@@ -1,5 +1,4 @@
 import {
-    AuthValidationError,
     createPublicAuthActions,
     LocalAuthentication,
     SignedCookieCodec,
@@ -7,35 +6,14 @@ import {
     TemplatedAuthEmailComposer,
 } from "@bernouy/cms-auth";
 import { ConfiguredEmailer } from "@bernouy/cms-auth/smtp";
-import { createAuthEmailTestSender, createLocalUser } from "@bernouy/cms-auth/management";
+import { createAuthEmailTestSender } from "@bernouy/cms-auth/management";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { KernelStores } from "./stores/kernelStores";
 
 export async function createProductionAuth(env: RuntimeEnv, stores: KernelStores) {
-    if (!(await stores.identityProviders.get("local"))) {
-        await stores.identityProviders.create({
-            id: "local",
-            kind: "local",
-            enabled: true,
-            displayName: "Email & password",
-        });
-    }
-
-    if (!(await stores.credentials.getByEmail(env.CMS_ADMIN_EMAIL))) {
-        try {
-            await createLocalUser(
-                { credentials: stores.credentials, users: stores.users },
-                {
-                    email: env.CMS_ADMIN_EMAIL,
-                    password: env.CMS_ADMIN_PASSWORD,
-                },
-            );
-        } catch (error) {
-            if (error instanceof AuthValidationError) {
-                throw new Error(`Invalid CMS_ADMIN_PASSWORD for first admin bootstrap: ${error.message}`);
-            }
-            throw error;
-        }
+    const localProvider = await stores.identityProviders.get("local");
+    if (!localProvider || !localProvider.enabled) {
+        throw new Error("The instance has not been provisioned with an enabled local identity provider");
     }
 
     const resolver = new SubjectResolver(stores.users);

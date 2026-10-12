@@ -1,4 +1,4 @@
-import type { LocalCredentialStore, Subject } from "@bernouy/cms-auth";
+import type { Subject } from "@bernouy/cms-auth";
 import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 import type { Db } from "mongodb";
 import { satisfiesVersionRange } from "@bernouy/cms-repository/providers";
@@ -25,22 +25,16 @@ type ProviderCapabilityGrant = {
 
 /** Initial host policy for the single-site runtime; wider grants need explicit site policy. */
 export function createProductionGatewayAccess(
-    credentials: LocalCredentialStore,
-    administratorEmail: string,
     db: Db,
-    siteId: string,
-    installations: ProviderInstallationStore,
-    manifests: ProviderManifestCatalogue,
+    siteId = "default",
+    installations?: ProviderInstallationStore,
+    manifests?: ProviderManifestCatalogue,
 ) {
     const grants = db.collection<AdministratorGrant>("cms_administrator_grants");
     const providerGrants = db.collection<ProviderCapabilityGrant>("cms_provider_capability_grants");
     const providerUsage = db.collection<{ _id: string; count: number; expiresAt: Date }>(
         "cms_provider_capability_usage",
     );
-    const bootstrap = async () => {
-        const credential = await credentials.getByEmail(administratorEmail);
-        return credential ? `local:${credential.sub}` : null;
-    };
     const providerMayCall = async (
         installationId: string,
         targetVersion: string,
@@ -48,6 +42,9 @@ export function createProductionGatewayAccess(
         contractId: string,
         targetInstallationId: string,
     ): Promise<boolean> => {
+        if (!installations || !manifests) {
+            return false;
+        }
         const source = await installations.get({ siteId, installationId });
         if (!source || source.installation.status !== "enabled") {
             return false;
@@ -94,10 +91,7 @@ export function createProductionGatewayAccess(
     };
 
     const isAdministratorId = async (subjectId: string): Promise<boolean> => {
-        return (
-            subjectId === (await bootstrap()) ||
-            Boolean(await grants.findOne({ sub: subjectId, enabled: { $ne: false } }))
-        );
+        return Boolean(await grants.findOne({ sub: subjectId, enabled: { $ne: false } }));
     };
     const isAdministrator = async (subject: Subject): Promise<boolean> => isAdministratorId(subject.identifier);
     const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, route, origin) =>
@@ -119,33 +113,23 @@ export function createProductionGatewayAccess(
 
     const administrators = {
         async canRevoke(sub: string): Promise<boolean> {
-            return sub !== (await bootstrap());
+            return Boolean(sub);
         },
         async get(sub: string) {
-            if (sub === (await bootstrap())) {
-                return { sub, enabled: true, revision: 1, bootstrap: true };
-            }
             const row = await grants.findOne({ sub });
             return {
                 sub,
                 enabled: row ? row.enabled !== false : false,
                 revision: row?.revision ?? (row ? 1 : 0),
-                bootstrap: false,
+                bootstrap: false as const,
             };
         },
         async list(): Promise<string[]> {
             const rows = await grants.find({ enabled: { $ne: false } }, { projection: { sub: 1 } }).toArray();
-            return [
-                ...new Set(
-                    [...rows.map((row) => row.sub), await bootstrap()].filter((id): id is string => Boolean(id)),
-                ),
-            ];
+            return [...new Set(rows.map((row) => row.sub))];
         },
         async set(sub: string, enabled: boolean, expectedRevision?: number) {
             const current = await this.get(sub);
-            if (current.bootstrap && !enabled) {
-                throw Object.assign(new Error("Bootstrap administrator cannot be removed"), { status: 409 });
-            }
             if (expectedRevision !== undefined && current.revision !== expectedRevision) {
                 throw revisionConflict();
             }

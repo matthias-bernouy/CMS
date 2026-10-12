@@ -1,4 +1,3 @@
-import type { LocalCredentialStore } from "@bernouy/cms-auth";
 import { CapabilityGateway, CatalogueGatewayRouteResolver } from "@bernouy/cms-gateway";
 import { MongoGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit/mongo";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
@@ -22,10 +21,8 @@ import { ProviderObservationRefresher } from "./ProviderObservationRefresher";
 export async function createProductionGateway(
     db: Db,
     secrets: SecretStore,
-    credentials: LocalCredentialStore,
     legacyIdentities: IdentityService,
     siteId: string,
-    administratorEmail: string,
 ) {
     const releases = new MongoReleaseCatalogue(db);
     await db.collection("cms_administrator_grants").createIndex({ sub: 1 }, { unique: true });
@@ -54,7 +51,7 @@ export async function createProductionGateway(
         },
     });
     const observations = new ProviderObservationRefresher(siteId, selections, installations, network);
-    const access = createProductionGatewayAccess(credentials, administratorEmail, db, siteId, installations, manifests);
+    const access = createProductionGatewayAccess(db, siteId, installations, manifests);
     const commandAudit = new MongoGatewayCommandAuditStore(db);
     await commandAudit.init();
     const identities = new ProviderIdentityAliases(legacyIdentities);

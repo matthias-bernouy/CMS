@@ -8,7 +8,7 @@ Production runtime composition root.
 - Connect MongoDB.
 - Instantiate the Kernel's auth, gateway, SEO and HTTP composition.
 - Connect an independently running Provider from its endpoint and token.
-- Install or upgrade official resources before starting the Kernel runner.
+- Refuse to start unless the Provider instance and official resources were provisioned beforehand.
 
 ## Rules
 

@@ -7,7 +7,6 @@ import {
     requiredEnv,
     type RuntimeEnvSource,
 } from "./runtimeEnvParsing";
-import { parseSelectionSiteId } from "@bernouy/cms-repository/providers/selections";
 import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
 import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
 
@@ -18,15 +17,11 @@ export type RuntimeEnv = {
     KERNEL_PORT: number;
     KERNEL_HOST: string;
     KERNEL_PUBLIC_URL: string;
-    ULVIA_PROVIDER_PUBLIC_URL?: string;
+    ULVIA_PROVIDER_URL: string;
+    ULVIA_INSTANCE_TOKEN: string;
     CMS_SESSION_SECRET: string;
     CMS_KEK_HEX?: string;
     CMS_KEK: RuntimeKekConfig;
-    CMS_ADMIN_EMAIL: string;
-    CMS_ADMIN_PASSWORD: string;
-    CMS_GATEWAY_SITE_ID?: string;
-    ULVIA_PROVIDER_TOKEN?: string;
-    CMS_REPOSITORY_URL?: string;
     CMS_FILES_DIR: string;
     MONGO_URL: string;
     CMS_AUTH_SITE_NAME: string;
@@ -63,16 +58,6 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
         ...(kek.keysHex.legacy ? { CMS_KEK_HEX: kek.keysHex.legacy } : {}),
         CMS_KEK: kek,
-        CMS_ADMIN_EMAIL: requiredEnv(source, "CMS_ADMIN_EMAIL"),
-        CMS_ADMIN_PASSWORD: requiredEnv(source, "CMS_ADMIN_PASSWORD"),
-        ...(!source.CMS_GATEWAY_SITE_ID?.trim()
-            ? {}
-            : { CMS_GATEWAY_SITE_ID: parseSelectionSiteId(source.CMS_GATEWAY_SITE_ID.trim()) }),
-        ...(!source.CMS_REPOSITORY_URL?.trim()
-            ? {}
-            : {
-                  CMS_REPOSITORY_URL: parseHttpUrl(source.CMS_REPOSITORY_URL.trim(), "CMS_REPOSITORY_URL"),
-              }),
         CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
         MONGO_URL: requiredEnv(source, "MONGO_URL"),
         CMS_AUTH_SITE_NAME: source.CMS_AUTH_SITE_NAME?.trim() || "CMS",
@@ -119,28 +104,20 @@ function parseListenerHost(raw: string | undefined, name: string): string {
 
 function parseUlviaProviderConfig(
     source: RuntimeEnvSource,
-): Pick<RuntimeEnv, "ULVIA_PROVIDER_PUBLIC_URL" | "ULVIA_PROVIDER_TOKEN"> {
-    const configured = [source.ULVIA_PROVIDER_PUBLIC_URL, source.ULVIA_PROVIDER_TOKEN].map((value) =>
-        Boolean(value?.trim()),
-    );
-    if (configured.some(Boolean) && !configured.every(Boolean)) {
-        throw new Error("ULVIA_PROVIDER_PUBLIC_URL and ULVIA_PROVIDER_TOKEN must be configured together");
-    }
-    if (!configured[0]) {
-        return {};
-    }
-    if (!source.CMS_REPOSITORY_URL?.trim() || !source.CMS_GATEWAY_SITE_ID?.trim()) {
-        throw new Error("Ulvia Provider bootstrap requires CMS_REPOSITORY_URL and CMS_GATEWAY_SITE_ID");
-    }
-    const token = source.ULVIA_PROVIDER_TOKEN!;
+): Pick<RuntimeEnv, "ULVIA_PROVIDER_URL" | "ULVIA_INSTANCE_TOKEN"> {
+    const token = source.ULVIA_INSTANCE_TOKEN;
+    requiredEnv(source, "ULVIA_INSTANCE_TOKEN");
     try {
-        assertProviderConnectionToken(token);
+        if (token !== token?.trim()) {
+            throw new TypeError("token whitespace");
+        }
+        assertProviderConnectionToken(token!);
     } catch {
-        throw new Error("ULVIA_PROVIDER_TOKEN is invalid");
+        throw new Error("ULVIA_INSTANCE_TOKEN is invalid");
     }
     return {
-        ULVIA_PROVIDER_PUBLIC_URL: parseHttpUrl(source.ULVIA_PROVIDER_PUBLIC_URL!, "ULVIA_PROVIDER_PUBLIC_URL"),
-        ULVIA_PROVIDER_TOKEN: token,
+        ULVIA_PROVIDER_URL: parseHttpUrl(requiredEnv(source, "ULVIA_PROVIDER_URL"), "ULVIA_PROVIDER_URL"),
+        ULVIA_INSTANCE_TOKEN: token!,
     };
 }
 

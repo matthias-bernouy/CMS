@@ -3,10 +3,10 @@ import { parsePort, readRuntimeEnv } from "../../src/runtimeEnv";
 
 const validEnv = () => ({
     KERNEL_PUBLIC_URL: "https://www.example.com",
+    ULVIA_PROVIDER_URL: "http://127.0.0.1:5103",
+    ULVIA_INSTANCE_TOKEN: "opaque-ulvia-instance-token",
     CMS_SESSION_SECRET: "session-secret",
     CMS_KEK_HEX: "00".repeat(32),
-    CMS_ADMIN_EMAIL: "admin@example.com",
-    CMS_ADMIN_PASSWORD: "password",
     CMS_FILES_DIR: "/data/files",
     MONGO_URL: "mongodb://mongo:27017/cms",
 });
@@ -128,52 +128,28 @@ describe("runtime env validation", () => {
         ).toBe(0);
     });
 
-    test("activates the capability gateway only with a valid stable site ID", () => {
-        expect(readRuntimeEnv(validEnv()).CMS_GATEWAY_SITE_ID).toBeUndefined();
-        expect(readRuntimeEnv({ ...validEnv(), CMS_GATEWAY_SITE_ID: "" }).CMS_GATEWAY_SITE_ID).toBeUndefined();
-        expect(readRuntimeEnv({ ...validEnv(), CMS_GATEWAY_SITE_ID: "site:main" }).CMS_GATEWAY_SITE_ID).toBe(
-            "site:main",
+    test("requires one pre-provisioned Ulvia Provider instance connection", () => {
+        expect(() => readRuntimeEnv({ ...validEnv(), ULVIA_PROVIDER_URL: undefined })).toThrow(
+            /ULVIA_PROVIDER_URL missing/,
         );
-        expect(() => readRuntimeEnv({ ...validEnv(), CMS_GATEWAY_SITE_ID: "bad site" })).toThrow();
-    });
-
-    test("requires a complete Ulvia Provider provider bootstrap tuple", () => {
-        expect(() => readRuntimeEnv({ ...validEnv(), ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103" })).toThrow(
-            /configured together/,
+        expect(() => readRuntimeEnv({ ...validEnv(), ULVIA_INSTANCE_TOKEN: undefined })).toThrow(
+            /ULVIA_INSTANCE_TOKEN missing/,
         );
-        expect(() =>
-            readRuntimeEnv({
-                ...validEnv(),
-                ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
-                ULVIA_PROVIDER_TOKEN: "opaque-ulvia-provider-token",
-            }),
-        ).toThrow(/requires CMS_REPOSITORY_URL/);
-        expect(
-            readRuntimeEnv({
-                ...validEnv(),
-                CMS_GATEWAY_SITE_ID: "default",
-                CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
-                ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
-                ULVIA_PROVIDER_TOKEN: "opaque-ulvia-provider-token",
-            }),
-        ).toMatchObject({
-            ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
-            ULVIA_PROVIDER_TOKEN: "opaque-ulvia-provider-token",
+        expect(readRuntimeEnv(validEnv())).toMatchObject({
+            ULVIA_PROVIDER_URL: "http://127.0.0.1:5103",
+            ULVIA_INSTANCE_TOKEN: "opaque-ulvia-instance-token",
         });
         for (const token of [
-            " opaque-ulvia-provider-token",
-            "opaque-ulvia-provider-token ",
-            "opaque-ulvia-provider-tokén",
+            " opaque-ulvia-instance-token",
+            "opaque-ulvia-instance-token ",
+            "opaque-ulvia-instance-tokén",
         ]) {
             expect(() =>
                 readRuntimeEnv({
                     ...validEnv(),
-                    CMS_GATEWAY_SITE_ID: "default",
-                    CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
-                    ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
-                    ULVIA_PROVIDER_TOKEN: token,
+                    ULVIA_INSTANCE_TOKEN: token,
                 }),
-            ).toThrow("ULVIA_PROVIDER_TOKEN is invalid");
+            ).toThrow("ULVIA_INSTANCE_TOKEN is invalid");
         }
     });
 });

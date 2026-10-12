@@ -1,14 +1,12 @@
 import { expect, test } from "bun:test";
-import type { LocalCredentialStore } from "@bernouy/cms-auth";
 import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 import type { Db } from "mongodb";
 import { createProductionGatewayAccess } from "../../src/runtime/gateway/access";
 
 test("production gateway derives Page access from capability access", async () => {
-    const credentials = {
-        getByEmail: async () => ({ sub: "bootstrap-1" }),
-    } as unknown as LocalCredentialStore;
-    const grants = new Map<string, { sub: string; enabled: boolean; revision: number }>();
+    const grants = new Map<string, { sub: string; enabled: boolean; revision: number }>([
+        ["local:administrator-1", { sub: "local:administrator-1", enabled: true, revision: 1 }],
+    ]);
     const db = {
         collection: () => ({
             findOne: async ({ sub, enabled }: { sub: string; enabled?: { $ne: boolean } }) => {
@@ -33,17 +31,18 @@ test("production gateway derives Page access from capability access", async () =
             },
         }),
     } as unknown as Db;
-    const access = createProductionGatewayAccess(credentials, "admin@example.test", db);
-    expect(await access.isAdministrator({ identifier: "local:bootstrap-1" })).toBe(true);
-    expect(await access.isAdministrator({ identifier: "oidc:bootstrap-1" })).toBe(false);
+    const access = createProductionGatewayAccess(db);
+    expect(await access.isAdministrator({ identifier: "local:administrator-1" })).toBe(true);
+    expect(await access.isAdministrator({ identifier: "oidc:administrator-1" })).toBe(false);
     const granted = await access.administrators.set("oidc:member-1", true, 0);
     expect(granted.revision).toBe(1);
     expect(await access.isAdministrator({ identifier: "oidc:member-1" })).toBe(true);
-    expect(await access.administrators.list()).toEqual(["oidc:member-1", "local:bootstrap-1"]);
+    expect(await access.administrators.list()).toEqual(["local:administrator-1", "oidc:member-1"]);
     await expect(access.administrators.set("oidc:member-1", false, 0)).rejects.toMatchObject({ status: 409 });
     await access.administrators.set("oidc:member-1", false, 1);
     expect(await access.isAdministrator({ identifier: "oidc:member-1" })).toBe(false);
-    expect(access.administrators.set("local:bootstrap-1", false)).rejects.toThrow();
+    await access.administrators.set("local:administrator-1", false, 1);
+    expect(await access.isAdministrator({ identifier: "local:administrator-1" })).toBe(false);
 
     const publicCapability = { access: "public" } as Parameters<CapabilityGatewayOptions["authorize"]>[1];
     const privateCapability = { access: "authenticated" } as Parameters<CapabilityGatewayOptions["authorize"]>[1];
@@ -54,12 +53,12 @@ test("production gateway derives Page access from capability access", async () =
     expect(await access.authorize({ kind: "anonymous" }, privateCapability, route, "page")).toBe(false);
     expect(
         await access.authorize(
-            { kind: "administrator", subjectId: "local:bootstrap-1" },
+            { kind: "administrator", subjectId: "local:administrator-1" },
             adminCapability,
             route,
             "page",
         ),
-    ).toBe(true);
+    ).toBe(false);
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, publicCapability, route, "page")).toBe(true);
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, privateCapability, route, "page")).toBe(true);
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, adminCapability, route, "page")).toBe(false);
