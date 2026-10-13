@@ -113,6 +113,40 @@ test("expired uploads are cleaned and public limits reject invalid input", async
     ).rejects.toMatchObject({ code: "INVALID_INPUT" });
 });
 
+test("replacement uploads keep a stable file identity and expose the latest generation", async () => {
+    let now = new Date("2026-01-01T00:00:00.000Z");
+    const files = service(() => now);
+    const namespace = await files.createNamespace({
+        name: "Author assets",
+        defaultVisibility: "private",
+        createdBy: { kind: "administrator", id: "admin-a" },
+    });
+    const original = await upload(files, namespace, "asset.txt", "first");
+    now = new Date("2026-01-01T00:01:00.000Z");
+    const pending = await files.createUpload({
+        ...namespace,
+        fileId: original.fileId,
+        filename: "asset.txt",
+        size: 6,
+    });
+    await files.writeUpload(pending.uploadId, pending.uploadToken, new Blob(["second"]).stream());
+    const replacement = await files.completeUpload(namespace.namespaceId, namespace.namespaceKey, pending.uploadId);
+
+    expect(replacement.fileId).toBe(original.fileId);
+    expect(replacement.generation).not.toBe(original.generation);
+    expect(
+        await files.listFiles({ namespaceId: namespace.namespaceId, namespaceKey: namespace.namespaceKey }),
+    ).toMatchObject({ items: [{ fileId: original.fileId, generation: replacement.generation }] });
+    expect(
+        await files.getFile({
+            namespaceId: namespace.namespaceId,
+            namespaceKey: namespace.namespaceKey,
+            fileId: original.fileId,
+            generation: original.generation,
+        }),
+    ).toMatchObject({ generation: original.generation });
+});
+
 function service(now: () => Date = () => new Date("2026-01-01T00:00:00.000Z")): CmsFilesService {
     return new CmsFilesService({
         store: new InMemoryCmsFilesStore(),

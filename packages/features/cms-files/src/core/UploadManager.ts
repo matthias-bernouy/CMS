@@ -25,6 +25,7 @@ export class UploadManager {
         mimeType?: string;
         visibility?: "private" | "public";
         imageProfile?: "thumbnail" | "responsive";
+        fileId?: string;
     }): Promise<{ uploadId: string; uploadToken: string; expiresAt: string; maxBytes: number }> {
         const authority = await this.namespaces.authorize(input.namespaceKey, "files.write");
         if (authority.namespaceId !== boundedText(input.namespaceId, 128)) {
@@ -36,6 +37,13 @@ export class UploadManager {
         }
         if (!Number.isSafeInteger(input.size) || input.size < 0 || input.size > this.maxFileBytes) {
             throw new CmsFilesError("INVALID_INPUT", 422);
+        }
+        const fileId = input.fileId ? boundedText(input.fileId, 128) : undefined;
+        if (fileId) {
+            const current = await this.store.getLatestFile(fileId);
+            if (!current || current.namespaceId !== authority.namespaceId) {
+                throw new CmsFilesError("NOT_FOUND", 404);
+            }
         }
         const upload = newCredential("upl");
         const createdAt = this.now();
@@ -53,6 +61,7 @@ export class UploadManager {
             state: "pending",
             createdAt: createdAt.toISOString(),
             expiresAt,
+            ...(fileId ? { fileId } : {}),
         });
         return { uploadId: upload.id, uploadToken: upload.value, expiresAt, maxBytes: this.maxFileBytes };
     }
@@ -111,9 +120,15 @@ export class UploadManager {
             await this.store.putUpload(reservedUpload);
         }
         const generation = upload.contentHash;
-        if (!(await this.store.getFile(fileId, generation))) {
-            await this.namespaces.assertQuota(upload.namespaceId, upload.actualSize);
+        const existingGeneration = await this.store.getFile(fileId, generation);
+        if (existingGeneration) {
+            await this.blobs.delete(upload.blobKey);
+            await this.store.putUpload({ ...reservedUpload, state: "completed" });
+            return this.access.reference(existingGeneration);
         }
+        await this.namespaces.assertQuota(upload.namespaceId, upload.actualSize);
+        const generations = await this.store.listFileGenerations(fileId);
+        const generationNumber = Math.max(0, ...generations.map((candidate) => candidate.generationNumber)) + 1;
         const now = this.now().toISOString();
         const file: FileRecord = {
             id: fileId,
@@ -124,6 +139,7 @@ export class UploadManager {
             size: upload.actualSize,
             mimeType: upload.detectedMimeType ?? "application/octet-stream",
             contentHash: upload.contentHash,
+            generationNumber,
             visibility: upload.visibility,
             ...(upload.imageProfile ? { imageProfile: upload.imageProfile } : {}),
             createdAt: now,

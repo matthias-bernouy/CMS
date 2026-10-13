@@ -26,7 +26,7 @@ export class FileCatalog {
         if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
             throw new CmsFilesError("INVALID_INPUT", 422);
         }
-        const files = await this.store.listFiles(input.namespaceId, offset, limit);
+        const files = await this.store.listLatestFiles(input.namespaceId, offset, limit);
         return { items: files.map((file) => this.access.reference(file)), offset, limit };
     }
 

@@ -56,6 +56,7 @@ export interface FileRecord {
     readonly size: number;
     readonly mimeType: string;
     readonly contentHash: string;
+    readonly generationNumber: number;
     readonly visibility: "private" | "public";
     readonly imageProfile?: "thumbnail" | "responsive";
     readonly createdAt: string;
@@ -90,6 +91,7 @@ export interface CmsFilesStore {
     getLatestFile(id: string): Promise<FileRecord | null>;
     listFileGenerations(id: string): Promise<readonly FileRecord[]>;
     listFiles(namespaceId: string, offset: number, limit: number): Promise<readonly FileRecord[]>;
+    listLatestFiles(namespaceId: string, offset: number, limit: number): Promise<readonly FileRecord[]>;
     deleteFile(id: string, generation: string): Promise<void>;
 }
 

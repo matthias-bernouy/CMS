@@ -76,7 +76,7 @@ export class InMemoryCmsFilesStore implements CmsFilesStore {
 
     async getLatestFile(id: string): Promise<FileRecord | null> {
         const files = [...this.#files.values()].filter((file) => file.id === id);
-        files.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+        files.sort((left, right) => right.generationNumber - left.generationNumber);
         return clone(files[0]);
     }
 
@@ -88,6 +88,20 @@ export class InMemoryCmsFilesStore implements CmsFilesStore {
         return [...this.#files.values()]
             .filter((file) => file.namespaceId === namespaceId)
             .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+            .slice(offset, offset + limit)
+            .map((item) => structuredClone(item));
+    }
+
+    async listLatestFiles(namespaceId: string, offset: number, limit: number): Promise<readonly FileRecord[]> {
+        const latest = new Map<string, FileRecord>();
+        for (const file of this.#files.values()) {
+            const current = latest.get(file.id);
+            if (file.namespaceId === namespaceId && (!current || file.generationNumber > current.generationNumber)) {
+                latest.set(file.id, file);
+            }
+        }
+        return [...latest.values()]
+            .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
             .slice(offset, offset + limit)
             .map((item) => structuredClone(item));
     }

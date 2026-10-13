@@ -81,7 +81,7 @@ export class MongoCmsFilesStore implements CmsFilesStore {
     }
 
     async getLatestFile(id: string): Promise<FileRecord | null> {
-        const row = await this.#documents.find({ kind: "file", id }).sort({ createdAt: -1 }).limit(1).next();
+        const row = await this.#documents.find({ kind: "file", id }).sort({ generationNumber: -1 }).limit(1).next();
         return row ? documentValue<FileRecord>(row) : null;
     }
 
@@ -96,6 +96,21 @@ export class MongoCmsFilesStore implements CmsFilesStore {
             .sort({ createdAt: -1 })
             .skip(offset)
             .limit(limit)
+            .toArray();
+        return rows.map(documentValue<FileRecord>);
+    }
+
+    async listLatestFiles(namespaceId: string, offset: number, limit: number): Promise<readonly FileRecord[]> {
+        const rows = await this.#documents
+            .aggregate<Document>([
+                { $match: { kind: "file", namespaceId } },
+                { $sort: { generationNumber: -1 } },
+                { $group: { _id: "$id", document: { $first: "$$ROOT" } } },
+                { $replaceWith: "$document" },
+                { $sort: { updatedAt: -1 } },
+                { $skip: offset },
+                { $limit: limit },
+            ])
             .toArray();
         return rows.map(documentValue<FileRecord>);
     }
