@@ -86,9 +86,9 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/workspace/files",
-        "input": { "query": { "offset": "offset", "limit": "limit" } },
+        "method": "POST",
+        "path": "/workspace.get",
+        "input": { "body": true },
         "response": {
             "successStatuses": [200],
             "contentTypes": ["application/json"],

@@ -16,9 +16,9 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "DELETE",
-        "path": "/workspace/files/{fileId}",
-        "input": { "path": { "fileId": "fileId" } },
+        "method": "POST",
+        "path": "/workspace.files.delete",
+        "input": { "body": true },
         "response": {
             "successStatuses": [200],
             "contentTypes": ["application/json"],

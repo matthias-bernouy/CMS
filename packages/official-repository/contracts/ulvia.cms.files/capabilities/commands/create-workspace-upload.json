@@ -34,7 +34,7 @@
     "binding": {
         "transport": "http",
         "method": "POST",
-        "path": "/workspace/uploads",
+        "path": "/workspace.upload.create",
         "input": { "body": true },
         "response": {
             "successStatuses": [200],

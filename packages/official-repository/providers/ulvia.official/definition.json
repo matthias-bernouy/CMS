@@ -52,7 +52,7 @@
         {
             "contractId": "ulvia.cms.files",
             "version": "1.0.0",
-            "digest": "sha256:90c43e5ce1378ff076c7adbe84bd21bb8a99c1d48e721dd0efd5b32c97ff682e",
+            "digest": "sha256:52bd2d78f3d399e373357abcef47eeb04d4093024444369817f9d915f2453f08",
             "requires": []
         },
         {

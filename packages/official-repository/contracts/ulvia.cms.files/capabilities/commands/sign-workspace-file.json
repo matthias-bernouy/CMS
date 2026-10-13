@@ -28,8 +28,8 @@
     "binding": {
         "transport": "http",
         "method": "POST",
-        "path": "/workspace/files/{fileId}/sign",
-        "input": { "path": { "fileId": "fileId" }, "body": { "properties": ["generation", "expiresIn"] } },
+        "path": "/workspace.files.sign",
+        "input": { "body": true },
         "response": {
             "successStatuses": [200],
             "contentTypes": ["application/json"],

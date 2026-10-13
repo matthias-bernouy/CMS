@@ -19,9 +19,9 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PATCH",
-        "path": "/workspace/files/{fileId}",
-        "input": { "path": { "fileId": "fileId" }, "body": { "properties": ["name"] } },
+        "method": "POST",
+        "path": "/workspace.files.update",
+        "input": { "body": true },
         "response": {
             "successStatuses": [200],
             "contentTypes": ["application/json"],
