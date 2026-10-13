@@ -49,12 +49,24 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
 async function submitPageDetails(page: Page) {
     const form = page.locator('form[cms-source*="ulvia.cms.pages/update as saved"]');
     const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/get"));
+    const editorReload = page.waitForResponse((candidate) =>
+        candidate.url().includes("ulvia.cms.pages/editor-catalogue"),
+    );
     const [response] = await Promise.all([
         page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/update")),
         form.locator('button[type="submit"]').click(),
     ]);
     if (response.ok()) {
-        await reload;
+        await Promise.all([reload, editorReload]);
+        const addHeading = page.getByRole("button", { name: "Add Heading", exact: true });
+        await addHeading.waitFor();
+        const deadline = Date.now() + 15_000;
+        while (!(await addHeading.isEnabled()) && Date.now() < deadline) {
+            await page.waitForTimeout(25);
+        }
+        if (!(await addHeading.isEnabled())) {
+            throw new Error("Page editor did not become ready after the details reload");
+        }
     }
     return response;
 }
