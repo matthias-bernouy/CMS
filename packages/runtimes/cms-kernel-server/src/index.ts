@@ -3,7 +3,7 @@ import { mountProductionKernel } from "./runtime/mountKernel";
 import { createKernelStores } from "./runtime/stores/kernelStores";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
 import { createProductionGateway } from "./runtime/gateway/createProductionGateway";
-import { fetchProviderReport } from "./runtime/gateway/fetchProviderReport";
+import { fetchProviderHandshake } from "./runtime/gateway/fetchProviderReport";
 import { assertProvisionedInstance } from "./runtime/gateway/assertProvisionedInstance";
 import { readRuntimeEnv } from "./runtimeEnv";
 
@@ -16,8 +16,8 @@ const core = await createKernelStores(env);
 const authentication = await createProductionAuth(env, core);
 const gateway = await createProductionGateway(core.db, core.secrets, core.identities, SITE_ID);
 try {
-    const report = await fetchProviderReport(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN);
-    await assertProvisionedInstance(gateway, env.ULVIA_PROVIDER_URL, report);
+    const handshake = await fetchProviderHandshake(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN);
+    await assertProvisionedInstance(gateway, env.ULVIA_PROVIDER_URL, handshake.runtime);
 } catch (error) {
     await core.close();
     throw error;

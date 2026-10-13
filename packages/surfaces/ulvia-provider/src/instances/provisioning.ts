@@ -1,6 +1,6 @@
 import type { ProviderInstanceRecord } from "./types";
 import type { ProviderInstanceRegistry } from "./registry";
-import { OFFICIAL_INSTANCE_PROFILE, type OfficialInstanceProfile } from "./officialProfile";
+import { resolveOfficialInstanceProfile, type OfficialInstanceProfile } from "./officialProfile";
 
 const STEPS = ["manifest", "provider", "contracts", "collection", "administrator"] as const;
 type ProvisioningStep = (typeof STEPS)[number];
@@ -27,7 +27,7 @@ export class OfficialInstanceProvisioner {
         if (!instance) {
             throw new Error(`Unknown Provider instance: ${instanceId}`);
         }
-        assertExactProfile(instance);
+        const profile = exactProfile(instance);
         if (instance.status === "disabled") {
             throw new Error(`Provider instance is disabled: ${instanceId}`);
         }
@@ -46,7 +46,7 @@ export class OfficialInstanceProvisioner {
                 if (instance.completedSteps.includes(step)) {
                     continue;
                 }
-                await executeStep(target, step, administrator);
+                await executeStep(target, profile, step, administrator);
                 instance = await this.instances.update(instance.id, instance.revision, {
                     completedSteps: [...instance.completedSteps, step],
                 });
@@ -62,29 +62,29 @@ export class OfficialInstanceProvisioner {
     }
 }
 
-function assertExactProfile(instance: ProviderInstanceRecord): void {
-    if (
-        instance.profile.id !== OFFICIAL_INSTANCE_PROFILE.id ||
-        instance.profile.version !== OFFICIAL_INSTANCE_PROFILE.version
-    ) {
+function exactProfile(instance: ProviderInstanceRecord): OfficialInstanceProfile {
+    const profile = resolveOfficialInstanceProfile(instance.profile.id, instance.profile.version);
+    if (!profile) {
         throw new Error(`Unsupported Provider instance profile: ${instance.profile.id}@${instance.profile.version}`);
     }
+    return profile;
 }
 
 function executeStep(
     target: OfficialInstanceProvisioningTarget,
+    profile: OfficialInstanceProfile,
     step: ProvisioningStep,
     administrator: ProviderInstanceAdministrator,
 ): Promise<void> {
     switch (step) {
         case "manifest":
-            return target.importManifest(OFFICIAL_INSTANCE_PROFILE);
+            return target.importManifest(profile);
         case "provider":
-            return target.connectProvider(OFFICIAL_INSTANCE_PROFILE);
+            return target.connectProvider(profile);
         case "contracts":
-            return target.selectContracts(OFFICIAL_INSTANCE_PROFILE);
+            return target.selectContracts(profile);
         case "collection":
-            return target.installCollection(OFFICIAL_INSTANCE_PROFILE);
+            return target.installCollection(profile);
         case "administrator":
             return target.initializeAdministrator(administrator);
     }

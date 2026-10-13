@@ -23,6 +23,13 @@ export function providerOptions(
         siteId: "default",
         report: { ...providerReport(...contracts), instanceId },
         dispatcher,
+        instance: {
+            id: instanceId,
+            status: "ready",
+            revision: 1,
+            profile: { id: "ulvia.official", version: "1.1.0" },
+        },
+        contentRevision: async () => 1,
     };
     return {
         contracts: contracts.map(({ release }) => release),

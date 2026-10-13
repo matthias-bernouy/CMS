@@ -11,7 +11,14 @@ export interface ProviderInstanceCredentials {
 }
 
 export type ProviderInstanceRuntimeCredentials = Readonly<{
-    token: string;
+    instanceAccessToken: string;
+    invocationSecret: string;
+    sessionSecret: string;
+    kekHex: string;
+}>;
+
+export type ProviderInstanceAccessCredentials = Readonly<{
+    instanceAccessToken: string;
     sessionSecret: string;
     kekHex: string;
 }>;
@@ -24,7 +31,7 @@ export type CreateProviderInstance = Readonly<{
 
 export type CreatedProviderInstance = Readonly<{
     instance: ProviderInstanceRecord;
-    credentials: ProviderInstanceRuntimeCredentials;
+    credentials: ProviderInstanceAccessCredentials;
 }>;
 
 export class ProviderInstanceLifecycle {
@@ -55,7 +62,14 @@ export class ProviderInstanceLifecycle {
         assertMatchingFingerprint(instance.idempotencyFingerprint, idempotencyFingerprint);
         const credentials = await this.credentials.ensure(instance);
         const provisioned = await this.provisioner.provision(instance.id, input.administrator);
-        return { instance: provisioned, credentials };
+        return {
+            instance: provisioned,
+            credentials: {
+                instanceAccessToken: credentials.instanceAccessToken,
+                sessionSecret: credentials.sessionSecret,
+                kekHex: credentials.kekHex,
+            },
+        };
     }
 
     get(instanceId: string): Promise<ProviderInstanceRecord | null> {

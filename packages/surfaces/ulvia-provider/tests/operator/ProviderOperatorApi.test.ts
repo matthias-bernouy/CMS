@@ -22,7 +22,11 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
             creates.push({ key, input });
             return {
                 instance,
-                credentials: { token: "new-instance-token", sessionSecret: "session-secret", kekHex: "kek" },
+                credentials: {
+                    instanceAccessToken: "new-instance-token",
+                    sessionSecret: "session-secret",
+                    kekHex: "kek",
+                },
             };
         },
         disable: async (id: string) => (id === instance.id ? { ...instance, status: "disabled" } : null),
@@ -45,7 +49,7 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
             }),
         });
         expect(created.status).toBe(201);
-        expect((await created.json()).credentials.token).toBe("new-instance-token");
+        expect((await created.json()).credentials.instanceAccessToken).toBe("new-instance-token");
         expect(creates).toHaveLength(1);
 
         const disabled = await server.request(
@@ -64,7 +68,12 @@ test("an idempotency key can only replay the exact instance request", async () =
     const lifecycle = new ProviderInstanceLifecycle(
         registry,
         {
-            ensure: async () => ({ token: "instance-token", sessionSecret: "session-secret", kekHex: "kek" }),
+            ensure: async () => ({
+                instanceAccessToken: "instance-token",
+                invocationSecret: "invocation-secret",
+                sessionSecret: "session-secret",
+                kekHex: "kek",
+            }),
             read: async () => null,
             disable: async () => undefined,
         },

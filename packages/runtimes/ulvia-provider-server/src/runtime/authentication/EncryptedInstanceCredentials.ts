@@ -7,7 +7,7 @@ import type {
     ProviderInstanceRuntimeCredentials,
 } from "@bernouy/ulvia-provider";
 import type { InstanceCredentialStore } from "./InstanceCredentialStore";
-import { hashInstanceToken } from "./ProviderInstanceAuthenticator";
+import { hashInstanceAccessToken } from "./ProviderInstanceAuthenticator";
 
 export class EncryptedInstanceCredentials implements ProviderInstanceCredentials {
     constructor(
@@ -25,18 +25,19 @@ export class EncryptedInstanceCredentials implements ProviderInstanceCredentials
             return credentials;
         }
         const runtimeCredentials = {
-            token: randomBytes(32).toString("base64url"),
+            instanceAccessToken: randomBytes(32).toString("base64url"),
+            invocationSecret: randomBytes(32).toString("base64url"),
             sessionSecret: randomBytes(48).toString("base64url"),
             kekHex: randomBytes(32).toString("hex"),
         };
-        const keyId = providerInvocationKeyId(runtimeCredentials.token);
+        const keyId = providerInvocationKeyId(runtimeCredentials.invocationSecret);
         const secretKey = `ULVIA_INSTANCE_${keyId.replaceAll("-", "_").toUpperCase()}`;
         await this.secrets.set(secretKey, JSON.stringify(runtimeCredentials));
         try {
             await this.credentials.put({
                 instanceId: instance.id,
-                keyId,
-                tokenHash: hashInstanceToken(runtimeCredentials.token),
+                invocationKeyId: keyId,
+                accessTokenHash: hashInstanceAccessToken(runtimeCredentials.instanceAccessToken),
                 secretKey,
                 enabled: true,
             });
@@ -83,9 +84,11 @@ function validRuntimeCredentials(value: unknown): value is ProviderInstanceRunti
     }
     const record = value as Record<string, unknown>;
     return (
-        Object.keys(record).sort().join(",") === "kekHex,sessionSecret,token" &&
-        typeof record.token === "string" &&
-        /^[A-Za-z0-9_-]{43}$/u.test(record.token) &&
+        Object.keys(record).sort().join(",") === "instanceAccessToken,invocationSecret,kekHex,sessionSecret" &&
+        typeof record.instanceAccessToken === "string" &&
+        /^[A-Za-z0-9_-]{43}$/u.test(record.instanceAccessToken) &&
+        typeof record.invocationSecret === "string" &&
+        /^[A-Za-z0-9_-]{43}$/u.test(record.invocationSecret) &&
         typeof record.sessionSecret === "string" &&
         record.sessionSecret.length >= 32 &&
         typeof record.kekHex === "string" &&

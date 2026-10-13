@@ -5,11 +5,20 @@ import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { ProviderCapabilityRegistry } from "./dispatch/registry";
 import { createProviderContractRelay } from "./transport/relay";
 import { compileProviderRoutes } from "./transport/routes";
+import { KERNEL_PROVIDER_PROTOCOL, type KernelProviderHandshake } from "./kernel/protocol";
+import type { ProviderInstanceProfile, ProviderInstanceStatus } from "./instances/types";
 
 export type UlviaProviderInstanceRuntime = Readonly<{
     siteId: string;
     report: ProviderRuntimeReport;
     dispatcher: ProviderCapabilityRegistry;
+    instance: {
+        id: string;
+        status: ProviderInstanceStatus;
+        revision: number;
+        profile: ProviderInstanceProfile;
+    };
+    contentRevision(): Promise<number | string>;
 }>;
 
 export type UlviaProviderInstanceLease = Readonly<{
@@ -38,6 +47,30 @@ export class UlviaProvider {
             }
             try {
                 return Response.json(lease.resource.report, { headers: { "Cache-Control": "no-store" } });
+            } finally {
+                lease.release();
+            }
+        });
+        runner.get("/ulvia/kernel/v1/handshake", async (request) => {
+            const token = bearerToken(request);
+            const lease = token ? await options.authenticateControlToken(token) : null;
+            if (!lease) {
+                return unauthorized();
+            }
+            try {
+                const runtime = lease.resource;
+                const handshake: KernelProviderHandshake = {
+                    protocol: KERNEL_PROVIDER_PROTOCOL,
+                    instance: {
+                        id: runtime.instance.id,
+                        status: runtime.instance.status,
+                        revision: runtime.instance.revision,
+                    },
+                    activeProfile: runtime.instance.profile,
+                    contentRevision: await runtime.contentRevision(),
+                    runtime: runtime.report,
+                };
+                return Response.json(handshake, { headers: { "Cache-Control": "no-store" } });
             } finally {
                 lease.release();
             }

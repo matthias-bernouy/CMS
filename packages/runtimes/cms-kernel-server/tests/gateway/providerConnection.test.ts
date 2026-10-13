@@ -1,28 +1,35 @@
 import { expect, test } from "bun:test";
-import { fetchProviderReport } from "../../src/runtime/gateway/fetchProviderReport";
+import { fetchProviderHandshake } from "../../src/runtime/gateway/fetchProviderReport";
 
 test("provider connection previews accept a pinned remote HTTPS endpoint", async () => {
     const requests: unknown[] = [];
     const report = providerReport();
-    const result = await fetchProviderReport("https://api.provider.example", "provider-token-at-least-twenty", {
+    const handshake = {
+        protocol: "ulvia-kernel-provider/v1",
+        instance: { id: report.instanceId, status: "ready", revision: 3 },
+        activeProfile: { id: "ulvia.official", version: "1.1.0" },
+        contentRevision: 12,
+        runtime: report,
+    };
+    const result = await fetchProviderHandshake("https://api.provider.example", "provider-token-at-least-twenty", {
         exchange: async (request) => {
             requests.push(request);
-            return Response.json(report);
+            return Response.json(handshake);
         },
     });
 
-    expect(result).toEqual(report);
+    expect(result).toEqual(handshake);
     expect(requests).toMatchObject([
         {
             origin: "https://api.provider.example",
-            pathAndQuery: "/ulvia/report",
+            pathAndQuery: "/ulvia/kernel/v1/handshake",
             method: "GET",
             authentication: { kind: "provider-control" },
         },
     ]);
     await expect(
-        fetchProviderReport("https://api.provider.example", "invalid", {
-            exchange: async () => Response.json(report),
+        fetchProviderHandshake("https://api.provider.example", "invalid", {
+            exchange: async () => Response.json(handshake),
         }),
     ).rejects.toThrow("Invalid provider token");
 });

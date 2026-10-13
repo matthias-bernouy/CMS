@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { mkdir } from "node:fs/promises";
+import { createContentReader } from "@bernouy/cms-content/rendering";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
@@ -9,9 +10,9 @@ import type { ReleaseDigest } from "@bernouy/cms-repository/contracts";
 import {
     CollectionSources,
     DefaultProviderCapabilityDispatcher,
-    OFFICIAL_INSTANCE_PROFILE,
     ProviderOperationExecutor,
     registerOfficialProviderCapabilities,
+    resolveOfficialInstanceProfile,
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceRecord,
     type UlviaProviderInstanceRuntime,
@@ -19,6 +20,7 @@ import {
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
 import type { EncryptedInstanceCredentials } from "../authentication/EncryptedInstanceCredentials";
 import { createProviderGateway } from "../gateway/createProviderGateway";
+import { createProtectedProviderManagement } from "../gateway/protectedManagement";
 import { MongoProviderOperationStore } from "../provider-operations/MongoProviderOperationStore";
 import { createProviderStores, type ProviderStores } from "../stores/providerStores";
 import { createInstanceProvisioningTarget } from "./instanceProvisioning";
@@ -124,15 +126,27 @@ export class ProviderInstanceHost {
                 stores,
                 gateway,
                 operations,
-                management,
+                createProtectedProviderManagement(management, instance),
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
             );
+            const content = createContentReader(stores.repo);
             return {
                 stores,
                 management,
                 administrators: gateway.administrators,
-                runtime: { siteId: SITE_ID, report, dispatcher },
+                runtime: {
+                    siteId: SITE_ID,
+                    report,
+                    dispatcher,
+                    instance: {
+                        id: instance.id,
+                        status: instance.status,
+                        revision: instance.revision,
+                        profile: instance.profile,
+                    },
+                    contentRevision: async () => (await content.getContentRevision?.()) ?? instance.revision,
+                },
             };
         } catch (error) {
             await stores.close();
@@ -142,7 +156,10 @@ export class ProviderInstanceHost {
 }
 
 function providerReport(instance: ProviderInstanceRecord): ProviderRuntimeReport {
-    const profile = OFFICIAL_INSTANCE_PROFILE;
+    const profile = resolveOfficialInstanceProfile(instance.profile.id, instance.profile.version);
+    if (!profile) {
+        throw new Error(`Unsupported Provider instance profile: ${instance.profile.id}@${instance.profile.version}`);
+    }
     return {
         protocol: "ulvia-provider/v1",
         providerId: profile.manifest.providerId,

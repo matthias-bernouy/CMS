@@ -45,7 +45,13 @@ export type {
     UpdateProviderInstanceRecord,
 } from "./instances/types";
 export { PROVIDER_INSTANCE_STATUSES } from "./instances/types";
-export { OFFICIAL_INSTANCE_PROFILE, type OfficialInstanceProfile } from "./instances/officialProfile";
+export {
+    OFFICIAL_INSTANCE_PROFILE,
+    SUPPORTED_INSTANCE_PROFILES,
+    SYSTEM_CONTRACT_IDS,
+    resolveOfficialInstanceProfile,
+    type OfficialInstanceProfile,
+} from "./instances/officialProfile";
 export {
     OfficialInstanceProvisioner,
     type OfficialInstanceProvisioningTarget,
@@ -56,6 +62,7 @@ export {
     type CreateProviderInstance,
     type CreatedProviderInstance,
     type ProviderInstanceCredentials,
+    type ProviderInstanceAccessCredentials,
     type ProviderInstanceRuntimeCredentials,
 } from "./instances/lifecycle";
 export { ProviderOperatorApi } from "./transport/ProviderOperatorApi";

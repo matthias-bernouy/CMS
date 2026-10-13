@@ -53,7 +53,7 @@ async function connectProvider(options: TargetOptions, profile: OfficialInstance
             providerId: profile.manifest.providerId,
             version: profile.manifest.version,
             endpoint: options.env.ULVIA_PROVIDER_PUBLIC_URL,
-            token: credentials.token,
+            token: credentials.invocationSecret,
             ...(installation ? { installationId: installation.id, revision: installation.revision } : {}),
         },
         BOOTSTRAP_ACTOR,

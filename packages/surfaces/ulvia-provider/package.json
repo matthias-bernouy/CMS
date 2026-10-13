@@ -6,7 +6,8 @@
     "type": "module",
     "exports": {
         ".": "./src/index.ts",
-        "./capabilities": "./src/capabilities/index.ts"
+        "./capabilities": "./src/capabilities/index.ts",
+        "./kernel": "./src/kernel/protocol.ts"
     },
     "architecture": {
         "layer": "surfaces"

@@ -21,11 +21,11 @@ export class ProviderInstanceAuthenticator {
     ) {}
 
     async authenticateControlToken(token: string): Promise<ProviderInstanceRecord | null> {
-        const credential = await this.credentials.getByTokenHash(hashInstanceToken(token));
+        const credential = await this.credentials.getByAccessTokenHash(hashInstanceAccessToken(token));
         if (!credential) {
             return null;
         }
-        const secret = await this.readEnabledSecret(credential);
+        const secret = await this.readEnabledAccessToken(credential);
         if (!secret || !equalSecrets(token, secret)) {
             return null;
         }
@@ -39,11 +39,11 @@ export class ProviderInstanceAuthenticator {
         } catch {
             return null;
         }
-        const credential = await this.credentials.getByKeyId(keyId);
+        const credential = await this.credentials.getByInvocationKeyId(keyId);
         if (!credential) {
             return null;
         }
-        const secret = await this.readEnabledSecret(credential);
+        const secret = await this.readEnabledInvocationSecret(credential);
         if (!secret) {
             return null;
         }
@@ -59,11 +59,18 @@ export class ProviderInstanceAuthenticator {
         }
     }
 
-    async readEnabledSecret(credential: InstanceCredential): Promise<string | null> {
+    async readEnabledAccessToken(credential: InstanceCredential): Promise<string | null> {
         if (!credential.enabled) {
             return null;
         }
-        return (await this.encryptedCredentials.readSecret(credential.secretKey))?.token ?? null;
+        return (await this.encryptedCredentials.readSecret(credential.secretKey))?.instanceAccessToken ?? null;
+    }
+
+    async readEnabledInvocationSecret(credential: InstanceCredential): Promise<string | null> {
+        if (!credential.enabled) {
+            return null;
+        }
+        return (await this.encryptedCredentials.readSecret(credential.secretKey))?.invocationSecret ?? null;
     }
 
     private async readReadyInstance(instanceId: string): Promise<ProviderInstanceRecord | null> {
@@ -72,8 +79,8 @@ export class ProviderInstanceAuthenticator {
     }
 }
 
-export function hashInstanceToken(token: string): string {
-    return createHash("sha256").update("ulvia-provider-control-token-v1\0").update(token).digest("base64url");
+export function hashInstanceAccessToken(token: string): string {
+    return createHash("sha256").update("ulvia-provider-instance-access-v1\0").update(token).digest("base64url");
 }
 
 function equalSecrets(received: string, expected: string): boolean {

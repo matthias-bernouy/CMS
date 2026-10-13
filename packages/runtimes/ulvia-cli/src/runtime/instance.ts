@@ -23,11 +23,11 @@ export async function provisionLocalInstance(
         throw new Error(`Local instance provisioning failed (${response.status})`);
     }
     const value = (await response.json()) as {
-        credentials?: { token?: unknown; sessionSecret?: unknown; kekHex?: unknown };
+        credentials?: { instanceAccessToken?: unknown; sessionSecret?: unknown; kekHex?: unknown };
         instance?: { id?: unknown; storageKey?: unknown; status?: unknown };
     };
     if (
-        typeof value.credentials?.token !== "string" ||
+        typeof value.credentials?.instanceAccessToken !== "string" ||
         typeof value.credentials.sessionSecret !== "string" ||
         typeof value.credentials.kekHex !== "string" ||
         typeof value.instance?.id !== "string" ||
@@ -39,7 +39,7 @@ export async function provisionLocalInstance(
     return {
         instanceId: value.instance.id,
         storageKey: value.instance.storageKey,
-        token: value.credentials.token,
+        token: value.credentials.instanceAccessToken,
         sessionSecret: value.credentials.sessionSecret,
         kekHex: value.credentials.kekHex,
     };

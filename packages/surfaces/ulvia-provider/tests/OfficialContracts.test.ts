@@ -41,7 +41,18 @@ test("mounts and dispatches every official CMS contract release", async () => {
     }
     expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(61);
     const runner = new BunRunner();
-    const runtime = { siteId: "site-a", dispatcher, report: report(contracts) };
+    const runtime = {
+        siteId: "site-a",
+        dispatcher,
+        report: report(contracts),
+        instance: {
+            id: "instance:contract-matrix",
+            status: "ready" as const,
+            revision: 1,
+            profile: { id: "ulvia.official", version: "1.1.0" },
+        },
+        contentRevision: async () => 1,
+    };
     new UlviaProvider(runner, {
         contracts: contracts.map(({ release }) => release),
         authenticateControlToken: async (token) =>

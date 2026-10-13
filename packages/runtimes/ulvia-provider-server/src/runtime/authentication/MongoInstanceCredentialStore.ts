@@ -16,8 +16,8 @@ export class MongoInstanceCredentialStore implements InstanceCredentialStore {
     async init(): Promise<void> {
         await Promise.all([
             this.#credentials.createIndex({ instanceId: 1 }, { unique: true }),
-            this.#credentials.createIndex({ keyId: 1 }, { unique: true }),
-            this.#credentials.createIndex({ tokenHash: 1 }, { unique: true }),
+            this.#credentials.createIndex({ invocationKeyId: 1 }, { unique: true }),
+            this.#credentials.createIndex({ accessTokenHash: 1 }, { unique: true }),
         ]);
     }
 
@@ -30,16 +30,16 @@ export class MongoInstanceCredentialStore implements InstanceCredentialStore {
         return serialize(document);
     }
 
-    async getByKeyId(keyId: string): Promise<InstanceCredential | null> {
-        return serializeNullable(await this.#credentials.findOne({ keyId, enabled: true }));
+    async getByInvocationKeyId(invocationKeyId: string): Promise<InstanceCredential | null> {
+        return serializeNullable(await this.#credentials.findOne({ invocationKeyId, enabled: true }));
     }
 
     async getByInstanceId(instanceId: string): Promise<InstanceCredential | null> {
         return serializeNullable(await this.#credentials.findOne({ instanceId }));
     }
 
-    async getByTokenHash(tokenHash: string): Promise<InstanceCredential | null> {
-        return serializeNullable(await this.#credentials.findOne({ tokenHash, enabled: true }));
+    async getByAccessTokenHash(accessTokenHash: string): Promise<InstanceCredential | null> {
+        return serializeNullable(await this.#credentials.findOne({ accessTokenHash, enabled: true }));
     }
 
     async disable(instanceId: string, expectedRevision: number): Promise<void> {
@@ -58,11 +58,11 @@ function serializeNullable(document: CredentialDocument | null): InstanceCredent
 }
 
 function serialize(document: CredentialDocument): InstanceCredential {
-    const { instanceId, keyId, tokenHash, secretKey, enabled, revision } = document;
+    const { instanceId, invocationKeyId, accessTokenHash, secretKey, enabled, revision } = document;
     return {
         instanceId,
-        keyId,
-        tokenHash,
+        invocationKeyId,
+        accessTokenHash,
         secretKey,
         enabled,
         revision,

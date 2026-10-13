@@ -3,7 +3,7 @@ import { providerInvocationKeyId, signProviderInvocationToken } from "@bernouy/c
 import type { ProviderInstanceRecord, ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
 import {
     ProviderInstanceAuthenticator,
-    hashInstanceToken,
+    hashInstanceAccessToken,
 } from "../../src/runtime/authentication/ProviderInstanceAuthenticator";
 import type {
     InstanceCredential,
@@ -12,6 +12,7 @@ import type {
 import type { EncryptedInstanceCredentials } from "../../src/runtime/authentication/EncryptedInstanceCredentials";
 
 const TOKEN = "opaque-instance-token-that-is-long-enough";
+const INVOCATION_SECRET = "opaque-invocation-secret-that-is-long-enough";
 const INSTANCE_ID = "instance:alpha";
 
 describe("ProviderInstanceAuthenticator", () => {
@@ -26,7 +27,7 @@ describe("ProviderInstanceAuthenticator", () => {
 
         expect((await authenticator.authenticateControlToken(TOKEN))?.id).toBe(INSTANCE_ID);
         const issuedAt = Math.floor(Date.now() / 1_000);
-        const signed = signProviderInvocationToken(TOKEN, {
+        const signed = signProviderInvocationToken(INVOCATION_SECRET, {
             version: 1,
             requestId: "00000000-0000-4000-8000-000000000001",
             instanceId: INSTANCE_ID,
@@ -69,15 +70,20 @@ function readyInstance(): ProviderInstanceRecord {
 
 function encryptedCredentials(): EncryptedInstanceCredentials {
     return {
-        readSecret: async () => ({ token: TOKEN, sessionSecret: "s".repeat(64), kekHex: "0".repeat(64) }),
+        readSecret: async () => ({
+            instanceAccessToken: TOKEN,
+            invocationSecret: INVOCATION_SECRET,
+            sessionSecret: "s".repeat(64),
+            kekHex: "0".repeat(64),
+        }),
     } as EncryptedInstanceCredentials;
 }
 
 function instanceCredential(): InstanceCredential {
     return {
         instanceId: INSTANCE_ID,
-        keyId: providerInvocationKeyId(TOKEN),
-        tokenHash: hashInstanceToken(TOKEN),
+        invocationKeyId: providerInvocationKeyId(INVOCATION_SECRET),
+        accessTokenHash: hashInstanceAccessToken(TOKEN),
         secretKey: "ULVIA_INSTANCE_ALPHA",
         enabled: true,
         revision: 1,
@@ -102,8 +108,8 @@ function credentialStore(credential: InstanceCredential): InstanceCredentialStor
         init: async () => undefined,
         put: async () => credential,
         getByInstanceId: async (instanceId) => (instanceId === credential.instanceId ? credential : null),
-        getByKeyId: async (keyId) => (keyId === credential.keyId ? credential : null),
-        getByTokenHash: async (hash) => (hash === credential.tokenHash ? credential : null),
+        getByInvocationKeyId: async (keyId) => (keyId === credential.invocationKeyId ? credential : null),
+        getByAccessTokenHash: async (hash) => (hash === credential.accessTokenHash ? credential : null),
         disable: async () => undefined,
     };
 }

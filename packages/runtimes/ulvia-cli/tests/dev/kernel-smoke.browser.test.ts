@@ -137,11 +137,14 @@ async function verifySecondInstanceIsolation(
         }),
     });
     expect(created.status).toBe(201);
-    const secondary = (await created.json()) as { instance: { id: string }; credentials: { token: string } };
+    const secondary = (await created.json()) as {
+        instance: { id: string };
+        credentials: { instanceAccessToken: string };
+    };
     expect(secondary.instance.id).not.toBe(primary.instanceId);
 
     const reports = await Promise.all(
-        [primary.token, secondary.credentials.token].map((token) =>
+        [primary.token, secondary.credentials.instanceAccessToken].map((token) =>
             fetch(`${providerUrl}/ulvia/report`, { headers: { authorization: `Bearer ${token}` } }).then((response) =>
                 response.json(),
             ),

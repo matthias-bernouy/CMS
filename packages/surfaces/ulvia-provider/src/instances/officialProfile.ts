@@ -1,4 +1,4 @@
-export const OFFICIAL_INSTANCE_PROFILE = Object.freeze({
+const PROFILE_1_0_0 = Object.freeze({
     id: "ulvia.official",
     version: "1.0.0",
     manifest: {
@@ -24,4 +24,30 @@ export const OFFICIAL_INSTANCE_PROFILE = Object.freeze({
     },
 });
 
-export type OfficialInstanceProfile = typeof OFFICIAL_INSTANCE_PROFILE;
+export type OfficialInstanceProfile = Readonly<{
+    id: string;
+    version: string;
+    manifest: Readonly<{ providerId: string; version: string; digest: string }>;
+    contracts: readonly Readonly<{ contractId: string; version: string; digest: string }>[];
+    collection: Readonly<{
+        publisherId: string;
+        collectionId: string;
+        version: string;
+        digest: string;
+    }>;
+}>;
+
+const PROFILE_1_1_0: OfficialInstanceProfile = Object.freeze({
+    ...PROFILE_1_0_0,
+    version: "1.1.0",
+});
+
+export const SUPPORTED_INSTANCE_PROFILES = Object.freeze([PROFILE_1_0_0, PROFILE_1_1_0]);
+
+export const OFFICIAL_INSTANCE_PROFILE = PROFILE_1_1_0;
+
+export function resolveOfficialInstanceProfile(id: string, version: string): OfficialInstanceProfile | null {
+    return SUPPORTED_INSTANCE_PROFILES.find((profile) => profile.id === id && profile.version === version) ?? null;
+}
+
+export const SYSTEM_CONTRACT_IDS = Object.freeze(PROFILE_1_0_0.contracts.map(({ contractId }) => contractId));
