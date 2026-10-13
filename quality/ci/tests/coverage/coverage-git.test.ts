@@ -40,3 +40,42 @@ test("coverage policy reads the baseline from its legacy location during migrati
     const baseline = readReferenceBaseline("HEAD", repository, join(repository, "quality/ci/coverage/baseline.json"));
     expect(baseline?.bunVersion).toBe("1.3.14");
 });
+
+test("coverage policy normalizes source ordering in a historical baseline", async () => {
+    const repository = await mkdtemp(join(tmpdir(), "cmscore-coverage-git-"));
+    repositories.push(repository);
+    git(repository, ["init", "--quiet"]);
+    git(repository, ["config", "user.email", "quality@example.invalid"]);
+    git(repository, ["config", "user.name", "Quality Test"]);
+
+    const baselinePath = join(repository, "quality/ci/coverage/baseline.json");
+    await mkdir(dirname(baselinePath), { recursive: true });
+    await writeFile(
+        baselinePath,
+        JSON.stringify({
+            schemaVersion: 1,
+            bunVersion: "1.4.2",
+            packages: {
+                "@example/package": {
+                    path: "packages/features/example",
+                    coveredSourceFiles: [
+                        "packages/features/example/src/z.ts",
+                        "packages/features/example/src/a.ts",
+                    ],
+                    uncoveredSourceFiles: [],
+                    files: { covered: 2, total: 2 },
+                    functions: { covered: 1, total: 1 },
+                    lines: { covered: 1, total: 1 },
+                },
+            },
+        }),
+    );
+    git(repository, ["add", "--all"]);
+    git(repository, ["commit", "--quiet", "--message", "unsorted coverage baseline"]);
+
+    const baseline = readReferenceBaseline("HEAD", repository, baselinePath);
+    expect(baseline?.packages["@example/package"]?.coveredSourceFiles).toEqual([
+        "packages/features/example/src/a.ts",
+        "packages/features/example/src/z.ts",
+    ]);
+});

@@ -69,7 +69,7 @@ export function readReferenceBaseline(
     for (const repositoryPath of repositoryPaths) {
         const show = git(["show", `${reference}:${repositoryPath}`], repositoryRoot);
         if (show.exitCode === 0) {
-            return parseBaseline(show.stdout, `Coverage baseline at ${reference}`);
+            return parseHistoricalBaseline(show.stdout, `Coverage baseline at ${reference}`);
         }
         readFailure ||= show.stderr.trim();
     }
@@ -82,4 +82,30 @@ export function readReferenceBaseline(
         return undefined;
     }
     throw new Error(readFailure || `Cannot read coverage baseline at ${reference}`);
+}
+
+function parseHistoricalBaseline(contents: string, label: string): CoverageBaseline {
+    let value: unknown;
+    try {
+        value = JSON.parse(contents) as unknown;
+    } catch {
+        return parseBaseline(contents, label);
+    }
+    if (value && typeof value === "object") {
+        const packages = (value as { packages?: unknown }).packages;
+        if (packages && typeof packages === "object") {
+            for (const coverage of Object.values(packages)) {
+                if (!coverage || typeof coverage !== "object") {
+                    continue;
+                }
+                const record = coverage as Record<string, unknown>;
+                for (const field of ["coveredSourceFiles", "uncoveredSourceFiles"] as const) {
+                    if (Array.isArray(record[field]) && record[field].every((path) => typeof path === "string")) {
+                        record[field] = [...record[field]].sort();
+                    }
+                }
+            }
+        }
+    }
+    return parseBaseline(JSON.stringify(value), label);
 }
