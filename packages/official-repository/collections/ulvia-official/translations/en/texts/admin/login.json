@@ -1,0 +1,15 @@
+{
+    "text.ui-administration-access-is-restricted-to-approved-accounts.label": "Administration access restriction",
+    "text.ui-continue-with.label": "Alternative sign-in separator",
+    "text.ui-invalid-email-or-password.label": "Invalid credentials message",
+    "text.ui-loading-sign-in-methods.label": "Loading sign-in methods",
+    "text.ui-no-sign-in-method-is-currently-available.label": "No sign-in method available",
+    "text.ui-password.label": "Password",
+    "text.ui-sign-in.label": "Sign in",
+    "text.ui-sign-in-methods-unavailable.label": "Sign-in methods unavailable",
+    "text.ui-sign-in-to-continue-to-your-administration-workspace.label": "Sign-in introduction",
+    "text.ui-site-administration.label": "Site administration",
+    "text.ui-too-many-attempts-please-wait-and-try-again.label": "Sign-in rate limit message",
+    "text.ui-ulvia-admin.label": "Ulvia Admin",
+    "text.ui-welcome-back.label": "Welcome back"
+}

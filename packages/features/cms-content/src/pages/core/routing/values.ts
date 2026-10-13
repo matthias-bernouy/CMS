@@ -59,11 +59,7 @@ export function nextPageRoute(
 
 export function validateRegisteredPagePath(value: string): string {
     const path = validatePagePath(value);
-    if (
-        ["/.cms", "/api", "/assets", "/auth", "/login"].some(
-            (prefix) => path === prefix || path.startsWith(`${prefix}/`),
-        )
-    ) {
+    if (["/.cms", "/api", "/assets", "/auth"].some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
         throw new TypeError("Page path is reserved by the kernel.");
     }
     return path;

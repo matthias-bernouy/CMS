@@ -11,6 +11,8 @@
     "page.diagnostics.name": "Diagnostics",
     "page.files.description": "Parcourez et organisez la bibliothèque de fichiers des auteurs.",
     "page.files.name": "Fichiers",
+    "page.login.description": "Authentifiez-vous avant d’accéder à l’espace d’administration.",
+    "page.login.name": "Connexion",
     "page.overview.description": "Gérez les Pages du site avec l’Ulvia Provider local sélectionné.",
     "page.overview.name": "Pages",
     "page.providers.description": "Consultez les providers approuvés et les contrats exacts sélectionnés.",

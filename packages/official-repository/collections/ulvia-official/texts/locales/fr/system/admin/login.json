@@ -1,0 +1,15 @@
+{
+    "ui-administration-access-is-restricted-to-approved-accounts": "L’accès à l’administration est réservé aux comptes autorisés.",
+    "ui-continue-with": "Ou continuer avec",
+    "ui-invalid-email-or-password": "Adresse e-mail ou mot de passe incorrect.",
+    "ui-loading-sign-in-methods": "Chargement des méthodes de connexion…",
+    "ui-no-sign-in-method-is-currently-available": "Aucune méthode de connexion n’est disponible. Contactez l’administrateur du site.",
+    "ui-password": "Mot de passe",
+    "ui-sign-in": "Se connecter",
+    "ui-sign-in-methods-unavailable": "Les méthodes de connexion n’ont pas pu être chargées. Réessayez.",
+    "ui-sign-in-to-continue-to-your-administration-workspace": "Connectez-vous pour accéder à votre espace d’administration.",
+    "ui-site-administration": "Administration du site",
+    "ui-too-many-attempts-please-wait-and-try-again": "Trop de tentatives. Patientez avant de réessayer.",
+    "ui-ulvia-admin": "Administration Ulvia",
+    "ui-welcome-back": "Bon retour"
+}

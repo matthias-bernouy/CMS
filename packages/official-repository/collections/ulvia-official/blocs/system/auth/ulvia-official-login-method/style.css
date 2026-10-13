@@ -1,0 +1,5 @@
+:host { display: block; }
+[part="wrapper"] { display: contents; }
+::slotted(button) { display: inline-flex; width: 100%; min-height: var(--ulvia-official-control-height-md, 2.75rem); align-items: center; justify-content: center; padding: var(--ulvia-official-spacing-sm, .75rem) var(--ulvia-official-spacing-md, 1rem); border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c5d0cb); border-radius: var(--ulvia-official-radius-md, .5rem); color: var(--ulvia-official-text-primary, #25322c); background: var(--ulvia-official-background-base, #fff); font: inherit; font-weight: var(--ulvia-official-font-weight-semibold, 600); cursor: pointer; }
+::slotted(button:hover) { border-color: var(--ulvia-official-border-strong, #879990); background: var(--ulvia-official-background-subtle, #f8faf9); }
+::slotted(button:focus-visible) { outline: 3px solid var(--ulvia-official-focus-ring, #74c6a6); outline-offset: 3px; }

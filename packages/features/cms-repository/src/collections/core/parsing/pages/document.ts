@@ -13,11 +13,7 @@ export function parseDefaultPath(value: unknown, path: string): string {
     ) {
         return invalid("must be a normalized absolute path without query or fragment", path);
     }
-    if (
-        ["/.cms", "/api", "/assets", "/auth", "/login"].some(
-            (prefix) => route === prefix || route.startsWith(`${prefix}/`),
-        )
-    ) {
+    if (["/.cms", "/api", "/assets", "/auth"].some((prefix) => route === prefix || route.startsWith(`${prefix}/`))) {
         return invalid("Page path is reserved by the kernel", path);
     }
     return route;

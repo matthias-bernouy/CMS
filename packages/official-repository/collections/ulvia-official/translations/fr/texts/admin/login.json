@@ -1,0 +1,15 @@
+{
+    "text.ui-administration-access-is-restricted-to-approved-accounts.label": "Restriction d’accès à l’administration",
+    "text.ui-continue-with.label": "Séparateur des autres méthodes de connexion",
+    "text.ui-invalid-email-or-password.label": "Message d’identifiants incorrects",
+    "text.ui-loading-sign-in-methods.label": "Chargement des méthodes de connexion",
+    "text.ui-no-sign-in-method-is-currently-available.label": "Aucune méthode de connexion disponible",
+    "text.ui-password.label": "Mot de passe",
+    "text.ui-sign-in.label": "Se connecter",
+    "text.ui-sign-in-methods-unavailable.label": "Méthodes de connexion indisponibles",
+    "text.ui-sign-in-to-continue-to-your-administration-workspace.label": "Introduction de la connexion",
+    "text.ui-site-administration.label": "Administration du site",
+    "text.ui-too-many-attempts-please-wait-and-try-again.label": "Message de limitation des connexions",
+    "text.ui-ulvia-admin.label": "Administration Ulvia",
+    "text.ui-welcome-back.label": "Bon retour"
+}

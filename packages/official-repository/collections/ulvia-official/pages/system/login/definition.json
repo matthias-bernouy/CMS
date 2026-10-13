@@ -1,0 +1,7 @@
+{
+    "id": "login",
+    "defaultPath": "/login",
+    "name": "page.login.name",
+    "description": "page.login.description",
+    "requires": []
+}

@@ -1,0 +1,80 @@
+[
+    {
+        "id": "ui-administration-access-is-restricted-to-approved-accounts",
+        "label": "text.ui-administration-access-is-restricted-to-approved-accounts.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-continue-with",
+        "label": "text.ui-continue-with.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-invalid-email-or-password",
+        "label": "text.ui-invalid-email-or-password.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-loading-sign-in-methods",
+        "label": "text.ui-loading-sign-in-methods.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-no-sign-in-method-is-currently-available",
+        "label": "text.ui-no-sign-in-method-is-currently-available.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-password",
+        "label": "text.ui-password.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-sign-in",
+        "label": "text.ui-sign-in.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-sign-in-methods-unavailable",
+        "label": "text.ui-sign-in-methods-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-sign-in-to-continue-to-your-administration-workspace",
+        "label": "text.ui-sign-in-to-continue-to-your-administration-workspace.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-site-administration",
+        "label": "text.ui-site-administration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-too-many-attempts-please-wait-and-try-again",
+        "label": "text.ui-too-many-attempts-please-wait-and-try-again.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-ulvia-admin",
+        "label": "text.ui-ulvia-admin.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-welcome-back",
+        "label": "text.ui-welcome-back.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    }
+]

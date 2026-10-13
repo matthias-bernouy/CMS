@@ -1,0 +1,21 @@
+{
+    "kind": "composition",
+    "id": "ulvia-official-login-page",
+    "label": "bloc.login-page.label",
+    "description": "bloc.login-page.description",
+    "category": "bloc.category.administration",
+    "internal": true,
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-center",
+        "ulvia-official-cover",
+        "ulvia-official-field",
+        "ulvia-official-form-actions",
+        "ulvia-official-input",
+        "ulvia-official-login-method",
+        "ulvia-official-stack",
+        "ulvia-official-surface"
+    ],
+    "requires": [],
+    "slots": {}
+}

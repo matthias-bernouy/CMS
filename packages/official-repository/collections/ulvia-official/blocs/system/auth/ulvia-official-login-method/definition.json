@@ -1,0 +1,14 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-login-method",
+    "label": "bloc.login-method.label",
+    "description": "bloc.login-method.description",
+    "category": "bloc.category.administration",
+    "internal": true,
+    "nativeElement": {
+        "accepts": ["button"]
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

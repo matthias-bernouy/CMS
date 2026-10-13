@@ -11,6 +11,8 @@
     "page.diagnostics.name": "Diagnostics",
     "page.files.description": "Browse and organize the author file library.",
     "page.files.name": "Files",
+    "page.login.description": "Authenticate before entering the administration workspace.",
+    "page.login.name": "Sign in",
     "page.overview.description": "Manage site Pages through the selected local Ulvia Provider.",
     "page.overview.name": "Pages",
     "page.providers.description": "Inspect approved providers and exact selected contracts.",
