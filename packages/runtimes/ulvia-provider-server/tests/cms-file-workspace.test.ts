@@ -1,7 +1,11 @@
 import { expect, test } from "bun:test";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { CmsFilesService } from "@bernouy/cms-files";
 import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
+import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { CmsFileWorkspace } from "../src/runtime/stores/CmsFileWorkspace";
 
@@ -15,6 +19,9 @@ test("the managed file workspace persists its namespace authority without exposi
     const secrets = new InMemorySecretStore();
     const first = new CmsFileWorkspace(files, secrets);
     const initial = await first.get({ limit: 10 });
+    const contract = await officialFilesContract();
+    const workspaceGet = contract.capabilities.find(({ id }) => id === "workspace.get")!;
+    expect(() => validateSchemaValue(workspaceGet.output, initial)).not.toThrow();
     const upload = await first.createUpload({ filename: "asset.txt", size: 5 });
     await files.writeUpload(upload.uploadId, upload.uploadToken, new Blob(["hello"]).stream());
     const reference = await first.completeUpload(upload.uploadId);
@@ -37,3 +44,11 @@ test("the managed file workspace persists its namespace authority without exposi
     await resumed.deleteFile(reference.fileId);
     expect((await resumed.get({ limit: 10 })).items).toEqual([]);
 });
+
+async function officialFilesContract() {
+    const path = resolve(
+        import.meta.dir,
+        "../../ulvia-cli/src/bootstrap/resources/contracts/cms/ulvia.cms.files/definition.json",
+    );
+    return (await admitContractReleaseJson(await readFile(path))).release;
+}
