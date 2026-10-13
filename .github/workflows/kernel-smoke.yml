@@ -1,6 +1,10 @@
 name: Kernel fresh-install smoke
 
 on:
+  pull_request:
+  push:
+    branches:
+      - master
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
