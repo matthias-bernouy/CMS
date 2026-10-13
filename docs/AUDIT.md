@@ -1,6 +1,6 @@
 # Repository Audit
 
-This audit describes the CmsCore repository as reviewed on 2026-10-08. It is a
+This audit describes the CmsCore repository as reviewed on 2026-10-13. It is a
 source-backed engineering assessment, not a security certification or a claim
 that every production failure mode has been exercised.
 
@@ -13,27 +13,29 @@ and administration is rendered from collection-owned Pages rather than a second 
 application model.
 
 The repository is suitable for continued product development and a controlled
-single-runtime deployment. It should not yet be described as ready for a
+single-node deployment with separate Ulvia Provider and Kernel processes. It
+should not yet be described as ready for a
 critical, horizontally scaled production service. The remaining risks are
 mostly long-lived compatibility, operational recovery, provider conformance and
 deployment validation rather than unclear ownership between packages.
 
 ## Verified Shape
 
-The workspace contains 18 packages:
+The workspace contains 19 packages:
 
 - seven Foundation packages;
-- five feature packages: authentication, content, files, gateway and repository;
+- six feature packages: authentication, content, files, gateway, repository and SEO;
 - two HTTP applications: Ulvia Provider and the site Kernel;
-- three executable runtimes: CMS server, official repository server and CLI.
+- four executable runtimes: Ulvia Provider server, Kernel server, official
+  repository server and CLI.
 
 The official repository currently contains:
 
-- eight `ulvia.cms.*` contracts with 43 capabilities;
-- one future provider-only CMS-instance contract that the local Ulvia Provider
-  does not claim;
+- eight `ulvia.cms.*` contracts with 61 capabilities;
+- one provider-only CMS-instance discovery contract with two capabilities that
+  the `ulvia.official` data-plane manifest does not claim;
 - the `ulvia.official` provider manifest;
-- the `ulvia-official` collection with 141 Bloc definitions, 119 theme tokens
+- the `ulvia-official` collection with 87 Bloc definitions, 119 theme tokens
   and seven administration Pages covering the eight CMS domains.
 
 The supported package dependency direction is:
@@ -52,8 +54,10 @@ The final review run completed with:
 
 - all nine `check:all` diagnostics passing;
 - the complete workspace build passing;
-- more than 2,100 tests passing, no failure and one explicitly opt-in fresh-install
-  browser smoke test skipped;
+- 2,188 tests passing, no failure and one explicitly opt-in fresh-install
+  browser smoke test skipped by the standard suite;
+- that fresh-install browser smoke passing separately against a new local stack,
+  including administration mutations, a second isolated instance and restart;
 - all tracked relative Markdown links resolving;
 - no whitespace error in the resulting patch.
 
@@ -76,9 +80,10 @@ advisory audit because it requires current registry access.
   `cms-repository` owns immutable contracts, providers and collections.
   `cms-gateway` owns live provider invocation and identities; Files providers
   own file and image semantics.
-- The official CMS provider behavior is the `ulvia-provider` surface. The future
-  `ulvia.provider.cms-instances` control plane remains a separate provider
-  product concern.
+- The official CMS provider behavior is the `ulvia-provider` surface. Its
+  authenticated operator API owns instance creation and provisioning, while the
+  unclaimed `ulvia.provider.cms-instances` contract remains a separate provider
+  discovery concern.
 
 ### Contracts, Providers And Gateway
 
@@ -179,9 +184,9 @@ penetration testing, dependency monitoring or deployment review.
    and operator diagnostics are not yet systematic.
 2. Full production backup/restore, historical KEK recovery, interrupted
    repository publication and corrupt-state recovery need black-box drills.
-3. The supported topology is one active CMS runtime and one active official
-   repository writer. Complete multi-replica fencing and split-brain behavior
-   are not proven.
+3. The supported topology is one active Kernel per instance, one Ulvia Provider
+   process and one active official repository writer. Complete multi-replica
+   fencing and split-brain behavior are not proven.
 4. Proxy headers, external TLS termination, shutdown under load and deployment
    rollback need environment-level tests, not only package tests.
 
@@ -210,9 +215,10 @@ penetration testing, dependency monitoring or deployment review.
    environment provisioning, approval policy and operator-visible evidence
    history remain incomplete; suites are embedded in evidence rather than
    catalogued independently.
-4. Generic CMS-instance creation, backup, restore and runtime upgrades belong to a
-   future provider such as the official local provider or Ulvia Cloud. They are
-   not `ulvia.cms.*` data-plane capabilities.
+4. Ulvia Provider now owns operator-authenticated instance creation, durable
+   credentials and idempotent installation of the official profile. Backup,
+   restore, runtime upgrades and production process orchestration remain
+   incomplete and are not `ulvia.cms.*` data-plane capabilities.
 5. Package licensing metadata is not yet fully reconciled between the workspace
    and direct products.
 

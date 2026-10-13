@@ -23,8 +23,9 @@ The separate `dev/` directory holds credentials, CMS files, and MongoDB data.
 `dev` mounts the authenticated Ulvia Provider surface on loopback port 5103.
 That port is fixed because it is part of the admitted official Provider
 manifest; `ULVIA_DEV_PROVIDER_PORT` cannot select another origin.
-`dev credentials` prints its bearer token alongside the CMS administrator
-credentials.
+`dev credentials` prints the CMS administrator email and password. Repository,
+Provider operator and instance bearer tokens remain in the private `dev/`
+directory and are not printed as user credentials.
 `release <resource-directory>` reads `definition.json` and routes by `kind`:
 `collection`, `contract`, or `provider-manifest`. It validates and stores one
 immutable release. A provider manifest must reference exact contract releases
@@ -82,8 +83,9 @@ executable package.
 resolution without deleting its exact historical bytes. `restore` exposes it
 again. Contract yanks block new dependent publications while previously
 published provider manifests remain readable. The loopback dev server uses the
-same write protocol and prints its generated repository token through `dev
-credentials`. The removed integration repository/Supabase bridge is not run.
+same write protocol and keeps its generated repository token in the private
+runtime directory. The removed integration repository/Supabase bridge is not
+run.
 
 A collection keeps immutable administration copy in recursive locale
 directories such as `translations/en/collection.json` and
@@ -129,11 +131,12 @@ bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.jobs
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.theme
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.pages
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.providers
+bun run ulvia -- release packages/official-repository/contracts/ulvia.provider.cms-instances
 bun run ulvia -- release packages/official-repository/providers/ulvia.official
 bun run ulvia -- dev
 ```
 
-Local `dev` connects and selects this provider automatically. Manual connection
-uses `http://127.0.0.1:5103` and the bearer token from `dev credentials`.
-Connection review validates the runtime report and exact manifest claims; it
-does not yet execute a live conformance suite.
+Local `dev` provisions an instance through the Provider operator API, then
+connects and selects the official Provider automatically. Connection review
+validates the runtime report and exact manifest claims; it does not yet execute
+a live conformance suite.

@@ -16,15 +16,18 @@ bun run ulvia -- dev credentials
 bun run ulvia -- dev stop
 ```
 
-The CLI manages a persistent local CMS stack with MongoDB. `ULVIA_DATA_DIR`
+The CLI manages a persistent local stack with MongoDB, an Ulvia Provider, a CMS
+Kernel and an immutable resource repository. `ULVIA_DATA_DIR`
 overrides its data directory; `ULVIA_DEV_KERNEL_PORT`,
 `ULVIA_DEV_MONGO_PORT`, and
 `ULVIA_DEV_REPOSITORY_PORT` override the local ports. `release` validates an
 authored collection, contract, or provider manifest into the local immutable
 repository. `push` and `pull` transfer exact coordinates to and from a compatible
 HTTPS repository; `yank` and `restore` manage reversible catalogue availability.
-`dev credentials` prints the local repository write token. Site installation is
-performed through the Kernel administration Pages rather than the CLI.
+`dev` idempotently provisions the local instance through the Provider operator
+API, installs the official profile and starts its Kernel. `dev credentials`
+prints only the administrator email and password; repository, operator and
+instance tokens remain in the private local runtime directory.
 
 ## Local KEK Rotation
 
@@ -70,8 +73,8 @@ build when generated browser assets are affected. Browser/network integration
 tests require an environment that permits Chromium and local listeners.
 
 The fresh-install Kernel smoke test additionally requires Docker Compose. It is
-opt-in locally and runs every night, or on demand, through the dedicated GitHub
-Actions workflow.
+opt-in locally and runs for every pull request, every push to `master`, every
+night and on demand through the dedicated GitHub Actions workflow.
 
 `check:dead-code` exits with a failure when it finds unused declarations,
 exports, exported types or package dependencies. Public exports can be
