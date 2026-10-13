@@ -12,18 +12,12 @@ import {
     type CmsServerProcess,
     type DevPorts,
 } from "../runtime/cms";
+import { resolveDevPorts } from "../runtime/devPorts";
 import { provisionLocalInstance } from "../runtime/instance";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
 import type { UlviaPaths } from "../runtime/paths";
 import { bootstrapOfficialRepository } from "./bootstrap";
-import { assertDevServersStopped, createFreshDevPaths, resetDevData } from "./devData";
-
-const DEFAULT_PORTS: DevPorts = Object.freeze({
-    kernel: 5100,
-    mongo: 27019,
-    repository: 5102,
-    provider: 5103,
-});
+import { resetCurrentDevEnvironment, runFreshDevEnvironment } from "./devData";
 
 export async function devCommand(
     args: readonly string[],
@@ -59,11 +53,9 @@ export async function devCommand(
     if (action === "new") {
         expectArgumentCount(args, 2, "Usage: ulvia dev new <absolute-data-directory>");
         const ports = resolveDevPorts(environment);
-        await assertDevServersStopped(ports);
-        const freshPaths = await createFreshDevPaths(args[1] ?? "", paths);
-        await stopLocalMongo(paths.mongo);
-        log(`Created isolated development environment: ${freshPaths.data}`);
-        await runDev(freshPaths, log, ports);
+        await runFreshDevEnvironment(args[1] ?? "", paths, ports, log, async (freshPaths, freshPorts) => {
+            await runDev(freshPaths, log, freshPorts);
+        });
         return;
     }
     if (action === "reset") {
@@ -72,11 +64,7 @@ export async function devCommand(
                 "Usage: ulvia dev reset --yes (permanently deletes the current dev instance and repository)",
             );
         }
-        await assertDevServersStopped(resolveDevPorts(environment));
-        await stopLocalMongo(paths.mongo);
-        await resetDevData(paths);
-        log(`Reset development environment: ${paths.data}`);
-        log("Run ulvia dev to provision a fresh instance.");
+        await resetCurrentDevEnvironment(paths, resolveDevPorts(environment), log);
         return;
     }
     throw new Error(`Unknown dev action: ${action}`);
@@ -134,37 +122,6 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     } finally {
         repository.stop();
     }
-}
-
-export function resolveDevPorts(environment: Record<string, string | undefined>): DevPorts {
-    const configuredProviderPort = environment.ULVIA_DEV_PROVIDER_PORT?.trim();
-    if (configuredProviderPort && configuredProviderPort !== String(DEFAULT_PORTS.provider)) {
-        throw new Error(
-            `ULVIA_DEV_PROVIDER_PORT cannot override the official Provider origin; expected ${DEFAULT_PORTS.provider}`,
-        );
-    }
-    const ports: DevPorts = {
-        kernel: readPort(environment, "ULVIA_DEV_KERNEL_PORT", DEFAULT_PORTS.kernel),
-        mongo: readPort(environment, "ULVIA_DEV_MONGO_PORT", DEFAULT_PORTS.mongo),
-        repository: readPort(environment, "ULVIA_DEV_REPOSITORY_PORT", DEFAULT_PORTS.repository),
-        provider: DEFAULT_PORTS.provider,
-    };
-    if (new Set(Object.values(ports)).size !== Object.values(ports).length) {
-        throw new Error("Ulvia dev ports must be distinct");
-    }
-    return ports;
-}
-
-function readPort(environment: Record<string, string | undefined>, name: string, fallback: number): number {
-    const raw = environment[name]?.trim();
-    if (!raw) {
-        return fallback;
-    }
-    const port = Number(raw);
-    if (!/^\d+$/u.test(raw) || !Number.isInteger(port) || port < 1 || port > 65_535) {
-        throw new Error(`${name} must be an integer between 1 and 65535`);
-    }
-    return port;
 }
 
 async function superviseServers(kernel: CmsServerProcess, provider: CmsServerProcess): Promise<void> {

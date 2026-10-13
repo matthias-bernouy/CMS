@@ -2,7 +2,36 @@ import { mkdir, readFile, rm } from "node:fs/promises";
 import { createConnection } from "node:net";
 import { join } from "node:path";
 import type { DevPorts } from "../runtime/cms";
+import { stopLocalMongo } from "../runtime/mongo";
 import { ensureUlviaPaths, resolveUlviaPaths, type UlviaPaths } from "../runtime/paths";
+
+type StartDev = (paths: UlviaPaths, ports: DevPorts) => Promise<void>;
+
+export async function runFreshDevEnvironment(
+    dataDirectory: string,
+    current: UlviaPaths,
+    ports: DevPorts,
+    log: (message: string) => void,
+    start: StartDev,
+): Promise<void> {
+    await assertDevServersStopped(ports);
+    const freshPaths = await createFreshDevPaths(dataDirectory, current);
+    await stopLocalMongo(current.mongo);
+    log(`Created isolated development environment: ${freshPaths.data}`);
+    await start(freshPaths, ports);
+}
+
+export async function resetCurrentDevEnvironment(
+    paths: UlviaPaths,
+    ports: DevPorts,
+    log: (message: string) => void,
+): Promise<void> {
+    await assertDevServersStopped(ports);
+    await stopLocalMongo(paths.mongo);
+    await resetDevData(paths);
+    log(`Reset development environment: ${paths.data}`);
+    log("Run ulvia dev to provision a fresh instance.");
+}
 
 export async function createFreshDevPaths(dataDirectory: string, current: UlviaPaths): Promise<UlviaPaths> {
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: dataDirectory });
