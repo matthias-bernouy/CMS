@@ -1,4 +1,4 @@
-import type { CmsFilesService, FileReference, NamespaceRecord } from "@bernouy/cms-files";
+import type { CmsFilesService, FileReference } from "@bernouy/cms-files";
 import type { SecretStore } from "@bernouy/secret-store";
 import type { CmsFileWorkspace as CmsFileWorkspacePort } from "@bernouy/ulvia-provider";
 
