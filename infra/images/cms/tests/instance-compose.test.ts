@@ -15,8 +15,10 @@ describe("per-instance Compose rendering", () => {
             ULVIA_PROVIDER_URL: "http://ulvia-provider:5103",
             ULVIA_INSTANCE_TOKEN: "g".repeat(48),
             CMS_SESSION_SECRET: "c".repeat(64),
-            CMS_KEK_HEX: "d".repeat(64),
+            CMS_KEK_ACTIVE_ID: "instance",
+            CMS_KEK_RING_JSON: JSON.stringify({ instance: "d".repeat(64) }),
         });
+        expect(cms.environment?.CMS_KEK_HEX).toBeUndefined();
         expect(cms.environment?.ULVIA_PROVIDER_OPERATOR_TOKEN).toBeUndefined();
         expect(cms.network_mode).toBeUndefined();
         expect(Object.keys(cms.networks ?? {}).sort()).toEqual(["cms_mongo", "cms_provider", "cms_proxy"]);

@@ -164,8 +164,8 @@ CMS_IMAGE=bernouy/cms:2026.10.12-1
 MONGO_URL=mongodb://cms_client:<password>@mongo:27017/<database>?authSource=<database>
 ULVIA_INSTANCE_TOKEN=<credentials.token>
 ULVIA_INSTANCE_STORAGE_KEY=<instance.storageKey>
+ULVIA_INSTANCE_KEK_HEX=<credentials.kekHex>
 CMS_SESSION_SECRET=<credentials.sessionSecret>
-CMS_KEK_HEX=<credentials.kekHex>
 ```
 
 ```bash

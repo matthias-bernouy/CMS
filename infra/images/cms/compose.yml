@@ -15,7 +15,8 @@ services:
             ULVIA_PROVIDER_URL: http://ulvia-provider:5103
             ULVIA_INSTANCE_TOKEN: ${ULVIA_INSTANCE_TOKEN:?ULVIA_INSTANCE_TOKEN must be set}
             CMS_SESSION_SECRET: ${CMS_SESSION_SECRET:?CMS_SESSION_SECRET must be set}
-            CMS_KEK_HEX: ${CMS_KEK_HEX:?CMS_KEK_HEX must be set}
+            CMS_KEK_ACTIVE_ID: instance
+            CMS_KEK_RING_JSON: '{"instance":"${ULVIA_INSTANCE_KEK_HEX:?ULVIA_INSTANCE_KEK_HEX must be set}"}'
             CMS_FILES_DIR: /var/lib/cms/files/${ULVIA_INSTANCE_STORAGE_KEY:?ULVIA_INSTANCE_STORAGE_KEY must be set}
             MONGO_URL: ${MONGO_URL:?MONGO_URL must select the provisioned instance database}
             CMS_AUTH_SITE_NAME: ${CMS_AUTH_SITE_NAME:-CMS}
