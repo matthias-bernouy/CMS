@@ -60,6 +60,34 @@ export class EncryptedInstanceCredentials implements ProviderInstanceCredentials
         }
     }
 
+    async stageAdministrator(instanceId: string, administrator: { email: string; password: string }): Promise<void> {
+        const credential = await this.requiredCredential(instanceId);
+        await this.secrets.set(`${credential.secretKey}_BOOTSTRAP`, JSON.stringify(administrator));
+    }
+
+    async readAdministrator(instanceId: string): Promise<{ email: string; password: string } | null> {
+        const credential = await this.credentials.getByInstanceId(instanceId);
+        if (!credential) {
+            return null;
+        }
+        const value = await this.secrets.get(`${credential.secretKey}_BOOTSTRAP`);
+        if (!value) {
+            return null;
+        }
+        const parsed: unknown = JSON.parse(value);
+        if (!validAdministrator(parsed)) {
+            throw new Error("Stored Provider bootstrap administrator is invalid");
+        }
+        return parsed;
+    }
+
+    async clearAdministrator(instanceId: string): Promise<void> {
+        const credential = await this.credentials.getByInstanceId(instanceId);
+        if (credential) {
+            await this.secrets.delete(`${credential.secretKey}_BOOTSTRAP`);
+        }
+    }
+
     async readSecret(secretKey: string): Promise<ProviderInstanceRuntimeCredentials | null> {
         const value = await this.secrets.get(secretKey);
         if (!value) {
@@ -76,6 +104,26 @@ export class EncryptedInstanceCredentials implements ProviderInstanceCredentials
         }
         return parsed;
     }
+
+    private async requiredCredential(instanceId: string) {
+        const credential = await this.credentials.getByInstanceId(instanceId);
+        if (!credential) {
+            throw new Error(`Instance credential is unavailable: ${instanceId}`);
+        }
+        return credential;
+    }
+}
+
+function validAdministrator(value: unknown): value is { email: string; password: string } {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return false;
+    }
+    const record = value as Record<string, unknown>;
+    return (
+        Object.keys(record).sort().join(",") === "email,password" &&
+        typeof record.email === "string" &&
+        typeof record.password === "string"
+    );
 }
 
 function validRuntimeCredentials(value: unknown): value is ProviderInstanceRuntimeCredentials {

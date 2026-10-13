@@ -9,6 +9,7 @@ import { ProviderInstanceAuthenticator } from "./runtime/authentication/Provider
 import { createEnvelopeSecretCrypto } from "./runtime/stores/envelopeCrypto";
 import { ProviderInstanceHost } from "./runtime/instances/ProviderInstanceHost";
 import { MongoProviderInstanceRegistry } from "./runtime/instances/MongoProviderInstanceRegistry";
+import { MongoInstanceTransitionStore } from "./runtime/instances/MongoInstanceTransitionStore";
 import { loadOfficialContracts } from "./runtime/instances/officialArtifacts";
 import { mountUlviaProvider } from "./runtime/mountUlviaProvider";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
@@ -30,7 +31,8 @@ const secrets = new ValidatingSecretStore(
 );
 const instances = new MongoProviderInstanceRegistry(controlDb);
 const credentialStore = new MongoInstanceCredentialStore(controlDb);
-await Promise.all([instances.init(), credentialStore.init()]);
+const transitions = new MongoInstanceTransitionStore(controlDb);
+await Promise.all([instances.init(), credentialStore.init(), transitions.init()]);
 const credentials = new EncryptedInstanceCredentials(credentialStore, secrets);
 const host = new ProviderInstanceHost(env, credentials);
 
@@ -39,9 +41,15 @@ try {
     const contracts = await loadOfficialContracts(
         new HttpProviderRepository("ulvia-provider-runtime", env.CMS_REPOSITORY_URL),
     );
-    const provisioner = new OfficialInstanceProvisioner(instances, (instance) => host.target(instance));
+    const provisioner = new OfficialInstanceProvisioner(
+        instances,
+        transitions,
+        (instance) => host.target(instance),
+        (instanceId) => credentials.readAdministrator(instanceId),
+    );
     const lifecycle = new ProviderInstanceLifecycle(instances, credentials, provisioner, env.CMS_SESSION_SECRET);
     const authenticator = new ProviderInstanceAuthenticator(instances, credentialStore, credentials);
+    await provisioner.recover();
     provider = mountUlviaProvider({ env, contracts, authenticator, host, lifecycle });
 } catch (error) {
     await Promise.allSettled([host.close(), mongo.close()]);

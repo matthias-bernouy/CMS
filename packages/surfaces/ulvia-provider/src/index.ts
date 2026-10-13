@@ -45,6 +45,11 @@ export type {
     UpdateProviderInstanceRecord,
 } from "./instances/types";
 export { PROVIDER_INSTANCE_STATUSES } from "./instances/types";
+export type {
+    InstanceTransitionRecord,
+    InstanceTransitionStatus,
+    InstanceTransitionStore,
+} from "./instances/transitions";
 export {
     OFFICIAL_INSTANCE_PROFILE,
     SUPPORTED_INSTANCE_PROFILES,

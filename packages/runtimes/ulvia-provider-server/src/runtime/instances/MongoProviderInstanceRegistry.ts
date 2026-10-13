@@ -31,7 +31,6 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
         const now = new Date();
         const document: ProviderInstanceDocument = {
             ...record,
-            completedSteps: [],
             revision: 1,
             createdAt: now,
             updatedAt: now,
@@ -61,7 +60,7 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
     ): Promise<ProviderInstanceRecord> {
         const set: Partial<ProviderInstanceDocument> = {
             ...(changes.status ? { status: changes.status } : {}),
-            ...(changes.completedSteps ? { completedSteps: [...changes.completedSteps] } : {}),
+            ...(changes.profile ? { profile: changes.profile } : {}),
             ...(changes.failure === null ? {} : changes.failure ? { failure: changes.failure } : {}),
             updatedAt: new Date(),
         };
@@ -88,7 +87,6 @@ function serialize(document: ProviderInstanceDocument): ProviderInstanceRecord {
         label,
         status,
         profile,
-        completedSteps,
         failure,
         revision,
     } = document;
@@ -101,7 +99,6 @@ function serialize(document: ProviderInstanceDocument): ProviderInstanceRecord {
         label,
         status,
         profile,
-        completedSteps,
         ...(failure ? { failure } : {}),
         revision,
         createdAt: document.createdAt.toISOString(),

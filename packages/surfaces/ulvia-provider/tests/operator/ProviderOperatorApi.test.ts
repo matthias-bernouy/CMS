@@ -24,8 +24,6 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
                 instance,
                 credentials: {
                     instanceAccessToken: "new-instance-token",
-                    sessionSecret: "session-secret",
-                    kekHex: "kek",
                 },
             };
         },
@@ -76,6 +74,9 @@ test("an idempotency key can only replay the exact instance request", async () =
             }),
             read: async () => null,
             disable: async () => undefined,
+            stageAdministrator: async () => undefined,
+            readAdministrator: async () => null,
+            clearAdministrator: async () => undefined,
         },
         { provision: async (id: string) => required(await registry.get(id)) } as unknown as OfficialInstanceProvisioner,
         "idempotency-secret",
@@ -106,7 +107,6 @@ function readyInstance(): ProviderInstanceRecord {
         label: "One",
         status: "ready",
         profile: { id: "ulvia.official", version: "1.0.0" },
-        completedSteps: ["manifest", "provider", "contracts", "collection", "administrator"],
         revision: 6,
         createdAt: new Date(0).toISOString(),
         updatedAt: new Date(0).toISOString(),
@@ -126,8 +126,9 @@ class MemoryRegistry implements ProviderInstanceRegistry {
     async init(): Promise<void> {}
     async create(record: CreateProviderInstanceRecord): Promise<ProviderInstanceRecord> {
         const now = new Date(0).toISOString();
-        this.#record = { ...record, completedSteps: [], revision: 1, createdAt: now, updatedAt: now };
-        return this.#record;
+        const created = { ...record, revision: 1, createdAt: now, updatedAt: now };
+        this.#record = created;
+        return created;
     }
     async get(instanceId: string): Promise<ProviderInstanceRecord | null> {
         return this.#record?.id === instanceId ? this.#record : null;

@@ -47,7 +47,38 @@ export class ProviderOperatorApi {
                 return instance ? Response.json(instance, noStore()) : new Response(null, { status: 404 });
             }),
         );
+        runner.post(
+            "/ulvia/operator/instances/:instanceId/profile",
+            authorized(async (request) => {
+                try {
+                    const profile = await parseProfileInput(request);
+                    return Response.json(
+                        await lifecycle.upgrade(instanceIdFrom(request, "/profile"), profile),
+                        noStore(),
+                    );
+                } catch (error) {
+                    return operatorError(error);
+                }
+            }),
+        );
     }
+}
+
+async function parseProfileInput(request: Request): Promise<{ id: string; version: string }> {
+    const bytes = await readBoundedRequestBody(request, MAX_BODY_BYTES);
+    const value = parseStrictJson(bytes, MAX_BODY_BYTES, 2);
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        throw new TypeError("Request body is invalid");
+    }
+    const input = value as Record<string, unknown>;
+    if (
+        Object.keys(input).sort().join(",") !== "id,version" ||
+        typeof input.id !== "string" ||
+        typeof input.version !== "string"
+    ) {
+        throw new TypeError("Request body is invalid");
+    }
+    return { id: input.id, version: input.version };
 }
 
 async function parseCreateInput(request: Request): Promise<CreateProviderInstance> {

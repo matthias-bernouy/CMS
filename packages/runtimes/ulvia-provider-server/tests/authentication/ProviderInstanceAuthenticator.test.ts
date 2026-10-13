@@ -61,7 +61,6 @@ function readyInstance(): ProviderInstanceRecord {
         label: "Alpha",
         status: "ready",
         profile: { id: "ulvia.official", version: "1.0.0" },
-        completedSteps: [],
         revision: 1,
         createdAt: new Date(0).toISOString(),
         updatedAt: new Date(0).toISOString(),

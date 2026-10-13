@@ -2,12 +2,15 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { OFFICIAL_INSTANCE_PROFILE } from "./officialProfile";
 import type { OfficialInstanceProvisioner, ProviderInstanceAdministrator } from "./provisioning";
 import type { ProviderInstanceRegistry } from "./registry";
-import type { ProviderInstanceRecord } from "./types";
+import type { ProviderInstanceProfile, ProviderInstanceRecord } from "./types";
 
 export interface ProviderInstanceCredentials {
     ensure(instance: ProviderInstanceRecord): Promise<ProviderInstanceRuntimeCredentials>;
     read(instanceId: string): Promise<ProviderInstanceRuntimeCredentials | null>;
     disable(instanceId: string): Promise<void>;
+    stageAdministrator(instanceId: string, administrator: ProviderInstanceAdministrator): Promise<void>;
+    readAdministrator(instanceId: string): Promise<ProviderInstanceAdministrator | null>;
+    clearAdministrator(instanceId: string): Promise<void>;
 }
 
 export type ProviderInstanceRuntimeCredentials = Readonly<{
@@ -59,11 +62,17 @@ export class ProviderInstanceLifecycle {
         }
         assertMatchingFingerprint(instance.idempotencyFingerprint, idempotencyFingerprint);
         const credentials = await this.credentials.ensure(instance);
-        const provisioned = await this.provisioner.provision(instance.id, input.administrator);
+        await this.credentials.stageAdministrator(instance.id, input.administrator);
+        const provisioned = await this.provisioner.provision(instance.id);
+        await this.credentials.clearAdministrator(instance.id);
         return {
             instance: provisioned,
             credentials: { instanceAccessToken: credentials.instanceAccessToken },
         };
+    }
+
+    upgrade(instanceId: string, target: ProviderInstanceProfile): Promise<ProviderInstanceRecord> {
+        return this.provisioner.upgrade(instanceId, target);
     }
 
     get(instanceId: string): Promise<ProviderInstanceRecord | null> {
