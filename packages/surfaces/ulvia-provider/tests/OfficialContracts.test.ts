@@ -8,6 +8,7 @@ import {
     MemoryProviderOperationStore,
     registerOfficialProviderCapabilities,
     type UlviaProviderDependencies,
+    type CmsFileWorkspace,
 } from "@bernouy/ulvia-provider";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
@@ -39,7 +40,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
             });
         }
     }
-    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(61);
+    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(68);
     const runner = new BunRunner();
     const runtime = {
         siteId: "site-a",
@@ -106,6 +107,7 @@ test("the official adapters implement the complete declared capability matrix", 
         undefined,
         undefined,
         {} as CmsFilesService,
+        {} as CmsFileWorkspace,
     );
 
     expect(() => dispatcher.seal(contracts.map(({ release }) => release))).not.toThrow();

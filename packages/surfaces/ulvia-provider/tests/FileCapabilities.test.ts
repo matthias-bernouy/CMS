@@ -134,6 +134,44 @@ test("file capabilities expose the namespace, upload and immutable file lifecycl
     });
 });
 
+test("managed workspace capabilities never require or return namespace credentials", async () => {
+    const dispatcher = new DefaultProviderCapabilityDispatcher();
+    const workspaceCalls: string[] = [];
+    registerFileCapabilities(dispatcher, files(), {
+        get: async () => {
+            workspaceCalls.push("get");
+            return {
+                namespace: {
+                    id: "ns_workspace",
+                    name: "Site files",
+                    defaultVisibility: "private",
+                    createdAt: "2026-01-01T00:00:00.000Z",
+                    createdBy: { kind: "system", id: "workspace" },
+                    quota: { maxBytes: 100, maxFiles: 10 },
+                },
+                items: [],
+                offset: 0,
+                limit: 10,
+            };
+        },
+        createUpload: async () => ({ uploadId: "upload", uploadToken: "token", expiresAt: "later", maxBytes: 100 }),
+        completeUpload: async () => fileReference(),
+        updateFile: async () => fileReference(),
+        setFileVisibility: async () => fileReference(),
+        signFile: async () => ({ url: "https://cms.example/signed", expiresAt: "later" }),
+        deleteFile: async () => undefined,
+    });
+
+    const result = await invoke(dispatcher, "workspace.get", { limit: 10 });
+
+    expect(workspaceCalls).toEqual(["get"]);
+    expect(JSON.stringify(result)).not.toContain("namespaceKey");
+    await invoke(dispatcher, "workspace.files.set-visibility", { fileId: "file_a", visibility: "public" });
+    await expect(
+        invoke(dispatcher, "workspace.files.set-visibility", { fileId: "file_a", visibility: "shared" }),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT", status: 422 });
+});
+
 function files(): CmsFilesService {
     return new CmsFilesService({
         store: new InMemoryCmsFilesStore(),
@@ -155,4 +193,17 @@ async function invoke<T = unknown>(
 
 function stream(value: string): ReadableStream<Uint8Array> {
     return new Blob([value]).stream();
+}
+
+function fileReference() {
+    return {
+        fileId: "file_a",
+        generation: "generation_a",
+        namespaceId: "ns_workspace",
+        mimeType: "text/plain",
+        size: 5,
+        visibility: "private" as const,
+        name: "asset.txt",
+        url: "https://cms.example/site/files/file_a/generation_a",
+    };
 }

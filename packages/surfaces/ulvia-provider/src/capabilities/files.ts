@@ -1,7 +1,12 @@
 import { CmsFilesError, type CmsFilesService } from "@bernouy/cms-files";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../dispatch/registry";
+import type { CmsFileWorkspace } from "../ports";
 
-export function registerFileCapabilities(dispatcher: ProviderCapabilityRegistry, files: CmsFilesService): void {
+export function registerFileCapabilities(
+    dispatcher: ProviderCapabilityRegistry,
+    files: CmsFilesService,
+    workspace?: CmsFileWorkspace,
+): void {
     dispatcher.register("ulvia.cms.files", "namespace.create", async (input, context) =>
         fileCall(() =>
             files.createNamespace({
@@ -66,6 +71,7 @@ export function registerFileCapabilities(dispatcher: ProviderCapabilityRegistry,
                 ...(input.imageProfile === "thumbnail" || input.imageProfile === "responsive"
                     ? { imageProfile: input.imageProfile }
                     : {}),
+                ...(typeof input.fileId === "string" ? { fileId: requiredText(input.fileId) } : {}),
             }),
         ),
     );
@@ -204,6 +210,69 @@ export function registerFileCapabilities(dispatcher: ProviderCapabilityRegistry,
             }),
         ),
     );
+    if (workspace) {
+        registerWorkspaceCapabilities(dispatcher, workspace);
+    }
+}
+
+function registerWorkspaceCapabilities(dispatcher: ProviderCapabilityRegistry, workspace: CmsFileWorkspace): void {
+    dispatcher.register("ulvia.cms.files", "workspace.get", async (input) =>
+        fileCall(() =>
+            workspace.get({
+                ...(typeof input.offset === "number" ? { offset: requiredInteger(input.offset) } : {}),
+                ...(typeof input.limit === "number" ? { limit: requiredInteger(input.limit) } : {}),
+            }),
+        ),
+    );
+    dispatcher.register("ulvia.cms.files", "workspace.upload.create", async (input) =>
+        fileCall(() =>
+            workspace.createUpload({
+                filename: requiredText(input.filename),
+                size: requiredInteger(input.size),
+                ...(typeof input.contentType === "string" ? { contentType: requiredText(input.contentType) } : {}),
+                ...(input.visibility === "public" || input.visibility === "private"
+                    ? { visibility: input.visibility }
+                    : {}),
+                ...(input.imageProfile === "thumbnail" || input.imageProfile === "responsive"
+                    ? { imageProfile: input.imageProfile }
+                    : {}),
+                ...(typeof input.fileId === "string" ? { fileId: requiredText(input.fileId) } : {}),
+            }),
+        ),
+    );
+    dispatcher.register("ulvia.cms.files", "workspace.upload.complete", async (input) =>
+        fileCall(async () => {
+            await workspace.completeUpload(requiredText(input.uploadId));
+            return null;
+        }),
+    );
+    dispatcher.register("ulvia.cms.files", "workspace.files.update", async (input) =>
+        fileCall(async () => {
+            await workspace.updateFile(requiredText(input.fileId), requiredText(input.name));
+            return null;
+        }),
+    );
+    dispatcher.register("ulvia.cms.files", "workspace.files.set-visibility", async (input) =>
+        fileCall(async () => {
+            await workspace.setFileVisibility(requiredText(input.fileId), requiredVisibility(input.visibility));
+            return null;
+        }),
+    );
+    dispatcher.register("ulvia.cms.files", "workspace.files.sign", async (input) =>
+        fileCall(() =>
+            workspace.signFile(
+                requiredText(input.fileId),
+                requiredText(input.generation),
+                requiredInteger(input.expiresIn),
+            ),
+        ),
+    );
+    dispatcher.register("ulvia.cms.files", "workspace.files.delete", async (input) =>
+        fileCall(async () => {
+            await workspace.deleteFile(requiredText(input.fileId));
+            return null;
+        }),
+    );
 }
 
 function binaryResult(read: Awaited<ReturnType<CmsFilesService["readFile"]>>) {
@@ -253,6 +322,13 @@ function requiredInteger(value: unknown): number {
 
 function requiredTextArray(value: unknown): readonly string[] {
     if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
+        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+    }
+    return value;
+}
+
+function requiredVisibility(value: unknown): "private" | "public" {
+    if (value !== "private" && value !== "public") {
         throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
     }
     return value;

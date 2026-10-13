@@ -1,5 +1,10 @@
 import type { ProviderCapabilityRegistry } from "../dispatch/registry";
-import type { UlviaProviderDependencies, UlviaProviderGateway, UlviaProviderManagement } from "../ports";
+import type {
+    CmsFileWorkspace,
+    UlviaProviderDependencies,
+    UlviaProviderGateway,
+    UlviaProviderManagement,
+} from "../ports";
 import { registerAccessCapabilities } from "./access";
 import { registerCollectionCapabilities } from "./collections";
 import { registerFileCapabilities } from "./files";
@@ -20,11 +25,12 @@ export function registerOfficialProviderCapabilities(
     providerManagement?: UlviaProviderManagement,
     collectionSources?: CollectionSources,
     files?: CmsFilesService,
+    fileWorkspace?: CmsFileWorkspace,
 ): void {
     registerPageCapabilities(dispatcher, dependencies);
     registerCollectionCapabilities(dispatcher, dependencies, operations, collectionSources);
     if (files) {
-        registerFileCapabilities(dispatcher, files);
+        registerFileCapabilities(dispatcher, files, fileWorkspace);
     }
     registerThemeCapabilities(dispatcher, dependencies);
     registerLocalizationCapabilities(dispatcher, dependencies);
@@ -44,4 +50,9 @@ export {
     registerThemeCapabilities,
 };
 export { CollectionSources } from "./collections/sources";
-export type { UlviaProviderDependencies, UlviaProviderGateway, UlviaProviderManagement } from "../ports";
+export type {
+    CmsFileWorkspace,
+    UlviaProviderDependencies,
+    UlviaProviderGateway,
+    UlviaProviderManagement,
+} from "../ports";

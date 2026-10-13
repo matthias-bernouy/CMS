@@ -9,6 +9,7 @@ export { CollectionSources } from "./capabilities/collections/sources";
 export type {
     CmsAccessDependencies,
     CmsCollectionDependencies,
+    CmsFileWorkspace,
     UlviaProviderDependencies,
     CmsLocalizationDependencies,
     CmsPageDependencies,
