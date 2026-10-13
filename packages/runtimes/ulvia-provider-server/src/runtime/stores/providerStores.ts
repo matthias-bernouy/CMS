@@ -12,11 +12,13 @@ import {
     withCollectionMigrationWriteFence,
 } from "@bernouy/cms-repository/collections/installations";
 import {
+    MongoAuthTokenStore,
     MongoIdentityProviderRepository,
     MongoLocalCredentialStore,
     MongoPatRepository,
     MongoUsersRepository,
 } from "@bernouy/cms-auth/mongo";
+import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { MongoCmsRepository, MongoPageRouteRegistry } from "@bernouy/cms-content/mongo";
 import { MongoCollectionMigrationStorage } from "@bernouy/cms-repository/collections/mongo";
@@ -121,6 +123,10 @@ export async function createProviderStores(env: ProviderStoreConfig) {
     await credentials.init();
     const pats = new MongoPatRepository(db);
     await pats.init();
+    const authTokens = new MongoAuthTokenStore(db);
+    await authTokens.init();
+    const rateLimit = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 });
+    await rateLimit.init();
     const secrets = new ValidatingSecretStore(
         new EncryptedMongoSecretStore({
             scopeId: SCOPE_ID,
@@ -132,6 +138,7 @@ export async function createProviderStores(env: ProviderStoreConfig) {
     await identities.init();
 
     return {
+        runtimeSessionSecret: env.CMS_SESSION_SECRET,
         collections,
         pageRoutes,
         collectionMigrations,
@@ -144,8 +151,11 @@ export async function createProviderStores(env: ProviderStoreConfig) {
         identityProviders,
         credentials,
         pats,
+        authTokens,
+        rateLimit,
         secrets,
         identities,
+        sitemapStore: new LocalFsBlobStore(join(env.CMS_FILES_DIR, "sitemaps")),
         close: () => mongo.close(),
     };
 }

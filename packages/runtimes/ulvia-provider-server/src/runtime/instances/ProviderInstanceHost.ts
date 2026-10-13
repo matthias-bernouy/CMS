@@ -21,6 +21,7 @@ import type { ProviderRuntimeEnv } from "../../runtimeEnv";
 import type { EncryptedInstanceCredentials } from "../authentication/EncryptedInstanceCredentials";
 import { createProviderGateway } from "../gateway/createProviderGateway";
 import { createProtectedProviderManagement } from "../gateway/protectedManagement";
+import { createInstanceKernelApi } from "../kernel/InstanceKernelApi";
 import { MongoProviderOperationStore } from "../provider-operations/MongoProviderOperationStore";
 import { createProviderStores, type ProviderStores } from "../stores/providerStores";
 import { createInstanceProvisioningTarget } from "./instanceProvisioning";
@@ -32,6 +33,7 @@ const INSTANCE_IDLE_MS = 60_000;
 
 export type InstanceComposition = Readonly<{
     stores: ProviderStores;
+    gateway: Awaited<ReturnType<typeof createProviderGateway>>;
     runtime: UlviaProviderInstanceRuntime;
     management: ProviderManagement;
     administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
@@ -131,8 +133,10 @@ export class ProviderInstanceHost {
                 stores.providerFiles,
             );
             const content = createContentReader(stores.repo);
+            const kernel = await createInstanceKernelApi(instance, { stores, gateway });
             return {
                 stores,
+                gateway,
                 management,
                 administrators: gateway.administrators,
                 runtime: {
@@ -146,6 +150,7 @@ export class ProviderInstanceHost {
                         profile: instance.profile,
                     },
                     contentRevision: async () => (await content.getContentRevision?.()) ?? instance.revision,
+                    kernel,
                 },
             };
         } catch (error) {

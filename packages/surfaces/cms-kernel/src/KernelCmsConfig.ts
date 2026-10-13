@@ -11,6 +11,7 @@ import type { CollectionMigrationService } from "@bernouy/cms-repository/collect
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { PageExecutionService } from "@bernouy/cms-gateway/execution";
+import type { PageExecutionHttpPort } from "@bernouy/cms-gateway/http/handlers";
 import type { Cache, Runner } from "@bernouy/http-runner";
 
 export type KernelCmsConfig = {
@@ -36,6 +37,10 @@ export type KernelCmsConfig = {
         readonly isAdministrator: (subject: Subject) => Promise<boolean>;
         readonly authenticateProvider?: (token: string) => Promise<string | null>;
     };
-    pageExecution?: PageExecutionService;
+    pageExecution?: PageExecutionService | PageExecutionHttpPort;
+    capabilityHandler?: (request: Request) => Promise<Response>;
+    collectionAssetHandler?: (request: Request) => Promise<Response>;
+    sitemapHandler?: (request: Request) => Promise<Response>;
+    sitemapChunkHandler?: (request: Request) => Promise<Response>;
     sitemapStore?: BlobStore;
 };

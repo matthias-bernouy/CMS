@@ -18,6 +18,10 @@ export default class KernelCms {
     readonly collectionAssets;
     readonly capabilityGateway;
     readonly pageExecution;
+    readonly capabilityHandler;
+    readonly collectionAssetHandler;
+    readonly sitemapHandler;
+    readonly sitemapChunkHandler;
     readonly sitemapStore?: BlobStore;
     readonly enforcePageCsp: boolean;
     readonly basePath: string;
@@ -35,6 +39,10 @@ export default class KernelCms {
         this.collectionAssets = config.collectionAssets;
         this.capabilityGateway = config.capabilityGateway;
         this.pageExecution = config.pageExecution;
+        this.capabilityHandler = config.capabilityHandler;
+        this.collectionAssetHandler = config.collectionAssetHandler;
+        this.sitemapHandler = config.sitemapHandler;
+        this.sitemapChunkHandler = config.sitemapChunkHandler;
         this.sitemapStore = config.sitemapStore;
         this.enforcePageCsp = config.enforcePageCsp ?? true;
         this.basePath = config.runner.basePath === "/" ? "" : config.runner.basePath;

@@ -4,7 +4,7 @@ import type { ProviderRuntimeEnv } from "../src/runtimeEnv";
 import type { InstanceComposition } from "../src/runtime/instances/ProviderInstanceHost";
 import { createInstanceProvisioningTarget } from "../src/runtime/instances/instanceProvisioning";
 
-test("the Provider composes only Provider-owned runtime services", async () => {
+test("the Provider owns every persistent instance service while remaining independent from Kernel", async () => {
     const [entrypoint, stores] = await Promise.all([
         Bun.file(new URL("../src/index.ts", import.meta.url)).text(),
         Bun.file(new URL("../src/runtime/stores/providerStores.ts", import.meta.url)).text(),
@@ -12,9 +12,9 @@ test("the Provider composes only Provider-owned runtime services", async () => {
 
     expect(entrypoint).not.toContain("cms-kernel-server");
     expect(entrypoint).not.toContain("cms-instance-runtime");
-    expect(stores).not.toContain("MongoAuthTokenStore");
-    expect(stores).not.toContain("MongoRateLimiter");
-    expect(stores).not.toContain("sitemap");
+    expect(stores).toContain("MongoAuthTokenStore");
+    expect(stores).toContain("MongoRateLimiter");
+    expect(stores).toContain("sitemapStore");
     expect(stores).toContain("CmsFilesService");
 });
 
@@ -85,7 +85,12 @@ function connectionTarget(management: Record<string, unknown>) {
         composition: { management } as unknown as InstanceComposition,
         env: { ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103" } as ProviderRuntimeEnv,
         credentials: {
-            read: async () => ({ token: "instance-token", sessionSecret: "session-secret", kekHex: "0".repeat(64) }),
+            read: async () => ({
+                instanceAccessToken: "instance-token",
+                invocationSecret: "invocation-secret",
+                sessionSecret: "session-secret",
+                kekHex: "0".repeat(64),
+            }),
         },
         providerSource: {} as never,
         collectionSource: {} as never,

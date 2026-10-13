@@ -61,10 +61,7 @@ const INSTANCE_SCHEMA = "ulvia.local-instance.v1" as const;
 export type LocalInstanceConnection = Readonly<{
     schema: typeof INSTANCE_SCHEMA;
     instanceId: string;
-    storageKey: string;
     token: string;
-    sessionSecret: string;
-    kekHex: string;
 }>;
 
 export async function saveLocalInstanceConnection(devRoot: string, value: Omit<LocalInstanceConnection, "schema">) {

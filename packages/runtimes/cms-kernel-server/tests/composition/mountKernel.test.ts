@@ -1,15 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { mountProductionKernel, type ProductionKernelRuntime } from "../../src/runtime/mountKernel";
-import { kernelMountFixtures } from "./kernelMountFixtures";
 
 describe("production Kernel mounting", () => {
     test("mounts and stops one runtime", async () => {
         const events: string[] = [];
         const logs: string[] = [];
         let kernelConfig: Record<string, unknown> | undefined;
-        let refreshStopped = false;
-        let observationStarted = false;
-        let observationStopped = false;
 
         class FakeRunner {
             readonly basePath = "/";
@@ -34,45 +30,48 @@ describe("production Kernel mounting", () => {
         const runtime = {
             Runner: FakeRunner,
             Kernel: FakeKernel,
-            startSitemapRefresh() {
-                return { stop: async () => void (refreshStopped = true) };
-            },
             log(message: string) {
                 logs.push(message);
             },
             reportError() {},
         } as unknown as ProductionKernelRuntime;
-        const options = kernelMountFixtures();
-        const gateway = {
-            siteId: "site:main",
-            invoker: { invoke: async () => ({ requestId: "request", status: 200, kind: "success" as const }) },
-            isAdministrator: async () => true,
-            observations: {
-                start: () => void (observationStarted = true),
-                stop: async () => void (observationStopped = true),
+        const token = (name: string) => ({ name });
+        const options = {
+            env: {
+                MODE: "PROD" as const,
+                KERNEL_PORT: 3100,
+                KERNEL_HOST: "127.0.0.1",
+                KERNEL_PUBLIC_URL: "https://www.example.test",
+                ULVIA_PROVIDER_URL: "https://provider.example.test",
+                ULVIA_INSTANCE_TOKEN: "opaque-ulvia-instance-token",
+            },
+            provider: {
+                content: token("content"),
+                authentication: token("authentication"),
+                publicAuth: token("public-auth"),
+                localAuthentication: token("local-auth"),
+                identityProviders: token("identity-providers"),
+                gateway: token("gateway"),
+                pageExecution: token("page-execution"),
+                capability: async () => new Response(),
+                collectionAsset: async () => new Response(),
+                sitemap: async () => new Response(),
             },
         };
 
-        const mounted = await mountProductionKernel({ ...options, gateway } as never, runtime);
+        const mounted = await mountProductionKernel(options as never, runtime);
         expect(events.slice(0, 3)).toEqual(["runner", "kernel", 'start:{"port":3100,"hostname":"127.0.0.1"}']);
 
         expect(kernelConfig).toMatchObject({
-            content: expect.any(Object),
+            content: options.provider.content,
             runner: expect.any(FakeRunner),
-            publicAuth: {
-                marker: "public-auth",
-                emailVerificationUrl: options.env.CMS_AUTH_EMAIL_VERIFICATION_URL,
-                passwordResetUrl: options.env.CMS_AUTH_PASSWORD_RESET_URL,
-            },
-            capabilityGateway: { siteId: gateway.siteId },
+            publicAuth: { name: "public-auth", allowSignup: false },
+            capabilityGateway: options.provider.gateway,
         });
         expect(events).toContain('start:{"port":3100,"hostname":"127.0.0.1"}');
-        expect(observationStarted).toBe(true);
         expect(logs).toContain("🚀 CMS listening");
 
         await mounted.stop();
-        expect(refreshStopped).toBe(true);
-        expect(observationStopped).toBe(true);
         expect(events.at(-1)).toBe("stop");
     });
 });

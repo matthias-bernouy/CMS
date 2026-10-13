@@ -9,13 +9,10 @@ test("local provisioning sends administrator input only to the protected operato
         return Response.json({
             instance: {
                 id: "instance:00000000-0000-4000-8000-000000000001",
-                storageKey: "instance-00000000-0000-4000-8000-000000000001",
                 status: "ready",
             },
             credentials: {
-                token: "a".repeat(43),
-                sessionSecret: "s".repeat(64),
-                kekHex: "0".repeat(64),
+                instanceAccessToken: "a".repeat(43),
             },
         });
     }) as typeof fetch;

@@ -1,39 +1,12 @@
-import { createProductionAuth } from "./runtime/auth";
 import { mountProductionKernel } from "./runtime/mountKernel";
-import { createKernelStores } from "./runtime/stores/kernelStores";
-import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
-import { createProductionGateway } from "./runtime/gateway/createProductionGateway";
 import { fetchProviderHandshake } from "./runtime/gateway/fetchProviderReport";
-import { assertProvisionedInstance } from "./runtime/gateway/assertProvisionedInstance";
+import { ProviderKernelClient } from "./runtime/provider/ProviderKernelClient";
 import { readRuntimeEnv } from "./runtimeEnv";
 
-const SITE_ID = "default";
-
 const env = readRuntimeEnv(process.env);
-await validateCmsStorageRoots(env.CMS_FILES_DIR);
-
-const core = await createKernelStores(env);
-const authentication = await createProductionAuth(env, core);
-const gateway = await createProductionGateway(core.db, core.secrets, core.identities, SITE_ID);
-try {
-    const handshake = await fetchProviderHandshake(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN);
-    await assertProvisionedInstance(gateway, env.ULVIA_PROVIDER_URL, handshake.runtime);
-} catch (error) {
-    await core.close();
-    throw error;
-}
-let kernel;
-try {
-    kernel = await mountProductionKernel({
-        env,
-        core,
-        authentication,
-        gateway,
-    });
-} catch (error) {
-    await core.close();
-    throw error;
-}
+await fetchProviderHandshake(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN);
+const provider = new ProviderKernelClient(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN, env.KERNEL_PUBLIC_URL);
+const kernel = await mountProductionKernel({ env, provider });
 
 let stopping = false;
 const shutdown = async (signal: string) => {
@@ -42,11 +15,7 @@ const shutdown = async (signal: string) => {
     }
     stopping = true;
     console.log(`\n→ Stopping (${signal})...`);
-    try {
-        await kernel.stop();
-    } finally {
-        await core.close();
-    }
+    await kernel.stop();
 };
 const handleSignal = (signal: string): void => {
     void shutdown(signal).catch((error) => {

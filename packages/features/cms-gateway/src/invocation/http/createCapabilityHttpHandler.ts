@@ -1,6 +1,7 @@
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayActor, GatewayInvoker } from "cms-gateway/invocation/interfaces/Invocation";
-import type { PageExecutionService } from "cms-gateway/execution/core/PageExecutionService";
+import type { PageCapabilityAccess, PageExecutionPage } from "cms-gateway/execution/core/PageExecutionService";
+import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/PageExecution";
 import { gatewayRoutePrefix, CMS_CAPABILITY_CALL_ROUTE } from "./routes";
 import { handleGatewayHttpCall } from "./handleHttpCall";
 
@@ -8,10 +9,20 @@ export type CapabilityHttpHandlerConfig = {
     siteId: string;
     basePath: string;
     invoker: GatewayInvoker;
-    pageExecution?: PageExecutionService;
+    pageExecution?: PageExecutionHttpPort;
     resolveActor(request: Request): Promise<GatewayActor>;
     authenticateProvider?: (token: string) => Promise<string | null>;
 };
+
+export interface PageExecutionHttpPort {
+    requiredAccess(page: PageExecutionPage, pageUrl: URL, callPrefix: string): Promise<PageCapabilityAccess | null>;
+    authorizeCall(
+        request: Request,
+        basePath: string,
+        contractId: string,
+        capabilityId: string,
+    ): Promise<GatewayExecutionPin>;
+}
 
 /** Create the complete provider/page capability HTTP adapter. */
 export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig) {

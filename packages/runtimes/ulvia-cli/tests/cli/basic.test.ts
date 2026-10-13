@@ -51,7 +51,6 @@ describe("Ulvia CLI", () => {
                 JSON.stringify({
                     schema: "ulvia.local-instance.v1",
                     instanceId: "instance:00000000-0000-4000-8000-000000000001",
-                    storageKey: "instance-00000000-0000-4000-8000-000000000001",
                     token,
                 }),
             );

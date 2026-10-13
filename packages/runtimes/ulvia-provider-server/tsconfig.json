@@ -11,11 +11,13 @@
         { "path": "../../foundation/image-processing" },
         { "path": "../../foundation/secret-store" },
         { "path": "../../foundation/http-runner" },
+        { "path": "../../foundation/rate-limiter" },
         { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-files" },
         { "path": "../../features/cms-gateway" },
         { "path": "../../features/cms-repository" },
+        { "path": "../../features/cms-seo" },
         { "path": "../../surfaces/ulvia-provider" }
     ]
 }

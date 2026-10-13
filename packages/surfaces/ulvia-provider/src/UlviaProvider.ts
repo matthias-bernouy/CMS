@@ -5,7 +5,14 @@ import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { ProviderCapabilityRegistry } from "./dispatch/registry";
 import { createProviderContractRelay } from "./transport/relay";
 import { compileProviderRoutes } from "./transport/routes";
-import { KERNEL_PROVIDER_PROTOCOL, type KernelProviderHandshake } from "./kernel/protocol";
+import {
+    KERNEL_PROVIDER_PROTOCOL,
+    KERNEL_PROVIDER_QUERY_OPERATIONS,
+    type KernelInstanceApi,
+    type KernelProviderHandshake,
+    type KernelProviderQuery,
+} from "./kernel/protocol";
+import { readBoundedRequestBody } from "@bernouy/http-runner";
 import type { ProviderInstanceProfile, ProviderInstanceStatus } from "./instances/types";
 
 export type UlviaProviderInstanceRuntime = Readonly<{
@@ -19,6 +26,7 @@ export type UlviaProviderInstanceRuntime = Readonly<{
         profile: ProviderInstanceProfile;
     };
     contentRevision(): Promise<number | string>;
+    kernel: KernelInstanceApi;
 }>;
 
 export type UlviaProviderInstanceLease = Readonly<{
@@ -75,6 +83,46 @@ export class UlviaProvider {
                 lease.release();
             }
         });
+        runner.post("/ulvia/kernel/v1/query", (request) =>
+            withKernelRuntime(request, options, async (runtime) => {
+                const query = await readKernelQuery(request);
+                return Response.json({ value: await runtime.kernel.query(query) }, noStore());
+            }),
+        );
+        for (const action of [
+            "login",
+            "logout",
+            "signup",
+            "request-email-verification",
+            "confirm-email-verification",
+            "request-password-reset",
+            "confirm-password-reset",
+        ]) {
+            runner.post(`/ulvia/kernel/v1/auth/${action}`, (request) =>
+                withKernelRuntime(request, options, (runtime) => runtime.kernel.handleAuth(action, request)),
+            );
+        }
+        runner.group("/ulvia/kernel/v1/call", (callRunner) => {
+            for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const) {
+                callRunner.setDefaultEndpoint(method, (request) =>
+                    withKernelRuntime(request, options, (runtime) => runtime.kernel.handleCapability(request)),
+                );
+            }
+        });
+        runner.group("/ulvia/kernel/v1/collections", (assetRunner) => {
+            for (const method of ["GET", "HEAD"] as const) {
+                assetRunner.setDefaultEndpoint(method, (request) =>
+                    withKernelRuntime(request, options, (runtime) => runtime.kernel.handleCollectionAsset(request)),
+                );
+            }
+        });
+        runner.group("/ulvia/kernel/v1/sitemap", (sitemapRunner) => {
+            for (const method of ["GET", "HEAD"] as const) {
+                sitemapRunner.setDefaultEndpoint(method, (request) =>
+                    withKernelRuntime(request, options, (runtime) => runtime.kernel.handleSitemap(request)),
+                );
+            }
+        });
         const methods = new Set(routes.map(({ capability }) => capability.binding.method));
         if (
             routes.some(({ capability }) => capability.binding.method === "GET" && capability.output.type === "binary")
@@ -107,6 +155,46 @@ export class UlviaProvider {
             });
         }
     }
+}
+
+async function withKernelRuntime(
+    request: Request,
+    options: UlviaProviderOptions,
+    handler: (runtime: UlviaProviderInstanceRuntime) => Promise<Response>,
+): Promise<Response> {
+    const token = bearerToken(request);
+    const lease = token ? await options.authenticateControlToken(token) : null;
+    if (!lease) {
+        return unauthorized();
+    }
+    try {
+        return await handler(lease.resource);
+    } finally {
+        lease.release();
+    }
+}
+
+async function readKernelQuery(request: Request): Promise<KernelProviderQuery> {
+    const bytes = await readBoundedRequestBody(request, 64 * 1024);
+    const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        throw new TypeError("Kernel query is invalid");
+    }
+    const record = value as Record<string, unknown>;
+    if (
+        !KERNEL_PROVIDER_QUERY_OPERATIONS.includes(record.operation as never) ||
+        Object.keys(record).some((key) => key !== "operation" && key !== "input")
+    ) {
+        throw new TypeError("Kernel query is invalid");
+    }
+    return {
+        operation: record.operation as KernelProviderQuery["operation"],
+        ...(Object.hasOwn(record, "input") ? { input: record.input } : {}),
+    };
+}
+
+function noStore(): ResponseInit {
+    return { headers: { "Cache-Control": "private, no-store" } };
 }
 
 function bearerToken(request: Request): string | null {

@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
 import type { DevRuntimeConfig } from "./config";
 import type { LocalInstanceConnection } from "./config";
 import type { LocalMongo } from "./mongo";
@@ -62,8 +61,8 @@ export async function startLocalProvider(
 }
 
 export async function startLocalKernel(
-    paths: UlviaPaths,
-    mongo: LocalMongo,
+    _paths: UlviaPaths,
+    _mongo: LocalMongo,
     ports: DevPorts,
     instance: LocalInstanceConnection,
     options: Readonly<{ inheritOutput?: boolean }> = {},
@@ -82,14 +81,6 @@ export async function startLocalKernel(
             KERNEL_PUBLIC_URL: kernelUrl,
             ULVIA_PROVIDER_URL: `http://127.0.0.1:${ports.provider}`,
             ULVIA_INSTANCE_TOKEN: instance.token,
-            CMS_SESSION_SECRET: instance.sessionSecret,
-            CMS_KEK_ACTIVE_ID: "instance",
-            CMS_KEK_RING_JSON: JSON.stringify({ instance: instance.kekHex }),
-            CMS_FILES_DIR: join(paths.cmsFiles, instance.storageKey),
-            MONGO_URL: mongoDatabaseUrl(mongo.url, `ulvia_${instance.storageKey.replaceAll("-", "_")}`),
-            CMS_AUTH_SITE_NAME: "Ulvia local CMS",
-            CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "0",
-            CMS_HTTP_CLIENT_ADDRESS_MODE: "disabled",
         },
     });
     try {

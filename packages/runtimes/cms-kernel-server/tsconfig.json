@@ -8,14 +8,10 @@
     "references": [
         { "path": "../../foundation/http-runner" },
         { "path": "../../features/cms-auth" },
-        { "path": "../../foundation/secret-store" },
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-repository" },
         { "path": "../../features/cms-gateway" },
-        { "path": "../../foundation/blob-store" },
-        { "path": "../../foundation/envelope-crypto" },
-        { "path": "../../foundation/rate-limiter" },
-        { "path": "../../features/cms-seo" },
-        { "path": "../../surfaces/cms-kernel" }
+        { "path": "../../surfaces/cms-kernel" },
+        { "path": "../../surfaces/ulvia-provider" }
     ]
 }

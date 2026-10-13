@@ -3,6 +3,43 @@ import type { ProviderInstanceProfile, ProviderInstanceStatus } from "../instanc
 
 export const KERNEL_PROVIDER_PROTOCOL = "ulvia-kernel-provider/v1" as const;
 
+export const KERNEL_PROVIDER_QUERY_OPERATIONS = [
+    "content.texts",
+    "content.revision",
+    "content.renderable-page",
+    "content.renderable-pages",
+    "content.resolve-page-reference",
+    "content.resolve-renderable-route",
+    "content.published-page",
+    "content.published-page-by-id",
+    "content.published-pages",
+    "content.resolve-published-route",
+    "content.renderable-blocs",
+    "content.bloc-view-js",
+    "content.rendering-settings",
+    "auth.subject",
+    "auth.is-administrator",
+    "auth.identity-providers",
+    "page.required-access",
+    "gateway.invoke",
+    "gateway.resolve-http",
+] as const;
+
+export type KernelProviderQueryOperation = (typeof KERNEL_PROVIDER_QUERY_OPERATIONS)[number];
+
+export type KernelProviderQuery = Readonly<{
+    operation: KernelProviderQueryOperation;
+    input?: unknown;
+}>;
+
+export interface KernelInstanceApi {
+    query(query: KernelProviderQuery): Promise<unknown>;
+    handleAuth(action: string, request: Request): Promise<Response>;
+    handleCapability(request: Request): Promise<Response>;
+    handleCollectionAsset(request: Request): Promise<Response>;
+    handleSitemap(request: Request): Promise<Response>;
+}
+
 export type KernelProviderHandshake = Readonly<{
     protocol: typeof KERNEL_PROVIDER_PROTOCOL;
     instance: {

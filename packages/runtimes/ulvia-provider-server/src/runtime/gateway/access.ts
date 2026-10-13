@@ -1,10 +1,10 @@
 import type { Subject } from "@bernouy/cms-auth";
 import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 import { MongoAdministratorGrantStore } from "@bernouy/cms-gateway/execution/mongo";
-import type { Db } from "mongodb";
 import { satisfiesVersionRange } from "@bernouy/cms-repository/providers";
-import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
+import type { Db } from "mongodb";
 
 type ProviderCapabilityGrant = {
     sourceInstallationId: string;
@@ -16,18 +16,15 @@ type ProviderCapabilityGrant = {
     updatedAt: Date;
 };
 
-/** Initial host policy for the single-site runtime; wider grants need explicit site policy. */
-export function createProductionGatewayAccess(
+export function createProviderGatewayAccess(
     db: Db,
-    siteId = "default",
-    installations?: ProviderInstallationStore,
-    manifests?: ProviderManifestCatalogue,
+    siteId: string,
+    installations: ProviderInstallationStore,
+    manifests: ProviderManifestCatalogue,
 ) {
     const administrators = new MongoAdministratorGrantStore(db);
-    const providerGrants = db.collection<ProviderCapabilityGrant>("cms_provider_capability_grants");
-    const providerUsage = db.collection<{ _id: string; count: number; expiresAt: Date }>(
-        "cms_provider_capability_usage",
-    );
+    const grants = db.collection<ProviderCapabilityGrant>("cms_provider_capability_grants");
+    const usage = db.collection<{ _id: string; count: number; expiresAt: Date }>("cms_provider_capability_usage");
     const providerMayCall = async (
         installationId: string,
         targetVersion: string,
@@ -35,9 +32,6 @@ export function createProductionGatewayAccess(
         contractId: string,
         targetInstallationId: string,
     ): Promise<boolean> => {
-        if (!installations || !manifests) {
-            return false;
-        }
         const source = await installations.get({ siteId, installationId });
         if (!source || source.installation.status !== "enabled") {
             return false;
@@ -46,10 +40,7 @@ export function createProductionGatewayAccess(
             source.installation.providerId,
             source.installation.approval.manifestVersion,
         );
-        if (!manifest || manifest.admission.digest !== source.installation.approval.manifestDigest) {
-            return false;
-        }
-        const declared = manifest.admission.manifest.implementations.some((implementation) =>
+        const declared = manifest?.admission.manifest.implementations.some((implementation) =>
             implementation.requires.some(
                 (requirement) =>
                     requirement.contractId === contractId &&
@@ -57,10 +48,10 @@ export function createProductionGatewayAccess(
                     satisfiesVersionRange(targetVersion, requirement.versionRange),
             ),
         );
-        if (!declared) {
+        if (!declared || manifest!.admission.digest !== source.installation.approval.manifestDigest) {
             return false;
         }
-        const grant = await providerGrants.findOne({
+        const grant = await grants.findOne({
             sourceInstallationId: installationId,
             targetInstallationId,
             contractId,
@@ -75,18 +66,14 @@ export function createProductionGatewayAccess(
         }
         const minute = Math.floor(Date.now() / 60_000);
         const key = `${siteId}\0${installationId}\0${contractId}\0${capabilityId}\0${minute}`;
-        const usage = await providerUsage.findOneAndUpdate(
+        const counter = await usage.findOneAndUpdate(
             { _id: key },
             { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date((minute + 2) * 60_000) } },
             { upsert: true, returnDocument: "after" },
         );
-        return Number(usage?.count) <= grant.maxCallsPerMinute;
+        return Number(counter?.count) <= grant.maxCallsPerMinute;
     };
-
-    const isAdministratorId = async (subjectId: string): Promise<boolean> => {
-        return (await administrators.get(subjectId)).enabled;
-    };
-    const isAdministrator = async (subject: Subject): Promise<boolean> => isAdministratorId(subject.identifier);
+    const isAdministratorId = async (subjectId: string) => (await administrators.get(subjectId)).enabled;
     const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, route, origin) =>
         (origin === "provider" &&
             actor.kind === "provider" &&
@@ -103,27 +90,9 @@ export function createProductionGatewayAccess(
                 (capability.access === "admin" &&
                     actor.kind === "administrator" &&
                     (await isAdministratorId(actor.subjectId)))));
-
     return {
         authorize,
-        isAdministrator,
+        isAdministrator: async (subject: Subject) => isAdministratorId(subject.identifier),
         administrators,
-        providerGrants: {
-            async set(value: Omit<ProviderCapabilityGrant, "updatedAt">) {
-                await providerGrants.replaceOne(
-                    {
-                        sourceInstallationId: value.sourceInstallationId,
-                        targetInstallationId: value.targetInstallationId,
-                        contractId: value.contractId,
-                        capabilityId: value.capabilityId,
-                    },
-                    { ...value, updatedAt: new Date() },
-                    { upsert: true },
-                );
-            },
-            list(sourceInstallationId: string) {
-                return providerGrants.find({ sourceInstallationId }).toArray();
-            },
-        },
     };
 }

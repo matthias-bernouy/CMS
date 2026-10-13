@@ -19,8 +19,6 @@ export type ProviderInstanceRuntimeCredentials = Readonly<{
 
 export type ProviderInstanceAccessCredentials = Readonly<{
     instanceAccessToken: string;
-    sessionSecret: string;
-    kekHex: string;
 }>;
 
 export type CreateProviderInstance = Readonly<{
@@ -64,11 +62,7 @@ export class ProviderInstanceLifecycle {
         const provisioned = await this.provisioner.provision(instance.id, input.administrator);
         return {
             instance: provisioned,
-            credentials: {
-                instanceAccessToken: credentials.instanceAccessToken,
-                sessionSecret: credentials.sessionSecret,
-                kekHex: credentials.kekHex,
-            },
+            credentials: { instanceAccessToken: credentials.instanceAccessToken },
         };
     }
 

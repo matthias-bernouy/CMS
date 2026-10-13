@@ -48,17 +48,21 @@ export function mountKernelRoutes(kernel: KernelCms) {
             `${kernel.cmsPathPrefix}/assets/component.js`,
             `${kernel.cmsPathPrefix}/assets/cms-binding-core.js`,
         ],
-        capabilityCallsEnabled: !!kernel.capabilityGateway,
+        capabilityCallsEnabled: !!(kernel.capabilityGateway || kernel.capabilityHandler),
     });
-    const sitemapHandler = createSitemapHandler({
-        content: kernel.content,
-        store: kernel.sitemapStore,
-        isReservedPath: (path) => isKernelReservedPath(path, kernel.cmsPathPrefix),
-    });
-    const sitemapChunkHandler = createSitemapChunkHandler({
-        store: kernel.sitemapStore,
-        basePath: kernel.basePath,
-    });
+    const sitemapHandler =
+        kernel.sitemapHandler ??
+        createSitemapHandler({
+            content: kernel.content,
+            store: kernel.sitemapStore,
+            isReservedPath: (path) => isKernelReservedPath(path, kernel.cmsPathPrefix),
+        });
+    const sitemapChunkHandler =
+        kernel.sitemapChunkHandler ??
+        createSitemapChunkHandler({
+            store: kernel.sitemapStore,
+            basePath: kernel.basePath,
+        });
     if (kernel.collections) {
         runner.use(
             createCollectionMaintenanceGuard({
@@ -80,13 +84,18 @@ export function mountKernelRoutes(kernel: KernelCms) {
     runner.addEndpoint("GET", "/.cms/assets/cms-binding-core.js", (request) =>
         serveBindingCoreRuntime(request, kernel.cache),
     );
-    if (kernel.collectionAssets) {
+    if (kernel.collectionAssets || kernel.collectionAssetHandler) {
+        const handler = kernel.collectionAssetHandler;
         runner.group(COLLECTION_ASSETS_ROUTE, (assetsRunner) => {
             assetsRunner.setDefaultEndpoint("GET", (request) =>
-                serveInstalledCollectionAsset(request, kernel.collectionAssets!, kernel.basePath),
+                handler
+                    ? handler(request)
+                    : serveInstalledCollectionAsset(request, kernel.collectionAssets!, kernel.basePath),
             );
             assetsRunner.setDefaultEndpoint("HEAD", (request) =>
-                serveInstalledCollectionAsset(request, kernel.collectionAssets!, kernel.basePath),
+                handler
+                    ? handler(request)
+                    : serveInstalledCollectionAsset(request, kernel.collectionAssets!, kernel.basePath),
             );
         });
     }
@@ -112,13 +121,15 @@ export function mountKernelRoutes(kernel: KernelCms) {
         ),
     );
 
-    if (kernel.capabilityGateway) {
-        const capabilityHandler = createCapabilityHttpHandler({
-            ...kernel.capabilityGateway,
-            basePath: kernel.basePath,
-            pageExecution: kernel.pageExecution,
-            resolveActor: (request) => resolveRequestActor(kernel, request),
-        });
+    if (kernel.capabilityGateway || kernel.capabilityHandler) {
+        const capabilityHandler =
+            kernel.capabilityHandler ??
+            createCapabilityHttpHandler({
+                ...kernel.capabilityGateway!,
+                basePath: kernel.basePath,
+                pageExecution: kernel.pageExecution,
+                resolveActor: (request) => resolveRequestActor(kernel, request),
+            });
         runner.group(CMS_CAPABILITY_CALL_ROUTE, (callRunner) => {
             for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const) {
                 callRunner.setDefaultEndpoint(method, capabilityHandler);

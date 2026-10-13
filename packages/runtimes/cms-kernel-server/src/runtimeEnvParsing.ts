@@ -22,13 +22,6 @@ export function parsePort(raw: string | undefined, name: string, fallback: numbe
     return port;
 }
 
-export function parseOptionalHttpUrl(raw: string | undefined, name: string, fallback: string): string {
-    if (raw === undefined) {
-        return fallback;
-    }
-    return parseHttpUrl(raw, name);
-}
-
 export function parseHttpUrl(raw: string, name: string): string {
     let url: URL;
     try {
@@ -40,44 +33,4 @@ export function parseHttpUrl(raw: string, name: string): string {
         throw new Error(`${name} must use http:// or https://`);
     }
     return url.href.replace(/\/$/, "");
-}
-
-export function parseNonNegativeInteger(raw: string | undefined, name: string, fallback: number): number {
-    if (raw === undefined) {
-        return fallback;
-    }
-    if (!/^\d+$/.test(raw)) {
-        throw new Error(`${name} must be a non-negative integer`);
-    }
-    return Number(raw);
-}
-
-export function parsePositiveInteger(raw: string | undefined, name: string, fallback?: number): number {
-    if (raw === undefined) {
-        if (fallback !== undefined) {
-            return fallback;
-        }
-        throw new Error(`${name} is required`);
-    }
-    if (!/^\d+$/.test(raw)) {
-        throw new Error(`${name} must be a positive integer`);
-    }
-    const value = Number(raw);
-    if (!Number.isSafeInteger(value) || value <= 0) {
-        throw new Error(`${name} must be a positive safe integer`);
-    }
-    return value;
-}
-
-export function parseBoolean(raw: string | undefined, name: string, fallback: boolean): boolean {
-    if (raw === undefined) {
-        return fallback;
-    }
-    if (raw === "true") {
-        return true;
-    }
-    if (raw === "false") {
-        return false;
-    }
-    throw new Error(`${name} must be true or false`);
 }

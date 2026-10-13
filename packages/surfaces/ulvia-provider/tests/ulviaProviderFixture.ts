@@ -30,6 +30,7 @@ export function providerOptions(
             profile: { id: "ulvia.official", version: "1.1.0" },
         },
         contentRevision: async () => 1,
+        kernel: kernelApi(),
     };
     return {
         contracts: contracts.map(({ release }) => release),
@@ -45,6 +46,16 @@ export function providerOptions(
                 return null;
             }
         },
+    };
+}
+
+function kernelApi() {
+    return {
+        query: async () => null,
+        handleAuth: async () => new Response(null, { status: 404 }),
+        handleCapability: async () => new Response(null, { status: 404 }),
+        handleCollectionAsset: async () => new Response(null, { status: 404 }),
+        handleSitemap: async () => new Response(null, { status: 404 }),
     };
 }
 
