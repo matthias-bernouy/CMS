@@ -1,5 +1,6 @@
 import type { Page } from "playwright";
 import { mutatePages, verifyPublishedPage } from "./kernelSmokePages";
+import { mutateFiles, verifyFilesAfterRestart } from "./kernelSmokeFiles";
 
 export async function runKernelSmoke(
     page: Page,
@@ -8,6 +9,7 @@ export async function runKernelSmoke(
 ): Promise<void> {
     await stage("sign in", () => signIn(page, credentials, kernelOrigin));
     await stage("Pages", () => mutatePages(page, kernelOrigin));
+    await stage("files", () => mutateFiles(page));
     await stage("collections and theme", () => mutateCollections(page));
     await stage("settings", () => mutateSettings(page));
     await stage("provider routing", () => mutateProviders(page));
@@ -32,6 +34,7 @@ export async function verifyKernelStateAfterRestart(
 ): Promise<void> {
     await signIn(page, credentials, kernelOrigin);
     await page.getByText("Smoke Page", { exact: true }).waitFor();
+    await stage("persisted files", () => verifyFilesAfterRestart(page));
 
     await adminPageLink(page, "collections").click();
     await page.getByRole("heading", { name: "smoke-kit", exact: true }).waitFor();

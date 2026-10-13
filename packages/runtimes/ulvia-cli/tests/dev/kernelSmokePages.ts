@@ -64,16 +64,16 @@ async function fillLatestVisibleElementContent(page: Page, value: string): Promi
 
 async function submitPageDetails(page: Page) {
     const form = page.locator('form[cms-source*="ulvia.cms.pages/update as saved"]');
+    const revision = form.locator('input[name="expectedRevision"]');
+    const initialRevision = await revision.inputValue();
     const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/get"));
-    const editorReload = page.waitForResponse((candidate) =>
-        candidate.url().includes("ulvia.cms.pages/editor-catalogue"),
-    );
     const [response] = await Promise.all([
         page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/update")),
         form.locator('button[type="submit"]').click(),
     ]);
     if (response.ok()) {
-        await Promise.all([reload, editorReload]);
+        await reload;
+        await waitForRevisionChange(revision, initialRevision);
         const addHeading = page.getByRole("button", { name: "Add Heading", exact: true });
         await addHeading.waitFor();
         const deadline = Date.now() + 15_000;
@@ -85,6 +85,17 @@ async function submitPageDetails(page: Page) {
         }
     }
     return response;
+}
+
+async function waitForRevisionChange(revision: ReturnType<Page["locator"]>, initialRevision: string): Promise<void> {
+    const deadline = Date.now() + 15_000;
+    while (Date.now() < deadline) {
+        if ((await revision.inputValue().catch(() => initialRevision)) !== initialRevision) {
+            return;
+        }
+        await revision.page().waitForTimeout(25);
+    }
+    throw new Error("Page details did not expose the updated revision after reload");
 }
 
 export async function verifyPublishedPage(page: Page, kernelOrigin: string): Promise<void> {
