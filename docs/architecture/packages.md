@@ -68,10 +68,10 @@ and serves admitted copies from a separate persistent volume.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/ulvia-provider` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous job execution for admitted `ulvia.cms.*` contracts. |
+| `@bernouy/ulvia-provider` | Authenticated provider report, versioned private Kernel protocol, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous job execution for admitted `ulvia.cms.*` contracts. |
 | `@bernouy/cms-kernel` | HTTP mounting and Page presentation for site and contributed Pages, authentication and injected feature handlers. |
-| `@bernouy/cms-kernel-server` | One pre-provisioned instance's Kernel environment, persistence adapters and CMS Kernel listener. |
-| `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, exact official-profile provisioning, Provider adapter composition, operator API and Ulvia Provider listener. |
+| `@bernouy/cms-kernel-server` | Stateless HTTP composition for one pre-provisioned instance, connected only by Provider URL and opaque instance access token. |
+| `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, instance-scoped persistence/auth/gateway/files, exact profile transitions and recovery, operator API and Ulvia Provider listener. |
 | `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
 | `@bernouy/ulvia-cli` | Persistent local repository/Provider/Kernel development stack, including idempotent instance provisioning. |
 

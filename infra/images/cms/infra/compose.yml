@@ -80,7 +80,6 @@ services:
             - ./mongo/validate-env.sh:/opt/cms-mongo/validate-env.sh:ro
             - ./mongo/01-validate-root-user.js:/docker-entrypoint-initdb.d/01-validate-root-user.js:ro
             - ./mongo/02-create-provider-user.js:/docker-entrypoint-initdb.d/02-create-provider-user.js:ro
-            - ./mongo/provision-site-user.js:/opt/cms-mongo/provision-site-user.js:ro
         networks:
             cms_mongo:
                 aliases:

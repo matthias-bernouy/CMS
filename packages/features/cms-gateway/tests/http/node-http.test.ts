@@ -64,8 +64,8 @@ test("provider control credentials are limited to report and Kernel handshake me
     const network = new NodeGatewayHttpNetwork({
         resolveAddresses: async () => [{ address: "8.8.8.8", family: 4 }],
         resolveToken: async () => "instance-access-token-that-is-long-enough",
-        sendPinned: async ({ pathAndQuery }) => {
-            sent.push(pathAndQuery);
+        sendPinned: async ({ url }) => {
+            sent.push(url.pathname);
             return Response.json({});
         },
     });

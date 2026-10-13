@@ -2,8 +2,8 @@
 // scripts. Keep this check so a reused or manually prepared volume cannot
 // silently grant the infrastructure identity a different role.
 
-// See provision-site-user.js: normalize mongosh's host environment object
-// before accessing variables by their dynamic names.
+// Normalize mongosh's host environment object before accessing variables by
+// their dynamic names.
 const environment = { ...process.env };
 
 function requiredEnv(name) {

@@ -10,7 +10,6 @@ import {
     mongoBootstrapSource,
     mongoProviderBootstrapSource,
     mongoPreflightSource,
-    mongoSiteProvisionSource,
     renderCompose,
     requiredInfrastructureEnvironment,
 } from "./deployment-fixtures.ts";
@@ -52,32 +51,24 @@ describe("shared infrastructure Compose rendering", () => {
 });
 
 describe("deployment definition safeguards", () => {
-    test("keeps root infrastructure-only and separates Provider and Kernel Mongo roles", () => {
+    test("keeps root infrastructure-only and gives only the Provider cross-database access", () => {
         expect(mongoBootstrapSource).toContain('roles[0].role !== "root"');
-        expect(mongoSiteProvisionSource).toContain('roles: [{ role: "readWrite", db: database }]');
         expect(mongoProviderBootstrapSource).toContain('role: "readWriteAnyDatabase"');
         expect(mongoProviderBootstrapSource).not.toContain('role: "root"');
-        expect(mongoSiteProvisionSource).toContain("db.getSiblingDB(database)");
-        expect(mongoSiteProvisionSource).toContain("roles[0].db !== database");
     });
 
-    test("requires 64-character hexadecimal root and site passwords", () => {
+    test("requires 64-character hexadecimal infrastructure passwords", () => {
         expect(mongoPreflightSource).toContain("validate_hex_secret MONGO_INITDB_ROOT_PASSWORD");
-        expect(mongoSiteProvisionSource).toContain("/^[a-fA-F0-9]{64}$/u");
+        expect(mongoPreflightSource).toContain("validate_hex_secret MONGO_PROVIDER_PASSWORD");
         expect(mongoPreflightSource).toContain('exec /usr/local/bin/docker-entrypoint.sh "$@"');
-    });
-
-    test("accepts Provider-generated instance database names for scoped Kernel users", () => {
-        expect(mongoSiteProvisionSource).toContain("ulvia_instance_");
-        expect(mongoSiteProvisionSource).toContain('roles: [{ role: "readWrite", db: database }]');
     });
 
     test("normalizes the mongosh environment before dynamic variable access", () => {
         expect(mongoBootstrapSource).toContain("const environment = { ...process.env }");
-        expect(mongoSiteProvisionSource).toContain("const environment = { ...process.env }");
+        expect(mongoProviderBootstrapSource).toContain("const environment = { ...process.env }");
         expect(mongoBootstrapSource).toContain("String(raw).trim()");
-        expect(mongoSiteProvisionSource).toContain("String(raw).trim()");
-        expect(`${mongoBootstrapSource}\n${mongoSiteProvisionSource}`).not.toContain("process.env[name]");
+        expect(mongoProviderBootstrapSource).toContain("String(raw).trim()");
+        expect(`${mongoBootstrapSource}\n${mongoProviderBootstrapSource}`).not.toContain("process.env[name]");
     });
 
     test("does not use a latest image tag", () => {
@@ -102,9 +93,10 @@ describe("deployment definition safeguards", () => {
         }
     });
 
-    test("prepares the writable file mount for the runtime identity", () => {
+    test("prepares the writable file mount only for the Provider runtime", () => {
         expect(dockerfileSource).toContain("/var/lib/cms/files");
-        expect(instanceComposeSource).toContain("- cms_files:/var/lib/cms/files");
+        expect(infrastructureComposeSource).toContain("- cms_files:/var/lib/cms/files");
+        expect(instanceComposeSource).not.toContain("/var/lib/cms/files");
     });
 
     test("installs both runtime entrypoint dependency closures", () => {

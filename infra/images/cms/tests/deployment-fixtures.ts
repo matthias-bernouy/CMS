@@ -37,10 +37,6 @@ export const mongoProviderBootstrapSource = readFileSync(
     resolve(cmsDirectory, "infra/mongo/02-create-provider-user.js"),
     "utf8",
 );
-export const mongoSiteProvisionSource = readFileSync(
-    resolve(cmsDirectory, "infra/mongo/provision-site-user.js"),
-    "utf8",
-);
 export const mongoPreflightSource = readFileSync(resolve(cmsDirectory, "infra/mongo/validate-env.sh"), "utf8");
 
 const dockerEnvironment = minimalDockerEnvironment();
@@ -49,11 +45,7 @@ export const composeTest = dockerComposeAvailable ? test : test.skip;
 
 export const requiredCmsEnvironment = {
     CMS_IMAGE: "registry.example.test/bernouy/cms:2026.07.15",
-    CMS_SESSION_SECRET: "c".repeat(64),
-    MONGO_URL: `mongodb://cms_client:${"b".repeat(64)}@mongo:27017/ulvia_instance?authSource=ulvia_instance`,
     ULVIA_INSTANCE_TOKEN: "g".repeat(48),
-    ULVIA_INSTANCE_STORAGE_KEY: "instance-00000000-0000-4000-8000-000000000001",
-    ULVIA_INSTANCE_KEK_HEX: "d".repeat(64),
 };
 
 export const requiredInfrastructureEnvironment = {

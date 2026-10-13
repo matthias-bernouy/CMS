@@ -95,13 +95,12 @@ straight to `src/` outside the explicit Kernel browser bundle.
 ## Deployment
 
 `infra/images/cms/` ships the deployment artefact: a `Dockerfile` containing
-the two independent server entrypoints, a per-instance `compose.yml`, and a shared
-`infra/compose.yml` (`nginx-proxy` + `acme-companion` + `mongo`). The design hosts
-**many instances on one server** sharing the TLS proxy and one authenticated
-MongoDB server. Every instance selects a dedicated database and owns its file
-directory; the current shared application credential is not a database-level
-security boundary. One domain routes both published and administrative Pages to
-the Kernel.
+the two independent server entrypoints, a stateless per-instance Kernel
+`compose.yml`, and a shared `infra/compose.yml` (`nginx-proxy` +
+`acme-companion` + `mongo` + repository + Provider). The design hosts **many
+instances on one server**: durable instance data and files remain behind the
+Provider, while each domain routes published and administrative Pages to its
+own Kernel process.
 See [`infra/images/cms/README.md`](./infra/images/cms/README.md) for the
 quick start.
 

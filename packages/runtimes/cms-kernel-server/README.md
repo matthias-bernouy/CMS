@@ -2,9 +2,10 @@
 
 Private production composition root for the CMS application.
 
-It reads and validates environment configuration, initializes infrastructure,
-selects the Kernel's adapters, connects the configured Provider, initializes
-official resources and mounts only the site Kernel. Ulvia Provider runs in
+It reads and validates the listener plus one Provider endpoint/token pair,
+performs the versioned Provider handshake, projects the Provider-owned instance
+APIs into the Kernel and mounts the site HTTP surface. It owns no database,
+files, sessions, installations or migration state. Ulvia Provider runs in
 `@bernouy/ulvia-provider-server`.
 
 Run it from the workspace root with:

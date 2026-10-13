@@ -109,13 +109,15 @@ transitive Blocs. The Kernel activates the revisioned plan from the same-origin
 referring Page before each call and sends only its immutable execution pin to
 the gateway.
 
-The local Ulvia Provider transport is contract-neutral: `@bernouy/ulvia-provider` derives
-its HTTP routes from admitted contract bindings. The same package contains thin
-official capability adapters that coordinate injected feature ports; it does
-not select stores or persistence adapters. The Kernel uses its normal
-`/.cms/call` gateway transport; there is no direct provider shortcut or
-internal relay hop. The shared bounded JSON budget applies at the gateway and
-provider surface.
+The local Ulvia Provider transport is contract-neutral: `@bernouy/ulvia-provider`
+derives its HTTP routes from admitted contract bindings. The same package
+contains thin official capability adapters that coordinate injected feature
+ports; it does not select stores or persistence adapters. Browsers still use
+the normal Kernel `/.cms/call` route. The stateless Kernel streams that request
+through the authenticated private Provider protocol, where the instance-owned
+gateway performs execution. The Provider consumes the instance access Bearer
+before restoring an optional user Bearer or session cookie for capability
+authorization. The shared bounded JSON budget applies at both HTTP boundaries.
 
 | Application | Routes relative to its base path |
 | --- | --- |
@@ -187,7 +189,8 @@ transport rules. See [files and responsive images](../images/README.md).
   file responses already expose a shared-cache policy.
 
 The code establishing the production boundary is
-[createProductionGateway](../../packages/runtimes/cms-kernel-server/src/runtime/gateway/createProductionGateway.ts)
+[ProviderKernelClient](../../packages/runtimes/cms-kernel-server/src/runtime/provider/ProviderKernelClient.ts),
+[InstanceKernelApi](../../packages/runtimes/ulvia-provider-server/src/runtime/kernel/InstanceKernelApi.ts)
 and [mountProductionKernel](../../packages/runtimes/cms-kernel-server/src/runtime/mountKernel.ts).
 The [repository audit](../AUDIT.md) and [deferred platform work](../TODO.md)
 track the remaining implementation and activation gates.
