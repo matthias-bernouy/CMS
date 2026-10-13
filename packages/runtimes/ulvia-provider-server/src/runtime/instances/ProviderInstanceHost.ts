@@ -26,6 +26,7 @@ import { createInstanceKernelApi } from "../kernel/InstanceKernelApi";
 import { MongoProviderOperationStore } from "../provider-operations/MongoProviderOperationStore";
 import { RecoverySupervisor } from "../recovery/RecoverySupervisor";
 import { createProviderStores, type ProviderStores } from "../stores/providerStores";
+import { CmsFileWorkspace } from "../stores/CmsFileWorkspace";
 import { createInstanceProvisioningTarget } from "./instanceProvisioning";
 import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "./InstanceResourcePool";
 import { OfficialProviderObservation } from "./OfficialProviderObservation";
@@ -177,6 +178,7 @@ export class ProviderInstanceHost {
                 createProtectedProviderManagement(management, instance),
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
+                new CmsFileWorkspace(stores.providerFiles, stores.secrets),
             );
             operationRecovery = new RecoverySupervisor((limit) => operations.recover(limit));
             await operationRecovery.start(false);
