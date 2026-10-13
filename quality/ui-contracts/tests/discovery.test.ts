@@ -34,6 +34,32 @@ test("discovery follows browser helpers but excludes server-only code, tests and
     }
 });
 
+test("discovery audits authored official collection blocs and their browser helpers", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ui-contract-official-"));
+    async function file(path: string, content: string): Promise<void> {
+        const absolute = join(root, path);
+        await mkdir(dirname(absolute), { recursive: true });
+        await writeFile(absolute, content);
+    }
+    try {
+        const bloc = "packages/official-repository/collections/official/blocs/admin/example";
+        await file(`${bloc}/bloc.ts`, 'import { load } from "./runtime/client"; load();');
+        await file(`${bloc}/runtime/client.ts`, 'export const load = () => fetch("/.cms/call/example/list");');
+        await file(`${bloc}/shadowdom.html`, "<section></section>");
+
+        const sources = await discoverUiSources(root);
+
+        expect(sources.map(({ path }) => path)).toEqual([
+            `${bloc}/bloc.ts`,
+            `${bloc}/runtime/client.ts`,
+            `${bloc}/shadowdom.html`,
+        ]);
+        expect(sources.every(({ browser }) => browser)).toBe(true);
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
 test("production policy does not mistake declarations, fixtures or frozen package snapshots for UI sources", () => {
     for (const path of [
         "a/thing.d.ts",

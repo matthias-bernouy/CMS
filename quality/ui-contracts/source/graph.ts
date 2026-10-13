@@ -10,7 +10,7 @@ export function isBrowserEntrypoint(path: string): boolean {
         path.startsWith("packages/surfaces/cms-kernel/src/components/") ||
         path.startsWith("packages/features/cms-content/src/browser/") ||
         /\.client\.[cm]?[jt]sx?$/.test(path) ||
-        /^packages\/resources\/[^/]+\/.*\/blocs\/.+\/Bloc\.ts$/.test(path)
+        /^packages\/official-repository\/collections\/[^/]+\/blocs\/.+\/bloc\.ts$/.test(path)
     );
 }
 

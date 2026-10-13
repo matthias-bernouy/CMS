@@ -27,9 +27,22 @@ export function isProductionSource(path: string): boolean {
 
 export async function discoverUiSources(root: string): Promise<UiSource[]> {
     const packages = await discoverWorkspacePackages(root, []);
+    const sourceRoots = [
+        ...packages.map(({ root: packageRoot }) => packageRoot),
+        join(root, "packages", "official-repository", "collections"),
+    ];
     const paths: string[] = [];
     async function visit(directory: string): Promise<void> {
-        for (const entry of await readdir(directory, { withFileTypes: true })) {
+        let entries;
+        try {
+            entries = await readdir(directory, { withFileTypes: true });
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+                return;
+            }
+            throw error;
+        }
+        for (const entry of entries) {
             const absolute = join(directory, entry.name);
             const path = relative(root, absolute).replaceAll("\\", "/");
             if (!isProductionSource(path)) {
@@ -42,8 +55,8 @@ export async function discoverUiSources(root: string): Promise<UiSource[]> {
             }
         }
     }
-    for (const pkg of packages) {
-        await visit(pkg.root);
+    for (const sourceRoot of sourceRoots) {
+        await visit(sourceRoot);
     }
     const sources: UiSource[] = await Promise.all(
         paths.sort().map(async (path) => ({
