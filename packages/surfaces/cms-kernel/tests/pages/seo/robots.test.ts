@@ -65,4 +65,27 @@ describe("Kernel robots", () => {
 
         expect(await response.text()).not.toContain("Sitemap:");
     });
+
+    test("blocks crawling and omits the sitemap for a private site", async () => {
+        const runner = new CaptureRunner("/private");
+        const repository = new InMemoryCmsRepository();
+        const settings = await repository.getSystem();
+        await repository.updateSystem({
+            site: { ...settings.site, visible: false, host: "https://canonical.test/private" },
+        });
+        new KernelCms({
+            runner,
+            cache: new InMemoryCache(),
+            content: createContentReader(repository),
+            authentication: new InMemoryAuthentication(),
+        });
+
+        const response = await runner.endpointHandler(
+            "GET",
+            "/private/robots.txt",
+        )(new Request("https://canonical.test/private/robots.txt"));
+
+        expect(response.headers.get("cache-control")).toBe("no-store");
+        expect(await response.text()).toBe("User-agent: *\nDisallow: /private/\n");
+    });
 });

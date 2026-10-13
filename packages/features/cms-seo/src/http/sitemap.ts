@@ -16,6 +16,12 @@ export function createSitemapHandler(config: SitemapHandlerConfig) {
     return async (request: Request): Promise<Response> => {
         try {
             const settings = await config.content.getRenderingSettings();
+            if (!settings.site.visible) {
+                return new Response("Not Found", {
+                    status: 404,
+                    headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" },
+                });
+            }
             const publicBaseUrl = canonicalSiteBaseUrl(settings.site.host);
             if (!publicBaseUrl) {
                 return unavailable();

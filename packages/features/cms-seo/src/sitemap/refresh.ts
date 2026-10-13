@@ -1,4 +1,8 @@
-import { CanonicalSiteHostNotConfiguredError, type SitemapMaterializationResult } from "./materialize";
+import {
+    CanonicalSiteHostNotConfiguredError,
+    PrivateSiteNotIndexableError,
+    type SitemapMaterializationResult,
+} from "./materialize";
 
 export const DEFAULT_SITEMAP_REFRESH_INTERVAL_MS = 60 * 60 * 1_000;
 export const DEFAULT_SITEMAP_RETRY_INTERVAL_MS = 5 * 60 * 1_000;
@@ -50,7 +54,11 @@ export function startSitemapSnapshotRefresh(
         controller = new AbortController();
         running = materialize(controller.signal)
             .catch((error) => {
-                if (!(error instanceof CanonicalSiteHostNotConfiguredError) && !controller?.signal.aborted) {
+                if (
+                    !(error instanceof CanonicalSiteHostNotConfiguredError) &&
+                    !(error instanceof PrivateSiteNotIndexableError) &&
+                    !controller?.signal.aborted
+                ) {
                     options.reportError?.(error);
                 }
                 return null;

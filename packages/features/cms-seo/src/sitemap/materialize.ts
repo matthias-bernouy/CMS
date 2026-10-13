@@ -30,6 +30,14 @@ export class CanonicalSiteHostNotConfiguredError extends TypeError {
     }
 }
 
+export class PrivateSiteNotIndexableError extends TypeError {
+    override name = "PrivateSiteNotIndexableError";
+
+    constructor() {
+        super("private sites do not publish sitemap snapshots");
+    }
+}
+
 export type SitemapMaterializationContext = {
     readonly store: SitemapStore;
     readonly content: Pick<ContentReader, "getRenderingSettings" | "getPublishedPages" | "resolvePublishedRoute">;
@@ -44,6 +52,9 @@ export async function materializeSitemapSnapshot(
 ): Promise<SitemapMaterializationResult> {
     const { store } = context;
     const settings = await context.content.getRenderingSettings();
+    if (!settings.site.visible) {
+        throw new PrivateSiteNotIndexableError();
+    }
     const baseUrl = canonicalSiteBaseUrl(settings.site.host);
     if (!baseUrl) {
         if (typeof settings.site.host === "string" && settings.site.host.trim()) {

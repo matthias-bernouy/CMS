@@ -16,7 +16,7 @@ export async function serveRenderablePage(
     language: string,
     kernel: KernelCms,
 ): Promise<Response> {
-    const decision = await preflightPageGatewayAccess(request, renderable.page, kernel, renderable.requirements);
+    const decision = await preflightPageGatewayAccess(request, renderable, kernel);
     if (decision.response) {
         return decision.response;
     }

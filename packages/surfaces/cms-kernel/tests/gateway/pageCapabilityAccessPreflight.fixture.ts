@@ -82,6 +82,9 @@ class CaptureRunner implements Runner {
 export async function mountPage(options: {
     content: string;
     auth?: Authentication;
+    pageId?: string;
+    pagePath?: string;
+    siteVisible?: boolean;
     systemPages?: Partial<Pick<TSystem["site"], "notFound" | "forbidden" | "serverError" | "login">>;
 }): Promise<{ handler: RouteHandler }> {
     const runner = new CaptureRunner();
@@ -89,7 +92,13 @@ export async function mountPage(options: {
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/component.js"), compress("component", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
-    const repository = pageRepository(options.content, options.systemPages);
+    const repository = pageRepository(
+        options.content,
+        options.systemPages,
+        options.siteVisible,
+        options.pageId,
+        options.pagePath,
+    );
     const pageExecution = new PageExecutionService({
         siteId: "site-a",
         content: createContentReader(repository),
@@ -155,17 +164,29 @@ export function authSubject(subject: { identifier: string } | null): Authenticat
 function pageRepository(
     content: string,
     systemPages: Partial<Pick<TSystem["site"], "notFound" | "forbidden" | "serverError" | "login">> = {},
+    siteVisible = true,
+    pageId = "products",
+    pagePath = "/products",
 ): CmsRepository {
-    const page: TPage = { path: "/products", title: "Products", description: "", content, visible: true, tags: [] };
+    const page: TPage = {
+        id: pageId,
+        path: pagePath,
+        title: "Products",
+        description: "",
+        content,
+        visible: true,
+        tags: [],
+    };
     return {
         getPublishedPage: async () => page,
-        getPublishedPageById: async (id) => (id === "sign-in" ? { ...page, path: "/sign-in" } : page),
+        getPublishedPageById: async (id) =>
+            id === page.id ? page : id === "sign-in" ? { ...page, path: "/sign-in" } : null,
         getPublishedPages: async () => [page],
         resolvePublishedRoute: async () => null,
         getPageRoute: async () => null,
         getBlocsList: async () => [],
         getBlocViewJS: async () => null,
-        getSystem: async () => ({ ...system, site: { ...system.site, ...systemPages } }),
+        getSystem: async () => ({ ...system, site: { ...system.site, visible: siteVisible, ...systemPages } }),
     } as unknown as CmsRepository;
 }
 

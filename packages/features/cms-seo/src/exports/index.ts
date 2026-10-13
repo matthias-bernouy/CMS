@@ -41,6 +41,7 @@ export {
 } from "cms-seo/sitemap/manifest";
 export {
     CanonicalSiteHostNotConfiguredError,
+    PrivateSiteNotIndexableError,
     materializeSitemapSnapshot,
     storedSitemapLocations,
     type SitemapMaterializationContext,

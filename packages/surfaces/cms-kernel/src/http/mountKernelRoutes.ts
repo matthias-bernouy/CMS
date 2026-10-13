@@ -40,6 +40,7 @@ export function mountKernelRoutes(kernel: KernelCms) {
     const runner = kernel.runner;
     const robotsHandler = createRobotsHandler({
         content: kernel.content,
+        basePath: kernel.basePath,
         cmsPathPrefix: kernel.cmsPathPrefix,
         collectionAssetsPath: `${kernel.basePath}${COLLECTION_ASSETS_ROUTE}`,
         publicRuntimePaths: [

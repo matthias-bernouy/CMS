@@ -16,13 +16,19 @@ export function sitemapPage(id: string, path: string): TPage {
     };
 }
 
-export function sitemapService(options: { store: BlobStore; pages?: readonly TPage[]; siteHost?: () => string }) {
+export function sitemapService(options: {
+    store: BlobStore;
+    pages?: readonly TPage[];
+    siteHost?: () => string;
+    siteVisible?: () => boolean;
+}) {
     const pages = options.pages ?? [];
     const content: Pick<ContentReader, "getRenderingSettings" | "getPublishedPages" | "resolvePublishedRoute"> = {
         getRenderingSettings: async () => {
             const settings = defaultSystem();
             settings.site.host = options.siteHost?.() ?? "https://example.test";
             settings.site.language = "en";
+            settings.site.visible = options.siteVisible?.() ?? true;
             return settings;
         },
         getPublishedPages: async () => pages,
