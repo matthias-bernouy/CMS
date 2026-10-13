@@ -1,0 +1,30 @@
+{
+    "id": "workspace.upload.complete",
+    "description": "Complete an upload in the server-managed site workspace.",
+    "access": "admin",
+    "behavior": { "effect": "command", "execution": "sync", "idempotency": "none" },
+    "input": {
+        "type": "object",
+        "properties": { "uploadId": { "type": "string", "maxLength": 128 } },
+        "required": ["uploadId"]
+    },
+    "output": { "type": "null" },
+    "errors": [
+        { "code": "INVALID_INPUT", "retryable": false },
+        { "code": "NOT_FOUND", "retryable": false },
+        { "code": "UPLOAD_NOT_READY", "retryable": true },
+        { "code": "QUOTA_EXCEEDED", "retryable": false },
+        { "code": "CORE_UNAVAILABLE", "retryable": true }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/workspace/uploads/{uploadId}/complete",
+        "input": { "path": { "uploadId": "uploadId" } },
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "INVALID_INPUT": 422, "NOT_FOUND": 404, "UPLOAD_NOT_READY": 409, "QUOTA_EXCEEDED": 409, "CORE_UNAVAILABLE": 503 }
+        }
+    }
+}

@@ -6,7 +6,7 @@
         "idempotency": "none"
     },
     "id": "upload.create",
-    "description": "Create a bounded upload session.",
+    "description": "Create a bounded upload session, optionally targeting an existing stable file identity.",
     "input": {
         "type": "object",
         "properties": {
@@ -51,6 +51,11 @@
                     "thumbnail",
                     "responsive"
                 ]
+            },
+            "fileId": {
+                "type": "string",
+                "maxLength": 128,
+                "nullable": true
             }
         },
         "required": [

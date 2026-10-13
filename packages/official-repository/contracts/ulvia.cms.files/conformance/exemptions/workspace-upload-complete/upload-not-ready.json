@@ -1,0 +1,5 @@
+{
+    "capabilityId": "workspace.upload.complete",
+    "reason": "Covered by the stateful cms-files provider and managed workspace harnesses; the portable contract suite cannot share upload and file state between isolated calls.",
+    "errorCode": "UPLOAD_NOT_READY"
+}
