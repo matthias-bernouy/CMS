@@ -24,6 +24,9 @@
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/ulvia-provider-server": "workspace:*"
     },
+    "devDependencies": {
+        "@bernouy/ulvia-provider": "workspace:*"
+    },
     "peerDependencies": {
         "typescript": "^7.0.2"
     }

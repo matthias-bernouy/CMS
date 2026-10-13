@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
+import { OFFICIAL_INSTANCE_PROFILE } from "@bernouy/ulvia-provider";
 import { buildOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
 import { assertCollectionSourceQuality } from "../../src/release/quality";
 import { prepareCollectionRelease } from "../../src/release/source";
@@ -107,4 +108,9 @@ test("the pre-built local bootstrap bundle matches official authored releases", 
     expect((await readFile(join(root, "collections", "ulvia-official", "release.json"), "utf8")).trim()).toBe(
         artifacts.collection,
     );
+    const officialCollection = await prepareCollectionRelease(
+        resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
+        await officialContractCatalogue(),
+    );
+    expect(OFFICIAL_INSTANCE_PROFILE.collection.digest).toBe(officialCollection.digest);
 });
