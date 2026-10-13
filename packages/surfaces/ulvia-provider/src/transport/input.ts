@@ -20,16 +20,16 @@ export async function decodeProviderContractInput(
 }> {
     const input: Record<string, unknown> = {};
     const binding = capability.binding.input;
-    for (const [property, wireName] of Object.entries(binding?.path ?? {})) {
+    for (const [wireName, property] of Object.entries(binding?.path ?? {})) {
         input[property] = decodeScalar(capability, property, pathParameters[wireName]);
     }
-    for (const [property, wireName] of Object.entries(binding?.query ?? {})) {
+    for (const [wireName, property] of Object.entries(binding?.query ?? {})) {
         const raw = url.searchParams.get(wireName);
         if (raw !== null) {
             input[property] = decodeScalar(capability, property, encodeURIComponent(raw));
         }
     }
-    for (const [property, wireName] of Object.entries(binding?.headers ?? {})) {
+    for (const [wireName, property] of Object.entries(binding?.headers ?? {})) {
         const raw = request.headers.get(wireName);
         if (raw !== null) {
             input[property] = decodeScalar(capability, property, raw);
