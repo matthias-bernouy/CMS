@@ -118,10 +118,11 @@ export class Bloc extends Component {
             if (!this.document || !this.settings) {
                 return;
             }
-            this.document = await themeCapability("save", {
+            await themeCapability("save", {
                 expectedRevision: this.document.revision,
                 themeJson: JSON.stringify(this.settings),
             });
+            this.document = await themeCapability("get", {});
             this.settings = JSON.parse(this.document.themeJson) as ThemeSettings;
             this.render();
         }, success);
