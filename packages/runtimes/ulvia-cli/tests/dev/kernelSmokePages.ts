@@ -28,11 +28,11 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
         throw new Error(`Page details update failed (${detailsResponse.status()}).`);
     }
     await page.getByRole("button", { name: "Add Heading", exact: true }).click();
-    await page.getByLabel("Element content", { exact: true }).fill("Smoke Page");
+    await fillLatestVisibleElementContent(page, "Smoke Page");
     await page.getByRole("button", { name: "Add Heading", exact: true }).click();
-    await page.getByLabel("Element content", { exact: true }).fill("Published through the Kernel.");
+    await fillLatestVisibleElementContent(page, "Published through the Kernel.");
     await page.getByRole("button", { name: "Add Heading", exact: true }).click();
-    await page.getByLabel("Element content", { exact: true }).fill("Built with the visual Page editor.");
+    await fillLatestVisibleElementContent(page, "Built with the visual Page editor.");
     const saveResponse = await submitPageMutation(page, "update");
     if (!saveResponse.ok()) {
         throw new Error(`Page update failed (${saveResponse.status()}).`);
@@ -44,6 +44,22 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     await verifyPublishedPage(page, kernelOrigin);
     await page.goto(`${kernelOrigin}/admin`);
     await page.locator("#pages-list").waitFor();
+}
+
+async function fillLatestVisibleElementContent(page: Page, value: string): Promise<void> {
+    const fields = page.getByLabel("Element content", { exact: true });
+    const deadline = Date.now() + 15_000;
+    while (Date.now() < deadline) {
+        for (let index = (await fields.count()) - 1; index >= 0; index -= 1) {
+            const field = fields.nth(index);
+            if (await field.isVisible().catch(() => false)) {
+                await field.fill(value);
+                return;
+            }
+        }
+        await page.waitForTimeout(50);
+    }
+    throw new Error("The Page editor did not expose a visible element content field");
 }
 
 async function submitPageDetails(page: Page) {

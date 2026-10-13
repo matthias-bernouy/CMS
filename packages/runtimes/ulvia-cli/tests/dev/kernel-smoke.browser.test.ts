@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
@@ -7,11 +7,12 @@ import { runCli } from "../../src/cli";
 import { runKernelSmoke, verifyKernelStateAfterRestart } from "./kernelSmokeFlows";
 
 const smoke = process.env.ULVIA_RUN_KERNEL_SMOKE === "1" ? test : test.skip;
-const PORTS = { kernel: 15_100, mongo: 27_029, repository: 15_102 } as const;
+const PORTS = { kernel: 15_100, mongo: 27_029, repository: 15_102, provider: 5_103 } as const;
 
 smoke(
     "fresh local installation publishes a Page and preserves Kernel state",
     async () => {
+        assertPortAvailable(PORTS.provider, "official Provider");
         const data = await mkdtemp(join(tmpdir(), "ulvia-kernel-smoke-"));
         const environment = {
             ...process.env,
@@ -19,6 +20,7 @@ smoke(
             ULVIA_DEV_KERNEL_PORT: String(PORTS.kernel),
             ULVIA_DEV_MONGO_PORT: String(PORTS.mongo),
             ULVIA_DEV_REPOSITORY_PORT: String(PORTS.repository),
+            ULVIA_DEV_PROVIDER_PORT: String(PORTS.provider),
         };
         const cli = resolve(import.meta.dir, "../../src/index.ts");
         const smokeCollection = resolve(import.meta.dir, "fixtures/smoke-kit");
@@ -80,6 +82,7 @@ smoke(
             await verifyKernelStateAfterRestart(restartedPage, credentials, `http://127.0.0.1:${PORTS.kernel}`);
             expect(restartErrors).toEqual([]);
         } catch (error) {
+            await writeFailureArtifacts(output, browser);
             throw new Error(`${error instanceof Error ? error.message : String(error)}\n\nRuntime output:\n${output}`);
         } finally {
             await browser?.close();
@@ -109,6 +112,44 @@ async function waitForHttp(url: string, runtime: ReturnType<typeof Bun.spawn>): 
         await Bun.sleep(250);
     }
     throw new Error("Local Kernel did not become ready");
+}
+
+function assertPortAvailable(port: number, label: string): void {
+    try {
+        const probe = Bun.serve({
+            hostname: "127.0.0.1",
+            port,
+            fetch: () => new Response(null, { status: 204 }),
+        });
+        probe.stop(true);
+    } catch (error) {
+        const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+        if (code === "EADDRINUSE") {
+            throw new Error(
+                `Kernel smoke cannot start because the ${label} port ${port} is already in use. Stop the existing Ulvia dev stack and retry.`,
+            );
+        }
+        throw error;
+    }
+}
+
+async function writeFailureArtifacts(
+    output: string,
+    browser: Awaited<ReturnType<typeof chromium.launch>> | undefined,
+): Promise<void> {
+    const directory = resolve(process.env.ULVIA_SMOKE_ARTIFACTS_DIR ?? "artifacts/kernel-smoke");
+    await mkdir(directory, { recursive: true });
+    await writeFile(join(directory, "runtime.log"), output, "utf8");
+    const page = browser?.contexts()[0]?.pages()[0];
+    if (page) {
+        await Promise.all([
+            page.screenshot({ path: join(directory, "failure.png"), fullPage: true }).catch(() => undefined),
+            page
+                .content()
+                .then((html) => writeFile(join(directory, "failure.html"), html, "utf8"))
+                .catch(() => undefined),
+        ]);
+    }
 }
 
 async function verifySecondInstanceIsolation(

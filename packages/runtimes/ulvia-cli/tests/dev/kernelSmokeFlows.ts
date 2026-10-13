@@ -6,13 +6,23 @@ export async function runKernelSmoke(
     credentials: { adminEmail: string; adminPassword: string },
     kernelOrigin: string,
 ): Promise<void> {
-    await signIn(page, credentials, kernelOrigin);
-    await mutatePages(page, kernelOrigin);
-    await mutateCollections(page);
-    await mutateSettings(page);
-    await mutateProviders(page);
-    await mutateAccess(page);
-    await inspectDiagnostics(page);
+    await stage("sign in", () => signIn(page, credentials, kernelOrigin));
+    await stage("Pages", () => mutatePages(page, kernelOrigin));
+    await stage("collections and theme", () => mutateCollections(page));
+    await stage("settings", () => mutateSettings(page));
+    await stage("provider routing", () => mutateProviders(page));
+    await stage("access", () => mutateAccess(page));
+    await stage("diagnostics", () => inspectDiagnostics(page));
+}
+
+async function stage(name: string, operation: () => Promise<void>): Promise<void> {
+    try {
+        await operation();
+    } catch (error) {
+        throw new Error(
+            `Kernel smoke failed during ${name}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+    }
 }
 
 export async function verifyKernelStateAfterRestart(
