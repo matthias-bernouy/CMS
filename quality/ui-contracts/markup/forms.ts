@@ -37,15 +37,6 @@ export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
             "Use an explicit logout action or link; do not load this endpoint as page data.",
         );
     }
-    if (automatic && method && !dynamic(method) && method !== "GET") {
-        report(
-            "cms-source-method",
-            "source-automatic-method",
-            "WARNING",
-            `Automatic sources perform GET; the declared ${method} method is ignored.`,
-            'For a submission, place cms-source on a native form and set cms-source-trigger="submit" or "change".',
-        );
-    }
     const formSubmission = tag.name === "form" && ["submit", "change"].includes(trigger);
     if (
         tag.name !== "form" &&
@@ -58,8 +49,8 @@ export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
             "cms-source-trigger",
             "source-trigger-target",
             "WARNING",
-            `Only a native form submits with ${method}; this element performs GET when its ancestor form triggers ${trigger}.`,
-            "Move the source and submission attributes onto the native form, or use GET for an event-triggered data refresh.",
+            `Only a native form serializes controls with ${method}; this element sends cms-source-body when its ancestor form triggers ${trigger}.`,
+            "Move the source and submission attributes onto the native form to submit its controls, or declare the intended cms-source-body explicitly.",
         );
     }
     if (!formSubmission) {

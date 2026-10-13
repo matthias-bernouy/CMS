@@ -13,6 +13,15 @@ export function networkPolicy(
     path: string,
     target: NetworkTarget,
 ): Pick<UiFinding, "rule" | "severity" | "message" | "recommendation"> {
+    if (target.kind === "binding") {
+        return {
+            rule: "ui.network.http",
+            severity: "INFO",
+            message: `${target.name} submits through the declarative Binding runtime.`,
+            recommendation:
+                "Keep the form contract declarative and reserve programmatic submission for browser behavior that cannot be expressed by a native form trigger.",
+        };
+    }
     if (target.kind === "websocket" || target.kind === "eventsource") {
         const protocol = target.kind === "websocket" ? "WebSocket" : "EventSource";
         return {

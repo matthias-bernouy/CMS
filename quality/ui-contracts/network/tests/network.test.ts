@@ -131,10 +131,14 @@ describe("browser network contracts", () => {
     });
 });
 
-test("programmatic binding requests remain visible for declarative-UI review", () => {
+test("programmatic binding requests remain visible without being classified as imperative HTTP", () => {
     const findings = inspect(
         'import { sourceFormRequest as request, Component } from "@bernouy/cms-content/browser"; request(form); new Component();',
     );
     expect(findings).toHaveLength(1);
-    expect(findings[0]).toMatchObject({ rule: "ui.network.http", severity: "WARNING" });
+    expect(findings[0]).toMatchObject({
+        rule: "ui.network.http",
+        severity: "INFO",
+        message: expect.stringContaining("declarative Binding runtime"),
+    });
 });

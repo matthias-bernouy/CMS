@@ -27,7 +27,8 @@ function inspectScript(source: UiSource, { content, offset }: ScriptExcerpt): Ui
     const visit = (node: ts.Node) => {
         if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
             const target = resolve(node.expression);
-            const request = ts.isCallExpression(node) && target && ["fetch", "client", "method"].includes(target.kind);
+            const request =
+                ts.isCallExpression(node) && target && ["fetch", "client", "method", "binding"].includes(target.kind);
             const connection =
                 ts.isNewExpression(node) && target && ["xhr", "websocket", "eventsource"].includes(target.kind);
             if (target && (request || connection)) {

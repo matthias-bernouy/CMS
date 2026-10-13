@@ -5,11 +5,8 @@ const path = "packages/surfaces/cms-kernel/src/core/admin/auth/templates/example
 const inspect = (content: string, file = path) => inspectMarkup({ path: file, content, kind: "html", browser: true });
 
 describe("declarative source form contracts", () => {
-    test("distinguishes ignored automatic methods from proven GET mutations", () => {
-        expect(inspect('<form cms-source="/api/search" cms-source-method="POST"></form>')[0]).toMatchObject({
-            severity: "WARNING",
-            rule: "source-automatic-method",
-        });
+    test("supports automatic source methods while still detecting proven GET mutations", () => {
+        expect(inspect('<form cms-source="/api/search" cms-source-method="POST"></form>')).toEqual([]);
         expect(
             inspect('<form cms-source="/api/search" cms-source-trigger="submit" cms-source-method="POST"></form>'),
         ).toEqual([]);

@@ -1,7 +1,7 @@
 import ts from "@typescript/typescript6";
 
 export type NetworkTarget = {
-    kind: "global" | "fetch" | "xhr" | "websocket" | "eventsource" | "client" | "method" | "namespace";
+    kind: "global" | "fetch" | "xhr" | "websocket" | "eventsource" | "client" | "method" | "namespace" | "binding";
     name: string;
 };
 
@@ -40,7 +40,7 @@ export function importedTarget(declaration: ts.Declaration): NetworkTarget | und
 
 export function clientExport(module: string, name: string): NetworkTarget | undefined {
     if (module === "@bernouy/cms-content/browser" && name === "sourceFormRequest") {
-        return { kind: "fetch", name: "sourceFormRequest" };
+        return { kind: "binding", name: "sourceFormRequest" };
     }
     if ((module === "axios" || module === "ky") && name === "default") {
         return { kind: "client", name: module };
