@@ -28,7 +28,6 @@ export function mountAuthRoutes(kernel: KernelCms): void {
     });
 
     runner.group(AUTH_ROUTES.base, (authRunner) => {
-        const supportedKinds = authKinds(backends);
         if (backends.local) {
             authRunner.addEndpoint("POST", AUTH_ROUTES.login, (request) => localLoginHandler(backends.local!, request));
             authRunner.addEndpoint("GET", AUTH_ROUTES.logout, (request) =>
