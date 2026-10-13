@@ -29,6 +29,7 @@
                 <h2 slot="content" id="job-health">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</h2>
                 <p slot="content" role="status" cms-condition="$source.loading">{{ cms.i18n.ulvia-official.ui-reading-durable-jobs }}</p>
                 <p slot="content" role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
+                <p slot="content" cms-condition="$source.loaded && jobs.items.length == 0">{{ cms.i18n.ulvia-official.ui-no-durable-jobs }}</p>
                 <ulvia-official-stack slot="content" cms-condition="$source.loaded" gap="sm" role="list">
                     <article slot="items" cms-repeat="jobs.items as job" role="listitem">
                         <ulvia-official-cluster align="center" justify="between">

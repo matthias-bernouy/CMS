@@ -144,6 +144,7 @@ async function inspectDiagnostics(page: Page): Promise<void> {
     await adminPageLink(page, "diagnostics").click();
     await page.getByRole("heading", { name: "Diagnostics", exact: true }).waitFor();
     await page.locator("#migration-health").waitFor();
+    await page.getByText("No durable jobs are currently retained.", { exact: true }).waitFor();
 }
 
 async function expectAdminValue(page: Page, label: string, expected: string): Promise<void> {

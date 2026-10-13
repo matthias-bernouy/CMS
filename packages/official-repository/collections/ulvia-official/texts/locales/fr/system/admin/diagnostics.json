@@ -9,6 +9,7 @@
     "ui-maintenance-mode-is-active": "Le mode maintenance est actif",
     "ui-manifest": "· manifeste",
     "ui-migration-diagnostics-are-unavailable": "Les diagnostics de migration sont indisponibles.",
+    "ui-no-durable-jobs": "Aucune tâche durable n’est actuellement conservée.",
     "ui-no-maintenance-operation-is-active": "Aucune opération de maintenance n’est active",
     "ui-operations-9b1b6f78": "opérations ·",
     "ui-pages": "Pages ·",

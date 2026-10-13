@@ -60,6 +60,12 @@
         "group": "text.group.admin.diagnostics"
     },
     {
+        "id": "ui-no-durable-jobs",
+        "label": "text.ui-no-durable-jobs.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
         "id": "ui-no-maintenance-operation-is-active",
         "label": "text.ui-no-maintenance-operation-is-active.label",
         "category": "text.category.admin",

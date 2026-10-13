@@ -9,6 +9,7 @@
     "text.ui-maintenance-mode-is-active.label": "Maintenance mode is active",
     "text.ui-manifest.label": "· manifest",
     "text.ui-migration-diagnostics-are-unavailable.label": "Migration diagnostics are unavailable.",
+    "text.ui-no-durable-jobs.label": "No durable jobs are currently retained.",
     "text.ui-no-maintenance-operation-is-active.label": "No maintenance operation is active",
     "text.ui-operations-9b1b6f78.label": "operations ·",
     "text.ui-pages.label": "Pages ·",
