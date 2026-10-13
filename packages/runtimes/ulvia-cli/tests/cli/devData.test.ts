@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assertDevServersStopped, createFreshDevPaths, resetDevData } from "../../src/commands/devData";
@@ -31,6 +31,11 @@ describe("Ulvia development data lifecycle", () => {
             await writeFile(join(root, "keep.txt"), "keep");
             await writeFile(join(paths.dev, "runtime.json"), JSON.stringify({ schema: "ulvia.dev-runtime.v1" }));
             await writeFile(join(paths.repository, "release.json"), "old");
+            const immutableObject = join(paths.repository, "objects", "sha256", "digest");
+            await mkdir(immutableObject, { recursive: true });
+            await writeFile(join(immutableObject, "release.json"), "immutable");
+            await chmod(immutableObject, 0o550);
+            await chmod(join(paths.repository, "objects", "sha256"), 0o550);
             await resetDevData(paths);
 
             expect(await readFile(join(root, "keep.txt"), "utf8")).toBe("keep");

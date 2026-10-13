@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm } from "node:fs/promises";
+import { chmod, lstat, mkdir, opendir, readFile, rm } from "node:fs/promises";
 import { createConnection } from "node:net";
 import { join } from "node:path";
 import type { DevPorts } from "../runtime/cms";
@@ -48,9 +48,33 @@ export async function createFreshDevPaths(dataDirectory: string, current: UlviaP
 
 export async function resetDevData(paths: UlviaPaths): Promise<void> {
     await assertUlviaDevEnvironment(paths);
+    await makeTreeOwnerRemovable(paths.repository);
+    await makeTreeOwnerRemovable(paths.dev);
     await rm(paths.repository, { recursive: true, force: true });
     await rm(paths.dev, { recursive: true, force: true });
     await ensureUlviaPaths(paths);
+}
+
+async function makeTreeOwnerRemovable(path: string): Promise<void> {
+    const metadata = await lstat(path).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") {
+            return null;
+        }
+        throw error;
+    });
+    if (metadata === null) {
+        return;
+    }
+    if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
+        throw new Error(`Refusing to reset non-directory Ulvia data: ${path}`);
+    }
+    await chmod(path, metadata.mode | 0o700);
+    const directory = await opendir(path);
+    for await (const entry of directory) {
+        if (entry.isDirectory() && !entry.isSymbolicLink()) {
+            await makeTreeOwnerRemovable(join(path, entry.name));
+        }
+    }
 }
 
 export async function assertDevServersStopped(
