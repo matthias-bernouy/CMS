@@ -1,3 +1,5 @@
+#!/usr/bin/env bun
+
 import { runCli } from "./cli";
 
 export { runCli, type CliOptions } from "./cli";
