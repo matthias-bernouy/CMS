@@ -78,6 +78,16 @@ async function mutateCollections(page: Page): Promise<void> {
     await page.getByRole("button", { name: /Blocs/u }).click();
     await page.getByText("smoke-kit-card", { exact: true }).waitFor();
     await page.getByRole("button", { name: /Collections/u }).click();
+    const officialCard = page.getByRole("heading", { name: "ulvia-official", exact: true }).locator("..");
+    await officialCard.getByRole("button", { name: "Manage" }).click();
+    await page.getByRole("heading", { name: "Ulvia Official", exact: true }).waitFor();
+    await page.getByRole("button", { name: /Theme/u }).click();
+    await page.getByLabel("Search tokens").waitFor();
+    const themeValue = page.getByLabel("Light value");
+    await themeValue.fill(await themeValue.inputValue());
+    await page.getByRole("button", { name: "Save value", exact: true }).click();
+    await page.getByText("Theme value saved.", { exact: true }).waitFor();
+    await page.getByRole("button", { name: /Collections/u }).click();
 }
 
 async function mutateSettings(page: Page): Promise<void> {

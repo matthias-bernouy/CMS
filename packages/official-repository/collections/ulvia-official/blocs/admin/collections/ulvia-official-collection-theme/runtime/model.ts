@@ -13,7 +13,7 @@ export type ThemeSource = {
     label: string;
     supportsModes: boolean;
     categories: ThemeCategory[];
-    owner?: { kind: string; collectionId?: string };
+    owner?: { kind: "integration"; integrationId: string } | { kind: "contribution"; contributionId: string };
 };
 export type ThemeProfile = { id: string; name: string; values: Record<ThemeMode, Record<string, string>> };
 export type ThemeSettings = { activeThemeId: string; sources: ThemeSource[]; themes: ThemeProfile[] };
@@ -21,7 +21,7 @@ export type ThemeDocument = { revision: number; activeThemeId: string; themeJson
 
 export function sourceFor(settings: ThemeSettings, collectionId: string): ThemeSource | undefined {
     return settings.sources.find(
-        (source) => source.owner?.kind === "collection" && source.owner.collectionId === collectionId,
+        (source) => source.owner?.kind === "contribution" && source.owner.contributionId === collectionId,
     );
 }
 
