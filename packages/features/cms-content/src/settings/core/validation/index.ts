@@ -7,6 +7,7 @@ import { ContentValidationError } from "cms-content/application/core/validation/
 import { validateThemeSettings } from "cms-content/theme/core";
 import { validateEmailSettings } from "cms-content/settings/core/validation/email";
 import { validateSiteOrganizationPatch } from "cms-content/settings/core/validation/organization";
+import { validatePageReference } from "cms-content/pages/core/routing/values";
 
 type SiteOrganizationPatch = Omit<Partial<SiteOrganizationSettings>, "address"> & {
     address?: Partial<SiteOrganizationAddress>;
@@ -54,6 +55,15 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
         }
         if (site.activeLanguages !== undefined) {
             site.activeLanguages = validateLanguageList(site.activeLanguages, "site.activeLanguages");
+        }
+        for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
+            if (site[field] !== undefined && site[field] !== null) {
+                try {
+                    site[field] = validatePageReference(site[field]);
+                } catch {
+                    throw new ContentValidationError(`site.${field}`, "invalid Page reference");
+                }
+            }
         }
         normalized.site = site as TSystem["site"];
     }

@@ -99,9 +99,10 @@ export async function mountPage(options: {
         options.pageId,
         options.pagePath,
     );
+    const content = createContentReader(repository);
     const pageExecution = new PageExecutionService({
         siteId: "site-a",
-        content: createContentReader(repository),
+        content,
         invoker: shopInvoker,
         authority: unusedAuthority,
         resolveCapability: async (contractId, capabilityId) => {
@@ -119,7 +120,15 @@ export async function mountPage(options: {
     });
     new KernelCms({
         runner,
-        content: createContentReader(repository),
+        content: {
+            ...content,
+            resolvePageReference: async (reference) => {
+                if (reference.kind === "contribution" && reference.pageId === "login") {
+                    return "/login";
+                }
+                return content.resolvePageReference(reference);
+            },
+        },
         cache,
         capabilityGateway: {
             siteId: "site-a",

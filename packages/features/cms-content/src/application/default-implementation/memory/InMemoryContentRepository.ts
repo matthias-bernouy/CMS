@@ -240,7 +240,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         }
         if (alternative) {
             for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
-                if (this.system.site[field]?.pageId === id) {
+                if (this.system.site[field]?.kind === "site" && this.system.site[field]?.pageId === id) {
                     this.system.site[field] = { kind: "site", pageId: alternative.id };
                 }
             }

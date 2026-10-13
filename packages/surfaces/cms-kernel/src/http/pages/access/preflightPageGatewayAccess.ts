@@ -5,7 +5,11 @@ import { renderRef } from "cms-kernel/http/pages/renderRef";
 import { resolveRequestActor } from "./resolveRequestActor";
 
 export type PageAccess = "public" | "authenticated" | "admin";
-export type PageAccessDecision = { readonly access: PageAccess; readonly response?: Response };
+export type PageAccessDecision = {
+    readonly access: PageAccess;
+    readonly cacheable: boolean;
+    readonly response?: Response;
+};
 
 /** Derives Page access from every direct and transitively used capability. */
 export async function preflightPageGatewayAccess(
@@ -26,7 +30,8 @@ export async function preflightPageGatewayAccess(
         !settings.site.visible && !isLoginPage
             ? highestAccess(capabilityDecision.access, "authenticated")
             : capabilityDecision.access;
-    return authorizeAccess(request, kernel, required);
+    const decision = await authorizeAccess(request, kernel, required);
+    return { ...decision, cacheable: decision.cacheable && !isLoginPage };
 }
 
 async function capabilityAccess(
@@ -37,7 +42,7 @@ async function capabilityAccess(
     const execution = kernel.pageExecution;
     if (!execution) {
         if (!pageRequiresCapabilityExecution({ page: renderable.page, requirements: renderable.requirements })) {
-            return { access: "public" };
+            return { access: "public", cacheable: true };
         }
         return unavailable();
     }
@@ -51,24 +56,25 @@ async function capabilityAccess(
     if (!required) {
         return unavailable();
     }
-    return { access: required };
+    return { access: required, cacheable: required === "public" };
 }
 
 async function authorizeAccess(request: Request, kernel: KernelCms, required: PageAccess): Promise<PageAccessDecision> {
     if (required === "public") {
-        return { access: "public" };
+        return { access: "public", cacheable: true };
     }
     const actor = await resolveRequestActor(kernel, request);
     if (required === "authenticated" && actor.kind === "anonymous") {
-        return { access: required, response: await accessDenied(request, kernel, 401) };
+        return { access: required, cacheable: false, response: await accessDenied(request, kernel, 401) };
     }
     if (required === "admin" && actor.kind !== "administrator") {
         return {
             access: required,
+            cacheable: false,
             response: await accessDenied(request, kernel, actor.kind === "anonymous" ? 401 : 403),
         };
     }
-    return { access: required };
+    return { access: required, cacheable: false };
 }
 
 function samePageReference(left: RenderablePage["reference"], right: RenderablePage["reference"]): boolean {
@@ -95,6 +101,7 @@ function highestAccess(left: PageAccess, right: PageAccess): PageAccess {
 function unavailable(): PageAccessDecision {
     return {
         access: "public",
+        cacheable: false,
         response: new Response("Service unavailable", {
             status: 503,
             headers: { "cache-control": "no-store" },
@@ -108,8 +115,10 @@ async function accessDenied(request: Request, kernel: KernelCms, status: 401 | 4
         const returnTo = `${url.pathname}${url.search}`;
         const settings = await kernel.content.getRenderingSettings().catch(() => null);
         const loginRef = settings?.site.login;
-        const loginPage = loginRef ? await kernel.content.getPublishedPageById(loginRef.pageId) : null;
-        const loginPath = loginPage?.path;
+        const loginPath = loginRef ? await kernel.content.resolvePageReference(loginRef) : null;
+        if (loginRef && !loginPath) {
+            return unavailable().response!;
+        }
         if (loginPath === url.pathname) {
             return new Response("Unauthorized", { status, headers: { "cache-control": "no-store" } });
         }

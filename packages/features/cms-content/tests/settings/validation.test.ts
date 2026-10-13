@@ -71,6 +71,34 @@ describe("validateSettingsPatch — canonical site host", () => {
     });
 });
 
+describe("validateSettingsPatch — system Page references", () => {
+    test("accepts stable contributed Page references", () => {
+        const login = {
+            kind: "contribution" as const,
+            sourceId: "ulvia.official",
+            contributionId: "ulvia-official",
+            pageId: "login",
+        };
+
+        expect(validateSettingsPatch({ site: { login } }).site?.login).toEqual(login);
+    });
+
+    test("rejects malformed contributed Page references", () => {
+        expect(() =>
+            validateSettingsPatch({
+                site: {
+                    login: {
+                        kind: "contribution",
+                        sourceId: "Ulvia Official",
+                        contributionId: "ulvia-official",
+                        pageId: "login",
+                    },
+                },
+            } as never),
+        ).toThrow(ContentValidationError);
+    });
+});
+
 describe("validateSettingsPatch — email settings", () => {
     test("passes through disabled email settings without requiring SMTP credentials", () => {
         const out = validateSettingsPatch({

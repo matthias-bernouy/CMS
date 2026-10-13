@@ -20,7 +20,7 @@ export async function serveRenderablePage(
     if (decision.response) {
         return decision.response;
     }
-    return renderIndexedPage(request, renderable.page, pathname, kernel, decision.access, language);
+    return renderIndexedPage(request, renderable.page, pathname, kernel, decision.access, language, decision.cacheable);
 }
 
 async function renderIndexedPage(
@@ -30,6 +30,7 @@ async function renderIndexedPage(
     kernel: KernelCms,
     access: PageAccess,
     language: string,
+    cacheable: boolean,
 ): Promise<Response> {
     if (access !== "public") {
         return renderWithFallbacks(request, page, cachePath, kernel, false, {
@@ -52,7 +53,7 @@ async function renderIndexedPage(
         reportPageFailure("indexing", cachePath, new Error(indexing.reason));
         return renderRef(request, kernel, "serverError", 503, "Service unavailable");
     }
-    return renderWithFallbacks(request, page, cachePath, kernel, !indexing.dynamic, {
+    return renderWithFallbacks(request, page, cachePath, kernel, cacheable && !indexing.dynamic, {
         ...indexing.metadata,
         language,
     });

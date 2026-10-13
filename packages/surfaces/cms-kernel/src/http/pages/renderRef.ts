@@ -37,8 +37,10 @@ export async function renderRef(
         const settings = await kernel.content.getRenderingSettings();
         const ref = settings.site?.[field] ?? null;
         if (ref) {
-            const page = await kernel.content.getPublishedPageById(ref.pageId);
-            if (page) {
+            const path = await kernel.content.resolvePageReference(ref);
+            const renderable = path ? await kernel.content.getRenderablePage(path) : null;
+            if (renderable) {
+                const { page } = renderable;
                 if (status === 410) {
                     return sendCompressed(
                         req,

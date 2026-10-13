@@ -14,8 +14,7 @@ export function coercePageRef(raw: unknown): TPageRef {
     }
     if (typeof raw === "object" && raw !== null && "kind" in raw && "pageId" in raw) {
         try {
-            const reference = validatePageReference(raw as Exclude<TPageRef, null>);
-            return reference.kind === "site" ? reference : null;
+            return validatePageReference(raw as Exclude<TPageRef, null>);
         } catch {
             return null;
         }

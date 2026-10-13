@@ -1,4 +1,4 @@
-import type { SitePageReference } from "cms-content/pages/interfaces/routing";
+import type { PageReference } from "cms-content/pages/interfaces/routing";
 import type { PageDocument } from "cms-content/pages/interfaces/document";
 
 export type PageIndexingConfiguration = {
@@ -82,5 +82,5 @@ export type PageRoute = {
     language: string;
 };
 
-/** Reference to a site Page by stable primary key. `null` means "not set". */
-export type TPageRef = SitePageReference | null;
+/** Stable reference to a site-owned or contributed Page. `null` means "not set". */
+export type TPageRef = PageReference | null;

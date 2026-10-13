@@ -36,6 +36,7 @@ describe("Kernel page capability access preflight", () => {
 
         const response = await handler(new Request("http://site/sign-in"));
         expect(response.status).toBe(200);
+        expect(response.headers.get("cache-control")).toBe("no-store");
     });
 
     test("redirects anonymous visitors when an automatic capability requires authentication", async () => {
@@ -59,6 +60,25 @@ describe("Kernel page capability access preflight", () => {
         const response = await handler(new Request("http://site/products"));
         expect(response.status).toBe(302);
         expect(response.headers.get("location")).toBe("/sign-in?returnTo=%2Fproducts");
+    });
+
+    test("uses a configured contributed login Page", async () => {
+        const { handler } = await mountPage({
+            content: `<section cms-source="/.cms/call/shop/myProducts as products" cms-source-method="post"></section>`,
+            auth: authSubject(null),
+            systemPages: {
+                login: {
+                    kind: "contribution",
+                    sourceId: "ulvia.official",
+                    contributionId: "ulvia-official",
+                    pageId: "login",
+                },
+            },
+        });
+
+        const response = await handler(new Request("http://site/products"));
+        expect(response.status).toBe(302);
+        expect(response.headers.get("location")).toBe("/login?returnTo=%2Fproducts");
     });
 
     test("serves public capabilities anonymously and authenticated capabilities to members", async () => {
