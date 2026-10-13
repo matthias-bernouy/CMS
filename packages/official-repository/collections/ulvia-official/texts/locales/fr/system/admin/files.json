@@ -27,5 +27,16 @@
     "ui-upload-a-file": "Téléverser un fichier",
     "ui-upload-file": "Téléverser le fichier",
     "ui-upload-replace-and-organise-author-files-through-stable-cms-identities": "Téléversez, remplacez et organisez les fichiers des auteurs grâce aux identités stables du CMS.",
-    "ui-uploading": "Téléversement…"
+    "ui-uploading": "Téléversement…",
+    "ui-bytes": "octets",
+    "ui-private": "Privé",
+    "ui-public": "Public",
+    "ui-file-uploaded": "Fichier téléversé.",
+    "ui-file-content-replaced": "Contenu du fichier remplacé.",
+    "ui-make-private": "Rendre privé",
+    "ui-files-in-this-batch": "fichiers dans cette liste",
+    "ui-private-file-could-not-be-opened": "Le fichier privé n’a pas pu être ouvert.",
+    "ui-file-could-not-be-opened": "Le fichier n’a pas pu être ouvert.",
+    "ui-deleting-a-file-removes-all-of-its-generations": "La suppression de ce fichier retire définitivement toutes ses générations.",
+    "ui-permanently-delete": "Supprimer définitivement"
 }

@@ -172,5 +172,71 @@
         "label": "text.ui-uploading.label",
         "category": "text.category.admin",
         "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-bytes",
+        "label": "text.ui-bytes.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-private",
+        "label": "text.ui-private.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-public",
+        "label": "text.ui-public.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-file-uploaded",
+        "label": "text.ui-file-uploaded.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-file-content-replaced",
+        "label": "text.ui-file-content-replaced.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-make-private",
+        "label": "text.ui-make-private.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-in-this-batch",
+        "label": "text.ui-files-in-this-batch.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-private-file-could-not-be-opened",
+        "label": "text.ui-private-file-could-not-be-opened.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-file-could-not-be-opened",
+        "label": "text.ui-file-could-not-be-opened.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-deleting-a-file-removes-all-of-its-generations",
+        "label": "text.ui-deleting-a-file-removes-all-of-its-generations.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-permanently-delete",
+        "label": "text.ui-permanently-delete.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
     }
 ]

@@ -27,5 +27,16 @@
     "text.ui-upload-a-file.label": "Upload a file",
     "text.ui-upload-file.label": "Upload file",
     "text.ui-upload-replace-and-organise-author-files-through-stable-cms-identities.label": "Upload, replace and organise author files through stable CMS identities.",
-    "text.ui-uploading.label": "Uploading…"
+    "text.ui-uploading.label": "Uploading…",
+    "text.ui-bytes.label": "Bytes",
+    "text.ui-private.label": "Private",
+    "text.ui-public.label": "Public",
+    "text.ui-file-uploaded.label": "File uploaded.",
+    "text.ui-file-content-replaced.label": "File content replaced.",
+    "text.ui-make-private.label": "Make private",
+    "text.ui-files-in-this-batch.label": "Files in this batch",
+    "text.ui-private-file-could-not-be-opened.label": "Private file could not be opened",
+    "text.ui-file-could-not-be-opened.label": "File could not be opened",
+    "text.ui-deleting-a-file-removes-all-of-its-generations.label": "Deleting a file removes all generations",
+    "text.ui-permanently-delete.label": "Permanently delete"
 }

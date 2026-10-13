@@ -27,5 +27,16 @@
     "text.ui-upload-a-file.label": "Téléverser un fichier",
     "text.ui-upload-file.label": "Téléverser le fichier",
     "text.ui-upload-replace-and-organise-author-files-through-stable-cms-identities.label": "Téléversez, remplacez et organisez les fichiers des auteurs grâce aux identités stables du CMS.",
-    "text.ui-uploading.label": "Téléversement…"
+    "text.ui-uploading.label": "Téléversement…",
+    "text.ui-bytes.label": "Octets",
+    "text.ui-private.label": "Privé",
+    "text.ui-public.label": "Public",
+    "text.ui-file-uploaded.label": "Fichier téléversé.",
+    "text.ui-file-content-replaced.label": "Contenu du fichier remplacé.",
+    "text.ui-make-private.label": "Rendre privé",
+    "text.ui-files-in-this-batch.label": "Fichiers dans cette liste",
+    "text.ui-private-file-could-not-be-opened.label": "Le fichier privé n’a pas pu être ouvert",
+    "text.ui-file-could-not-be-opened.label": "Le fichier n’a pas pu être ouvert",
+    "text.ui-deleting-a-file-removes-all-of-its-generations.label": "Supprimer un fichier retire toutes ses générations",
+    "text.ui-permanently-delete.label": "Supprimer définitivement"
 }

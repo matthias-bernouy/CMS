@@ -27,5 +27,16 @@
     "ui-upload-a-file": "Upload a file",
     "ui-upload-file": "Upload file",
     "ui-upload-replace-and-organise-author-files-through-stable-cms-identities": "Upload, replace and organise author files through stable CMS identities.",
-    "ui-uploading": "Uploading…"
+    "ui-uploading": "Uploading…",
+    "ui-bytes": "bytes",
+    "ui-private": "Private",
+    "ui-public": "Public",
+    "ui-file-uploaded": "File uploaded.",
+    "ui-file-content-replaced": "File content replaced.",
+    "ui-make-private": "Make private",
+    "ui-files-in-this-batch": "files in this batch",
+    "ui-private-file-could-not-be-opened": "The private file could not be opened.",
+    "ui-file-could-not-be-opened": "The file could not be opened.",
+    "ui-deleting-a-file-removes-all-of-its-generations": "Deleting this file permanently removes all of its generations.",
+    "ui-permanently-delete": "Permanently delete"
 }

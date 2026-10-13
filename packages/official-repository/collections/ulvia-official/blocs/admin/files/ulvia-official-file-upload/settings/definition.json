@@ -1,0 +1,25 @@
+[
+    {
+        "id": "file-id",
+        "label": "setting.file-id.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "",
+        "maxLength": 128,
+        "control": { "kind": "text" }
+    },
+    {
+        "id": "visibility",
+        "label": "setting.visibility.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "private",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "private", "label": "setting.option.private" },
+                { "value": "public", "label": "setting.option.public" }
+            ]
+        }
+    }
+]

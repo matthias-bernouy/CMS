@@ -1,0 +1,24 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-file-upload",
+    "label": "bloc.file-upload.label",
+    "description": "bloc.file-upload.description",
+    "category": "bloc.category.administration",
+    "order": 20,
+    "internal": true,
+    "uses": ["ulvia-official-file-upload-input"],
+    "requires": [
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.upload.create", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "upload.write", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.upload.complete", "versionRange": "^1.0.0" }
+    ],
+    "slots": {
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ],
+            "min": 1
+        }
+    }
+}

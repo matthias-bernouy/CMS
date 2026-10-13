@@ -1,0 +1,20 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-file-link",
+    "label": "bloc.file-link.label",
+    "description": "bloc.file-link.description",
+    "category": "bloc.category.administration",
+    "order": 40,
+    "internal": true,
+    "uses": [],
+    "requires": [
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.sign", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "files.read", "versionRange": "^1.0.0" }
+    ],
+    "slots": {
+        "content": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "min": 1
+        }
+    }
+}

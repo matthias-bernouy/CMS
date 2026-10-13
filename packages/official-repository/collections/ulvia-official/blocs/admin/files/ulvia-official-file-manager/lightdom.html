@@ -1,0 +1,109 @@
+<ulvia-official-stack slot="content" gap="lg">
+    <ulvia-official-surface slot="items" appearance="elevated" padding="lg">
+        <h2 slot="content">{{ cms.i18n.ulvia-official.ui-upload-a-file }}</h2>
+        <p slot="content">{{ cms.i18n.ulvia-official.ui-files-are-validated-and-limited-by-the-server-upload-policy }}</p>
+        <ulvia-official-file-upload slot="content" visibility="private">
+            <ulvia-official-field slot="content" label-position="top">
+                <label slot="label" for="new-file">{{ cms.i18n.ulvia-official.ui-choose-a-file }}</label>
+                <ulvia-official-file-upload-input slot="control"><input id="new-file" type="file" name="file" required></ulvia-official-file-upload-input>
+            </ulvia-official-field>
+            <form slot="content" hidden cms-source="/.cms/call/ulvia.cms.files/workspace.upload.create" cms-source-id="file-upload-create" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json"></form>
+            <form slot="content" hidden cms-source="/.cms/call/ulvia.cms.files/workspace.upload.complete" cms-source-id="file-upload-complete" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library"></form>
+            <output slot="content" name="uploading-label" hidden>{{ cms.i18n.ulvia-official.ui-uploading }}</output>
+            <output slot="content" name="uploaded-label" hidden>{{ cms.i18n.ulvia-official.ui-file-uploaded }}</output>
+            <output slot="content" name="replaced-label" hidden>{{ cms.i18n.ulvia-official.ui-file-content-replaced }}</output>
+            <output slot="content" name="upload-error-label" hidden>{{ cms.i18n.ulvia-official.ui-the-file-could-not-be-uploaded }}</output>
+            <output slot="content" name="replacement-error-label" hidden>{{ cms.i18n.ulvia-official.ui-the-replacement-could-not-be-stored }}</output>
+            <output slot="content" name="upload-status" role="status" aria-live="polite"></output>
+        </ulvia-official-file-upload>
+    </ulvia-official-surface>
+
+    <section id="file-library" slot="items" cms-source="/.cms/call/ulvia.cms.files/workspace.get as workspace" cms-source-method="POST" cms-source-body='{"offset":{"from":"raw","value":0},"limit":{"from":"raw","value":100}}'>
+        <div role="status" aria-live="polite" cms-condition="$source.loading">
+            <h2>{{ cms.i18n.ulvia-official.ui-loading-files }}</h2>
+        </div>
+        <div role="alert" cms-condition="$source.error">
+            <h2>{{ cms.i18n.ulvia-official.ui-files-unavailable }}</h2>
+            <p>{{ cms.i18n.ulvia-official.ui-the-author-library-could-not-be-read }}</p>
+        </div>
+        <ulvia-official-stack cms-condition="$source.loaded" gap="md">
+            <ulvia-official-cluster slot="items" align="center" justify="between">
+                <h2 slot="items">{{ cms.i18n.ulvia-official.ui-library }}</h2>
+                <p slot="items">{{ workspace.items.length }} {{ cms.i18n.ulvia-official.ui-files-in-this-batch }}</p>
+            </ulvia-official-cluster>
+            <ulvia-official-grid slot="items" cms-condition="workspace.items.length" gap="md" role="list">
+                <ulvia-official-surface slot="items" cms-repeat="workspace.items as file" appearance="outlined" padding="lg" role="listitem">
+                    <ulvia-official-stack slot="content" gap="md">
+                        <header slot="items">
+                            <h3>{{ file.name }}</h3>
+                            <p>{{ file.mimeType }} {{ file.size }} {{ cms.i18n.ulvia-official.ui-bytes }}</p>
+                            <p cms-condition="file.visibility == 'private'">{{ cms.i18n.ulvia-official.ui-private }}</p>
+                            <p cms-condition="file.visibility == 'public'">{{ cms.i18n.ulvia-official.ui-public }}</p>
+                        </header>
+                        <form slot="items" cms-source="/.cms/call/ulvia.cms.files/workspace.files.update" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library" cms-source-success-reset="false">
+                            <input type="hidden" name="fileId" value="{{ file.fileId }}">
+                            <ulvia-official-field label-position="top">
+                                <label slot="label" for="file-name-{{ file.fileId }}">{{ cms.i18n.ulvia-official.ui-save-name }}</label>
+                                <ulvia-official-input slot="control"><input id="file-name-{{ file.fileId }}" type="text" name="name" value="{{ file.name }}" maxlength="255" required></ulvia-official-input>
+                            </ulvia-official-field>
+                            <ulvia-official-form-actions align="end">
+                                <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">{{ cms.i18n.ulvia-official.ui-saving }}</p>
+                                <p slot="actions" role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-reload-this-folder-before-retrying }}</p>
+                                <ulvia-official-action slot="actions" variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-save-name }}</button></ulvia-official-action>
+                            </ulvia-official-form-actions>
+                        </form>
+                        <ulvia-official-file-upload slot="items" file-id="{{ file.fileId }}" visibility="{{ file.visibility }}">
+                            <ulvia-official-field slot="content" label-position="top">
+                                <label slot="label" for="file-replacement-{{ file.fileId }}">{{ cms.i18n.ulvia-official.ui-replace-content }}</label>
+                                <ulvia-official-file-upload-input slot="control"><input id="file-replacement-{{ file.fileId }}" type="file" name="file" aria-label="{{ cms.i18n.ulvia-official.ui-replacement-file-for }} {{ file.name }}" required></ulvia-official-file-upload-input>
+                            </ulvia-official-field>
+                            <form slot="content" hidden cms-source="/.cms/call/ulvia.cms.files/workspace.upload.create" cms-source-id="file-upload-create" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json"></form>
+                            <form slot="content" hidden cms-source="/.cms/call/ulvia.cms.files/workspace.upload.complete" cms-source-id="file-upload-complete" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library"></form>
+                            <output slot="content" name="uploading-label" hidden>{{ cms.i18n.ulvia-official.ui-uploading }}</output>
+                            <output slot="content" name="uploaded-label" hidden>{{ cms.i18n.ulvia-official.ui-file-uploaded }}</output>
+                            <output slot="content" name="replaced-label" hidden>{{ cms.i18n.ulvia-official.ui-file-content-replaced }}</output>
+                            <output slot="content" name="upload-error-label" hidden>{{ cms.i18n.ulvia-official.ui-the-file-could-not-be-uploaded }}</output>
+                            <output slot="content" name="replacement-error-label" hidden>{{ cms.i18n.ulvia-official.ui-the-replacement-could-not-be-stored }}</output>
+                            <output slot="content" name="upload-status" role="status" aria-live="polite"></output>
+                        </ulvia-official-file-upload>
+                        <ulvia-official-cluster slot="items" align="center">
+                            <ulvia-official-file-link slot="items" cms-condition="file.visibility == 'public'" url="{{ file.url }}">
+                                <button slot="content" type="button">{{ cms.i18n.ulvia-official.ui-open-file }}</button>
+                                <output slot="content" name="file-link-error-label" hidden>{{ cms.i18n.ulvia-official.ui-file-could-not-be-opened }}</output>
+                                <output slot="content" name="file-link-error" role="alert"></output>
+                            </ulvia-official-file-link>
+                            <ulvia-official-file-link slot="items" cms-condition="file.visibility == 'private'" file-id="{{ file.fileId }}" generation="{{ file.generation }}">
+                                <button slot="content" type="button">{{ cms.i18n.ulvia-official.ui-open-file }}</button>
+                                <form slot="content" hidden cms-source="/.cms/call/ulvia.cms.files/workspace.files.sign" cms-source-id="private-file-sign" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json"></form>
+                                <output slot="content" name="file-link-error-label" hidden>{{ cms.i18n.ulvia-official.ui-private-file-could-not-be-opened }}</output>
+                                <output slot="content" name="file-link-error" role="alert"></output>
+                            </ulvia-official-file-link>
+                            <form slot="items" cms-condition="file.visibility == 'private'" cms-source="/.cms/call/ulvia.cms.files/workspace.files.set-visibility" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library">
+                                <input type="hidden" name="fileId" value="{{ file.fileId }}">
+                                <input type="hidden" name="visibility" value="public">
+                                <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-publish }}</button></ulvia-official-action>
+                            </form>
+                            <form slot="items" cms-condition="file.visibility == 'public'" cms-source="/.cms/call/ulvia.cms.files/workspace.files.set-visibility" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library">
+                                <input type="hidden" name="fileId" value="{{ file.fileId }}">
+                                <input type="hidden" name="visibility" value="private">
+                                <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-make-private }}</button></ulvia-official-action>
+                            </form>
+                        </ulvia-official-cluster>
+                        <details slot="items">
+                            <summary>{{ cms.i18n.ulvia-official.ui-delete }}</summary>
+                            <p>{{ cms.i18n.ulvia-official.ui-deleting-a-file-removes-all-of-its-generations }}</p>
+                            <form cms-source="/.cms/call/ulvia.cms.files/workspace.files.delete" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library">
+                                <input type="hidden" name="fileId" value="{{ file.fileId }}">
+                                <p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-reload-this-folder-before-retrying }}</p>
+                                <ulvia-official-action variant="filled" tone="danger" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-permanently-delete }}</button></ulvia-official-action>
+                            </form>
+                        </details>
+                    </ulvia-official-stack>
+                </ulvia-official-surface>
+            </ulvia-official-grid>
+            <ulvia-official-surface slot="items" cms-condition="workspace.items.length == 0" appearance="subtle" padding="lg">
+                <p slot="content">{{ cms.i18n.ulvia-official.ui-this-folder-is-empty }}</p>
+            </ulvia-official-surface>
+        </ulvia-official-stack>
+    </section>
+</ulvia-official-stack>

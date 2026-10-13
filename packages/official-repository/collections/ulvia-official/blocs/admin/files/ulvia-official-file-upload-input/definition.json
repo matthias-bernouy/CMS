@@ -1,0 +1,16 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-file-upload-input",
+    "label": "bloc.file-upload-input.label",
+    "description": "bloc.file-upload-input.description",
+    "category": "bloc.category.administration",
+    "order": 30,
+    "internal": true,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": { "type": { "required": true, "values": ["file"] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

@@ -1,0 +1,33 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-file-manager",
+    "label": "bloc.file-manager.label",
+    "description": "bloc.file-manager.description",
+    "category": "bloc.category.administration",
+    "order": 10,
+    "internal": true,
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-cluster",
+        "ulvia-official-field",
+        "ulvia-official-file-link",
+        "ulvia-official-file-upload",
+        "ulvia-official-file-upload-input",
+        "ulvia-official-form-actions",
+        "ulvia-official-grid",
+        "ulvia-official-input",
+        "ulvia-official-stack",
+        "ulvia-official-surface"
+    ],
+    "requires": [
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.get", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.upload.create", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "upload.write", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.upload.complete", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.update", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.set-visibility", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.sign", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.delete", "versionRange": "^1.0.0" }
+    ],
+    "slots": {}
+}
