@@ -7,6 +7,8 @@ bun run ulvia -- dev
 bun run ulvia -- dev status
 bun run ulvia -- dev credentials
 bun run ulvia -- dev stop
+bun run ulvia -- dev new /absolute/path/to/a/fresh-environment
+bun run ulvia -- dev reset --yes
 bun run ulvia -- release packages/official-repository/collections/test
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
@@ -26,6 +28,13 @@ manifest; `ULVIA_DEV_PROVIDER_PORT` cannot select another origin.
 `dev credentials` prints the CMS administrator email and password. Repository,
 Provider operator and instance bearer tokens remain in the private `dev/`
 directory and are not printed as user credentials.
+`dev new <absolute-data-directory>` creates and immediately starts a completely
+isolated environment. The destination must not exist, and later commands target
+it by setting `ULVIA_DATA_DIR` to the same path. `dev reset --yes` stops the
+current environment's MongoDB container and permanently clears only its `dev/`
+and `repository/` directories. It refuses to continue while the Kernel,
+Provider, or repository listener is still reachable; stop the foreground
+`dev` process first. The next `dev` invocation provisions a fresh instance.
 `release <resource-directory>` reads `definition.json` and routes by `kind`:
 `collection`, `contract`, or `provider-manifest`. It validates and stores one
 immutable release. A provider manifest must reference exact contract releases

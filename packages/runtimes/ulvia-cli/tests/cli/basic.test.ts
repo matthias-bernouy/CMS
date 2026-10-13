@@ -18,6 +18,8 @@ describe("Ulvia CLI", () => {
         expect(output.join("\n")).toContain("ulvia prune");
         expect(output.join("\n")).toContain("ulvia pull");
         expect(output.join("\n")).toContain("ulvia push");
+        expect(output.join("\n")).toContain("ulvia dev new");
+        expect(output.join("\n")).toContain("ulvia dev reset --yes");
     });
 
     test("accepts isolated dev ports and rejects collisions", () => {

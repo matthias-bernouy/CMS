@@ -16,6 +16,7 @@ import { provisionLocalInstance } from "../runtime/instance";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
 import type { UlviaPaths } from "../runtime/paths";
 import { bootstrapOfficialRepository } from "./bootstrap";
+import { assertDevServersStopped, createFreshDevPaths, resetDevData } from "./devData";
 
 const DEFAULT_PORTS: DevPorts = Object.freeze({
     kernel: 5100,
@@ -31,18 +32,18 @@ export async function devCommand(
     environment: Record<string, string | undefined> = process.env,
 ): Promise<void> {
     const action = args[0] ?? "start";
-    if (args.length > (args[0] ? 1 : 0)) {
-        throw new Error("dev accepts only one action: status, credentials, or stop");
-    }
     if (action === "start") {
+        expectArgumentCount(args, 0, "Usage: ulvia dev");
         await runDev(paths, log, resolveDevPorts(environment));
         return;
     }
     if (action === "status") {
+        expectArgumentCount(args, 1, "Usage: ulvia dev status");
         await devStatus(paths, log);
         return;
     }
     if (action === "credentials") {
+        expectArgumentCount(args, 1, "Usage: ulvia dev credentials");
         const config = await loadOrCreateDevRuntimeConfig(paths.dev);
         log(`Email: ${config.adminEmail}`);
         log(`Password: ${config.adminPassword}`);
@@ -50,11 +51,41 @@ export async function devCommand(
         return;
     }
     if (action === "stop") {
+        expectArgumentCount(args, 1, "Usage: ulvia dev stop");
         const mongo = await stopLocalMongo(paths.mongo);
         log(`MongoDB: ${mongo ? "stopped" : "not running"}`);
         return;
     }
+    if (action === "new") {
+        expectArgumentCount(args, 2, "Usage: ulvia dev new <absolute-data-directory>");
+        const ports = resolveDevPorts(environment);
+        await assertDevServersStopped(ports);
+        const freshPaths = await createFreshDevPaths(args[1] ?? "", paths);
+        await stopLocalMongo(paths.mongo);
+        log(`Created isolated development environment: ${freshPaths.data}`);
+        await runDev(freshPaths, log, ports);
+        return;
+    }
+    if (action === "reset") {
+        if (args.length !== 2 || args[1] !== "--yes") {
+            throw new Error(
+                "Usage: ulvia dev reset --yes (permanently deletes the current dev instance and repository)",
+            );
+        }
+        await assertDevServersStopped(resolveDevPorts(environment));
+        await stopLocalMongo(paths.mongo);
+        await resetDevData(paths);
+        log(`Reset development environment: ${paths.data}`);
+        log("Run ulvia dev to provision a fresh instance.");
+        return;
+    }
     throw new Error(`Unknown dev action: ${action}`);
+}
+
+function expectArgumentCount(args: readonly string[], expected: number, usage: string): void {
+    if (args.length !== expected) {
+        throw new Error(usage);
+    }
 }
 
 async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: DevPorts): Promise<void> {
@@ -96,7 +127,8 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     log(`Resource repository: ${repository.url}`);
     log(`Ulvia Provider: http://127.0.0.1:${ports.provider}`);
     log(`CMS Kernel: http://127.0.0.1:${ports.kernel}`);
-    log("Credentials: bun run ulvia -- dev credentials");
+    log(`Persistent data: ${paths.data}`);
+    log("Credentials: run ulvia dev credentials with the same ULVIA_DATA_DIR");
     try {
         await superviseServers(kernel, provider);
     } finally {

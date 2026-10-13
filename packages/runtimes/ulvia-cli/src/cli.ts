@@ -9,6 +9,8 @@ const HELP = `Ulvia local CMS CLI
 
 Usage:
   ulvia dev [status | credentials | stop]
+  ulvia dev new <absolute-data-directory>
+  ulvia dev reset --yes
   ulvia release <resource-directory>
   ulvia push <kind> <publisher/id@version> --repository <url>
   ulvia pull <kind> <publisher/id@version> --repository <url>
@@ -17,7 +19,7 @@ Usage:
   ulvia prune
 
 Commands:
-  dev        Run or inspect the persistent local CMS development stack
+  dev        Run, inspect, create, or reset a persistent local CMS development stack
   release    Validate and store an immutable collection, contract, or provider manifest
   push       Publish one exact local release to a remote repository
   pull       Validate and store one exact remote release locally
