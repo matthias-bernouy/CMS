@@ -54,7 +54,14 @@ async function signIn(
     await page.getByLabel("Email address").fill(credentials.adminEmail);
     await page.getByLabel("Password").fill(credentials.adminPassword);
     await Promise.all([page.waitForURL(/\/admin$/u), page.getByRole("button", { name: /Sign in with/u }).click()]);
-    await page.getByRole("heading", { name: "Pages", exact: true }).waitFor();
+    await page
+        .getByRole("heading", { name: "Pages", exact: true })
+        .waitFor()
+        .catch(async (error) => {
+            throw new Error(
+                `${error instanceof Error ? error.message : String(error)}\nURL: ${page.url()}\nPage: ${await page.locator("body").innerText()}`,
+            );
+        });
 }
 
 async function mutateCollections(page: Page): Promise<void> {

@@ -161,12 +161,5 @@ async function initializeAdministrator(
                   { ...administrator, emailVerified: true },
               )
           ).sub;
-    const now = new Date();
-    await stores.db
-        .collection("cms_administrator_grants")
-        .updateOne(
-            { sub: subjectId },
-            { $setOnInsert: { sub: subjectId, enabled: true, revision: 1, createdAt: now, updatedAt: now } },
-            { upsert: true },
-        );
+    await composition.administrators.set(subjectId, true);
 }

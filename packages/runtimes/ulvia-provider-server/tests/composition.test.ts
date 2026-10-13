@@ -48,6 +48,33 @@ describe("official Provider connection provisioning", () => {
     });
 });
 
+test("official administrator provisioning writes the shared authority model", async () => {
+    let granted: { sub: string; enabled: boolean } | undefined;
+    const target = createInstanceProvisioningTarget({
+        instance: { id: "instance:official", storageKey: "instance-official" } as ProviderInstanceRecord,
+        composition: {
+            stores: {
+                identityProviders: { get: async () => ({ id: "local" }) },
+                credentials: { getByEmail: async () => ({ sub: "administrator" }) },
+            },
+            administrators: {
+                set: async (sub: string, enabled: boolean) => {
+                    granted = { sub, enabled };
+                    return { sub, enabled, revision: 1, bootstrap: false };
+                },
+            },
+        } as unknown as InstanceComposition,
+        env: {} as ProviderRuntimeEnv,
+        credentials: { read: async () => null },
+        providerSource: {} as never,
+        collectionSource: {} as never,
+    });
+
+    await target.initializeAdministrator({ email: "admin@example.test", password: "unused-existing-password" });
+
+    expect(granted).toEqual({ sub: "local:administrator", enabled: true });
+});
+
 function connectionTarget(management: Record<string, unknown>) {
     const instance = {
         id: "instance:official",

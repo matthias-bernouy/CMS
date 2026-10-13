@@ -25,7 +25,6 @@ export async function createProductionGateway(
     siteId: string,
 ) {
     const releases = new MongoReleaseCatalogue(db);
-    await db.collection("cms_administrator_grants").createIndex({ sub: 1 }, { unique: true });
     await db
         .collection("cms_provider_capability_grants")
         .createIndex(

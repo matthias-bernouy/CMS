@@ -32,6 +32,7 @@ export type InstanceComposition = Readonly<{
     stores: ProviderStores;
     runtime: UlviaProviderInstanceRuntime;
     management: ProviderManagement;
+    administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
 }>;
 
 export class ProviderInstanceHost {
@@ -127,7 +128,12 @@ export class ProviderInstanceHost {
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
             );
-            return { stores, management, runtime: { siteId: SITE_ID, report, dispatcher } };
+            return {
+                stores,
+                management,
+                administrators: gateway.administrators,
+                runtime: { siteId: SITE_ID, report, dispatcher },
+            };
         } catch (error) {
             await stores.close();
             throw error;
