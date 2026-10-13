@@ -63,10 +63,13 @@ async function signIn(
     kernelOrigin: string,
 ): Promise<void> {
     await page.goto(`${kernelOrigin}/login`);
-    await page.getByRole("heading", { name: "Welcome back" }).waitFor();
-    await page.getByLabel("Email address").fill(credentials.adminEmail);
-    await page.getByLabel("Password").fill(credentials.adminPassword);
-    await Promise.all([page.waitForURL(/\/admin$/u), page.getByRole("button", { name: /Sign in with/u }).click()]);
+    await page.getByRole("heading", { name: /^(Welcome back|Bon retour)$/u }).waitFor();
+    await page.getByLabel(/^(Email address|Adresse e-mail)$/u).fill(credentials.adminEmail);
+    await page.getByLabel(/^(Password|Mot de passe)$/u).fill(credentials.adminPassword);
+    await Promise.all([
+        page.waitForURL(/\/admin$/u),
+        page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click(),
+    ]);
     await page
         .getByRole("heading", { name: "Pages", exact: true })
         .waitFor()

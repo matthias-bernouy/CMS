@@ -46,7 +46,7 @@ smoke(
                 adminPassword: string;
             };
             browser = await chromium.launch({ headless: true });
-            const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+            const page = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             page.setDefaultTimeout(15_000);
             const browserErrors: string[] = [];
             page.on("pageerror", (error) => browserErrors.push(error.message));
@@ -83,7 +83,7 @@ smoke(
             ]);
             await waitForHttp(`http://127.0.0.1:${PORTS.kernel}/login`, runtime);
             browser = await chromium.launch({ headless: true });
-            const restartedPage = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+            const restartedPage = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             restartedPage.setDefaultTimeout(15_000);
             const restartErrors: string[] = [];
             restartedPage.on("pageerror", (error) => restartErrors.push(error.message));
