@@ -69,6 +69,30 @@ test("Provider operation recovery reclaims an expired lease and records failures
     expect(record.errorCode).toBe("OPERATION_FAILED");
 });
 
+test("Provider operation recovery terminates work whose handler no longer exists", async () => {
+    const store = new MemoryProviderOperationStore();
+    await store.createOrGet({
+        id: "00000000-0000-7000-8000-000000000011",
+        siteId: "default",
+        contractId: "ulvia.cms.removed",
+        capabilityId: "removed",
+        idempotencyKey: "removed-1",
+        inputDigest: `sha256:${"0".repeat(64)}`,
+        input: {},
+        context: { ...context, idempotencyKey: "removed-1" },
+        status: "queued",
+        revision: 1,
+        createdAt: "2026-10-06T10:00:00.000Z",
+        updatedAt: "2026-10-06T10:00:00.000Z",
+    });
+    const executor = new ProviderOperationExecutor(store, () => new Date("2026-10-06T10:01:00.000Z"));
+
+    await executor.recover();
+
+    const record = await expectTerminal(store, "00000000-0000-7000-8000-000000000011", "failed");
+    expect(record.errorCode).toBe("OPERATION_HANDLER_UNAVAILABLE");
+});
+
 test("Provider operations abort cooperative work when lease renewal is lost", async () => {
     class LostLeaseStore extends MemoryProviderOperationStore {
         override async renew(): Promise<boolean> {
@@ -101,6 +125,66 @@ test("Provider operations abort cooperative work when lease renewal is lost", as
     expect((await store.get("default", queued.operationId))?.status).toBe("running");
 });
 
+test("Provider operation shutdown drains active work and rejects new work", async () => {
+    const store = new MemoryProviderOperationStore();
+    const executor = new ProviderOperationExecutor(store);
+    let finish!: () => void;
+    const completion = new Promise<void>((resolve) => {
+        finish = resolve;
+    });
+    let started = false;
+    executor.register("ulvia.cms.collections", "apply", async () => {
+        started = true;
+        await completion;
+        return { applied: true };
+    });
+
+    await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    await waitUntil(() => started);
+    let stopped = false;
+    const stopping = executor.stop().then(() => {
+        stopped = true;
+    });
+    await Bun.sleep(2);
+    expect(stopped).toBe(false);
+
+    finish();
+    await stopping;
+    expect(stopped).toBe(true);
+    await expect(
+        executor.enqueue("ulvia.cms.collections", "apply", {}, { ...context, idempotencyKey: "after-stop" }),
+    ).rejects.toMatchObject({ code: "PROVIDER_SHUTTING_DOWN", status: 503 });
+});
+
+test("Provider operations retain their instance resource until execution finishes", async () => {
+    const store = new MemoryProviderOperationStore();
+    let retained = 0;
+    let released = 0;
+    const executor = new ProviderOperationExecutor(store, undefined, {
+        retainResource: () => {
+            retained += 1;
+            return () => {
+                released += 1;
+            };
+        },
+    });
+    let finish!: () => void;
+    const completion = new Promise<void>((resolve) => {
+        finish = resolve;
+    });
+    executor.register("ulvia.cms.collections", "apply", async () => {
+        await completion;
+        return { applied: true };
+    });
+
+    const queued = await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    await waitUntil(() => retained === 1);
+    expect(released).toBe(0);
+    finish();
+    await expectTerminal(store, queued.operationId, "succeeded");
+    await waitUntil(() => released === 1);
+});
+
 test("the jobs contract exposes a completed result only from its detail query", async () => {
     const store = new MemoryProviderOperationStore();
     const executor = new ProviderOperationExecutor(store);
@@ -110,10 +194,11 @@ test("the jobs contract exposes a completed result only from its detail query", 
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerJobCapabilities(dispatcher, executor);
 
-    const detail = await dispatcher.invoke("ulvia.cms.jobs", "get", { jobId: queued.operationId }, context);
+    const detail = record(await dispatcher.invoke("ulvia.cms.jobs", "get", { jobId: queued.operationId }, context));
     expect(JSON.parse(String(detail.resultJson))).toEqual({ migrationId: "migration-1" });
-    const listed = await dispatcher.invoke("ulvia.cms.jobs", "list", {}, context);
-    expect(listed.items[0]).not.toHaveProperty("resultJson");
+    const listed = record(await dispatcher.invoke("ulvia.cms.jobs", "list", {}, context));
+    expect(Array.isArray(listed.items)).toBe(true);
+    expect((listed.items as unknown[])[0]).not.toHaveProperty("resultJson");
 });
 
 async function expectTerminal(store: MemoryProviderOperationStore, id: string, status: "succeeded" | "failed") {
@@ -125,4 +210,21 @@ async function expectTerminal(store: MemoryProviderOperationStore, id: string, s
         await new Promise((resolve) => setTimeout(resolve, 1));
     }
     throw new Error(`Operation ${id} did not reach ${status}`);
+}
+
+async function waitUntil(predicate: () => boolean): Promise<void> {
+    const deadline = Date.now() + 200;
+    while (!predicate()) {
+        if (Date.now() >= deadline) {
+            throw new Error("Timed out waiting for Provider operation");
+        }
+        await Bun.sleep(2);
+    }
+}
+
+function record(value: unknown): Record<string, unknown> {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        throw new TypeError("Expected a Provider operation record");
+    }
+    return value as Record<string, unknown>;
 }

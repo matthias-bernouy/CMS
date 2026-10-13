@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
-import { DefaultProviderCapabilityDispatcher } from "../src";
+import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
