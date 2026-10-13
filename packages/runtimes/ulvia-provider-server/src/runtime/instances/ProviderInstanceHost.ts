@@ -28,6 +28,7 @@ import { RecoverySupervisor } from "../recovery/RecoverySupervisor";
 import { createProviderStores, type ProviderStores } from "../stores/providerStores";
 import { createInstanceProvisioningTarget } from "./instanceProvisioning";
 import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "./InstanceResourcePool";
+import { OfficialProviderObservation } from "./OfficialProviderObservation";
 
 const SITE_ID = "default";
 const MAX_OPEN_INSTANCES = 32;
@@ -41,6 +42,7 @@ export type InstanceComposition = Readonly<{
     managementForProfile(profile: OfficialInstanceProfile): ProviderManagement;
     administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
     operations: ProviderOperationExecutor;
+    ensureProviderReady(): Promise<void>;
     close(): Promise<void>;
 }>;
 
@@ -66,6 +68,7 @@ export class ProviderInstanceHost {
 
     async runtime(instance: ProviderInstanceRecord): Promise<ResourceLease<UlviaProviderInstanceRuntime>> {
         const lease = await this.open(instance);
+        await lease.resource.ensureProviderReady();
         return {
             resource: {
                 ...lease.resource.runtime,
@@ -159,6 +162,7 @@ export class ProviderInstanceHost {
             const profile = requiredProfile(instance.profile.id, instance.profile.version);
             const report = providerReport(instance, profile);
             const management = managementForProfile(profile);
+            const observation = new OfficialProviderObservation(management, instance.id, profile);
             const providerOperations = new MongoProviderOperationStore(stores.db);
             await providerOperations.init();
             const operations = new ProviderOperationExecutor(providerOperations, undefined, {
@@ -186,6 +190,7 @@ export class ProviderInstanceHost {
                 managementForProfile,
                 administrators: gateway.administrators,
                 operations,
+                ensureProviderReady: () => observation.ensureFresh(),
                 close: async () => {
                     await activeRecovery.stop();
                     await operations.stop();

@@ -3,6 +3,7 @@ import { OFFICIAL_INSTANCE_PROFILE, type ProviderInstanceRecord } from "@bernouy
 import type { ProviderRuntimeEnv } from "../src/runtimeEnv";
 import type { InstanceComposition } from "../src/runtime/instances/ProviderInstanceHost";
 import { createInstanceProvisioningTarget } from "../src/runtime/instances/instanceProvisioning";
+import { OfficialProviderObservation } from "../src/runtime/instances/OfficialProviderObservation";
 
 test("the Provider owns every persistent instance service while remaining independent from Kernel", async () => {
     const [entrypoint, stores] = await Promise.all([
@@ -46,6 +47,60 @@ describe("official Provider connection provisioning", () => {
         await expect(target.connectProvider(OFFICIAL_INSTANCE_PROFILE, execution())).rejects.toThrow(
             "Official Provider observation was not persisted",
         );
+    });
+});
+
+describe("official Provider observation renewal", () => {
+    test("renews a stale observation once for concurrent requests", async () => {
+        let refreshes = 0;
+        let releaseRefresh!: () => void;
+        const refreshing = new Promise<void>((resolve) => {
+            releaseRefresh = resolve;
+        });
+        const observation = new OfficialProviderObservation(
+            {
+                list: async () => ({ installations: [installation("2026-09-24T10:00:00.000Z")], selected: [] }),
+                refreshObservation: async () => {
+                    refreshes += 1;
+                    await refreshing;
+                    return {} as never;
+                },
+            },
+            "instance:official",
+            OFFICIAL_INSTANCE_PROFILE,
+            () => Date.parse("2026-09-24T10:01:00.000Z"),
+        );
+
+        const first = observation.ensureFresh();
+        const second = observation.ensureFresh();
+        expect(refreshes).toBe(0);
+        await Bun.sleep(0);
+        expect(refreshes).toBe(1);
+        releaseRefresh();
+        await Promise.all([first, second]);
+        await observation.ensureFresh();
+
+        expect(refreshes).toBe(1);
+    });
+
+    test("keeps a fresh complete observation without probing the Provider", async () => {
+        let refreshes = 0;
+        const observation = new OfficialProviderObservation(
+            {
+                list: async () => ({ installations: [installation("2026-09-24T10:00:45.000Z")], selected: [] }),
+                refreshObservation: async () => {
+                    refreshes += 1;
+                    return {} as never;
+                },
+            },
+            "instance:official",
+            OFFICIAL_INSTANCE_PROFILE,
+            () => Date.parse("2026-09-24T10:01:00.000Z"),
+        );
+
+        await observation.ensureFresh();
+
+        expect(refreshes).toBe(0);
     });
 });
 

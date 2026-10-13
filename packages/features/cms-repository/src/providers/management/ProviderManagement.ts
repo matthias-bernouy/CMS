@@ -19,6 +19,7 @@ export type ProviderManagementOptions = Readonly<{
 export class ProviderManagement {
     private readonly connections: ProviderConnectionWorkflow;
     private readonly lifecycle: ProviderInstallationLifecycle;
+    private readonly readReport: ProviderReportReader;
 
     constructor(
         private readonly gateway: ProviderManagementGateway,
@@ -26,6 +27,7 @@ export class ProviderManagement {
         options: ProviderManagementOptions,
     ) {
         this.sources = options.sources ?? [];
+        this.readReport = options.readReport;
         this.connections = new ProviderConnectionWorkflow(gateway, secrets, { readReport: options.readReport });
         this.lifecycle = new ProviderInstallationLifecycle(gateway.installations, gateway.manifests, () =>
             new Date().toISOString(),
@@ -72,6 +74,20 @@ export class ProviderManagement {
 
     async approve(ticket: string, actorId: string) {
         return this.connections.approve(ticket, actorId);
+    }
+
+    async refreshObservation(installationId: string) {
+        const scope = { siteId: this.gateway.siteId, installationId };
+        const current = await this.gateway.installations.get(scope);
+        if (!current) {
+            throw Object.assign(new Error("Provider installation is unavailable"), { status: 404 });
+        }
+        const token = await this.secrets.get(requiredSecretKey(current.installation.providerTokenRef));
+        if (!token) {
+            throw new Error("Provider credential is unavailable");
+        }
+        const report = await this.readReport(current.installation.endpoint, token);
+        return this.lifecycle.observe(scope, current.revision, report);
     }
 
     async selectContract(input: { installationId: string; contractId: string; version: string; digest: string }) {
