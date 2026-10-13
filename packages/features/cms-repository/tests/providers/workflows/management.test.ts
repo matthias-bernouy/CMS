@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import { InMemoryProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import { providerWorld, report, siteId } from "./fixtures";
+import { candidate, providerSite, providerWorld, report, siteId } from "./fixtures";
 
 test("provider management renews an approved installation observation with its stored credential", async () => {
     const world = await providerWorld();
@@ -45,4 +45,45 @@ test("provider management renews an approved installation observation with its s
         { endpoint: "https://provider.example.com", token },
         { endpoint: "https://provider.example.com", token },
     ]);
+});
+
+test("provider management keeps selected installations enabled until their contracts are rerouted", async () => {
+    const site = await providerSite();
+    const approved = await site.lifecycle.approve(
+        await site.lifecycle.prepare(candidate(site.previous), report(site.previous)),
+        "administrator",
+    );
+    const selected = await site.selections.replace(
+        siteId,
+        [site.pin("commerce", "1.0.0"), site.pin("payment", "1.0.0")],
+        0,
+    );
+    const management = new ProviderManagement(
+        {
+            siteId,
+            releases: site.releases,
+            manifests: site.manifests,
+            installations: site.installations,
+            selections: site.selections,
+        },
+        new InMemorySecretStore(),
+        { readReport: async () => report(site.previous) },
+    );
+
+    for (const action of ["disable", "revoke"] as const) {
+        await expect(
+            management.setStatus({ installationId: approved.installation.id, revision: approved.revision, action }),
+        ).rejects.toMatchObject({ code: "installation_selected", status: 409 });
+    }
+    expect(
+        (await site.installations.get({ siteId, installationId: approved.installation.id }))?.installation.status,
+    ).toBe("enabled");
+
+    await site.selections.replace(siteId, [], selected.revision);
+    const disabled = await management.setStatus({
+        installationId: approved.installation.id,
+        revision: approved.revision,
+        action: "disable",
+    });
+    expect(disabled.status).toBe("disabled");
 });

@@ -62,9 +62,10 @@ are local ephemeral objects, not persisted drafts or HTTP exchange tokens.
   `gatewayTokenRef: null` explicitly removes the local optional reference;
   omission preserves it. Removing the reference does not revoke the secret.
 - `disable` and `enable` change administrative intent, not remote account state.
-  A fresh observation is needed after a status change.
-- `revoke` is terminal for that installation. Old records and selection pins
-  remain readable; new selection plans cannot use the revoked installation.
+  A fresh observation is needed after a status change. The management workflow
+  refuses to disable an installation while any site contract selects it.
+- `revoke` is terminal for that installation. The management workflow requires
+  every contract to be rerouted first, then removes the local credentials.
   Creating a new connection requires a different installation ID.
 - Mutations carry an expected revision, including observations, so a stale
   approval cannot overwrite a concurrent observation or administrative action.
@@ -116,8 +117,9 @@ serving both payment majors and `commerce@1.1`, which accepts either major.
 3. Replacing only payment with V2 while retaining commerce V1.0 is rejected.
 4. Replacing commerce with V1.1 and payment with V2 together is accepted if the
    rest of the site's graph also remains valid.
-5. A subsequent disable or revoke leaves those pins recorded but does not make
-   them executable. Runtime invocation must recheck current installation state.
+5. A subsequent disable or revoke is rejected until the site reroutes or removes
+   every contract pin using that installation. Runtime invocation still rechecks
+   current installation state.
 
 Manifest approval and site selection are separate operations, not one atomic
 upgrade transaction. If a new manifest removes a selected release, the existing

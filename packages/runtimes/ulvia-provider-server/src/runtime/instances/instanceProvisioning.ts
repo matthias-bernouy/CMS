@@ -53,6 +53,11 @@ async function connectProvider(
     const installation = state.installations.find(
         (item) => item.providerId === profile.manifest.providerId && item.accountId === options.instance.id,
     );
+    if (installation?.status === "revoked") {
+        throw new Error(
+            `Official Provider installation was revoked and cannot be restored: ${installation.id}. Provision a new instance instead.`,
+        );
+    }
     if (installation && connectionIsReady(installation, options, profile)) {
         return;
     }

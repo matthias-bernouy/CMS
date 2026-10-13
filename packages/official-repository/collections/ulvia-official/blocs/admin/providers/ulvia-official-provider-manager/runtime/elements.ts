@@ -1,6 +1,6 @@
 import type { ContractSelection, ProviderDetail, ProviderInstallation } from "./model";
 
-export function installationCard(item: ProviderInstallation): HTMLElement {
+export function installationCard(item: ProviderInstallation, selections: ContractSelection[]): HTMLElement {
     const card = document.createElement("ulvia-official-card");
     card.setAttribute("surface", "raised");
     const eyebrow = text("small", `${item.providerId} · ${item.accountId}`);
@@ -16,14 +16,20 @@ export function installationCard(item: ProviderInstallation): HTMLElement {
     );
     const status = badge(item.status);
     body.append(status);
+    const selectedContracts = selections.filter(({ installationId }) => installationId === item.id);
+    if (selectedContracts.length) {
+        body.append(
+            text("small", `${selectedContracts.length} selected contract${selectedContracts.length === 1 ? "" : "s"}`),
+        );
+    }
     const actions: HTMLElement[] = [];
     if (item.status === "enabled") {
-        actions.push(action("Disable", "disable", item, "secondary"));
+        actions.push(action("Disable", "disable", item, "secondary", selectedContracts.length > 0));
     } else if (item.status === "disabled") {
         actions.push(action("Enable", "enable", item, "primary"));
     }
     if (item.status !== "revoked") {
-        actions.push(action("Revoke", "revoke", item, "danger"));
+        actions.push(action("Revoke", "revoke", item, "danger", selectedContracts.length > 0));
     }
     for (const control of actions) {
         control.slot = "actions";
@@ -78,7 +84,13 @@ export function empty(message: string): HTMLElement {
     return item;
 }
 
-function action(label: string, actionId: string, item: ProviderInstallation, tone: string): HTMLElement {
+function action(
+    label: string,
+    actionId: string,
+    item: ProviderInstallation,
+    tone: string,
+    selected = false,
+): HTMLElement {
     const wrapper = document.createElement("ulvia-official-action");
     wrapper.setAttribute("variant", tone === "primary" ? "filled" : "outline");
     wrapper.setAttribute("tone", tone);
@@ -89,6 +101,10 @@ function action(label: string, actionId: string, item: ProviderInstallation, ton
     button.dataset.action = actionId;
     button.dataset.key = item.id;
     button.dataset.revision = String(item.revision);
+    button.disabled = selected;
+    if (selected) {
+        button.title = "Reroute every selected contract before changing this provider status.";
+    }
     wrapper.append(button);
     return wrapper;
 }

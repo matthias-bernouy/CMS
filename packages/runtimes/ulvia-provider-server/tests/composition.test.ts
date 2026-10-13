@@ -48,6 +48,22 @@ describe("official Provider connection provisioning", () => {
             "Official Provider observation was not persisted",
         );
     });
+
+    test("does not restore a terminally revoked official installation", async () => {
+        let previewed = false;
+        const target = connectionTarget({
+            list: async () => ({ installations: [{ ...installation(null), status: "revoked" }], selected: [] }),
+            preview: async () => {
+                previewed = true;
+                return { ticket: "ticket" };
+            },
+        });
+
+        await expect(target.connectProvider(OFFICIAL_INSTANCE_PROFILE, execution())).rejects.toThrow(
+            "was revoked and cannot be restored",
+        );
+        expect(previewed).toBe(false);
+    });
 });
 
 describe("official Provider observation renewal", () => {

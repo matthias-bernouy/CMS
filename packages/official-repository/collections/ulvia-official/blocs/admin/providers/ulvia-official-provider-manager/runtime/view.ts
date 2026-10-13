@@ -11,7 +11,7 @@ export class ProviderView {
             metric(String(list.selections.length), "Selected contracts"),
         );
         const target = this.required("[data-installations]");
-        target.replaceChildren(...list.installations.map(installationCard));
+        target.replaceChildren(...list.installations.map((item) => installationCard(item, list.selections)));
         if (!list.installations.length) {
             target.append(empty("No provider installation has been approved."));
         }

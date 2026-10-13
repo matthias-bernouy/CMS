@@ -113,9 +113,18 @@ export class ProviderManagement {
 
     async setStatus(input: { installationId: string; revision: number; action: "enable" | "disable" | "revoke" }) {
         const scope = { siteId: this.gateway.siteId, installationId: input.installationId };
-        const current = await this.gateway.installations.get(scope);
+        const [current, selections] = await Promise.all([
+            this.gateway.installations.get(scope),
+            input.action === "enable" ? Promise.resolve(null) : this.gateway.selections.get(this.gateway.siteId),
+        ]);
         if (!current) {
             throw Object.assign(new Error("Provider installation is unavailable"), { status: 404 });
+        }
+        if (selections?.plan.selections.some(({ installationId }) => installationId === input.installationId)) {
+            throw Object.assign(new Error("Provider installation is selected by one or more contracts"), {
+                code: "installation_selected",
+                status: 409,
+            });
         }
         const credentialKeys =
             input.action === "revoke"

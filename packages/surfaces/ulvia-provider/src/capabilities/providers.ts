@@ -100,7 +100,7 @@ async function providerCommand<T>(operation: () => Promise<T>): Promise<T> {
         if (status === 409 || code === "revision_conflict") {
             throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
         }
-        if (code === "installation_revoked") {
+        if (code === "installation_revoked" || code === "installation_selected" || code.endsWith("_protected")) {
             throw new ProviderCapabilityDispatchError("INVALID_STATE", 409);
         }
         if (code) {

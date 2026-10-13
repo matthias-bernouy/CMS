@@ -33,19 +33,7 @@ export function createProtectedProviderManagement(
             }
             return management.replaceSelections(input);
         },
-        setStatus: async (input) => {
-            if (input.action !== "enable") {
-                const state = await management.list();
-                const system = state.installations.find(
-                    (candidate) =>
-                        candidate.providerId === profile.manifest.providerId && candidate.accountId === instance.id,
-                );
-                if (system?.id === input.installationId) {
-                    throw policyError("system_installation_protected");
-                }
-            }
-            return management.setStatus(input);
-        },
+        setStatus: (input) => management.setStatus(input),
     };
 }
 
