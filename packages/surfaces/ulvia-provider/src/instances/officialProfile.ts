@@ -6,12 +6,12 @@ const PROFILE_1_0_0 = Object.freeze({
     manifest: {
         providerId: "ulvia.official",
         version: "0.3.0",
-        digest: "sha256:d4d760e89b605c9f8731d63e5622b1d605ebaa3165c72f65660ac63d6c6d09bf",
+        digest: "sha256:a3a17f47e46a4cdc0a30aac5647d244ca3324429cc5626a31dd7a2963ad3b423",
     },
     contracts: [
         ["ulvia.cms.access", "1.0.0", "sha256:c42172edc03e7ef9cc8af7012cde2448b6655481100d5891f37641ae75371491"],
         ["ulvia.cms.collections", "1.0.0", "sha256:dfe1b858443a8155e495cf0e8993051b379f1f11f90a6d2c201bf5f59e934e8f"],
-        ["ulvia.cms.files", "1.0.0", "sha256:90c43e5ce1378ff076c7adbe84bd21bb8a99c1d48e721dd0efd5b32c97ff682e"],
+        ["ulvia.cms.files", "1.0.0", "sha256:52bd2d78f3d399e373357abcef47eeb04d4093024444369817f9d915f2453f08"],
         ["ulvia.cms.jobs", "1.0.0", "sha256:716b2e09685380389ec5fe6ac2a8485d72b8a9ca5a72396320095a08e022d51a"],
         ["ulvia.cms.localization", "1.0.0", "sha256:7010c5c41387b23cfd0e2874aa80f900548cea32c7502d0437467a3a69a5bcb7"],
         ["ulvia.cms.pages", "1.0.0", "sha256:fa13c10a11bdada047e9dbaf9f662c1897ada4881fe8419b6c0f694bc1bfb000"],
@@ -22,7 +22,7 @@ const PROFILE_1_0_0 = Object.freeze({
         publisherId: "ulvia.official",
         collectionId: "ulvia-official",
         version: "1.0.0",
-        digest: "sha256:b685ff35563360c4249530d6383e07075a6412c2d114a358cb4e8ed076834a75",
+        digest: "sha256:071bfc5a75b1d8572f6e6fea9294c6bec215d2f536b81b72ebc85382d892ded5",
     },
 });
 

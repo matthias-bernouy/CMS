@@ -108,6 +108,7 @@ test("the pre-built local bootstrap bundle matches official authored releases", 
     expect((await readFile(join(root, "collections", "ulvia-official", "release.json"), "utf8")).trim()).toBe(
         artifacts.collection,
     );
+    expect(OFFICIAL_INSTANCE_PROFILE.manifest.digest).toBe(artifacts.providerDigest);
     const officialCollection = await prepareCollectionRelease(
         resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
         await officialContractCatalogue(),

@@ -11,6 +11,7 @@ import { prepareCollectionRelease } from "../release/source";
 export type OfficialBootstrapArtifacts = Readonly<{
     contracts: Readonly<Record<string, string>>;
     provider: string;
+    providerDigest: string;
     collection: string;
 }>;
 
@@ -47,7 +48,12 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
         catalogue,
     );
     const collection = await prepareCollectionRelease(join(root, "collections", "ulvia-official"), catalogue);
-    return { contracts, provider: provider.canonicalJson, collection: collection.canonicalJson };
+    return {
+        contracts,
+        provider: provider.canonicalJson,
+        providerDigest: provider.digest,
+        collection: collection.canonicalJson,
+    };
 }
 
 async function writeBootstrapArtifacts(): Promise<void> {
