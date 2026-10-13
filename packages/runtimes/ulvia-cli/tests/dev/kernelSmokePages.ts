@@ -124,7 +124,11 @@ async function submitPageMutation(page: Page, capability: string) {
 }
 
 function mutationButton(page: Page, capability: string) {
-    return capability === "update"
-        ? page.getByRole("button", { name: "Save document", exact: true })
-        : page.locator(`form[cms-source^="/.cms/call/ulvia.cms.pages/${capability} "] button[type="submit"]`);
+    if (capability === "update") {
+        return page.getByRole("button", { name: "Save document", exact: true });
+    }
+    const mutationForm = page
+        .locator(`form[cms-source^="/.cms/call/ulvia.cms.pages/${capability} "]`)
+        .filter({ has: page.locator('input[name="visible"][value="true"]') });
+    return mutationForm.locator('button[type="submit"]');
 }
