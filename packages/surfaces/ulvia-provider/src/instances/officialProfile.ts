@@ -1,3 +1,5 @@
+import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
+
 const PROFILE_1_0_0 = Object.freeze({
     id: "ulvia.official",
     version: "1.0.0",
@@ -27,6 +29,7 @@ const PROFILE_1_0_0 = Object.freeze({
 export type OfficialInstanceProfile = Readonly<{
     id: string;
     version: string;
+    upgradeFromVersions: readonly string[];
     manifest: Readonly<{ providerId: string; version: string; digest: string }>;
     contracts: readonly Readonly<{ contractId: string; version: string; digest: string }>[];
     collection: Readonly<{
@@ -37,17 +40,28 @@ export type OfficialInstanceProfile = Readonly<{
     }>;
 }>;
 
-const PROFILE_1_1_0: OfficialInstanceProfile = Object.freeze({
+const PROFILE_1_0_0_WITH_TRANSITIONS: OfficialInstanceProfile = Object.freeze({
     ...PROFILE_1_0_0,
-    version: "1.1.0",
+    upgradeFromVersions: [],
 });
 
-export const SUPPORTED_INSTANCE_PROFILES = Object.freeze([PROFILE_1_0_0, PROFILE_1_1_0]);
+export const SUPPORTED_INSTANCE_PROFILES = Object.freeze([PROFILE_1_0_0_WITH_TRANSITIONS]);
 
-export const OFFICIAL_INSTANCE_PROFILE = PROFILE_1_1_0;
+export const OFFICIAL_INSTANCE_PROFILE = PROFILE_1_0_0_WITH_TRANSITIONS;
 
 export function resolveOfficialInstanceProfile(id: string, version: string): OfficialInstanceProfile | null {
     return SUPPORTED_INSTANCE_PROFILES.find((profile) => profile.id === id && profile.version === version) ?? null;
+}
+
+export function canUpgradeOfficialInstanceProfile(
+    source: OfficialInstanceProfile,
+    target: OfficialInstanceProfile,
+): boolean {
+    return (
+        source.id === target.id &&
+        compareSemVer(target.version, source.version) > 0 &&
+        target.upgradeFromVersions.includes(source.version)
+    );
 }
 
 export const SYSTEM_CONTRACT_IDS = Object.freeze(PROFILE_1_0_0.contracts.map(({ contractId }) => contractId));

@@ -54,6 +54,7 @@ export {
     OFFICIAL_INSTANCE_PROFILE,
     SUPPORTED_INSTANCE_PROFILES,
     SYSTEM_CONTRACT_IDS,
+    canUpgradeOfficialInstanceProfile,
     resolveOfficialInstanceProfile,
     type OfficialInstanceProfile,
 } from "./instances/officialProfile";
@@ -61,6 +62,7 @@ export {
     OfficialInstanceProvisioner,
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceAdministrator,
+    type ProviderInstanceTransitionExecution,
 } from "./instances/provisioning";
 export {
     ProviderInstanceLifecycle,

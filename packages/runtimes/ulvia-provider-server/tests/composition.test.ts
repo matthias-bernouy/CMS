@@ -12,6 +12,7 @@ test("the Provider owns every persistent instance service while remaining indepe
 
     expect(entrypoint).not.toContain("cms-kernel-server");
     expect(entrypoint).not.toContain("cms-instance-runtime");
+    expect(entrypoint).toContain("host.recoverOperations");
     expect(stores).toContain("MongoAuthTokenStore");
     expect(stores).toContain("MongoRateLimiter");
     expect(stores).toContain("sitemapStore");
@@ -30,7 +31,7 @@ describe("official Provider connection provisioning", () => {
             approve: async () => ({ observed: true }),
         });
 
-        await target.connectProvider(OFFICIAL_INSTANCE_PROFILE);
+        await target.connectProvider(OFFICIAL_INSTANCE_PROFILE, execution());
 
         expect(calls).toEqual([expect.objectContaining({ installationId: "installation:official", revision: 4 })]);
     });
@@ -42,7 +43,7 @@ describe("official Provider connection provisioning", () => {
             approve: async () => ({ observed: false }),
         });
 
-        await expect(target.connectProvider(OFFICIAL_INSTANCE_PROFILE)).rejects.toThrow(
+        await expect(target.connectProvider(OFFICIAL_INSTANCE_PROFILE, execution())).rejects.toThrow(
             "Official Provider observation was not persisted",
         );
     });
@@ -70,7 +71,10 @@ test("official administrator provisioning writes the shared authority model", as
         collectionSource: {} as never,
     });
 
-    await target.initializeAdministrator({ email: "admin@example.test", password: "unused-existing-password" });
+    await target.initializeAdministrator(
+        { email: "admin@example.test", password: "unused-existing-password" },
+        execution(),
+    );
 
     expect(granted).toEqual({ sub: "local:administrator", enabled: true });
 });
@@ -82,7 +86,13 @@ function connectionTarget(management: Record<string, unknown>) {
     } as ProviderInstanceRecord;
     return createInstanceProvisioningTarget({
         instance,
-        composition: { management } as unknown as InstanceComposition,
+        composition: {
+            management,
+            managementForProfile: (profile: typeof OFFICIAL_INSTANCE_PROFILE) => {
+                expect(profile).toBe(OFFICIAL_INSTANCE_PROFILE);
+                return management;
+            },
+        } as unknown as InstanceComposition,
         env: { ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103" } as ProviderRuntimeEnv,
         credentials: {
             read: async () => ({
@@ -110,4 +120,8 @@ function installation(observedAt: string | null) {
         observedAt,
         contracts: OFFICIAL_INSTANCE_PROFILE.contracts.map((contract) => ({ ...contract, status: "ready" })),
     };
+}
+
+function execution() {
+    return { signal: new AbortController().signal, throwIfLeaseLost: () => undefined };
 }

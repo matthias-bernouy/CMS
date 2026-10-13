@@ -3,6 +3,10 @@ export type ResourceLease<T> = Readonly<{
     release(): void;
 }>;
 
+export type ResourceLifetime = Readonly<{
+    retain(): () => void;
+}>;
+
 type Timer = ReturnType<typeof setTimeout>;
 
 type PoolEntry<T> = {
@@ -17,7 +21,7 @@ export class InstanceResourcePool<T> {
     readonly #entries = new Map<string, PoolEntry<T>>();
 
     constructor(
-        private readonly create: (key: string) => Promise<T>,
+        private readonly create: (key: string, lifetime: ResourceLifetime) => Promise<T>,
         private readonly dispose: (resource: T) => Promise<void>,
         private readonly options: Readonly<{ maxEntries: number; idleMs: number }>,
     ) {
@@ -32,8 +36,9 @@ export class InstanceResourcePool<T> {
     async acquire(key: string): Promise<ResourceLease<T>> {
         let entry = this.#entries.get(key);
         if (!entry) {
-            entry = { resource: this.create(key), leases: 0, lastUsed: Date.now() };
+            entry = { resource: undefined as unknown as Promise<T>, leases: 0, lastUsed: Date.now() };
             this.#entries.set(key, entry);
+            entry.resource = this.create(key, { retain: () => this.#retain(key, entry!) });
             entry.resource.catch(() => {
                 if (this.#entries.get(key) === entry) {
                     this.#entries.delete(key);
@@ -63,6 +68,25 @@ export class InstanceResourcePool<T> {
                 released = true;
                 this.#release(key, entry!);
             },
+        };
+    }
+
+    #retain(key: string, entry: PoolEntry<T>): () => void {
+        if (this.#entries.get(key) !== entry) {
+            throw new Error(`Cannot retain a disposing instance resource: ${key}`);
+        }
+        if (entry.timer) {
+            clearTimeout(entry.timer);
+            entry.timer = undefined;
+        }
+        entry.leases += 1;
+        let released = false;
+        return () => {
+            if (released) {
+                return;
+            }
+            released = true;
+            this.#release(key, entry);
         };
     }
 

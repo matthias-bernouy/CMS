@@ -1,34 +1,43 @@
 import { randomUUID } from "node:crypto";
 import type { ProviderInstanceRegistry } from "./registry";
-import { resolveOfficialInstanceProfile, type OfficialInstanceProfile } from "./officialProfile";
+import {
+    canUpgradeOfficialInstanceProfile,
+    resolveOfficialInstanceProfile,
+    type OfficialInstanceProfile,
+} from "./officialProfile";
 import type { InstanceTransitionRecord, InstanceTransitionStore } from "./transitions";
 import type { ProviderInstanceProfile, ProviderInstanceRecord } from "./types";
+import {
+    executeProvisioningStep,
+    PROVISION_STEPS,
+    UPGRADE_STEPS,
+    type OfficialInstanceProvisioningTarget,
+    type ProviderInstanceAdministrator,
+    type TransitionStep,
+} from "./provisioningTarget";
+import { ProviderInstanceTransitionLease, transitionLeaseExpiry } from "./transitionLease";
 
-const PROVISION_STEPS = ["manifest", "provider", "contracts", "collection", "administrator"] as const;
-const UPGRADE_STEPS = ["manifest", "provider", "contracts", "collection"] as const;
-const LEASE_MS = 30_000;
+const DEFAULT_LEASE_MS = 30_000;
 
-type TransitionStep = (typeof PROVISION_STEPS)[number];
-
-export type ProviderInstanceAdministrator = Readonly<{ email: string; password: string }>;
-
-export interface OfficialInstanceProvisioningTarget {
-    importManifest(profile: OfficialInstanceProfile): Promise<void>;
-    connectProvider(profile: OfficialInstanceProfile): Promise<void>;
-    selectContracts(profile: OfficialInstanceProfile): Promise<void>;
-    installCollection(profile: OfficialInstanceProfile): Promise<void>;
-    initializeAdministrator(administrator: ProviderInstanceAdministrator): Promise<void>;
-    release?(): void;
-}
+export type { OfficialInstanceProvisioningTarget, ProviderInstanceAdministrator } from "./provisioningTarget";
+export type { ProviderInstanceTransitionExecution } from "./transitionLease";
 
 export class OfficialInstanceProvisioner {
     constructor(
         private readonly instances: ProviderInstanceRegistry,
         private readonly transitions: InstanceTransitionStore,
         private readonly openTarget: (instance: ProviderInstanceRecord) => Promise<OfficialInstanceProvisioningTarget>,
-        private readonly readAdministrator: (instanceId: string) => Promise<ProviderInstanceAdministrator | null>,
+        private readonly administratorCredentials: Readonly<{
+            read(instanceId: string): Promise<ProviderInstanceAdministrator | null>;
+            clear(instanceId: string): Promise<void>;
+        }>,
         private readonly now: () => Date = () => new Date(),
-    ) {}
+        private readonly leaseMs = DEFAULT_LEASE_MS,
+    ) {
+        if (!Number.isSafeInteger(leaseMs) || leaseMs < 3) {
+            throw new TypeError("Provider instance transition lease duration must be at least 3 milliseconds");
+        }
+    }
 
     provision(instanceId: string): Promise<ProviderInstanceRecord> {
         return this.transition(instanceId, undefined);
@@ -38,10 +47,12 @@ export class OfficialInstanceProvisioner {
         return this.transition(instanceId, target);
     }
 
-    async recover(limit = 100): Promise<void> {
-        for (const transition of await this.transitions.listRecoverable(this.now().toISOString(), limit)) {
+    async recover(limit = 100): Promise<number> {
+        const transitions = await this.transitions.listRecoverable(this.now().toISOString(), limit);
+        for (const transition of transitions) {
             await this.execute(transition).catch(() => undefined);
         }
+        return transitions.length;
     }
 
     private async transition(
@@ -53,9 +64,17 @@ export class OfficialInstanceProvisioner {
             throw new Error(`Provider instance is disabled: ${instanceId}`);
         }
         const target = requestedTarget ?? instance.profile;
-        exactProfile(target);
+        const targetProfile = exactProfile(target);
         if (requestedTarget && instance.status === "ready" && sameProfile(instance.profile, target)) {
             return instance;
+        }
+        if (requestedTarget && !sameProfile(instance.profile, target)) {
+            const sourceProfile = exactProfile(instance.profile);
+            if (!canUpgradeOfficialInstanceProfile(sourceProfile, targetProfile)) {
+                throw new Error(
+                    `Unsupported Provider instance profile transition: ${sourceProfile.id}@${sourceProfile.version} -> ${targetProfile.id}@${targetProfile.version}`,
+                );
+            }
         }
         const kind = requestedTarget ? "upgrade" : "provision";
         const transition = await this.transitions.createOrGet({
@@ -70,6 +89,7 @@ export class OfficialInstanceProvisioner {
             status: "queued",
         });
         if (transition.status === "succeeded") {
+            await this.clearCompletedAdministrator(transition);
             return instance;
         }
         const executable =
@@ -91,28 +111,49 @@ export class OfficialInstanceProvisioner {
                 transition.id,
                 transition.revision,
                 owner,
-                expiresAt(now),
+                transitionLeaseExpiry(now, this.leaseMs),
                 now.toISOString(),
             ))
         ) {
             throw new Error(`Provider transition is already running: ${transition.id}`);
         }
-        let instance = await requiredInstance(this.instances, transition.instanceId);
-        if (instance.status === "failed" || instance.status === "ready") {
-            instance = await this.instances.update(instance.id, instance.revision, {
-                status: transition.kind === "upgrade" ? "upgrading" : "provisioning",
-                failure: null,
-            });
-        }
-        const profile = exactProfile(transition.targetProfile);
-        const target = await this.openTarget(instance);
-        const heartbeat = maintainLease(this.transitions, transition.id, owner, this.now);
+        const lease = new ProviderInstanceTransitionLease(
+            this.transitions,
+            transition.id,
+            owner,
+            this.now,
+            this.leaseMs,
+        );
+        const execution = lease.execution;
+        let target: OfficialInstanceProvisioningTarget | undefined;
+        let instance: ProviderInstanceRecord | undefined;
         try {
+            instance = await requiredInstance(this.instances, transition.instanceId);
+            execution.throwIfLeaseLost();
+            if (instance.status === "failed" || instance.status === "ready") {
+                instance = await this.instances.update(instance.id, instance.revision, {
+                    status: transition.kind === "upgrade" ? "upgrading" : "provisioning",
+                    failure: null,
+                });
+            }
+            execution.throwIfLeaseLost();
+            await this.clearCompletedAdministrator(transition);
+            execution.throwIfLeaseLost();
+            const profile = exactProfile(transition.targetProfile);
+            target = await this.openTarget(instance);
+            execution.throwIfLeaseLost();
             for (const step of transition.steps as readonly TransitionStep[]) {
                 if (transition.completedSteps.includes(step)) {
                     continue;
                 }
-                await executeStep(target, profile, step, await this.readAdministrator(instance.id));
+                await executeProvisioningStep(
+                    target,
+                    profile,
+                    step,
+                    await this.administratorCredentials.read(instance.id),
+                    execution,
+                );
+                execution.throwIfLeaseLost();
                 const updated = await this.transitions.completeStep(
                     transition.id,
                     owner,
@@ -120,30 +161,44 @@ export class OfficialInstanceProvisioner {
                     this.now().toISOString(),
                 );
                 if (!updated) {
-                    throw new Error(`Provider transition lease was lost: ${transition.id}`);
+                    return lease.lose(transition.id);
                 }
                 transition = updated;
+                await this.clearCompletedAdministrator(transition);
+                execution.throwIfLeaseLost();
             }
+            execution.throwIfLeaseLost();
             instance = await this.instances.update(instance.id, instance.revision, {
                 status: "ready",
                 profile: transition.targetProfile,
                 failure: null,
             });
             if (!(await this.transitions.succeed(transition.id, owner, this.now().toISOString()))) {
-                throw new Error(`Provider transition lease was lost: ${transition.id}`);
+                lease.lose(transition.id);
             }
             return instance;
         } catch (error) {
+            if (lease.lost) {
+                throw lease.reason;
+            }
             const message = error instanceof Error ? error.message.slice(0, 512) : "Profile transition failed";
-            await this.transitions.fail(transition.id, owner, message, this.now().toISOString());
-            const latest = await this.instances.get(instance.id);
+            if (!(await this.transitions.fail(transition.id, owner, message, this.now().toISOString()))) {
+                lease.lose(transition.id);
+            }
+            const latest = await this.instances.get(transition.instanceId);
             if (latest && latest.status !== "disabled") {
                 await this.instances.update(latest.id, latest.revision, { status: "failed", failure: message });
             }
             throw error;
         } finally {
-            heartbeat.stop();
-            target.release?.();
+            await lease.stop();
+            target?.release?.();
+        }
+    }
+
+    private async clearCompletedAdministrator(transition: InstanceTransitionRecord): Promise<void> {
+        if (transition.kind === "provision" && transition.completedSteps.includes("administrator")) {
+            await this.administratorCredentials.clear(transition.instanceId);
         }
     }
 }
@@ -156,49 +211,12 @@ function exactProfile(profile: ProviderInstanceProfile): OfficialInstanceProfile
     return resolved;
 }
 
-async function executeStep(
-    target: OfficialInstanceProvisioningTarget,
-    profile: OfficialInstanceProfile,
-    step: TransitionStep,
-    administrator: ProviderInstanceAdministrator | null,
-): Promise<void> {
-    if (step === "manifest") {
-        return target.importManifest(profile);
-    }
-    if (step === "provider") {
-        return target.connectProvider(profile);
-    }
-    if (step === "contracts") {
-        return target.selectContracts(profile);
-    }
-    if (step === "collection") {
-        return target.installCollection(profile);
-    }
-    if (!administrator) {
-        throw new Error("Provisioning administrator credentials are unavailable");
-    }
-    return target.initializeAdministrator(administrator);
-}
-
 function transitionId(instanceId: string, target: ProviderInstanceProfile): string {
     return `profile:${instanceId}:${target.id}:${target.version}`;
 }
 
 function sameProfile(left: ProviderInstanceProfile, right: ProviderInstanceProfile): boolean {
     return left.id === right.id && left.version === right.version;
-}
-
-function expiresAt(now: Date): string {
-    return new Date(now.getTime() + LEASE_MS).toISOString();
-}
-
-function maintainLease(store: InstanceTransitionStore, id: string, owner: string, now: () => Date): { stop(): void } {
-    const timer = setInterval(() => {
-        const current = now();
-        void store.renew(id, owner, expiresAt(current), current.toISOString());
-    }, LEASE_MS / 3);
-    timer.unref?.();
-    return { stop: () => clearInterval(timer) };
 }
 
 async function requiredInstance(store: ProviderInstanceRegistry, id: string): Promise<ProviderInstanceRecord> {

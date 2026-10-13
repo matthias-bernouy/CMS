@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
     OFFICIAL_INSTANCE_PROFILE,
     OfficialInstanceProvisioner,
+    canUpgradeOfficialInstanceProfile,
     type CreateProviderInstanceRecord,
     type InstanceTransitionRecord,
     type InstanceTransitionStore,
@@ -44,15 +45,98 @@ describe("OfficialInstanceProvisioner", () => {
         expect(calls.filter((step) => step === "collection")).toHaveLength(2);
     });
 
-    test("switches from profile 1.0 only after the 1.1 plan succeeds", async () => {
+    test("clears staged administrator credentials after the durable step and reconciles a cleanup crash", async () => {
+        const registry = new MemoryRegistry(instance());
+        const transitions = new MemoryTransitions();
+        const calls: string[] = [];
+        let cleanupAttempts = 0;
+        let failCleanup = true;
+        const provisioner = new OfficialInstanceProvisioner(
+            registry,
+            transitions,
+            async () => target(calls, async () => void calls.push("collection")),
+            administratorCredentials(async () => {
+                cleanupAttempts += 1;
+                if (failCleanup) {
+                    throw new Error("secret store unavailable");
+                }
+            }),
+        );
+
+        await expect(provisioner.provision("instance:one")).rejects.toThrow("secret store unavailable");
+        expect(transitions.record?.completedSteps).toContain("administrator");
+        expect(calls.filter((step) => step === "administrator")).toHaveLength(1);
+        expect(cleanupAttempts).toBe(1);
+
+        failCleanup = false;
+        expect((await provisioner.provision("instance:one")).status).toBe("ready");
+        expect(calls.filter((step) => step === "administrator")).toHaveLength(1);
+        expect(cleanupAttempts).toBe(2);
+        expect(transitions.record?.status).toBe("succeeded");
+    });
+
+    test("rejects undeclared profile upgrades before creating a transition", async () => {
         const registry = new MemoryRegistry(instance("ready", "1.0.0"));
         const calls: string[] = [];
-        const provisioner = createProvisioner(registry, new MemoryTransitions(), calls);
+        const transitions = new MemoryTransitions();
+        const provisioner = createProvisioner(registry, transitions, calls);
 
-        const upgraded = await provisioner.upgrade("instance:one", { id: "ulvia.official", version: "1.1.0" });
+        await expect(provisioner.upgrade("instance:one", { id: "ulvia.official", version: "1.1.0" })).rejects.toThrow(
+            "Unsupported Provider instance profile",
+        );
 
-        expect(upgraded.profile.version).toBe("1.1.0");
-        expect(calls).toEqual(["manifest", "provider", "contracts", "collection"]);
+        expect(transitions.record).toBeNull();
+        expect(calls).toEqual([]);
+    });
+
+    test("allows only explicitly declared forward profile transitions", () => {
+        const target = {
+            ...OFFICIAL_INSTANCE_PROFILE,
+            version: "2.0.0",
+            upgradeFromVersions: ["1.0.0"],
+        };
+        const downgrade = {
+            ...OFFICIAL_INSTANCE_PROFILE,
+            version: "0.9.0",
+            upgradeFromVersions: ["1.0.0"],
+        };
+        expect(canUpgradeOfficialInstanceProfile(OFFICIAL_INSTANCE_PROFILE, target)).toBe(true);
+        expect(canUpgradeOfficialInstanceProfile(target, OFFICIAL_INSTANCE_PROFILE)).toBe(false);
+        expect(canUpgradeOfficialInstanceProfile(OFFICIAL_INSTANCE_PROFILE, downgrade)).toBe(false);
+    });
+
+    test("does not fail or overwrite a transition after losing its lease", async () => {
+        const registry = new MemoryRegistry(instance());
+        const transitions = new MemoryTransitions();
+        transitions.renewResult = false;
+        const provisioner = new OfficialInstanceProvisioner(
+            registry,
+            transitions,
+            async () => {
+                await Bun.sleep(10);
+                return target([], async () => undefined);
+            },
+            administratorCredentials(),
+            () => new Date(),
+            3,
+        );
+
+        await expect(provisioner.provision("instance:one")).rejects.toThrow("lease was lost");
+        expect(transitions.record?.status).toBe("running");
+        expect((await registry.get("instance:one"))?.status).toBe("provisioning");
+    });
+
+    test("does not overwrite instance state when failure persistence loses ownership", async () => {
+        const registry = new MemoryRegistry(instance());
+        const transitions = new MemoryTransitions();
+        transitions.allowFinish = false;
+        const provisioner = createProvisioner(registry, transitions, [], async () => {
+            throw new Error("repository unavailable");
+        });
+
+        await expect(provisioner.provision("instance:one")).rejects.toThrow("lease was lost");
+        expect(transitions.record?.status).toBe("running");
+        expect((await registry.get("instance:one"))?.status).toBe("provisioning");
     });
 });
 
@@ -66,8 +150,15 @@ function createProvisioner(
         registry,
         transitions,
         async () => target(calls, installCollection),
-        async () => ({ email: "admin@example.test", password: "secret" }),
+        administratorCredentials(),
     );
+}
+
+function administratorCredentials(clear: () => Promise<void> = async () => undefined) {
+    return {
+        read: async () => ({ email: "admin@example.test", password: "secret" }),
+        clear,
+    };
 }
 
 function target(calls: string[], installCollection: () => Promise<void>): OfficialInstanceProvisioningTarget {
@@ -131,6 +222,8 @@ class MemoryRegistry implements ProviderInstanceRegistry {
 
 class MemoryTransitions implements InstanceTransitionStore {
     record: InstanceTransitionRecord | null = null;
+    renewResult = true;
+    allowFinish = true;
     async init(): Promise<void> {}
     async createOrGet(value: Omit<InstanceTransitionRecord, "revision" | "createdAt" | "updatedAt">) {
         if (!this.record) {
@@ -152,7 +245,7 @@ class MemoryTransitions implements InstanceTransitionStore {
         return !!this.patch(revision, { status: "running", lease: { owner, expiresAt }, updatedAt: now });
     }
     async renew() {
-        return true;
+        return this.renewResult;
     }
     async completeStep(_id: string, owner: string, step: string, now: string) {
         if (this.record?.lease?.owner !== owner) {
@@ -170,7 +263,7 @@ class MemoryTransitions implements InstanceTransitionStore {
         return this.finish(owner, "failed", now, failure);
     }
     private finish(owner: string, status: "succeeded" | "failed", now: string, failure?: string) {
-        if (this.record?.lease?.owner !== owner) {
+        if (!this.allowFinish || this.record?.lease?.owner !== owner) {
             return false;
         }
         return !!this.patch(this.record.revision, { status, updatedAt: now, lease: undefined, failure });

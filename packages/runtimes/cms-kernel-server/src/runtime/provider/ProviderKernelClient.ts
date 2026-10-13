@@ -12,6 +12,7 @@ import type { PageExecutionHttpPort } from "@bernouy/cms-gateway/http/handlers";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { KernelProviderQuery, KernelProviderQueryOperation } from "@bernouy/ulvia-provider/kernel";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
+import type { ProviderKernelTransport } from "./ProviderKernelTransport";
 
 export class ProviderKernelClient {
     readonly content: ContentReader;
@@ -28,8 +29,7 @@ export class ProviderKernelClient {
     };
 
     constructor(
-        private readonly endpoint: string,
-        private readonly token: string,
+        private readonly transport: ProviderKernelTransport,
         kernelUrl: string,
     ) {
         this.content = remoteContent(this);
@@ -67,9 +67,9 @@ export class ProviderKernelClient {
     }
 
     async query<T>(operation: KernelProviderQueryOperation, input?: unknown): Promise<T> {
-        const response = await fetch(`${this.endpoint}/ulvia/kernel/v1/query`, {
+        const response = await this.transport.request("/ulvia/kernel/v1/query", {
             method: "POST",
-            headers: { authorization: `Bearer ${this.token}`, "content-type": "application/json" },
+            headers: { "content-type": "application/json" },
             body: JSON.stringify({
                 operation,
                 ...(input === undefined ? {} : { input }),
@@ -83,7 +83,7 @@ export class ProviderKernelClient {
     }
 
     auth(action: string, request: Request): Promise<Response> {
-        return this.forward(`/ulvia/kernel/v1/auth/${action}`, request);
+        return this.forward(`/ulvia/kernel/v1/auth/${action}`, request, undefined, 10_000);
     }
 
     capability = (request: Request): Promise<Response> =>
@@ -100,42 +100,20 @@ export class ProviderKernelClient {
 
     sitemap = (request: Request): Promise<Response> => this.forwardSitemap(request);
 
-    private async forward(path: string, request: Request, extraHeaders?: HeadersInit): Promise<Response> {
-        const headers = new Headers(request.headers);
-        const actorAuthorization = headers.get("authorization");
-        headers.delete("x-ulvia-actor-authorization");
-        headers.set("authorization", `Bearer ${this.token}`);
-        if (actorAuthorization) {
-            headers.set("x-ulvia-actor-authorization", actorAuthorization);
-        }
-        for (const [name, value] of new Headers(extraHeaders)) {
-            headers.set(name, value);
-        }
-        const response = await fetch(`${this.endpoint}${path}`, {
-            method: request.method,
-            headers,
-            body: request.body,
-            redirect: "manual",
-            signal: AbortSignal.timeout(30_000),
-            ...(request.body ? { duplex: "half" } : {}),
-        });
+    private async forward(
+        path: string,
+        request: Request,
+        extraHeaders?: HeadersInit,
+        timeoutMs?: number,
+    ): Promise<Response> {
+        const response = await this.transport.forward(path, request, extraHeaders, timeoutMs);
         if (!response.ok) {
-            const errorCode = await response
-                .clone()
-                .json()
-                .then((value) => (value as { error?: { code?: string } }).error?.code)
-                .catch(() => undefined);
             console.error("Provider proxy request failed", {
                 path: path.split("?")[0],
                 status: response.status,
-                errorCode,
             });
         }
-        return new Response(response.body, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: response.headers,
-        });
+        return this.transport.response(response);
     }
 
     private forwardSitemap(request: Request): Promise<Response> {

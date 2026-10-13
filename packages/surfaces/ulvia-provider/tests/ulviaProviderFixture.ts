@@ -29,7 +29,7 @@ export function providerOptions(
             id: instanceId,
             status: "ready",
             revision: 1,
-            profile: { id: "ulvia.official", version: "1.1.0" },
+            profile: { id: "ulvia.official", version: "1.0.0" },
         },
         contentRevision: async () => 1,
         kernel: kernelApi(kernelOverrides),

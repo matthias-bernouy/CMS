@@ -1,23 +1,12 @@
-import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
 import { assertKernelProviderHandshake } from "@bernouy/ulvia-provider/kernel";
-import type { GatewayHttpNetwork } from "@bernouy/cms-gateway/http";
-import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
-import { randomUUID } from "node:crypto";
+import { ProviderKernelTransport } from "../provider/ProviderKernelTransport";
 
-/** A bounded, credential-safe report probe using the gateway's pinned public-or-loopback network policy. */
-export async function fetchProviderHandshake(endpoint: string, token: string, network?: GatewayHttpNetwork) {
-    assertProviderConnectionToken(token);
+/** A bounded probe over the operator-configured private Kernel-to-Provider transport. */
+export async function fetchProviderHandshake(transport: ProviderKernelTransport) {
     const signal = AbortSignal.timeout(5_000);
-    const transport = network ?? new NodeGatewayHttpNetwork({ resolveToken: async () => token });
-    const response = await transport.exchange({
-        origin: endpoint,
-        pathAndQuery: "/ulvia/kernel/v1/handshake",
+    const response = await transport.request("/ulvia/kernel/v1/handshake", {
         method: "GET",
-        headers: {},
-        requestId: randomUUID(),
-        providerTokenRef: "${PENDING_PROVIDER_TOKEN}",
-        authentication: { kind: "provider-control" },
-        accept: "application/json",
+        headers: { accept: "application/json" },
         signal,
     });
     if (!response.ok || !response.body) {

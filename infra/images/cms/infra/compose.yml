@@ -144,7 +144,7 @@ services:
             MONGO_URL: mongodb://${MONGO_PROVIDER_USERNAME}:${MONGO_PROVIDER_PASSWORD}@mongo:27017/ulvia_provider_control?authSource=admin
             ULVIA_PROVIDER_PORT: "5103"
             ULVIA_PROVIDER_HOST: 0.0.0.0
-            ULVIA_PROVIDER_PUBLIC_URL: http://ulvia-provider:5103
+            ULVIA_PROVIDER_PUBLIC_URL: http://127.0.0.1:5103
             ULVIA_PROVIDER_OPERATOR_TOKEN: ${ULVIA_PROVIDER_OPERATOR_TOKEN:?ULVIA_PROVIDER_OPERATOR_TOKEN must be set}
         volumes:
             - cms_files:/var/lib/cms/files

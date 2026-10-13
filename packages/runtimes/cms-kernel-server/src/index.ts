@@ -1,11 +1,13 @@
 import { mountProductionKernel } from "./runtime/mountKernel";
 import { fetchProviderHandshake } from "./runtime/gateway/fetchProviderReport";
 import { ProviderKernelClient } from "./runtime/provider/ProviderKernelClient";
+import { ProviderKernelTransport } from "./runtime/provider/ProviderKernelTransport";
 import { readRuntimeEnv } from "./runtimeEnv";
 
 const env = readRuntimeEnv(process.env);
-await fetchProviderHandshake(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN);
-const provider = new ProviderKernelClient(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN, env.KERNEL_PUBLIC_URL);
+const transport = new ProviderKernelTransport(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN);
+await fetchProviderHandshake(transport);
+const provider = new ProviderKernelClient(transport, env.KERNEL_PUBLIC_URL);
 const kernel = await mountProductionKernel({ env, provider });
 
 let stopping = false;

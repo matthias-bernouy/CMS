@@ -43,3 +43,37 @@ test("an active resource is never disposed by overflow eviction", async () => {
     second.release();
     await pool.close();
 });
+
+test("a retained background resource is not disposed after its request lease becomes idle", async () => {
+    const disposed: string[] = [];
+    let retain!: () => () => void;
+    const pool = new InstanceResourcePool(
+        async (key, lifetime) => {
+            retain = lifetime.retain;
+            return key;
+        },
+        async (key) => void disposed.push(key),
+        { maxEntries: 1, idleMs: 3 },
+    );
+
+    const request = await pool.acquire("instance");
+    const releaseBackground = retain();
+    request.release();
+    await Bun.sleep(10);
+    expect(disposed).toEqual([]);
+
+    releaseBackground();
+    await waitUntil(() => disposed.length === 1);
+    expect(disposed).toEqual(["instance"]);
+    await pool.close();
+});
+
+async function waitUntil(predicate: () => boolean): Promise<void> {
+    const deadline = Date.now() + 200;
+    while (!predicate()) {
+        if (Date.now() >= deadline) {
+            throw new Error("Timed out waiting for resource disposal");
+        }
+        await Bun.sleep(2);
+    }
+}

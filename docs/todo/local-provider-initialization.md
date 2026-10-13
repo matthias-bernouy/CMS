@@ -79,10 +79,12 @@ isolated instance databases. That credential is never passed to the Kernel.
 
 Profile transitions durably record their plan version, lease owner, completed
 steps and failure. Provisioning records `manifest`, `provider`, `contracts`,
-`collection`, `administrator`; upgrades omit the administrator step. Startup
-recovers queued, failed and expired transitions, and the active profile changes
-only after every step succeeds. A disabled instance rejects both report and
-contract traffic.
+`collection`, `administrator`; upgrades omit the administrator step. The
+Provider continuously recovers queued transitions and running transitions whose
+lease expired, including work that becomes recoverable after startup. Failed
+transitions require an explicit retry, and the active profile changes only after
+every step succeeds. A disabled instance rejects both report and contract
+traffic.
 
 Backup, restore, deletion, instance-token rotation and automatic MongoDB user
 provisioning remain explicit lifecycle work. They are not hidden inside Kernel

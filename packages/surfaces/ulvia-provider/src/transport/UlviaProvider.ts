@@ -185,12 +185,34 @@ async function withKernelRuntime(
 function kernelForwardedRequest(request: Request): Request {
     const headers = new Headers(request.headers);
     const actorAuthorization = headers.get("x-ulvia-actor-authorization");
+    const originalOrigin = parseOriginalOrigin(headers.get("x-ulvia-original-origin"));
     headers.delete("authorization");
     headers.delete("x-ulvia-actor-authorization");
+    headers.delete("x-ulvia-original-origin");
     if (actorAuthorization) {
         headers.set("authorization", actorAuthorization);
     }
-    return new Request(request, { headers });
+    const forwarded = new Request(request, { headers });
+    if (!originalOrigin) {
+        return forwarded;
+    }
+    const url = new URL(forwarded.url);
+    url.protocol = originalOrigin.protocol;
+    url.hostname = originalOrigin.hostname;
+    url.port = originalOrigin.port;
+    return new Request(url, forwarded);
+}
+
+function parseOriginalOrigin(value: string | null): URL | null {
+    if (!value) {
+        return null;
+    }
+    try {
+        const url = new URL(value);
+        return (url.protocol === "http:" || url.protocol === "https:") && url.origin === value ? url : null;
+    } catch {
+        return null;
+    }
 }
 
 async function readKernelQuery(request: Request): Promise<KernelProviderQuery> {

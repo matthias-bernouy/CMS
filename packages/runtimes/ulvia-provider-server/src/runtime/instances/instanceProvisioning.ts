@@ -1,18 +1,17 @@
-import { createLocalUser } from "@bernouy/cms-auth/management";
 import type { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import type { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import type {
     OfficialInstanceProfile,
     OfficialInstanceProvisioningTarget,
-    ProviderInstanceAdministrator,
     ProviderInstanceRecord,
     ProviderInstanceCredentials,
+    ProviderInstanceTransitionExecution,
 } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
 import type { InstanceComposition } from "./ProviderInstanceHost";
 import { loadOfficialManifest } from "./officialArtifacts";
+import { initializeOfficialAdministrator, installOfficialCollection } from "./instanceInitialization";
 
-const SITE_ID = "default";
 const BOOTSTRAP_ACTOR = "system:provider-provisioner";
 
 type TargetOptions = Readonly<{
@@ -26,18 +25,31 @@ type TargetOptions = Readonly<{
 
 export function createInstanceProvisioningTarget(options: TargetOptions): OfficialInstanceProvisioningTarget {
     return {
-        importManifest: async () => {
-            await options.composition.management.importManifest(await loadOfficialManifest(options.providerSource));
+        importManifest: async (_profile, execution) => {
+            execution.throwIfLeaseLost();
+            const manifest = await loadOfficialManifest(options.providerSource);
+            execution.throwIfLeaseLost();
+            await options.composition.management.importManifest(manifest);
+            execution.throwIfLeaseLost();
         },
-        connectProvider: (profile) => connectProvider(options, profile),
-        selectContracts: (profile) => selectContracts(options.composition, profile),
-        installCollection: (profile) => installCollection(options, profile),
-        initializeAdministrator: (administrator) => initializeAdministrator(options.composition, administrator),
+        connectProvider: (profile, execution) => connectProvider(options, profile, execution),
+        selectContracts: (profile, execution) => selectContracts(options.composition, profile, execution),
+        installCollection: (profile, execution) =>
+            installOfficialCollection(options.composition, options.collectionSource, profile, execution),
+        initializeAdministrator: (administrator, execution) =>
+            initializeOfficialAdministrator(options.composition, administrator, execution),
     };
 }
 
-async function connectProvider(options: TargetOptions, profile: OfficialInstanceProfile): Promise<void> {
-    const state = await options.composition.management.list();
+async function connectProvider(
+    options: TargetOptions,
+    profile: OfficialInstanceProfile,
+    execution: ProviderInstanceTransitionExecution,
+): Promise<void> {
+    execution.throwIfLeaseLost();
+    const management = options.composition.managementForProfile(profile);
+    const state = await management.list();
+    execution.throwIfLeaseLost();
     const installation = state.installations.find(
         (item) => item.providerId === profile.manifest.providerId && item.accountId === options.instance.id,
     );
@@ -45,10 +57,11 @@ async function connectProvider(options: TargetOptions, profile: OfficialInstance
         return;
     }
     const credentials = await options.credentials.read(options.instance.id);
+    execution.throwIfLeaseLost();
     if (!credentials) {
         throw new Error(`Provider instance token is unavailable: ${options.instance.id}`);
     }
-    const preview = await options.composition.management.preview(
+    const preview = await management.preview(
         {
             providerId: profile.manifest.providerId,
             version: profile.manifest.version,
@@ -58,14 +71,22 @@ async function connectProvider(options: TargetOptions, profile: OfficialInstance
         },
         BOOTSTRAP_ACTOR,
     );
-    const approved = await options.composition.management.approve(preview.ticket, BOOTSTRAP_ACTOR);
+    execution.throwIfLeaseLost();
+    const approved = await management.approve(preview.ticket, BOOTSTRAP_ACTOR);
+    execution.throwIfLeaseLost();
     if (!approved.observed) {
         throw new Error("Official Provider observation was not persisted");
     }
 }
 
-async function selectContracts(composition: InstanceComposition, profile: OfficialInstanceProfile): Promise<void> {
+async function selectContracts(
+    composition: InstanceComposition,
+    profile: OfficialInstanceProfile,
+    execution: ProviderInstanceTransitionExecution,
+): Promise<void> {
+    execution.throwIfLeaseLost();
     const state = await composition.management.list();
+    execution.throwIfLeaseLost();
     const installation = state.installations.find(
         (item) =>
             item.providerId === profile.manifest.providerId && item.accountId === composition.runtime.report.instanceId,
@@ -79,6 +100,7 @@ async function selectContracts(composition: InstanceComposition, profile: Offici
             continue;
         }
         await composition.management.selectContract({ installationId: installation.id, ...contract });
+        execution.throwIfLeaseLost();
     }
 }
 
@@ -107,59 +129,4 @@ function connectionIsReady(
             ),
         )
     );
-}
-
-async function installCollection(options: TargetOptions, profile: OfficialInstanceProfile): Promise<void> {
-    const entry = (await options.collectionSource.list()).find(
-        (candidate) =>
-            candidate.publisherId === profile.collection.publisherId &&
-            candidate.collectionId === profile.collection.collectionId &&
-            candidate.version === profile.collection.version &&
-            candidate.digest === profile.collection.digest,
-    );
-    if (!entry) {
-        throw new Error("Exact official administration collection is unavailable");
-    }
-    const bundle = await options.collectionSource.get(entry);
-    const imported = await options.composition.stores.collections.importRelease(bundle.release, bundle.assets);
-    if (imported.digest !== profile.collection.digest) {
-        throw new Error("Official administration collection digest mismatch");
-    }
-    const snapshot = await options.composition.stores.collections.snapshot(SITE_ID);
-    const installed = snapshot.collections.find(({ collectionId }) => collectionId === entry.collectionId);
-    if (installed?.digest === imported.digest) {
-        return;
-    }
-    const method = installed ? "upgrade" : "install";
-    await options.composition.stores.collections[method](
-        SITE_ID,
-        imported.digest,
-        snapshot.revision,
-        options.collectionSource.id,
-    );
-}
-
-async function initializeAdministrator(
-    composition: InstanceComposition,
-    administrator: ProviderInstanceAdministrator,
-): Promise<void> {
-    const stores = composition.stores;
-    if (!(await stores.identityProviders.get("local"))) {
-        await stores.identityProviders.create({
-            id: "local",
-            kind: "local",
-            enabled: true,
-            displayName: "Email & password",
-        });
-    }
-    const existing = await stores.credentials.getByEmail(administrator.email);
-    const subjectId = existing
-        ? `local:${existing.sub}`
-        : (
-              await createLocalUser(
-                  { credentials: stores.credentials, users: stores.users },
-                  { ...administrator, emailVerified: true },
-              )
-          ).sub;
-    await composition.administrators.set(subjectId, true);
 }

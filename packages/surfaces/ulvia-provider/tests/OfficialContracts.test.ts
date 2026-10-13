@@ -49,7 +49,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
             id: "instance:contract-matrix",
             status: "ready" as const,
             revision: 1,
-            profile: { id: "ulvia.official", version: "1.1.0" },
+            profile: { id: "ulvia.official", version: "1.0.0" },
         },
         contentRevision: async () => 1,
         kernel: {

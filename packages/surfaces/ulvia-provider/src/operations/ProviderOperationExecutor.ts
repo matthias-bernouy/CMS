@@ -11,11 +11,13 @@ const DEFAULT_RECOVERY_LIMIT = 100;
 export type ProviderOperationExecutorOptions = Readonly<{
     leaseMs?: number;
     recoveryLimit?: number;
+    retainResource?: () => () => void;
 }>;
 
 export class ProviderOperationExecutor {
     readonly #handlers = new Map<string, ProviderOperationHandler>();
-    readonly #running = new Set<string>();
+    readonly #running = new Map<string, Promise<void>>();
+    #stopping = false;
 
     constructor(
         readonly store: ProviderOperationStore,
@@ -45,6 +47,9 @@ export class ProviderOperationExecutor {
         input: Readonly<Record<string, unknown>>,
         context: ProviderCapabilityInvocationContext,
     ): Promise<{ operationId: string }> {
+        if (this.#stopping) {
+            throw new ProviderCapabilityDispatchError("PROVIDER_SHUTTING_DOWN", 503);
+        }
         if (!context.idempotencyKey) {
             throw new ProviderCapabilityDispatchError("IDEMPOTENCY_KEY_REQUIRED", 422);
         }
@@ -67,33 +72,56 @@ export class ProviderOperationExecutor {
         if (stored.record.inputDigest !== candidate.inputDigest) {
             throw new ProviderCapabilityDispatchError("IDEMPOTENCY_CONFLICT", 409);
         }
-        this.#schedule(stored.record);
+        void this.#execute(stored.record).catch(() => undefined);
         return { operationId: stored.record.id };
     }
 
-    async recover(): Promise<void> {
-        const records = await this.store.listRecoverable(
-            this.now().toISOString(),
-            this.options.recoveryLimit ?? DEFAULT_RECOVERY_LIMIT,
-        );
-        for (const record of records) {
-            this.#schedule(record);
+    async recover(limit = this.options.recoveryLimit ?? DEFAULT_RECOVERY_LIMIT): Promise<number> {
+        if (this.#stopping) {
+            return 0;
+        }
+        const records = await this.store.listRecoverable(this.now().toISOString(), limit);
+        if (this.#stopping) {
+            return 0;
+        }
+        await Promise.all(records.map((record) => this.#execute(record)));
+        return records.length;
+    }
+
+    async stop(): Promise<void> {
+        this.#stopping = true;
+        while (this.#running.size > 0) {
+            await Promise.allSettled([...this.#running.values()]);
         }
     }
 
-    #schedule(record: ProviderOperationRecord): void {
-        if (this.#running.has(record.id) || record.status === "succeeded" || record.status === "failed") {
-            return;
+    #execute(record: ProviderOperationRecord): Promise<void> {
+        const active = this.#running.get(record.id);
+        if (active) {
+            return active;
         }
-        this.#running.add(record.id);
-        queueMicrotask(() => void this.#run(record).finally(() => this.#running.delete(record.id)));
+        if (this.#stopping || record.status === "succeeded" || record.status === "failed") {
+            return Promise.resolve();
+        }
+        const running = this.#executeRetained(record).finally(() => {
+            if (this.#running.get(record.id) === running) {
+                this.#running.delete(record.id);
+            }
+        });
+        this.#running.set(record.id, running);
+        return running;
+    }
+
+    async #executeRetained(record: ProviderOperationRecord): Promise<void> {
+        const release = this.options.retainResource?.();
+        try {
+            await this.#run(record);
+        } finally {
+            release?.();
+        }
     }
 
     async #run(record: ProviderOperationRecord): Promise<void> {
-        const handler = this.#handlers.get(operationKey(record.contractId, record.capabilityId));
-        if (!handler) {
-            return;
-        }
         const token = randomUUID();
         const now = this.now();
         if (
@@ -105,6 +133,11 @@ export class ProviderOperationExecutor {
                 now.toISOString(),
             ))
         ) {
+            return;
+        }
+        const handler = this.#handlers.get(operationKey(record.contractId, record.capabilityId));
+        if (!handler) {
+            await this.store.fail(record.id, token, "OPERATION_HANDLER_UNAVAILABLE", this.now().toISOString());
             return;
         }
         const executionAbort = new AbortController();

@@ -1,4 +1,8 @@
-import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
+import {
+    parseProviderRuntimeReport,
+    type ProviderRuntimeReport,
+} from "@bernouy/cms-repository/providers/installations";
+import { isCanonicalSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import type { ProviderInstanceProfile, ProviderInstanceStatus } from "../instances/types";
 
 export const KERNEL_PROVIDER_PROTOCOL = "ulvia-kernel-provider/v1" as const;
@@ -55,26 +59,58 @@ export type KernelProviderHandshake = Readonly<{
 }>;
 
 export function assertKernelProviderHandshake(value: unknown): asserts value is KernelProviderHandshake {
+    try {
+        const handshake = record(value, ["protocol", "instance", "activeProfile", "contentRevision", "runtime"]);
+        const instance = record(handshake.instance, ["id", "status", "revision"]);
+        const profile = record(handshake.activeProfile, ["id", "version"]);
+        const runtime = parseProviderRuntimeReport(handshake.runtime);
+        const contentRevision = handshake.contentRevision;
+        if (
+            handshake.protocol !== KERNEL_PROVIDER_PROTOCOL ||
+            instance.status !== "ready" ||
+            !identifier(instance.id, 160) ||
+            !positiveInteger(instance.revision) ||
+            !identifier(profile.id, 96) ||
+            !isCanonicalSemVer(profile.version) ||
+            !(
+                (typeof contentRevision === "string" &&
+                    contentRevision.length > 0 &&
+                    contentRevision.length <= 256 * 1024) ||
+                nonNegativeInteger(contentRevision)
+            ) ||
+            runtime.instanceId !== instance.id
+        ) {
+            throw new TypeError("Provider handshake is invalid");
+        }
+    } catch {
+        throw new TypeError("Provider handshake is invalid");
+    }
+}
+
+function record(value: unknown, keys: readonly string[]): Record<string, unknown> {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
-        throw new TypeError("Provider handshake is invalid");
+        throw new TypeError("Expected object");
     }
-    const handshake = value as Record<string, unknown>;
-    const instance = handshake.instance as Record<string, unknown> | undefined;
-    const profile = handshake.activeProfile as Record<string, unknown> | undefined;
-    if (
-        handshake.protocol !== KERNEL_PROVIDER_PROTOCOL ||
-        !instance ||
-        typeof instance.id !== "string" ||
-        instance.status !== "ready" ||
-        !Number.isSafeInteger(instance.revision) ||
-        !profile ||
-        typeof profile.id !== "string" ||
-        typeof profile.version !== "string" ||
-        !(typeof handshake.contentRevision === "string" || Number.isSafeInteger(handshake.contentRevision)) ||
-        !handshake.runtime ||
-        typeof handshake.runtime !== "object" ||
-        Array.isArray(handshake.runtime)
-    ) {
-        throw new TypeError("Provider handshake is invalid");
+    const result = value as Record<string, unknown>;
+    if (Object.keys(result).some((key) => !keys.includes(key)) || keys.some((key) => !(key in result))) {
+        throw new TypeError("Unexpected object shape");
     }
+    return result;
+}
+
+function identifier(value: unknown, maxLength: number): value is string {
+    return (
+        typeof value === "string" &&
+        value.length > 0 &&
+        value.length <= maxLength &&
+        /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/u.test(value)
+    );
+}
+
+function positiveInteger(value: unknown): value is number {
+    return Number.isSafeInteger(value) && (value as number) > 0;
+}
+
+function nonNegativeInteger(value: unknown): value is number {
+    return Number.isSafeInteger(value) && (value as number) >= 0;
 }

@@ -13,6 +13,7 @@ import {
     ProviderOperationExecutor,
     registerOfficialProviderCapabilities,
     resolveOfficialInstanceProfile,
+    type OfficialInstanceProfile,
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceRecord,
     type UlviaProviderInstanceRuntime,
@@ -23,9 +24,10 @@ import { createProviderGateway } from "../gateway/createProviderGateway";
 import { createProtectedProviderManagement } from "../gateway/protectedManagement";
 import { createInstanceKernelApi } from "../kernel/InstanceKernelApi";
 import { MongoProviderOperationStore } from "../provider-operations/MongoProviderOperationStore";
+import { RecoverySupervisor } from "../recovery/RecoverySupervisor";
 import { createProviderStores, type ProviderStores } from "../stores/providerStores";
 import { createInstanceProvisioningTarget } from "./instanceProvisioning";
-import { InstanceResourcePool, type ResourceLease } from "./InstanceResourcePool";
+import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "./InstanceResourcePool";
 
 const SITE_ID = "default";
 const MAX_OPEN_INSTANCES = 32;
@@ -36,7 +38,10 @@ export type InstanceComposition = Readonly<{
     gateway: Awaited<ReturnType<typeof createProviderGateway>>;
     runtime: UlviaProviderInstanceRuntime;
     management: ProviderManagement;
+    managementForProfile(profile: OfficialInstanceProfile): ProviderManagement;
     administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
+    operations: ProviderOperationExecutor;
+    close(): Promise<void>;
 }>;
 
 export class ProviderInstanceHost {
@@ -51,8 +56,8 @@ export class ProviderInstanceHost {
         this.#providerSource = new HttpProviderRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
         this.#collectionSource = new HttpCollectionRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
         this.#instances = new InstanceResourcePool(
-            (instanceId) => this.createComposition(this.#records.get(instanceId)!),
-            (composition) => composition.stores.close(),
+            (key, lifetime) => this.createComposition(this.#records.get(key)!, lifetime),
+            (composition) => composition.close(),
             { maxEntries: MAX_OPEN_INSTANCES, idleMs: INSTANCE_IDLE_MS },
         );
     }
@@ -95,16 +100,36 @@ export class ProviderInstanceHost {
         await this.#instances.close();
     }
 
+    async recoverOperations(instances: readonly ProviderInstanceRecord[], limit = 100): Promise<number> {
+        let recovered = 0;
+        for (const instance of instances) {
+            if (instance.status !== "ready") {
+                continue;
+            }
+            const lease = await this.open(instance);
+            try {
+                recovered += await lease.resource.operations.recover(limit);
+            } finally {
+                lease.release();
+            }
+        }
+        return recovered;
+    }
+
     private async open(instance: ProviderInstanceRecord): Promise<ResourceLease<InstanceComposition>> {
-        this.#records.set(instance.id, instance);
+        const key = compositionKey(instance);
+        this.#records.set(key, instance);
         try {
-            return await this.#instances.acquire(instance.id);
+            return await this.#instances.acquire(key);
         } finally {
-            this.#records.delete(instance.id);
+            this.#records.delete(key);
         }
     }
 
-    private async createComposition(instance: ProviderInstanceRecord): Promise<InstanceComposition> {
+    private async createComposition(
+        instance: ProviderInstanceRecord,
+        lifetime: ResourceLifetime,
+    ): Promise<InstanceComposition> {
         const credentials = await this.credentials.read(instance.id);
         if (!credentials) {
             throw new Error(`Provider instance credentials are unavailable: ${instance.id}`);
@@ -123,17 +148,22 @@ export class ProviderInstanceHost {
             CMS_FILES_DIR: filesDirectory,
             KERNEL_PUBLIC_URL: instance.kernelUrl,
         });
+        let operationRecovery: RecoverySupervisor | undefined;
         try {
             const gateway = await createProviderGateway(stores, SITE_ID);
-            const report = providerReport(instance);
-            const management = new ProviderManagement(gateway, stores.secrets, {
-                sources: [this.#providerSource],
-                readReport: async () => report,
-            });
+            const managementForProfile = (profile: OfficialInstanceProfile) =>
+                new ProviderManagement(gateway, stores.secrets, {
+                    sources: [this.#providerSource],
+                    readReport: async () => providerReport(instance, profile),
+                });
+            const profile = requiredProfile(instance.profile.id, instance.profile.version);
+            const report = providerReport(instance, profile);
+            const management = managementForProfile(profile);
             const providerOperations = new MongoProviderOperationStore(stores.db);
             await providerOperations.init();
-            const operations = new ProviderOperationExecutor(providerOperations);
-            await operations.recover();
+            const operations = new ProviderOperationExecutor(providerOperations, undefined, {
+                retainResource: lifetime.retain,
+            });
             const dispatcher = new DefaultProviderCapabilityDispatcher();
             registerOfficialProviderCapabilities(
                 dispatcher,
@@ -144,13 +174,23 @@ export class ProviderInstanceHost {
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
             );
+            operationRecovery = new RecoverySupervisor((limit) => operations.recover(limit));
+            await operationRecovery.start(false);
+            const activeRecovery = operationRecovery;
             const content = createContentReader(stores.repo);
             const kernel = await createInstanceKernelApi(instance, { stores, gateway });
             return {
                 stores,
                 gateway,
                 management,
+                managementForProfile,
                 administrators: gateway.administrators,
+                operations,
+                close: async () => {
+                    await activeRecovery.stop();
+                    await operations.stop();
+                    await stores.close();
+                },
                 runtime: {
                     siteId: SITE_ID,
                     report,
@@ -166,17 +206,18 @@ export class ProviderInstanceHost {
                 },
             };
         } catch (error) {
+            await operationRecovery?.stop();
             await stores.close();
             throw error;
         }
     }
 }
 
-function providerReport(instance: ProviderInstanceRecord): ProviderRuntimeReport {
-    const profile = resolveOfficialInstanceProfile(instance.profile.id, instance.profile.version);
-    if (!profile) {
-        throw new Error(`Unsupported Provider instance profile: ${instance.profile.id}@${instance.profile.version}`);
-    }
+function providerReport(
+    instance: ProviderInstanceRecord,
+    selectedProfile?: OfficialInstanceProfile,
+): ProviderRuntimeReport {
+    const profile = selectedProfile ?? requiredProfile(instance.profile.id, instance.profile.version);
     return {
         protocol: "ulvia-provider/v1",
         providerId: profile.manifest.providerId,
@@ -190,6 +231,18 @@ function providerReport(instance: ProviderInstanceRecord): ProviderRuntimeReport
             status: "ready" as const,
         })),
     };
+}
+
+function requiredProfile(id: string, version: string): OfficialInstanceProfile {
+    const profile = resolveOfficialInstanceProfile(id, version);
+    if (!profile) {
+        throw new Error(`Unsupported Provider instance profile: ${id}@${version}`);
+    }
+    return profile;
+}
+
+function compositionKey(instance: ProviderInstanceRecord): string {
+    return `${instance.id}\0${instance.profile.id}\0${instance.profile.version}`;
 }
 
 function instanceMongoUrl(controlUrl: string, storageKey: string): string {

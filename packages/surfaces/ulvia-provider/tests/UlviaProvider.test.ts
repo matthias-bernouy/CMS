@@ -18,8 +18,13 @@ describe("UlviaProvider", () => {
     test("handshakes with the Kernel and separates control from actor authentication", async () => {
         const contract = await contractRelease();
         const dispatcher = new DefaultProviderCapabilityDispatcher();
-        const forwarded: Array<{ authorization: string | null; privateHeader: string | null; cookie: string | null }> =
-            [];
+        const forwarded: Array<{
+            authorization: string | null;
+            privateHeader: string | null;
+            originalOriginHeader: string | null;
+            origin: string;
+            cookie: string | null;
+        }> = [];
         const runner = new BunRunner();
         new UlviaProvider(
             runner,
@@ -28,6 +33,8 @@ describe("UlviaProvider", () => {
                     forwarded.push({
                         authorization: request.headers.get("authorization"),
                         privateHeader: request.headers.get("x-ulvia-actor-authorization"),
+                        originalOriginHeader: request.headers.get("x-ulvia-original-origin"),
+                        origin: new URL(request.url).origin,
                         cookie: request.headers.get("cookie"),
                     });
                     return Response.json({ ok: true });
@@ -44,7 +51,7 @@ describe("UlviaProvider", () => {
             expect(await handshake.json()).toMatchObject({
                 protocol: "ulvia-kernel-provider/v1",
                 instance: { id: PROVIDER_INSTANCE_ID, status: "ready", revision: 1 },
-                activeProfile: { id: "ulvia.official", version: "1.1.0" },
+                activeProfile: { id: "ulvia.official", version: "1.0.0" },
                 contentRevision: 1,
             });
 
@@ -52,6 +59,7 @@ describe("UlviaProvider", () => {
                 headers: {
                     ...reportAuthorization(),
                     "x-ulvia-actor-authorization": "Bearer user-pat",
+                    "x-ulvia-original-origin": "http://kernel.test",
                     cookie: "cms-session=session-token",
                 },
             });
@@ -60,6 +68,8 @@ describe("UlviaProvider", () => {
                 {
                     authorization: "Bearer user-pat",
                     privateHeader: null,
+                    originalOriginHeader: null,
+                    origin: "http://kernel.test",
                     cookie: "cms-session=session-token",
                 },
             ]);

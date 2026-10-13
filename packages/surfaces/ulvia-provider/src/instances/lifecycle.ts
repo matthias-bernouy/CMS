@@ -64,7 +64,6 @@ export class ProviderInstanceLifecycle {
         const credentials = await this.credentials.ensure(instance);
         await this.credentials.stageAdministrator(instance.id, input.administrator);
         const provisioned = await this.provisioner.provision(instance.id);
-        await this.credentials.clearAdministrator(instance.id);
         return {
             instance: provisioned,
             credentials: { instanceAccessToken: credentials.instanceAccessToken },

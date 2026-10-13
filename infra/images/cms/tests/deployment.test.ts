@@ -43,7 +43,7 @@ describe("shared infrastructure Compose rendering", () => {
         });
         expect(config.services.provider.environment).toMatchObject({
             ULVIA_PROVIDER_HOST: "0.0.0.0",
-            ULVIA_PROVIDER_PUBLIC_URL: "http://ulvia-provider:5103",
+            ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
             CMS_REPOSITORY_URL: "http://repository:3100",
         });
         expect(config.networks?.cms_provider).toMatchObject({ name: "cms_provider", internal: true });
