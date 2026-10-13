@@ -57,9 +57,18 @@ smoke(
             expect(browserErrors).toEqual([]);
             await browser.close();
             browser = undefined;
-            runtime.kill("SIGTERM");
+            const status: string[] = [];
+            await runCli(["dev", "status"], { environment, log: (message) => status.push(message) });
+            expect(status).toContain("Dev stack: running");
+            expect(status).toContain("CMS Kernel: running");
+            expect(status).toContain("Ulvia Provider: running");
+            expect(status).toContain("Resource repository: running");
+            await runCli(["dev", "stop"], { environment, log: () => undefined });
             await runtime.exited;
             await capture;
+            const stoppedStatus: string[] = [];
+            await runCli(["dev", "status"], { environment, log: (message) => stoppedStatus.push(message) });
+            expect(stoppedStatus).toContain("Dev stack: stopped");
 
             output += "\n--- persisted-state restart ---\n";
             runtime = Bun.spawn([process.execPath, cli, "dev"], {
@@ -81,6 +90,11 @@ smoke(
 
             await verifyKernelStateAfterRestart(restartedPage, credentials, `http://127.0.0.1:${PORTS.kernel}`);
             expect(restartErrors).toEqual([]);
+            await browser.close();
+            browser = undefined;
+            await runCli(["dev", "stop"], { environment, log: () => undefined });
+            await runtime.exited;
+            await capture;
         } catch (error) {
             await writeFailureArtifacts(output, browser);
             throw new Error(`${error instanceof Error ? error.message : String(error)}\n\nRuntime output:\n${output}`);

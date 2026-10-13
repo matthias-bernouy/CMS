@@ -12,7 +12,13 @@ import {
     type CmsServerProcess,
     type DevPorts,
 } from "../runtime/cms";
-import { resolveDevPorts } from "../runtime/devPorts";
+import { resolveDevPorts } from "../runtime/dev/ports";
+import {
+    inspectDevSupervisor,
+    probeDevServices,
+    registerDevSupervisor,
+    stopDevSupervisor,
+} from "../runtime/dev/supervisor";
 import { provisionLocalInstance } from "../runtime/instance";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
 import type { UlviaPaths } from "../runtime/paths";
@@ -33,7 +39,7 @@ export async function devCommand(
     }
     if (action === "status") {
         expectArgumentCount(args, 1, "Usage: ulvia dev status");
-        await devStatus(paths, log);
+        await devStatus(paths, resolveDevPorts(environment), log);
         return;
     }
     if (action === "credentials") {
@@ -46,7 +52,11 @@ export async function devCommand(
     }
     if (action === "stop") {
         expectArgumentCount(args, 1, "Usage: ulvia dev stop");
+        const supervisor = await stopDevSupervisor(paths);
         const mongo = await stopLocalMongo(paths.mongo);
+        log(
+            `Dev stack: ${supervisor === "stopped" ? "stopped" : supervisor === "stale" ? "stale state cleared" : "not supervised"}`,
+        );
         log(`MongoDB: ${mongo ? "stopped" : "not running"}`);
         return;
     }
@@ -77,6 +87,19 @@ function expectArgumentCount(args: readonly string[], expected: number, usage: s
 }
 
 async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: DevPorts): Promise<void> {
+    const existing = await inspectDevSupervisor(paths);
+    if (existing.status === "active") {
+        throw new Error(`An Ulvia dev stack is already running for ${paths.data}`);
+    }
+    const unregister = await registerDevSupervisor(paths, ports);
+    try {
+        await runDevStack(paths, log, ports);
+    } finally {
+        await unregister();
+    }
+}
+
+async function runDevStack(paths: UlviaPaths, log: (message: string) => void, ports: DevPorts): Promise<void> {
     log("Preparing bundled official resources...");
     await bootstrapOfficialRepository(paths.repository);
     log("Starting persistent local MongoDB...");
@@ -152,6 +175,20 @@ async function stopServers(kernel: CmsServerProcess, provider: CmsServerProcess)
     await stopLocalServer(provider);
 }
 
-async function devStatus(paths: UlviaPaths, log: (message: string) => void): Promise<void> {
-    log(`MongoDB: ${(await localMongoStatus(paths.mongo)) ?? "not created"}`);
+async function devStatus(paths: UlviaPaths, ports: DevPorts, log: (message: string) => void): Promise<void> {
+    const supervisor = await inspectDevSupervisor(paths);
+    const [services, mongo] = await Promise.all([
+        probeDevServices(supervisor.state?.ports ?? ports),
+        localMongoStatus(paths.mongo),
+    ]);
+    const serviceValues = Object.values(services);
+    const running = serviceValues.every(Boolean) && mongo === "running" && supervisor.status === "active";
+    const stopped = serviceValues.every((value) => !value) && mongo !== "running" && supervisor.status !== "active";
+    log(`Dev stack: ${running ? "running" : stopped ? "stopped" : "degraded"}`);
+    log(`Supervisor: ${supervisor.status}`);
+    log(`CMS Kernel: ${services.kernel ? "running" : "stopped"}`);
+    log(`Ulvia Provider: ${services.provider ? "running" : "stopped"}`);
+    log(`Resource repository: ${services.repository ? "running" : "stopped"}`);
+    log(`MongoDB: ${mongo ?? "not created"}`);
+    log(`Persistent data: ${paths.data}`);
 }

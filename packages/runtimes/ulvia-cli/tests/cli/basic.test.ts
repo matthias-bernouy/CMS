@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { runCli } from "../../src/cli";
 import { bootstrapOfficialRepository } from "../../src/commands/bootstrap";
-import { resolveDevPorts } from "../../src/runtime/devPorts";
+import { resolveDevPorts } from "../../src/runtime/dev/ports";
 import { localMongoUrl } from "../../src/runtime/mongo";
 
 describe("Ulvia CLI", () => {

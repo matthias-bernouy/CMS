@@ -1,4 +1,4 @@
-import type { DevPorts } from "./cms";
+import type { DevPorts } from "../cms";
 
 const DEFAULT_PORTS: DevPorts = Object.freeze({
     kernel: 5100,
