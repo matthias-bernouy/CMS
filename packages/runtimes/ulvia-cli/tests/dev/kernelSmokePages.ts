@@ -22,6 +22,11 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
                 `${error instanceof Error ? error.message : String(error)}\nURL: ${page.url()}\nPage: ${await page.locator("body").innerText()}`,
             );
         });
+    await page.locator("#page-description").fill("Updated before editing the document.");
+    const detailsResponse = await submitPageDetails(page);
+    if (!detailsResponse.ok()) {
+        throw new Error(`Page details update failed (${detailsResponse.status()}).`);
+    }
     await page.getByRole("button", { name: "Add Heading", exact: true }).click();
     await page.getByLabel("Element content", { exact: true }).fill("Smoke Page");
     await page.getByRole("button", { name: "Add Heading", exact: true }).click();
@@ -39,6 +44,19 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     await verifyPublishedPage(page, kernelOrigin);
     await page.goto(`${kernelOrigin}/admin`);
     await page.locator("#pages-list").waitFor();
+}
+
+async function submitPageDetails(page: Page) {
+    const form = page.locator('form[cms-source*="ulvia.cms.pages/update as saved"]');
+    const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/get"));
+    const [response] = await Promise.all([
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/update")),
+        form.locator('button[type="submit"]').click(),
+    ]);
+    if (response.ok()) {
+        await reload;
+    }
+    return response;
 }
 
 export async function verifyPublishedPage(page: Page, kernelOrigin: string): Promise<void> {

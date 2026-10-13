@@ -14,6 +14,7 @@ export class Bloc extends Component {
     private selected = -1;
     private pageId: string | null = null;
     private pageRevision = 0;
+    private loadedContent = "";
     private readonly status: EditorStatus;
 
     constructor() {
@@ -39,6 +40,7 @@ export class Bloc extends Component {
             const page = await callCapability<PageUpdate>("get", { id });
             this.pageId = page.id;
             this.pageRevision = page.revision;
+            this.loadedContent = page.content;
             this.pageDocument.replace(page.content);
             this.render();
         });
@@ -128,11 +130,17 @@ export class Bloc extends Component {
             if (!id || !Number.isSafeInteger(revision)) {
                 throw new Error("The Page identity or revision is missing.");
             }
-            await callCapability<PageUpdate>("update", {
+            const latest = await callCapability<PageUpdate>("get", { id });
+            if (latest.content !== this.loadedContent) {
+                throw new Error("The Page document changed since it was loaded. Reload before saving.");
+            }
+            const updated = await callCapability<PageUpdate>("update", {
                 id,
-                expectedRevision: revision,
+                expectedRevision: latest.revision,
                 content: this.pageDocument.serialize(),
             });
+            this.pageRevision = updated.revision;
+            this.loadedContent = updated.content;
             this.status.notice("Document saved. Reloading the Page…");
             location.reload();
         });
