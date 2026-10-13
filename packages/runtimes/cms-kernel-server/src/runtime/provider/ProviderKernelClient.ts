@@ -11,6 +11,7 @@ import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type { PageExecutionHttpPort } from "@bernouy/cms-gateway/http/handlers";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { KernelProviderQuery, KernelProviderQueryOperation } from "@bernouy/ulvia-provider/kernel";
+import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
 
 export class ProviderKernelClient {
     readonly content: ContentReader;
@@ -19,6 +20,7 @@ export class ProviderKernelClient {
     readonly publicAuth: PublicAuthActions;
     readonly identityProviders: IdentityProviderRepository;
     readonly pageExecution: PageExecutionHttpPort;
+    readonly collectionAssets: InstalledCollectionAssetSource;
     readonly gateway: {
         siteId: string;
         invoker: GatewayInvoker;
@@ -49,6 +51,18 @@ export class ProviderKernelClient {
                 resolveHttp: (request) => this.query("gateway.resolve-http", { request }),
             },
             isAdministrator: (subject) => this.query("auth.is-administrator", { subjectId: subject.identifier }),
+        };
+        this.collectionAssets = {
+            siteId: "default",
+            store: {
+                getInstalledAssetMetadata: (_siteId, collectionId, assetId) =>
+                    this.query("assets.metadata", { collectionId, assetId }),
+                getInstalledAssetMetadataBatch: (_siteId, references) =>
+                    this.query("assets.metadata-batch", { references }),
+                getReleaseAsset: async () => {
+                    throw new Error("Collection asset bytes are streamed through the Provider proxy");
+                },
+            },
         };
     }
 
@@ -88,7 +102,12 @@ export class ProviderKernelClient {
 
     private async forward(path: string, request: Request, extraHeaders?: HeadersInit): Promise<Response> {
         const headers = new Headers(request.headers);
+        const actorAuthorization = headers.get("authorization");
+        headers.delete("x-ulvia-actor-authorization");
         headers.set("authorization", `Bearer ${this.token}`);
+        if (actorAuthorization) {
+            headers.set("x-ulvia-actor-authorization", actorAuthorization);
+        }
         for (const [name, value] of new Headers(extraHeaders)) {
             headers.set(name, value);
         }
@@ -100,6 +119,18 @@ export class ProviderKernelClient {
             signal: AbortSignal.timeout(30_000),
             ...(request.body ? { duplex: "half" } : {}),
         });
+        if (!response.ok) {
+            const errorCode = await response
+                .clone()
+                .json()
+                .then((value) => (value as { error?: { code?: string } }).error?.code)
+                .catch(() => undefined);
+            console.error("Provider proxy request failed", {
+                path: path.split("?")[0],
+                status: response.status,
+                errorCode,
+            });
+        }
         return new Response(response.body, {
             status: response.status,
             statusText: response.statusText,
@@ -115,7 +146,16 @@ export class ProviderKernelClient {
 
 function remoteContent(client: ProviderKernelClient): ContentReader {
     return {
-        getContentTexts: () => client.query("content.texts"),
+        getContentTexts: async () => {
+            const projection = await client.query<{
+                defaultLocale: string;
+                sources: { namespace: string; catalogues: Record<string, Record<string, string>> }[];
+            }>("content.texts");
+            return projection.sources.map((source) => ({
+                namespace: source.namespace,
+                resolve: (locale) => source.catalogues[locale] ?? source.catalogues[projection.defaultLocale] ?? {},
+            }));
+        },
         getContentRevision: () => client.query("content.revision"),
         getRenderablePage: (path) => client.query("content.renderable-page", { path }),
         getRenderablePages: () => client.query("content.renderable-pages"),
@@ -159,11 +199,14 @@ function remoteLocalAuthentication(client: ProviderKernelClient, secure: boolean
                     body: JSON.stringify({ email, password }),
                 }),
             );
-            const value = (await response.json()) as { subject?: Subject };
+            const value = (await response.json()) as { subject?: Subject; cookie?: string };
             if (!response.ok || !value.subject) {
                 return { ok: false, error: response.status === 429 ? "rate_limited" : "invalid_credentials" };
             }
-            return { ok: true, subject: value.subject, cookie: response.headers.get("set-cookie") ?? "" };
+            if (!value.cookie) {
+                return { ok: false, error: "invalid_credentials" };
+            }
+            return { ok: true, subject: value.subject, cookie: value.cookie };
         },
         clearSession: () => `cms-session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure ? "; Secure" : ""}`,
     };
@@ -185,7 +228,17 @@ function remotePublicAuth(client: ProviderKernelClient): PublicAuthActions {
     };
     return {
         buildLoginUrl: (returnTo) => `/login?returnTo=${encodeURIComponent(returnTo)}`,
-        login: (request) => client.auth("login", request),
+        login: async (request) => {
+            const response = await client.auth("login", request);
+            const value = (await response.json()) as { subject?: Subject; cookie?: string; error?: string };
+            return Response.json(
+                value.subject ? { subject: value.subject } : { error: value.error ?? "invalid_credentials" },
+                {
+                    status: value.subject ? 200 : response.status,
+                    headers: value.cookie ? { "set-cookie": value.cookie } : {},
+                },
+            );
+        },
         logout: () =>
             new Response(JSON.stringify({ ok: true }), {
                 headers: {

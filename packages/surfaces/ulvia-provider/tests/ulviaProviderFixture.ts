@@ -6,6 +6,7 @@ import type {
     UlviaProviderInstanceRuntime,
     UlviaProviderOptions,
 } from "@bernouy/ulvia-provider";
+import type { KernelInstanceApi } from "@bernouy/ulvia-provider/kernel";
 
 export const PROVIDER_TOKEN = "ulvia-provider-token-that-is-long-enough";
 export const PROVIDER_INSTANCE_ID = "instance:fixture-a";
@@ -18,6 +19,7 @@ export function providerOptions(
     contracts: readonly Awaited<ReturnType<typeof contractRelease>>[],
     dispatcher: DefaultProviderCapabilityDispatcher,
     instanceId = PROVIDER_INSTANCE_ID,
+    kernelOverrides: Partial<KernelInstanceApi> = {},
 ): UlviaProviderOptions {
     const runtime: UlviaProviderInstanceRuntime = {
         siteId: "default",
@@ -30,7 +32,7 @@ export function providerOptions(
             profile: { id: "ulvia.official", version: "1.1.0" },
         },
         contentRevision: async () => 1,
-        kernel: kernelApi(),
+        kernel: kernelApi(kernelOverrides),
     };
     return {
         contracts: contracts.map(({ release }) => release),
@@ -49,13 +51,14 @@ export function providerOptions(
     };
 }
 
-function kernelApi() {
+function kernelApi(overrides: Partial<KernelInstanceApi>): KernelInstanceApi {
     return {
         query: async () => null,
         handleAuth: async () => new Response(null, { status: 404 }),
         handleCapability: async () => new Response(null, { status: 404 }),
         handleCollectionAsset: async () => new Response(null, { status: 404 }),
         handleSitemap: async () => new Response(null, { status: 404 }),
+        ...overrides,
     };
 }
 

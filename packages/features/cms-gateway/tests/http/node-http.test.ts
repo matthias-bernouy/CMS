@@ -59,6 +59,33 @@ test("node transport rejects a forged literal address and reserved headers", asy
     expect(sent).toBe(0);
 });
 
+test("provider control credentials are limited to report and Kernel handshake metadata", async () => {
+    const sent: string[] = [];
+    const network = new NodeGatewayHttpNetwork({
+        resolveAddresses: async () => [{ address: "8.8.8.8", family: 4 }],
+        resolveToken: async () => "instance-access-token-that-is-long-enough",
+        sendPinned: async ({ pathAndQuery }) => {
+            sent.push(pathAndQuery);
+            return Response.json({});
+        },
+    });
+    const request = {
+        origin: "https://provider.example.com",
+        method: "GET" as const,
+        headers: {},
+        requestId: "request-1",
+        providerTokenRef: "token-ref",
+        authentication: { kind: "provider-control" as const },
+        signal: new AbortController().signal,
+    };
+    await network.exchange({ ...request, pathAndQuery: "/ulvia/report" });
+    await network.exchange({ ...request, pathAndQuery: "/ulvia/kernel/v1/handshake" });
+    await expect(network.exchange({ ...request, pathAndQuery: "/ulvia/kernel/v1/query" })).rejects.toThrow(
+        "metadata endpoints",
+    );
+    expect(sent).toEqual(["/ulvia/report", "/ulvia/kernel/v1/handshake"]);
+});
+
 test("node transport aborts DNS and secret lookups that outlast the request deadline", async () => {
     for (const phase of ["dns", "secret"] as const) {
         let sent = 0;

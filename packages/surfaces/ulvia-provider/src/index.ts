@@ -3,7 +3,7 @@ export {
     type UlviaProviderInstanceLease,
     type UlviaProviderInstanceRuntime,
     type UlviaProviderOptions,
-} from "./UlviaProvider";
+} from "./transport/UlviaProvider";
 export { registerOfficialProviderCapabilities } from "./capabilities";
 export { CollectionSources } from "./capabilities/collections/sources";
 export type {

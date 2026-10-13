@@ -33,6 +33,7 @@ export async function mountProductionKernel(
         pageExecution: provider.pageExecution,
         capabilityHandler: provider.capability,
         collectionAssetHandler: provider.collectionAsset,
+        collectionAssets: provider.collectionAssets,
         sitemapHandler: provider.sitemap,
         sitemapChunkHandler: provider.sitemap,
     });

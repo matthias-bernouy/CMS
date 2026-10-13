@@ -2,18 +2,18 @@ import type { Runner } from "@bernouy/http-runner";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
-import type { ProviderCapabilityRegistry } from "./dispatch/registry";
-import { createProviderContractRelay } from "./transport/relay";
-import { compileProviderRoutes } from "./transport/routes";
+import type { ProviderCapabilityRegistry } from "../dispatch/registry";
+import { createProviderContractRelay } from "./relay";
+import { compileProviderRoutes } from "./routes";
 import {
     KERNEL_PROVIDER_PROTOCOL,
     KERNEL_PROVIDER_QUERY_OPERATIONS,
     type KernelInstanceApi,
     type KernelProviderHandshake,
     type KernelProviderQuery,
-} from "./kernel/protocol";
+} from "../kernel/protocol";
 import { readBoundedRequestBody } from "@bernouy/http-runner";
-import type { ProviderInstanceProfile, ProviderInstanceStatus } from "./instances/types";
+import type { ProviderInstanceProfile, ProviderInstanceStatus } from "../instances/types";
 
 export type UlviaProviderInstanceRuntime = Readonly<{
     siteId: string;
@@ -84,8 +84,8 @@ export class UlviaProvider {
             }
         });
         runner.post("/ulvia/kernel/v1/query", (request) =>
-            withKernelRuntime(request, options, async (runtime) => {
-                const query = await readKernelQuery(request);
+            withKernelRuntime(request, options, async (runtime, forwardedRequest) => {
+                const query = await readKernelQuery(forwardedRequest);
                 return Response.json({ value: await runtime.kernel.query(query) }, noStore());
             }),
         );
@@ -99,27 +99,35 @@ export class UlviaProvider {
             "confirm-password-reset",
         ]) {
             runner.post(`/ulvia/kernel/v1/auth/${action}`, (request) =>
-                withKernelRuntime(request, options, (runtime) => runtime.kernel.handleAuth(action, request)),
+                withKernelRuntime(request, options, (runtime, forwardedRequest) =>
+                    runtime.kernel.handleAuth(action, forwardedRequest),
+                ),
             );
         }
         runner.group("/ulvia/kernel/v1/call", (callRunner) => {
             for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const) {
                 callRunner.setDefaultEndpoint(method, (request) =>
-                    withKernelRuntime(request, options, (runtime) => runtime.kernel.handleCapability(request)),
+                    withKernelRuntime(request, options, (runtime, forwardedRequest) =>
+                        runtime.kernel.handleCapability(forwardedRequest),
+                    ),
                 );
             }
         });
         runner.group("/ulvia/kernel/v1/collections", (assetRunner) => {
             for (const method of ["GET", "HEAD"] as const) {
                 assetRunner.setDefaultEndpoint(method, (request) =>
-                    withKernelRuntime(request, options, (runtime) => runtime.kernel.handleCollectionAsset(request)),
+                    withKernelRuntime(request, options, (runtime, forwardedRequest) =>
+                        runtime.kernel.handleCollectionAsset(forwardedRequest),
+                    ),
                 );
             }
         });
         runner.group("/ulvia/kernel/v1/sitemap", (sitemapRunner) => {
             for (const method of ["GET", "HEAD"] as const) {
                 sitemapRunner.setDefaultEndpoint(method, (request) =>
-                    withKernelRuntime(request, options, (runtime) => runtime.kernel.handleSitemap(request)),
+                    withKernelRuntime(request, options, (runtime, forwardedRequest) =>
+                        runtime.kernel.handleSitemap(forwardedRequest),
+                    ),
                 );
             }
         });
@@ -160,7 +168,7 @@ export class UlviaProvider {
 async function withKernelRuntime(
     request: Request,
     options: UlviaProviderOptions,
-    handler: (runtime: UlviaProviderInstanceRuntime) => Promise<Response>,
+    handler: (runtime: UlviaProviderInstanceRuntime, forwardedRequest: Request) => Promise<Response>,
 ): Promise<Response> {
     const token = bearerToken(request);
     const lease = token ? await options.authenticateControlToken(token) : null;
@@ -168,10 +176,21 @@ async function withKernelRuntime(
         return unauthorized();
     }
     try {
-        return await handler(lease.resource);
+        return await handler(lease.resource, kernelForwardedRequest(request));
     } finally {
         lease.release();
     }
+}
+
+function kernelForwardedRequest(request: Request): Request {
+    const headers = new Headers(request.headers);
+    const actorAuthorization = headers.get("x-ulvia-actor-authorization");
+    headers.delete("authorization");
+    headers.delete("x-ulvia-actor-authorization");
+    if (actorAuthorization) {
+        headers.set("authorization", actorAuthorization);
+    }
+    return new Request(request, { headers });
 }
 
 async function readKernelQuery(request: Request): Promise<KernelProviderQuery> {

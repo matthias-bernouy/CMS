@@ -23,6 +23,8 @@ export const KERNEL_PROVIDER_QUERY_OPERATIONS = [
     "page.required-access",
     "gateway.invoke",
     "gateway.resolve-http",
+    "assets.metadata",
+    "assets.metadata-batch",
 ] as const;
 
 export type KernelProviderQueryOperation = (typeof KERNEL_PROVIDER_QUERY_OPERATIONS)[number];

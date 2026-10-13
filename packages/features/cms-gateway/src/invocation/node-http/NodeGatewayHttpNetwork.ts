@@ -41,9 +41,9 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
         }
         if (
             request.authentication.kind === "provider-control" &&
-            (request.method !== "GET" || request.pathAndQuery !== "/ulvia/report")
+            (request.method !== "GET" || !PROVIDER_CONTROL_PATHS.has(request.pathAndQuery))
         ) {
-            throw new TypeError("provider control credential is restricted to the runtime report");
+            throw new TypeError("provider control credential is restricted to Provider metadata endpoints");
         }
         assertSafeApplicationHeaders(request);
         const hostname = origin.hostname.replace(/^\[|\]$/g, "");
@@ -83,6 +83,8 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
         });
     }
 }
+
+const PROVIDER_CONTROL_PATHS = new Set(["/ulvia/report", "/ulvia/kernel/v1/handshake"]);
 
 async function defaultResolveAddresses(hostname: string): Promise<readonly ResolvedAddress[]> {
     const family = isIP(hostname);

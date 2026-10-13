@@ -65,7 +65,7 @@ async function executeQuery(
     const input = objectInput(query.input);
     switch (query.operation) {
         case "content.texts":
-            return (await content.getContentTexts?.()) ?? [];
+            return projectContentTexts(content);
         case "content.revision":
             return (await content.getContentRevision?.()) ?? 0;
         case "content.renderable-page":
@@ -105,7 +105,29 @@ async function executeQuery(
             return gateway.invoker.invoke(input.invocation as never);
         case "gateway.resolve-http":
             return gateway.invoker.resolveHttp(input.request as never);
+        case "assets.metadata":
+            return stores.collections.getInstalledAssetMetadata(
+                gateway.siteId,
+                text(input.collectionId),
+                text(input.assetId),
+            );
+        case "assets.metadata-batch":
+            return stores.collections.getInstalledAssetMetadataBatch(gateway.siteId, input.references as never);
     }
+}
+
+async function projectContentTexts(content: ContentReader) {
+    const settings = await content.getRenderingSettings();
+    const defaultLocale = settings.site.language || "en";
+    const locales = [...new Set([defaultLocale, ...(settings.site.activeLanguages ?? [])])];
+    const sources = (await content.getContentTexts?.()) ?? [];
+    return {
+        defaultLocale,
+        sources: sources.map((source) => ({
+            namespace: source.namespace,
+            catalogues: Object.fromEntries(locales.map((locale) => [locale, source.resolve(locale)])),
+        })),
+    };
 }
 
 async function handleAuth(
@@ -114,9 +136,13 @@ async function handleAuth(
     authentication: Awaited<ReturnType<typeof createInstanceAuth>>,
 ): Promise<Response> {
     if (action === "login") {
-        return request.headers.get("content-type")?.includes("application/json")
-            ? authentication.publicAuth.login(request)
-            : localLoginHandler(authentication.auth, request);
+        if (!request.headers.get("content-type")?.includes("application/json")) {
+            return localLoginHandler(authentication.auth, request);
+        }
+        const input = objectInput(await request.json());
+        return Response.json(await authentication.auth.authenticate(text(input.email), text(input.password)), {
+            headers: { "cache-control": "private, no-store" },
+        });
     }
     if (action === "logout") {
         return localLogoutHandler(authentication.auth, request);

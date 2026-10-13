@@ -61,7 +61,19 @@ export class ProviderInstanceHost {
 
     async runtime(instance: ProviderInstanceRecord): Promise<ResourceLease<UlviaProviderInstanceRuntime>> {
         const lease = await this.open(instance);
-        return { resource: lease.resource.runtime, release: lease.release };
+        return {
+            resource: {
+                ...lease.resource.runtime,
+                report: providerReport(instance),
+                instance: {
+                    id: instance.id,
+                    status: instance.status,
+                    revision: instance.revision,
+                    profile: instance.profile,
+                },
+            },
+            release: lease.release,
+        };
     }
 
     async target(instance: ProviderInstanceRecord): Promise<OfficialInstanceProvisioningTarget> {

@@ -23,22 +23,22 @@ export async function verifyKernelStateAfterRestart(
     await signIn(page, credentials, kernelOrigin);
     await page.getByText("Smoke Page", { exact: true }).waitFor();
 
-    await page.getByRole("link", { name: "Collections", exact: true }).click();
+    await adminPageLink(page, "collections").click();
     await page.getByRole("heading", { name: "smoke-kit", exact: true }).waitFor();
 
-    await page.getByRole("link", { name: "Settings", exact: true }).click();
+    await adminPageLink(page, "settings").click();
     await waitUntilEnabled(page, "Save general settings");
     await expectAdminValue(page, "Site name", "Smoke CMS");
     await page.getByRole("button", { name: "Languages", exact: true }).click();
     await expectAdminValue(page, "Default language", "fr-FR");
 
-    await page.getByRole("link", { name: "Providers", exact: true }).click();
+    await adminPageLink(page, "providers").click();
     await page.getByRole("heading", { name: "Installations and contract routing" }).waitFor();
     await page.getByRole("button", { name: "Contract routing" }).click();
     await page.getByText("Contract implementations loaded.", { exact: true }).waitFor();
 
-    await page.getByRole("link", { name: "Users", exact: true }).click();
-    await page.getByText("1 total users.", { exact: true }).waitFor();
+    await adminPageLink(page, "access").click();
+    await page.getByText(credentials.adminEmail, { exact: true }).waitFor();
 
     await inspectDiagnostics(page);
     await verifyPublishedPage(page, kernelOrigin);
@@ -65,7 +65,7 @@ async function signIn(
 }
 
 async function mutateCollections(page: Page): Promise<void> {
-    await page.getByRole("link", { name: "Collections", exact: true }).click();
+    await adminPageLink(page, "collections").click();
     await page.getByRole("heading", { name: "Installed foundations and releases" }).waitFor();
     await page.getByRole("button", { name: "Repository", exact: true }).click();
     await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
@@ -81,7 +81,7 @@ async function mutateCollections(page: Page): Promise<void> {
 }
 
 async function mutateSettings(page: Page): Promise<void> {
-    await page.getByRole("link", { name: "Settings", exact: true }).click();
+    await adminPageLink(page, "settings").click();
     await waitUntilEnabled(page, "Save general settings");
     await page.getByRole("heading", { name: "General", exact: true }).waitFor();
     await page.getByLabel("Site name").fill("Smoke CMS");
@@ -108,7 +108,7 @@ async function mutateSettings(page: Page): Promise<void> {
 }
 
 async function mutateProviders(page: Page): Promise<void> {
-    await page.getByRole("link", { name: "Providers", exact: true }).click();
+    await adminPageLink(page, "providers").click();
     await page.getByRole("heading", { name: "Installations and contract routing" }).waitFor();
     await page.getByRole("button", { name: "Contract routing" }).click();
     await page.getByText("Contract implementations loaded.", { exact: true }).waitFor();
@@ -117,13 +117,12 @@ async function mutateProviders(page: Page): Promise<void> {
 }
 
 async function mutateAccess(page: Page): Promise<void> {
-    await page.getByRole("link", { name: "Users", exact: true }).click();
-    await page.getByText("1 total users.", { exact: true }).waitFor();
-    await page.getByRole("heading", { name: "Members", exact: true }).waitFor();
-    await page.getByLabel("Provider status").first().selectOption("true");
+    await adminPageLink(page, "access").click();
+    const providerForm = page.locator('form[cms-source*="ulvia.cms.access/update-login-provider"]').first();
+    await providerForm.locator('select[name="enabled"]').selectOption("true");
     const [response] = await Promise.all([
         page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.access/update-login-provider")),
-        page.getByRole("button", { name: "Save provider" }).first().click(),
+        providerForm.locator('button[type="submit"]').click(),
     ]);
     if (!response.ok()) {
         throw new Error(`Login provider flow failed (${response.status()}).`);
@@ -131,9 +130,9 @@ async function mutateAccess(page: Page): Promise<void> {
 }
 
 async function inspectDiagnostics(page: Page): Promise<void> {
-    await page.getByRole("link", { name: "Diagnostics", exact: true }).click();
+    await adminPageLink(page, "diagnostics").click();
     await page.getByRole("heading", { name: "Diagnostics", exact: true }).waitFor();
-    await page.getByRole("heading", { name: "Content maintenance", exact: true }).waitFor();
+    await page.locator("#migration-health").waitFor();
 }
 
 async function expectAdminValue(page: Page, label: string, expected: string): Promise<void> {
@@ -153,4 +152,8 @@ async function waitUntilEnabled(page: Page, buttonName: string): Promise<void> {
         await page.waitForTimeout(100);
     }
     throw new Error(`${buttonName} did not become enabled.`);
+}
+
+function adminPageLink(page: Page, pageId: string) {
+    return page.locator(`a[href="/admin/${pageId}"]`).first();
 }

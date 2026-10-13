@@ -15,6 +15,59 @@ import {
 } from "./ulviaProviderFixture";
 
 describe("UlviaProvider", () => {
+    test("handshakes with the Kernel and separates control from actor authentication", async () => {
+        const contract = await contractRelease();
+        const dispatcher = new DefaultProviderCapabilityDispatcher();
+        const forwarded: Array<{ authorization: string | null; privateHeader: string | null; cookie: string | null }> =
+            [];
+        const runner = new BunRunner();
+        new UlviaProvider(
+            runner,
+            providerOptions([contract], dispatcher, PROVIDER_INSTANCE_ID, {
+                handleCapability: async (request) => {
+                    forwarded.push({
+                        authorization: request.headers.get("authorization"),
+                        privateHeader: request.headers.get("x-ulvia-actor-authorization"),
+                        cookie: request.headers.get("cookie"),
+                    });
+                    return Response.json({ ok: true });
+                },
+            }),
+        );
+        const server = serveForTest(runner);
+        try {
+            expect((await server.request("GET", "/ulvia/kernel/v1/handshake")).status).toBe(401);
+            const handshake = await server.request("GET", "/ulvia/kernel/v1/handshake", {
+                headers: reportAuthorization(),
+            });
+            expect(handshake.status).toBe(200);
+            expect(await handshake.json()).toMatchObject({
+                protocol: "ulvia-kernel-provider/v1",
+                instance: { id: PROVIDER_INSTANCE_ID, status: "ready", revision: 1 },
+                activeProfile: { id: "ulvia.official", version: "1.1.0" },
+                contentRevision: 1,
+            });
+
+            const response = await server.request("POST", "/ulvia/kernel/v1/call/ulvia.cms.fixture/echo", {
+                headers: {
+                    ...reportAuthorization(),
+                    "x-ulvia-actor-authorization": "Bearer user-pat",
+                    cookie: "cms-session=session-token",
+                },
+            });
+            expect(response.status).toBe(200);
+            expect(forwarded).toEqual([
+                {
+                    authorization: "Bearer user-pat",
+                    privateHeader: null,
+                    cookie: "cms-session=session-token",
+                },
+            ]);
+        } finally {
+            server.stop();
+        }
+    });
+
     test("authenticates the report and dispatches declared HTTP bindings", async () => {
         const contract = await contractRelease();
         const dispatcher = new DefaultProviderCapabilityDispatcher();
