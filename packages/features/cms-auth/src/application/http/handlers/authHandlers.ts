@@ -23,7 +23,6 @@ export const AUTH_ROUTES = {
     logout: "/logout",
     oidcLogin: "/:provider/login",
     oidcCallback: "/:provider/callback",
-    methods: "/methods",
 } as const;
 
 export function oidcLoginHandler(oidc: OidcAuthHandlers, req: Request): Promise<Response> | Response {

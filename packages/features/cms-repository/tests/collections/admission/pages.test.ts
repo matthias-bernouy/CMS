@@ -97,6 +97,42 @@ test("collection Pages admit typed capability forms owned by a composition", () 
     }
 });
 
+test("collection system Pages admit only the closed authentication bindings", () => {
+    const source = collectionDocument({ "page.overview.name": "Overview" });
+    const authentication = {
+        kind: "composition",
+        id: "atlas-authentication",
+        label: "bloc.page.label",
+        lightdom: `<section cms-source="/.cms/auth/methods as methods" cms-source-method="GET">
+            <form cms-source="/.cms/auth/login as session" cms-source-method="POST" cms-source-trigger="submit">
+                <input type="email" name="email" required>
+                <input type="password" name="password" required>
+                <button type="submit">{{ copy }}</button>
+            </form>
+        </section>`,
+        slots: {},
+        uses: [],
+        requires: [],
+    };
+    const login = { ...page, document: { html: "<atlas-authentication></atlas-authentication>" } };
+    expect(() =>
+        parseCollectionRelease({ ...source, blocs: [...source.blocs, authentication], pages: [login] }),
+    ).not.toThrow();
+
+    for (const lightdom of [
+        authentication.lightdom.replace('cms-source-method="GET"', 'cms-source-method="POST"'),
+        authentication.lightdom.replace("/.cms/auth/methods", "/.cms/auth/secrets"),
+    ]) {
+        expect(() =>
+            parseCollectionRelease({
+                ...source,
+                blocs: [...source.blocs, { ...authentication, lightdom }],
+                pages: [login],
+            }),
+        ).toThrow("canonical CMS capability");
+    }
+});
+
 test("Pages reject removed kernel file transports", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const html = `<section>

@@ -7,30 +7,25 @@ import {
     oidcCallbackHandler,
     oidcLoginHandler,
     registerPublicAuthRoutes,
-    resolveLoginMethods,
 } from "@bernouy/cms-auth/http";
 import type KernelCms from "cms-kernel/KernelCms";
-import { renderLoginPage } from "cms-kernel/http/auth/loginPage";
 
 export function mountAuthRoutes(kernel: KernelCms): void {
     const { runner } = kernel;
     const backends = kernel.authBackends ?? {};
     const basePath = runner.basePath === "/" ? "" : runner.basePath;
-    runner.addEndpoint("GET", "/login", async (request) => {
-        const supportedKinds = authKinds(backends);
-        const methods = await resolveLoginMethods({
-            publicBasePath: `${basePath}${AUTH_ROUTES.base}`,
-            identityProviders: kernel.identityProviders ?? null,
-            supportedKinds,
-        });
-        return renderLoginPage(request, basePath, methods);
-    });
-
-    if (kernel.publicAuth) {
-        runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
+    runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
+        if (kernel.publicAuth) {
             registerPublicAuthRoutes(authRunner, kernel.publicAuth!);
-        });
-    }
+        }
+        authRunner.addEndpoint("GET", PUBLIC_AUTH_ROUTES.methods, () =>
+            authMethodsHandler({
+                publicBasePath: `${basePath}${AUTH_ROUTES.base}`,
+                identityProviders: kernel.identityProviders ?? null,
+                supportedKinds: authKinds(backends),
+            }),
+        );
+    });
 
     runner.group(AUTH_ROUTES.base, (authRunner) => {
         const supportedKinds = authKinds(backends);
@@ -48,13 +43,6 @@ export function mountAuthRoutes(kernel: KernelCms): void {
                 oidcCallbackHandler(backends.oidc!, request),
             );
         }
-        authRunner.addEndpoint("GET", AUTH_ROUTES.methods, () =>
-            authMethodsHandler({
-                publicBasePath: `${basePath}${AUTH_ROUTES.base}`,
-                identityProviders: kernel.identityProviders ?? null,
-                supportedKinds,
-            }),
-        );
     });
 }
 

@@ -3,7 +3,7 @@ import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, record, string, unique } from "../../values";
-import { capabilityCallKey, parseRequirements } from "../requirements";
+import { capabilityCallKey, isCollectionSystemSource, parseRequirements } from "../requirements";
 import { parseDefaultPath } from "./document";
 import { validatePageDocument, type PageDocumentValidationResult } from "@bernouy/cms-content/page-document";
 
@@ -49,16 +49,21 @@ export function parseCollectionPages(
         }
         const requires = parseRequirements(source.requires, `${path}.requires`, limits);
         const calls = new Set(
-            sources.map(({ method, url }) => {
-                const call = capabilityCallKey(url);
-                if (!call || method !== "POST") {
-                    return invalid(
-                        "Page sources must use a canonical CMS capability with POST",
-                        `${path}.document.html`,
-                    );
-                }
-                return call;
-            }),
+            sources
+                .map(({ method, url }) => {
+                    if (isCollectionSystemSource(url, method)) {
+                        return null;
+                    }
+                    const call = capabilityCallKey(url);
+                    if (!call || method !== "POST") {
+                        return invalid(
+                            "Page sources must use a canonical CMS capability with POST",
+                            `${path}.document.html`,
+                        );
+                    }
+                    return call;
+                })
+                .filter((call): call is string => call !== null),
         );
         const declaredCalls = new Set(requires.map((item) => `${item.contractId}/${item.capabilityId}`));
         if (declaredCalls.size !== calls.size || [...calls].some((call) => !declaredCalls.has(call))) {
