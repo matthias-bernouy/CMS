@@ -43,10 +43,12 @@ test("resolves collection asset expressions inside immutable Bloc JavaScript", a
         },
         ["site-card"],
     );
-    const entry = runtime.cache.get(collectionBlocsetCacheKey(["site-card"], 1));
+    const revision = new URL(assets.blocUrls[0]!, "http://localhost").searchParams.get("r");
+    expect(revision).toMatch(/^sha256:[a-f0-9]{64}$/);
+    const entry = runtime.cache.get(collectionBlocsetCacheKey(["site-card"], revision!));
     const js = new TextDecoder().decode(entry!.raw);
 
-    expect(assets.blocUrls[0]).toContain("r=1");
+    expect(assets.blocUrls[0]).toContain(`r=${revision}`);
     expect(js).toContain("/.cms/collections/design-system/assets/mark.svg?v=");
     expect(js).toContain("background-image");
     expect(js).not.toContain("cms.asset.design-system.mark.svg");
