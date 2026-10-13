@@ -25,10 +25,9 @@ export function projectTextCatalogue(
             values: Object.entries(text.values)
                 .sort(([left], [right]) => left.localeCompare(right))
                 .map(([locale, value]) => ({ locale, value })),
-            overrides: Object.entries(textOverrides)
-                .filter(([, values]) => values[text.id] !== undefined)
+            overrides: Object.entries(textOverrides[text.id] ?? {})
                 .sort(([left], [right]) => left.localeCompare(right))
-                .map(([locale, values]) => ({ locale, value: values[text.id]! })),
+                .map(([locale, value]) => ({ locale, value })),
         })),
     };
 }

@@ -86,19 +86,20 @@ export class Bloc extends Component {
             }
             const locale = this.required<HTMLSelectElement>("[data-locale]").value;
             const overrides = JSON.parse(this.catalogue.overridesJson) as Record<string, Record<string, string>>;
-            const current = { ...(overrides[locale] ?? {}) };
             for (const input of this.shadowRoot!.querySelectorAll<HTMLTextAreaElement>("[data-text-id]")) {
+                const textId = input.dataset.textId!;
+                const current = { ...(overrides[textId] ?? {}) };
                 const value = input.value;
                 if (value) {
-                    current[input.dataset.textId!] = value;
+                    current[locale] = value;
                 } else {
-                    delete current[input.dataset.textId!];
+                    delete current[locale];
                 }
-            }
-            if (Object.keys(current).length) {
-                overrides[locale] = current;
-            } else {
-                delete overrides[locale];
+                if (Object.keys(current).length) {
+                    overrides[textId] = current;
+                } else {
+                    delete overrides[textId];
+                }
             }
             this.catalogue = await localizationCapability<TextCatalogue>("save-texts", {
                 collectionId: this.catalogue.collectionId,
