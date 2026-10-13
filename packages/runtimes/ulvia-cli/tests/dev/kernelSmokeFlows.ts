@@ -128,6 +128,7 @@ async function mutateProviders(page: Page): Promise<void> {
 
 async function mutateAccess(page: Page): Promise<void> {
     await adminPageLink(page, "access").click();
+    await page.getByText("Email & password", { exact: true }).waitFor();
     const providerForm = page.locator('form[cms-source*="ulvia.cms.access/update-login-provider"]').first();
     await providerForm.locator('select[name="enabled"]').selectOption("true");
     const [response] = await Promise.all([
