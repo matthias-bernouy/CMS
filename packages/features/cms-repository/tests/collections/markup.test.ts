@@ -159,6 +159,19 @@ describe("collection markup admission", () => {
         expect(() => check([shell, composition()])).toThrow("layout and slots only");
     });
 
+    test("allows internal application components to author interactive shadow structure without copy", () => {
+        const workspace = component({
+            internal: true,
+            shadowdom:
+                '<form><label><slot name="label"></slot><input data-value=""></label><button type="submit"><slot name="submit"></slot></button></form>',
+            lightdom:
+                '<span slot="label">{{ cms.i18n.demo.label }}</span><span slot="submit">{{ cms.i18n.demo.submit }}</span>',
+            slots: {},
+        });
+        expect(() => check([workspace])).not.toThrow();
+        expect(() => check([{ ...workspace, internal: false }])).toThrow("layout and slots only");
+    });
+
     test("any-component slots reject compositions", () => {
         expect(() =>
             check([

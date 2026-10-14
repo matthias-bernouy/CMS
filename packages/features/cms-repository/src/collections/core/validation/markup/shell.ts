@@ -76,7 +76,7 @@ function validateInitialValue(value: string, path: string): void {
     }
 }
 
-export function validateShadow(tree: MarkupTree, path: string): void {
+export function validateShadow(tree: MarkupTree, path: string, interactive = false): void {
     for (const node of nodes(tree)) {
         if (node.type === "text") {
             if (binding(node.data)) {
@@ -95,7 +95,7 @@ export function validateShadow(tree: MarkupTree, path: string): void {
         if (Object.values(node.attribs).some(binding)) {
             invalid("shadow shells are static and cannot contain bindings", path);
         }
-        if (!SHADOW_LAYOUT_TAGS.has(node.name)) {
+        if (!interactive && !SHADOW_LAYOUT_TAGS.has(node.name)) {
             invalid("shadow shells contain layout and slots only; put semantic content in lightdom", path);
         }
         if (Object.keys(node.attribs).some((name) => SHADOW_CONTENT_ATTRIBUTES.has(name))) {

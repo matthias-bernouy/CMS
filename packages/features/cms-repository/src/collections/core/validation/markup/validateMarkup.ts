@@ -69,7 +69,7 @@ export function validateMarkup(
         }
         validatePageSlots(bloc, content, path);
         if (content.shadow) {
-            validateShadow(content.shadow, `${path}.shadowdom`);
+            validateShadow(content.shadow, `${path}.shadowdom`, bloc.internal);
             if (elements(content.shadow).some((node) => ids.has(node.name))) {
                 invalid("nested blocs belong in lightdom, not static shadow shells", `${path}.shadowdom`);
             }
