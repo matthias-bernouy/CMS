@@ -98,7 +98,7 @@ whose changes invalidate and rerun the query:
 A listener does not have to be an input. This permits an explicit revision or
 invalidation state to refresh a query without changing its logical input.
 Conversely, a required input that is initially absent stays in `waiting` until
-one of the query's explicit listeners or refresh policies triggers it.
+an explicit listener, refresh policy, or targeted reload triggers the query.
 `cms-query-refresh` may additionally contain `focus`, `reconnect`, and one
 bounded interval such as `interval(5s)`. These policies do not change the
 capability or its input.
