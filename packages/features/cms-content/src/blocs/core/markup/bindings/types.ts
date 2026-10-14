@@ -8,6 +8,7 @@ export const CMS_BINDING_ATTRIBUTES = {
     sync: "cms-sync",
     query: "cms-query",
     queryInput: "cms-query-input",
+    queryListen: "cms-query-listen",
     queryRefresh: "cms-query-refresh",
     repeat: "cms-repeat",
     source: "cms-source",
@@ -86,6 +87,7 @@ export type CmsRemoteQueryBinding = CmsQueryTarget & { readonly name: string };
 export type CmsSyncQueryBinding = { readonly sync: CmsSyncTarget; readonly name: string };
 export type CmsQueryBinding = CmsRemoteQueryBinding | CmsSyncQueryBinding;
 export type CmsQueryInput = CmsBindingInputMap;
+export type CmsQueryListen = readonly CmsSyncTarget[];
 export type CmsQueryRefreshPolicy = {
     readonly intervalMs?: number;
     readonly focus: boolean;

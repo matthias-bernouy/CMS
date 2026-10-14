@@ -496,6 +496,13 @@ describe("collection release parsing", () => {
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
             '<atlas-panel cms-query="@page:atlas-undeclared as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></atlas-panel>';
         expect(() => parseCollectionRelease(source)).toThrow("declared locally or explicitly imported");
+
+        (source.blocs as Record<string, unknown>[])[1]!.lightdom =
+            '<atlas-panel cms-query="catalog:items.list as products" cms-query-listen="@page:atlas-undeclared"><slot name="main" slot="body"></slot></atlas-panel>';
+        (source.blocs as Record<string, unknown>[])[1]!.requires = [
+            { contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" },
+        ];
+        expect(() => parseCollectionRelease(source)).toThrow("declared locally or explicitly imported");
     });
 
     test("validates known cms-sync producer types against declared state contracts", () => {
@@ -589,8 +596,8 @@ describe("collection release parsing", () => {
         producer.slots = {};
         producer.uses = [];
         producer.lightdom = `<section>
-            <div cms-query="catalog:items.list as left" cms-query-input='{"right":{"from":"state","key":"@page:atlas-right"}}' cms-sync="@page:atlas-left"></div>
-            <div cms-query="catalog:items.list as right" cms-query-input='{"left":{"from":"state","key":"@page:atlas-left"}}' cms-sync="@page:atlas-right"></div>
+            <div cms-query="catalog:items.list as left" cms-query-input='{"right":{"from":"state","key":"@page:atlas-right"}}' cms-query-listen="@page:atlas-right" cms-sync="@page:atlas-left"></div>
+            <div cms-query="catalog:items.list as right" cms-query-input='{"left":{"from":"state","key":"@page:atlas-left"}}' cms-query-listen="@page:atlas-left" cms-sync="@page:atlas-right"></div>
         </section>`;
         delete producer.defaultContent;
         expect(() => parseCollectionRelease(source)).toThrow(/automatic state query cycle/);

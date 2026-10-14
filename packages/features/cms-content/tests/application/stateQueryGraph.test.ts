@@ -11,7 +11,7 @@ describe("ValidatingCmsRepository — synchronized query graph", () => {
             description: "",
             viewJS: "",
             ownership: { kind: "code-managed" as const },
-            compositionHTML: `<section cms-query="catalog:items.list as ${id.replaceAll("-", "_")}" cms-query-input='{"dependency":{"from":"state","key":"@page:${input}"}}' cms-sync="@page:${output}"></section>`,
+            compositionHTML: `<section cms-query="catalog:items.list as ${id.replaceAll("-", "_")}" cms-query-input='{"dependency":{"from":"state","key":"@page:${input}"}}' cms-query-listen="@page:${input}" cms-sync="@page:${output}"></section>`,
         });
         await repo.createBloc(composition("fixture-left-query", "fixture-right", "fixture-left"));
         await repo.createBloc(composition("fixture-right-query", "fixture-left", "fixture-right"));
@@ -49,8 +49,8 @@ describe("ValidatingCmsRepository — synchronized query graph", () => {
                 viewJS: "",
                 ownership: { kind: "code-managed" },
                 compositionHTML: `<section>
-                    <div cms-query="catalog:items.list as left" cms-query-input='{"right":{"from":"state","key":"@page:fixture-right"}}' cms-sync="@page:fixture-left"></div>
-                    <div cms-query="catalog:items.list as right" cms-query-input='{"left":{"from":"state","key":"@page:fixture-left"}}' cms-sync="@page:fixture-right"></div>
+                    <div cms-query="catalog:items.list as left" cms-query-input='{"right":{"from":"state","key":"@page:fixture-right"}}' cms-query-listen="@page:fixture-right" cms-sync="@page:fixture-left"></div>
+                    <div cms-query="catalog:items.list as right" cms-query-input='{"left":{"from":"state","key":"@page:fixture-left"}}' cms-query-listen="@page:fixture-left" cms-sync="@page:fixture-right"></div>
                 </section>`,
             }),
         ).rejects.toThrow("automatic state query cycle");

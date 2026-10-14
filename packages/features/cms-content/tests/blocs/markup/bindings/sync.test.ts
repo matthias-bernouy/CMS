@@ -12,6 +12,15 @@ describe("cms-sync validation", () => {
         expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.sync, "ulvia-official-editor")).toContain(
             "target is invalid",
         );
+        expect(
+            nativeBindingAttributeIssue(
+                CMS_BINDING_ATTRIBUTES.queryListen,
+                "@page:ulvia-official-editor @param:ulvia-official-search",
+            ),
+        ).toBeNull();
+        expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.queryListen, "ulvia-official-editor")).toContain(
+            "listeners",
+        );
     });
 
     test("separates remote producers from local consumers", () => {
@@ -33,6 +42,17 @@ describe("cms-sync validation", () => {
                 "cms-query-refresh": "focus",
             }),
         ).toContain("cannot declare remote query controls");
+        expect(
+            nativeBindingElementIssue("section", {
+                "cms-query": "@page:ulvia-official-products as products",
+                "cms-query-listen": "@page:ulvia-official-revision",
+            }),
+        ).toContain("cannot declare remote query controls");
+        expect(
+            nativeBindingElementIssue("section", {
+                "cms-query-listen": "@page:ulvia-official-revision",
+            }),
+        ).toContain("requires cms-query");
     });
 
     test("prevents structured query state from being written into URL parameters", () => {

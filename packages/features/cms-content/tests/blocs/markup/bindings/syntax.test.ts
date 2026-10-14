@@ -3,6 +3,7 @@ import {
     asInterpolation,
     asQuery,
     asQueryInput,
+    asQueryListen,
     asRepeat,
     asSource,
     asSourceBody,
@@ -12,6 +13,7 @@ import {
     parseInterpolation,
     parseQuery,
     parseQueryInput,
+    parseQueryListen,
     parseQueryRefresh,
     parseRepeat,
     parseSource,
@@ -150,6 +152,25 @@ describe("binding syntax", () => {
         expect(parseQueryInput(nested)).toEqual({
             "targets[0][digest]": { from: "state", key: "@param:site-digest" },
         });
+    });
+
+    test("formats and parses bounded explicit query listeners", () => {
+        expect(
+            asQueryListen([
+                { scope: "param", key: "ulvia-official-search" },
+                { scope: "page", key: "ulvia-official-revision" },
+            ]),
+        ).toBe("@param:ulvia-official-search @page:ulvia-official-revision");
+        expect(parseQueryListen(" @param:ulvia-official-search @page:ulvia-official-revision ")).toEqual([
+            { scope: "param", key: "ulvia-official-search" },
+            { scope: "page", key: "ulvia-official-revision" },
+        ]);
+        expect(parseQueryListen("")).toBeNull();
+        expect(parseQueryListen("@page:ulvia-official-revision @page:ulvia-official-revision")).toBeNull();
+        expect(parseQueryListen("@unknown:ulvia-official-revision")).toBeNull();
+        expect(
+            parseQueryListen(Array.from({ length: 17 }, (_, index) => `@page:site-key-${index}`).join(" ")),
+        ).toBeNull();
     });
 
     test("parses bounded query refresh policies", () => {

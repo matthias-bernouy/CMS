@@ -17,6 +17,7 @@ unique local alias:
 <section
   cms-query="catalog:products.list as products"
   cms-query-input='{"category":{"from":"state","key":"@param:shop-category"},"limit":{"from":"literal","value":20}}'
+  cms-query-listen="@param:shop-category"
   cms-query-refresh="focus reconnect"
 >
   <p cms-condition="products.loading">Loading products…</p>
@@ -82,8 +83,22 @@ A query without input uses an HTTP `GET`. A query with input uses an HTTP
 capability, not a gateway URL; the Kernel owns the transport route and provider
 selection.
 
-The query reruns only when its resolved logical input changes. A change outside
-a selected `path` does not issue another request.
+State inputs are snapshots. They do not implicitly subscribe the query to every
+state they read. `cms-query-listen` explicitly lists the synchronized states
+whose changes invalidate and rerun the query:
+
+```html
+<section
+  cms-query="catalog:products.list as products"
+  cms-query-input='{"category":{"from":"state","key":"@param:shop-category"}}'
+  cms-query-listen="@param:shop-category @page:shop-products-revision"
+>…</section>
+```
+
+A listener does not have to be an input. This permits an explicit revision or
+invalidation state to refresh a query without changing its logical input.
+Conversely, a required input that is initially absent stays in `waiting` until
+one of the query's explicit listeners or refresh policies triggers it.
 `cms-query-refresh` may additionally contain `focus`, `reconnect`, and one
 bounded interval such as `interval(5s)`. These policies do not change the
 capability or its input.

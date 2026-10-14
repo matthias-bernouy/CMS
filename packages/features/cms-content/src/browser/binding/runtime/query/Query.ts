@@ -65,11 +65,7 @@ export class Query {
             () => this.requestIdentity(),
             () => this.run(),
         );
-        this.stopRefresh = listenQueryRefresh(
-            this.element,
-            () => void this.run(),
-            () => void this.run({ onlyIfInputChanged: true }),
-        );
+        this.stopRefresh = listenQueryRefresh(this.element, () => void this.run());
         const supplied = connectSourceData(this.element, (value) => this.accept(value));
         if (supplied && !this.options.sourceStateForce) {
             this.accept(supplied.value);
@@ -104,7 +100,7 @@ export class Query {
     run(options: { readonly onlyIfInputChanged?: boolean } = {}): Promise<boolean> {
         if (this.pending) {
             this.queuedForce ||= !options.onlyIfInputChanged;
-            if (options.onlyIfInputChanged && this.requestIdentity() !== this.activeIdentity) {
+            if (this.requestIdentity() !== this.activeIdentity) {
                 this.lastInputIdentity = null;
                 this.abort?.abort();
             }

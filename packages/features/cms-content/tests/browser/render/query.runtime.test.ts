@@ -75,6 +75,7 @@ test("a Provider query waits for required synchronized input", async () => {
     const host = el(`<section
         cms-query="catalog.items:list as products"
         cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-required-filter"}}'
+        cms-query-listen="@page:ulvia-official-required-filter"
     ><p cms-condition="products.waiting">Waiting</p></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -177,6 +178,7 @@ test("a remote query refreshes only when one of its synchronized inputs changes"
     const host = el(`<section
         cms-query="catalog.items:list as products"
         cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-filter"}}'
+        cms-query-listen="@page:ulvia-official-filter"
     ></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -205,12 +207,13 @@ test("a remote query refreshes only when one of its synchronized inputs changes"
     writeSyncValue(unrelated, undefined);
 });
 
-test("a remote query ignores state changes outside its selected path", async () => {
+test("an explicit listener invalidates a remote query even when its selected input path is unchanged", async () => {
     const target = { scope: "page", key: "ulvia-official-selection-snapshot" } as const;
     writeSyncValue(target, { data: { id: "one" }, refreshing: false });
     const host = el(`<section
         cms-query="catalog.items:get as product"
         cms-query-input='{"id":{"from":"state","key":"@page:ulvia-official-selection-snapshot","path":["data","id"]}}'
+        cms-query-listen="@page:ulvia-official-selection-snapshot"
     ></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -228,11 +231,10 @@ test("a remote query ignores state changes outside its selected path", async () 
     query.start();
     await waitFor(() => inputs.length === 1);
     writeSyncValue(target, { data: { id: "one" }, refreshing: true });
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(inputs).toHaveLength(1);
-    writeSyncValue(target, { data: { id: "two" }, refreshing: false });
     await waitFor(() => inputs.length === 2);
-    expect(inputs).toEqual([{ id: "one" }, { id: "two" }]);
+    writeSyncValue(target, { data: { id: "two" }, refreshing: false });
+    await waitFor(() => inputs.length === 3);
+    expect(inputs).toEqual([{ id: "one" }, { id: "one" }, { id: "two" }]);
     query.dispose();
     writeSyncValue(target, undefined);
 });
@@ -243,6 +245,7 @@ test("a remote query restarts after its input changes away and back while in fli
     const host = el(`<section
         cms-query="catalog.items:list as products"
         cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-fast-filter"}}'
+        cms-query-listen="@page:ulvia-official-fast-filter"
     ></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -271,6 +274,36 @@ test("a remote query restarts after its input changes away and back while in fli
     releaseFirst();
     await waitFor(() => inputs.length === 2);
     expect(inputs).toEqual([{ status: "draft" }, { status: "draft" }]);
+    query.dispose();
+    writeSyncValue(target, undefined);
+});
+
+test("a remote query treats synchronized inputs as snapshots without an explicit listener", async () => {
+    const target = { scope: "page", key: "ulvia-official-snapshot-filter" } as const;
+    writeSyncValue(target, "draft");
+    const host = el(`<section
+        cms-query="catalog.items:list as products"
+        cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-snapshot-filter"}}'
+    ></section>`);
+    document.body.appendChild(host);
+    const inputs: unknown[] = [];
+    const query = new Query(
+        host,
+        {},
+        {
+            request: async (_url, _signal, init) => {
+                inputs.push(JSON.parse(String(init?.body)));
+                return { kind: "success", data: [] };
+            },
+        },
+    );
+
+    query.start();
+    await waitFor(() => inputs.length === 1);
+    writeSyncValue(target, "published");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(inputs).toEqual([{ status: "draft" }]);
     query.dispose();
     writeSyncValue(target, undefined);
 });

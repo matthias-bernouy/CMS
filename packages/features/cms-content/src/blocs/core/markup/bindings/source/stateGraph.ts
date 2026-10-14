@@ -1,5 +1,5 @@
 import { parseSyncTarget } from "cms-content/blocs/core/markup/bindings/sync";
-import { parseQuery, parseQueryInput } from "./index";
+import { parseQuery, parseQueryListen } from "./index";
 
 /** Rejects automatic query feedback and competing producers in one composed document. */
 export function validateStateQueryGraph(root: ParentNode): void {
@@ -30,14 +30,8 @@ function queryInputs(element: Element, query: ReturnType<typeof parseQuery>): Re
     if (query && "sync" in query) {
         inputs.add(stateId(query.sync.scope, query.sync.key));
     }
-    for (const source of Object.values(parseQueryInput(element.getAttribute("cms-query-input")) ?? {})) {
-        if (source?.from !== "state") {
-            continue;
-        }
-        const target = parseSyncTarget(source.key);
-        if (target) {
-            inputs.add(stateId(target.scope, target.key));
-        }
+    for (const target of parseQueryListen(element.getAttribute("cms-query-listen")) ?? []) {
+        inputs.add(stateId(target.scope, target.key));
     }
     return inputs;
 }

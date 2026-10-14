@@ -1,6 +1,7 @@
 import type {
     CmsQueryBinding,
     CmsQueryInput,
+    CmsQueryListen,
     CmsQueryRefreshPolicy,
     CmsSourceBinding,
     CmsSourceUrl,
@@ -17,6 +18,7 @@ const QUERY_PATTERN =
     /^\s*([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*):([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u;
 const SYNC_QUERY_PATTERN = /^\s*(@(?:param|page|session|persistent):[^\s]+)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u;
 const QUERY_REFRESH_INTERVAL = /^interval\((\d+)(ms|s|m)\)$/u;
+const MAX_QUERY_LISTEN_TARGETS = 16;
 const MIN_QUERY_REFRESH_INTERVAL_MS = 1_000;
 const MAX_QUERY_REFRESH_INTERVAL_MS = 60 * 60 * 1_000;
 const RESERVED_QUERY_NAMES = new Set(["cms"]);
@@ -100,6 +102,23 @@ export function asQueryInput(input: CmsQueryInput): string {
 
 export function parseQueryInput(value: string | null | undefined): CmsQueryInput | null {
     return parseSourceBody(value);
+}
+
+export function asQueryListen(listeners: CmsQueryListen): string {
+    const value = listeners.map(asSyncTarget).join(" ");
+    if (!parseQueryListen(value)) {
+        throw new TypeError("Invalid CMS query listeners");
+    }
+    return value;
+}
+
+export function parseQueryListen(value: string | null | undefined): CmsQueryListen | null {
+    const tokens = value?.trim().split(/\s+/u).filter(Boolean) ?? [];
+    if (tokens.length === 0 || tokens.length > MAX_QUERY_LISTEN_TARGETS || new Set(tokens).size !== tokens.length) {
+        return null;
+    }
+    const listeners = tokens.map(parseSyncTarget);
+    return listeners.every((listener) => listener !== null) ? listeners : null;
 }
 
 export function parseQueryRefresh(value: string | null | undefined): CmsQueryRefreshPolicy | null {

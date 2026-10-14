@@ -2,6 +2,7 @@ import { parseHTML } from "linkedom";
 import {
     parseQuery,
     parseQueryInput,
+    parseQueryListen,
     parseSourceBody,
     parseSyncTarget,
     type CmsSourceBodyBinding,
@@ -58,6 +59,9 @@ export function validateCollectionStateBindings(
                 installed,
                 path,
             );
+            for (const target of parseQueryListen(element.getAttribute("cms-query-listen")) ?? []) {
+                assertReadable(target, own, imported, installed, path);
+            }
         }
         for (const element of Array.from(document.body.querySelectorAll("[cms-source-body]"))) {
             validateInputReads(

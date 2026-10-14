@@ -12,6 +12,7 @@ import {
     isCmsSourceTrigger,
     parseCondition,
     parseQuery,
+    parseQueryListen,
     parseQueryRefresh,
     parseRepeat,
     parseSource,
@@ -46,6 +47,9 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     }
     if (name === CMS_BINDING_ATTRIBUTES.queryInput) {
         return isTypedQueryInput(value) ? null : "CMS query input must be a typed parameter map";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.queryListen) {
+        return parseQueryListen(value) ? null : "CMS query listeners must identify one to sixteen unique states";
     }
     if (name === CMS_BINDING_ATTRIBUTES.queryRefresh) {
         return parseQueryRefresh(value) ? null : "CMS query refresh policy is invalid";
@@ -141,6 +145,7 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
             binding &&
             "sync" in binding &&
             (attributes[CMS_BINDING_ATTRIBUTES.queryInput] !== undefined ||
+                attributes[CMS_BINDING_ATTRIBUTES.queryListen] !== undefined ||
                 attributes[CMS_BINDING_ATTRIBUTES.queryRefresh] !== undefined)
         ) {
             return "synchronized-state queries cannot declare remote query controls";
@@ -179,7 +184,11 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     if (sync !== undefined && tag === "select" && attributes.multiple !== undefined) {
         return "multiple selects require an explicit collection value contract and cannot synchronize browser state";
     }
-    for (const name of [CMS_BINDING_ATTRIBUTES.queryInput, CMS_BINDING_ATTRIBUTES.queryRefresh]) {
+    for (const name of [
+        CMS_BINDING_ATTRIBUTES.queryInput,
+        CMS_BINDING_ATTRIBUTES.queryListen,
+        CMS_BINDING_ATTRIBUTES.queryRefresh,
+    ]) {
         if (attributes[name] !== undefined && query === undefined) {
             return `CMS query attribute "${name}" requires cms-query`;
         }
