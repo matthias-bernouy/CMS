@@ -141,7 +141,7 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "POST",
+        "method": "GET",
         "path": "/catalogue",
         "input": {},
         "response": {

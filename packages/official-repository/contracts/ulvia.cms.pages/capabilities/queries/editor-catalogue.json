@@ -92,7 +92,7 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "POST",
+        "method": "GET",
         "path": "/editor-catalogue",
         "input": {},
         "response": {

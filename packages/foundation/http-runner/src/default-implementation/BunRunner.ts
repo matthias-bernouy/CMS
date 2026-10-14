@@ -1,5 +1,5 @@
 import { getRequestIP as readRequestIP } from "http-runner/core/request/ip";
-import type { Middleware, RouteHandler, Runner, RunnerListenOptions } from "http-runner/interfaces/Runner";
+import type { HttpMethod, Middleware, RouteHandler, Runner, RunnerListenOptions } from "http-runner/interfaces/Runner";
 import { dispatchBunRunnerRequest, type RegisteredDefaultEndpoint, type RegisteredRoute } from "./bunRequestDispatch";
 import { stopServerGracefully } from "./gracefulServerStop";
 import { normalizePath, urlJoin } from "./runnerPaths";
@@ -105,11 +105,7 @@ export class BunRunner implements Runner {
         this.addEndpoint("PUT", path, handler, middlewares);
     }
 
-    setDefaultEndpoint(
-        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS",
-        handler: RouteHandler,
-        middlewares: Middleware[] = [],
-    ): void {
+    setDefaultEndpoint(method: HttpMethod, handler: RouteHandler, middlewares: Middleware[] = []): void {
         this._registerDefaultEndpoint(method, "/", handler, middlewares);
     }
 

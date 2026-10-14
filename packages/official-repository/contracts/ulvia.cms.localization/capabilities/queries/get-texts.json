@@ -146,7 +146,7 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "POST",
+        "method": "QUERY",
         "path": "/get-texts",
         "input": {
             "body": true

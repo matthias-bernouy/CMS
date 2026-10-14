@@ -9,7 +9,7 @@ import type {
     HttpInputBinding,
 } from "../../interfaces/HttpBinding";
 
-const HTTP_METHODS = new Set<CapabilityHttpMethod>(["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"]);
+const HTTP_METHODS = new Set<CapabilityHttpMethod>(["DELETE", "GET", "PATCH", "POST", "PUT", "QUERY"]);
 
 export function parseHttpBinding(value: unknown, path: string, limits: Readonly<ReleaseLimits>): HttpBindingDefinition {
     const record = expectRecord(value, path, "invalid_binding");

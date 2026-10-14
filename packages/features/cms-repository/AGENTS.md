@@ -127,9 +127,11 @@ models and validation for CMS-owned installations and site selections.
   and reserves security, identity, tracing and transport headers for the gateway.
 - HTTP path/query/application-header scalars use `json-percent`: canonical
   I-JSON scalar text, then `encodeURIComponent`; decode once and validate.
-  Omission, null and quoted strings differ. GET/HEAD must be queries. HEAD errors
-  encode their code and request ID in reserved `x-ulvia-error-code` and
-  `x-ulvia-request-id` response headers, never a body. See the
+  Omission, null and quoted strings differ. Queries use bodyless `GET` or
+  JSON-bodied `QUERY`; commands use `POST`, `PUT`, `PATCH` or `DELETE`.
+  `HEAD` is derived only from binary `GET`. HEAD errors encode their code and
+  request ID in reserved `x-ulvia-error-code` and `x-ulvia-request-id`
+  response headers, never a body. See the
   [HTTP profile](fixtures/contracts/protocol-v1/http-parameters.md).
 - Capability mocks are validated examples, not executable provider responses.
   Binary mock leaves reference declared fixture assets by ID. Bundle admission

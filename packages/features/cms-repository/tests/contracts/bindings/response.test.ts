@@ -127,44 +127,4 @@ describe("HTTP response binding compilation", () => {
             ),
         ).toThrow("explicit transport encoding");
     });
-
-    test("treats HEAD responses as bodyless independently of their status", () => {
-        const binding = {
-            transport: "http",
-            method: "HEAD",
-            path: "/v1/messages",
-            response: { successStatuses: [200], contentTypes: [] },
-        };
-        const compiled = compileHttpBinding(
-            capability({
-                behavior: { effect: "query", execution: "sync" },
-                input: objectSchema({}),
-                output: { type: "null" },
-                binding,
-            }),
-        );
-
-        expect(compiled.response).toEqual({
-            kind: "result",
-            errorEnvelope: {
-                kind: "headers",
-                encoding: "json-percent",
-                codeHeader: "x-ulvia-error-code",
-                requestIdHeader: "x-ulvia-request-id",
-            },
-            successStatuses: [200],
-            contentTypes: [],
-            errorStatuses: { INVALID_RECIPIENT: 422 },
-        });
-        expect(() =>
-            compileHttpBinding(
-                capability({
-                    behavior: { effect: "query", execution: "sync" },
-                    input: objectSchema({}),
-                    output: objectSchema({ ok: { type: "boolean" } }, ["ok"]),
-                    binding,
-                }),
-            ),
-        ).toThrow("HEAD responses require a null or binary resource output schema");
-    });
 });

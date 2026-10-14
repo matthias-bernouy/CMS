@@ -111,7 +111,7 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "POST",
+        "method": "QUERY",
         "path": "/list-users",
         "input": {
             "body": true

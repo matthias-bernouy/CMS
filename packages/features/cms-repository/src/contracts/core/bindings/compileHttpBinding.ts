@@ -10,8 +10,15 @@ import { compileResponse } from "./response";
 export function compileHttpBinding(capability: CapabilityDefinition): CompiledHttpBinding {
     const definition = capability.binding;
     const path = `capability ${capability.id}.binding`;
-    if ((definition.method === "GET" || definition.method === "HEAD") && capability.behavior.effect !== "query") {
-        throw new ReleaseValidationError("invalid_binding", `${definition.method} capabilities must be queries`, path);
+    const queryMethod = definition.method === "GET" || definition.method === "QUERY";
+    if (queryMethod !== (capability.behavior.effect === "query")) {
+        throw new ReleaseValidationError(
+            "invalid_binding",
+            capability.behavior.effect === "query"
+                ? "query capabilities must use GET or QUERY"
+                : `${definition.method} capabilities must be queries`,
+            path,
+        );
     }
     const template = parsePathTemplate(definition.path, `${path}.path`);
     const used = new Set<string>();
@@ -40,12 +47,11 @@ export function compileHttpBinding(capability: CapabilityDefinition): CompiledHt
             `${path}.input`,
         );
     }
-    if ((definition.method === "GET" || definition.method === "HEAD") && body) {
-        throw new ReleaseValidationError(
-            "invalid_binding",
-            `${definition.method} capabilities cannot have a body`,
-            path,
-        );
+    if (definition.method === "GET" && body) {
+        throw new ReleaseValidationError("invalid_binding", "GET capabilities cannot have a body", path);
+    }
+    if (definition.method === "QUERY" && body?.kind !== "json") {
+        throw new ReleaseValidationError("invalid_binding", "QUERY capabilities require a JSON body", path);
     }
     return deepFreeze({
         method: definition.method,
@@ -60,7 +66,6 @@ export function compileHttpBinding(capability: CapabilityDefinition): CompiledHt
             capability.errors,
             capability.output,
             capability.behavior.execution,
-            definition.method,
             `${path}.response`,
         ),
     }) as CompiledHttpBinding;

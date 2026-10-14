@@ -2,6 +2,7 @@
  * Endpoint handler: may return a Response synchronously or as a Promise.
  */
 export type RouteHandler = (req: Request) => Response | Promise<Response>;
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "QUERY";
 
 /**
  * Middleware function that can transform a request or intercept a response.
@@ -22,12 +23,7 @@ export interface Runner {
      * @param path The URL path (can include dynamic segments like /article/:id)
      * @param handler The function to execute when the route is matched
      */
-    addEndpoint(
-        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS",
-        path: string,
-        handler: RouteHandler,
-        middleware?: Middleware[],
-    ): void;
+    addEndpoint(method: HttpMethod, path: string, handler: RouteHandler, middleware?: Middleware[]): void;
 
     /**
      * Adds a global middleware that runs before every request.
@@ -62,11 +58,7 @@ export interface Runner {
      * or asset serving under a prefix that should natively 404 on misses.
      * Subsequent calls replace the previous default.
      */
-    setDefaultEndpoint(
-        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS",
-        handler: RouteHandler,
-        middlewares?: Middleware[],
-    ): void;
+    setDefaultEndpoint(method: HttpMethod, handler: RouteHandler, middlewares?: Middleware[]): void;
 
     /**
      * Returns the TCP-level remote address for an in-flight Request, or

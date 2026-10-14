@@ -1,23 +1,15 @@
 import type { CapabilityErrorDefinition } from "../../../interfaces/ContractRelease";
-import type { CapabilityHttpMethod, CompiledHttpErrorEnvelope } from "../../../interfaces/HttpBinding";
+import type { CompiledHttpErrorEnvelope } from "../../../interfaces/HttpBinding";
 import { ReleaseValidationError } from "../../protocol/errors";
 import { assertJsonCompatible } from "../jsonCompatibility";
 
-export function errorEnvelope(method: CapabilityHttpMethod): CompiledHttpErrorEnvelope {
-    return method === "HEAD"
-        ? {
-              kind: "headers",
-              encoding: "json-percent",
-              codeHeader: "x-ulvia-error-code",
-              requestIdHeader: "x-ulvia-request-id",
-          }
-        : { kind: "json" };
+export function errorEnvelope(): CompiledHttpErrorEnvelope {
+    return { kind: "json" };
 }
 
 export function compileErrorStatuses(
     mappings: Readonly<Record<string, number>>,
     errors: readonly CapabilityErrorDefinition[],
-    method: CapabilityHttpMethod,
     path: string,
 ): Readonly<Record<string, number>> {
     const declared = errors.map((error) => error.code).sort();
@@ -40,13 +32,6 @@ export function compileErrorStatuses(
             );
         }
         if (error.output) {
-            if (method === "HEAD" && error.output.type !== "null") {
-                throw new ReleaseValidationError(
-                    "invalid_binding",
-                    "HEAD error responses require a null output schema",
-                    `${path}.${error.code}.output`,
-                );
-            }
             assertJsonCompatible(error.output, `${path}.${error.code}.output`);
         }
         compiled[error.code] = status;

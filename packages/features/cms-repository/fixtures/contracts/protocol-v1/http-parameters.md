@@ -44,11 +44,11 @@ Headers use this same encoding, not a separate quoting convention.
 
 ## Methods and error envelopes
 
-`GET` and `HEAD` capabilities must be queries and cannot carry request bodies.
-The converse does not hold: a query may use `POST` with a JSON body.
+Query capabilities use bodyless `GET` or JSON-bodied `QUERY`. Command
+capabilities use `POST`, `PUT`, `PATCH` or `DELETE`. A contract cannot declare
+`HEAD`; the Gateway derives it only from a binary `GET` capability.
 
-For `HEAD`, success output is null and error output is absent or null. No
-response body is sent. The compiled response contains:
+For a derived `HEAD`, no response body is sent. The runtime binding contains:
 
 ```ts
 errorEnvelope: {
@@ -65,7 +65,7 @@ business error code must still match its declared HTTP status. Several codes
 may share a status because the code header disambiguates them. These are
 protocol-owned response headers, never user-controlled request mappings.
 
-Other methods retain `errorEnvelope: { kind: "json" }`. This metadata describes
+Declared methods retain `errorEnvelope: { kind: "json" }`. This metadata describes
 the error channel, not a successful operation's final-result representation.
 Actual response production, request-ID generation and response-envelope
 validation belong to the future HTTP adapter; this package defines the plan.

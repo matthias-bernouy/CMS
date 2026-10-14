@@ -1,4 +1,4 @@
-import type { Runner } from "@bernouy/http-runner";
+import type { HttpMethod, Runner } from "@bernouy/http-runner";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
@@ -131,7 +131,7 @@ export class UlviaProvider {
                 );
             }
         });
-        const methods = new Set(routes.map(({ capability }) => capability.binding.method));
+        const methods = new Set<HttpMethod>(routes.map(({ capability }) => capability.binding.method));
         if (
             routes.some(({ capability }) => capability.binding.method === "GET" && capability.output.type === "binary")
         ) {

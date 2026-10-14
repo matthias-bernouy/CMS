@@ -93,7 +93,7 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "POST",
+        "method": "QUERY",
         "path": "/get-migration",
         "input": {
             "body": true

@@ -1,7 +1,7 @@
 import { ReleaseValidationError } from "../protocol/errors";
 import { MEDIA_TYPE_PATTERN } from "../schema/context";
 import type { CapabilityErrorDefinition, CapabilityExecution } from "../../interfaces/ContractRelease";
-import type { CapabilityHttpMethod, CompiledHttpResponse, HttpResponseBinding } from "../../interfaces/HttpBinding";
+import type { CompiledHttpResponse, HttpResponseBinding } from "../../interfaces/HttpBinding";
 import type { UlviaSchema } from "../../interfaces/UlviaSchema";
 import { assertJsonCompatible } from "./jsonCompatibility";
 import { compileErrorStatuses, errorEnvelope } from "./responses/errors";
@@ -11,7 +11,6 @@ export function compileResponse(
     errors: readonly CapabilityErrorDefinition[],
     output: UlviaSchema,
     execution: CapabilityExecution,
-    method: CapabilityHttpMethod,
     path: string,
 ): CompiledHttpResponse {
     const statuses = uniqueSorted(binding.successStatuses, `${path}.successStatuses`);
@@ -19,7 +18,7 @@ export function compileResponse(
         throw new ReleaseValidationError("invalid_binding", "success statuses must be 2xx", `${path}.successStatuses`);
     }
     const contentTypes = [...binding.contentTypes].sort();
-    const errorStatuses = compileErrorStatuses(binding.errorStatuses, errors, method, `${path}.errorStatuses`);
+    const errorStatuses = compileErrorStatuses(binding.errorStatuses, errors, `${path}.errorStatuses`);
     if (
         new Set(contentTypes).size !== contentTypes.length ||
         contentTypes.some((type) => !MEDIA_TYPE_PATTERN.test(type))
@@ -41,29 +40,10 @@ export function compileResponse(
         if (output.type !== "binary") {
             assertJsonCompatible(output, `${path}.output`);
         }
-        return compileOperationResponse(statuses, contentTypes, errorStatuses, method, path);
+        return compileOperationResponse(statuses, contentTypes, errorStatuses, path);
     }
     if (statuses.includes(202)) {
         throw new ReleaseValidationError("invalid_binding", "status 202 requires operation execution", path);
-    }
-    if (method === "HEAD") {
-        if (output.type !== "null" && output.type !== "binary") {
-            throw new ReleaseValidationError(
-                "invalid_binding",
-                "HEAD responses require a null or binary resource output schema",
-                path,
-            );
-        }
-        if (contentTypes.length > 0) {
-            throw new ReleaseValidationError("invalid_binding", "HEAD responses cannot declare content types", path);
-        }
-        return {
-            kind: "result",
-            successStatuses: statuses,
-            contentTypes,
-            errorStatuses,
-            errorEnvelope: errorEnvelope(method),
-        };
     }
     const bodylessStatuses = statuses.filter((status) => status === 204 || status === 205);
     if (bodylessStatuses.length > 0 && contentTypes.length > 0) {
@@ -105,7 +85,7 @@ export function compileResponse(
         successStatuses: statuses,
         contentTypes,
         errorStatuses,
-        errorEnvelope: errorEnvelope(method),
+        errorEnvelope: errorEnvelope(),
     };
 }
 
@@ -113,12 +93,8 @@ function compileOperationResponse(
     statuses: readonly number[],
     contentTypes: readonly string[],
     errorStatuses: Readonly<Record<string, number>>,
-    method: CapabilityHttpMethod,
     path: string,
 ): CompiledHttpResponse {
-    if (method === "HEAD") {
-        throw new ReleaseValidationError("invalid_binding", "operation capabilities cannot use HEAD", path);
-    }
     if (statuses.length !== 1 || statuses[0] !== 202) {
         throw new ReleaseValidationError("invalid_binding", "operation responses must declare only status 202", path);
     }
@@ -134,7 +110,7 @@ function compileOperationResponse(
         successStatuses: statuses,
         contentTypes,
         errorStatuses,
-        errorEnvelope: errorEnvelope(method),
+        errorEnvelope: errorEnvelope(),
     };
 }
 

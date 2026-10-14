@@ -20,6 +20,10 @@ async function example() {
             },
             required: ["items", "next"],
         },
+        binding: {
+            ...capability("item.list").binding,
+            method: "QUERY" as const,
+        },
     };
     const operation = {
         ...capability("item.export"),

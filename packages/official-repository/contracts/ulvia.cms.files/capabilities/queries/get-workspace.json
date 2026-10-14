@@ -86,7 +86,7 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "POST",
+        "method": "QUERY",
         "path": "/workspace.get",
         "input": { "body": true },
         "response": {

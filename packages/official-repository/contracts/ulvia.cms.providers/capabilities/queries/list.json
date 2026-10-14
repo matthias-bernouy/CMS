@@ -123,7 +123,7 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "POST",
+        "method": "GET",
         "path": "/list",
         "input": {},
         "response": {
