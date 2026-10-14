@@ -25,34 +25,19 @@ export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
             }),
         );
     };
-    const trigger = attrs.get("cms-source-trigger")?.value ?? "auto";
-    const automatic = !["submit", "change"].includes(trigger) && !dynamic(trigger);
+    const trigger = attrs.get("cms-source-trigger")?.value ?? "";
     const method = attrs.get("cms-source-method")?.value.trim().toUpperCase();
-    if (automatic && knownMutatingGet(source, sourceAttr.value)) {
+    if (tag.name !== "form") {
         report(
             "cms-source",
-            "source-automatic-mutation",
+            "source-form-owner",
             "ERROR",
-            "This automatic source requests the Control logout endpoint, which clears the authentication cookie on GET.",
-            "Use an explicit logout action or link; do not load this endpoint as page data.",
+            "cms-source is reserved for native form submissions.",
+            "Use cms-query for reads, or move the mutation binding onto its owning native form.",
         );
+        return findings;
     }
     const formSubmission = tag.name === "form" && ["submit", "change"].includes(trigger);
-    if (
-        tag.name !== "form" &&
-        ["submit", "change"].includes(trigger) &&
-        method &&
-        !dynamic(method) &&
-        method !== "GET"
-    ) {
-        report(
-            "cms-source-trigger",
-            "source-trigger-target",
-            "WARNING",
-            `Only a native form serializes controls with ${method}; this element sends cms-source-body when its ancestor form triggers ${trigger}.`,
-            "Move the source and submission attributes onto the native form to submit its controls, or declare the intended cms-source-body explicitly.",
-        );
-    }
     if (!formSubmission) {
         return findings;
     }
@@ -91,15 +76,6 @@ export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
 
 function dynamic(value: string): boolean {
     return value.includes(DYNAMIC_VALUE) || value.includes("{{") || value.includes("#{");
-}
-
-function knownMutatingGet(source: UiSource, value: string): boolean {
-    if (!source.path.replaceAll("\\", "/").startsWith("packages/surfaces/cms-kernel/")) {
-        return false;
-    }
-    // mountRoutes/index.ts mounts GET <basePath>/logout; LocalAuthentication.logout clears its cookie.
-    const url = value.replace(/\s+as\s+[A-Za-z_$][\w$]*\s*$/, "").trim();
-    return /^(?:\{\{\s*BASE_PATH\s*\}\})?\/logout(?:[?#]|$)/.test(url);
 }
 
 function validBody(value: string): boolean {

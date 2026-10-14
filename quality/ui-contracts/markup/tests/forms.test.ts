@@ -5,31 +5,23 @@ const path = "packages/surfaces/cms-kernel/src/core/admin/auth/templates/example
 const inspect = (content: string, file = path) => inspectMarkup({ path: file, content, kind: "html", browser: true });
 
 describe("declarative source form contracts", () => {
-    test("supports automatic source methods while still detecting proven GET mutations", () => {
+    test("reserves sources for native form submissions", () => {
         expect(inspect('<form cms-source="/api/search" cms-source-method="POST"></form>')).toEqual([]);
         expect(
             inspect('<form cms-source="/api/search" cms-source-trigger="submit" cms-source-method="POST"></form>'),
         ).toEqual([]);
-        expect(inspect('<div cms-source="{{BASE_PATH}}/logout?returnTo=/login as result"></div>')[0]).toMatchObject({
+        expect(inspect('<div cms-source="/api/search"></div>')[0]).toMatchObject({
             severity: "ERROR",
-            rule: "source-automatic-mutation",
+            rule: "source-form-owner",
         });
-        for (const value of ["/api/remove", "https://example.test/logout", "/logout-history", "{{ endpoint }}"]) {
-            expect(inspect(`<div cms-source="${value}"></div>`)).toEqual([]);
-        }
-        expect(
-            inspect('<div cms-source="/logout"></div>', "packages/official-repository/example/template.html"),
-        ).toEqual([]);
     });
 
     test("does not confuse static method metadata with dynamic values", () => {
-        expect(inspect('<div cms-source="/api/search" cms-source-method="{{ method }}"></div>')).toEqual([]);
         expect(
             inspect(
                 '<form cms-source="/api/search" cms-source-trigger="{{ trigger }}" cms-source-method="POST"></form>',
             ),
         ).toEqual([]);
-        expect(inspect('<div cms-source="/api/search" cms-source-method="GET"></div>')).toEqual([]);
     });
 
     test("rejects explicit publish/reload self loops, including native success events", () => {
@@ -49,11 +41,11 @@ describe("declarative source form contracts", () => {
         ).toBe("source-publish-reload-loop");
     });
 
-    test("allows other sources to reload and ignores attributes on non-submitting owners", () => {
+    test("allows forms to publish distinct reload events", () => {
         expect(
-            inspect(`<section cms-source="/api/settings" cms-reload-on="settings:saved"></section>
-            <form cms-source="/api/settings" cms-source-trigger="submit" cms-source-publish="settings:saved" cms-reload-on="refresh:form"></form>
-            <div cms-source="/api/read" cms-source-publish="read:done" cms-reload-on="read:done"></div>`),
+            inspect(
+                '<form cms-source="/api/settings" cms-source-trigger="submit" cms-source-publish="settings:saved" cms-reload-on="refresh:form"></form>',
+            ),
         ).toEqual([]);
         expect(
             inspect(
@@ -69,8 +61,8 @@ describe("declarative source form contracts", () => {
             );
         expect(
             body({
-                id: { from: "queryParam", name: "id" },
-                draft: { from: "state", name: "draft" },
+                id: { from: "sync", key: "@param:site-id" },
+                draft: { from: "sync", key: "@page:site-draft" },
                 enabled: { from: "raw", value: false },
                 count: { from: "raw", value: 0 },
             }),
@@ -79,7 +71,7 @@ describe("declarative source form contracts", () => {
             { id: 12 },
             [{ id: 12 }],
             { id: { from: "raw", value: [] } },
-            { id: { from: "queryParam", name: " " } },
+            { id: { from: "sync", key: "@param:site/id" } },
             { id: { from: "raw", value: "" } },
         ]) {
             expect(body(value)[0]).toMatchObject({ severity: "WARNING", rule: "source-body-contract" });

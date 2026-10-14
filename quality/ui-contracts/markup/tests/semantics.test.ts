@@ -4,31 +4,20 @@ import { inspectMarkup } from "../index";
 const inspect = (content: string) => inspectMarkup({ path: "example.html", content, kind: "html", browser: true });
 
 describe("source submission ownership and document events", () => {
-    test("warns when non-form event targets declare a method that only forms submit", () => {
+    test("rejects non-form sources regardless of trigger or method", () => {
         for (const trigger of ["submit", "change"]) {
             for (const method of ["POST", "DELETE", "HEAD"]) {
                 const content = `<form><section cms-source="/api/search" cms-source-trigger="${trigger}" cms-source-method="${method}"></section></form>`;
-                expect(inspect(content)[0]).toMatchObject({ rule: "source-trigger-target", severity: "WARNING" });
-                expect(inspect(content)[0]?.message).toContain(`Only a native form serializes controls with ${method}`);
+                expect(inspect(content)[0]).toMatchObject({ rule: "source-form-owner", severity: "ERROR" });
             }
         }
     });
 
-    test("preserves event-triggered GET refreshes and native form methods", () => {
+    test("preserves native form methods", () => {
         for (const trigger of ["submit", "change"]) {
             expect(
                 inspect(
-                    `<form><section cms-source="/api/search" cms-source-trigger="${trigger}" cms-source-method="GET"></section></form>`,
-                ),
-            ).toEqual([]);
-            expect(
-                inspect(
                     `<form cms-source="/api/search" cms-source-trigger="${trigger}" cms-source-method="HEAD"></form>`,
-                ),
-            ).toEqual([]);
-            expect(
-                inspect(
-                    `<section cms-source="/api/search" cms-source-trigger="${trigger}" cms-source-method="{{ method }}"></section>`,
                 ),
             ).toEqual([]);
         }
@@ -49,11 +38,5 @@ describe("source submission ownership and document events", () => {
             const content = `<form cms-source="/api/save" cms-source-trigger="submit" cms-source-publish="{{ event }}" cms-reload-on="${event}"></form>`;
             expect(inspect(content)[0]).toMatchObject({ rule: "source-publish-reload-loop", severity: "ERROR" });
         }
-    });
-
-    test("non-form GET results do not emit submission success or publication events", () => {
-        const content =
-            '<form><section cms-source="/api/read" cms-source-trigger="change" cms-source-publish="read:done" cms-reload-on="read:done cms-source:success"></section></form>';
-        expect(inspect(content)).toEqual([]);
     });
 });

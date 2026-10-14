@@ -4,9 +4,18 @@ A published page can resolve a dynamic entity through a selected gateway
 capability. The page owns its indexing projection; provider installations do not
 own CMS metadata or sitemap rules. No `/.cms/sources` route is involved.
 
-The page's browser `cms-source` binding calls `/.cms/call/<contractId>/<capabilityId>`
-with `cms-source-method="POST"`. A `cms-source-body` field whose source is a page
-query parameter identifies a candidate in the administration UI. The picker matches selected
+The Page's browser `cms-query` binding identifies
+`<contractId>:<capabilityId> as <alias>`. A `cms-query-input` field whose source
+is a synchronized `@param:` state identifies a candidate in the administration UI:
+
+```html
+<main
+  cms-query="commerce:product.get as product"
+  cms-query-input='{"slug":{"from":"sync","key":"@param:commerce-product"}}'
+></main>
+```
+
+The picker matches selected
 query capabilities with an object output containing a property named like the
 bound input. Saving additionally checks scalar input/identity types and the
 configured projection paths. The UI suggests a candidate when exactly one is
@@ -25,7 +34,7 @@ Page settings store `indexing.enabled` and an optional `indexing.entity`:
   "entity": {
     "contractId": "commerce",
     "label": "Product",
-    "pageQueryParam": "product",
+    "pageQueryParam": "commerce-product",
     "resolve": {
       "capabilityId": "product.get",
       "inputParam": "slug",
@@ -69,13 +78,14 @@ A page with dynamic resolution but no `discover` remains absent from the
 sitemap. Static pages and localized paths keep their existing sitemap behavior.
 The page settings UI exposes the discovery capability, projection fields, and
 pagination. The page config API also accepts the complete `indexing` object.
-Stored Source URNs and Source entity IDs are not accepted by this contract.
+Gateway URLs, Source URNs, and Source entity IDs are not accepted by this
+contract. Candidate detection is transport-independent.
 
 ## Current Limits
 
 Resolution sends one page-query value as a **string**, under the configured
-input key. It does not coerce numeric identities or copy the browser binding's
-other inputs. A schema accepted by the settings validator can therefore still
+input key. It does not coerce numeric identities or copy the browser query's
+other logical inputs. A schema accepted by the settings validator can therefore still
 fail execution when it requires numbers, nested input objects or additional
 required fields. Use a resolver accepting one string identity for this path.
 

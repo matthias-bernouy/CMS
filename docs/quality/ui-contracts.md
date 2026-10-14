@@ -32,17 +32,16 @@ An empty or invalid workspace fails instead of reporting a successful audit.
 | `binding-core-owner` | ERROR / INFO | Only explicitly declared document producers create a `cms-binding-core`. Known producers remain visible as INFO. |
 | `ui.network.http` | WARNING / INFO | Browser HTTP requests require review. Exact documented infrastructure boundaries are INFO. |
 | `ui.network.websocket`, `ui.network.eventsource` | INFO | Review connection ownership and lifecycle; ordinary HTTP binding does not replace these protocols. |
-| `source-automatic-method` | WARNING | Currently flags non-GET automatic sources; its GET-only assumption is stale. See the limitation below. |
-| `source-trigger-target` | WARNING | Flags non-GET event-triggered sources outside native forms; its GET-only message is stale. |
-| `source-automatic-mutation` | ERROR | An automatic source targets a proven mutating GET endpoint (currently logout only). |
+| `source-form-owner` | ERROR | `cms-source` is used outside its native form mutation boundary. Reads must use `cms-query`. |
 | `source-publish-reload-loop` | ERROR | A submitted form reloads on an event its own success emits, causing another submission. |
 | `source-body-contract` | WARNING | A static `cms-source-body` contains descriptors the runtime ignores. |
 
-Binding owns ordinary UI data loading, source parameters, loading/error state,
-submission, and reload coordination. Components retain local interaction such as
+`cms-query` owns ordinary UI data loading and refresh state. Native forms own
+mutations through `cms-source`; `cms-sync` connects declared browser state,
+query inputs, controls, and producer snapshots. Components retain local interaction such as
 focus, selection, drag-and-drop, and rendering third-party canvases. A chart or
-file input does not automatically need its own HTTP client: sources support
-cancellation and submissions support multipart forms and nested field paths.
+file input does not automatically need its own HTTP client: queries support
+cancellation and submissions support native binary values and nested field paths.
 
 The ownership rule is a **CMS application policy**, not a restriction of the
 foundation engine. The engine supports isolated nested cores; that capability and
@@ -52,7 +51,7 @@ its tests remain valid.
 
 A custom element may own and compose children in **light DOM**. Those children
 remain discoverable by the existing document core, so their `cms-source`,
-`cms-repeat`, and `cms-condition` bindings are valid. The markup does not all
+`cms-query`, `cms-repeat`, and `cms-condition` bindings are valid. The markup does not all
 have to be inlined into the page file. Reusable component composition is an
 accepted architecture; being a custom element is not a binding boundary.
 
@@ -128,27 +127,8 @@ This first version is intentionally bounded:
   must be added explicitly; unresolved imports can reduce coverage.
 - HTML tokenization handles quotes, comments, raw text, and common entities; it
   is not a full browser HTML parser.
-- Method diagnostics lag behind the current source engine; they cannot prove
-  that an automatic or event-triggered source ignores its declared method.
 - This version does not validate all endpoint methods, source schemas,
   interpolation, boolean attributes, official component usage, or CSS styles.
   It does not ban `innerHTML`, `createElement`, native controls, or local events.
 
 Re-run the scanner for the current inventory and counts.
-
-## Known Method Diagnostic Drift
-
-The current engine in
-[`Source.ts`](../../packages/features/cms-content/src/browser/binding/source/Source.ts)
-honors automatic `cms-source-method`, including POST JSON reads used by gateway
-queries. The behavior is covered by
-[request parity tests](../../packages/features/cms-content/tests/browser/source/parity/requests.test.ts).
-Only native forms use form serialization; other sources use the ordinary read
-branch with their declared method and body mappings.
-
-The scanner in [forms.ts](../../quality/ui-contracts/markup/forms.ts) still emits
-GET-only explanations for `source-automatic-method` and `source-trigger-target`.
-Treat these messages as stale diagnostics and inspect the actual request path;
-do not rewrite a valid gateway query into GET to satisfy them. Bringing those
-rules into line with the engine remains tooling work. The rules and their
-current severities are documented above as implemented.
