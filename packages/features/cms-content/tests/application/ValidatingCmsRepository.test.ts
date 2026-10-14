@@ -1,6 +1,18 @@
 import { describe, test, expect } from "bun:test";
 import { ValidatingCmsRepository, ContentValidationError, InMemoryCmsRepository } from "@bernouy/cms-content";
 import type { CmsRepository } from "@bernouy/cms-content";
+import type { BindingQueryCapability } from "@bernouy/cms-content/page-document";
+
+const queryCapability: BindingQueryCapability = {
+    contractId: "catalog",
+    capabilityId: "list",
+    output: {
+        type: "object",
+        required: ["items"],
+        properties: { items: { type: "array", items: { type: "string" } } },
+    },
+    errors: [],
+};
 
 /** Capturing inner repo: records what the decorator forwards after validation
  *  + normalization, and answers the ref-existence reads. */
@@ -233,6 +245,35 @@ describe("ValidatingCmsRepository — pages", () => {
         expect(calls.insertPage[0][2]).toContain('slot="actions"');
         expect(calls.updatePage[0].content).toContain('slot="illustration"');
     });
+
+    test("validates Page query bindings against resolved contract schemas", async () => {
+        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+            requireQueryCapabilityResolution: true,
+            resolveQueryCapabilities: async () => [queryCapability],
+        });
+        await repo.createBloc({
+            id: "fixture-query",
+            name: "Query",
+            group: "",
+            description: "",
+            ownership: { kind: "code-managed" },
+            nativeElement: { accepts: ["span"] },
+            viewJS: "customElements.define('fixture-query', class extends HTMLElement {})",
+        });
+
+        await repo.insertPage(
+            "/query",
+            "Query",
+            `<fixture-query>${queryDocument('<span cms-repeat="pages.data.items as item">{{ item }}</span>')}</fixture-query>`,
+        );
+        await expect(
+            repo.insertPage(
+                "/invalid-query",
+                "Invalid query",
+                `<fixture-query>${queryDocument("<span>{{ pages.data.missing }}</span>")}</fixture-query>`,
+            ),
+        ).rejects.toThrow("is not declared by the output schema");
+    });
 });
 
 describe("ValidatingCmsRepository — pass-through", () => {
@@ -243,6 +284,51 @@ describe("ValidatingCmsRepository — pass-through", () => {
 });
 
 describe("ValidatingCmsRepository — blocs", () => {
+    test("validates local query bindings against resolved contract schemas", async () => {
+        const targets: string[] = [];
+        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+            requireQueryCapabilityResolution: true,
+            resolveQueryCapabilities: async (requested) => {
+                targets.push(...requested.map(({ contractId, capabilityId }) => `${contractId}:${capabilityId}`));
+                return [queryCapability];
+            },
+        });
+        const bloc = (body: string) => ({
+            id: "fixture-query",
+            name: "Query",
+            group: "",
+            description: "",
+            ownership: { kind: "code-managed" as const },
+            componentHTML: queryDocument(body),
+            viewJS: "customElements.define('fixture-query', class extends HTMLElement {})",
+        });
+
+        await repo.createBloc(bloc('<p cms-repeat="pages.data.items as item">{{ item }}</p>'));
+        expect(targets).toEqual(["catalog:list"]);
+        await expect(repo.replaceBloc(bloc("<p>{{ pages.data.missing }}</p>"))).rejects.toThrow(
+            "is not declared by the output schema",
+        );
+    });
+
+    test("collects queries from default Bloc content for strict resolution", async () => {
+        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+            requireQueryCapabilityResolution: true,
+            resolveQueryCapabilities: async () => [],
+        });
+        await expect(
+            repo.createBloc({
+                id: "fixture-default-query",
+                name: "Default query",
+                group: "",
+                description: "",
+                ownership: { kind: "code-managed" },
+                viewJS: "customElements.define('fixture-default-query', class extends HTMLElement {})",
+                nativeElement: { accepts: ["span"] },
+                defaultContent: '<span cms-query="catalog:list as pages"></span>',
+            }),
+        ).rejects.toThrow("cannot be resolved to an exact contract schema");
+    });
+
     test("rejects cycles across persisted Bloc dependencies", async () => {
         const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
         const composition = (id: string, compositionHTML: string) => ({
@@ -302,3 +388,13 @@ describe("ValidatingCmsRepository — blocs", () => {
         ).rejects.toThrow("does not declare slot");
     });
 });
+
+function queryDocument(success: string): string {
+    return `<span cms-query="catalog:list as pages">
+        <span cms-match="pages.outcome.kind">
+            <span cms-case='"none"'></span>
+            <span cms-case='"success"'>${success}</span>
+            <span cms-case='"failure"'>Offline</span>
+        </span>
+    </span>`;
+}

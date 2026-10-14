@@ -29,6 +29,7 @@ import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation
 import { validateSettingsPatch } from "cms-content/settings/core/validation";
 import { validateSiteBlocDefinition, validateSiteBlocSnapshot } from "cms-content/blocs/core/validation";
 import { validateBlocArtifact } from "cms-content/application/core/validation/blocArtifact";
+import type { ContentBindingValidationOptions } from "cms-content/application/core/validation/bindingCapabilities";
 /**
  * Decorator that VALIDATES + NORMALIZES every authored-content write before
  * delegating to the wrapped repository — the single, unbypassable barrier so
@@ -40,7 +41,10 @@ import { validateBlocArtifact } from "cms-content/application/core/validation/bl
  *   `new ValidatingCmsRepository(new MongoCmsRepository(db))`
  */
 export class ValidatingCmsRepository implements CmsRepository {
-    constructor(private readonly inner: CmsRepository) {}
+    constructor(
+        private readonly inner: CmsRepository,
+        private readonly bindingValidation: ContentBindingValidationOptions = {},
+    ) {}
     async getContentContributions() {
         return (await this.inner.getContentContributions?.()) ?? { revision: 0, pages: [], texts: [] };
     }
@@ -62,7 +66,7 @@ export class ValidatingCmsRepository implements CmsRepository {
             return this.inner.insertPage(validPath, validTitle, undefined, validOptions);
         }
         const validContent = validatePagePatch({ content }).content!;
-        await assertContentRefsExist(this.inner, validContent);
+        await assertContentRefsExist(this.inner, validContent, this.bindingValidation);
         return this.inner.insertPage(validPath, validTitle, validContent, validOptions);
     }
 
@@ -73,19 +77,19 @@ export class ValidatingCmsRepository implements CmsRepository {
                 ? await this.inner.getPageById(valid.id)
                 : null;
         if (valid.content !== undefined) {
-            await assertContentRefsExist(this.inner, valid.content);
+            await assertContentRefsExist(this.inner, valid.content, this.bindingValidation);
         } else if (valid.visible === true && current) {
-            await assertContentRefsExist(this.inner, current.content);
+            await assertContentRefsExist(this.inner, current.content, this.bindingValidation);
         }
         return this.inner.updatePage(valid, expectedRevision);
     }
 
     // ── Pass-through: blocs (compiled + validated upstream) ────────────────
     async createBloc(bloc: TBlocWrite): Promise<TBloc> {
-        return this.inner.createBloc(await validateBlocArtifact(this.inner, bloc));
+        return this.inner.createBloc(await validateBlocArtifact(this.inner, bloc, this.bindingValidation));
     }
     async replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
-        return this.inner.replaceBloc(await validateBlocArtifact(this.inner, bloc));
+        return this.inner.replaceBloc(await validateBlocArtifact(this.inner, bloc, this.bindingValidation));
     }
     getBlocRecord(tag: string): Promise<BlocRecord | null> {
         return this.inner.getBlocRecord(tag);
@@ -119,7 +123,7 @@ export class ValidatingCmsRepository implements CmsRepository {
     ): Promise<BlocRecord> {
         return this.inner.publishSiteBloc(
             tag,
-            await validateBlocArtifact(this.inner, artifact),
+            await validateBlocArtifact(this.inner, artifact, this.bindingValidation),
             expectedDraftRevision,
             publicationDate,
             publicationGuard,

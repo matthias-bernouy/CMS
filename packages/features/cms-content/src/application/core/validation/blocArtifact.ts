@@ -8,10 +8,18 @@ import type { PageDocumentBlocContract } from "cms-content/blocs/core/markup/val
 import type { TBloc, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
 import { validateBlocWrite } from "cms-content/blocs/core/validation";
 import { assertAcyclicBlocDependencies } from "cms-content/blocs/core/markup/validation/documents/blocDependencyGraph";
+import {
+    resolveBindingAnalysisOptions,
+    type ContentBindingValidationOptions,
+} from "cms-content/application/core/validation/bindingCapabilities";
 
 type BlocCatalogueReader = Pick<CmsRepository, "getBlocsList">;
 
-export async function validateBlocArtifact(repository: BlocCatalogueReader, value: TBlocWrite): Promise<TBloc> {
+export async function validateBlocArtifact(
+    repository: BlocCatalogueReader,
+    value: TBlocWrite,
+    bindingOptions: ContentBindingValidationOptions = {},
+): Promise<TBloc> {
     const bloc = validateBlocWrite(value);
     const catalogueBlocs = (await repository.getBlocsList({ includeInactive: true })).filter(
         ({ id }) => id !== bloc.id,
@@ -28,6 +36,18 @@ export async function validateBlocArtifact(repository: BlocCatalogueReader, valu
         },
         catalogue,
     );
+    if (bindingOptions.resolveQueryCapabilities || bindingOptions.requireQueryCapabilityResolution) {
+        validateBlocDocument(
+            {
+                ...contract,
+                ...(validated.fixedContent === undefined ? {} : { fixedContent: validated.fixedContent }),
+                ...(validated.defaultContent === undefined ? {} : { defaultContent: validated.defaultContent }),
+            },
+            catalogue,
+            [],
+            await resolveBindingAnalysisOptions(validated.queries, bindingOptions),
+        );
+    }
     const artifact: TBloc = {
         ...bloc,
         ...(validated.fixedContent === undefined

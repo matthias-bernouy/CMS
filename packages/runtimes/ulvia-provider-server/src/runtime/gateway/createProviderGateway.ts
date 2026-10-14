@@ -5,27 +5,12 @@ import { DefaultPageExecutionAuthority } from "@bernouy/cms-gateway/execution";
 import { MongoPageExecutionGrantStore } from "@bernouy/cms-gateway/execution/mongo";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
-import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
-import {
-    MongoContractSelectionStore,
-    MongoProviderInstallationStore,
-    MongoProviderManifestCatalogue,
-} from "@bernouy/cms-repository/providers/mongo";
-import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
 import { createSecretResolver } from "@bernouy/secret-store";
 import type { ProviderStores } from "../stores/providerStores";
 import { createProviderGatewayAccess } from "./access";
 
 export async function createProviderGateway(stores: ProviderStores, siteId: string) {
-    const { db } = stores;
-    const releases = new MongoReleaseCatalogue(db);
-    const manifests = new MongoProviderManifestCatalogue(db, releases);
-    const installations = new MongoProviderInstallationStore(db, manifests, () => new Date().toISOString());
-    await installations.init();
-    const selections = new MongoContractSelectionStore(
-        db,
-        new CatalogueSelectionDependencies(releases, manifests, installations),
-    );
+    const { db, releases, manifests, installations, selections } = stores;
     const routes = new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests });
     const pageExecutions = new DefaultPageExecutionAuthority(selections, routes, new MongoPageExecutionGrantStore(db));
     const resolveSecret = createSecretResolver(stores.secrets);

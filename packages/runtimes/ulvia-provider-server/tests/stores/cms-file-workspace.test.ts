@@ -7,7 +7,7 @@ import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import { CmsFileWorkspace } from "../src/runtime/stores/CmsFileWorkspace";
+import { CmsFileWorkspace } from "../../src/runtime/stores/CmsFileWorkspace";
 
 test("the managed file workspace persists its namespace authority without exposing it", async () => {
     const files = new CmsFilesService({
@@ -48,7 +48,7 @@ test("the managed file workspace persists its namespace authority without exposi
 async function officialFilesContract() {
     const path = resolve(
         import.meta.dir,
-        "../../ulvia-cli/src/bootstrap/resources/contracts/cms/ulvia.cms.files/definition.json",
+        "../../../ulvia-cli/src/bootstrap/resources/contracts/cms/ulvia.cms.files/definition.json",
     );
     return (await admitContractReleaseJson(await readFile(path))).release;
 }

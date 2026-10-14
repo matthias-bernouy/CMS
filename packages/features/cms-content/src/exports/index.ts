@@ -287,6 +287,7 @@ export type { ProjectedIndexingDiscoveryItem } from "cms-content/pages/core/inde
 
 // ── Validation (rules live here; the decorator is the unbypassable barrier) ─
 export { ValidatingCmsRepository } from "cms-content/application/core/ValidatingCmsRepository";
+export type { ContentBindingValidationOptions } from "cms-content/application/core/validation/bindingCapabilities";
 export {
     assertContentRefsExist,
     type ContentRefsReader,

@@ -3,5 +3,7 @@ export type {
     BindingAnalysisOptions,
     BindingCapabilityError,
     BindingQueryCapability,
+    BindingQueryCapabilityResolver,
+    BindingQueryTarget,
     BindingValueSchema,
 } from "./types";

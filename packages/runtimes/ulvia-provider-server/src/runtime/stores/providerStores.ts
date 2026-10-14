@@ -35,6 +35,13 @@ import { LocalFsBlobStore } from "@bernouy/blob-store/local-fs";
 import { join } from "node:path";
 import { SharpImageTransformer } from "@bernouy/image-processing/sharp";
 import { MongoIdentityService } from "@bernouy/cms-gateway/identity/mongo";
+import {
+    MongoContractSelectionStore,
+    MongoProviderInstallationStore,
+    MongoProviderManifestCatalogue,
+} from "@bernouy/cms-repository/providers/mongo";
+import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
+import { selectedQueryCapabilityResolver } from "./selectedQueryCapabilities";
 
 const SCOPE_ID = "default";
 
@@ -51,6 +58,14 @@ export async function createProviderStores(env: ProviderStoreConfig) {
     const mongo = new MongoClient(env.MONGO_URL);
     await mongo.connect();
     const db = mongo.db();
+    const releases = new MongoReleaseCatalogue(db);
+    const manifests = new MongoProviderManifestCatalogue(db, releases);
+    const installations = new MongoProviderInstallationStore(db, manifests, () => new Date().toISOString());
+    await installations.init();
+    const selections = new MongoContractSelectionStore(
+        db,
+        new CatalogueSelectionDependencies(releases, manifests, installations),
+    );
 
     const secretCrypto = await createEnvelopeSecretCrypto(db, env.CMS_KEK).catch(async (error) => {
         await mongo.close();
@@ -62,7 +77,7 @@ export async function createProviderStores(env: ProviderStoreConfig) {
     await innerRepo.init();
     const collectionStorage = new MongoCollectionStorage(db);
     await collectionStorage.init();
-    const rawCollections = new CollectionStore(collectionStorage, new MongoReleaseCatalogue(db));
+    const rawCollections = new CollectionStore(collectionStorage, releases);
     const pageRoutes = new MongoPageRouteRegistry(db);
     const pageRouteMutations = new PageRouteMutationCoordinator();
     await synchronizePageRoutes(
@@ -77,6 +92,10 @@ export async function createProviderStores(env: ProviderStoreConfig) {
     });
     const validatedRepo = new ValidatingCmsRepository(
         withInstalledCollections(innerRepo, migrationCollections, SCOPE_ID, pageRoutes),
+        {
+            resolveQueryCapabilities: selectedQueryCapabilityResolver(SCOPE_ID, selections, releases),
+            requireQueryCapabilityResolution: true,
+        },
     );
     await validatePageLinks(validatedRepo, pageRoutes, SCOPE_ID);
     const migrationRepo = withSitePageRoutes(validatedRepo, pageRoutes, SCOPE_ID, pageRouteMutations);
@@ -155,6 +174,10 @@ export async function createProviderStores(env: ProviderStoreConfig) {
         rateLimit,
         secrets,
         identities,
+        releases,
+        manifests,
+        installations,
+        selections,
         sitemapStore: new LocalFsBlobStore(join(env.CMS_FILES_DIR, "sitemaps")),
         close: () => mongo.close(),
     };

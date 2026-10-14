@@ -39,6 +39,8 @@ export {
     type BindingAnalysisOptions,
     type BindingCapabilityError,
     type BindingQueryCapability,
+    type BindingQueryCapabilityResolver,
+    type BindingQueryTarget,
     type BindingValueSchema,
 } from "cms-content/blocs/core/markup/validation/bindingAnalysis";
 export { isUserFacingTextAttribute } from "cms-content/pages/core/rendering/userFacingTextAttributes";

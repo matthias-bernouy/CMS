@@ -31,6 +31,15 @@ export interface BindingQueryCapability {
     readonly errors: readonly BindingCapabilityError[];
 }
 
+export interface BindingQueryTarget {
+    readonly contractId: string;
+    readonly capabilityId: string;
+}
+
+export type BindingQueryCapabilityResolver = (
+    targets: readonly BindingQueryTarget[],
+) => Promise<readonly BindingQueryCapability[]>;
+
 export interface BindingAnalysisOptions {
     readonly capabilities?: readonly BindingQueryCapability[];
     /** When true, every provider query must resolve to an exact supplied capability description. */

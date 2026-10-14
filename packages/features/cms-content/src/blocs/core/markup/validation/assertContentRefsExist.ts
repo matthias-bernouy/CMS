@@ -5,6 +5,10 @@ import { validateStateQueryGraph } from "cms-content/blocs/core/markup/bindings/
 import type { TBloc } from "cms-content/blocs/interfaces/blocs";
 import type { BlocSettings } from "cms-content/pages/interfaces/document";
 import { validatePageDocument } from "cms-content/blocs/core/markup/validation/documents/pageDocument";
+import {
+    resolveBindingAnalysisOptions,
+    type ContentBindingValidationOptions,
+} from "cms-content/application/core/validation/bindingCapabilities";
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {
@@ -24,13 +28,17 @@ export type ContentRefsReader = {
  * Server-side Page grammar gate. Every root is an active Bloc and every child
  * must satisfy the direct parent's managed-native or named-slot contract.
  */
-export async function assertContentRefsExist(repository: ContentRefsReader, content: string): Promise<void> {
+export async function assertContentRefsExist(
+    repository: ContentRefsReader,
+    content: string,
+    bindingOptions: ContentBindingValidationOptions = {},
+): Promise<void> {
     if (!content) {
         return;
     }
 
     const registeredBlocs = await repository.getBlocsList();
-    validatePageDocument(
+    const document = validatePageDocument(
         content,
         registeredBlocs.map((bloc) => ({
             id: bloc.id,
@@ -40,11 +48,24 @@ export async function assertContentRefsExist(repository: ContentRefsReader, cont
             ...(bloc.settings ? { settings: bloc.settings } : {}),
         })),
     );
-    const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
-    document.body.innerHTML = content;
+    if (bindingOptions.resolveQueryCapabilities || bindingOptions.requireQueryCapabilityResolution) {
+        validatePageDocument(
+            document.html,
+            registeredBlocs.map((bloc) => ({
+                id: bloc.id,
+                kind: bloc.compositionHTML === undefined ? "component" : "composition",
+                slots: bloc.slots ?? {},
+                ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
+                ...(bloc.settings ? { settings: bloc.settings } : {}),
+            })),
+            await resolveBindingAnalysisOptions(document.queries, bindingOptions),
+        );
+    }
+    const { document: expandedDocument } = parseHTML("<!DOCTYPE html><html><body></body></html>");
+    expandedDocument.body.innerHTML = document.html;
     try {
-        expandCompositions(document.body, registeredBlocs);
-        validateStateQueryGraph(document.body);
+        expandCompositions(expandedDocument.body, registeredBlocs);
+        validateStateQueryGraph(expandedDocument.body);
     } catch (error) {
         throw new ContentValidationError(
             "content",

@@ -41,6 +41,7 @@ export function validateBlocDocument(
     known.set(bloc.id, bloc);
     const unresolved = new Set(unresolvedBlocs.map(({ id }) => id));
     let fixed: BlocContentMarkupResult | undefined;
+    let defaultResult: BlocContentMarkupResult | undefined;
     let defaultContent: string | undefined;
 
     if (bloc.fixedContent !== undefined) {
@@ -58,6 +59,7 @@ export function validateBlocDocument(
             kind: "default",
             ownerTag: bloc.id,
         });
+        defaultResult = validated;
         defaultContent = validated.html;
         validateDefaultContent(bloc, defaultContent, known, unresolved);
         validateBindings(defaultContent, bindingOptions);
@@ -65,8 +67,8 @@ export function validateBlocDocument(
     return {
         ...(defaultContent === undefined ? {} : { defaultContent }),
         ...(fixed === undefined ? {} : { fixedContent: fixed.html }),
-        queries: fixed?.queries ?? [],
-        sources: fixed?.sources ?? [],
+        queries: [...(fixed?.queries ?? []), ...(defaultResult?.queries ?? [])],
+        sources: [...(fixed?.sources ?? []), ...(defaultResult?.sources ?? [])],
     };
 }
 
