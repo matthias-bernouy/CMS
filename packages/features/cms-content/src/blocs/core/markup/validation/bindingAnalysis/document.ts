@@ -142,6 +142,9 @@ function validateInterpolations(element: Element, scope: BindingScope, facts: Bi
 }
 
 function repeatedVariable(variable: BindingVariable, path: string): BindingVariable {
+    if (variable.kind === "unknown") {
+        return variable;
+    }
     if (variable.kind !== "schema" || variable.schema.type !== "array") {
         throw new ContentValidationError("content", `CMS repeat path ${JSON.stringify(path)} must resolve to an array`);
     }
