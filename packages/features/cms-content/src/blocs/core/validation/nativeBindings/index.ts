@@ -55,13 +55,15 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
         return source && isInternalEndpoint(source.url) ? null : "CMS source must use a same-site endpoint";
     }
     if (name === CMS_BINDING_ATTRIBUTES.sourceSuccessReload) {
-        return isCmsSourceSuccessReload(value) ? null : "CMS source success reload must identify one query by name";
+        return isCmsSourceSuccessReload(value)
+            ? null
+            : "CMS source success reload must identify one to eight unique queries by name";
     }
     if (name === CMS_BINDING_ATTRIBUTES.sourceSerialization) {
         return isCmsSourceSerialization(value) ? null : "CMS source serialization must be typed-json";
     }
     if (name === CMS_BINDING_ATTRIBUTES.formValueType) {
-        return isCmsFormValueType(value) ? null : "CMS form value type must be string, number or boolean";
+        return isCmsFormValueType(value) ? null : "CMS form value type must be string, number, boolean or json";
     }
     if (name === CMS_BINDING_ATTRIBUTES.formEmpty) {
         return isCmsFormEmptyBehavior(value) ? null : "CMS form empty behavior must be null or omit";

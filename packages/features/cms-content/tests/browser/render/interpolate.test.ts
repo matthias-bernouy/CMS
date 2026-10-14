@@ -90,6 +90,11 @@ describe("interpolateString — filters (injected)", () => {
         ).toBe("email=seller%2B2%40example.com");
     });
 
+    test("built-in json serializes structured values without producing markup", () => {
+        expect(interpolateString("{{ value | json }}", s({ value: ["en", "fr"] }))).toBe('["en","fr"]');
+        expect(interpolateString("{{ value | json }}", s({ value: undefined }))).toBe("");
+    });
+
     test("does not let host filters override the system string conversion", () => {
         expect(interpolateString("{{ open | string }}", s({ open: false }), { string: () => "overridden" })).toBe(
             "false",

@@ -5,6 +5,7 @@ import { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenS
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { storedMarkupSecurityIssue } from "cms-content/blocs/core/markup/security/storedMarkupIssue";
 import { parseQuery, parseSource } from "cms-content/blocs/core/markup/bindings";
+import { parseCmsSourceSuccessReload } from "cms-content/blocs/core/validation/nativeBindings/formValues";
 import {
     assertBlocBindingSourceBudget,
     assertBlocDomBudget,
@@ -99,12 +100,14 @@ export function extractQueries(document: Document): readonly ContentQuery[] {
         names.add(query.name);
     }
     for (const form of Array.from(document.querySelectorAll("form[cms-source-success-reload]"))) {
-        const target = form.getAttribute("cms-source-success-reload") ?? "";
-        if (!names.has(target)) {
-            throw new ContentValidationError(
-                "content",
-                `CMS source success reload references unknown query ${JSON.stringify(target)}`,
-            );
+        const targets = parseCmsSourceSuccessReload(form.getAttribute("cms-source-success-reload"));
+        for (const target of targets ?? []) {
+            if (!names.has(target)) {
+                throw new ContentValidationError(
+                    "content",
+                    `CMS source success reload references unknown query ${JSON.stringify(target)}`,
+                );
+            }
         }
     }
     return queries;

@@ -27,7 +27,7 @@ function repository() {
 describe("declarative form contracts", () => {
     test("exposes controlled serialization and control-value helpers", () => {
         expect(CMS_SOURCE_SERIALIZATIONS).toEqual(["typed-json"]);
-        expect(CMS_FORM_VALUE_TYPES).toEqual(["string", "number", "boolean"]);
+        expect(CMS_FORM_VALUE_TYPES).toEqual(["string", "number", "boolean", "json"]);
         expect(CMS_FORM_EMPTY_BEHAVIORS).toEqual(["null", "omit"]);
         expect(isCmsSourceSerialization("typed-json")).toBe(true);
         expect(isCmsSourceSerialization("json")).toBe(false);
@@ -40,7 +40,8 @@ describe("declarative form contracts", () => {
         expect(isCmsFormValueType("object")).toBe(false);
         expect(isCmsFormEmptyBehavior("undefined")).toBe(false);
         expect(isCmsSourceSuccessReload("orderDetail")).toBe(true);
-        for (const value of [null, "", "order-detail", "#detail", "query child", "#{target}", "{{ target }}"]) {
+        expect(isCmsSourceSuccessReload("orderDetail orderList")).toBe(true);
+        for (const value of [null, "", "order-detail", "#detail", "detail detail", "#{target}", "{{ target }}"]) {
             expect(isCmsSourceSuccessReload(value)).toBe(false);
         }
     });
@@ -59,6 +60,7 @@ describe("declarative form contracts", () => {
     test("rejects invalid values and attribute placement at both page-write boundaries", async () => {
         const invalid = [
             form('cms-source-success-reload="detail child"'),
+            form('cms-source-success-reload="detail detail"'),
             form('cms-source-success-reload="{{ target }}"'),
             form('cms-source-serialization="json"'),
             form('cms-source-serialization="typed-json"', "", "GET"),

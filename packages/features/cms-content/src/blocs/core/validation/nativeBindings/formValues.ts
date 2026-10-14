@@ -20,5 +20,18 @@ export function isCmsFormEmptyBehavior(value: string | null): value is CmsFormEm
 }
 
 export function isCmsSourceSuccessReload(value: string | null): boolean {
-    return /^[A-Za-z_][A-Za-z0-9_]*$/.test(value ?? "");
+    return parseCmsSourceSuccessReload(value) !== null;
+}
+
+export function parseCmsSourceSuccessReload(value: string | null): readonly string[] | null {
+    const names = value?.trim().split(/\s+/u).filter(Boolean) ?? [];
+    if (
+        names.length === 0 ||
+        names.length > 8 ||
+        new Set(names).size !== names.length ||
+        names.some((name) => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(name))
+    ) {
+        return null;
+    }
+    return names;
 }

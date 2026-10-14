@@ -44,10 +44,22 @@ export function createBuiltinFilters(locale?: string): FilterMap {
     const normalizedLocale = locale?.trim() || undefined;
     return {
         dateLong: (value) => formatLongDate(value, normalizedLocale),
+        json: (value) => stringifyJson(value),
         minorCurrency: (value, currency) => formatMinorCurrency(value, currency, normalizedLocale),
         string: (value) => stringifyScalar(value),
         urlencode: (value) => encodeURIComponent(value == null ? "" : String(value)),
     };
+}
+
+function stringifyJson(value: unknown): string | undefined {
+    if (value === undefined) {
+        return "";
+    }
+    try {
+        return JSON.stringify(value);
+    } catch {
+        return undefined;
+    }
 }
 
 function stringifyScalar(value: unknown): string | undefined {

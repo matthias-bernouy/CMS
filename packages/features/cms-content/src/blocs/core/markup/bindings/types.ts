@@ -79,7 +79,7 @@ export type CmsQueryRefreshPolicy = {
 };
 
 export const CMS_SOURCE_SERIALIZATIONS = ["typed-json"] as const;
-export const CMS_FORM_VALUE_TYPES = ["string", "number", "boolean"] as const;
+export const CMS_FORM_VALUE_TYPES = ["string", "number", "boolean", "json"] as const;
 export const CMS_FORM_EMPTY_BEHAVIORS = ["null", "omit"] as const;
 export type CmsSourceSerialization = (typeof CMS_SOURCE_SERIALIZATIONS)[number];
 export type CmsFormValueType = (typeof CMS_FORM_VALUE_TYPES)[number];

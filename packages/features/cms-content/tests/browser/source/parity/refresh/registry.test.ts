@@ -12,19 +12,28 @@ afterEach(resetDom);
 function setup() {
     const isolated = document;
     isolated.body.innerHTML =
-        '<cms-binding-core cms-binding-disabled><section cms-query="catalog:get as detail"></section><form cms-source="/save" cms-source-trigger="submit" cms-source-success-reload="detail"></form></cms-binding-core>';
+        '<cms-binding-core cms-binding-disabled><section cms-query="catalog:get as detail"></section><section cms-query="catalog:list as catalogue"></section><form cms-source="/save" cms-source-trigger="submit" cms-source-success-reload="detail"></form></cms-binding-core>';
     const source = isolated.querySelector("section")!;
+    const catalogue = isolated.querySelectorAll("section")[1]!;
     const form = isolated.querySelector("form")!;
-    const state = { calls: 0 };
+    const state = { calls: [] as string[] };
     const stop = connectQueryReload(
         source,
         () => source.getAttribute("cms-query") ?? "",
         async () => {
-            state.calls++;
+            state.calls.push("detail");
             return true;
         },
     );
-    return { source, form, state, stop };
+    const stopCatalogue = connectQueryReload(
+        catalogue,
+        () => catalogue.getAttribute("cms-query") ?? "",
+        async () => {
+            state.calls.push("catalogue");
+            return true;
+        },
+    );
+    return { source, catalogue, form, state, stop, stopCatalogue };
 }
 
 test("reload targets one active read source and rejects replaced or changed selections", async () => {
@@ -36,8 +45,16 @@ test("reload targets one active read source and rejects replaced or changed sele
     source.setAttribute("cms-query", "catalog:get as detail");
     stop();
     expect(await operation.reload()).toBe(false);
-    expect(state.calls).toBe(1);
+    expect(state.calls).toEqual(["detail"]);
     await expect(reloadSource(source)).rejects.toThrow("active");
+});
+
+test("one successful submission can reload a bounded set of unique queries", async () => {
+    const { form, state } = setup();
+    form.setAttribute("cms-source-success-reload", "detail catalogue");
+    const operation = submissionReload(form)!;
+    expect(await operation.reload()).toBe(true);
+    expect(state.calls).toEqual(["detail", "catalogue"]);
 });
 
 test("a disposed registration cannot remove its replacement", async () => {
@@ -50,7 +67,9 @@ test("a disposed registration cannot remove its replacement", async () => {
 test("query names cannot cross cores or match duplicates", () => {
     const { source, form } = setup();
     form.setAttribute("cms-source-success-reload", "bad-name");
-    expect(() => submissionReload(form)).toThrow("query by name");
+    expect(() => submissionReload(form)).toThrow("queries by name");
+    form.setAttribute("cms-source-success-reload", "detail detail");
+    expect(() => submissionReload(form)).toThrow("queries by name");
     form.setAttribute("cms-source-success-reload", "section");
     expect(() => submissionReload(form)).toThrow("one active query");
     form.setAttribute("cms-source-success-reload", "detail");

@@ -1,4 +1,5 @@
 import { parseQuery } from "cms-content/blocs/core/markup/bindings/source";
+import { parseCmsSourceSuccessReload } from "cms-content/blocs/core/validation/nativeBindings/formValues";
 import { BINDING_CORE_TAG, QUERY_ATTR, SOURCE_SUCCESS_RELOAD_ATTR } from "../../../core/attrs";
 
 type Reader = {
@@ -36,14 +37,34 @@ export async function reloadSource(source: Element): Promise<boolean> {
 }
 
 export function submissionReload(form: HTMLFormElement) {
-    const name = form.getAttribute(SOURCE_SUCCESS_RELOAD_ATTR)?.trim();
-    if (!name) {
+    const rawNames = form.getAttribute(SOURCE_SUCCESS_RELOAD_ATTR);
+    if (!rawNames?.trim()) {
         return null;
     }
-    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
-        throw new Error("cms-source-success-reload must identify one query by name.");
+    const names = parseCmsSourceSuccessReload(rawNames);
+    if (!names) {
+        throw new Error("cms-source-success-reload must identify one to eight unique queries by name.");
     }
     const core = form.closest(BINDING_CORE_TAG);
+    const selected = names.map((name) => selectReader(core, name));
+    const source = selected[0]!.source;
+    const current = () => selected.every((selection) => isCurrent(selection));
+    return {
+        source,
+        current,
+        reload: async () => {
+            if (!current()) {
+                return false;
+            }
+            const outcomes = await Promise.all(selected.map(({ reader }) => reader.reload(form)));
+            return outcomes.every(Boolean);
+        },
+    };
+}
+
+type SelectedReader = { source: Element; reader: Reader; url: string; generation: number };
+
+function selectReader(core: Element | null, name: string): SelectedReader {
     const matches = core
         ? Array.from(core.querySelectorAll(`[${QUERY_ATTR}]`)).filter(
               (element) =>
@@ -54,17 +75,21 @@ export function submissionReload(form: HTMLFormElement) {
     const source = matches.length === 1 ? matches[0]! : null;
     const reader = source ? readers.get(source) : undefined;
     if (!source || !reader || source.closest(BINDING_CORE_TAG) !== core || !source.hasAttribute(QUERY_ATTR)) {
-        throw new Error("cms-source-success-reload requires one active query with that name in the same binding core.");
+        throw new Error(`cms-source-success-reload requires one active query named ${JSON.stringify(name)}.`);
     }
     const url = reader.url();
     if (!url) {
-        throw new Error("cms-source-success-reload requires a valid query.");
+        throw new Error(`cms-source-success-reload requires query ${JSON.stringify(name)} to be valid.`);
     }
-    const generation = reader.generation();
-    const current = () =>
+    return { source, reader, url, generation: reader.generation() };
+}
+
+function isCurrent(selection: SelectedReader): boolean {
+    const { source, reader, url, generation } = selection;
+    return (
         source.isConnected &&
         readers.get(source) === reader &&
         reader.url() === url &&
-        reader.generation() === generation;
-    return { source, current, reload: () => (current() ? reader.reload(form) : Promise.resolve(false)) };
+        reader.generation() === generation
+    );
 }
