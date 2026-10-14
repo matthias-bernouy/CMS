@@ -10,56 +10,65 @@
         cms-query-input='{"targets[0][repositoryId]":{"from":"state","key":"@param:ulvia-official-repository"},"targets[0][publisherId]":{"from":"state","key":"@param:ulvia-official-publisher"},"targets[0][collectionId]":{"from":"state","key":"@param:ulvia-official-collection"},"targets[0][version]":{"from":"state","key":"@param:ulvia-official-version"},"targets[0][digest]":{"from":"state","key":"@param:ulvia-official-digest"}}'
         cms-query-listen="@param:ulvia-official-repository @param:ulvia-official-publisher @param:ulvia-official-collection @param:ulvia-official-version @param:ulvia-official-digest"
     >
-        <div cms-condition="plan.loading">{{ cms.i18n.ulvia-official.ui-preparing-migration-plan }}</div>
-        <div cms-condition="plan.error">{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
-        <div cms-condition="plan.loaded">
-        <ulvia-official-stack gap="lg">
-            <ulvia-official-surface slot="items" appearance="elevated" padding="lg">
-                <ulvia-official-stack slot="content" gap="md">
-                    <h2 slot="items">{{ cms.i18n.ulvia-official.ui-plan-summary }}</h2>
-                    <p slot="items">
-                        {{ plan.data.totalPages }} {{ cms.i18n.ulvia-official.ui-pages-9046da16 }}
-                        {{ plan.data.operationCount }} {{ cms.i18n.ulvia-official.ui-operations }}
-                    </p>
-                    <code slot="items">{{ plan.data.planDigest }}</code>
-                    <div slot="items" cms-repeat="plan.data.blockedReasons as reason">{{ reason }}</div>
-                    <form
-                        slot="items"
-                        cms-condition="plan.data.blockedReasons.length === 0"
-                        cms-source="/.cms/call/ulvia.cms.collections/apply-migration"
-                        cms-source-method="POST"
-                        cms-source-trigger="submit"
-                        cms-source-serialization="typed-json"
-                        cms-source-idempotency="auto"
-                        cms-source-success-redirect="/admin/collections"
-                    >
-                        <input
-                            type="hidden"
-                            name="expectedRevision"
-                            value="{{ plan.data.expectedRevision }}"
-                            cms-form-value-type="number"
+        <div cms-condition="plan.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-preparing-migration-plan }}</div>
+        <div cms-match="plan.outcome.kind">
+            <span cms-case='"none"' hidden></span>
+            <div cms-case='"error"' cms-match="plan.outcome.code">
+                <div cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
+                <div cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
+                <div cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
+                <div cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
+            </div>
+            <div cms-case='"success"'>
+            <ulvia-official-stack gap="lg">
+                <ulvia-official-surface slot="items" appearance="elevated" padding="lg">
+                    <ulvia-official-stack slot="content" gap="md">
+                        <h2 slot="items">{{ cms.i18n.ulvia-official.ui-plan-summary }}</h2>
+                        <p slot="items">
+                            {{ plan.data.totalPages }} {{ cms.i18n.ulvia-official.ui-pages-9046da16 }}
+                            {{ plan.data.operationCount }} {{ cms.i18n.ulvia-official.ui-operations }}
+                        </p>
+                        <code slot="items">{{ plan.data.planDigest }}</code>
+                        <div slot="items" cms-repeat="plan.data.blockedReasons as reason">{{ reason }}</div>
+                        <form
+                            slot="items"
+                            cms-condition="plan.data.blockedReasons.length === 0"
+                            cms-source="/.cms/call/ulvia.cms.collections/apply-migration"
+                            cms-source-method="POST"
+                            cms-source-trigger="submit"
+                            cms-source-serialization="typed-json"
+                            cms-source-idempotency="auto"
+                            cms-source-success-redirect="/admin/collections"
                         >
-                        <input type="hidden" name="planDigest" value="{{ plan.data.planDigest }}">
-                        <input type="hidden" name="targets[0][repositoryId]" value="{{ plan.data.references.0.repositoryId }}">
-                        <input type="hidden" name="targets[0][publisherId]" value="{{ plan.data.references.0.publisherId }}">
-                        <input type="hidden" name="targets[0][collectionId]" value="{{ plan.data.references.0.collectionId }}">
-                        <input type="hidden" name="targets[0][version]" value="{{ plan.data.references.0.version }}">
-                        <input type="hidden" name="targets[0][digest]" value="{{ plan.data.references.0.digest }}">
-                        <ulvia-official-form-actions align="end">
-                            <div slot="actions" cms-condition="$source.loading">
-                                {{ cms.i18n.ulvia-official.ui-starting-migration }}
-                            </div>
-                            <div slot="actions" cms-condition="$source.error">
-                                {{ cms.i18n.ulvia-official.ui-request-failed }}
-                            </div>
-                            <ulvia-official-action slot="actions" variant="filled" tone="primary">
-                                <button type="submit">{{ cms.i18n.ulvia-official.ui-apply-migration }}</button>
-                            </ulvia-official-action>
-                        </ulvia-official-form-actions>
-                    </form>
-                </ulvia-official-stack>
-            </ulvia-official-surface>
-        </ulvia-official-stack>
+                            <input
+                                type="hidden"
+                                name="expectedRevision"
+                                value="{{ plan.data.expectedRevision }}"
+                                cms-form-value-type="number"
+                            >
+                            <input type="hidden" name="planDigest" value="{{ plan.data.planDigest }}">
+                            <input type="hidden" name="targets[0][repositoryId]" value="{{ plan.data.references.0.repositoryId }}">
+                            <input type="hidden" name="targets[0][publisherId]" value="{{ plan.data.references.0.publisherId }}">
+                            <input type="hidden" name="targets[0][collectionId]" value="{{ plan.data.references.0.collectionId }}">
+                            <input type="hidden" name="targets[0][version]" value="{{ plan.data.references.0.version }}">
+                            <input type="hidden" name="targets[0][digest]" value="{{ plan.data.references.0.digest }}">
+                            <ulvia-official-form-actions align="end">
+                                <div slot="actions" cms-condition="$source.loading">
+                                    {{ cms.i18n.ulvia-official.ui-starting-migration }}
+                                </div>
+                                <div slot="actions" cms-condition="$source.error">
+                                    {{ cms.i18n.ulvia-official.ui-request-failed }}
+                                </div>
+                                <ulvia-official-action slot="actions" variant="filled" tone="primary">
+                                    <button type="submit">{{ cms.i18n.ulvia-official.ui-apply-migration }}</button>
+                                </ulvia-official-action>
+                            </ulvia-official-form-actions>
+                        </form>
+                    </ulvia-official-stack>
+                </ulvia-official-surface>
+            </ulvia-official-stack>
+            </div>
+            <div cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
         </div>
     </section>
 </ulvia-official-admin-workspace>

@@ -3,197 +3,205 @@
     cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia-official-collection"},"profileId":{"from":"state","key":"@param:ulvia-official-theme-profile","optional":true},"mode":{"from":"state","key":"@param:ulvia-official-theme-mode","optional":true},"tokenId":{"from":"state","key":"@param:ulvia-official-theme-token","optional":true},"search":{"from":"state","key":"@param:ulvia-official-theme-search","optional":true}}'
     cms-query-listen="@param:ulvia-official-collection @param:ulvia-official-theme-profile @param:ulvia-official-theme-mode @param:ulvia-official-theme-token @param:ulvia-official-theme-search"
 >
-    <p role="status" aria-live="polite" cms-condition="collectionTheme.loading">
+    <p role="status" aria-live="polite" cms-condition="collectionTheme.activity === 'fetching'">
         {{ cms.i18n.ulvia-official.ui-working }}
     </p>
-    <p role="alert" cms-condition="collectionTheme.error">
-        {{ cms.i18n.ulvia-official.ui-request-failed }}
-    </p>
-    <ulvia-official-stack cms-condition="collectionTheme.loaded" gap="lg">
-        <header slot="items">
-            <h3>{{ cms.i18n.ulvia-official.ui-collection-theme-editor }}</h3>
-            <p>{{ cms.i18n.ulvia-official.ui-edit-collection-theme-help }}</p>
-        </header>
-        <ulvia-official-surface slot="items" appearance="subtle" padding="lg">
-            <ulvia-official-cluster slot="content" align="end" gap="md">
-                <ulvia-official-field slot="items" label-position="top">
-                    <label slot="label" for="collection-theme-profile">
-                        {{ cms.i18n.ulvia-official.ui-theme-profile }}
-                    </label>
-                    <ulvia-official-select slot="control">
-                        <select id="collection-theme-profile" cms-sync="@param:ulvia-official-theme-profile">
-                            <option
-                                cms-repeat="collectionTheme.data.profiles as profile"
-                                value="{{ profile.id }}"
-                                selected="{{ profile.id === collectionTheme.data.profileId }}"
-                            >{{ profile.name }}</option>
-                        </select>
-                    </ulvia-official-select>
-                </ulvia-official-field>
-                <ulvia-official-field slot="items" label-position="top">
-                    <label slot="label" for="collection-theme-mode">
-                        {{ cms.i18n.ulvia-official.ui-theme-mode }}
-                    </label>
-                    <ulvia-official-select slot="control">
-                        <select id="collection-theme-mode" cms-sync="@param:ulvia-official-theme-mode">
-                            <option value="light" selected="{{ collectionTheme.data.mode === 'light' }}">
-                                {{ cms.i18n.ulvia-official.ui-light }}
-                            </option>
-                            <option
-                                value="dark"
-                                cms-condition="collectionTheme.data.supportsModes"
-                                selected="{{ collectionTheme.data.mode === 'dark' }}"
-                            >
-                                {{ cms.i18n.ulvia-official.ui-dark }}
-                            </option>
-                        </select>
-                    </ulvia-official-select>
-                </ulvia-official-field>
-                <ulvia-official-field slot="items" label-position="top">
-                    <label slot="label" for="collection-theme-search">
-                        {{ cms.i18n.ulvia-official.ui-search-tokens }}
-                    </label>
-                    <ulvia-official-input slot="control">
-                        <input
-                            id="collection-theme-search"
-                            type="search"
-                            cms-sync="@param:ulvia-official-theme-search"
-                            value="{{ collectionTheme.data.search }}"
-                            placeholder="{{ cms.i18n.ulvia-official.ui-search-theme-tokens }}"
-                        >
-                    </ulvia-official-input>
-                </ulvia-official-field>
-            </ulvia-official-cluster>
-        </ulvia-official-surface>
-        <ulvia-official-cluster slot="items" align="center" justify="between">
-            <ulvia-official-badge slot="items" tone="success" cms-condition="collectionTheme.data.profileActive">
-                <span slot="label">{{ cms.i18n.ulvia-official.ui-active-theme }}</span>
-            </ulvia-official-badge>
-            <ulvia-official-badge slot="items" tone="neutral" cms-condition="collectionTheme.data.profileActive === false">
-                <span slot="label">{{ cms.i18n.ulvia-official.ui-draft-theme }}</span>
-            </ulvia-official-badge>
-            <form
-                slot="items"
-                cms-condition="collectionTheme.data.profileActive === false"
-                cms-source="/.cms/call/ulvia.cms.theme/activate as activatedTheme"
-                cms-source-method="POST"
-                cms-source-trigger="submit"
-                cms-source-serialization="typed-json"
-                cms-source-success-reload="collectionTheme"
-            >
-                <input
-                    type="hidden"
-                    name="expectedRevision"
-                    value="{{ collectionTheme.data.revision }}"
-                    cms-form-value-type="number"
-                >
-                <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
-                <ulvia-official-action variant="outline" tone="secondary">
-                    <button type="submit">{{ cms.i18n.ulvia-official.ui-activate-theme }}</button>
-                </ulvia-official-action>
-                <p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-            </form>
-        </ulvia-official-cluster>
-        <p slot="items" cms-condition="collectionTheme.data.sourceFound === false">
-            {{ cms.i18n.ulvia-official.ui-this-collection-publishes-no-theme-catalogue }}
-        </p>
-        <p
-            slot="items"
-            cms-condition="collectionTheme.data.sourceFound &amp;&amp; collectionTheme.data.tokens.length === 0"
-        >
-            {{ cms.i18n.ulvia-official.ui-no-theme-token-matches-current-search }}
-        </p>
-        <ulvia-official-grid slot="items" gap="md" cms-condition="collectionTheme.data.tokens.length">
-            <ulvia-official-surface
-                slot="items"
-                cms-repeat="collectionTheme.data.tokens as token"
-                appearance="outlined"
-                padding="md"
-            >
-                <ulvia-official-stack slot="content" gap="sm">
-                    <span slot="items">{{ token.categoryLabel }}</span>
-                    <strong slot="items">{{ token.label }}</strong>
-                    <code slot="items">{{ token.value }}</code>
-                    <ulvia-official-badge slot="items" tone="info" cms-condition="token.overridden">
-                        <span slot="label">{{ cms.i18n.ulvia-official.ui-overridden }}</span>
-                    </ulvia-official-badge>
-                    <ulvia-official-action slot="items" variant="ghost" tone="secondary" size="sm">
-                        <a
-                            href="/admin/collections/detail?ulvia-official-collection={{ collectionTheme.data.collectionId | urlencode }}&amp;ulvia-official-theme-profile={{ collectionTheme.data.profileId | urlencode }}&amp;ulvia-official-theme-mode={{ collectionTheme.data.mode | urlencode }}&amp;ulvia-official-theme-token={{ token.id | urlencode }}"
-                        >{{ cms.i18n.ulvia-official.ui-edit-token }}</a>
-                    </ulvia-official-action>
-                </ulvia-official-stack>
-            </ulvia-official-surface>
-        </ulvia-official-grid>
-        <ulvia-official-surface slot="items" appearance="elevated" padding="lg" cms-condition="collectionTheme.data.hasToken">
-            <ulvia-official-stack slot="content" gap="md">
-                <header slot="items">
-                    <p>{{ collectionTheme.data.token.categoryLabel }}</p>
-                    <h4>{{ collectionTheme.data.token.label }}</h4>
-                    <p>{{ collectionTheme.data.token.description }}</p>
-                    <code>{{ collectionTheme.data.token.variable }}</code>
-                </header>
-                <form
-                    slot="items"
-                    cms-source="/.cms/call/ulvia.cms.theme/save-token as savedThemeToken"
-                    cms-source-method="POST"
-                    cms-source-trigger="submit"
-                    cms-source-serialization="typed-json"
-                    cms-source-success-reload="collectionTheme"
-                    cms-source-success-reset="false"
-                >
-                    <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
-                    <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
-                    <input type="hidden" name="mode" value="{{ collectionTheme.data.mode }}">
-                    <input type="hidden" name="tokenId" value="{{ collectionTheme.data.token.id }}">
-                    <ulvia-official-stack gap="md">
-                        <ulvia-official-field slot="items" label-position="top">
-                            <label slot="label" for="collection-theme-token-value">
-                                {{ cms.i18n.ulvia-official.ui-token-value }}
-                            </label>
-                            <ulvia-official-input slot="control">
-                                <input
-                                    id="collection-theme-token-value"
-                                    type="text"
-                                    name="value"
-                                    value="{{ collectionTheme.data.token.value }}"
-                                    maxlength="4096"
-                                    required
+    <div cms-match="collectionTheme.outcome.kind">
+        <span cms-case='"none"' hidden></span>
+        <div cms-case='"error"' cms-match="collectionTheme.outcome.code">
+            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                {{ cms.i18n.ulvia-official.ui-request-failed }}
+            </p>
+        </div>
+        <ulvia-official-stack cms-case='"success"' gap="lg">
+            <header slot="items">
+                <h3>{{ cms.i18n.ulvia-official.ui-collection-theme-editor }}</h3>
+                <p>{{ cms.i18n.ulvia-official.ui-edit-collection-theme-help }}</p>
+            </header>
+            <ulvia-official-surface slot="items" appearance="subtle" padding="lg">
+                <ulvia-official-cluster slot="content" align="end" gap="md">
+                    <ulvia-official-field slot="items" label-position="top">
+                        <label slot="label" for="collection-theme-profile">
+                            {{ cms.i18n.ulvia-official.ui-theme-profile }}
+                        </label>
+                        <ulvia-official-select slot="control">
+                            <select id="collection-theme-profile" cms-sync="@param:ulvia-official-theme-profile">
+                                <option
+                                    cms-repeat="collectionTheme.data.profiles as profile"
+                                    value="{{ profile.id }}"
+                                    selected="{{ profile.id === collectionTheme.data.profileId }}"
+                                >{{ profile.name }}</option>
+                            </select>
+                        </ulvia-official-select>
+                    </ulvia-official-field>
+                    <ulvia-official-field slot="items" label-position="top">
+                        <label slot="label" for="collection-theme-mode">
+                            {{ cms.i18n.ulvia-official.ui-theme-mode }}
+                        </label>
+                        <ulvia-official-select slot="control">
+                            <select id="collection-theme-mode" cms-sync="@param:ulvia-official-theme-mode">
+                                <option value="light" selected="{{ collectionTheme.data.mode === 'light' }}">
+                                    {{ cms.i18n.ulvia-official.ui-light }}
+                                </option>
+                                <option
+                                    value="dark"
+                                    cms-condition="collectionTheme.data.supportsModes"
+                                    selected="{{ collectionTheme.data.mode === 'dark' }}"
                                 >
-                            </ulvia-official-input>
-                        </ulvia-official-field>
-                        <ulvia-official-form-actions slot="items" align="end">
-                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
-                                {{ cms.i18n.ulvia-official.ui-theme-value-saved }}
-                            </p>
-                            <p slot="actions" role="alert" cms-condition="$source.error">
-                                {{ cms.i18n.ulvia-official.ui-request-failed }}
-                            </p>
-                            <ulvia-official-action slot="actions" variant="filled" tone="primary">
-                                <button type="submit">{{ cms.i18n.ulvia-official.ui-save-value }}</button>
-                            </ulvia-official-action>
-                        </ulvia-official-form-actions>
-                    </ulvia-official-stack>
-                </form>
+                                    {{ cms.i18n.ulvia-official.ui-dark }}
+                                </option>
+                            </select>
+                        </ulvia-official-select>
+                    </ulvia-official-field>
+                    <ulvia-official-field slot="items" label-position="top">
+                        <label slot="label" for="collection-theme-search">
+                            {{ cms.i18n.ulvia-official.ui-search-tokens }}
+                        </label>
+                        <ulvia-official-input slot="control">
+                            <input
+                                id="collection-theme-search"
+                                type="search"
+                                cms-sync="@param:ulvia-official-theme-search"
+                                value="{{ collectionTheme.data.search }}"
+                                placeholder="{{ cms.i18n.ulvia-official.ui-search-theme-tokens }}"
+                            >
+                        </ulvia-official-input>
+                    </ulvia-official-field>
+                </ulvia-official-cluster>
+            </ulvia-official-surface>
+            <ulvia-official-cluster slot="items" align="center" justify="between">
+                <ulvia-official-badge slot="items" tone="success" cms-condition="collectionTheme.data.profileActive">
+                    <span slot="label">{{ cms.i18n.ulvia-official.ui-active-theme }}</span>
+                </ulvia-official-badge>
+                <ulvia-official-badge slot="items" tone="neutral" cms-condition="collectionTheme.data.profileActive === false">
+                    <span slot="label">{{ cms.i18n.ulvia-official.ui-draft-theme }}</span>
+                </ulvia-official-badge>
                 <form
                     slot="items"
-                    cms-condition="collectionTheme.data.token.overridden"
-                    cms-source="/.cms/call/ulvia.cms.theme/reset-token as resetThemeToken"
+                    cms-condition="collectionTheme.data.profileActive === false"
+                    cms-source="/.cms/call/ulvia.cms.theme/activate as activatedTheme"
                     cms-source-method="POST"
                     cms-source-trigger="submit"
                     cms-source-serialization="typed-json"
                     cms-source-success-reload="collectionTheme"
                 >
-                    <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
+                    <input
+                        type="hidden"
+                        name="expectedRevision"
+                        value="{{ collectionTheme.data.revision }}"
+                        cms-form-value-type="number"
+                    >
                     <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
-                    <input type="hidden" name="mode" value="{{ collectionTheme.data.mode }}">
-                    <input type="hidden" name="tokenId" value="{{ collectionTheme.data.token.id }}">
                     <ulvia-official-action variant="outline" tone="secondary">
-                        <button type="submit">{{ cms.i18n.ulvia-official.ui-reset-to-collection-value }}</button>
+                        <button type="submit">{{ cms.i18n.ulvia-official.ui-activate-theme }}</button>
                     </ulvia-official-action>
                     <p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                 </form>
-            </ulvia-official-stack>
-        </ulvia-official-surface>
-    </ulvia-official-stack>
+            </ulvia-official-cluster>
+            <p slot="items" cms-condition="collectionTheme.data.sourceFound === false">
+                {{ cms.i18n.ulvia-official.ui-this-collection-publishes-no-theme-catalogue }}
+            </p>
+            <p
+                slot="items"
+                cms-condition="collectionTheme.data.sourceFound &amp;&amp; collectionTheme.data.tokens.length === 0"
+            >
+                {{ cms.i18n.ulvia-official.ui-no-theme-token-matches-current-search }}
+            </p>
+            <ulvia-official-grid slot="items" gap="md" cms-condition="collectionTheme.data.tokens.length">
+                <ulvia-official-surface
+                    slot="items"
+                    cms-repeat="collectionTheme.data.tokens as token"
+                    appearance="outlined"
+                    padding="md"
+                >
+                    <ulvia-official-stack slot="content" gap="sm">
+                        <span slot="items">{{ token.categoryLabel }}</span>
+                        <strong slot="items">{{ token.label }}</strong>
+                        <code slot="items">{{ token.value }}</code>
+                        <ulvia-official-badge slot="items" tone="info" cms-condition="token.overridden">
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-overridden }}</span>
+                        </ulvia-official-badge>
+                        <ulvia-official-action slot="items" variant="ghost" tone="secondary" size="sm">
+                            <a
+                                href="/admin/collections/detail?ulvia-official-collection={{ collectionTheme.data.collectionId | urlencode }}&amp;ulvia-official-theme-profile={{ collectionTheme.data.profileId | urlencode }}&amp;ulvia-official-theme-mode={{ collectionTheme.data.mode | urlencode }}&amp;ulvia-official-theme-token={{ token.id | urlencode }}"
+                            >{{ cms.i18n.ulvia-official.ui-edit-token }}</a>
+                        </ulvia-official-action>
+                    </ulvia-official-stack>
+                </ulvia-official-surface>
+            </ulvia-official-grid>
+            <ulvia-official-surface slot="items" appearance="elevated" padding="lg" cms-condition="collectionTheme.data.hasToken">
+                <ulvia-official-stack slot="content" gap="md">
+                    <header slot="items">
+                        <p>{{ collectionTheme.data.token.categoryLabel }}</p>
+                        <h4>{{ collectionTheme.data.token.label }}</h4>
+                        <p>{{ collectionTheme.data.token.description }}</p>
+                        <code>{{ collectionTheme.data.token.variable }}</code>
+                    </header>
+                    <form
+                        slot="items"
+                        cms-source="/.cms/call/ulvia.cms.theme/save-token as savedThemeToken"
+                        cms-source-method="POST"
+                        cms-source-trigger="submit"
+                        cms-source-serialization="typed-json"
+                        cms-source-success-reload="collectionTheme"
+                        cms-source-success-reset="false"
+                    >
+                        <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
+                        <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
+                        <input type="hidden" name="mode" value="{{ collectionTheme.data.mode }}">
+                        <input type="hidden" name="tokenId" value="{{ collectionTheme.data.token.id }}">
+                        <ulvia-official-stack gap="md">
+                            <ulvia-official-field slot="items" label-position="top">
+                                <label slot="label" for="collection-theme-token-value">
+                                    {{ cms.i18n.ulvia-official.ui-token-value }}
+                                </label>
+                                <ulvia-official-input slot="control">
+                                    <input
+                                        id="collection-theme-token-value"
+                                        type="text"
+                                        name="value"
+                                        value="{{ collectionTheme.data.token.value }}"
+                                        maxlength="4096"
+                                        required
+                                    >
+                                </ulvia-official-input>
+                            </ulvia-official-field>
+                            <ulvia-official-form-actions slot="items" align="end">
+                                <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
+                                    {{ cms.i18n.ulvia-official.ui-theme-value-saved }}
+                                </p>
+                                <p slot="actions" role="alert" cms-condition="$source.error">
+                                    {{ cms.i18n.ulvia-official.ui-request-failed }}
+                                </p>
+                                <ulvia-official-action slot="actions" variant="filled" tone="primary">
+                                    <button type="submit">{{ cms.i18n.ulvia-official.ui-save-value }}</button>
+                                </ulvia-official-action>
+                            </ulvia-official-form-actions>
+                        </ulvia-official-stack>
+                    </form>
+                    <form
+                        slot="items"
+                        cms-condition="collectionTheme.data.token.overridden"
+                        cms-source="/.cms/call/ulvia.cms.theme/reset-token as resetThemeToken"
+                        cms-source-method="POST"
+                        cms-source-trigger="submit"
+                        cms-source-serialization="typed-json"
+                        cms-source-success-reload="collectionTheme"
+                    >
+                        <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
+                        <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
+                        <input type="hidden" name="mode" value="{{ collectionTheme.data.mode }}">
+                        <input type="hidden" name="tokenId" value="{{ collectionTheme.data.token.id }}">
+                        <ulvia-official-action variant="outline" tone="secondary">
+                            <button type="submit">{{ cms.i18n.ulvia-official.ui-reset-to-collection-value }}</button>
+                        </ulvia-official-action>
+                        <p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                    </form>
+                </ulvia-official-stack>
+            </ulvia-official-surface>
+        </ulvia-official-stack>
+        <p role="alert" cms-case='"failure"'>
+            {{ cms.i18n.ulvia-official.ui-request-failed }}
+        </p>
+    </div>
 </section>

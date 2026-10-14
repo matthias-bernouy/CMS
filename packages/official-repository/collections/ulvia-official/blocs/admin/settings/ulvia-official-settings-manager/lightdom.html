@@ -10,107 +10,115 @@
         cms-query="ulvia.cms.access:overview as settingsAccess"
         cms-query-input='{"limit":{"from":"literal","value":1}}'
     >
-        <p role="status" aria-live="polite" cms-condition="settingsAccess.loading">
+        <p role="status" aria-live="polite" cms-condition="settingsAccess.activity === 'fetching'">
             {{ cms.i18n.ulvia-official.ui-working }}
         </p>
-        <p role="alert" cms-condition="settingsAccess.error">
-            {{ cms.i18n.ulvia-official.ui-request-failed }}
-        </p>
-        <ulvia-official-surface cms-condition="settingsAccess.loaded" appearance="elevated" padding="lg">
-            <form
-                slot="content"
-                cms-source="/.cms/call/ulvia.cms.access/update-site as savedSite"
-                cms-source-method="POST"
-                cms-source-trigger="submit"
-                cms-source-serialization="typed-json"
-                cms-source-success-reload="settingsAccess settingsLocalization"
-                cms-source-success-reset="false"
-            >
-                <input
-                    type="hidden"
-                    name="expectedRevision"
-                    value="{{ settingsAccess.data.site.revision }}"
-                    cms-form-value-type="number"
+        <div cms-match="settingsAccess.outcome.kind">
+            <span cms-case='"none"' hidden></span>
+            <div cms-case='"error"' cms-match="settingsAccess.outcome.code">
+                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                    {{ cms.i18n.ulvia-official.ui-request-failed }}
+                </p>
+            </div>
+            <ulvia-official-surface cms-case='"success"' appearance="elevated" padding="lg">
+                <form
+                    slot="content"
+                    cms-source="/.cms/call/ulvia.cms.access/update-site as savedSite"
+                    cms-source-method="POST"
+                    cms-source-trigger="submit"
+                    cms-source-serialization="typed-json"
+                    cms-source-success-reload="settingsAccess settingsLocalization"
+                    cms-source-success-reset="false"
                 >
-                <ulvia-official-stack gap="lg">
-                    <header slot="items">
-                        <p>{{ cms.i18n.ulvia-official.ui-site }}</p>
-                        <h3>{{ cms.i18n.ulvia-official.ui-general-settings }}</h3>
-                    </header>
-                    <ulvia-official-field slot="items" label-position="top">
-                        <label slot="label" for="settings-site-name">
-                            {{ cms.i18n.ulvia-official.ui-site-name }}
-                        </label>
-                        <span slot="description">{{ cms.i18n.ulvia-official.ui-site-name-help }}</span>
-                        <ulvia-official-input slot="control">
-                            <input
-                                id="settings-site-name"
-                                type="text"
-                                name="name"
-                                value="{{ settingsAccess.data.site.name }}"
-                                maxlength="160"
-                                autocomplete="organization"
-                                required
-                            >
-                        </ulvia-official-input>
-                    </ulvia-official-field>
-                    <ulvia-official-field slot="items" label-position="top">
-                        <label slot="label" for="settings-public-host">
-                            {{ cms.i18n.ulvia-official.ui-public-host }}
-                        </label>
-                        <span slot="description">{{ cms.i18n.ulvia-official.ui-public-host-help }}</span>
-                        <ulvia-official-input slot="control">
-                            <input
-                                id="settings-public-host"
-                                type="text"
-                                name="host"
-                                value="{{ settingsAccess.data.site.host }}"
-                                placeholder="{{ cms.i18n.ulvia-official.ui-public-host-placeholder }}"
-                                maxlength="2048"
-                                inputmode="url"
-                            >
-                        </ulvia-official-input>
-                    </ulvia-official-field>
-                    <ulvia-official-field slot="items" label-position="top">
-                        <label slot="label" for="settings-site-visibility">
-                            {{ cms.i18n.ulvia-official.ui-site-availability }}
-                        </label>
-                        <span slot="description">{{ cms.i18n.ulvia-official.ui-site-availability-help }}</span>
-                        <ulvia-official-select slot="control">
-                            <select
-                                id="settings-site-visibility"
-                                name="visible"
-                                cms-form-value-type="boolean"
-                            >
-                                <option value="true" selected="{{ settingsAccess.data.site.visible }}">
-                                    {{ cms.i18n.ulvia-official.ui-public }}
-                                </option>
-                                <option
-                                    value="false"
-                                    selected="{{ settingsAccess.data.site.visible === false }}"
+                    <input
+                        type="hidden"
+                        name="expectedRevision"
+                        value="{{ settingsAccess.data.site.revision }}"
+                        cms-form-value-type="number"
+                    >
+                    <ulvia-official-stack gap="lg">
+                        <header slot="items">
+                            <p>{{ cms.i18n.ulvia-official.ui-site }}</p>
+                            <h3>{{ cms.i18n.ulvia-official.ui-general-settings }}</h3>
+                        </header>
+                        <ulvia-official-field slot="items" label-position="top">
+                            <label slot="label" for="settings-site-name">
+                                {{ cms.i18n.ulvia-official.ui-site-name }}
+                            </label>
+                            <span slot="description">{{ cms.i18n.ulvia-official.ui-site-name-help }}</span>
+                            <ulvia-official-input slot="control">
+                                <input
+                                    id="settings-site-name"
+                                    type="text"
+                                    name="name"
+                                    value="{{ settingsAccess.data.site.name }}"
+                                    maxlength="160"
+                                    autocomplete="organization"
+                                    required
                                 >
-                                    {{ cms.i18n.ulvia-official.ui-private }}
-                                </option>
-                            </select>
-                        </ulvia-official-select>
-                    </ulvia-official-field>
-                    <ulvia-official-form-actions slot="items" align="end">
-                        <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">
-                            {{ cms.i18n.ulvia-official.ui-working }}
-                        </p>
-                        <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
-                            {{ cms.i18n.ulvia-official.ui-general-settings-saved }}
-                        </p>
-                        <p slot="actions" role="alert" cms-condition="$source.error">
-                            {{ cms.i18n.ulvia-official.ui-request-failed }}
-                        </p>
-                        <ulvia-official-action slot="actions" variant="filled" tone="primary">
-                            <button type="submit">{{ cms.i18n.ulvia-official.ui-save-general-settings }}</button>
-                        </ulvia-official-action>
-                    </ulvia-official-form-actions>
-                </ulvia-official-stack>
-            </form>
-        </ulvia-official-surface>
+                            </ulvia-official-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field slot="items" label-position="top">
+                            <label slot="label" for="settings-public-host">
+                                {{ cms.i18n.ulvia-official.ui-public-host }}
+                            </label>
+                            <span slot="description">{{ cms.i18n.ulvia-official.ui-public-host-help }}</span>
+                            <ulvia-official-input slot="control">
+                                <input
+                                    id="settings-public-host"
+                                    type="text"
+                                    name="host"
+                                    value="{{ settingsAccess.data.site.host }}"
+                                    placeholder="{{ cms.i18n.ulvia-official.ui-public-host-placeholder }}"
+                                    maxlength="2048"
+                                    inputmode="url"
+                                >
+                            </ulvia-official-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field slot="items" label-position="top">
+                            <label slot="label" for="settings-site-visibility">
+                                {{ cms.i18n.ulvia-official.ui-site-availability }}
+                            </label>
+                            <span slot="description">{{ cms.i18n.ulvia-official.ui-site-availability-help }}</span>
+                            <ulvia-official-select slot="control">
+                                <select
+                                    id="settings-site-visibility"
+                                    name="visible"
+                                    cms-form-value-type="boolean"
+                                >
+                                    <option value="true" selected="{{ settingsAccess.data.site.visible }}">
+                                        {{ cms.i18n.ulvia-official.ui-public }}
+                                    </option>
+                                    <option
+                                        value="false"
+                                        selected="{{ settingsAccess.data.site.visible === false }}"
+                                    >
+                                        {{ cms.i18n.ulvia-official.ui-private }}
+                                    </option>
+                                </select>
+                            </ulvia-official-select>
+                        </ulvia-official-field>
+                        <ulvia-official-form-actions slot="items" align="end">
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">
+                                {{ cms.i18n.ulvia-official.ui-working }}
+                            </p>
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
+                                {{ cms.i18n.ulvia-official.ui-general-settings-saved }}
+                            </p>
+                            <p slot="actions" role="alert" cms-condition="$source.error">
+                                {{ cms.i18n.ulvia-official.ui-request-failed }}
+                            </p>
+                            <ulvia-official-action slot="actions" variant="filled" tone="primary">
+                                <button type="submit">{{ cms.i18n.ulvia-official.ui-save-general-settings }}</button>
+                            </ulvia-official-action>
+                        </ulvia-official-form-actions>
+                    </ulvia-official-stack>
+                </form>
+            </ulvia-official-surface>
+            <p role="alert" cms-case='"failure"'>
+                {{ cms.i18n.ulvia-official.ui-request-failed }}
+            </p>
+        </div>
     </section>
 
     <section
@@ -118,97 +126,105 @@
         slot="items"
         cms-query="ulvia.cms.localization:overview as settingsLocalization"
     >
-        <p role="status" aria-live="polite" cms-condition="settingsLocalization.loading">
+        <p role="status" aria-live="polite" cms-condition="settingsLocalization.activity === 'fetching'">
             {{ cms.i18n.ulvia-official.ui-working }}
         </p>
-        <p role="alert" cms-condition="settingsLocalization.error">
-            {{ cms.i18n.ulvia-official.ui-request-failed }}
-        </p>
-        <ulvia-official-surface cms-condition="settingsLocalization.loaded" appearance="elevated" padding="lg">
-            <form
-                slot="content"
-                cms-source="/.cms/call/ulvia.cms.localization/update-languages as savedLanguages"
-                cms-source-method="POST"
-                cms-source-trigger="submit"
-                cms-source-serialization="typed-json"
-                cms-source-success-reload="settingsLocalization settingsAccess"
-                cms-source-success-reset="false"
-            >
-                <input
-                    type="hidden"
-                    name="expectedRevision"
-                    value="{{ settingsLocalization.data.revision }}"
-                    cms-form-value-type="number"
+        <div cms-match="settingsLocalization.outcome.kind">
+            <span cms-case='"none"' hidden></span>
+            <div cms-case='"error"' cms-match="settingsLocalization.outcome.code">
+                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                    {{ cms.i18n.ulvia-official.ui-request-failed }}
+                </p>
+            </div>
+            <ulvia-official-surface cms-case='"success"' appearance="elevated" padding="lg">
+                <form
+                    slot="content"
+                    cms-source="/.cms/call/ulvia.cms.localization/update-languages as savedLanguages"
+                    cms-source-method="POST"
+                    cms-source-trigger="submit"
+                    cms-source-serialization="typed-json"
+                    cms-source-success-reload="settingsLocalization settingsAccess"
+                    cms-source-success-reset="false"
                 >
-                <ulvia-official-stack gap="lg">
-                    <header slot="items">
-                        <p>{{ cms.i18n.ulvia-official.ui-localization }}</p>
-                        <h3>{{ cms.i18n.ulvia-official.ui-languages }}</h3>
-                        <p>{{ cms.i18n.ulvia-official.ui-site-languages-help }}</p>
-                    </header>
-                    <ulvia-official-field slot="items" label-position="top">
-                        <label slot="label" for="settings-default-language">
-                            {{ cms.i18n.ulvia-official.ui-default-language }}
-                        </label>
-                        <span slot="description">{{ cms.i18n.ulvia-official.ui-default-language-help }}</span>
-                        <ulvia-official-input slot="control">
-                            <input
-                                id="settings-default-language"
-                                type="text"
-                                name="language"
-                                value="{{ settingsLocalization.data.language }}"
-                                maxlength="64"
-                                autocomplete="off"
-                                required
-                            >
-                        </ulvia-official-input>
-                    </ulvia-official-field>
-                    <ulvia-official-field slot="items" label-position="top">
-                        <label slot="label" for="settings-available-languages">
-                            {{ cms.i18n.ulvia-official.ui-available-languages }}
-                        </label>
-                        <span slot="description">{{ cms.i18n.ulvia-official.ui-available-languages-help }}</span>
-                        <ulvia-official-textarea slot="control">
-                            <textarea
-                                id="settings-available-languages"
-                                name="additionalLanguages"
-                                cms-form-value-type="json"
-                                rows="3"
-                                placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
-                            >{{ settingsLocalization.data.additionalLanguages | json }}</textarea>
-                        </ulvia-official-textarea>
-                    </ulvia-official-field>
-                    <ulvia-official-field slot="items" label-position="top">
-                        <label slot="label" for="settings-active-languages">
-                            {{ cms.i18n.ulvia-official.ui-active-languages }}
-                        </label>
-                        <span slot="description">{{ cms.i18n.ulvia-official.ui-active-languages-help }}</span>
-                        <ulvia-official-textarea slot="control">
-                            <textarea
-                                id="settings-active-languages"
-                                name="activeLanguages"
-                                cms-form-value-type="json"
-                                rows="3"
-                                placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
-                            >{{ settingsLocalization.data.activeLanguages | json }}</textarea>
-                        </ulvia-official-textarea>
-                    </ulvia-official-field>
-                    <ulvia-official-form-actions slot="items" align="end">
-                        <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">
-                            {{ cms.i18n.ulvia-official.ui-working }}
-                        </p>
-                        <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
-                            {{ cms.i18n.ulvia-official.ui-languages-saved }}
-                        </p>
-                        <p slot="actions" role="alert" cms-condition="$source.error">
-                            {{ cms.i18n.ulvia-official.ui-request-failed }}
-                        </p>
-                        <ulvia-official-action slot="actions" variant="filled" tone="primary">
-                            <button type="submit">{{ cms.i18n.ulvia-official.ui-save-languages }}</button>
-                        </ulvia-official-action>
-                    </ulvia-official-form-actions>
-                </ulvia-official-stack>
-            </form>
-        </ulvia-official-surface>
+                    <input
+                        type="hidden"
+                        name="expectedRevision"
+                        value="{{ settingsLocalization.data.revision }}"
+                        cms-form-value-type="number"
+                    >
+                    <ulvia-official-stack gap="lg">
+                        <header slot="items">
+                            <p>{{ cms.i18n.ulvia-official.ui-localization }}</p>
+                            <h3>{{ cms.i18n.ulvia-official.ui-languages }}</h3>
+                            <p>{{ cms.i18n.ulvia-official.ui-site-languages-help }}</p>
+                        </header>
+                        <ulvia-official-field slot="items" label-position="top">
+                            <label slot="label" for="settings-default-language">
+                                {{ cms.i18n.ulvia-official.ui-default-language }}
+                            </label>
+                            <span slot="description">{{ cms.i18n.ulvia-official.ui-default-language-help }}</span>
+                            <ulvia-official-input slot="control">
+                                <input
+                                    id="settings-default-language"
+                                    type="text"
+                                    name="language"
+                                    value="{{ settingsLocalization.data.language }}"
+                                    maxlength="64"
+                                    autocomplete="off"
+                                    required
+                                >
+                            </ulvia-official-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field slot="items" label-position="top">
+                            <label slot="label" for="settings-available-languages">
+                                {{ cms.i18n.ulvia-official.ui-available-languages }}
+                            </label>
+                            <span slot="description">{{ cms.i18n.ulvia-official.ui-available-languages-help }}</span>
+                            <ulvia-official-textarea slot="control">
+                                <textarea
+                                    id="settings-available-languages"
+                                    name="additionalLanguages"
+                                    cms-form-value-type="json"
+                                    rows="3"
+                                    placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
+                                >{{ settingsLocalization.data.additionalLanguages | json }}</textarea>
+                            </ulvia-official-textarea>
+                        </ulvia-official-field>
+                        <ulvia-official-field slot="items" label-position="top">
+                            <label slot="label" for="settings-active-languages">
+                                {{ cms.i18n.ulvia-official.ui-active-languages }}
+                            </label>
+                            <span slot="description">{{ cms.i18n.ulvia-official.ui-active-languages-help }}</span>
+                            <ulvia-official-textarea slot="control">
+                                <textarea
+                                    id="settings-active-languages"
+                                    name="activeLanguages"
+                                    cms-form-value-type="json"
+                                    rows="3"
+                                    placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
+                                >{{ settingsLocalization.data.activeLanguages | json }}</textarea>
+                            </ulvia-official-textarea>
+                        </ulvia-official-field>
+                        <ulvia-official-form-actions slot="items" align="end">
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">
+                                {{ cms.i18n.ulvia-official.ui-working }}
+                            </p>
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
+                                {{ cms.i18n.ulvia-official.ui-languages-saved }}
+                            </p>
+                            <p slot="actions" role="alert" cms-condition="$source.error">
+                                {{ cms.i18n.ulvia-official.ui-request-failed }}
+                            </p>
+                            <ulvia-official-action slot="actions" variant="filled" tone="primary">
+                                <button type="submit">{{ cms.i18n.ulvia-official.ui-save-languages }}</button>
+                            </ulvia-official-action>
+                        </ulvia-official-form-actions>
+                    </ulvia-official-stack>
+                </form>
+            </ulvia-official-surface>
+            <p role="alert" cms-case='"failure"'>
+                {{ cms.i18n.ulvia-official.ui-request-failed }}
+            </p>
+        </div>
     </section>
 </ulvia-official-stack>
