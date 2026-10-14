@@ -1,4 +1,6 @@
 import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
+import { interpolationExpressions } from "cms-content/blocs/core/markup/bindings/source";
+import { parseBindingExpression } from "cms-content/blocs/core/markup/expression/parser";
 import { boundAttributeValueIssue } from "cms-content/blocs/core/markup/validation/contracts/attributeBindings";
 import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
 import { nativeAttributeBindingKind } from "cms-content/blocs/core/validation/nativeHtml";
@@ -52,6 +54,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
         isContributedAssetSource(value) &&
         ((normalizedTag === "a" && normalizedAttribute === "href") ||
             (normalizedTag === "img" && normalizedAttribute === "src"));
+    if (normalizedTag === "a" && normalizedAttribute === "href" && DYNAMIC_TOKEN.test(value) && !contributedAssetUrl) {
+        return dynamicInternalHrefIssue(value);
+    }
     if (DYNAMIC_TOKEN.test(value) && isRuntimeBoundNativeAttribute(normalizedTag, normalizedAttribute)) {
         const issue = boundAttributeValueIssue(value, nativeAttributeBindingKind(normalizedAttribute));
         return issue === undefined ? `attribute "${attribute}" only accepts {{ expression }} bindings` : issue;
@@ -110,6 +115,34 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     }
     if (normalizedTag === "svg") {
         return svgAttributeIssue(normalizedAttribute, value);
+    }
+    return null;
+}
+
+function dynamicInternalHrefIssue(value: string): string | null {
+    if (CONTROL_CHARACTER.test(value) || value.includes("#{") || value.includes("@{")) {
+        return "dynamic native links require controlled interpolation";
+    }
+    const expressions = interpolationExpressions(value);
+    if (!expressions) {
+        return "dynamic native link interpolation is invalid";
+    }
+    const firstToken = value.indexOf("{{");
+    const query = value.indexOf("?");
+    const fragment = value.indexOf("#");
+    const dynamicBoundary = query === -1 ? fragment : fragment === -1 ? query : Math.min(query, fragment);
+    if (!value.startsWith("/") || value.startsWith("//") || dynamicBoundary === -1 || firstToken < dynamicBoundary) {
+        return "dynamic native links require a static same-site path";
+    }
+    try {
+        for (const expression of expressions) {
+            const node = parseBindingExpression(expression);
+            if (node.kind !== "filter" || node.name !== "urlencode" || node.argument) {
+                return "dynamic native link values require the urlencode filter";
+            }
+        }
+    } catch {
+        return "dynamic native link interpolation is invalid";
     }
     return null;
 }

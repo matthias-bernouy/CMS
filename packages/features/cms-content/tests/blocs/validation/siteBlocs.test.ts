@@ -146,6 +146,47 @@ describe("site bloc validation", () => {
         }
     });
 
+    test("accepts automatic idempotency only on submitted forms", () => {
+        expect(() =>
+            validateSiteBlocSnapshot(
+                siteBlocSnapshot({
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "form",
+                            attributes: {
+                                "cms-source": "/.cms/call/catalog/apply",
+                                "cms-source-method": "POST",
+                                "cms-source-trigger": "submit",
+                                "cms-source-idempotency": "auto",
+                            },
+                            children: [],
+                        },
+                    ],
+                }),
+            ),
+        ).not.toThrow();
+        expect(() =>
+            validateSiteBlocSnapshot(
+                siteBlocSnapshot({
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "form",
+                            attributes: {
+                                "cms-source": "/.cms/call/catalog/apply",
+                                "cms-source-method": "POST",
+                                "cms-source-trigger": "submit",
+                                "cms-source-idempotency": "manual",
+                            },
+                            children: [],
+                        },
+                    ],
+                }),
+            ),
+        ).toThrow(/idempotency/);
+    });
+
     test("rejects unknown slots, duplicate ids, self references, and invalid public names", () => {
         expect(() =>
             validateSiteBlocSnapshot(siteBlocSnapshot({ structure: [{ kind: "slot", slotId: "missing" }] })),

@@ -15,6 +15,7 @@ export const CMS_BINDING_ATTRIBUTES = {
     sourceBody: "cms-source-body",
     sourceDelay: "cms-source-delay",
     sourceInheritQuery: "cms-source-inherit-query",
+    sourceIdempotency: "cms-source-idempotency",
     sourceId: "cms-source-id",
     sourceMethod: "cms-source-method",
     sourcePublish: "cms-source-publish",

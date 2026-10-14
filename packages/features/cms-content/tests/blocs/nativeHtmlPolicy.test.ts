@@ -283,4 +283,42 @@ describe("platform native HTML policy", () => {
             ).toThrow("static value");
         }
     });
+
+    test("accepts encoded bindings only in query values of same-site links", () => {
+        expect(() =>
+            validateSiteBlocSnapshot(
+                siteBlocSnapshot({
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "a",
+                            attributes: { href: "/admin/details?id={{ item.id | urlencode }}" },
+                            children: [{ kind: "text", value: "Details" }],
+                        },
+                    ],
+                }),
+            ),
+        ).not.toThrow();
+
+        for (const href of [
+            "/admin/{{ item.id | urlencode }}",
+            "/admin/details?id={{ item.id }}",
+            "//example.test/details?id={{ item.id | urlencode }}",
+        ]) {
+            expect(() =>
+                validateSiteBlocSnapshot(
+                    siteBlocSnapshot({
+                        structure: [
+                            {
+                                kind: "bloc",
+                                tag: "a",
+                                attributes: { href },
+                                children: [{ kind: "text", value: "Details" }],
+                            },
+                        ],
+                    }),
+                ),
+            ).toThrow(/dynamic native link/);
+        }
+    });
 });

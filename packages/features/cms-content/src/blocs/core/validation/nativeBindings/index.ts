@@ -62,6 +62,9 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     if (name === CMS_BINDING_ATTRIBUTES.sourceSerialization) {
         return isCmsSourceSerialization(value) ? null : "CMS source serialization must be typed-json";
     }
+    if (name === CMS_BINDING_ATTRIBUTES.sourceIdempotency) {
+        return value === "auto" ? null : "CMS source idempotency must be auto";
+    }
     if (name === CMS_BINDING_ATTRIBUTES.formValueType) {
         return isCmsFormValueType(value) ? null : "CMS form value type must be string, number, boolean or json";
     }
@@ -145,7 +148,11 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
             return `CMS query attribute "${name}" requires cms-query`;
         }
     }
-    for (const name of [CMS_BINDING_ATTRIBUTES.sourceSerialization, CMS_BINDING_ATTRIBUTES.sourceSuccessReload]) {
+    for (const name of [
+        CMS_BINDING_ATTRIBUTES.sourceIdempotency,
+        CMS_BINDING_ATTRIBUTES.sourceSerialization,
+        CMS_BINDING_ATTRIBUTES.sourceSuccessReload,
+    ]) {
         if (attributes[name] !== undefined && tag !== "form") {
             return `CMS submission attribute "${name}" requires a form`;
         }
