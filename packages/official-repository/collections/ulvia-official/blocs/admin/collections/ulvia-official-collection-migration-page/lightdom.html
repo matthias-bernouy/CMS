@@ -1,0 +1,64 @@
+<ulvia-official-admin-workspace>
+    <h1 slot="title">{{ cms.i18n.ulvia-official.ui-migration-preview }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-review-the-plan-before-applying-the-migration }}</p>
+    <ulvia-official-action slot="actions" variant="outline" tone="secondary">
+        <a href="/admin/collections">{{ cms.i18n.ulvia-official.ui-back-to-collections }}</a>
+    </ulvia-official-action>
+    <section
+        slot="content"
+        cms-query="ulvia.cms.collections:plan-migration as plan"
+        cms-query-input='{"targets[0][repositoryId]":{"from":"queryParam","name":"repository"},"targets[0][publisherId]":{"from":"queryParam","name":"publisher"},"targets[0][collectionId]":{"from":"queryParam","name":"collection"},"targets[0][version]":{"from":"queryParam","name":"version"},"targets[0][digest]":{"from":"queryParam","name":"digest"}}'
+    >
+        <div cms-condition="plan.loading">{{ cms.i18n.ulvia-official.ui-preparing-migration-plan }}</div>
+        <div cms-condition="plan.error">{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
+        <div cms-condition="plan.loaded">
+        <ulvia-official-stack gap="lg">
+            <ulvia-official-surface slot="items" appearance="elevated" padding="lg">
+                <ulvia-official-stack slot="content" gap="md">
+                    <h2 slot="items">{{ cms.i18n.ulvia-official.ui-plan-summary }}</h2>
+                    <p slot="items">
+                        {{ plan.data.totalPages }} {{ cms.i18n.ulvia-official.ui-pages-9046da16 }}
+                        {{ plan.data.operationCount }} {{ cms.i18n.ulvia-official.ui-operations }}
+                    </p>
+                    <code slot="items">{{ plan.data.planDigest }}</code>
+                    <div slot="items" cms-repeat="plan.data.blockedReasons as reason">{{ reason }}</div>
+                    <form
+                        slot="items"
+                        cms-condition="plan.data.blockedReasons.length === 0"
+                        cms-source="/.cms/call/ulvia.cms.collections/apply-migration"
+                        cms-source-method="POST"
+                        cms-source-trigger="submit"
+                        cms-source-serialization="typed-json"
+                        cms-source-idempotency="auto"
+                        cms-source-success-redirect="/admin/collections"
+                    >
+                        <input
+                            type="hidden"
+                            name="expectedRevision"
+                            value="{{ plan.data.expectedRevision }}"
+                            cms-form-value-type="number"
+                        >
+                        <input type="hidden" name="planDigest" value="{{ plan.data.planDigest }}">
+                        <input type="hidden" name="targets[0][repositoryId]" value="{{ plan.data.references.0.repositoryId }}">
+                        <input type="hidden" name="targets[0][publisherId]" value="{{ plan.data.references.0.publisherId }}">
+                        <input type="hidden" name="targets[0][collectionId]" value="{{ plan.data.references.0.collectionId }}">
+                        <input type="hidden" name="targets[0][version]" value="{{ plan.data.references.0.version }}">
+                        <input type="hidden" name="targets[0][digest]" value="{{ plan.data.references.0.digest }}">
+                        <ulvia-official-form-actions align="end">
+                            <div slot="actions" cms-condition="$source.loading">
+                                {{ cms.i18n.ulvia-official.ui-starting-migration }}
+                            </div>
+                            <div slot="actions" cms-condition="$source.error">
+                                {{ cms.i18n.ulvia-official.ui-request-failed }}
+                            </div>
+                            <ulvia-official-action slot="actions" variant="filled" tone="primary">
+                                <button type="submit">{{ cms.i18n.ulvia-official.ui-apply-migration }}</button>
+                            </ulvia-official-action>
+                        </ulvia-official-form-actions>
+                    </form>
+                </ulvia-official-stack>
+            </ulvia-official-surface>
+        </ulvia-official-stack>
+        </div>
+    </section>
+</ulvia-official-admin-workspace>

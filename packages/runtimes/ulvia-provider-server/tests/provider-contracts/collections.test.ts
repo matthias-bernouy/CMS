@@ -38,7 +38,10 @@ test("collection catalogue stages only the exact repository release", async () =
     };
     const sources = new CollectionSources(store as never, [source]);
 
-    expect(await sources.catalogue("default")).toMatchObject({ revision: 4, releases: [entry] });
+    expect(await sources.catalogue("default")).toMatchObject({
+        revision: 4,
+        releases: [{ ...entry, action: "install" }],
+    });
     expect(await sources.stage([reference])).toEqual([{ digest, repositoryId: "official" }]);
     expect(importRelease).toHaveBeenCalledTimes(1);
     await expect(sources.stage([{ ...reference, digest: `sha256:${"b".repeat(64)}` }])).rejects.toMatchObject({

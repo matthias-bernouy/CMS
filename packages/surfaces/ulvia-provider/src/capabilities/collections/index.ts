@@ -101,15 +101,17 @@ export function registerCollectionCapabilities(
         }),
     );
     dispatcher.register("ulvia.cms.collections", "plan-migration", async (input, context) =>
-        collectionCommand(async () =>
-            projectMigrationPlan(
+        collectionCommand(async () => {
+            const references = structuredClone(input.targets);
+            return projectMigrationPlan(
                 await dependencies.collectionMigrations.plan(
                     context.siteId,
                     await collectionTargets(input.targets, sources),
-                    integer(input.expectedRevision),
+                    await dependencies.collections.revision(context.siteId),
                 ),
-            ),
-        ),
+                references,
+            );
+        }),
     );
     dispatcher.register("ulvia.cms.collections", "migration-status", async (input, context) => {
         const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 20;

@@ -1,0 +1,30 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-collection-detail-page",
+    "label": "bloc.collection-detail-page.label",
+    "description": "bloc.collection-detail-page.description",
+    "category": "bloc.category.administration",
+    "order": 11,
+    "internal": true,
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-admin-workspace",
+        "ulvia-official-collection-texts",
+        "ulvia-official-collection-theme",
+        "ulvia-official-field",
+        "ulvia-official-form-actions",
+        "ulvia-official-grid",
+        "ulvia-official-stack",
+        "ulvia-official-surface",
+        "ulvia-official-textarea"
+    ],
+    "requires": [
+        { "contractId": "ulvia.cms.collections", "capabilityId": "get", "versionRange": "^1.0.0" },
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "update-configuration",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {}
+}

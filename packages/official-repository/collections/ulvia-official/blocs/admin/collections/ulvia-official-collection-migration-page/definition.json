@@ -1,0 +1,29 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-collection-migration-page",
+    "label": "bloc.collection-migration-page.label",
+    "description": "bloc.collection-migration-page.description",
+    "category": "bloc.category.administration",
+    "order": 12,
+    "internal": true,
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-admin-workspace",
+        "ulvia-official-form-actions",
+        "ulvia-official-stack",
+        "ulvia-official-surface"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "plan-migration",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "apply-migration",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {}
+}

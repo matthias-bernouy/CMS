@@ -1,0 +1,7 @@
+{
+    "id": "collection-details",
+    "defaultPath": "/admin/collections/detail",
+    "name": "page.collection-details.name",
+    "description": "page.collection-details.description",
+    "requires": []
+}

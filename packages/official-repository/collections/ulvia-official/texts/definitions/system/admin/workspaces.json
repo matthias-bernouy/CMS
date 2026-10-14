@@ -106,5 +106,215 @@
         "label": "text.ui-selected-contracts.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-available-releases",
+        "label": "text.ui-available-releases.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-collection-catalogue-unavailable",
+        "label": "text.ui-collection-catalogue-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-historical-release",
+        "label": "text.ui-historical-release.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-install",
+        "label": "text.ui-install.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-installed",
+        "label": "text.ui-installed.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-installed-collections",
+        "label": "text.ui-installed-collections.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-installed-collections-count",
+        "label": "text.ui-installed-collections-count.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-installing",
+        "label": "text.ui-installing.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-manage",
+        "label": "text.ui-manage.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-migration-status",
+        "label": "text.ui-migration-status.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-no-collection-is-installed",
+        "label": "text.ui-no-collection-is-installed.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-no-repository-release-is-available",
+        "label": "text.ui-no-repository-release-is-available.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-plan-migration",
+        "label": "text.ui-plan-migration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-reading-collection-catalogue",
+        "label": "text.ui-reading-collection-catalogue.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-recent-activity",
+        "label": "text.ui-recent-activity.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-repository-releases",
+        "label": "text.ui-repository-releases.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-try-compatible-upgrade",
+        "label": "text.ui-try-compatible-upgrade.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-apply-migration",
+        "label": "text.ui-apply-migration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-assets",
+        "label": "text.ui-assets.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-back-to-collections",
+        "label": "text.ui-back-to-collections.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-collection-configuration",
+        "label": "text.ui-collection-configuration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-collection-details",
+        "label": "text.ui-collection-details.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-collection-details-unavailable",
+        "label": "text.ui-collection-details-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-configuration-json",
+        "label": "text.ui-configuration-json.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-generation",
+        "label": "text.ui-generation.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-migration-plan-unavailable",
+        "label": "text.ui-migration-plan-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-migration-preview",
+        "label": "text.ui-migration-preview.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-plan-summary",
+        "label": "text.ui-plan-summary.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-preparing-migration-plan",
+        "label": "text.ui-preparing-migration-plan.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-reading-collection-details",
+        "label": "text.ui-reading-collection-details.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-review-the-installed-collection-and-its-resources",
+        "label": "text.ui-review-the-installed-collection-and-its-resources.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-review-the-plan-before-applying-the-migration",
+        "label": "text.ui-review-the-plan-before-applying-the-migration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-starting-migration",
+        "label": "text.ui-starting-migration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-texts",
+        "label": "text.ui-texts.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-this-collection-publishes-no-blocks",
+        "label": "text.ui-this-collection-publishes-no-blocks.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
     }
 ]

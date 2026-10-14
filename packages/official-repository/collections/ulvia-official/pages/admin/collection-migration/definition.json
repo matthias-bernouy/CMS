@@ -1,0 +1,7 @@
+{
+    "id": "collection-migration",
+    "defaultPath": "/admin/collections/migration",
+    "name": "page.collection-migration.name",
+    "description": "page.collection-migration.description",
+    "requires": []
+}

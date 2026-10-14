@@ -1,4 +1,5 @@
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
+import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { ProviderCapabilityDispatchError } from "../../dispatch/registry";
 import type { CmsCollectionDependencies } from "../../ports";
 import { requiredText } from "./support";
@@ -34,10 +35,14 @@ export class CollectionSources {
         if (releases.length > MAX_CATALOGUE_RELEASES) {
             throw new ProviderCapabilityDispatchError("CATALOGUE_TOO_LARGE", 422);
         }
+        const installed = new Map(snapshot.collections.map((item) => [item.collectionId, item]));
         return {
             revision: snapshot.revision,
             repositories: [...this.byId.keys()],
-            releases,
+            releases: releases.map((release) => ({
+                ...release,
+                action: releaseAction(release, installed.get(release.collectionId)),
+            })),
             installed: snapshot.collections.map(({ collectionId, digest, repositoryId, release }) => ({
                 collectionId,
                 publisherId: release.publisherId,
@@ -79,6 +84,21 @@ export class CollectionSources {
             }),
         );
     }
+}
+
+function releaseAction(
+    release: { digest: string; version: string },
+    installed:
+        | Awaited<ReturnType<CmsCollectionDependencies["collections"]["snapshot"]>>["collections"][number]
+        | undefined,
+): "install" | "upgrade" | "current" | "older" {
+    if (!installed) {
+        return "install";
+    }
+    if (installed.digest === release.digest) {
+        return "current";
+    }
+    return compareSemVer(release.version, installed.release.version) > 0 ? "upgrade" : "older";
 }
 
 function parseReference(value: unknown): ReleaseReference {

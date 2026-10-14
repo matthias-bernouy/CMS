@@ -3,6 +3,7 @@ import type { CmsCollectionDependencies } from "../../ports";
 
 export function projectMigrationPlan(
     plan: Awaited<ReturnType<CmsCollectionDependencies["collectionMigrations"]["plan"]>>,
+    references: unknown,
 ) {
     return {
         expectedRevision: plan.expectedCollectionRevision,
@@ -11,6 +12,7 @@ export function projectMigrationPlan(
         totalPages: plan.totalPages,
         operationCount: plan.operationCount,
         blockedReasons: plan.blockedReasons,
+        references,
     };
 }
 
