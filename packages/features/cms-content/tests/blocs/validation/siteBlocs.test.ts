@@ -109,7 +109,7 @@ describe("site bloc validation", () => {
                         tag: "site-results",
                         attributes: {
                             "cms-query": "catalog:search as results",
-                            "cms-query-input": '{"query":{"from":"queryParam","name":"query"}}',
+                            "cms-query-input": '{"query":{"from":"sync","key":"@param:site-query"}}',
                         },
                         children: [
                             {

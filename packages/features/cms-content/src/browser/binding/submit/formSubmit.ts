@@ -5,4 +5,5 @@ export type {
     AdditionalFormFields,
     FormSubmitResult,
     SerializedForm,
+    SerializedFormValue,
 } from "./types";

@@ -7,7 +7,7 @@
     <section
         slot="content"
         cms-query="ulvia.cms.collections:get as collection"
-        cms-query-input='{"collectionId":{"from":"queryParam","name":"collection"}}'
+        cms-query-input='{"collectionId":{"from":"sync","key":"@param:ulvia-official-collection"}}'
     >
         <div cms-condition="collection.loading">
             {{ cms.i18n.ulvia-official.ui-reading-collection-details }}

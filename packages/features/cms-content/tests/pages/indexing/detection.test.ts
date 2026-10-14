@@ -6,7 +6,7 @@ import {
 } from "@bernouy/cms-content";
 
 const bound = (contract: string, capability: string, param: string, pageParam: string) =>
-    `<main cms-source="/.cms/call/${contract}/${capability}" cms-source-method="POST" cms-source-body='{"${param}":{"from":"queryParam","name":"${pageParam}"}}'></main>`;
+    `<main cms-source="/.cms/call/${contract}/${capability}" cms-source-method="POST" cms-source-body='{"${param}":{"from":"sync","key":"@param:site-${pageParam}"}}'></main>`;
 
 describe("detectPageIndexingCandidates", () => {
     test("keeps CMS metadata scopes reserved", () => {
@@ -18,14 +18,19 @@ describe("detectPageIndexingCandidates", () => {
         expect(detectPageIndexingCandidates(bound("commerce", "product.get", "slug", "product"))).toEqual({
             status: "detected",
             candidates: [
-                { contractId: "commerce", capabilityId: "product.get", inputParam: "slug", pageQueryParam: "product" },
+                {
+                    contractId: "commerce",
+                    capabilityId: "product.get",
+                    inputParam: "slug",
+                    pageQueryParam: "site-product",
+                },
             ],
         });
     });
 
     test("ignores submitted, external, malformed, and old Source bindings", () => {
         const html = `${bound("commerce", "product.get", "slug", "product").replace("<main ", '<main cms-source-trigger="submit" ')}
-            <div cms-source="https://external.test/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"queryParam","name":"product"}}'></div>
+            <div cms-source="https://external.test/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"sync","key":"@param:site-product"}}'></div>
             <div cms-source="/.cms/sources/commerce/product?slug=#{product}"></div>`;
         expect(detectPageIndexingCandidates(html)).toEqual({ status: "none", candidates: [] });
     });

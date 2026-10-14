@@ -108,6 +108,7 @@ describe("binding conditions", () => {
             sourceSuccessRedirectParam: "cms-source-success-redirect-param",
             sourceSuccessReset: "cms-source-success-reset",
             sourceTrigger: "cms-source-trigger",
+            sync: "cms-sync",
         });
         expect(CMS_BINDING_RUNTIME_ATTRIBUTES).toEqual({ ready: "cms-ready" });
     });

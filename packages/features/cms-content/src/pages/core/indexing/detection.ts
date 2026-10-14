@@ -1,5 +1,5 @@
 import { collectCmsSourceBindings } from "cms-content/pages/core/indexing/sourceBindings";
-import { isCmsQueryParamName } from "cms-content/blocs/core/markup/bindings";
+import { parseSyncTarget } from "cms-content/blocs/core/markup/bindings";
 
 const DETECTION_BASE_URL = new URL("https://cms.invalid");
 
@@ -30,10 +30,11 @@ export function detectPageIndexingCandidates(
             continue;
         }
         for (const [inputParam, value] of Object.entries(binding.body)) {
-            if (value?.from !== "queryParam" || !isCmsQueryParamName(value.name)) {
+            const target = value?.from === "sync" ? parseSyncTarget(value.key) : null;
+            if (!target || target.scope !== "param") {
                 continue;
             }
-            const candidate = { ...reference, inputParam, pageQueryParam: value.name };
+            const candidate = { ...reference, inputParam, pageQueryParam: target.key };
             candidates.set(JSON.stringify(candidate), candidate);
         }
     }

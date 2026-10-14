@@ -93,7 +93,7 @@ function withAdditionalFields(
             next = { ...data };
         }
         next[key] = value;
-        formData.append(key, String(value));
+        formData.append(key, typeof value === "object" && value !== null ? JSON.stringify(value) : String(value));
     }
     return next;
 }

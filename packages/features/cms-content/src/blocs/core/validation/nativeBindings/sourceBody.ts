@@ -1,6 +1,5 @@
-import { isCmsQueryParamName } from "cms-content/blocs/core/markup/bindings";
+import { parseSyncTarget } from "cms-content/blocs/core/markup/bindings";
 
-const PAGE_STATE_KEY = /^[A-Za-z0-9_][A-Za-z0-9_.:-]*$/;
 const TYPED_PATH = /^[A-Za-z0-9_-]+(?:\[[A-Za-z0-9_-]+\])*$/;
 
 export function isTypedSourceBody(value: string): boolean {
@@ -30,11 +29,8 @@ function isTypedSourceParam(value: unknown): boolean {
         return false;
     }
     const keys = Object.keys(value).sort().join(",");
-    if (value.from === "queryParam") {
-        return keys === "from,name" && isCmsQueryParamName(value.name as string | undefined);
-    }
-    if (value.from === "state") {
-        return keys === "from,name" && typeof value.name === "string" && PAGE_STATE_KEY.test(value.name);
+    if (value.from === "sync") {
+        return keys === "from,key" && typeof value.key === "string" && parseSyncTarget(value.key) !== null;
     }
     if (value.from !== "raw" || keys !== "from,value") {
         return false;

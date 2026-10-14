@@ -73,9 +73,9 @@ describe("binding syntax", () => {
                 url: "/.cms/call/catalog/search",
                 alias: "addresses",
                 params: {
-                    q: { from: "queryParam", name: "address" },
-                    minimum: { from: "queryParam", name: " filter_racket-weight:gte " },
-                    delivery: { from: "state", name: "deliveryAddress" },
+                    q: { from: "sync", key: "@param:site-address" },
+                    minimum: { from: "sync", key: " @param:site-racket-minimum " },
+                    delivery: { from: "sync", key: "@page:site-delivery-address" },
                     limit: { from: "raw", value: 5 },
                     type: { from: "raw", value: "housenumber street" },
                     empty: { from: "raw", value: "" },
@@ -83,7 +83,7 @@ describe("binding syntax", () => {
                 },
             }),
         ).toBe(
-            "/.cms/call/catalog/search?q=#{address}&minimum=#{filter_racket-weight:gte}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses",
+            "/.cms/call/catalog/search?q=@{param:site-address}&minimum=@{param:site-racket-minimum}&delivery=@{page:site-delivery-address}&limit=5&type=housenumber%20street as addresses",
         );
         expect(asSource({ url: "/api/plans?", params: { q: { from: "raw", value: "hello" } } })).toBe(
             "/api/plans?q=hello",
@@ -91,13 +91,13 @@ describe("binding syntax", () => {
         expect(
             asSource({
                 url: "/api/plans?existing=1#results",
-                params: { q: { from: "queryParam", name: "search" } },
+                params: { q: { from: "sync", key: "@param:site-search" } },
             }),
-        ).toBe("/api/plans?existing=1&q=#{search}#results");
+        ).toBe("/api/plans?existing=1&q=@{param:site-search}#results");
         expect(() =>
             asSource({
                 url: "/api/plans",
-                params: { q: { from: "queryParam", name: "filter/racket:gte" } },
+                params: { q: { from: "sync", key: "@param:site/filter" } },
             }),
         ).toThrow();
     });
@@ -114,9 +114,9 @@ describe("binding syntax", () => {
 
     test("formats and parses source body bindings", () => {
         const body = {
-            email: { from: "queryParam" as const, name: "email" },
-            minimum: { from: "queryParam" as const, name: " filter_racket-weight:gte " },
-            token: { from: "state" as const, name: "auth.token" },
+            email: { from: "sync" as const, key: "@param:site-email" },
+            minimum: { from: "sync" as const, key: " @param:site-racket-minimum " },
+            token: { from: "sync" as const, key: "@page:site-auth-token" },
             active: { from: "raw" as const, value: true },
             count: { from: "raw" as const, value: 2 },
             label: { from: "raw" as const, value: "Newsletter" },
@@ -124,9 +124,9 @@ describe("binding syntax", () => {
         };
         const formatted = asSourceBody(body);
         const expected = {
-            email: { from: "queryParam", name: "email" },
-            minimum: { from: "queryParam", name: "filter_racket-weight:gte" },
-            token: { from: "state", name: "auth.token" },
+            email: { from: "sync", key: "@param:site-email" },
+            minimum: { from: "sync", key: "@param:site-racket-minimum" },
+            token: { from: "sync", key: "@page:site-auth-token" },
             active: { from: "raw", value: true },
             count: { from: "raw", value: 2 },
             label: { from: "raw", value: "Newsletter" },
@@ -182,18 +182,18 @@ describe("binding syntax", () => {
     test("shares typed logical inputs without exposing an HTTP body", () => {
         const encoded = asQueryInput({
             limit: { from: "raw", value: 100 },
-            page: { from: "queryParam", name: "page" },
+            page: { from: "sync", key: "@param:site-page" },
         });
         expect(parseQueryInput(encoded)).toEqual({
             limit: { from: "raw", value: 100 },
-            page: { from: "queryParam", name: "page" },
+            page: { from: "sync", key: "@param:site-page" },
         });
 
         const nested = asQueryInput({
-            "targets[0][digest]": { from: "queryParam", name: "digest" },
+            "targets[0][digest]": { from: "sync", key: "@param:site-digest" },
         });
         expect(parseQueryInput(nested)).toEqual({
-            "targets[0][digest]": { from: "queryParam", name: "digest" },
+            "targets[0][digest]": { from: "sync", key: "@param:site-digest" },
         });
     });
 
@@ -209,14 +209,13 @@ describe("binding syntax", () => {
         }
     });
 
-    test("keeps structured body query-param names independent from URL token grammar", () => {
+    test("rejects malformed synchronized input targets", () => {
         const formatted = asSourceBody({
-            external: { from: "queryParam", name: " external query/name} " },
+            external: { from: "sync", key: "@param:site/query" },
         });
 
-        expect(parseSourceBody(formatted)).toEqual({
-            external: { from: "queryParam", name: "external query/name}" },
-        });
+        expect(formatted).toBe("");
+        expect(parseSourceBody('{"external":{"from":"sync","key":"@param:site/query"}}')).toBeNull();
     });
 
     test("formats repeat bindings", () => {

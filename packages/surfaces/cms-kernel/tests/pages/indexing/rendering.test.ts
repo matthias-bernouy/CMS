@@ -26,7 +26,7 @@ describe("Kernel dynamic page metadata", () => {
             },
         });
         const response = await mounted.get(
-            new Request("https://example.test/products/detail?product=requested-chair&utm_source=ignored"),
+            new Request("https://example.test/products/detail?site-product=requested-chair&utm_source=ignored"),
         );
         const { document } = parseHTML(await response.text());
         expect(response.status).toBe(200);
@@ -34,7 +34,7 @@ describe("Kernel dynamic page metadata", () => {
         expect(document.title).toBe("Oak chair — Public pages");
         expect(document.querySelector('meta[name="description"]')?.getAttribute("content")).toBe("A solid oak chair");
         expect(document.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe(
-            "https://example.test/products/detail?product=oak-chair",
+            "https://example.test/products/detail?site-product=oak-chair",
         );
         expect(calls).toMatchObject([
             {
@@ -53,7 +53,7 @@ describe("Kernel dynamic page metadata", () => {
             storedPages: [{ ...PRODUCT_PAGE, indexing: { ...PRODUCT_PAGE.indexing, enabled: false } }],
             gateway: gateway({ slug: "chair", title: "Private chair", description: "Members only" }),
         });
-        const response = await mounted.get(new Request("https://example.test/products/detail?product=chair"));
+        const response = await mounted.get(new Request("https://example.test/products/detail?site-product=chair"));
         const { document } = parseHTML(await response.text());
         expect(document.title).toBe("Private chair — Public pages");
         expect(document.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("noindex,follow");
@@ -83,7 +83,7 @@ describe("Kernel dynamic page metadata", () => {
         [502, 503],
     ])("maps a gateway %i response to public status %i", async (gatewayStatus, publicStatus) => {
         const mounted = mountPublicPages({ storedPages: [PRODUCT_PAGE], gateway: gateway(null, gatewayStatus) });
-        const response = await mounted.get(new Request("https://example.test/products/detail?product=missing"));
+        const response = await mounted.get(new Request("https://example.test/products/detail?site-product=missing"));
         expect(response.status).toBe(publicStatus);
     });
 });

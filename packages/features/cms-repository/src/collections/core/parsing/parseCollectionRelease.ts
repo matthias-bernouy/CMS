@@ -77,7 +77,7 @@ export function parseCollectionRelease(
         const translations = parseCollectionTranslations(source.translations, locale);
         const texts = source.texts === undefined ? undefined : parseTexts(source.texts, locale, limits);
         const assets = parseAssets(source.assets === undefined ? [] : source.assets, limits);
-        const states = parseCollectionStates(source.states, limits);
+        const states = parseCollectionStates(source.states, collectionId, limits);
         const dependencies =
             source.dependencies === undefined
                 ? undefined

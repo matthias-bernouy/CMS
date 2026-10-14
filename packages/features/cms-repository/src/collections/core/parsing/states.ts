@@ -6,12 +6,19 @@ import { array, identifier, integer, keys, ordinal, record, unique } from "../va
 
 const SCOPES = new Set<CollectionStateScope>(["param", "page", "session", "persistent"]);
 
-export function parseCollectionStates(value: unknown, limits: Readonly<CollectionLimits>): readonly CollectionState[] {
+export function parseCollectionStates(
+    value: unknown,
+    collectionId: string,
+    limits: Readonly<CollectionLimits>,
+): readonly CollectionState[] {
     const states = array(value ?? [], limits.maxStates, "$.states").map((entry, index) => {
         const path = `$.states[${index}]`;
         const source = record(entry, path);
         keys(source, ["id", "generation", "scope", "schema"], path);
         const id = identifier(source.id, `${path}.id`);
+        if (`${collectionId}-${id}`.length > 128) {
+            invalid("collection-owned state key must contain at most 128 characters", `${path}.id`);
+        }
         const scope = source.scope;
         if (typeof scope !== "string" || !SCOPES.has(scope as CollectionStateScope)) {
             invalid("must be param, page, session or persistent", `${path}.scope`);

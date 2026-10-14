@@ -74,8 +74,8 @@ describe("dynamic indexing sitemap", () => {
         const xml = new TextDecoder().decode(gunzipSync(await chunk.arrayBuffer()));
         expect(xml).toContain("<loc>https://example.test/static</loc>");
         expect(xml).not.toContain("<loc>https://example.test/private</loc>");
-        expect(xml).toContain("<loc>https://example.test/products/detail?product=oak+%26+chair</loc>");
-        expect(xml).toContain("<loc>https://example.test/products/detail?product=lamp</loc>");
+        expect(xml).toContain("<loc>https://example.test/products/detail?site-product=oak+%26+chair</loc>");
+        expect(xml).toContain("<loc>https://example.test/products/detail?site-product=lamp</loc>");
     });
 
     test("keeps the last good snapshot when gateway discovery fails", async () => {

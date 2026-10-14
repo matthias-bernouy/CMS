@@ -25,7 +25,7 @@ export type FormSubmitResult = {
     refresh?: { ok: boolean; message: string };
 };
 
-export type AdditionalFormFields = Record<string, string | number | boolean>;
+export type AdditionalFormFields = Record<string, SerializedFormValue>;
 
 export type SubmitFormOptions = {
     url: string;

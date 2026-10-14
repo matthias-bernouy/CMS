@@ -462,6 +462,22 @@ describe("collection release parsing", () => {
         }
     });
 
+    test("rejects collection-owned state keys above the browser binding limit", () => {
+        expect(() =>
+            parseCollectionRelease({
+                ...collectionDocument(),
+                collectionId: `atlas-${"a".repeat(90)}`,
+                states: [
+                    {
+                        id: "selection-that-cannot-fit-the-runtime-key-limit",
+                        scope: "page",
+                        schema: { type: "string", maxLength: 64 },
+                    },
+                ],
+            }),
+        ).toThrow("at most 128 characters");
+    });
+
     test("validates collection ownership for declarative state bindings", () => {
         const source = collectionDocument();
         source.states = [

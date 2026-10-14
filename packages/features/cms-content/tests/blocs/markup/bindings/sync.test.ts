@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { CMS_BINDING_ATTRIBUTES } from "@bernouy/cms-content/bindings";
-import { nativeBindingAttributeIssue, nativeBindingElementIssue } from "@bernouy/cms-content";
+import { nativeBindingAttributeIssue } from "@bernouy/cms-content";
+import { nativeBindingElementIssue } from "../../../../src/blocs/core/validation/nativeBindings";
 
 describe("cms-sync validation", () => {
     test("accepts scoped targets and rejects ambiguous keys", () => {

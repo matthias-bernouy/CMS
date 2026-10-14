@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { setState } from "../../../../src/browser/binding/params";
+import { writeSyncValue } from "../../../../src/browser/binding/params/SyncState";
 import { BindingRuntime } from "../../../../src/browser/binding/runtime/BindingRuntime";
 import { el, resetDom, settle, text, waitFor } from "../../support/testUtils";
 
@@ -14,12 +14,12 @@ describe("Source — submit payload and publication", () => {
                 headers: { "content-type": "application/json" },
             });
         }) as typeof fetch;
-        location.href = "http://localhost/?returnTo=%2Fdashboard";
-        setState("auth.token", "abc123");
+        location.href = "http://localhost/?site-return-to=%2Fdashboard";
+        writeSyncValue({ scope: "page", key: "site-auth-token" }, "abc123");
         const body = JSON.stringify({
             email: { from: "raw", value: "bound@example.com" },
-            returnTo: { from: "queryParam", name: "returnTo" },
-            token: { from: "state", name: "auth.token" },
+            returnTo: { from: "sync", key: "@param:site-return-to" },
+            token: { from: "sync", key: "@page:site-auth-token" },
             remember: { from: "raw", value: true },
         });
 
@@ -38,7 +38,7 @@ describe("Source — submit payload and publication", () => {
         await waitFor(() => request !== null);
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/api/login?returnTo=%2Fdashboard");
+        expect(captured.url).toBe("http://localhost/api/login?site-return-to=%2Fdashboard");
         expect(captured.init?.body).toBe(
             JSON.stringify({
                 email: "ada@example.com",

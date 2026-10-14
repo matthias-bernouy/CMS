@@ -31,7 +31,7 @@
                         <code>{{ installed.digest }}</code>
                     </div>
                     <ulvia-official-action slot="actions" variant="filled" tone="primary" size="sm">
-                        <a href="/admin/collections/detail?collection={{ installed.collectionId | urlencode }}">
+                        <a href="/admin/collections/detail?ulvia-official-collection={{ installed.collectionId | urlencode }}">
                             {{ cms.i18n.ulvia-official.ui-manage }}
                         </a>
                     </ulvia-official-action>
@@ -130,7 +130,7 @@
                             </ulvia-official-action>
                         </form>
                         <ulvia-official-action slot="items" variant="filled" tone="primary" size="sm">
-                            <a href="/admin/collections/migration?repository={{ release.repositoryId | urlencode }}&amp;publisher={{ release.publisherId | urlencode }}&amp;collection={{ release.collectionId | urlencode }}&amp;version={{ release.version | urlencode }}&amp;digest={{ release.digest | urlencode }}">
+                            <a href="/admin/collections/migration?ulvia-official-repository={{ release.repositoryId | urlencode }}&amp;ulvia-official-publisher={{ release.publisherId | urlencode }}&amp;ulvia-official-collection={{ release.collectionId | urlencode }}&amp;ulvia-official-version={{ release.version | urlencode }}&amp;ulvia-official-digest={{ release.digest | urlencode }}">
                                 {{ cms.i18n.ulvia-official.ui-plan-migration }}
                             </a>
                         </ulvia-official-action>

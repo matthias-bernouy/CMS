@@ -1,6 +1,6 @@
 <section
     cms-query="ulvia.cms.localization:get-texts as collectionTexts"
-    cms-query-input='{"collectionId":{"from":"queryParam","name":"collection"},"locale":{"from":"queryParam","name":"locale"},"group":{"from":"queryParam","name":"group"},"search":{"from":"queryParam","name":"search"}}'
+    cms-query-input='{"collectionId":{"from":"sync","key":"@param:ulvia-official-collection"},"locale":{"from":"sync","key":"@param:ulvia-official-locale"},"group":{"from":"sync","key":"@param:ulvia-official-group"},"search":{"from":"sync","key":"@param:ulvia-official-search"}}'
 >
     <p role="status" aria-live="polite" cms-condition="collectionTexts.loading">
         {{ cms.i18n.ulvia-official.ui-working }}
@@ -20,7 +20,7 @@
                         {{ cms.i18n.ulvia-official.ui-translation-language }}
                     </label>
                     <ulvia-official-select slot="control">
-                        <select id="collection-text-locale" cms-param-sync="locale">
+                        <select id="collection-text-locale" cms-sync="@param:ulvia-official-locale">
                             <option
                                 cms-repeat="collectionTexts.data.locales as locale"
                                 value="{{ locale }}"
@@ -34,7 +34,7 @@
                         {{ cms.i18n.ulvia-official.ui-text-group }}
                     </label>
                     <ulvia-official-select slot="control">
-                        <select id="collection-text-group" cms-param-sync="group">
+                        <select id="collection-text-group" cms-sync="@param:ulvia-official-group">
                             <option
                                 cms-repeat="collectionTexts.data.groups as group"
                                 value="{{ group.id }}"
@@ -51,7 +51,7 @@
                         <input
                             id="collection-text-search"
                             type="search"
-                            cms-param-sync="search"
+                            cms-sync="@param:ulvia-official-search"
                             value="{{ collectionTexts.data.search }}"
                             placeholder="{{ cms.i18n.ulvia-official.ui-search-labels-and-keys }}"
                         >

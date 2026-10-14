@@ -5,7 +5,7 @@ export const PRODUCT_PAGE = {
     path: "/products/detail",
     title: "${content.title} — ${site.name}",
     description: "${content.description}",
-    content: `<main cms-source="/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"queryParam","name":"product"}}'></main>`,
+    content: `<main cms-source="/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"sync","key":"@param:site-product"}}'></main>`,
     visible: true,
     tags: [],
     indexing: {
@@ -13,7 +13,7 @@ export const PRODUCT_PAGE = {
         entity: {
             contractId: "commerce",
             label: "Product",
-            pageQueryParam: "product",
+            pageQueryParam: "site-product",
             resolve: { capabilityId: "product.get", inputParam: "slug", identityPath: "slug" },
             discover: {
                 capabilityId: "product.list",

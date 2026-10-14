@@ -39,9 +39,9 @@ describe("discoverPageIndexingLocations", () => {
             ["commerce", "product.list", { cursor: "second-page" }],
         ]);
         expect(locations).toEqual([
-            { location: "/products/detail?product=oak+chair", lastModified: "2026-08-22T08:00:00.000Z" },
+            { location: "/products/detail?site-product=oak+chair", lastModified: "2026-08-22T08:00:00.000Z" },
             { location: "/catalog/product?item=oak+chair", lastModified: "2026-08-22T08:00:00.000Z" },
-            { location: "/products/detail?product=lamp" },
+            { location: "/products/detail?site-product=lamp" },
             { location: "/catalog/product?item=lamp" },
         ]);
     });

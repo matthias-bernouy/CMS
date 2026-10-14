@@ -8,7 +8,6 @@ import type {
     CmsQueryInput,
     CmsQueryRefreshPolicy,
 } from "cms-content/blocs/core/markup/bindings/types";
-import { asQueryParamToken } from "cms-content/blocs/core/markup/bindings/queryParams";
 import { asSyncTarget, parseSyncTarget } from "cms-content/blocs/core/markup/bindings/sync";
 
 const INTERPOLATION_PATTERN = /^\s*\{\{\s*([\s\S]*?)\s*\}\}\s*$/;
@@ -172,7 +171,13 @@ function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string
     if (!params) {
         return url;
     }
-    const entries = Object.entries(normalizeSourceParamMap(params));
+    const normalized = normalizeSourceParamMap(params);
+    for (const [name, value] of Object.entries(params)) {
+        if (value?.from === "sync" && normalized[name] === undefined) {
+            throw new TypeError("Invalid CMS source parameter");
+        }
+    }
+    const entries = Object.entries(normalized);
     if (entries.length === 0) {
         return url;
     }
@@ -187,11 +192,12 @@ function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string
 }
 
 function encodeSourceParamValue(value: CmsSourceParamValue): string {
-    if (value.from === "queryParam") {
-        return asQueryParamToken(value.name);
-    }
-    if (value.from === "state") {
-        return `@{${value.name.trim()}}`;
+    if (value.from === "sync") {
+        const target = parseSyncTarget(value.key);
+        if (!target) {
+            throw new TypeError("Invalid synchronized source parameter");
+        }
+        return `@{${asSyncTarget(target).slice(1)}}`;
     }
     return encodeURIComponent(String(value.value).trim());
 }
@@ -211,14 +217,9 @@ function normalizeSourceParamValue(value: unknown): CmsSourceParamValue | null {
     if (!isRecord(value) || typeof value.from !== "string") {
         return null;
     }
-    if (value.from === "queryParam") {
-        const name = typeof value.name === "string" ? value.name.trim() : "";
-        return name ? { from: value.from, name } : null;
-    }
-    if (value.from === "state") {
-        return typeof value.name === "string" && value.name.trim()
-            ? { from: value.from, name: value.name.trim() }
-            : null;
+    if (value.from === "sync") {
+        const target = typeof value.key === "string" ? parseSyncTarget(value.key) : null;
+        return target ? { from: "sync", key: asSyncTarget(target) } : null;
     }
     if (value.from !== "raw") {
         return null;

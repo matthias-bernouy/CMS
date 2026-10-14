@@ -1,33 +1,26 @@
-import { currentParams, currentState } from "../../params";
-import type { AdditionalFormFields } from "../../submit/formSubmit";
+import { parseSyncTarget } from "cms-content/blocs/core/markup/bindings";
+import { readSyncValue } from "../../params/SyncState";
+import type { AdditionalFormFields, SerializedFormValue } from "../../submit/formSubmit";
 
-type SourceBodyValue =
-    | { from: "queryParam"; name: string }
-    | { from: "state"; name: string }
-    | { from: "raw"; value: string | number | boolean };
+type SourceBodyValue = { from: "sync"; key: string } | { from: "raw"; value: string | number | boolean };
 
 type SourceBodyBinding = Record<string, SourceBodyValue>;
 
-export function resolveSourceBodyFields(
-    value: string | null,
-    doc: Document,
-    options: Readonly<{ omitMissingQueryParams?: boolean }> = {},
-): AdditionalFormFields | undefined {
+export function resolveSourceBodyFields(value: string | null, doc: Document): AdditionalFormFields | undefined {
     const binding = parseSourceBody(value);
     if (!binding) {
         return undefined;
     }
 
     const fields: AdditionalFormFields = {};
-    const params = currentParams();
     for (const [name, source] of Object.entries(binding)) {
-        if (source.from === "queryParam") {
-            if (options.omitMissingQueryParams && !params.has(source.name)) {
+        if (source.from === "sync") {
+            const target = parseSyncTarget(source.key);
+            const value = target ? readSyncValue(target, doc) : undefined;
+            if (value === undefined) {
                 continue;
             }
-            fields[name] = params.get(source.name) ?? "";
-        } else if (source.from === "state") {
-            fields[name] = currentState(source.name, doc);
+            fields[name] = value as SerializedFormValue;
         } else {
             fields[name] = source.value;
         }
@@ -66,10 +59,10 @@ function normalizeSourceBodyValue(value: unknown): SourceBodyValue | null {
         return null;
     }
 
-    if (value.from === "queryParam" || value.from === "state") {
-        return typeof value.name === "string" && value.name.trim()
-            ? { from: value.from, name: value.name.trim() }
-            : null;
+    if (value.from === "sync") {
+        const key = typeof value.key === "string" ? value.key : "";
+        const target = parseSyncTarget(key);
+        return target ? { from: "sync", key: key.trim() } : null;
     }
 
     if (value.from !== "raw") {

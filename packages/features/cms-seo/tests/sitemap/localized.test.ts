@@ -57,16 +57,18 @@ test("sitemap snapshots separate languages and common URLs while retaining recip
     const french = xmlByLanguage.get("fr")!;
     const english = xmlByLanguage.get("en")!;
     expect(french).toContain("<loc>https://example.test/a-propos</loc>");
-    expect(french).toContain("<loc>https://example.test/produits/fiche?product=oak+%26+chair</loc>");
+    expect(french).toContain("<loc>https://example.test/produits/fiche?site-product=oak+%26+chair</loc>");
     expect(french).not.toContain("<loc>https://example.test/en/about</loc>");
     expect(english).toContain("<loc>https://example.test/en/about</loc>");
-    expect(english).toContain("<loc>https://example.test/en/products/detail?product=oak+%26+chair</loc>");
+    expect(english).toContain("<loc>https://example.test/en/products/detail?site-product=oak+%26+chair</loc>");
     expect(english).not.toContain("<loc>https://example.test/a-propos</loc>");
     for (const xml of [french, english]) {
         expect(xml).toContain('hreflang="fr" href="https://example.test/a-propos"');
         expect(xml).toContain('hreflang="en" href="https://example.test/en/about"');
-        expect(xml).toContain('hreflang="fr" href="https://example.test/produits/fiche?product=oak+%26+chair"');
-        expect(xml).toContain('hreflang="en" href="https://example.test/en/products/detail?product=oak+%26+chair"');
+        expect(xml).toContain('hreflang="fr" href="https://example.test/produits/fiche?site-product=oak+%26+chair"');
+        expect(xml).toContain(
+            'hreflang="en" href="https://example.test/en/products/detail?site-product=oak+%26+chair"',
+        );
     }
 
     await repository.updateSystem({ site: { activeLanguages: [] } as never });

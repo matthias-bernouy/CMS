@@ -1,5 +1,12 @@
 import { parseHTML } from "linkedom";
-import { parseQuery, parseSyncTarget, type CmsSyncTarget } from "@bernouy/cms-content/bindings";
+import {
+    parseQuery,
+    parseQueryInput,
+    parseSourceBody,
+    parseSyncTarget,
+    type CmsSourceBodyBinding,
+    type CmsSyncTarget,
+} from "@bernouy/cms-content/bindings";
 import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
 import type { CollectionDependency, CollectionRelease } from "../../../interfaces/CollectionRelease";
 import type { CollectionPage } from "../../../interfaces/CollectionPage";
@@ -41,6 +48,39 @@ export function validateCollectionStateBindings(
             const query = parseQuery(element.getAttribute("cms-query") ?? "");
             if (query && "sync" in query) {
                 assertReadable(query.sync, own, imported, installed, path);
+            }
+            validateInputReads(
+                parseQueryInput(element.getAttribute("cms-query-input")),
+                own,
+                imported,
+                installed,
+                path,
+            );
+        }
+        for (const element of Array.from(document.body.querySelectorAll("[cms-source-body]"))) {
+            validateInputReads(
+                parseSourceBody(element.getAttribute("cms-source-body")),
+                own,
+                imported,
+                installed,
+                path,
+            );
+        }
+    }
+}
+
+function validateInputReads(
+    input: CmsSourceBodyBinding | null,
+    own: ReadonlyMap<string, CollectionState>,
+    imported: ReadonlyMap<string, { collectionId: string; id: string }>,
+    installed: ReadonlyMap<string, CollectionRelease>,
+    path: string,
+): void {
+    for (const source of Object.values(input ?? {})) {
+        if (source?.from === "sync") {
+            const target = parseSyncTarget(source.key);
+            if (target) {
+                assertReadable(target, own, imported, installed, path);
             }
         }
     }

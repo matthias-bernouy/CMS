@@ -49,10 +49,7 @@ export const CMS_SOURCE_STATUS_SCOPE = "$source";
 export const CMS_SOURCES_STATUS_SCOPE = "$sources";
 
 export type CmsBindingAttribute = (typeof CMS_BINDING_ATTRIBUTES)[keyof typeof CMS_BINDING_ATTRIBUTES];
-export type CmsSourceParamValue =
-    | { from: "queryParam"; name: string }
-    | { from: "state"; name: string }
-    | { from: "raw"; value: string | number | boolean };
+export type CmsSourceParamValue = { from: "sync"; key: string } | { from: "raw"; value: string | number | boolean };
 export type CmsSourceParamMap = Record<string, CmsSourceParamValue | null | undefined>;
 export type CmsSourceBinding = { url: string; alias?: string; params?: CmsSourceParamMap };
 export type CmsSourceBodyBinding = CmsSourceParamMap;

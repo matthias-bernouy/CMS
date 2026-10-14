@@ -6,7 +6,7 @@ describe("resolvePageIndexingMetadata", () => {
     test("projects declared variables and canonical identity from a gateway capability", async () => {
         const calls: unknown[] = [];
         const result = await resolvePageIndexingMetadata(
-            new Request("https://shop.test/products/detail?product=requested&utm_source=ignored"),
+            new Request("https://shop.test/products/detail?site-product=requested&utm_source=ignored"),
             PRODUCT_PAGE,
             async (...args) => {
                 calls.push(args);
@@ -23,7 +23,7 @@ describe("resolvePageIndexingMetadata", () => {
             kind: "render",
             dynamic: true,
             metadata: {
-                canonical: { queryParam: "product", value: "canonical-chair" },
+                canonical: { queryParam: "site-product", value: "canonical-chair" },
                 content: { description: "Solid oak", title: "Oak chair" },
                 fallbackTitle: "Oak chair",
                 indexable: true,
@@ -33,7 +33,7 @@ describe("resolvePageIndexingMetadata", () => {
 
     test("keeps metadata dynamic when indexing is disabled", async () => {
         const result = await resolvePageIndexingMetadata(
-            new Request("https://shop.test/products/detail?product=chair"),
+            new Request("https://shop.test/products/detail?site-product=chair"),
             { ...PRODUCT_PAGE, indexing: { ...PRODUCT_PAGE.indexing, enabled: false } },
             async () => Response.json({ slug: "chair", title: "Chair", description: "Description" }),
         );
@@ -45,7 +45,7 @@ describe("resolvePageIndexingMetadata", () => {
         let calls = 0;
         for (const url of [
             "https://shop.test/products/detail",
-            "https://shop.test/products/detail?product=a&product=b",
+            "https://shop.test/products/detail?site-product=a&site-product=b",
         ]) {
             const result = await resolvePageIndexingMetadata(new Request(url), PRODUCT_PAGE, async () => {
                 calls += 1;
@@ -68,7 +68,7 @@ describe("resolvePageIndexingMetadata", () => {
             [502, "unavailable"],
         ] as const) {
             const result = await resolvePageIndexingMetadata(
-                new Request("https://shop.test/products/detail?product=chair"),
+                new Request("https://shop.test/products/detail?site-product=chair"),
                 PRODUCT_PAGE,
                 async () => new Response(null, { status }),
             );

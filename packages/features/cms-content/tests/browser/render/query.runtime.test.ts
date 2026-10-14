@@ -25,13 +25,13 @@ test("a Provider query with input uses the logical QUERY transport", () => {
 });
 
 test("a Provider query input builds nested objects and arrays from typed paths", () => {
-    location.href = "http://localhost/?repository=official&collection=ulvia&version=2.0.0";
+    location.href = "http://localhost/?site-repository=official&site-collection=ulvia&site-version=2.0.0";
     const query = el(`<section
         cms-query="ulvia.cms.collections:plan-migration as plan"
         cms-query-input='{
-            "targets[0][repositoryId]":{"from":"queryParam","name":"repository"},
-            "targets[0][collectionId]":{"from":"queryParam","name":"collection"},
-            "targets[0][version]":{"from":"queryParam","name":"version"},
+            "targets[0][repositoryId]":{"from":"sync","key":"@param:site-repository"},
+            "targets[0][collectionId]":{"from":"sync","key":"@param:site-collection"},
+            "targets[0][version]":{"from":"sync","key":"@param:site-version"},
             "targets[0][publisherId]":{"from":"raw","value":"ulvia.official"}
         }'
     ></section>`);
@@ -42,13 +42,13 @@ test("a Provider query input builds nested objects and arrays from typed paths",
 });
 
 test("a Provider query omits absent optional query parameters", () => {
-    location.href = "http://localhost/?collection=ulvia&themeMode=";
+    location.href = "http://localhost/?site-collection=ulvia&site-theme-mode=";
     const query = el(`<section
         cms-query="ulvia.cms.theme:get as theme"
         cms-query-input='{
-            "collectionId":{"from":"queryParam","name":"collection"},
-            "profileId":{"from":"queryParam","name":"themeProfile"},
-            "mode":{"from":"queryParam","name":"themeMode"}
+            "collectionId":{"from":"sync","key":"@param:site-collection"},
+            "profileId":{"from":"sync","key":"@param:site-theme-profile"},
+            "mode":{"from":"sync","key":"@param:site-theme-mode"}
         }'
     ></section>`);
 
