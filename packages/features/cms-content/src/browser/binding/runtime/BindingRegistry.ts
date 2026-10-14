@@ -2,6 +2,7 @@ import { BIND_STOP_ATTR, BINDING_CORE_TAG, QUERY_ATTR, SOURCE_ATTR, type SourceS
 import type { FilterMap } from "../core/interpolate";
 import { PageStateSync } from "../params/PageStateSync";
 import { ParamSync } from "../params/ParamSync";
+import { SyncControl } from "../params/SyncControl";
 import { Query } from "./query/Query";
 import { Source } from "../source/Source";
 import { sourceTrigger } from "../source/sourceEvents";
@@ -17,6 +18,7 @@ export class BindingRegistry {
     private readonly sourceStatuses = new Map<Element, SourceStatusValue>();
     private readonly paramSyncs = new Map<Element, ParamSync>();
     private readonly pageStateSyncs = new Map<Element, PageStateSync>();
+    private readonly syncControls = new Map<Element, SyncControl>();
     private readonly reads: ReadRequests;
 
     constructor(
@@ -47,11 +49,15 @@ export class BindingRegistry {
         for (const sync of this.pageStateSyncs.values()) {
             sync.dispose();
         }
+        for (const sync of this.syncControls.values()) {
+            sync.dispose();
+        }
         this.queries.clear();
         this.sources.clear();
         this.sourceStatuses.clear();
         this.paramSyncs.clear();
         this.pageStateSyncs.clear();
+        this.syncControls.clear();
     }
 
     reconcileQuery(element: Element): void {
@@ -167,6 +173,24 @@ export class BindingRegistry {
         this.pageStateSyncs.delete(element);
     }
 
+    registerSyncControl(element: Element): void {
+        if (!element.isConnected || this.syncControls.has(element)) {
+            return;
+        }
+        const sync = new SyncControl(element);
+        this.syncControls.set(element, sync);
+        sync.start();
+    }
+
+    unregisterSyncControl(element: Element): void {
+        const sync = this.syncControls.get(element);
+        if (!sync) {
+            return;
+        }
+        sync.dispose();
+        this.syncControls.delete(element);
+    }
+
     pruneDetached(): void {
         for (const query of this.queries.keys()) {
             if (!query.isConnected) {
@@ -186,6 +210,11 @@ export class BindingRegistry {
         for (const sync of this.pageStateSyncs.keys()) {
             if (!sync.isConnected) {
                 this.unregisterPageStateSync(sync);
+            }
+        }
+        for (const sync of this.syncControls.keys()) {
+            if (!sync.isConnected) {
+                this.unregisterSyncControl(sync);
             }
         }
     }

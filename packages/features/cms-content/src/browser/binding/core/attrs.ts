@@ -21,6 +21,7 @@ export const SOURCE_SUCCESS_REDIRECT_PARAM_ATTR = "cms-source-success-redirect-p
 export const REPEAT_ATTR = "cms-repeat";
 export const CONDITION_ATTR = "cms-condition";
 export const PAGE_STATE_ATTR = "cms-page-state";
+export const SYNC_ATTR = "cms-sync";
 
 const SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type SourceState = (typeof SOURCE_STATES)[number];

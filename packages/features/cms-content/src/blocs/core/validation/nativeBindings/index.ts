@@ -126,6 +126,7 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
 export function nativeBindingElementIssue(tag: string, attributes: Readonly<Record<string, string>>): string | null {
     const query = attributes[CMS_BINDING_ATTRIBUTES.query];
     const source = attributes[CMS_BINDING_ATTRIBUTES.source];
+    const sync = attributes[CMS_BINDING_ATTRIBUTES.sync];
     if (query !== undefined && tag === "form") {
         return "CMS queries cannot be declared on forms";
     }
@@ -137,6 +138,17 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     }
     if (query !== undefined) {
         const binding = parseQuery(query);
+        if (binding && "sync" in binding && sync !== undefined) {
+            return "synchronized-state queries cannot republish the state they consume";
+        }
+        if (
+            binding &&
+            "sync" in binding &&
+            (attributes[CMS_BINDING_ATTRIBUTES.queryInput] !== undefined ||
+                attributes[CMS_BINDING_ATTRIBUTES.queryRefresh] !== undefined)
+        ) {
+            return "synchronized-state queries cannot declare remote query controls";
+        }
         if (
             binding &&
             "contractId" in binding &&
@@ -153,6 +165,14 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
         ) {
             return "Kernel authentication methods query does not accept input";
         }
+    }
+    if (
+        sync !== undefined &&
+        query === undefined &&
+        !["input", "select", "textarea"].includes(tag) &&
+        !tag.includes("-")
+    ) {
+        return "CMS sync requires a query or form control";
     }
     for (const name of [CMS_BINDING_ATTRIBUTES.queryInput, CMS_BINDING_ATTRIBUTES.queryRefresh]) {
         if (attributes[name] !== undefined && query === undefined) {

@@ -1,6 +1,6 @@
 import { PAGE_STATE_ATTR } from "../params/PageStateSync";
 import { PARAM_SYNC_ATTR } from "../params/ParamSync";
-import { QUERY_ATTR, SOURCE_ATTR } from "../core/attrs";
+import { QUERY_ATTR, SOURCE_ATTR, SYNC_ATTR } from "../core/attrs";
 import type { BindingRegistry } from "./BindingRegistry";
 import { eachMatching } from "./discovery";
 
@@ -9,6 +9,11 @@ export function registerWithin(node: Node, root: Element, registry: BindingRegis
     eachMatching(node, SOURCE_ATTR, root, (element) => registry.registerSource(element));
     eachMatching(node, PARAM_SYNC_ATTR, root, (element) => registry.registerParamSync(element));
     eachMatching(node, PAGE_STATE_ATTR, root, (element) => registry.registerPageStateSync(element));
+    eachMatching(node, SYNC_ATTR, root, (element) => {
+        if (!element.hasAttribute(QUERY_ATTR) && element.localName !== "form") {
+            registry.registerSyncControl(element);
+        }
+    });
 }
 
 export function unregisterWithin(node: Node, root: Element, registry: BindingRegistry): void {
@@ -16,6 +21,7 @@ export function unregisterWithin(node: Node, root: Element, registry: BindingReg
     eachMatching(node, SOURCE_ATTR, root, (element) => registry.unregisterSource(element));
     eachMatching(node, PARAM_SYNC_ATTR, root, (element) => registry.unregisterParamSync(element));
     eachMatching(node, PAGE_STATE_ATTR, root, (element) => registry.unregisterPageStateSync(element));
+    eachMatching(node, SYNC_ATTR, root, (element) => registry.unregisterSyncControl(element));
 }
 
 export function reconcileAttribute(target: Node, attribute: string | null, registry: BindingRegistry): void {
@@ -42,6 +48,11 @@ export function reconcileAttribute(target: Node, attribute: string | null, regis
             registry.registerPageStateSync(element);
         } else {
             registry.unregisterPageStateSync(element);
+        }
+    } else if (attribute === SYNC_ATTR) {
+        registry.unregisterSyncControl(element);
+        if (element.hasAttribute(SYNC_ATTR) && !element.hasAttribute(QUERY_ATTR) && element.localName !== "form") {
+            registry.registerSyncControl(element);
         }
     }
 }

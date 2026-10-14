@@ -41,8 +41,15 @@ export {
     SOURCE_ID_ATTR,
     SOURCE_STATE_FORCE_ATTR,
     SOURCE_TRIGGER_ATTR,
+    SYNC_ATTR,
 } from "./core/attrs";
 export { currentState, setState, STATE_CHANGE_EVENT } from "./params";
+export {
+    CMS_SYNC_CHANGE_EVENT,
+    readSyncValue,
+    subscribeSyncValue,
+    writeSyncValue,
+} from "./params/SyncState";
 export {
     CMS_SOURCE_FAILED_EVENT,
     CMS_SOURCE_REFRESH_FAILED_EVENT,
