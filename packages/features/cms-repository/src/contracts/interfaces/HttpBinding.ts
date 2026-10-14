@@ -1,5 +1,5 @@
 export type CapabilityHttpMethod = "DELETE" | "GET" | "PATCH" | "POST" | "PUT" | "QUERY";
-export type CompiledCapabilityHttpMethod = CapabilityHttpMethod | "HEAD";
+type CompiledCapabilityHttpMethod = CapabilityHttpMethod | "HEAD";
 
 export interface HttpBodyPropertiesBinding {
     readonly properties: readonly string[];
