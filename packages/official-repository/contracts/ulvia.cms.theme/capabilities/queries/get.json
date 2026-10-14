@@ -1,6 +1,6 @@
 {
     "id": "get",
-    "description": "Read the complete structured site theme and its revision.",
+    "description": "Read a filtered collection theme workspace with resolved profile values.",
     "access": "admin",
     "behavior": {
         "effect": "query",
@@ -8,53 +8,132 @@
     },
     "input": {
         "type": "object",
-        "properties": {},
-        "required": []
+        "properties": {
+            "collectionId": { "type": "string", "minLength": 1, "maxLength": 96 },
+            "profileId": { "type": "string", "maxLength": 96 },
+            "mode": { "type": "string", "enum": ["light", "dark"], "maxLength": 5 },
+            "tokenId": { "type": "string", "maxLength": 96 },
+            "search": { "type": "string", "maxLength": 300 }
+        },
+        "required": ["collectionId"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "revision": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
+            "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+            "collectionId": { "type": "string", "maxLength": 96 },
+            "activeThemeId": { "type": "string", "maxLength": 96 },
+            "profiles": {
+                "type": "array",
+                "maxItems": 128,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string", "maxLength": 96 },
+                        "name": { "type": "string", "maxLength": 300 },
+                        "active": { "type": "boolean" }
+                    },
+                    "required": ["id", "name", "active"]
+                }
             },
-            "activeThemeId": {
-                "type": "string",
-                "maxLength": 96
+            "profileId": { "type": "string", "maxLength": 96 },
+            "profileActive": { "type": "boolean" },
+            "mode": { "type": "string", "enum": ["light", "dark"], "maxLength": 5 },
+            "search": { "type": "string", "maxLength": 300 },
+            "sourceFound": { "type": "boolean" },
+            "sourceLabel": { "type": "string", "maxLength": 300 },
+            "supportsModes": { "type": "boolean" },
+            "tokens": {
+                "type": "array",
+                "maxItems": 4096,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string", "maxLength": 96 },
+                        "label": { "type": "string", "maxLength": 300 },
+                        "description": { "type": "string", "maxLength": 2000 },
+                        "variable": { "type": "string", "maxLength": 96 },
+                        "type": {
+                            "type": "string",
+                            "enum": ["color", "font-family", "length", "number", "shadow", "value"],
+                            "maxLength": 11
+                        },
+                        "value": { "type": "string", "maxLength": 4096 },
+                        "overridden": { "type": "boolean" },
+                        "categoryId": { "type": "string", "maxLength": 96 },
+                        "categoryLabel": { "type": "string", "maxLength": 300 }
+                    },
+                    "required": [
+                        "id",
+                        "label",
+                        "description",
+                        "variable",
+                        "type",
+                        "value",
+                        "overridden",
+                        "categoryId",
+                        "categoryLabel"
+                    ]
+                }
             },
-            "themeJson": {
-                "type": "string",
-                "maxLength": 1048576
+            "hasToken": { "type": "boolean" },
+            "token": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "maxLength": 96 },
+                    "label": { "type": "string", "maxLength": 300 },
+                    "description": { "type": "string", "maxLength": 2000 },
+                    "variable": { "type": "string", "maxLength": 96 },
+                    "type": {
+                        "type": "string",
+                        "enum": ["color", "font-family", "length", "number", "shadow", "value"],
+                        "maxLength": 11
+                    },
+                    "value": { "type": "string", "maxLength": 4096 },
+                    "overridden": { "type": "boolean" },
+                    "categoryId": { "type": "string", "maxLength": 96 },
+                    "categoryLabel": { "type": "string", "maxLength": 300 }
+                },
+                "required": [
+                    "id",
+                    "label",
+                    "description",
+                    "variable",
+                    "type",
+                    "value",
+                    "overridden",
+                    "categoryId",
+                    "categoryLabel"
+                ]
             }
         },
         "required": [
             "revision",
+            "collectionId",
             "activeThemeId",
-            "themeJson"
+            "profiles",
+            "profileId",
+            "profileActive",
+            "mode",
+            "search",
+            "sourceFound",
+            "sourceLabel",
+            "supportsModes",
+            "tokens",
+            "hasToken",
+            "token"
         ]
     },
-    "errors": [
-        {
-            "code": "CORE_UNAVAILABLE",
-            "retryable": true
-        }
-    ],
+    "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
     "binding": {
         "transport": "http",
-        "method": "GET",
+        "method": "QUERY",
         "path": "/get",
-        "input": {},
+        "input": { "body": true },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
-            "errorStatuses": {
-                "CORE_UNAVAILABLE": 503
-            }
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "CORE_UNAVAILABLE": 503 }
         }
     }
 }

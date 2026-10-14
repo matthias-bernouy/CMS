@@ -225,6 +225,11 @@ test("theme reads compose the authoritative token catalogues from installed coll
         repo: {
             getSystemRevision: async () => 3,
             getSystem: async () => structuredClone(system),
+            updateSystem: async (update: { theme: typeof system.theme }, expectedRevision: number) => {
+                expect(expectedRevision).toBe(3);
+                system.theme = structuredClone(update.theme);
+                return structuredClone(system);
+            },
         },
         collections: {
             snapshot: async () => ({
@@ -271,19 +276,35 @@ test("theme reads compose the authoritative token catalogues from installed coll
         },
     } as never);
 
-    const output = await dispatcher.invoke("ulvia.cms.theme", "get", {}, context);
-    const theme = JSON.parse(output.themeJson as string);
-    expect(output.revision).toBe(3);
-    expect(theme.sources).toContainEqual(
-        expect.objectContaining({
-            label: "Thème exemple",
-            owner: { kind: "contribution", contributionId: "example" },
-            categories: [
-                expect.objectContaining({
-                    label: "Couleurs",
-                    tokens: [expect.objectContaining({ id: "example-primary", label: "Primaire" })],
-                }),
-            ],
-        }),
+    const output = await dispatcher.invoke("ulvia.cms.theme", "get", { collectionId: "example" }, context);
+    expect(output).toMatchObject({
+        revision: 3,
+        collectionId: "example",
+        sourceFound: true,
+        sourceLabel: "Thème exemple",
+        profileId: "default",
+        mode: "light",
+        token: {
+            id: "example-primary",
+            label: "Primaire",
+            categoryLabel: "Couleurs",
+            value: "#3b5ccc",
+            overridden: false,
+        },
+    });
+
+    const saved = await dispatcher.invoke(
+        "ulvia.cms.theme",
+        "save-token",
+        {
+            expectedRevision: 3,
+            themeId: "default",
+            mode: "light",
+            tokenId: "example-primary",
+            value: "#123456",
+        },
+        context,
     );
+    expect(saved).toMatchObject({ value: "#123456", overridden: true });
+    expect(system.theme.themes[0]!.values.light["example-primary"]).toBe("#123456");
 });

@@ -27,7 +27,7 @@ const ROUTES = [
     ["ulvia.cms.localization", "overview", "GET", "/overview", undefined],
     ["ulvia.cms.pages", "list", "QUERY", "/list", {}],
     ["ulvia.cms.providers", "list", "GET", "/list", undefined],
-    ["ulvia.cms.theme", "get", "GET", "/get", undefined],
+    ["ulvia.cms.theme", "get", "QUERY", "/get", { collectionId: "example" }],
 ] as const;
 
 test("mounts and dispatches every official CMS contract release", async () => {
@@ -40,7 +40,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
             });
         }
     }
-    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(68);
+    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(70);
     const runner = new BunRunner();
     const runtime = {
         siteId: "site-a",

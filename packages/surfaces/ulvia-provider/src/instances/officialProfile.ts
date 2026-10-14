@@ -16,7 +16,7 @@ const PROFILE_1_0_0 = Object.freeze({
         ["ulvia.cms.localization", "1.0.0", "sha256:e588415389e6a61418de058d230e7aea0ef1153329686049cff4cc3c68897347"],
         ["ulvia.cms.pages", "1.0.0", "sha256:5861aa84cd305cc2a634b28f0649b3b20793e5ce7d4777efe4fdaa91ca1c1248"],
         ["ulvia.cms.providers", "1.0.0", "sha256:e8f3a7c7a88515aa4f26093895f66fbc9559564aed1293df8b652759f234449b"],
-        ["ulvia.cms.theme", "1.0.0", "sha256:7fd692a7b9293db9da35c08c1906cec021bcd120b4165500b76fbf49276713d4"],
+        ["ulvia.cms.theme", "1.0.0", "sha256:84ab33385113a421c545d4d74416e0e22751a42183d51caa759d62a935ba6d0b"],
     ].map(([contractId, version, digest]) => ({ contractId: contractId!, version: version!, digest: digest! })),
     collection: {
         publisherId: "ulvia.official",

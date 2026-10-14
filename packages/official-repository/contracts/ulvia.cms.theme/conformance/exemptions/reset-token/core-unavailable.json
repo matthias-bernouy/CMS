@@ -1,5 +1,5 @@
 {
-    "capabilityId": "save",
+    "capabilityId": "reset-token",
     "errorCode": "CORE_UNAVAILABLE",
     "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
 }

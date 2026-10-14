@@ -1,29 +1,19 @@
 {
     "id": "read-theme",
-    "description": "Verify that a fresh CMS tenant exposes a structured site theme.",
+    "description": "Verify that a fresh CMS tenant exposes a structured collection theme workspace.",
     "calls": [
         {
             "id": "get",
             "capabilityId": "get",
-            "actor": {
-                "kind": "admin"
-            },
-            "input": {},
+            "actor": { "kind": "admin" },
+            "input": { "collectionId": "conformance-missing" },
             "expect": {
                 "kind": "success",
                 "checks": [
-                    {
-                        "path": "/revision",
-                        "present": true
-                    },
-                    {
-                        "path": "/activeThemeId",
-                        "present": true
-                    },
-                    {
-                        "path": "/themeJson",
-                        "present": true
-                    }
+                    { "path": "/revision", "present": true },
+                    { "path": "/activeThemeId", "present": true },
+                    { "path": "/sourceFound", "present": true },
+                    { "path": "/tokens", "present": true }
                 ]
             }
         }

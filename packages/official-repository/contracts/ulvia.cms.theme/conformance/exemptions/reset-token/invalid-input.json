@@ -1,0 +1,5 @@
+{
+    "capabilityId": "reset-token",
+    "errorCode": "INVALID_INPUT",
+    "reason": "The portable smoke suite does not prescribe invalid theme token input."
+}

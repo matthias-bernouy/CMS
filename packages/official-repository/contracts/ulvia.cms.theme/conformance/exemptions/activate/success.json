@@ -1,0 +1,4 @@
+{
+    "capabilityId": "activate",
+    "reason": "This state-changing capability requires a stable theme profile and dedicated cleanup that the portable suite does not prescribe."
+}

@@ -1,8 +1,3 @@
-import {
-    MAX_CAPABILITY_JSON_BYTES,
-    MAX_CAPABILITY_JSON_DEPTH,
-    parseStrictJson,
-} from "@bernouy/cms-repository/contracts/protocol";
 import { ProviderCapabilityDispatchError } from "../../dispatch/registry";
 
 export async function configurationCommand<T>(operation: () => Promise<T>): Promise<T> {
@@ -24,13 +19,6 @@ export async function configurationCommand<T>(operation: () => Promise<T>): Prom
         }
         throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
     }
-}
-
-export function parseConfigurationJson(value: unknown): unknown {
-    if (typeof value !== "string") {
-        return invalid();
-    }
-    return parseStrictJson(new TextEncoder().encode(value), MAX_CAPABILITY_JSON_BYTES, MAX_CAPABILITY_JSON_DEPTH);
 }
 
 export function languages(value: unknown): string[] {

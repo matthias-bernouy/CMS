@@ -1,0 +1,4 @@
+{
+    "capabilityId": "reset-token",
+    "reason": "This state-changing capability requires a stable overridden token and dedicated cleanup that the portable suite does not prescribe."
+}
