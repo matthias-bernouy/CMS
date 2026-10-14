@@ -95,8 +95,13 @@ describe("collection authored bundle admission", () => {
             kind: "composition",
             id: "atlas-catalog",
             label: "bloc.page.label",
-            lightdom:
-                '<section cms-query="catalog.items:item.list as items"><p cms-condition="items.loaded">{{ items.data.id }}</p></section>',
+            lightdom: `<section cms-query="catalog.items:item.list as items">
+                <div cms-match="items.outcome.kind">
+                    <div cms-case='"none"'></div>
+                    <p cms-case='"success"'>{{ items.data.id }}</p>
+                    <p cms-case='"failure"'>{{ items.outcome.code }}</p>
+                </div>
+            </section>`,
             slots: {},
             uses: [],
             requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],

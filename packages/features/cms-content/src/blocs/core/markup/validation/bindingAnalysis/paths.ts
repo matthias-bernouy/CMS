@@ -10,7 +10,9 @@ export function resolveBindingPath(path: string, scope: BindingScope, facts: Bin
     const root = segments.shift()!;
     const variable = scope.get(root);
     if (!variable) {
-        throw issue(`binding references unknown value ${JSON.stringify(root)}`);
+        // Collection and Bloc-local values are validated by their owning contract.
+        // This analyzer owns only variables introduced by the binding grammar.
+        return { kind: "unknown" };
     }
     if (variable.kind === "unknown" || segments.length === 0) {
         return variable;

@@ -1,11 +1,13 @@
+import { parseQuery } from "@bernouy/cms-content/bindings";
+import { validateDocumentBindings } from "@bernouy/cms-content/page-document";
+import type { BindingQueryCapability } from "@bernouy/cms-content/page-document";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { satisfiesVersionRange } from "cms-repository/exports/contracts/compatibility";
-import type { CollectionRelease } from "../../interfaces/CollectionRelease";
-import type { CollectionBloc } from "../../interfaces/CollectionBloc";
-import type { CollectionCapabilityRequirement } from "../../interfaces/CollectionRelease";
-import { CollectionValidationError } from "../errors";
-import { parseQuery } from "@bernouy/cms-content/bindings";
+import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
+import type { CollectionCapabilityRequirement, CollectionRelease } from "../../../interfaces/CollectionRelease";
+import { CollectionValidationError } from "../../errors";
 import { parseHTML } from "linkedom";
+import { mergeQueryCapabilities } from "./mergeCapabilities";
 
 /** Each resource and its used blocs need joint witnesses; unrelated resources stay independent. */
 export async function verifyCollectionRequirements(
@@ -16,13 +18,14 @@ export async function verifyCollectionRequirements(
     for (const bloc of release.blocs) {
         const used = usedBlocs(bloc, blocs);
         const closure = used.flatMap((item) => item.requires);
-        await verifyRequirements(
+        const capabilities = await verifyRequirements(
             closure,
             queryTargets(used.map((item) => item.lightdom ?? "")),
             `$.blocs.${bloc.id}.requires`,
             "this bloc and its used blocs",
             catalogue,
         );
+        validateBindings(bloc.lightdom ?? "", capabilities, `$.blocs.${bloc.id}.lightdom`);
     }
     for (const page of release.pages ?? []) {
         const used = page.uses.flatMap((id) => {
@@ -30,13 +33,14 @@ export async function verifyCollectionRequirements(
             return bloc ? usedBlocs(bloc, blocs) : [];
         });
         const closure = [...page.requires, ...used.flatMap((item) => item.requires)];
-        await verifyRequirements(
+        const capabilities = await verifyRequirements(
             closure,
             queryTargets([page.document.html, ...used.map((item) => item.lightdom ?? "")]),
             `$.pages.${page.id}.requires`,
             "this page and its used blocs",
             catalogue,
         );
+        validateBindings(page.document.html, capabilities, `$.pages.${page.id}.document.html`);
     }
 }
 
@@ -46,11 +50,12 @@ async function verifyRequirements(
     path: string,
     owner: string,
     catalogue?: ReleaseCatalogue,
-): Promise<void> {
+): Promise<readonly BindingQueryCapability[]> {
+    const result: BindingQueryCapability[] = [];
     for (const contractId of new Set(closure.map((requirement) => requirement.contractId))) {
         const requirements = closure.filter((requirement) => requirement.contractId === contractId);
         const entries = catalogue ? await catalogue.list(contractId) : [];
-        const witness = entries.some((entry) => {
+        const witnesses = entries.filter((entry) => {
             const contract = entry.admission.release;
             return (
                 !entry.yank &&
@@ -67,13 +72,44 @@ async function verifyRequirements(
                 )
             );
         });
-        if (!witness) {
+        if (witnesses.length === 0) {
             throw new CollectionValidationError(
                 "resolution_failed",
                 `no non-yanked ${contractId} release jointly satisfies ${owner}`,
                 path,
             );
         }
+        for (const target of queries) {
+            if (!target.startsWith(`${contractId}/`)) {
+                continue;
+            }
+            const capabilityId = target.slice(contractId.length + 1);
+            result.push(
+                mergeQueryCapabilities(
+                    contractId,
+                    capabilityId,
+                    witnesses.map((entry) =>
+                        entry.admission.release.capabilities.find((capability) => capability.id === capabilityId),
+                    ),
+                    path,
+                ),
+            );
+        }
+    }
+    return result;
+}
+
+function validateBindings(html: string, capabilities: readonly BindingQueryCapability[], path: string): void {
+    const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
+    document.body.innerHTML = html;
+    try {
+        validateDocumentBindings(document, { capabilities, requireCapabilityResolution: true });
+    } catch (error) {
+        throw new CollectionValidationError(
+            "invalid_collection",
+            error instanceof Error ? error.message : "invalid typed query binding",
+            path,
+        );
     }
 }
 
