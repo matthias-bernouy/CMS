@@ -61,7 +61,7 @@ describe("renderPage — binding core wrapper", () => {
         expect(html).toContain("<cms-binding-core");
         expect(html).toContain(`<link href="${BINDING_CORE_URL}" as="script" rel="preload">`);
         expect(html).toContain('id="cms-binding-cloak"');
-        expect(html).toContain("cms-binding-core:not(:defined) :is([cms-source],[cms-query]){visibility:hidden}");
+        expect(html).toContain("cms-binding-core:not(:defined) :is([cms-mutation],[cms-query]){visibility:hidden}");
         expect(html).not.toContain("body{visibility:hidden}");
         expect(html).toContain(BINDING_CORE_URL);
         const { document } = parseHTML(html);

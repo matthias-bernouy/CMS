@@ -19,7 +19,7 @@ export async function resolvePageLinks(root: Element, kernel: KernelCms): Promis
     for (const element of elements) {
         const success = element.hasAttribute("data-cms-success-page-ref");
         const referenceAttribute = success ? "data-cms-success-page-ref" : "data-cms-page-ref";
-        const targetAttribute = success ? "cms-source-success-redirect" : "href";
+        const targetAttribute = success ? "cms-mutation-redirect" : "href";
         if ((!success && element.localName !== "a") || (success && element.localName !== "form")) {
             throw new Error("Stable Page references must target anchors or successful form redirects");
         }

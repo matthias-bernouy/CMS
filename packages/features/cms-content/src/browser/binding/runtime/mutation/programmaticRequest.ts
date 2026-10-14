@@ -1,12 +1,12 @@
 import type { FormSubmitResult } from "../../form/formSubmit";
 import { parseMutation } from "cms-content/blocs/core/markup/bindings";
-import { CMS_SOURCE_FAILED_EVENT, CMS_SOURCE_SUCCESS_EVENT } from "./events/resultEvents";
+import { CMS_MUTATION_FAILED_EVENT, CMS_MUTATION_SUCCESS_EVENT } from "./events/resultEvents";
 
 const submittedControls = new WeakMap<HTMLFormElement, HTMLElement[]>();
 const activeForms = new WeakSet<HTMLFormElement>();
 const activationWaiters = new WeakMap<HTMLFormElement, Set<() => void>>();
 
-export function activateSourceForm(form: HTMLFormElement): () => void {
+export function activateMutationForm(form: HTMLFormElement): () => void {
     activeForms.add(form);
     for (const resolve of activationWaiters.get(form) ?? []) {
         resolve();
@@ -15,7 +15,7 @@ export function activateSourceForm(form: HTMLFormElement): () => void {
     return () => activeForms.delete(form);
 }
 
-export class SourceFormError extends Error {
+export class MutationFormError extends Error {
     constructor(
         message: string,
         readonly status: number,
@@ -24,8 +24,6 @@ export class SourceFormError extends Error {
         super(message);
     }
 }
-
-export { SourceFormError as MutationFormError };
 
 /** Submit a declarative mutation form and await its successful output. */
 export async function mutationFormRequest(
@@ -51,32 +49,12 @@ export async function mutationFormRequest(
     return requestForm(matches[0]!, values);
 }
 
-/** Submit a declarative form source and await the result owned by binding. */
-export async function sourceFormRequest(
-    host: ParentNode,
-    sourceId: string,
-    values: Record<string, unknown> = {},
-): Promise<unknown> {
-    if (!/^[a-z][a-z0-9-]*$/.test(sourceId)) {
-        throw new Error(`Invalid declarative source id: ${sourceId}`);
-    }
-    const selector = `[cms-source-id="${sourceId}"]`;
-    const local = host.querySelector(selector);
-    const root = host instanceof Node ? host.getRootNode() : null;
-    const parentHost = root instanceof ShadowRoot ? root.host : null;
-    const form = local || parentHost?.querySelector(selector);
-    if (!(form instanceof HTMLFormElement)) {
-        throw new Error(`Missing declarative source form: ${sourceId}`);
-    }
-    return requestForm(form, values);
-}
-
 async function requestForm(form: HTMLFormElement, values: Record<string, unknown>): Promise<unknown> {
-    await sourceReady(form);
+    await mutationReady(form);
     replaceSubmittedControls(form, values);
     const result = await submit(form);
     if (!result.ok) {
-        throw new SourceFormError(resultMessage(result), result.status || 0, result.body);
+        throw new MutationFormError(resultMessage(result), result.status || 0, result.body);
     }
     return result.body;
 }
@@ -160,17 +138,17 @@ function submit(form: HTMLFormElement): Promise<FormSubmitResult> {
             if (event.target !== form) {
                 return;
             }
-            form.removeEventListener(CMS_SOURCE_SUCCESS_EVENT, complete);
-            form.removeEventListener(CMS_SOURCE_FAILED_EVENT, complete);
+            form.removeEventListener(CMS_MUTATION_SUCCESS_EVENT, complete);
+            form.removeEventListener(CMS_MUTATION_FAILED_EVENT, complete);
             resolve((event as CustomEvent<FormSubmitResult>).detail);
         };
-        form.addEventListener(CMS_SOURCE_SUCCESS_EVENT, complete);
-        form.addEventListener(CMS_SOURCE_FAILED_EVENT, complete);
+        form.addEventListener(CMS_MUTATION_SUCCESS_EVENT, complete);
+        form.addEventListener(CMS_MUTATION_FAILED_EVENT, complete);
         form.requestSubmit();
     });
 }
 
-function sourceReady(form: HTMLFormElement): Promise<void> {
+function mutationReady(form: HTMLFormElement): Promise<void> {
     if (activeForms.has(form)) {
         return Promise.resolve();
     }

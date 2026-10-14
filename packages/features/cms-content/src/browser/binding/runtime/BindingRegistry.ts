@@ -1,14 +1,12 @@
-import { BINDING_CORE_TAG, MUTATION_ATTR, QUERIES_ATTR, QUERY_ATTR, SOURCE_ATTR } from "../core/attrs";
+import { BINDING_CORE_TAG, MUTATION_ATTR, QUERIES_ATTR, QUERY_ATTR } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
 import { SyncControl } from "../state/SyncControl";
 import { Query } from "./query/Query";
 import { FormMutation } from "./mutation/FormMutation";
-import { mutationStateScope, type MutationState } from "./mutation/mutationState";
 
 export class BindingRegistry {
     private readonly queries = new Map<Element, Query>();
     private readonly mutations = new Map<Element, FormMutation>();
-    private readonly mutationStates = new Map<Element, MutationState>();
     private readonly syncControls = new Map<Element, SyncControl>();
     constructor(
         private readonly root: Element,
@@ -34,7 +32,6 @@ export class BindingRegistry {
         }
         this.queries.clear();
         this.mutations.clear();
-        this.mutationStates.clear();
         this.syncControls.clear();
     }
 
@@ -70,10 +67,7 @@ export class BindingRegistry {
     }
 
     reconcileSource(element: Element): void {
-        if (
-            (!element.hasAttribute(SOURCE_ATTR) && !element.hasAttribute(MUTATION_ATTR)) ||
-            element.localName !== "form"
-        ) {
+        if (!element.hasAttribute(MUTATION_ATTR) || element.localName !== "form") {
             this.unregisterSource(element);
             return;
         }
@@ -93,8 +87,6 @@ export class BindingRegistry {
             return;
         }
         const mutation = new FormMutation(element as HTMLFormElement, this.filters, {
-            setMutationState: (current, status) => this.mutationStates.set(current, status),
-            mutationStatesFor: (current, status) => mutationStateScope(this.root, this.mutationStates, current, status),
             afterMutationRender: this.afterRender,
         });
         this.mutations.set(element, mutation);
@@ -111,7 +103,6 @@ export class BindingRegistry {
         }
         mutation.dispose();
         this.mutations.delete(element);
-        this.mutationStates.delete(element);
     }
 
     registerSyncControl(element: Element): void {

@@ -28,17 +28,17 @@ describe("CompiledTemplate — boundaries", () => {
         expect(text(source.querySelector("span"))).toBe("{{ id }}");
     });
 
-    test("descends into submit sources for parent data while keeping submit result bindings inert", () => {
+    test("descends into mutations for parent data while keeping mutation result bindings inert", () => {
         const { host, region } = mount(
             `
-            <form cms-source="/api/save as result" cms-source-trigger="submit" data-id="{{ id }}" cms-source-success-redirect="/saved?id={{ result.body.id }}">
+            <form cms-mutation="test.settings:save as result" data-id="{{ id }}" cms-mutation-redirect="/saved?id={{ result.data.id }}">
                 <input name="site.name" value="{{ site.name }}">
                 <select name="site.notFound">
                     <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
                 </select>
                 <input class="enabled" cms-condition="email.enabled" name="email.enabled" value="true">
                 <input class="disabled" cms-condition="!email.enabled" name="email.enabled" value="true">
-                <p class="success" cms-condition="result.ok">Saved {{ result.body.id }}</p>
+                <p class="success" cms-condition="result.outcome.kind === 'success'">Saved {{ result.data.id }}</p>
             </form>
         `,
             {
@@ -51,14 +51,14 @@ describe("CompiledTemplate — boundaries", () => {
         const form = host.querySelector("form")!;
 
         expect(form.getAttribute("data-id")).toBe("settings");
-        expect(form.getAttribute("cms-source-success-redirect")).toBe("/saved?id={{ result.body.id }}");
+        expect(form.getAttribute("cms-mutation-redirect")).toBe("/saved?id={{ result.data.id }}");
         expect(form.querySelector("input")!.getAttribute("value")).toBe("Demo");
         expect(form.querySelector("option")!.getAttribute("value")).toBe("/404");
         expect(text(form.querySelector("option"))).toBe("Not found");
         expect(form.querySelector(".enabled")).not.toBeNull();
         expect(form.querySelector(".enabled")!.hasAttribute("cms-condition")).toBe(false);
         expect(form.querySelector(".disabled")).toBeNull();
-        expect(text(form.querySelector(".success"))).toBe("Saved {{ result.body.id }}");
+        expect(text(form.querySelector(".success"))).toBe("Saved {{ result.data.id }}");
         expect(form.querySelector(".success")!.hasAttribute("cms-condition")).toBe(true);
 
         region.update({
@@ -71,14 +71,14 @@ describe("CompiledTemplate — boundaries", () => {
         });
 
         expect(form.getAttribute("data-id")).toBe("settings-2");
-        expect(form.getAttribute("cms-source-success-redirect")).toBe("/saved?id={{ result.body.id }}");
+        expect(form.getAttribute("cms-mutation-redirect")).toBe("/saved?id={{ result.data.id }}");
         expect(form.querySelector("input")!.getAttribute("value")).toBe("Updated");
         expect(form.querySelector("option")!.getAttribute("value")).toBe("/500");
         expect(text(form.querySelector("option"))).toBe("Server error");
         expect(form.querySelector(".enabled")).toBeNull();
         expect(form.querySelector(".disabled")).not.toBeNull();
         expect(form.querySelector(".disabled")!.hasAttribute("cms-condition")).toBe(false);
-        expect(text(form.querySelector(".success"))).toBe("Saved {{ result.body.id }}");
+        expect(text(form.querySelector(".success"))).toBe("Saved {{ result.data.id }}");
     });
 
     test("binds a nested binding core's own attributes but keeps its subtree inert", () => {
@@ -98,11 +98,11 @@ describe("CompiledTemplate — boundaries", () => {
         expect(text(core.querySelector("span"))).toBe("{{ id }}");
     });
 
-    test("boolean attributes respect nested source and submit-result ownership", () => {
+    test("boolean attributes respect nested mutation and result ownership", () => {
         const { host, region } = mount(
-            `<form cms-source="/save as result" cms-source-trigger="submit">
+            `<form cms-mutation="test.settings:save as result">
                 <input required="{{ required }}">
-                <button disabled="{{ result.pending }}">Save</button>
+                <button disabled="{{ result.activity === 'submitting' }}">Save</button>
             </form>
             <section cms-query="catalog:nested as nested" hidden="{{ hidden }}">
                 <input required="{{ required }}">

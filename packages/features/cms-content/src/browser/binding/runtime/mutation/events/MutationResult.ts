@@ -3,16 +3,15 @@ import {
     MUTATION_REDIRECT_ATTR,
     MUTATION_REDIRECT_PARAM_ATTR,
     MUTATION_RESET_ATTR,
-    SOURCE_SUCCESS_REDIRECT_ATTR,
-    SOURCE_SUCCESS_REDIRECT_PARAM_ATTR,
-    SOURCE_SUCCESS_RELOAD_ATTR,
-    SOURCE_SUCCESS_RESET_ATTR,
-    type SourceMethod,
 } from "../../../core/attrs";
 import { interpolateString, type FilterMap } from "../../../core/interpolate";
 import type { Scope } from "../../../core/scope";
 import type { FormSubmitResult } from "../../../form/formSubmit";
-import { CMS_SOURCE_FAILED_EVENT, CMS_SOURCE_REFRESH_FAILED_EVENT, CMS_SOURCE_SUCCESS_EVENT } from "./resultEvents";
+import {
+    CMS_MUTATION_FAILED_EVENT,
+    CMS_MUTATION_REFRESH_FAILED_EVENT,
+    CMS_MUTATION_SUCCESS_EVENT,
+} from "./resultEvents";
 
 export class MutationResult {
     constructor(
@@ -20,10 +19,10 @@ export class MutationResult {
         private readonly filters: FilterMap,
     ) {}
 
-    complete(result: FormSubmitResult, alias: string | undefined, method: SourceMethod): void {
+    complete(result: FormSubmitResult, alias: string): void {
         if (result.ok && result.refresh?.ok === false) {
             this.element.dispatchEvent(
-                new CustomEvent(CMS_SOURCE_REFRESH_FAILED_EVENT, { bubbles: true, composed: true, detail: result }),
+                new CustomEvent(CMS_MUTATION_REFRESH_FAILED_EVENT, { bubbles: true, composed: true, detail: result }),
             );
             return;
         }
@@ -31,7 +30,7 @@ export class MutationResult {
         if (!result.ok) {
             return;
         }
-        if (this.shouldReset(method)) {
+        if (this.shouldReset()) {
             result.form.reset();
         }
         const target = this.successRedirect(result, alias);
@@ -41,58 +40,42 @@ export class MutationResult {
     }
 
     private dispatch(result: FormSubmitResult): void {
-        const type = result.ok ? CMS_SOURCE_SUCCESS_EVENT : CMS_SOURCE_FAILED_EVENT;
+        const type = result.ok ? CMS_MUTATION_SUCCESS_EVENT : CMS_MUTATION_FAILED_EVENT;
         const init: CustomEventInit<FormSubmitResult> = { bubbles: true, composed: true, detail: result };
         this.element.dispatchEvent(new CustomEvent(type, init));
     }
 
-    private shouldReset(method: SourceMethod): boolean {
-        const value = (
-            this.element.getAttribute(MUTATION_RESET_ATTR) ?? this.element.getAttribute(SOURCE_SUCCESS_RESET_ATTR)
-        )
-            ?.trim()
-            .toLowerCase();
+    private shouldReset(): boolean {
+        const value = this.element.getAttribute(MUTATION_RESET_ATTR)?.trim().toLowerCase();
         if (value === "false" || value === "0" || value === "no") {
             return false;
         }
         if (value === "true" || value === "1" || value === "yes" || value === "") {
             return true;
         }
-        return (
-            !this.element.hasAttribute(MUTATION_INVALIDATES_ATTR) &&
-            !this.element.hasAttribute(SOURCE_SUCCESS_RELOAD_ATTR) &&
-            method !== "GET"
-        );
+        return !this.element.hasAttribute(MUTATION_INVALIDATES_ATTR);
     }
 
-    private successRedirect(result: FormSubmitResult, alias: string | undefined): string {
-        const param = (
-            this.element.getAttribute(MUTATION_REDIRECT_PARAM_ATTR) ??
-            this.element.getAttribute(SOURCE_SUCCESS_REDIRECT_PARAM_ATTR)
-        )?.trim();
+    private successRedirect(result: FormSubmitResult, alias: string): string {
+        const param = this.element.getAttribute(MUTATION_REDIRECT_PARAM_ATTR)?.trim();
         const requested = param ? new URLSearchParams(location.search).get(param)?.trim() : "";
         if (requested && this.redirectUrl(requested)) {
             return requested;
         }
-        const template = (
-            this.element.getAttribute(MUTATION_REDIRECT_ATTR) ?? this.element.getAttribute(SOURCE_SUCCESS_REDIRECT_ATTR)
-        )?.trim();
+        const template = this.element.getAttribute(MUTATION_REDIRECT_ATTR)?.trim();
         if (!template) {
             return "";
         }
         const scope: Scope = {
             value: result,
             vars: {
-                ...(alias ? { [alias]: result } : {}),
-                result,
-                $source: {
-                    loading: false,
-                    loaded: result.ok,
-                    empty: false,
-                    error: !result.ok,
-                    status: result.status,
-                    message: result.message,
+                [alias]: {
+                    activity: "idle",
+                    hasData: true,
+                    data: result.body,
+                    outcome: result.outcome ?? { kind: "success", status: result.status },
                 },
+                result,
             },
         };
         return interpolateString(template, scope, this.filters).trim();

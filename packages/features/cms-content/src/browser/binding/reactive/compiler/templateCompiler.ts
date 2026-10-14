@@ -1,11 +1,4 @@
-import {
-    BINDING_CORE_TAG,
-    MUTATION_ATTR,
-    QUERIES_ATTR,
-    QUERY_ATTR,
-    SOURCE_ATTR,
-    SOURCE_TRIGGER_ATTR,
-} from "../../core/attrs";
+import { BINDING_CORE_TAG, MUTATION_ATTR, QUERIES_ATTR, QUERY_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import { bindingOwnedBySubmitSource, pathOwnedBySubmitSource, submitBoundary } from "./submitOwnership";
 import { compileAttributes, rawHtmlExpression } from "./templateBindings";
@@ -74,15 +67,6 @@ function compileNode(
         const boundary = submitBoundary(element);
         compileAttributes(element, path, plan, boundary);
         compileChildren(element, path, plan, filters, createTemplate, boundary);
-        return;
-    }
-    if (element.hasAttribute(SOURCE_ATTR)) {
-        const trigger = element.getAttribute(SOURCE_TRIGGER_ATTR)?.trim().toLowerCase();
-        const boundary = trigger === "submit" || trigger === "change" ? submitBoundary(element) : null;
-        compileAttributes(element, path, plan, boundary ?? options.submitBoundary);
-        if (trigger === "submit" || trigger === "change") {
-            compileChildren(element, path, plan, filters, createTemplate, boundary);
-        }
         return;
     }
     if (element.localName === BINDING_CORE_TAG) {

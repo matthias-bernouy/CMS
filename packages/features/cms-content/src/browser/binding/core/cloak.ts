@@ -1,9 +1,9 @@
-import { BINDING_CORE_TAG, QUERY_ATTR, SOURCE_ATTR } from "./attrs";
+import { BINDING_CORE_TAG, MUTATION_ATTR, QUERY_ATTR } from "./attrs";
 
 const CLOAK_ID = "cms-binding-cloak";
 const CLOAK_CSS =
     `${BINDING_CORE_TAG}{display:contents}` +
-    `${BINDING_CORE_TAG}:not(:defined) :is([${SOURCE_ATTR}],[${QUERY_ATTR}]){visibility:hidden}`;
+    `${BINDING_CORE_TAG}:not(:defined) :is([${MUTATION_ATTR}],[${QUERY_ATTR}]){visibility:hidden}`;
 
 export function injectCloak(doc: Document): void {
     if (doc.getElementById(CLOAK_ID)) {

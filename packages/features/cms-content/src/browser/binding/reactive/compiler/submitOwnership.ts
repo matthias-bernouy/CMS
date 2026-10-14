@@ -1,13 +1,11 @@
-import { MUTATION_ATTR, SOURCE_ATTR } from "../../core/attrs";
+import { MUTATION_ATTR } from "../../core/attrs";
 import { collectConditionReferences } from "../../render/condition";
 import type { SubmitSourceBoundary } from "../templatePlan";
-import { interpolationExpressions, parseMutation, parseSource } from "cms-content/blocs/core/markup/bindings";
+import { interpolationExpressions, parseMutation } from "cms-content/blocs/core/markup/bindings";
 
 export function submitBoundary(element: Element): SubmitSourceBoundary {
     return {
-        alias:
-            parseMutation(element.getAttribute(MUTATION_ATTR) ?? "")?.name ??
-            parseSource(element.getAttribute(SOURCE_ATTR) ?? "")?.alias,
+        alias: parseMutation(element.getAttribute(MUTATION_ATTR) ?? "")?.name,
     };
 }
 
@@ -35,5 +33,5 @@ export function pathOwnedBySubmitSource(path: string, boundary: SubmitSourceBoun
         return false;
     }
     const head = path.trim().split(".")[0] ?? "";
-    return head === "$source" || (!!boundary.alias && head === boundary.alias);
+    return !!boundary.alias && head === boundary.alias;
 }

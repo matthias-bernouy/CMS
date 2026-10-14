@@ -15,7 +15,7 @@ describe("<cms-binding-core> — cloak", () => {
         document.body.innerHTML = `<${BINDING_CORE_TAG}></${BINDING_CORE_TAG}>`;
         const style = document.getElementById("cms-binding-cloak");
         expect(style).not.toBeNull();
-        expect(style!.textContent).toContain(`${BINDING_CORE_TAG}:not(:defined) :is([cms-source],[cms-query])`);
+        expect(style!.textContent).toContain(`${BINDING_CORE_TAG}:not(:defined) :is([cms-mutation],[cms-query])`);
         expect(style!.textContent).toContain("visibility:hidden");
         expect(style!.textContent).not.toContain("cms-ready");
     });

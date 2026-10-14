@@ -1,7 +1,7 @@
 /**
  * `<cms-binding-core>` — the declarative activation root for the data-binding
  * runtime. Wrap any region of HTML in it; on connect it runs a `BindingRuntime`
- * over its own subtree (discovering `cms-query` and `cms-source` elements, expanding
+ * over its own subtree (discovering `cms-query` and `cms-mutation` elements, expanding
  * `cms-repeat`, interpolating `{{ }}`), and on disconnect it tears that runtime
  * down. The custom-element lifecycle replaces the old imperative bootstrap —
  * no head script, no DOMContentLoaded juggling.
@@ -23,9 +23,13 @@ export {
     QUERY_INPUT_ATTR,
     QUERY_LISTEN_ATTR,
     QUERY_REFRESH_ATTR,
-    SOURCE_BODY_ATTR,
-    SOURCE_ID_ATTR,
-    SOURCE_TRIGGER_ATTR,
+    MUTATION_ATTR,
+    MUTATION_IDEMPOTENCY_ATTR,
+    MUTATION_INPUT_ATTR,
+    MUTATION_INVALIDATES_ATTR,
+    MUTATION_REDIRECT_ATTR,
+    MUTATION_REDIRECT_PARAM_ATTR,
+    MUTATION_RESET_ATTR,
     SYNC_ATTR,
 } from "./core/attrs";
 export {
@@ -35,19 +39,14 @@ export {
     writeSyncValue,
 } from "./state/SyncState";
 export {
-    CMS_SOURCE_FAILED_EVENT,
-    CMS_SOURCE_REFRESH_FAILED_EVENT,
-    CMS_SOURCE_SUCCESS_EVENT,
-    type CmsSourceResultEvent,
-    type CmsSourceResultEventMap,
+    CMS_MUTATION_FAILED_EVENT,
+    CMS_MUTATION_REFRESH_FAILED_EVENT,
+    CMS_MUTATION_SUCCESS_EVENT,
+    type CmsMutationResultEvent,
+    type CmsMutationResultEventMap,
 } from "./runtime/mutation/events/resultEvents";
 export type { FormSubmitResult } from "./form/formSubmit";
-export {
-    mutationFormRequest,
-    MutationFormError,
-    sourceFormRequest,
-    SourceFormError,
-} from "./runtime/mutation/programmaticRequest";
+export { mutationFormRequest, MutationFormError } from "./runtime/mutation/programmaticRequest";
 
 const BINDING_FILTERS_KEY = Symbol.for("@bernouy/cms-content.browser.binding.filters");
 

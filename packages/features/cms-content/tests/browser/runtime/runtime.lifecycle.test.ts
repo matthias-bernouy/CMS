@@ -22,15 +22,15 @@ describe("BindingRuntime — lifecycle", () => {
         expect(text(root.querySelector("p"))).toBe("{{ methods.data[0] }}");
     });
 
-    test("discovers forms but ignores cms-source on non-form elements", async () => {
+    test("discovers mutation forms but ignores cms-mutation on non-form elements", async () => {
         const requests: string[] = [];
         globalThis.fetch = (async (input: RequestInfo | URL) => {
             requests.push(String(input));
             return new Response("{}");
         }) as typeof fetch;
         const root = el(`<div>
-            <section cms-source="/old-read-source"></section>
-            <form cms-source="/save" cms-source-trigger="submit"><button>Save</button></form>
+            <section cms-mutation="test.items:save as ignored"></section>
+            <form cms-mutation="test.items:save as saved"><button>Save</button></form>
         </div>`);
         document.body.appendChild(root);
         const runtime = new BindingRuntime(root);
@@ -40,7 +40,7 @@ describe("BindingRuntime — lifecycle", () => {
         expect(requests).toEqual([]);
         root.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
         await waitFor(() => requests.length === 1);
-        expect(requests).toEqual(["http://localhost/save"]);
+        expect(requests).toEqual(["http://localhost/.cms/call/test.items/save"]);
         runtime.stop();
     });
 

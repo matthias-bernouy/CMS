@@ -8,7 +8,7 @@
  *  - **Blank on miss.** A token whose path resolves nowhere in the scope chain
  *    renders empty — it's an absent optional field. This is safe in this runtime:
  *    a nested source's tokens are never bound by
- *    an ancestor (the pass stops at the `[cms-query]` or `[cms-source]` boundary), and
+ *    an ancestor (the pass stops at the `[cms-query]` or `[cms-mutation]` boundary), and
  *    `{{ BASE_PATH }}` is server-substituted before the client ever sees it.
  *  - **Raw, not HTML-escaped.** The resolved value is stringified as-is. Safety
  *    is the consumer's job and comes for free from the DOM APIs: text and

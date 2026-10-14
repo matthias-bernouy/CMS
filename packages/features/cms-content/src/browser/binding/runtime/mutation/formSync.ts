@@ -7,21 +7,8 @@ export function publishFormSync(form: HTMLFormElement, state: MutationState, inp
         return;
     }
     try {
-        const synchronizedState =
-            state.data && typeof state.data === "object" && "form" in state.data
-                ? { ...state, data: serializableResult(state.data as Record<string, unknown>) }
-                : state;
-        writeSyncValue(
-            target,
-            { ...synchronizedState, ...(input === undefined ? {} : { input }), dirty },
-            form.ownerDocument,
-        );
+        writeSyncValue(target, { ...state, ...(input === undefined ? {} : { input }), dirty }, form.ownerDocument);
     } catch (error) {
         console.warn("cms-sync could not publish form state", error);
     }
-}
-
-function serializableResult(result: Record<string, unknown>): Record<string, unknown> {
-    const { form: _form, ...serializable } = result;
-    return serializable;
 }

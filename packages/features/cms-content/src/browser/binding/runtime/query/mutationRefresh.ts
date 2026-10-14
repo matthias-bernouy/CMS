@@ -1,6 +1,6 @@
 import { parseQuery } from "cms-content/blocs/core/markup/bindings/source";
 import { parseCmsSourceSuccessReload } from "cms-content/blocs/core/validation/nativeBindings/formValues";
-import { BINDING_CORE_TAG, MUTATION_INVALIDATES_ATTR, QUERY_ATTR, SOURCE_SUCCESS_RELOAD_ATTR } from "../../core/attrs";
+import { BINDING_CORE_TAG, MUTATION_INVALIDATES_ATTR, QUERY_ATTR } from "../../core/attrs";
 
 type Reader = {
     url: () => string;
@@ -50,7 +50,7 @@ export function connectQueryReload(
 }
 
 export function formMutationReload(form: HTMLFormElement) {
-    const rawNames = form.getAttribute(MUTATION_INVALIDATES_ATTR) ?? form.getAttribute(SOURCE_SUCCESS_RELOAD_ATTR);
+    const rawNames = form.getAttribute(MUTATION_INVALIDATES_ATTR);
     if (!rawNames?.trim()) {
         return null;
     }

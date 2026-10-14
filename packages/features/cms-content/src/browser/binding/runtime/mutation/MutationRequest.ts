@@ -1,20 +1,9 @@
-import {
-    MUTATION_ATTR,
-    MUTATION_IDEMPOTENCY_ATTR,
-    MUTATION_INPUT_ATTR,
-    SOURCE_BODY_ATTR,
-    SOURCE_IDEMPOTENCY_ATTR,
-    SOURCE_INHERIT_QUERY_ATTR,
-    SOURCE_METHOD_ATTR,
-    type SourceMethod,
-} from "../../core/attrs";
+import { MUTATION_IDEMPOTENCY_ATTR, MUTATION_INPUT_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import { resolveBindingInput } from "../../state/bindingInput";
 import {
     collectFormData,
-    normalizeFormMethod,
     serializeForm,
-    submitForm,
     type AdditionalFormFields,
     type FormSubmitResult,
     type SerializedForm,
@@ -24,7 +13,7 @@ import { runFetch } from "../query/queryFetch";
 
 type CapturedSubmission = {
     form: HTMLFormElement;
-    method: SourceMethod;
+    method: "POST";
     formData: FormData;
     bodyFields: AdditionalFormFields | undefined;
     serialized: SerializedForm;
@@ -50,9 +39,9 @@ export class MutationRequest {
         if (!form) {
             return null;
         }
-        const method = this.sourceMethod();
+        const method = "POST" as const;
         const formData = collectFormData(form);
-        const bodyFields = method === "GET" ? undefined : this.resolveBodyFields(true);
+        const bodyFields = this.resolveBodyFields(true);
         const serialized = serializeForm(form, { url: this.submitUrl(url), method, formData, bodyFields });
         this.latestInput = serialized.data;
         return {
@@ -74,9 +63,9 @@ export class MutationRequest {
         if (!form) {
             return;
         }
-        const method = this.sourceMethod();
+        const method = "POST" as const;
         const formData = collectFormData(form);
-        const bodyFields = method === "GET" ? undefined : this.resolveBodyFields(false);
+        const bodyFields = this.resolveBodyFields(false);
         this.latestInput = serializeForm(form, {
             url: this.submitUrl(url),
             method,
@@ -85,61 +74,50 @@ export class MutationRequest {
         }).data;
     }
 
-    async send(captured: CapturedSubmission, url: string, signal: AbortSignal): Promise<FormSubmitResult> {
-        if (this.element.hasAttribute(MUTATION_ATTR)) {
-            const headers = new Headers();
-            headers.set("Accept", "application/json");
-            if (captured.idempotencyKey) {
-                headers.set("Idempotency-Key", captured.idempotencyKey);
-            }
-            const init: RequestInit = { method: "POST", headers, signal };
-            if (captured.serialized.kind === "json") {
-                headers.set("Content-Type", "application/json");
-                init.body = captured.serialized.body;
-            } else if (captured.serialized.kind === "formData") {
-                init.body = captured.serialized.body;
-            }
-            const outcome = await runFetch(captured.serialized.url, signal, init);
-            if (outcome.kind === "success") {
-                return {
-                    ok: true,
-                    status: outcome.status ?? 200,
-                    statusText: "OK",
-                    body: outcome.data,
-                    message: "",
-                    form: captured.form,
-                    outcome: {
-                        kind: "success",
-                        status: outcome.status ?? 200,
-                        ...(outcome.requestId ? { requestId: outcome.requestId } : {}),
-                    },
-                };
-            }
-            const failed =
-                outcome.kind === "aborted" ? { kind: "failure" as const, code: "aborted", retryable: false } : outcome;
+    async send(captured: CapturedSubmission, signal: AbortSignal): Promise<FormSubmitResult> {
+        const headers = new Headers();
+        headers.set("Accept", "application/json");
+        if (captured.idempotencyKey) {
+            headers.set("Idempotency-Key", captured.idempotencyKey);
+        }
+        const init: RequestInit = { method: "POST", headers, signal };
+        if (captured.serialized.kind === "json") {
+            headers.set("Content-Type", "application/json");
+            init.body = captured.serialized.body;
+        } else if (captured.serialized.kind === "formData") {
+            init.body = captured.serialized.body;
+        }
+        const outcome = await runFetch(captured.serialized.url, signal, init);
+        if (outcome.kind === "success") {
             return {
-                ok: false,
-                status: failed.status ?? 0,
-                statusText: failed.kind === "error" ? "Command rejected" : "Mutation failed",
-                body: failed.kind === "error" ? (failed.output ?? null) : null,
-                message: failed.code,
+                ok: true,
+                status: outcome.status ?? 200,
+                statusText: "OK",
+                body: outcome.data,
+                message: "",
                 form: captured.form,
-                outcome: failed,
+                outcome: {
+                    kind: "success",
+                    status: outcome.status ?? 200,
+                    ...(outcome.requestId ? { requestId: outcome.requestId } : {}),
+                },
             };
         }
-        return submitForm(captured.form, {
-            url: this.submitUrl(url),
-            method: captured.method,
-            signal,
-            bodyFields: captured.bodyFields,
-            formData: captured.formData,
-            serialized: captured.serialized,
-            ...(captured.idempotencyKey ? { headers: { "Idempotency-Key": captured.idempotencyKey } } : {}),
-        });
+        const failed =
+            outcome.kind === "aborted" ? { kind: "failure" as const, code: "aborted", retryable: false } : outcome;
+        return {
+            ok: false,
+            status: failed.status ?? 0,
+            statusText: failed.kind === "error" ? "Command rejected" : "Mutation failed",
+            body: failed.kind === "error" ? (failed.output ?? null) : null,
+            message: failed.code,
+            form: captured.form,
+            outcome: failed,
+        };
     }
 
     private resolveBodyFields(required: boolean): AdditionalFormFields | undefined {
-        const value = this.element.getAttribute(MUTATION_INPUT_ATTR) ?? this.element.getAttribute(SOURCE_BODY_ATTR);
+        const value = this.element.getAttribute(MUTATION_INPUT_ATTR);
         const resolved = resolveBindingInput(value, this.element.ownerDocument);
         if (!resolved.ready) {
             if (required) {
@@ -150,16 +128,15 @@ export class MutationRequest {
         return Object.keys(resolved.fields).length ? resolved.fields : undefined;
     }
 
-    complete(result: FormSubmitResult, alias: string | undefined): void {
+    complete(result: FormSubmitResult, alias: string): void {
         if (result.ok && result.refresh?.ok !== false) {
             idempotencyAttempts.delete(result.form);
         }
-        this.result.complete(result, alias, this.sourceMethod());
+        this.result.complete(result, alias);
     }
 
     private idempotency(form: HTMLFormElement, serialized: SerializedForm): { idempotencyKey?: string } {
-        const mode =
-            this.element.getAttribute(MUTATION_IDEMPOTENCY_ATTR) ?? this.element.getAttribute(SOURCE_IDEMPOTENCY_ATTR);
+        const mode = this.element.getAttribute(MUTATION_IDEMPOTENCY_ATTR);
         if (mode === null) {
             return {};
         }
@@ -176,24 +153,8 @@ export class MutationRequest {
         return { idempotencyKey: key };
     }
 
-    private sourceMethod(): SourceMethod {
-        if (this.element.hasAttribute(MUTATION_ATTR)) {
-            return "POST";
-        }
-        return normalizeFormMethod(this.element.getAttribute(SOURCE_METHOD_ATTR), "POST") as SourceMethod;
-    }
-
     private submitUrl(url: string): string {
-        const next = new URL(url, location.href);
-        if (this.element.hasAttribute(MUTATION_ATTR)) {
-            return next.toString();
-        }
-        if (this.element.getAttribute(SOURCE_INHERIT_QUERY_ATTR)?.trim().toLowerCase() !== "false") {
-            for (const [key, value] of new URLSearchParams(location.search)) {
-                next.searchParams.append(key, value);
-            }
-        }
-        return next.toString();
+        return new URL(url, location.href).toString();
     }
 }
 

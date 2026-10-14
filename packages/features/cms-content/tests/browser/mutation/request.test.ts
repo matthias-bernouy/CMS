@@ -1,10 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import {
-    CMS_SOURCE_SUCCESS_EVENT,
+    CMS_MUTATION_SUCCESS_EVENT,
     mutationFormRequest,
+    MutationFormError,
     type FormSubmitResult,
-    sourceFormRequest,
-    SourceFormError,
 } from "../../../src/browser/index";
 import { BindingRuntime } from "../../../src/browser/binding/runtime/BindingRuntime";
 import { el, resetDom, settle, text, waitFor } from "../support/testUtils";
@@ -43,7 +42,7 @@ describe("Form mutation — submit request", () => {
         runtime.stop();
     });
 
-    test("form-owned submit source sends JSON without replacing form controls", async () => {
+    test("form-owned mutation sends JSON without replacing form controls", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
         let result: FormSubmitResult | undefined;
         location.href = "http://localhost/";
@@ -57,15 +56,15 @@ describe("Form mutation — submit request", () => {
         }) as typeof fetch;
 
         const root = el(`
-            <form cms-source="/api/users as result" cms-source-trigger="submit" cms-source-method="POST">
+            <form cms-mutation="test.users:create as result">
                 <input name="email">
-                <p class="success" cms-condition="result.ok">Created {{ result.body.id }}</p>
+                <p class="success" cms-condition="result.outcome.kind === 'success'">Created {{ result.data.id }}</p>
                 <button type="submit">Save</button>
             </form>
         `) as HTMLFormElement;
         document.body.append(root);
         document.body.addEventListener(
-            CMS_SOURCE_SUCCESS_EVENT,
+            CMS_MUTATION_SUCCESS_EVENT,
             (event) => {
                 result = event.detail;
             },
@@ -85,7 +84,7 @@ describe("Form mutation — submit request", () => {
         await waitFor(() => text(root.querySelector(".success")) === "Created 42");
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/api/users");
+        expect(captured.url).toBe("http://localhost/.cms/call/test.users/create");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.body).toBe(JSON.stringify({ email: "ada@example.com" }));
         expect(result?.status).toBe(201);
@@ -104,7 +103,7 @@ describe("Form mutation — submit request", () => {
         }) as typeof fetch;
 
         const root = el(`
-            <form cms-source="/api/newsletter as result" cms-source-trigger="submit" cms-source-method="POST">
+            <form cms-mutation="test.newsletter:subscribe as result">
                 <input name="email" value="reader@example.com">
                 <button type="submit">Subscribe</button>
             </form>
@@ -141,8 +140,7 @@ describe("Form mutation — submit request", () => {
             });
         }) as typeof fetch;
         const root = el(`
-            <form cms-source="/api/jobs" cms-source-trigger="submit" cms-source-method="POST"
-                cms-source-idempotency="auto">
+            <form cms-mutation="test.jobs:run as result" cms-mutation-idempotency="auto">
                 <input name="name" value="migration">
                 <button type="submit">Run</button>
             </form>
@@ -154,14 +152,16 @@ describe("Form mutation — submit request", () => {
 
         root.requestSubmit();
         await waitFor(() => keys.length === 1);
+        await settle();
         root.requestSubmit();
         await waitFor(() => keys.length === 2);
+        await settle();
         expect(keys[0]).not.toBe("");
         expect(keys[1]).toBe(keys[0]);
 
         status = 200;
         const succeeded = new Promise<void>((resolve) => {
-            root.addEventListener(CMS_SOURCE_SUCCESS_EVENT, () => resolve(), { once: true });
+            root.addEventListener(CMS_MUTATION_SUCCESS_EVENT, () => resolve(), { once: true });
         });
         root.requestSubmit();
         await waitFor(() => keys.length === 3);
@@ -173,20 +173,20 @@ describe("Form mutation — submit request", () => {
         runtime.stop();
     });
 
-    test("programmatic requests submit the declarative source form through binding events", async () => {
+    test("programmatic requests submit the declarative mutation through binding events", async () => {
         let payload: unknown;
         globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
             payload = JSON.parse(String(init?.body));
             return Response.json({ saved: true });
         }) as typeof fetch;
         const host = el(
-            '<div><form cms-source="/save as result" cms-source-trigger="submit" cms-source-id="save" cms-source-serialization="typed-json"></form></div>',
+            '<div><form cms-mutation="test.profile:save as save"></form></div>',
         );
         document.body.append(host);
         const runtime = new BindingRuntime(host);
         runtime.start();
 
-        const result = await sourceFormRequest(host, "save", {
+        const result = await mutationFormRequest(host, "save", {
             name: "Ada",
             count: 2,
             enabled: false,
@@ -207,22 +207,20 @@ describe("Form mutation — submit request", () => {
         runtime.stop();
     });
 
-    test("programmatic requests expose declarative source failures", async () => {
+    test("programmatic requests expose declared mutation failures", async () => {
         globalThis.fetch = (async () =>
             Response.json(
-                { error: "Invalid profile" },
+                { error: { code: "INVALID_PROFILE", retryable: false, output: { message: "Invalid profile" } } },
                 { status: 422, statusText: "Unprocessable Content" },
             )) as typeof fetch;
-        const host = el(
-            '<div><form cms-source="/save as result" cms-source-trigger="submit" cms-source-id="save"></form></div>',
-        );
+        const host = el('<div><form cms-mutation="test.profile:save as save"></form></div>');
         document.body.append(host);
         const runtime = new BindingRuntime(host);
         runtime.start();
 
-        const error = await sourceFormRequest(host, "save").catch((reason) => reason);
-        expect(error).toBeInstanceOf(SourceFormError);
-        expect(error).toMatchObject({ message: "Invalid profile", status: 422, body: { error: "Invalid profile" } });
+        const error = await mutationFormRequest(host, "save").catch((reason) => reason);
+        expect(error).toBeInstanceOf(MutationFormError);
+        expect(error).toMatchObject({ message: "Invalid profile", status: 422, body: { message: "Invalid profile" } });
         runtime.stop();
     });
 });

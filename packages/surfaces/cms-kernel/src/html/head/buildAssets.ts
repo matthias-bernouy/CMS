@@ -40,7 +40,7 @@ export function buildBindingCloak(document: Document, head: HTMLElement, enabled
     const style = document.createElement("style");
     style.id = "cms-binding-cloak";
     style.textContent =
-        "cms-binding-core{display:contents}cms-binding-core:not(:defined) :is([cms-source],[cms-query]){visibility:hidden}";
+        "cms-binding-core{display:contents}cms-binding-core:not(:defined) :is([cms-mutation],[cms-query]){visibility:hidden}";
     head.appendChild(style);
 }
 

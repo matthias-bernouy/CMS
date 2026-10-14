@@ -1,6 +1,6 @@
 /** Mounts source-independent `$range(n)` repeats owned by one binding root. */
 
-import { REPEAT_ATTR, SOURCE_ATTR } from "../core/attrs";
+import { MUTATION_ATTR, REPEAT_ATTR } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
 import { CompiledTemplate } from "../reactive/CompiledTemplate";
 import type { MountedRegion } from "../reactive/MountedRegion";
@@ -62,7 +62,7 @@ export class FixedRangeRuntime {
         }
 
         for (let parent = element.parentElement; parent && parent !== this.root; parent = parent.parentElement) {
-            if (parent.hasAttribute(SOURCE_ATTR) || parent.hasAttribute(REPEAT_ATTR)) {
+            if (parent.hasAttribute(MUTATION_ATTR) || parent.hasAttribute(REPEAT_ATTR)) {
                 return false;
             }
         }

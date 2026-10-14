@@ -1,4 +1,3 @@
-import { MUTATION_ATTR, SOURCE_SERIALIZATION_ATTR } from "../../../core/attrs";
 import type { FormSubmitResult } from "../../../form/types";
 import { formMutationReload } from "../../query/mutationRefresh";
 import type { MutationRequest } from "../MutationRequest";
@@ -21,12 +20,8 @@ export class MutationTransaction {
         if (!captured) {
             return null;
         }
-        const needsLock =
-            reload ||
-            element.hasAttribute(MUTATION_ATTR) ||
-            element.getAttribute(SOURCE_SERIALIZATION_ATTR) === "typed-json";
-        const unlock = needsLock ? lockEditing(reload?.source ?? element, captured.form) : null;
-        if (needsLock && !unlock) {
+        const unlock = lockEditing(reload?.source ?? element, captured.form);
+        if (!unlock) {
             return null;
         }
         return new MutationTransaction(request, captured, reload, unlock);
@@ -36,8 +31,8 @@ export class MutationTransaction {
         return this.unlock !== null;
     }
 
-    async send(url: string, signal: AbortSignal): Promise<FormSubmitResult | null> {
-        const result = await this.request.send(this.captured, url, signal);
+    async send(signal: AbortSignal): Promise<FormSubmitResult | null> {
+        const result = await this.request.send(this.captured, signal);
         if (signal.aborted || (this.reload && !this.reload.current())) {
             return null;
         }

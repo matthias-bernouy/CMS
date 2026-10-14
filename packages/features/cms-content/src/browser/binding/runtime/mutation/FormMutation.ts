@@ -1,7 +1,7 @@
-/** Executes one native form-owned `cms-source` mutation. */
+/** Executes one native form-owned `cms-mutation`. */
 
-import { parseMutation, parseSource } from "cms-content/blocs/core/markup/bindings/source";
-import { MUTATION_ATTR, SOURCE_ATTR } from "../../core/attrs";
+import { parseMutation } from "cms-content/blocs/core/markup/bindings";
+import { MUTATION_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import { BindingRenderer } from "../../reactive/renderer/BindingRenderer";
 import { cloneBindingContent } from "../../reactive/renderer/bindingContent";
@@ -9,31 +9,24 @@ import { listenFormMutationEvents } from "./events/formEvents";
 import { publishFormSync } from "./formSync";
 import { MutationPresenter } from "./MutationPresenter";
 import { MutationRequest } from "./MutationRequest";
-import type { MutationState, MutationStateOptions } from "./mutationState";
-import { activateSourceForm } from "./programmaticRequest";
-import { ChangeMutationScheduler } from "./transaction/ChangeMutationScheduler";
+import { initialMutationState, type MutationState } from "./mutationState";
+import { activateMutationForm } from "./programmaticRequest";
 import { MutationTransaction } from "./transaction/MutationTransaction";
 
 export type { MutationState } from "./mutationState";
 
-type FormMutationOptions = MutationStateOptions & { afterMutationRender?: (source: Element) => void };
+type FormMutationOptions = { afterMutationRender?: (mutation: Element) => void };
 
 export class FormMutation {
     private readonly renderer: BindingRenderer;
     private readonly presenter: MutationPresenter;
     private readonly request: MutationRequest;
-    private readonly changeScheduler: ChangeMutationScheduler;
     private abort: AbortController | null = null;
     private stopActivation: (() => void) | null = null;
     private stopListeners: (() => void) | null = null;
     private transaction: MutationTransaction | null = null;
     private syncDirty = false;
-    private status: MutationState = {
-        loading: false,
-        loaded: false,
-        empty: false,
-        error: false,
-    };
+    private status: MutationState = initialMutationState();
 
     constructor(
         private readonly form: HTMLFormElement,
@@ -43,32 +36,20 @@ export class FormMutation {
         this.request = new MutationRequest(form, filters);
         const captured = cloneBindingContent(form);
         this.renderer = new BindingRenderer(form, captured, filters, { inPlace: true });
-        this.presenter = new MutationPresenter(form, captured, this.renderer, {
-            ...options,
-            setMutationState: (source, status) => {
-                this.status = status;
-                options.setMutationState?.(source, status);
-            },
-        });
-        this.changeScheduler = new ChangeMutationScheduler(
-            form,
-            () => this.transaction?.locked === true,
-            () => this.run(),
-        );
+        this.presenter = new MutationPresenter(this.renderer);
     }
 
     start(): void {
         this.stopListeners = listenFormMutationEvents(this.form, {
             onSubmit: (event) => this.onSubmit(event),
-            onChange: () => this.changeScheduler.run(),
         });
         this.form.addEventListener("input", this.onFormInput);
         const spec = mutationBinding(this.form);
         if (spec) {
-            this.presenter.initial(spec.alias, spec.typed);
+            this.status = this.presenter.initial(spec.alias);
             this.afterRender();
         }
-        this.stopActivation = activateSourceForm(this.form);
+        this.stopActivation = activateMutationForm(this.form);
     }
 
     dispose(): void {
@@ -115,22 +96,22 @@ export class FormMutation {
                 message: error instanceof Error ? error.message : String(error),
                 form: this.form,
             };
-            this.presenter.result(spec.alias, result, spec.typed, this.request.input);
+            this.status = this.presenter.result(spec.alias, result, this.request.input);
             this.afterRender();
             this.request.complete(result, spec.alias);
             return false;
         }
 
-        this.presenter.loading(spec.alias, spec.typed, this.request.input);
+        this.status = this.presenter.loading(spec.alias, this.request.input);
         this.afterRender();
         this.abort?.abort();
         const controller = new AbortController();
         this.abort = controller;
         try {
-            const result = await transaction.send(spec.url, controller.signal);
+            const result = await transaction.send(controller.signal);
             if (!result) {
                 if (!controller.signal.aborted) {
-                    this.presenter.initial(spec.alias, spec.typed);
+                    this.status = this.presenter.initial(spec.alias);
                     this.afterRender();
                 }
                 return false;
@@ -138,7 +119,7 @@ export class FormMutation {
             if (result.ok) {
                 this.syncDirty = false;
             }
-            this.presenter.result(spec.alias, result, spec.typed, this.request.input);
+            this.status = this.presenter.result(spec.alias, result, this.request.input);
             this.afterRender();
             this.request.complete(result, spec.alias);
             return result.ok && result.refresh?.ok !== false;
@@ -150,7 +131,6 @@ export class FormMutation {
             if (this.transaction === transaction) {
                 this.transaction = null;
             }
-            this.changeScheduler.release();
         }
     }
 
@@ -184,9 +164,7 @@ export class FormMutation {
     }
 }
 
-function mutationBinding(
-    form: HTMLFormElement,
-): { readonly url: string; readonly alias?: string; readonly typed: boolean } | null {
+function mutationBinding(form: HTMLFormElement): { readonly url: string; readonly alias: string } | null {
     const mutation = parseMutation(form.getAttribute(MUTATION_ATTR) ?? "");
     if (mutation) {
         const key = `${mutation.contractId}:${mutation.capabilityId}`;
@@ -194,8 +172,7 @@ function mutationBinding(
             key === "kernel.auth:login"
                 ? "/.cms/auth/login"
                 : `/.cms/call/${mutation.contractId}/${mutation.capabilityId}`;
-        return { url, alias: mutation.name, typed: true };
+        return { url, alias: mutation.name };
     }
-    const source = parseSource(form.getAttribute(SOURCE_ATTR) ?? "");
-    return source ? { ...source, typed: false } : null;
+    return null;
 }

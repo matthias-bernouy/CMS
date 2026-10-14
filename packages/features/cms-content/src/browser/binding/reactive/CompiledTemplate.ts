@@ -41,7 +41,7 @@ export class CompiledTemplate {
         const plan = compileTemplatePlan(template, filters, {}, CompiledTemplate.fromTemplate);
         // The parent query keeps its bindings; this in-place submit scope
         // owns only attributes that explicitly reference its result.
-        if (parent.parentElement?.closest("[cms-mutation],[cms-source]")) {
+        if (parent.parentElement?.closest("[cms-mutation]")) {
             const boundary = submitBoundary(parent);
             plan.attributes = plan.attributes.filter((item) => bindingOwnedBySubmitSource(item.template, boundary));
         }

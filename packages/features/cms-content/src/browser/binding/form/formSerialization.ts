@@ -1,8 +1,6 @@
 import { collectFormData } from "./formControls";
-import { appendSerializedValue } from "./nestedFormData";
 import type { AdditionalFormFields, FormSubmitMethod, SerializedForm, SerializedFormData } from "./types";
 import { serializeTypedForm } from "./typed/serialize";
-import { MUTATION_ATTR, SOURCE_SERIALIZATION_ATTR } from "../core/attrs";
 
 const BODY_METHODS = new Set<FormSubmitMethod>(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -19,52 +17,14 @@ export function serializeForm(
     options: { url: string; method: FormSubmitMethod; bodyFields?: AdditionalFormFields; formData?: FormData },
 ): SerializedForm {
     const formData = options.formData ?? collectFormData(form);
-    const mode = form.hasAttribute(MUTATION_ATTR) ? "typed-json" : form.getAttribute(SOURCE_SERIALIZATION_ATTR);
-    if (mode && mode !== "typed-json") {
-        throw new Error("cms-source-serialization must be typed-json when specified.");
+    if (!BODY_METHODS.has(options.method)) {
+        throw new Error("Declarative mutations require a method with a request body.");
     }
-    if (mode === "typed-json") {
-        if (!BODY_METHODS.has(options.method)) {
-            throw new Error("typed-json requires a method with a request body.");
-        }
-        const data = withAdditionalFields(serializeTypedForm(form), formData, options.bodyFields);
-        return { kind: "json", url: options.url, formData, data, body: JSON.stringify(data) };
-    }
-    if (options.method === "GET") {
-        return {
-            kind: "query",
-            url: appendQuery(options.url, formData),
-            formData,
-            data: serializeFormData(formData),
-        };
-    }
-
-    const data = withAdditionalFields(serializeFormData(formData), formData, options.bodyFields);
-    if (BODY_METHODS.has(options.method) && hasFile(formData)) {
+    const data = withAdditionalFields(serializeTypedForm(form), formData, options.bodyFields);
+    if (hasFile(formData)) {
         return { kind: "formData", url: options.url, formData, data, body: formData };
     }
     return { kind: "json", url: options.url, formData, data, body: JSON.stringify(data) };
-}
-
-function serializeFormData(formData: FormData): SerializedFormData {
-    const data: SerializedFormData = {};
-    for (const [key, value] of formData.entries()) {
-        if (isEmptyFile(value)) {
-            continue;
-        }
-        appendSerializedValue(data, key, value);
-    }
-    return data;
-}
-
-function appendQuery(url: string, formData: FormData): string {
-    const next = new URL(url, location.href);
-    for (const [key, value] of formData.entries()) {
-        if (!isEmptyFile(value)) {
-            next.searchParams.append(key, isFileLike(value) ? value.name : value);
-        }
-    }
-    return next.toString();
 }
 
 function withAdditionalFields(
