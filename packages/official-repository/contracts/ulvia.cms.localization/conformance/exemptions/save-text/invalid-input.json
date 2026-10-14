@@ -1,0 +1,5 @@
+{
+    "capabilityId": "save-text",
+    "errorCode": "INVALID_INPUT",
+    "reason": "The portable smoke suite does not prescribe invalid text override values."
+}

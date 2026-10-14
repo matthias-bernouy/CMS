@@ -1,0 +1,135 @@
+<section
+    cms-query="ulvia.cms.localization:get-texts as collectionTexts"
+    cms-query-input='{"collectionId":{"from":"queryParam","name":"collection"},"locale":{"from":"queryParam","name":"locale"},"group":{"from":"queryParam","name":"group"},"search":{"from":"queryParam","name":"search"}}'
+>
+    <p role="status" aria-live="polite" cms-condition="collectionTexts.loading">
+        {{ cms.i18n.ulvia-official.ui-working }}
+    </p>
+    <p role="alert" cms-condition="collectionTexts.error">
+        {{ cms.i18n.ulvia-official.ui-request-failed }}
+    </p>
+    <ulvia-official-stack cms-condition="collectionTexts.loaded" gap="lg">
+        <header slot="items">
+            <h3>{{ cms.i18n.ulvia-official.ui-collection-text-editor }}</h3>
+            <p>{{ cms.i18n.ulvia-official.ui-edit-collection-text-overrides-help }}</p>
+        </header>
+        <ulvia-official-surface slot="items" appearance="subtle" padding="lg">
+            <ulvia-official-cluster slot="content" align="end" gap="md">
+                <ulvia-official-field slot="items" label-position="top">
+                    <label slot="label" for="collection-text-locale">
+                        {{ cms.i18n.ulvia-official.ui-translation-language }}
+                    </label>
+                    <ulvia-official-select slot="control">
+                        <select id="collection-text-locale" cms-param-sync="locale">
+                            <option
+                                cms-repeat="collectionTexts.data.locales as locale"
+                                value="{{ locale }}"
+                                selected="{{ locale === collectionTexts.data.locale }}"
+                            >{{ locale }}</option>
+                        </select>
+                    </ulvia-official-select>
+                </ulvia-official-field>
+                <ulvia-official-field slot="items" label-position="top">
+                    <label slot="label" for="collection-text-group">
+                        {{ cms.i18n.ulvia-official.ui-text-group }}
+                    </label>
+                    <ulvia-official-select slot="control">
+                        <select id="collection-text-group" cms-param-sync="group">
+                            <option
+                                cms-repeat="collectionTexts.data.groups as group"
+                                value="{{ group.id }}"
+                                selected="{{ group.id === collectionTexts.data.group }}"
+                            >{{ group.id }}</option>
+                        </select>
+                    </ulvia-official-select>
+                </ulvia-official-field>
+                <ulvia-official-field slot="items" label-position="top">
+                    <label slot="label" for="collection-text-search">
+                        {{ cms.i18n.ulvia-official.ui-search-texts }}
+                    </label>
+                    <ulvia-official-input slot="control">
+                        <input
+                            id="collection-text-search"
+                            type="search"
+                            cms-param-sync="search"
+                            value="{{ collectionTexts.data.search }}"
+                            placeholder="{{ cms.i18n.ulvia-official.ui-search-labels-and-keys }}"
+                        >
+                    </ulvia-official-input>
+                </ulvia-official-field>
+            </ulvia-official-cluster>
+        </ulvia-official-surface>
+        <p slot="items" cms-condition="collectionTexts.data.groups.length === 0">
+            {{ cms.i18n.ulvia-official.ui-this-collection-publishes-no-translatable-text-resources }}
+        </p>
+        <p
+            slot="items"
+            cms-condition="collectionTexts.data.groups.length > 0 &amp;&amp; collectionTexts.data.items.length === 0"
+        >
+            {{ cms.i18n.ulvia-official.ui-no-text-matches-current-filters }}
+        </p>
+        <ulvia-official-stack slot="items" gap="md" cms-condition="collectionTexts.data.items.length">
+            <form
+                slot="items"
+                cms-repeat="collectionTexts.data.items as text"
+                cms-source="/.cms/call/ulvia.cms.localization/save-text as savedText"
+                cms-source-method="POST"
+                cms-source-trigger="submit"
+                cms-source-serialization="typed-json"
+                cms-source-success-reload="collectionTexts"
+                cms-source-success-reset="false"
+            >
+                <input type="hidden" name="collectionId" value="{{ collectionTexts.data.collectionId }}">
+                <input
+                    type="hidden"
+                    name="expectedRevision"
+                    value="{{ collectionTexts.data.revision }}"
+                    cms-form-value-type="number"
+                >
+                <input type="hidden" name="locale" value="{{ collectionTexts.data.locale }}">
+                <input type="hidden" name="textId" value="{{ text.id }}">
+                <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-stack slot="content" gap="md">
+                        <header slot="items">
+                            <h4>{{ text.label }}</h4>
+                            <p>{{ text.description }}</p>
+                            <code>{{ text.id }}</code>
+                        </header>
+                        <ulvia-official-surface slot="items" appearance="subtle" padding="md">
+                            <p slot="content">{{ cms.i18n.ulvia-official.ui-collection-value }}</p>
+                            <p slot="content">{{ text.sourceValue }}</p>
+                        </ulvia-official-surface>
+                        <ulvia-official-field slot="items" label-position="top">
+                            <label slot="label" for="collection-text-{{ text.id }}">
+                                {{ cms.i18n.ulvia-official.ui-site-override }}
+                            </label>
+                            <ulvia-official-textarea slot="control">
+                                <textarea
+                                    id="collection-text-{{ text.id }}"
+                                    name="value"
+                                    rows="3"
+                                    maxlength="65536"
+                                    placeholder="{{ text.sourceValue }}"
+                                >{{ text.overrideValue }}</textarea>
+                            </ulvia-official-textarea>
+                        </ulvia-official-field>
+                        <ulvia-official-form-actions slot="items" align="end">
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">
+                                {{ cms.i18n.ulvia-official.ui-working }}
+                            </p>
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
+                                {{ cms.i18n.ulvia-official.ui-translation-saved }}
+                            </p>
+                            <p slot="actions" role="alert" cms-condition="$source.error">
+                                {{ cms.i18n.ulvia-official.ui-request-failed }}
+                            </p>
+                            <ulvia-official-action slot="actions" variant="filled" tone="primary">
+                                <button type="submit">{{ cms.i18n.ulvia-official.ui-save-translation }}</button>
+                            </ulvia-official-action>
+                        </ulvia-official-form-actions>
+                    </ulvia-official-stack>
+                </ulvia-official-surface>
+            </form>
+        </ulvia-official-stack>
+    </ulvia-official-stack>
+</section>

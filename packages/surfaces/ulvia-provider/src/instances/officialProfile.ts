@@ -13,7 +13,7 @@ const PROFILE_1_0_0 = Object.freeze({
         ["ulvia.cms.collections", "1.0.0", "sha256:2ba95ce154f6823b00243efce7e15916541fe4c489f7c6f79b055cf03bdb7ce1"],
         ["ulvia.cms.files", "1.0.0", "sha256:fa9e6aac42c7c466a44ff10f39e77ae6941508bf105d87dc54dbd6c7a6d57fcc"],
         ["ulvia.cms.jobs", "1.0.0", "sha256:27a89ae82a8417ce80df81fffe5e98355bbcc6c1d0cb3321ac3881c3b95d519a"],
-        ["ulvia.cms.localization", "1.0.0", "sha256:adc3e47e76bbeecbd1399b2fd5fced9e24ef6cc9342a64fe2eb614b92a3e8ab9"],
+        ["ulvia.cms.localization", "1.0.0", "sha256:e588415389e6a61418de058d230e7aea0ef1153329686049cff4cc3c68897347"],
         ["ulvia.cms.pages", "1.0.0", "sha256:5861aa84cd305cc2a634b28f0649b3b20793e5ce7d4777efe4fdaa91ca1c1248"],
         ["ulvia.cms.providers", "1.0.0", "sha256:e8f3a7c7a88515aa4f26093895f66fbc9559564aed1293df8b652759f234449b"],
         ["ulvia.cms.theme", "1.0.0", "sha256:7fd692a7b9293db9da35c08c1906cec021bcd120b4165500b76fbf49276713d4"],

@@ -154,7 +154,15 @@ test("localization reads and saves canonical text-first multilingual overrides",
         },
     });
     registerLocalizationCapabilities(dispatcher, {
-        repo: {},
+        repo: {
+            getSystemRevision: async () => 2,
+            getSystem: async () => {
+                const system = defaultSystem();
+                system.site.language = "en";
+                system.site.activeLanguages = ["en", "fr"];
+                return system;
+            },
+        },
         collections: {
             snapshot: async () => ({ revision, collections: [installation()] }),
             saveTexts: async (_siteId: string, _collectionId: string, expectedRevision: number, next: unknown) => {
@@ -172,25 +180,41 @@ test("localization reads and saves canonical text-first multilingual overrides",
         { collectionId: "example", locale: "fr" },
         context,
     );
-    expect(initial.items[0]!.overrides).toEqual([
-        { locale: "en", value: "Hello site" },
-        { locale: "fr", value: "Bonjour site" },
-    ]);
+    expect(initial).toMatchObject({
+        locale: "fr",
+        locales: ["en", "fr"],
+        group: "General",
+        items: [{ id: "greeting", sourceValue: "Bonjour", overrideValue: "Bonjour site" }],
+    });
 
     const saved = await dispatcher.invoke(
         "ulvia.cms.localization",
-        "save-texts",
+        "save-text",
         {
             collectionId: "example",
             expectedRevision: 4,
             locale: "fr",
-            overridesJson: JSON.stringify({ greeting: { en: "Hello site", fr: "Salut" } }),
+            textId: "greeting",
+            value: "Salut",
         },
         context,
     );
-    expect(saved.revision).toBe(5);
-    expect(saved.items[0]!.overrides).toContainEqual({ locale: "fr", value: "Salut" });
+    expect(saved).toEqual({
+        revision: 5,
+        collectionId: "example",
+        textId: "greeting",
+        locale: "fr",
+        overridden: true,
+    });
     expect(textOverrides).toEqual({ greeting: { en: "Hello site", fr: "Salut" } });
+
+    await dispatcher.invoke(
+        "ulvia.cms.localization",
+        "save-text",
+        { collectionId: "example", expectedRevision: 5, locale: "fr", textId: "greeting", value: "" },
+        context,
+    );
+    expect(textOverrides).toEqual({ greeting: { en: "Hello site" } });
 });
 
 test("theme reads compose the authoritative token catalogues from installed collections", async () => {

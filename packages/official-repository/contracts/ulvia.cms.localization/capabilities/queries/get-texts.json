@@ -1,6 +1,6 @@
 {
     "id": "get-texts",
-    "description": "Read one installed collection text catalogue and its site-owned overrides.",
+    "description": "Read and filter one installed collection's text catalogue for declarative administration.",
     "access": "admin",
     "behavior": {
         "effect": "query",
@@ -17,6 +17,14 @@
             "locale": {
                 "type": "string",
                 "maxLength": 64
+            },
+            "group": {
+                "type": "string",
+                "maxLength": 300
+            },
+            "search": {
+                "type": "string",
+                "maxLength": 300
             }
         },
         "required": [
@@ -39,9 +47,43 @@
                 "type": "string",
                 "maxLength": 64
             },
-            "overridesJson": {
+            "locales": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                    "type": "string",
+                    "maxLength": 64
+                }
+            },
+            "group": {
                 "type": "string",
-                "maxLength": 1048576
+                "maxLength": 300
+            },
+            "groups": {
+                "type": "array",
+                "maxItems": 4096,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "maxLength": 300
+                        },
+                        "count": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4096
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "count"
+                    ]
+                }
+            },
+            "search": {
+                "type": "string",
+                "maxLength": 300
             },
             "items": {
                 "type": "array",
@@ -74,54 +116,24 @@
                             "type": "string",
                             "maxLength": 300
                         },
-                        "values": {
-                            "type": "array",
-                            "maxItems": 64,
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "locale": {
-                                        "type": "string",
-                                        "maxLength": 64
-                                    },
-                                    "value": {
-                                        "type": "string",
-                                        "maxLength": 65536
-                                    }
-                                },
-                                "required": [
-                                    "locale",
-                                    "value"
-                                ]
-                            }
+                        "sourceValue": {
+                            "type": "string",
+                            "maxLength": 65536
                         },
-                        "overrides": {
-                            "type": "array",
-                            "maxItems": 64,
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "locale": {
-                                        "type": "string",
-                                        "maxLength": 64
-                                    },
-                                    "value": {
-                                        "type": "string",
-                                        "maxLength": 65536
-                                    }
-                                },
-                                "required": [
-                                    "locale",
-                                    "value"
-                                ]
-                            }
+                        "overrideValue": {
+                            "type": "string",
+                            "maxLength": 65536
                         }
                     },
                     "required": [
                         "id",
                         "generation",
-                        "values",
-                        "overrides"
+                        "label",
+                        "description",
+                        "category",
+                        "group",
+                        "sourceValue",
+                        "overrideValue"
                     ]
                 }
             }
@@ -130,7 +142,10 @@
             "revision",
             "collectionId",
             "locale",
-            "overridesJson",
+            "locales",
+            "group",
+            "groups",
+            "search",
             "items"
         ]
     },
