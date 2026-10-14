@@ -6,7 +6,7 @@ import { type BlocMarkup, pageSlots, validatePageSlots, validateSlotTargets } fr
 import { elements, markupTree, offeredSlots, significantRoots } from "./tree";
 import { validateManagedNativeDefinition } from "./managedNative";
 import { validateBlocDocument, type BlocDocumentValidationResult } from "@bernouy/cms-content/page-document";
-import { capabilityCallKey, isCollectionSystemQuery, isCollectionSystemSource } from "../../parsing/requirements";
+import { isCollectionSystemQuery } from "../../parsing/requirements";
 
 function inspect(bloc: CollectionBloc): BlocMarkup {
     const shadow = bloc.kind === "component" ? markupTree(bloc.shadowdom) : undefined;
@@ -82,21 +82,11 @@ export function validateMarkup(
             validateDeclaredUses(content.light, bloc, `${path}.lightdom`);
             validateSlotTargets(content.light, content.shellSlots, byId, markup, `${path}.lightdom`, importedBlocs);
             const calls = [
-                ...canonical!.sources.map(({ method, url }) => {
-                    if (isCollectionSystemSource(url, method)) {
-                        return null;
-                    }
-                    const call = capabilityCallKey(url);
-                    if (!call || method !== "POST") {
-                        return invalid(
-                            "Bloc sources must use a canonical CMS capability with POST",
-                            `${path}.lightdom`,
-                        );
-                    }
-                    return call;
-                }),
                 ...canonical!.queries.map(({ contractId, capabilityId }) =>
                     isCollectionSystemQuery(contractId, capabilityId) ? null : `${contractId}/${capabilityId}`,
+                ),
+                ...canonical!.mutations.map(({ contractId, capabilityId }) =>
+                    contractId.startsWith("kernel.") ? null : `${contractId}/${capabilityId}`,
                 ),
             ];
             const requirements = new Set(

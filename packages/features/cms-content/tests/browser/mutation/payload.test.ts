@@ -1,92 +1,56 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { writeSyncValue } from "../../../src/browser/binding/state/SyncState";
 import { BindingRuntime } from "../../../src/browser/binding/runtime/BindingRuntime";
+import { writeSyncValue } from "../../../src/browser/binding/state/SyncState";
 import { el, resetDom, settle, waitFor } from "../support/testUtils";
 
 afterEach(resetDom);
 
-describe("Form mutation — submit payload", () => {
-    test("form-owned submit resolves cms-source-body fields", async () => {
+describe("Form mutation payload", () => {
+    test("resolves cms-mutation-input fields without inheriting page query parameters", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
         globalThis.fetch = (async (url: string, init?: RequestInit) => {
             request = { url, init };
-            return new Response(JSON.stringify({ ok: true }), {
-                headers: { "content-type": "application/json" },
-            });
+            return Response.json({ ok: true });
         }) as typeof fetch;
         location.href = "http://localhost/?site-return-to=%2Fdashboard";
         writeSyncValue({ scope: "page", key: "site-auth-token" }, "abc123");
-        const body = JSON.stringify({
-            email: { from: "literal", value: "bound@example.com" },
+        const input = JSON.stringify({
             returnTo: { from: "state", key: "@param:site-return-to" },
             token: { from: "state", key: "@page:site-auth-token" },
             remember: { from: "literal", value: true },
         });
-
         const root = el(`
-            <form cms-source="/api/login as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-source-body='${body}'>
+            <form cms-mutation="accounts:login as session" cms-mutation-reset="false" cms-mutation-input='${input}'>
                 <input name="email" value="ada@example.com">
-                <button type="submit">Login</button>
             </form>
         `) as HTMLFormElement;
         document.body.append(root);
         const runtime = new BindingRuntime(root);
         runtime.start();
-        await settle();
 
         root.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
         await waitFor(() => request !== null);
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/api/login?site-return-to=%2Fdashboard");
-        expect(captured.init?.body).toBe(
-            JSON.stringify({
-                email: "ada@example.com",
-                returnTo: "/dashboard",
-                token: "abc123",
-                remember: true,
-            }),
-        );
+        expect(captured.url).toBe("http://localhost/.cms/call/accounts/login");
+        expect(JSON.parse(String(captured.init?.body))).toEqual({
+            email: "ada@example.com",
+            returnTo: "/dashboard",
+            token: "abc123",
+            remember: true,
+        });
         runtime.stop();
     });
 
-    test("form-owned GET submit appends form values and does not reset by default", async () => {
-        let url = "";
-        globalThis.fetch = (async (nextUrl: string) => {
-            url = nextUrl;
-            return new Response(JSON.stringify({ ok: true }), {
-                headers: { "content-type": "application/json" },
-            });
-        }) as typeof fetch;
-
-        const root = el(`
-            <form cms-source="/api/search?kind=public as result" cms-source-trigger="submit" cms-source-method="GET">
-                <input name="q" value="plans">
-                <button type="submit">Search</button>
-            </form>
-        `) as HTMLFormElement;
-        document.body.append(root);
-        const runtime = new BindingRuntime(root);
-        runtime.start();
-        await settle();
-
-        root.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-        await waitFor(() => url !== "");
-
-        expect(url).toBe("http://localhost/api/search?kind=public&q=plans");
-        expect(root.querySelector<HTMLInputElement>("[name=q]")!.value).toBe("plans");
-        runtime.stop();
-    });
-
-    test("form-owned submit does not send a required state input before it exists", async () => {
+    test("does not send a required synchronized input before it exists", async () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls += 1;
-            return new Response("{}", { headers: { "content-type": "application/json" } });
+            return Response.json({});
         }) as typeof fetch;
         const root = el(`
-            <form cms-source="/api/login as result" cms-source-trigger="submit" cms-source-method="POST"
-                cms-source-body='{"token":{"from":"state","key":"@page:site-missing-token"}}'>
+            <form cms-mutation="accounts:login as session"
+                cms-mutation-input='{"token":{"from":"state","key":"@page:site-missing-token"}}'>
                 <button type="submit">Login</button>
             </form>
         `) as HTMLFormElement;

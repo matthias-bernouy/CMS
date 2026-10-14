@@ -1,4 +1,4 @@
-import { parseSource } from "../../../src/blocs/core/markup/bindings/source";
+import { parseMutation } from "../../../src/blocs/core/markup/bindings";
 import { parseRepeat } from "../../../src/browser/binding/render/repeat";
 import { describe, test, expect } from "bun:test";
 import { lookup, type Scope } from "../../../src/browser/binding/core/scope";
@@ -117,9 +117,9 @@ test("cms is reserved even when implicit values, aliases or parents supply it", 
     expect(lookup({ value: { cmsData: { title: "Business" } } }, "cmsData.title").value).toBe("Business");
 });
 
-test("source and repeat aliases cannot claim the reserved root", () => {
-    expect(parseSource("/api/items as cms")).toBeNull();
+test("mutation and repeat aliases cannot claim the reserved root", () => {
+    expect(parseMutation("catalog:save as cms")).toBeNull();
     expect(() => parseRepeat("items as cms")).toThrow("reserved");
-    expect(parseSource("/api/items as cmsData")?.alias).toBe("cmsData");
+    expect(parseMutation("catalog:save as cmsData")?.name).toBe("cmsData");
     expect(parseRepeat("items as cmsData").name).toBe("cmsData");
 });

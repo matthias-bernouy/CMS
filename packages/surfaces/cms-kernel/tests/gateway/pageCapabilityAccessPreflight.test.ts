@@ -97,7 +97,7 @@ describe("Kernel page capability access preflight", () => {
 
     test("requires authentication even when the capability is triggered on submit", async () => {
         const { handler } = await mountPage({
-            content: `<form cms-source="/.cms/call/shop/createOrder" cms-source-method="post" cms-source-trigger="submit"><button>Buy</button></form>`,
+            content: `<form cms-mutation="shop:create-order as order"><button>Buy</button></form>`,
             auth: authSubject(null),
         });
         const response = await handler(new Request("http://site/checkout"));

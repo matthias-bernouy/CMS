@@ -7,7 +7,7 @@ import type {
     CmsQueryRefreshPolicy,
 } from "cms-content/blocs/core/markup/bindings/types";
 import { asSyncTarget, parseSyncTarget } from "cms-content/blocs/core/markup/bindings/sync";
-import { asSourceBody, parseSourceBody } from "./input";
+import { asBindingInput, parseBindingInput } from "./input";
 
 const QUERY_PATTERN =
     /^\s*([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*):([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u;
@@ -98,11 +98,11 @@ export function parseQueries(value: string | null | undefined): CmsQueriesBindin
 }
 
 export function asQueryInput(input: CmsQueryInput): string {
-    return asSourceBody(input);
+    return asBindingInput(input);
 }
 
 export function parseQueryInput(value: string | null | undefined): CmsQueryInput | null {
-    return parseSourceBody(value);
+    return parseBindingInput(value);
 }
 
 export function asQueryListen(listeners: CmsQueryListen): string {

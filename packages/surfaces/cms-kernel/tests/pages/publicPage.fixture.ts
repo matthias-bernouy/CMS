@@ -98,7 +98,6 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         ? new PageExecutionService({
               siteId: "site-test",
               content: repository,
-              invoker,
               authority: unusedAuthority,
               resolveCapability: async () => ({ access: "public", version: "1.0.0" }),
           })

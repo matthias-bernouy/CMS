@@ -38,17 +38,14 @@ describe("Bloc document budgets", () => {
         expect(() => fixed("<span></span>".repeat(BLOC_DOCUMENT_LIMITS.maxDomNodes + 1))).toThrow("too many nodes");
     });
 
-    test("bounds CMS source bindings", () => {
-        const source =
-            '<form cms-source="/.cms/call/example/items" cms-source-method="POST" cms-source-trigger="submit"><button>Save</button></form>';
-        expect(() => fixed(source.repeat(BLOC_DOCUMENT_LIMITS.maxBindingSources + 1))).toThrow(
-            "too many CMS source bindings",
-        );
+    test("bounds CMS operations", () => {
+        const mutation = '<form cms-mutation="example:save-item as saved"><button>Save</button></form>';
+        expect(() => fixed(mutation.repeat(BLOC_DOCUMENT_LIMITS.maxOperations + 1))).toThrow("too many CMS operations");
     });
 
-    test("separates named queries from form submissions", () => {
-        expect(() => fixed('<section cms-source="/.cms/call/catalog/items"></section>')).toThrow(
-            "use cms-query for reads",
+    test("separates named queries from mutations", () => {
+        expect(() => fixed('<section cms-mutation="catalog:save as saved"></section>')).toThrow(
+            "CMS mutations are reserved for form submissions",
         );
         expect(() =>
             fixed(

@@ -523,7 +523,7 @@ describe("collection release parsing", () => {
             producer.slots = {};
             producer.uses = [];
             producer.requires =
-                markup.includes("cms-query") || markup.includes("cms-source")
+                markup.includes("cms-query") || markup.includes("cms-mutation")
                     ? [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }]
                     : [];
             return source;
@@ -551,7 +551,7 @@ describe("collection release parsing", () => {
             parseCollectionRelease(
                 state(
                     { type: "array", items: { type: "string", maxLength: 64 }, maxItems: 10 },
-                    '<form cms-source="/.cms/call/catalog/items.list" cms-source-method="POST" cms-source-trigger="submit" cms-sync="@page:atlas-shared"></form>',
+                    '<form cms-mutation="catalog:items.list as items" cms-sync="@page:atlas-shared"></form>',
                 ),
             ),
         ).toThrow("requires a nonnullable object state");

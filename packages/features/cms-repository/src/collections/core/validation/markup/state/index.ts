@@ -4,9 +4,9 @@ import {
     parseQueries,
     parseQueryInput,
     parseQueryListen,
-    parseSourceBody,
+    parseBindingInput,
     parseSyncTarget,
-    type CmsSourceBodyBinding,
+    type CmsBindingInputMap,
     type CmsSyncTarget,
 } from "@bernouy/cms-content/bindings";
 import type { CollectionBloc } from "../../../../interfaces/CollectionBloc";
@@ -67,9 +67,9 @@ export function validateCollectionStateBindings(
                 assertReadable(binding.sync, own, imported, installed, path);
             }
         }
-        for (const element of Array.from(document.body.querySelectorAll("[cms-source-body]"))) {
+        for (const element of Array.from(document.body.querySelectorAll("[cms-mutation-input]"))) {
             validateInputReads(
-                parseSourceBody(element.getAttribute("cms-source-body")),
+                parseBindingInput(element.getAttribute("cms-mutation-input")),
                 own,
                 imported,
                 installed,
@@ -81,7 +81,7 @@ export function validateCollectionStateBindings(
 }
 
 function validateInputReads(
-    input: CmsSourceBodyBinding | null,
+    input: CmsBindingInputMap | null,
     own: ReadonlyMap<string, CollectionState>,
     imported: ReadonlyMap<string, { collectionId: string; id: string }>,
     installed: ReadonlyMap<string, CollectionRelease>,

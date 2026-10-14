@@ -8,7 +8,7 @@ export const BLOC_DOCUMENT_LIMITS = Object.freeze({
     maxSourceTotalLength: 8 * 1024 * 1024,
     maxDomNodes: 2_048,
     maxDomDepth: 64,
-    maxBindingSources: 128,
+    maxOperations: 128,
 });
 
 export function assertBlocMarkupLength(field: string, value: string): void {
@@ -58,12 +58,9 @@ export function assertBlocDomBudget(field: string, root: Node): void {
     }
 }
 
-export function assertBlocBindingSourceBudget(field: string, count: number): void {
-    if (count > BLOC_DOCUMENT_LIMITS.maxBindingSources) {
-        throw new ContentValidationError(
-            field,
-            `too many CMS source bindings; max ${BLOC_DOCUMENT_LIMITS.maxBindingSources}`,
-        );
+export function assertBlocOperationBudget(field: string, count: number): void {
+    if (count > BLOC_DOCUMENT_LIMITS.maxOperations) {
+        throw new ContentValidationError(field, `too many CMS operations; max ${BLOC_DOCUMENT_LIMITS.maxOperations}`);
     }
 }
 

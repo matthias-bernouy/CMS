@@ -7,7 +7,7 @@ afterEach(resetDom);
 function setup() {
     const isolated = document;
     isolated.body.innerHTML =
-        '<cms-binding-core><section cms-query="catalog:get as detail"></section><section cms-query="catalog:list as catalogue"></section><form cms-source="/save" cms-source-trigger="submit" cms-source-success-reload="detail"></form></cms-binding-core>';
+        '<cms-binding-core><section cms-query="catalog:get as detail"></section><section cms-query="catalog:list as catalogue"></section><form cms-mutation="catalog:save as saved" cms-mutation-invalidates="detail"></form></cms-binding-core>';
     const source = isolated.querySelector("section")!;
     const catalogue = isolated.querySelectorAll("section")[1]!;
     const form = isolated.querySelector("form")!;
@@ -46,7 +46,7 @@ test("submission reload rejects replaced or disconnected query selections", asyn
 
 test("one successful submission can reload a bounded set of unique queries", async () => {
     const { form, state } = setup();
-    form.setAttribute("cms-source-success-reload", "detail catalogue");
+    form.setAttribute("cms-mutation-invalidates", "detail catalogue");
     const operation = formMutationReload(form)!;
     expect(await operation.reload()).toBe(true);
     expect(state.calls).toEqual(["detail", "catalogue"]);
@@ -55,13 +55,13 @@ test("one successful submission can reload a bounded set of unique queries", asy
 
 test("query names cannot cross cores or match duplicates", () => {
     const { source, form } = setup();
-    form.setAttribute("cms-source-success-reload", "bad-name");
+    form.setAttribute("cms-mutation-invalidates", "bad-name");
     expect(() => formMutationReload(form)).toThrow("queries by name");
-    form.setAttribute("cms-source-success-reload", "detail detail");
+    form.setAttribute("cms-mutation-invalidates", "detail detail");
     expect(() => formMutationReload(form)).toThrow("queries by name");
-    form.setAttribute("cms-source-success-reload", "section");
+    form.setAttribute("cms-mutation-invalidates", "section");
     expect(() => formMutationReload(form)).toThrow("one active query");
-    form.setAttribute("cms-source-success-reload", "detail");
+    form.setAttribute("cms-mutation-invalidates", "detail");
     source.parentElement!.append(source.cloneNode(true));
     expect(() => formMutationReload(form)).toThrow("one active");
     source.nextElementSibling?.nextElementSibling?.remove();

@@ -103,7 +103,6 @@ export async function mountPage(options: {
     const pageExecution = new PageExecutionService({
         siteId: "site-a",
         content,
-        invoker: shopInvoker,
         authority: unusedAuthority,
         resolveCapability: async (contractId, capabilityId) => {
             if (contractId !== "shop") {
@@ -112,7 +111,7 @@ export async function mountPage(options: {
             if (capabilityId === "restricted") {
                 return { access: "admin", version: "1.0.0" };
             }
-            if (capabilityId === "my-products" || capabilityId === "createOrder") {
+            if (capabilityId === "my-products" || capabilityId === "create-order") {
                 return { access: "authenticated", version: "1.0.0" };
             }
             return capabilityId === "list-products" ? { access: "public", version: "1.0.0" } : null;

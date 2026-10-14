@@ -157,7 +157,7 @@ describe("site bloc validation", () => {
         }
     });
 
-    test("accepts automatic idempotency only on submitted forms", () => {
+    test("accepts automatic idempotency only on mutation forms", () => {
         expect(() =>
             validateSiteBlocSnapshot(
                 siteBlocSnapshot({
@@ -166,10 +166,8 @@ describe("site bloc validation", () => {
                             kind: "bloc",
                             tag: "form",
                             attributes: {
-                                "cms-source": "/.cms/call/catalog/apply",
-                                "cms-source-method": "POST",
-                                "cms-source-trigger": "submit",
-                                "cms-source-idempotency": "auto",
+                                "cms-mutation": "catalog:apply as applied",
+                                "cms-mutation-idempotency": "auto",
                             },
                             children: [],
                         },
@@ -185,10 +183,8 @@ describe("site bloc validation", () => {
                             kind: "bloc",
                             tag: "form",
                             attributes: {
-                                "cms-source": "/.cms/call/catalog/apply",
-                                "cms-source-method": "POST",
-                                "cms-source-trigger": "submit",
-                                "cms-source-idempotency": "manual",
+                                "cms-mutation": "catalog:apply as applied",
+                                "cms-mutation-idempotency": "manual",
                             },
                             children: [],
                         },
@@ -312,16 +308,15 @@ describe("site bloc validation", () => {
             ["<ul><site-card>Not a list item</site-card></ul>", /only direct <li>/],
             ["<ul>Loose text<li>Item</li></ul>", /only direct <li>/],
             ['<section><span slot="label">Nested slot bypass</span></section>', /direct custom-element child/],
-            ["<form></form>", /declared CMS source endpoint/],
+            ["<form></form>", /declared CMS mutation/],
             [
-                `<form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
-                    cms-source-trigger="submit"
-                    cms-source-body='{"safe":{"from":"literal","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
+                `<form cms-mutation="forms:contact as contact"
+                    cms-mutation-input='{"safe":{"from":"literal","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
             [
-                `<form cms-source="/.cms/auth/login" cms-source-method="POST"
-                    cms-source-trigger="submit" cms-source-success-redirect-param="bad param"></form>`,
+                `<form cms-mutation="kernel.auth:login as session"
+                    cms-mutation-redirect-param="bad param"></form>`,
                 /redirect parameter is invalid/,
             ],
         ] as const) {
@@ -333,15 +328,13 @@ describe("site bloc validation", () => {
         const valid = validateSiteBlocSnapshot(
             siteBlocSnapshot({
                 defaultContent: `<h2 slot="title">Contact</h2><form
-                    cms-source="/.cms/call/forms/contact"
-                    cms-source-method="POST"
-                    cms-source-trigger="submit"
-                    cms-source-success-redirect="/thanks" cms-source-success-redirect-param="returnTo"></form>`,
+                    cms-mutation="forms:contact as contact"
+                    cms-mutation-redirect="/thanks" cms-mutation-redirect-param="returnTo"></form>`,
             }),
             "site-feature-panel",
         );
-        expect(valid.defaultContent).toContain('cms-source="/.cms/call/forms/contact"');
-        expect(valid.defaultContent).toContain('cms-source-success-redirect-param="returnTo"');
+        expect(valid.defaultContent).toContain('cms-mutation="forms:contact as contact"');
+        expect(valid.defaultContent).toContain('cms-mutation-redirect-param="returnTo"');
     });
 
     test("allows controlled CMS forms in the site bloc structure", () => {
@@ -349,10 +342,8 @@ describe("site bloc validation", () => {
             kind: "bloc" as const,
             tag: "form",
             attributes: {
-                "cms-source": "/.cms/call/system-auth/logout as logout",
-                "cms-source-method": "POST",
-                "cms-source-trigger": "submit",
-                "cms-source-success-redirect": "/login",
+                "cms-mutation": "system-auth:logout as logout",
+                "cms-mutation-redirect": "/login",
             },
             children: [],
         };
@@ -364,17 +355,6 @@ describe("site bloc validation", () => {
             "site-feature-panel",
         );
         expect(valid.structure).toEqual([form]);
-        const autosaveForm = {
-            ...form,
-            attributes: {
-                ...form.attributes,
-                "cms-source-trigger": "change",
-                "cms-source-delay": "650",
-            },
-        };
-        expect(
-            validateSiteBlocSnapshot(siteBlocSnapshot({ structure: [autosaveForm] }), "site-feature-panel").structure,
-        ).toEqual([autosaveForm]);
         expect(() =>
             validateSiteBlocSnapshot(
                 siteBlocSnapshot({
@@ -382,7 +362,7 @@ describe("site bloc validation", () => {
                 }),
                 "site-feature-panel",
             ),
-        ).toThrow(/declared CMS source endpoint/);
+        ).toThrow(/declared CMS mutation/);
     });
 
     test("enforces native list children in private structure", () => {

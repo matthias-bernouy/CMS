@@ -32,7 +32,7 @@ test("collection Page hosts reject undeclared capability and resource attributes
         ...page,
         requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
         document: {
-            html: '<atlas-panel cms-source="/.cms/call/catalog.items/item.list as catalog" cms-source-method="POST"></atlas-panel>',
+            html: '<atlas-panel cms-mutation="catalog.items:item.list as catalog"></atlas-panel>',
         },
     };
     expect(() => parseCollectionRelease({ ...source, pages: [bound] })).toThrow(/not a declared setting/);
@@ -71,7 +71,7 @@ test("collection Page hosts reject undeclared capability and resource attributes
 test("collection Pages admit typed capability forms owned by a composition", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const form =
-        '<form cms-source="/.cms/call/catalog.items/item.rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json"><label for="title">{{ copy }}</label><input id="title" type="text" name="title" required><input type="hidden" name="expectedRevision" value="1" cms-form-value-type="number"><button type="submit">{{ copy }}</button></form>';
+        '<form cms-mutation="catalog.items:item.rename as renamed"><label for="title">{{ copy }}</label><input id="title" type="text" name="title" required><input type="hidden" name="expectedRevision" value="1" cms-form-value-type="number"><button type="submit">{{ copy }}</button></form>';
     (source.blocs as Record<string, unknown>[]).push({
         kind: "composition",
         id: "atlas-form-page",
@@ -87,8 +87,8 @@ test("collection Pages admit typed capability forms owned by a composition", () 
     };
     expect(() => parseCollectionRelease({ ...source, pages: [mutation] })).not.toThrow();
     for (const html of [
-        form.replace('cms-source-trigger="submit"', 'action="https://example.com"'),
-        form.replace('cms-source-trigger="submit"', 'cms-source-trigger="auto"'),
+        form.replace('cms-mutation="catalog.items:item.rename as renamed"', 'action="https://example.com"'),
+        form.replace("catalog.items:item.rename as renamed", "catalog.items:item.rename"),
         form.replace('cms-form-value-type="number"', 'cms-form-value-type="object"'),
     ]) {
         const invalid = structuredClone(source);
@@ -104,7 +104,7 @@ test("collection system Pages admit only the closed authentication bindings", ()
         id: "atlas-authentication",
         label: "bloc.page.label",
         lightdom: `<section cms-query="kernel.auth:methods as methods">
-            <form cms-source="/.cms/auth/login as session" cms-source-method="POST" cms-source-trigger="submit">
+            <form cms-mutation="kernel.auth:login as session">
                 <input type="email" name="email" required>
                 <input type="password" name="password" required>
                 <button type="submit">{{ copy }}</button>
@@ -203,8 +203,8 @@ test("collection Pages reject executable or unbounded markup", () => {
         '<div style="color:red">Inline style</div>',
         '<div onclick="run()">Handler</div>',
         "<atlas-unknown></atlas-unknown>",
-        '<section cms-source="/api/users" cms-source-method="POST"></section>',
-        '<section cms-source="/.cms/call/catalog.items/item.list" cms-source-method="GET"></section>',
+        '<section cms-mutation="catalog.items:item.list as items"></section>',
+        '<section cms-query="catalog.items:item.list"></section>',
     ]) {
         expect(() => parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }] })).toThrow();
     }

@@ -197,17 +197,16 @@ describe("generated site Bloc source", () => {
             ],
             [{ ...base.draft, defaultContent: "<li>Orphan item</li>" }, /direct child of <ul> or <ol>/],
             [{ ...base.draft, defaultContent: "<ul>Loose text<li>Item</li></ul>" }, /only direct <li>/],
-            [{ ...base.draft, defaultContent: "<form></form>" }, /declared CMS source endpoint/],
+            [{ ...base.draft, defaultContent: "<form></form>" }, /declared CMS mutation/],
         ] as const) {
             expect(() => generateSiteBlocSourceBundle(base, snapshot as typeof base.draft)).toThrow(message);
         }
 
         const source = generateSiteBlocSourceBundle(base, {
             ...base.draft,
-            defaultContent: `<form cms-source="/.cms/call/forms/contact"
-                cms-source-method="POST" cms-source-trigger="submit"
-                cms-source-inherit-query="false" cms-source-success-reset="true"></form>`,
+            defaultContent: `<form cms-mutation="forms:contact as contact"
+                cms-mutation-reset="true"></form>`,
         });
-        expect(source["default.html"]).toContain('cms-source="/.cms/call/forms/contact"');
+        expect(source["default.html"]).toContain('cms-mutation="forms:contact as contact"');
     });
 });

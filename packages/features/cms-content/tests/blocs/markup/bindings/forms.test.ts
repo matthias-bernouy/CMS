@@ -3,16 +3,14 @@ import {
     CMS_BINDING_ATTRIBUTES,
     CMS_FORM_EMPTY_BEHAVIORS,
     CMS_FORM_VALUE_TYPES,
-    CMS_SOURCE_SERIALIZATIONS,
     isCmsFormEmptyBehavior,
     isCmsFormValueType,
-    isCmsSourceSerialization,
-    isCmsSourceSuccessReload,
+    isMutationInvalidations,
 } from "@bernouy/cms-content/bindings";
 import { nativeBindingAttributeIssue, ValidatingCmsRepository, type CmsRepository } from "@bernouy/cms-content";
 
-const form = (attributes: string, children = "", method = "PATCH") =>
-    `<fixture-card><form cms-source="/api/orders/update" cms-source-method="${method}" cms-source-trigger="submit" ${attributes}>${children}</form></fixture-card>`;
+const form = (attributes: string, children = "") =>
+    `<fixture-card><form cms-mutation="orders:update as saved" ${attributes}>${children}</form></fixture-card>`;
 
 function repository() {
     const writes: string[] = [];
@@ -39,12 +37,9 @@ describe("declarative form contracts", () => {
         expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutationReset, "false")).toBeNull();
     });
 
-    test("exposes controlled serialization and control-value helpers", () => {
-        expect(CMS_SOURCE_SERIALIZATIONS).toEqual(["typed-json"]);
+    test("exposes controlled invalidation and control-value helpers", () => {
         expect(CMS_FORM_VALUE_TYPES).toEqual(["string", "number", "boolean", "json"]);
         expect(CMS_FORM_EMPTY_BEHAVIORS).toEqual(["null", "omit"]);
-        expect(isCmsSourceSerialization("typed-json")).toBe(true);
-        expect(isCmsSourceSerialization("json")).toBe(false);
         for (const value of CMS_FORM_VALUE_TYPES) {
             expect(isCmsFormValueType(value)).toBe(true);
         }
@@ -53,19 +48,17 @@ describe("declarative form contracts", () => {
         }
         expect(isCmsFormValueType("object")).toBe(false);
         expect(isCmsFormEmptyBehavior("undefined")).toBe(false);
-        expect(isCmsSourceSuccessReload("orderDetail")).toBe(true);
-        expect(isCmsSourceSuccessReload("orderDetail orderList")).toBe(true);
+        expect(isMutationInvalidations("orderDetail")).toBe(true);
+        expect(isMutationInvalidations("orderDetail orderList")).toBe(true);
         for (const value of [null, "", "order-detail", "#detail", "detail detail", "#{target}", "{{ target }}"]) {
-            expect(isCmsSourceSuccessReload(value)).toBe(false);
+            expect(isMutationInvalidations(value)).toBe(false);
         }
-        expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.source, "/api/search?q=#{search}")).not.toBeNull();
-        expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.source, "/api/search?q=@{page:key}")).not.toBeNull();
     });
 
     test("rejects typed forms that are not owned by a Bloc contract", async () => {
         const { repo, writes } = repository();
         const content = form(
-            'cms-source-serialization="typed-json" cms-source-success-reload="orderDetail"',
+            "",
             '<input name="items[0][price]" cms-form-value-type="number" cms-form-empty="null"><fixture-field name="note" cms-form-value-type="string" cms-form-empty="omit"></fixture-field>',
         );
         await expect(repo.insertPage("/orders", "Orders", content)).rejects.toThrow("not a declared setting");
@@ -75,18 +68,17 @@ describe("declarative form contracts", () => {
 
     test("rejects invalid values and attribute placement at both page-write boundaries", async () => {
         const invalid = [
-            form('cms-source-success-reload="detail child"'),
-            form('cms-source-success-reload="detail detail"'),
-            form('cms-source-success-reload="{{ target }}"'),
-            form('cms-source-serialization="json"'),
-            form('cms-source-serialization="typed-json"', "", "GET"),
+            form('cms-mutation-invalidates="detail detail"'),
+            form('cms-mutation-invalidates="{{ target }}"'),
+            form('cms-mutation-idempotency="manual"'),
+            form('cms-mutation-reset="maybe"'),
             form("", '<input cms-form-value-type="object">'),
             form("", '<input cms-form-empty="undefined">'),
             form('cms-form-value-type="string"'),
-            form("", '<section cms-source-serialization="typed-json"></section>'),
-            form("", '<section cms-source-success-reload="detail"></section>'),
+            form("", '<section cms-mutation-idempotency="auto"></section>'),
+            form("", '<section cms-mutation-invalidates="detail"></section>'),
             form("", '<section cms-form-empty="null"></section>'),
-            form('cms-source-success-update="#detail"'),
+            form('cms-mutation-unknown="#detail"'),
             form('cms-arbitrary="true"'),
         ];
         for (const content of invalid) {
@@ -98,11 +90,9 @@ describe("declarative form contracts", () => {
 
     test("rejects ordinary forms that bypass Bloc ownership", async () => {
         const { repo } = repository();
-        for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"]) {
-            await expect(
-                repo.insertPage("/orders", "Orders", form("", '<input name="query">', method)),
-            ).rejects.toThrow("does not declare slot");
-        }
+        await expect(repo.insertPage("/orders", "Orders", form("", '<input name="query">'))).rejects.toThrow(
+            "does not declare slot",
+        );
         expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.formValueType, "boolean")).toBeNull();
     });
 });

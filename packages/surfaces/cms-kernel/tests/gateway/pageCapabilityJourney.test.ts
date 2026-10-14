@@ -40,7 +40,6 @@ test("a published Page renders and invokes only its exact capability plan", asyn
     const pageExecution = new PageExecutionService({
         siteId: "site-a",
         content: createContentReader(repository),
-        invoker,
         authority,
         resolveCapability: async (contractId, capabilityId) =>
             contractId === "shop" && capabilityId === "list-products" ? { access: "public", version: "2.3.0" } : null,

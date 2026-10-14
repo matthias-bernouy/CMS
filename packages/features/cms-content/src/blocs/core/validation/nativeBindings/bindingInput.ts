@@ -1,9 +1,9 @@
-import { parseQueryInput, parseSourceBody } from "cms-content/blocs/core/markup/bindings";
+import { parseBindingInput, parseQueryInput } from "cms-content/blocs/core/markup/bindings";
 
 const TYPED_PATH = /^[A-Za-z0-9_-]+(?:\[[A-Za-z0-9_-]+\])*$/;
 
-export function isTypedSourceBody(value: string): boolean {
-    return parseSourceBody(value) !== null;
+export function isTypedBindingInput(value: string): boolean {
+    return parseBindingInput(value) !== null;
 }
 
 export function isTypedQueryInput(value: string): boolean {

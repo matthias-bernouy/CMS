@@ -28,7 +28,6 @@ export type BlocDocumentValidationResult = {
     readonly fixedContent?: string;
     readonly queries: BlocContentMarkupResult["queries"];
     readonly mutations: BlocContentMarkupResult["mutations"];
-    readonly sources: BlocContentMarkupResult["sources"];
 };
 
 /** Canonical published-Bloc document grammar shared by every Bloc producer. */
@@ -70,7 +69,6 @@ export function validateBlocDocument(
         ...(fixed === undefined ? {} : { fixedContent: fixed.html }),
         queries: [...(fixed?.queries ?? []), ...(defaultResult?.queries ?? [])],
         mutations: [...(fixed?.mutations ?? []), ...(defaultResult?.mutations ?? [])],
-        sources: [...(fixed?.sources ?? []), ...(defaultResult?.sources ?? [])],
     };
 }
 

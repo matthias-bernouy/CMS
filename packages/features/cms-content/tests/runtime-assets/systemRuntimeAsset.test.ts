@@ -27,7 +27,8 @@ describe("content browser runtime assets", () => {
 
         expect(source).toContain("cms-binding-core");
         expect(source).not.toContain("setSourceContext");
-        expect(source).toContain("sourceFormRequest");
+        expect(source).toContain("mutationFormRequest");
+        expect(source).not.toContain("sourceFormRequest");
         expect(source).not.toContain("cms-signup-legal-consent");
         expect(source).not.toContain("cms-login-methods");
         expect(source).not.toContain("node:crypto");

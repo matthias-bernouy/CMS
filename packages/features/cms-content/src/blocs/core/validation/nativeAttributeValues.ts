@@ -1,5 +1,5 @@
 import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
-import { interpolationExpressions } from "cms-content/blocs/core/markup/bindings/source";
+import { interpolationExpressions } from "cms-content/blocs/core/markup/bindings/operation";
 import { parseBindingExpression } from "cms-content/blocs/core/markup/expression/parser";
 import { boundAttributeValueIssue } from "cms-content/blocs/core/markup/validation/contracts/attributeBindings";
 import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";

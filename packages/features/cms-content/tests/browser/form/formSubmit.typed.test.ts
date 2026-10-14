@@ -4,8 +4,12 @@ import { resetDom } from "../support/testUtils";
 import { form } from "./formTestUtils";
 
 afterEach(resetDom);
-const encode = (fields: string, mode = 'cms-source-serialization="typed-json"') =>
-    serializeForm(form(`<form ${mode}>${fields}</form>`), { url: "/save", method: "POST" }).data;
+const encode = (fields: string) =>
+    serializeForm(form(`<form>${fields}</form>`), {
+        url: "/save",
+        method: "POST",
+        serialization: "typed-json",
+    }).data;
 
 test("typed JSON builds nested values and preserves explicit false, zero, null and empty arrays", () => {
     expect(
@@ -52,13 +56,15 @@ test.each([
     expect(() => encode(fields)).toThrow();
 });
 
-test("ordinary forms keep string values and repeated names; typed append paths are explicit", () => {
+test("mutation forms require explicit append paths for repeated names", () => {
     const fields = '<input name="tag" value="a"><input name="tag" value="b"><input name="n" type="number" value="0">';
-    expect(encode(fields, "")).toEqual({ tag: ["a", "b"], n: "0" });
+    expect(() => encode(fields)).toThrow();
     expect(encode(fields.replaceAll('name="tag"', 'name="tag[]"'))).toEqual({ tag: ["a", "b"], n: 0 });
 });
 
-test("typed JSON cannot silently turn a GET into a write", () => {
-    const target = form('<form cms-source-serialization="typed-json"><input name="a" value="b"></form>');
-    expect(() => serializeForm(target, { url: "/read", method: "GET" })).toThrow("request body");
+test("mutation serialization cannot silently turn a GET into a write", () => {
+    const target = form('<form><input name="a" value="b"></form>');
+    expect(() => serializeForm(target, { url: "/read", method: "GET", serialization: "typed-json" })).toThrow(
+        "request body",
+    );
 });

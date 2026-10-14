@@ -179,9 +179,7 @@ describe("Form mutation — submit request", () => {
             payload = JSON.parse(String(init?.body));
             return Response.json({ saved: true });
         }) as typeof fetch;
-        const host = el(
-            '<div><form cms-mutation="test.profile:save as save"></form></div>',
-        );
+        const host = el('<div><form cms-mutation="test.profile:save as save"></form></div>');
         document.body.append(host);
         const runtime = new BindingRuntime(host);
         runtime.start();

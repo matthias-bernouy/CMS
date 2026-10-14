@@ -1,5 +1,5 @@
 import {
-    parseSourceBody,
+    parseBindingInput,
     parseSyncTarget,
     type CmsBindingInputCast,
     type CmsJsonValue,
@@ -14,7 +14,7 @@ const JSON_NUMBER = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/u;
 const JSON_INTEGER = /^-?(?:0|[1-9]\d*)$/u;
 
 export function resolveBindingInput(value: string | null, doc: Document): ResolvedBindingInput {
-    const binding = parseSourceBody(value);
+    const binding = parseBindingInput(value);
     if (!binding) {
         return { ready: true, fields: {} };
     }

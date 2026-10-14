@@ -268,11 +268,11 @@ export {
 } from "cms-content/blocs/core/composition/expandCompositions";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 export {
+    collectCmsMutationBindings,
     collectCmsQueryBindings,
-    collectCmsSourceBindings,
+    type CmsMutationBindingReference,
     type CmsQueryBindingReference,
-    type CmsSourceBindingReference,
-} from "cms-content/pages/core/indexing/sourceBindings";
+} from "cms-content/pages/core/indexing/operationBindings";
 export {
     detectPageIndexingCandidates,
     type PageIndexingCandidate,

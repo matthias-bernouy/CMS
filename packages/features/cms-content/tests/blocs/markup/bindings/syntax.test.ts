@@ -1,18 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import {
     asInterpolation,
+    asBindingInput,
     asMutation,
     asQuery,
     asQueries,
     asQueryInput,
     asQueryListen,
     asRepeat,
-    asSource,
-    asSourceBody,
     asSyncTarget,
     isCmsQueryParamName,
     isInterpolation,
     parseInterpolation,
+    parseBindingInput,
     parseMutation,
     parseQuery,
     parseQueries,
@@ -20,8 +20,6 @@ import {
     parseQueryListen,
     parseQueryRefresh,
     parseRepeat,
-    parseSource,
-    parseSourceBody,
     parseSyncTarget,
 } from "@bernouy/cms-content/bindings";
 
@@ -55,27 +53,7 @@ describe("binding syntax", () => {
         expect(isInterpolation("Hello {{ plan.name }}")).toBe(false);
     });
 
-    test("formats source bindings", () => {
-        expect(asSource(" /api/plans ")).toBe("/api/plans");
-        expect(asSource("https://example.com/api/plans")).toBe("https://example.com/api/plans");
-        expect(asSource({ url: " /api/plans ", alias: " plans " })).toBe("/api/plans as plans");
-        expect(asSource({ url: "/.cms/call/catalog/search?limit=5", alias: "addresses" })).toBe(
-            "/.cms/call/catalog/search?limit=5 as addresses",
-        );
-    });
-
-    test("parses source bindings", () => {
-        expect(parseSource(" {{BASE_PATH}}/api/plans ")).toEqual({ url: "{{BASE_PATH}}/api/plans" });
-        expect(parseSource("/api/plans as plans")).toEqual({ url: "/api/plans", alias: "plans" });
-        expect(parseSource("  /.cms/call/catalog/search?limit=5   as   addresses  ")).toEqual({
-            url: "/.cms/call/catalog/search?limit=5",
-            alias: "addresses",
-        });
-        expect(parseSource("")).toBeNull();
-        expect(parseSource("   ")).toBeNull();
-    });
-
-    test("formats and parses source body bindings", () => {
+    test("formats and parses typed binding inputs", () => {
         const body = {
             email: { from: "state" as const, key: "@param:site-email", optional: true },
             minimum: { from: "state" as const, key: " @param:site-racket-minimum ", cast: "number" as const },
@@ -84,7 +62,7 @@ describe("binding syntax", () => {
             options: { from: "literal" as const, value: { count: 2, labels: ["Newsletter"] } },
             skipped: undefined,
         };
-        const formatted = asSourceBody(body);
+        const formatted = asBindingInput(body);
         const expected = {
             email: { from: "state", key: "@param:site-email", optional: true },
             minimum: { from: "state", key: "@param:site-racket-minimum", cast: "number" },
@@ -93,9 +71,9 @@ describe("binding syntax", () => {
             options: { from: "literal", value: { count: 2, labels: ["Newsletter"] } },
         };
         expect(JSON.parse(formatted)).toEqual(expected);
-        expect(parseSourceBody(formatted)).toEqual(expected);
-        expect(parseSourceBody("")).toBeNull();
-        expect(parseSourceBody("{bad")).toBeNull();
+        expect(parseBindingInput(formatted)).toEqual(expected);
+        expect(parseBindingInput("")).toBeNull();
+        expect(parseBindingInput("{bad")).toBeNull();
     });
 
     test("requires one logical target and safe name for queries", () => {
@@ -236,7 +214,7 @@ describe("binding syntax", () => {
 
     test("rejects malformed synchronized input targets", () => {
         expect(() =>
-            asSourceBody({
+            asBindingInput({
                 external: { from: "state", key: "@param:site/query" },
             }),
         ).toThrow("Invalid CMS binding input field");
@@ -246,7 +224,7 @@ describe("binding syntax", () => {
             '{"external":{"from":"state","key":"@page:site-value","optional":true,"fallback":null}}',
             '{"external":{"from":"raw","value":true}}',
         ]) {
-            expect(parseSourceBody(invalid)).toBeNull();
+            expect(parseBindingInput(invalid)).toBeNull();
         }
     });
 

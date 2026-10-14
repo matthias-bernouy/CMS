@@ -1,4 +1,4 @@
-import { parseQuery, parseQueryInput } from "cms-content/blocs/core/markup/bindings/source";
+import { parseQuery, parseQueryInput } from "cms-content/blocs/core/markup/bindings/operation";
 import { QUERY_ATTR, QUERY_INPUT_ATTR } from "../../core/attrs";
 import { resolveBindingInput } from "../../state/bindingInput";
 import { setStructuredPath, type StructuredData } from "../../state/structuredData";

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import {
-    CMS_SOURCE_FAILED_EVENT,
-    CMS_SOURCE_SUCCESS_EVENT,
-    type CmsSourceResultEvent,
+    CMS_MUTATION_FAILED_EVENT,
+    CMS_MUTATION_SUCCESS_EVENT,
+    type CmsMutationResultEvent,
 } from "../../../src/browser/index";
 import { BindingRuntime } from "../../../src/browser/binding/runtime/BindingRuntime";
 import { el, resetDom, settle, waitFor } from "../support/testUtils";
@@ -11,20 +11,29 @@ afterEach(resetDom);
 
 describe("Form mutation — public submission events", () => {
     test("exports stable canonical event names", () => {
-        expect(CMS_SOURCE_SUCCESS_EVENT).toBe("cms-source:success");
-        expect(CMS_SOURCE_FAILED_EVENT).toBe("cms-source:failed");
+        expect(CMS_MUTATION_SUCCESS_EVENT).toBe("cms-mutation:success");
+        expect(CMS_MUTATION_FAILED_EVENT).toBe("cms-mutation:failed");
     });
 
     test("dispatches a typed failure result from the source element", async () => {
         globalThis.fetch = (async () =>
-            new Response(JSON.stringify({ field: "path", error: "A page already uses this path." }), {
-                status: 409,
-                statusText: "Conflict",
-                headers: { "content-type": "application/json" },
-            })) as unknown as typeof fetch;
+            new Response(
+                JSON.stringify({
+                    error: {
+                        code: "PATH_CONFLICT",
+                        retryable: false,
+                        output: { field: "path", message: "A page already uses this path." },
+                    },
+                }),
+                {
+                    status: 409,
+                    statusText: "Conflict",
+                    headers: { "content-type": "application/json" },
+                },
+            )) as unknown as typeof fetch;
 
         const form = el(`
-            <form cms-source="/api/page" cms-source-trigger="submit" cms-source-method="POST">
+            <form cms-mutation="pages:create as created">
                 <input name="path" value="/about">
                 <button type="submit">Create</button>
             </form>
@@ -34,9 +43,9 @@ describe("Form mutation — public submission events", () => {
         runtime.start();
         await settle();
 
-        let failure: CmsSourceResultEvent | null = null;
+        let failure: CmsMutationResultEvent | null = null;
         form.addEventListener(
-            CMS_SOURCE_FAILED_EVENT,
+            CMS_MUTATION_FAILED_EVENT,
             (event) => {
                 failure = event;
             },
@@ -46,15 +55,15 @@ describe("Form mutation — public submission events", () => {
         form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
         await waitFor(() => failure !== null);
 
-        const event = failure as unknown as CmsSourceResultEvent;
+        const event = failure as unknown as CmsMutationResultEvent;
         expect(event.target).toBe(form);
         expect(event.bubbles).toBe(true);
         expect(event.composed).toBe(true);
         expect(event.detail.ok).toBe(false);
         expect(event.detail.status).toBe(409);
-        expect(event.detail.statusText).toBe("Conflict");
-        expect(event.detail.body).toEqual({ field: "path", error: "A page already uses this path." });
-        expect(event.detail.message).toBe("A page already uses this path.");
+        expect(event.detail.statusText).toBe("Command rejected");
+        expect(event.detail.body).toEqual({ field: "path", message: "A page already uses this path." });
+        expect(event.detail.message).toBe("PATH_CONFLICT");
         expect(event.detail.form).toBe(form);
         runtime.stop();
     });

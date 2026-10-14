@@ -3,12 +3,7 @@ import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, record, string, unique } from "../../values";
-import {
-    capabilityCallKey,
-    isCollectionSystemQuery,
-    isCollectionSystemSource,
-    parseRequirements,
-} from "../requirements";
+import { isCollectionSystemQuery, parseRequirements } from "../requirements";
 import { parseDefaultPath } from "./document";
 import { validatePageDocument, type PageDocumentValidationResult } from "@bernouy/cms-content/page-document";
 
@@ -42,7 +37,7 @@ export function parseCollectionPages(
         } catch (error) {
             invalid(error instanceof Error ? error.message : "invalid Page document", `${path}.document.html`);
         }
-        const { html, queries, sources, uses } = validated!;
+        const { html, queries, mutations, uses } = validated!;
         if (source.uses !== undefined) {
             const declared = array(source.uses, limits.maxBlocs, `${path}.uses`).map((item, itemIndex) =>
                 string(item, 128, `${path}.uses[${itemIndex}]`),
@@ -54,23 +49,11 @@ export function parseCollectionPages(
         }
         const requires = parseRequirements(source.requires, `${path}.requires`, limits);
         const calls = new Set([
-            ...sources
-                .map(({ method, url }) => {
-                    if (isCollectionSystemSource(url, method)) {
-                        return null;
-                    }
-                    const call = capabilityCallKey(url);
-                    if (!call || method !== "POST") {
-                        return invalid(
-                            "Page sources must use a canonical CMS capability with POST",
-                            `${path}.document.html`,
-                        );
-                    }
-                    return call;
-                })
-                .filter((call): call is string => call !== null),
             ...queries
                 .filter(({ contractId, capabilityId }) => !isCollectionSystemQuery(contractId, capabilityId))
+                .map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
+            ...mutations
+                .filter(({ contractId }) => !contractId.startsWith("kernel."))
                 .map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
         ]);
         const declaredCalls = new Set(requires.map((item) => `${item.contractId}/${item.capabilityId}`));

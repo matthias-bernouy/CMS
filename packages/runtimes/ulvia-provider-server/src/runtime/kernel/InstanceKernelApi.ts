@@ -21,7 +21,6 @@ export async function createInstanceKernelApi(
     const pageExecution = new PageExecutionService({
         siteId: gateway.siteId,
         content,
-        invoker: gateway.invoker,
         authority: gateway.pageExecutions,
         resolveCapability: gateway.resolvePageCapability,
     });

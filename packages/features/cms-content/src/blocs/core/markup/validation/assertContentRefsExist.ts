@@ -1,7 +1,7 @@
 import { parseHTML } from "linkedom";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { expandCompositions } from "cms-content/blocs/core/composition/expandCompositions";
-import { validateStateQueryGraph } from "cms-content/blocs/core/markup/bindings/source/stateGraph";
+import { validateStateQueryGraph } from "cms-content/blocs/core/markup/bindings/operation/stateGraph";
 import type { TBloc } from "cms-content/blocs/interfaces/blocs";
 import type { BlocSettings } from "cms-content/pages/interfaces/document";
 import { validatePageDocument } from "cms-content/blocs/core/markup/validation/documents/pageDocument";

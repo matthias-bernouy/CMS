@@ -163,8 +163,8 @@ describe("ValidatingCmsRepository — pages", () => {
             ['<h1 class="forged">Title</h1>', /not allowed/],
             ['<img src="https:\/\/example.invalid\/photo.jpg" alt="Photo">', /CMS media item/],
             ['<img alt="Photo">', /CMS media item/],
-            ["<form></form>", /declared CMS source endpoint/],
-            ["<fixture-card><form></form></fixture-card>", /declared CMS source endpoint/],
+            ["<form></form>", /declared CMS mutation/],
+            ["<fixture-card><form></form></fixture-card>", /declared CMS mutation/],
             [
                 '<fixture-card><img src="https:\/\/example.invalid\/photo.jpg" alt="Photo"></fixture-card>',
                 /CMS media item/,
@@ -172,23 +172,22 @@ describe("ValidatingCmsRepository — pages", () => {
             ['<fixture-card><img alt=""></fixture-card>', /alternative text/],
             [
                 '<fixture-card><section cms-source="https:\/\/example.invalid\/items"></section></fixture-card>',
-                /use cms-query for reads/,
+                /not a declared CMS binding/,
             ],
             [
-                `<fixture-card><form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
-                    cms-source-trigger="submit"><button formaction="https://example.invalid/steal">Send</button>
+                `<fixture-card><form cms-mutation="forms:contact as contact"
+                    ><button formaction="https://example.invalid/steal">Send</button>
                 </form></fixture-card>`,
                 /formaction.*forbidden/,
             ],
             [
-                `<form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
-                    cms-source-trigger="submit"
-                    cms-source-body='{"safe":{"from":"literal","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
+                `<form cms-mutation="forms:contact as contact"
+                    cms-mutation-input='{"safe":{"from":"literal","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
             [
-                `<form cms-source="/.cms/call/forms/contact" cms-source-method="POST" cms-source-trigger="submit" cms-source-inherit-query="maybe"></form>`,
-                /query inheritance must be true or false/,
+                `<form cms-mutation="forms:contact as contact" cms-source-inherit-query="maybe"></form>`,
+                /not a declared CMS binding/,
             ],
         ] as const;
 

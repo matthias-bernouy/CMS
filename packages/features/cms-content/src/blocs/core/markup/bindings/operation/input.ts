@@ -4,7 +4,6 @@ import type {
     CmsBindingInputPath,
     CmsBindingInputValue,
     CmsJsonValue,
-    CmsSourceBodyBinding,
 } from "cms-content/blocs/core/markup/bindings/types";
 import { asSyncTarget, parseSyncTarget } from "cms-content/blocs/core/markup/bindings/sync";
 
@@ -14,12 +13,12 @@ const MAX_JSON_DEPTH = 64;
 const MAX_PATH_DEPTH = 24;
 const MAX_ARRAY_INDEX = 10_000;
 
-export function asSourceBody(body: CmsSourceBodyBinding): string {
+export function asBindingInput(body: CmsBindingInputMap): string {
     const normalized = normalizeInputMap(body);
     return Object.keys(normalized).length ? JSON.stringify(normalized) : "";
 }
 
-export function parseSourceBody(value: string | null | undefined): CmsSourceBodyBinding | null {
+export function parseBindingInput(value: string | null | undefined): CmsBindingInputMap | null {
     const raw = value?.trim() ?? "";
     if (!raw) {
         return null;
@@ -33,7 +32,7 @@ export function parseSourceBody(value: string | null | undefined): CmsSourceBody
     if (!isRecord(parsed)) {
         return null;
     }
-    const body: CmsSourceBodyBinding = {};
+    const body: CmsBindingInputMap = {};
     for (const [name, source] of Object.entries(parsed)) {
         const normalized = normalizeInputValue(source);
         if (!name.trim() || !normalized) {

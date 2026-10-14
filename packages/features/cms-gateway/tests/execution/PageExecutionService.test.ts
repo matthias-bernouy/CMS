@@ -8,26 +8,16 @@ const page: TPage = {
     path: "/products",
     title: "Products",
     description: "",
-    content: `<form cms-source="/.cms/call/shop/products as products" cms-source-method="post"></form>`,
+    content: `<form cms-mutation="shop:list-products as products"></form>`,
     visible: true,
     tags: [],
 };
 
-test("Page execution resolves sources to exact capabilities before classifying access", async () => {
+test("Page execution resolves logical mutations before classifying access", async () => {
     const activated: unknown[] = [];
     const service = new PageExecutionService({
         siteId: "site-a",
         content: { getRenderablePage: async () => null },
-        invoker: {
-            resolveHttp: async ({ contractId, method, path }) => {
-                expect({ contractId, method, path }).toEqual({
-                    contractId: "shop",
-                    method: "POST",
-                    path: "/products",
-                });
-                return { capability: { id: "listProducts" }, binding: {}, pathValues: {} };
-            },
-        },
         authority: {
             activate: async (input) => {
                 activated.push(input);
@@ -36,7 +26,7 @@ test("Page execution resolves sources to exact capabilities before classifying a
             authorize: async () => ({ planDigest: "sha256:plan", version: "2.3.0" }) as never,
         },
         resolveCapability: async (contractId, capabilityId) => {
-            if (contractId === "shop" && capabilityId === "listProducts") {
+            if (contractId === "shop" && capabilityId === "list-products") {
                 return { access: "authenticated", version: "2.3.0" };
             }
             return contractId === "search" && capabilityId === "read" ? { access: "public", version: "1.4.0" } : null;
@@ -53,7 +43,7 @@ test("Page execution resolves sources to exact capabilities before classifying a
         await service.resolveRequirements(selected, new URL("https://example.test/products"), "/.cms/call/"),
     ).toEqual([
         { contractId: "search", capabilityId: "read", versionRange: "^1.0.0" },
-        { contractId: "shop", capabilityId: "listProducts", versionRange: "=2.3.0" },
+        { contractId: "shop", capabilityId: "list-products", versionRange: "=2.3.0" },
     ]);
     expect(activated).toEqual([]);
 });
@@ -70,9 +60,6 @@ test("Page calls activate the complete exact plan of the same-origin referring P
     const service = new PageExecutionService({
         siteId: "site-a",
         content: { getRenderablePage: async (path) => (path === "/products" ? selected : null) },
-        invoker: {
-            resolveHttp: async () => ({ capability: { id: "listProducts" }, binding: {}, pathValues: {} }),
-        },
         authority: {
             activate: async (input) => {
                 activations.push(input);
@@ -92,13 +79,13 @@ test("Page calls activate the complete exact plan of the same-origin referring P
         }),
         "/",
         "shop",
-        "listProducts",
+        "list-products",
     );
 
     expect(activations).toEqual([
         {
             consumer: { kind: "site", siteId: "site-a", pageId: "products", pageRevision: 4 },
-            requirements: [{ contractId: "shop", capabilityId: "listProducts", versionRange: "=2.3.0" }],
+            requirements: [{ contractId: "shop", capabilityId: "list-products", versionRange: "=2.3.0" }],
         },
     ]);
     expect(authorizations).toEqual([
@@ -108,7 +95,7 @@ test("Page calls activate the complete exact plan of the same-origin referring P
             pageId: "products",
             pageRevision: 4,
             contractId: "shop",
-            capabilityId: "listProducts",
+            capabilityId: "list-products",
         },
     ]);
 });
@@ -117,11 +104,6 @@ test("Page execution resolves logical cms-query targets without provider HTTP ro
     const service = new PageExecutionService({
         siteId: "site-a",
         content: { getRenderablePage: async () => null },
-        invoker: {
-            resolveHttp: async () => {
-                throw new Error("logical queries must not resolve an HTTP route");
-            },
-        },
         authority: {
             activate: async () => ({}) as never,
             authorize: async () => ({}) as never,

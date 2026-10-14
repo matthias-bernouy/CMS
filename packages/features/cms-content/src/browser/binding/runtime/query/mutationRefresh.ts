@@ -1,5 +1,5 @@
-import { parseQuery } from "cms-content/blocs/core/markup/bindings/source";
-import { parseCmsSourceSuccessReload } from "cms-content/blocs/core/validation/nativeBindings/formValues";
+import { parseQuery } from "cms-content/blocs/core/markup/bindings/operation";
+import { parseMutationInvalidations } from "cms-content/blocs/core/validation/nativeBindings/formValues";
 import { BINDING_CORE_TAG, MUTATION_INVALIDATES_ATTR, QUERY_ATTR } from "../../core/attrs";
 
 type Reader = {
@@ -54,7 +54,7 @@ export function formMutationReload(form: HTMLFormElement) {
     if (!rawNames?.trim()) {
         return null;
     }
-    const names = parseCmsSourceSuccessReload(rawNames);
+    const names = parseMutationInvalidations(rawNames);
     if (!names) {
         throw new Error("cms-mutation-invalidates must identify one to eight unique queries by name.");
     }

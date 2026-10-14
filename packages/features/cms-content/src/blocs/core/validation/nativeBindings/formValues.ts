@@ -1,15 +1,9 @@
 import {
-    CMS_SOURCE_SERIALIZATIONS,
     CMS_FORM_VALUE_TYPES,
     CMS_FORM_EMPTY_BEHAVIORS,
-    type CmsSourceSerialization,
     type CmsFormValueType,
     type CmsFormEmptyBehavior,
 } from "cms-content/blocs/core/markup/bindings/types";
-
-export function isCmsSourceSerialization(value: string | null): value is CmsSourceSerialization {
-    return (CMS_SOURCE_SERIALIZATIONS as readonly string[]).includes(value ?? "");
-}
 
 export function isCmsFormValueType(value: string | null): value is CmsFormValueType {
     return (CMS_FORM_VALUE_TYPES as readonly string[]).includes(value ?? "");
@@ -19,11 +13,11 @@ export function isCmsFormEmptyBehavior(value: string | null): value is CmsFormEm
     return (CMS_FORM_EMPTY_BEHAVIORS as readonly string[]).includes(value ?? "");
 }
 
-export function isCmsSourceSuccessReload(value: string | null): boolean {
-    return parseCmsSourceSuccessReload(value) !== null;
+export function isMutationInvalidations(value: string | null): boolean {
+    return parseMutationInvalidations(value) !== null;
 }
 
-export function parseCmsSourceSuccessReload(value: string | null): readonly string[] | null {
+export function parseMutationInvalidations(value: string | null): readonly string[] | null {
     const names = value?.trim().split(/\s+/u).filter(Boolean) ?? [];
     if (
         names.length === 0 ||

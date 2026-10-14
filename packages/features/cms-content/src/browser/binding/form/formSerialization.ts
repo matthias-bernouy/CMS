@@ -1,4 +1,5 @@
 import { collectFormData } from "./formControls";
+import { appendSerializedValue } from "./nestedFormData";
 import type { AdditionalFormFields, FormSubmitMethod, SerializedForm, SerializedFormData } from "./types";
 import { serializeTypedForm } from "./typed/serialize";
 
@@ -14,17 +15,58 @@ export function normalizeFormMethod(value: string | null | undefined, fallback: 
 
 export function serializeForm(
     form: HTMLFormElement,
-    options: { url: string; method: FormSubmitMethod; bodyFields?: AdditionalFormFields; formData?: FormData },
+    options: {
+        url: string;
+        method: FormSubmitMethod;
+        bodyFields?: AdditionalFormFields;
+        formData?: FormData;
+        serialization?: "typed-json";
+    },
 ): SerializedForm {
     const formData = options.formData ?? collectFormData(form);
-    if (!BODY_METHODS.has(options.method)) {
-        throw new Error("Declarative mutations require a method with a request body.");
+    if (options.serialization === "typed-json") {
+        if (!BODY_METHODS.has(options.method)) {
+            throw new Error("Typed JSON requires a method with a request body.");
+        }
+        const data = withAdditionalFields(serializeTypedForm(form), formData, options.bodyFields);
+        if (hasFile(formData)) {
+            return { kind: "formData", url: options.url, formData, data, body: formData };
+        }
+        return { kind: "json", url: options.url, formData, data, body: JSON.stringify(data) };
     }
-    const data = withAdditionalFields(serializeTypedForm(form), formData, options.bodyFields);
+    if (options.method === "GET") {
+        return {
+            kind: "query",
+            url: appendQuery(options.url, formData),
+            formData,
+            data: serializeFormData(formData),
+        };
+    }
+    const data = withAdditionalFields(serializeFormData(formData), formData, options.bodyFields);
     if (hasFile(formData)) {
         return { kind: "formData", url: options.url, formData, data, body: formData };
     }
     return { kind: "json", url: options.url, formData, data, body: JSON.stringify(data) };
+}
+
+function serializeFormData(formData: FormData): SerializedFormData {
+    const data: SerializedFormData = {};
+    for (const [key, value] of formData.entries()) {
+        if (!isEmptyFile(value)) {
+            appendSerializedValue(data, key, value);
+        }
+    }
+    return data;
+}
+
+function appendQuery(url: string, formData: FormData): string {
+    const next = new URL(url, location.href);
+    for (const [key, value] of formData.entries()) {
+        if (!isEmptyFile(value)) {
+            next.searchParams.append(key, isFileLike(value) ? value.name : value);
+        }
+    }
+    return next.toString();
 }
 
 function withAdditionalFields(

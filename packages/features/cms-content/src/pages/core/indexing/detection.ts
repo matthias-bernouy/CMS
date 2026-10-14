@@ -1,4 +1,4 @@
-import { collectCmsQueryBindings } from "cms-content/pages/core/indexing/sourceBindings";
+import { collectCmsQueryBindings } from "cms-content/pages/core/indexing/operationBindings";
 import { parseSyncTarget } from "cms-content/blocs/core/markup/bindings";
 
 export type PageIndexingCandidate = {

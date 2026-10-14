@@ -1,18 +1,3 @@
-export function sourceRoute(rawUrl: string, pageUrl: URL, prefix: string): { contractId: string; path: string } | null {
-    try {
-        const url = new URL(rawUrl, pageUrl);
-        if (url.origin !== pageUrl.origin || !url.pathname.startsWith(prefix)) {
-            return null;
-        }
-        const suffix = url.pathname.slice(prefix.length);
-        const separator = suffix.indexOf("/");
-        const contractId = decodeURIComponent(separator < 0 ? suffix : suffix.slice(0, separator));
-        return contractId ? { contractId, path: separator < 0 ? "/" : suffix.slice(separator) } : null;
-    } catch {
-        return null;
-    }
-}
-
 export function pageCallPrefix(basePath: string): string {
     return `${basePath === "/" ? "" : basePath.replace(/\/$/u, "")}/.cms/call/`;
 }

@@ -16,8 +16,8 @@ describe("Form mutation — auth submit", () => {
         globalThis.fetch = (async () =>
             Response.json({ subject: { identifier: "user:ada" } })) as unknown as typeof fetch;
         location.href = `http://localhost/login?returnTo=${encodeURIComponent(returnTo)}`;
-        const form = el(`<form cms-source="/.cms/auth/login as result" cms-source-trigger="submit"
-            cms-source-success-redirect="/account" cms-source-success-redirect-param="returnTo">
+        const form = el(`<form cms-mutation="kernel.auth:login as session"
+            cms-mutation-redirect="/account" cms-mutation-redirect-param="returnTo">
             <input name="email" value="ada@example.test">
         </form>`);
         document.body.append(form);
@@ -44,7 +44,7 @@ describe("Form mutation — auth submit", () => {
         location.href = "http://localhost/auth/login?returnTo=%2Fdashboard";
 
         const root = el(`
-            <form cms-source="/.cms/auth/login as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-redirect="/">
+            <form cms-mutation="kernel.auth:login as session" cms-mutation-redirect="/">
                 <input type="email" name="email" placeholder="Email" required>
                 <input type="password" name="password" placeholder="Password" required>
                 <input type="submit" value="Login">
@@ -65,7 +65,7 @@ describe("Form mutation — auth submit", () => {
 
         const captured = request as unknown as { url: string; init?: RequestInit };
         expect(event.defaultPrevented).toBe(true);
-        expect(captured.url).toBe("http://localhost/.cms/auth/login?returnTo=%2Fdashboard");
+        expect(captured.url).toBe("http://localhost/.cms/auth/login");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.body).toBe(
             JSON.stringify({

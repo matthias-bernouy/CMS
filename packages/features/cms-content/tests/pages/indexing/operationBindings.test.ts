@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { collectCmsQueryBindings, collectCmsSourceBindings } from "@bernouy/cms-content";
+import { collectCmsMutationBindings, collectCmsQueryBindings } from "@bernouy/cms-content";
 
 describe("collectCmsQueryBindings", () => {
     test("extracts remote query identities and their typed inputs", () => {
@@ -34,35 +34,31 @@ describe("collectCmsQueryBindings", () => {
     });
 });
 
-describe("collectCmsSourceBindings", () => {
-    test("extracts only form-owned mutation URLs, aliases, methods, and triggers", () => {
+describe("collectCmsMutationBindings", () => {
+    test("extracts form-owned logical mutations and their typed inputs", () => {
         expect(
-            collectCmsSourceBindings(`
-            <section cms-source="/.cms/call/catalog/search?limit=20 as products"></section>
-            <form cms-source="/.cms/call/newsletter/subscribe" cms-source-method="post" cms-source-trigger="submit"></form>
+            collectCmsMutationBindings(`
+            <section cms-mutation="catalog:ignored as ignored"></section>
+            <form cms-mutation="newsletter:subscribe as subscription"
+                cms-mutation-input='{"audience":{"from":"state","key":"@page:newsletter-audience"}}'></form>
+            <form cms-mutation="kernel.auth:login as session"></form>
         `),
         ).toEqual([
             {
-                url: "/.cms/call/newsletter/subscribe",
-                method: "POST",
-                trigger: "submit",
+                contractId: "newsletter",
+                capabilityId: "subscribe",
+                alias: "subscription",
+                input: { audience: { from: "state", key: "@page:newsletter-audience" } },
             },
         ]);
     });
 
-    test("ignores non-form and empty source attributes and normalizes invalid form options", () => {
+    test("ignores malformed and non-form mutation declarations", () => {
         expect(
-            collectCmsSourceBindings(`
-            <section cms-source=" "></section>
-            <section cms-source="/api/items"></section>
-            <form cms-source="/api/items" cms-source-method="TRACE" cms-source-trigger="hover"></form>
+            collectCmsMutationBindings(`
+            <section cms-mutation="catalog:save as ignored"></section>
+            <form cms-mutation="invalid"></form>
         `),
-        ).toEqual([
-            {
-                url: "/api/items",
-                method: "POST",
-                trigger: "submit",
-            },
-        ]);
+        ).toEqual([]);
     });
 });

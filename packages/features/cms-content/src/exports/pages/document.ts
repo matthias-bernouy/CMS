@@ -25,7 +25,6 @@ export {
 export {
     validatePageDocument,
     type PageDocumentBlocContract,
-    type PageDocumentSource,
     type PageDocumentValidationResult,
     type UnresolvedPageDocumentBloc,
 } from "cms-content/blocs/core/markup/validation/documents/pageDocument";

@@ -20,19 +20,6 @@ export const CMS_BINDING_ATTRIBUTES = {
     mutationRedirectParam: "cms-mutation-redirect-param",
     mutationReset: "cms-mutation-reset",
     repeat: "cms-repeat",
-    source: "cms-source",
-    sourceBody: "cms-source-body",
-    sourceDelay: "cms-source-delay",
-    sourceInheritQuery: "cms-source-inherit-query",
-    sourceIdempotency: "cms-source-idempotency",
-    sourceId: "cms-source-id",
-    sourceMethod: "cms-source-method",
-    sourceSerialization: "cms-source-serialization",
-    sourceSuccessReload: "cms-source-success-reload",
-    sourceSuccessRedirect: "cms-source-success-redirect",
-    sourceSuccessRedirectParam: "cms-source-success-redirect-param",
-    sourceSuccessReset: "cms-source-success-reset",
-    sourceTrigger: "cms-source-trigger",
 } as const;
 
 export const CMS_CONDITION_FIELD_OPERATORS = [
@@ -47,11 +34,6 @@ export const CMS_CONDITION_FIELD_OPERATORS = [
     "empty",
     "notEmpty",
 ] as const;
-export const CMS_SOURCE_TRIGGERS = ["submit", "change"] as const;
-export const CMS_SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
-export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
-export const CMS_SOURCE_STATUS_SCOPE = "$source";
-export const CMS_SOURCES_STATUS_SCOPE = "$sources";
 
 export type CmsBindingAttribute = (typeof CMS_BINDING_ATTRIBUTES)[keyof typeof CMS_BINDING_ATTRIBUTES];
 export type CmsJsonValue = null | string | number | boolean | CmsJsonValue[] | { [key: string]: CmsJsonValue };
@@ -68,9 +50,6 @@ export type CmsBindingInputValue =
           readonly fallback?: CmsJsonValue;
       };
 export type CmsBindingInputMap = Record<string, CmsBindingInputValue | null | undefined>;
-export type CmsSourceBinding = { url: string; alias?: string };
-export type CmsSourceBodyBinding = CmsBindingInputMap;
-export type CmsSourceUrl = string;
 export type CmsConditionExpression = string;
 export type CmsMatchExpression = string;
 export type CmsCaseValue = string | number | boolean | null;
@@ -78,10 +57,6 @@ export type CmsConditionLiteral = string | number | boolean | null;
 export type CmsConditionFieldOperator = (typeof CMS_CONDITION_FIELD_OPERATORS)[number];
 export type CmsRepeatBinding = { path: string; alias?: string };
 export type CmsRepeatRangeBinding = { count: number; alias: string };
-export type CmsSourceTrigger = (typeof CMS_SOURCE_TRIGGERS)[number];
-export type CmsSourceMethod = (typeof CMS_SOURCE_METHODS)[number];
-export type CmsSourceState = (typeof CMS_SOURCE_STATES)[number];
-export type CmsSourceStatusCondition = { sourceId?: string; state: CmsSourceState };
 
 export type CmsQueryTarget = {
     readonly contractId: string;
@@ -104,9 +79,7 @@ export type CmsQueryRefreshPolicy = {
 export type CmsMutationBinding = CmsRemoteQueryBinding;
 export type CmsMutationInput = CmsBindingInputMap;
 
-export const CMS_SOURCE_SERIALIZATIONS = ["typed-json"] as const;
 export const CMS_FORM_VALUE_TYPES = ["string", "number", "boolean", "json"] as const;
 export const CMS_FORM_EMPTY_BEHAVIORS = ["null", "omit"] as const;
-export type CmsSourceSerialization = (typeof CMS_SOURCE_SERIALIZATIONS)[number];
 export type CmsFormValueType = (typeof CMS_FORM_VALUE_TYPES)[number];
 export type CmsFormEmptyBehavior = (typeof CMS_FORM_EMPTY_BEHAVIORS)[number];

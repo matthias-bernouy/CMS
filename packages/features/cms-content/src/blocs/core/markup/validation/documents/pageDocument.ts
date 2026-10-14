@@ -1,7 +1,6 @@
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { extractRefs } from "cms-content/blocs/core/markup/contentRefs";
-import { parseSource } from "cms-content/blocs/core/markup/bindings";
 import { managedNativeElementIssue } from "cms-content/blocs/core/markup/validation/managedNativeElements";
 import {
     extractQueries,
@@ -28,13 +27,7 @@ export type PageDocumentValidationResult = {
     readonly html: string;
     readonly queries: readonly ContentQuery[];
     readonly mutations: readonly ContentQuery[];
-    readonly sources: readonly PageDocumentSource[];
     readonly uses: readonly string[];
-};
-
-export type PageDocumentSource = {
-    readonly method?: string;
-    readonly url: string;
 };
 
 /** Canonical Page-document grammar shared by site-authored and contributed Pages. */
@@ -76,18 +69,7 @@ export function validatePageDocument(
     validateHosts(document, known, unresolved);
     validateManagedNative(normalized, blocs);
 
-    const sources = Array.from(document.querySelectorAll("[cms-source]"), (element): PageDocumentSource | null => {
-        const source = parseSource(element.getAttribute("cms-source") ?? "");
-        return source
-            ? {
-                  url: source.url,
-                  ...(element.hasAttribute("cms-source-method")
-                      ? { method: element.getAttribute("cms-source-method") ?? "" }
-                      : {}),
-              }
-            : null;
-    }).filter((source): source is PageDocumentSource => source !== null);
-    return { html: document.body.innerHTML, queries, mutations, sources, uses };
+    return { html: document.body.innerHTML, queries, mutations, uses };
 }
 
 function validateHosts(

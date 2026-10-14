@@ -42,7 +42,13 @@ export class MutationRequest {
         const method = "POST" as const;
         const formData = collectFormData(form);
         const bodyFields = this.resolveBodyFields(true);
-        const serialized = serializeForm(form, { url: this.submitUrl(url), method, formData, bodyFields });
+        const serialized = serializeForm(form, {
+            url: this.submitUrl(url),
+            method,
+            formData,
+            bodyFields,
+            serialization: "typed-json",
+        });
         this.latestInput = serialized.data;
         return {
             form,
@@ -71,6 +77,7 @@ export class MutationRequest {
             method,
             formData,
             bodyFields,
+            serialization: "typed-json",
         }).data;
     }
 

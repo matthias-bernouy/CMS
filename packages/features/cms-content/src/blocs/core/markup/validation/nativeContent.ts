@@ -4,10 +4,10 @@ import { ContentValidationError } from "cms-content/application/core/validation/
 import { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenStoredHtml";
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { storedMarkupSecurityIssue } from "cms-content/blocs/core/markup/security/storedMarkupIssue";
-import { parseMutation, parseQuery, parseSource } from "cms-content/blocs/core/markup/bindings";
-import { parseCmsSourceSuccessReload } from "cms-content/blocs/core/validation/nativeBindings/formValues";
+import { parseMutation, parseQuery } from "cms-content/blocs/core/markup/bindings";
+import { parseMutationInvalidations } from "cms-content/blocs/core/validation/nativeBindings/formValues";
 import {
-    assertBlocBindingSourceBudget,
+    assertBlocOperationBudget,
     assertBlocDomBudget,
     assertBlocMarkupLength,
 } from "cms-content/blocs/core/markup/validation/documents/blocBudgets";
@@ -16,7 +16,6 @@ export type BlocContentMarkupResult = {
     readonly html: string;
     readonly queries: readonly ContentQuery[];
     readonly mutations: readonly ContentMutation[];
-    readonly sources: readonly { readonly method?: string; readonly url: string }[];
 };
 
 export type ContentQuery = {
@@ -77,19 +76,8 @@ export function validateBlocContentMarkup(
     document.body.innerHTML = html;
     const queries = extractQueries(document);
     const mutations = extractMutations(document);
-    const sources = Array.from(document.querySelectorAll("[cms-source]"), (element) => {
-        const source = parseSource(element.getAttribute("cms-source") ?? "");
-        return source
-            ? {
-                  url: source.url,
-                  ...(element.hasAttribute("cms-source-method")
-                      ? { method: element.getAttribute("cms-source-method") ?? "" }
-                      : {}),
-              }
-            : null;
-    }).filter((source): source is NonNullable<typeof source> => source !== null);
-    assertBlocBindingSourceBudget(options.field, sources.length + queries.length + mutations.length);
-    return { html, queries, mutations, sources };
+    assertBlocOperationBudget(options.field, queries.length + mutations.length);
+    return { html, queries, mutations };
 }
 
 export function extractQueries(document: Document): readonly ContentQuery[] {
@@ -104,19 +92,8 @@ export function extractQueries(document: Document): readonly ContentQuery[] {
         names.add(query.name);
     }
     const queries = bindings.filter((query): query is ContentQuery => "contractId" in query);
-    for (const form of Array.from(document.querySelectorAll("form[cms-source-success-reload]"))) {
-        const targets = parseCmsSourceSuccessReload(form.getAttribute("cms-source-success-reload"));
-        for (const target of targets ?? []) {
-            if (!names.has(target)) {
-                throw new ContentValidationError(
-                    "content",
-                    `CMS source success reload references unknown query ${JSON.stringify(target)}`,
-                );
-            }
-        }
-    }
     for (const form of Array.from(document.querySelectorAll("form[cms-mutation-invalidates]"))) {
-        const targets = parseCmsSourceSuccessReload(form.getAttribute("cms-mutation-invalidates"));
+        const targets = parseMutationInvalidations(form.getAttribute("cms-mutation-invalidates"));
         for (const target of targets ?? []) {
             if (!names.has(target)) {
                 throw new ContentValidationError(

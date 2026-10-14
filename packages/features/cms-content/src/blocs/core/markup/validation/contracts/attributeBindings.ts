@@ -5,7 +5,7 @@ import {
 } from "cms-content/blocs/core/markup/expression/inspect";
 import { parseBindingExpression } from "cms-content/blocs/core/markup/expression/parser";
 import type { ExpressionNode } from "cms-content/blocs/core/markup/expression/types";
-import { interpolationExpressions, parseInterpolation } from "cms-content/blocs/core/markup/bindings/source";
+import { interpolationExpressions, parseInterpolation } from "cms-content/blocs/core/markup/bindings/operation";
 
 export type BoundAttributeValueKind = "boolean" | "string" | "declared-string" | "number" | "integer";
 

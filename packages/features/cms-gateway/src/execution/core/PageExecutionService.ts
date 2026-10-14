@@ -4,11 +4,10 @@ import type {
     RenderablePage,
     RenderablePageSource,
 } from "@bernouy/cms-content/rendering";
-import { collectCmsQueryBindings, collectCmsSourceBindings } from "@bernouy/cms-content/rendering";
+import { collectCmsMutationBindings, collectCmsQueryBindings } from "@bernouy/cms-content/rendering";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
-import type { GatewayInvoker } from "cms-gateway/invocation/interfaces/Invocation";
 import type { GatewayExecutionPin, PageExecutionAuthority, PageExecutionConsumer } from "../interfaces/PageExecution";
-import { pageCallPrefix, referringPagePath, sourceRoute } from "./pageExecutionRoutes";
+import { pageCallPrefix, referringPagePath } from "./pageExecutionRoutes";
 
 export type PageCapabilityAccess = "public" | "authenticated" | "admin";
 
@@ -23,14 +22,13 @@ export function pageRequiresCapabilityExecution(page: PageExecutionPage): boolea
     return (
         page.requirements.length > 0 ||
         collectCmsQueryBindings(page.page.content).length > 0 ||
-        collectCmsSourceBindings(page.page.content).length > 0
+        collectCmsMutationBindings(page.page.content).length > 0
     );
 }
 
 export type PageExecutionServiceOptions = {
     readonly siteId: string;
     readonly content: Pick<ContentReader, "getRenderablePage">;
-    readonly invoker: Pick<GatewayInvoker, "resolveHttp">;
     readonly authority: PageExecutionAuthority;
     readonly resolveCapability: (contractId: string, capabilityId: string) => Promise<ResolvedPageCapability | null>;
 };
@@ -88,8 +86,8 @@ export class PageExecutionService {
 
     async resolveRequirements(
         page: PageExecutionPage,
-        pageUrl: URL,
-        prefix: string,
+        _pageUrl: URL,
+        _prefix: string,
     ): Promise<readonly PageCapabilityRequirement[] | null> {
         const requirements = new Map(page.requirements.map((item) => [requirementKey(item), item]));
         for (const query of collectCmsQueryBindings(page.page.content)) {
@@ -109,31 +107,16 @@ export class PageExecutionService {
             };
             requirements.set(requirementKey(requirement), requirement);
         }
-        for (const binding of collectCmsSourceBindings(page.page.content)) {
-            const route = sourceRoute(binding.url, pageUrl, prefix);
-            if (!route) {
-                continue;
-            }
-            const resolved = await this.options.invoker
-                .resolveHttp({
-                    siteId: this.options.siteId,
-                    contractId: route.contractId,
-                    method: binding.method,
-                    path: route.path,
-                })
-                .catch(() => null);
-            if (!resolved) {
-                return null;
-            }
+        for (const binding of collectCmsMutationBindings(page.page.content)) {
             const capability = await this.options
-                .resolveCapability(route.contractId, resolved.capability.id)
+                .resolveCapability(binding.contractId, binding.capabilityId)
                 .catch(() => null);
             if (!capability) {
                 return null;
             }
             const requirement = {
-                contractId: route.contractId,
-                capabilityId: resolved.capability.id,
+                contractId: binding.contractId,
+                capabilityId: binding.capabilityId,
                 versionRange: `=${capability.version}`,
             };
             requirements.set(requirementKey(requirement), requirement);
