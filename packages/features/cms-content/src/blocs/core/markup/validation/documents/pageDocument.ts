@@ -11,6 +11,10 @@ import {
 import { pageBlocHostAttributesIssue } from "cms-content/blocs/core/markup/validation/contracts/hostAttributes";
 import { blocHostContractIssue } from "cms-content/blocs/core/markup/validation/contracts/pageSlotContracts";
 import type { PageBlocContract } from "cms-content/pages/interfaces/document";
+import {
+    validateDocumentBindings,
+    type BindingAnalysisOptions,
+} from "cms-content/blocs/core/markup/validation/bindingAnalysis";
 import { parseHTML } from "linkedom";
 
 export type PageDocumentBlocContract = PageBlocContract;
@@ -37,7 +41,7 @@ export function validatePageDocument(
     blocs: readonly PageDocumentBlocContract[],
     options: {
         readonly unresolvedBlocs?: readonly UnresolvedPageDocumentBloc[];
-    } = {},
+    } & BindingAnalysisOptions = {},
 ): PageDocumentValidationResult {
     const preflight = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>").document;
     preflight.body.innerHTML = html;
@@ -62,6 +66,9 @@ export function validatePageDocument(
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = normalized;
     const queries = extractQueries(document);
+    if (options.capabilities || options.requireCapabilityResolution) {
+        validateDocumentBindings(document, options);
+    }
     validateRoots(document, known, new Set(unresolved.keys()));
     validateHosts(document, known, unresolved);
     validateManagedNative(normalized, blocs);

@@ -13,6 +13,10 @@ import type {
     UnresolvedPageDocumentBloc,
 } from "cms-content/blocs/core/markup/validation/documents/pageDocument";
 import { parseHTML } from "linkedom";
+import {
+    validateDocumentBindings,
+    type BindingAnalysisOptions,
+} from "cms-content/blocs/core/markup/validation/bindingAnalysis";
 
 export type BlocDocumentContract = PageDocumentBlocContract & {
     readonly defaultContent?: string;
@@ -31,6 +35,7 @@ export function validateBlocDocument(
     bloc: BlocDocumentContract,
     catalogue: readonly PageDocumentBlocContract[],
     unresolvedBlocs: readonly UnresolvedPageDocumentBloc[] = [],
+    bindingOptions: BindingAnalysisOptions = {},
 ): BlocDocumentValidationResult {
     const known = new Map(catalogue.map((entry) => [entry.id, entry]));
     known.set(bloc.id, bloc);
@@ -45,6 +50,7 @@ export function validateBlocDocument(
             ownerTag: bloc.id,
         });
         validateFragment(fixed.html, bloc.id, known, unresolved, true);
+        validateBindings(fixed.html, bindingOptions);
     }
     if (bloc.defaultContent !== undefined) {
         const validated = validateBlocContentMarkup(bloc.defaultContent, {
@@ -54,6 +60,7 @@ export function validateBlocDocument(
         });
         defaultContent = validated.html;
         validateDefaultContent(bloc, defaultContent, known, unresolved);
+        validateBindings(defaultContent, bindingOptions);
     }
     return {
         ...(defaultContent === undefined ? {} : { defaultContent }),
@@ -61,6 +68,15 @@ export function validateBlocDocument(
         queries: fixed?.queries ?? [],
         sources: fixed?.sources ?? [],
     };
+}
+
+function validateBindings(html: string, options: BindingAnalysisOptions): void {
+    if (!options.capabilities && !options.requireCapabilityResolution) {
+        return;
+    }
+    const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
+    document.body.innerHTML = html;
+    validateDocumentBindings(document, options);
 }
 
 function validateFragment(

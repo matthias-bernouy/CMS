@@ -34,6 +34,13 @@ export {
     type BlocDocumentValidationResult,
 } from "cms-content/blocs/core/markup/validation/documents/blocDocument";
 export { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
+export {
+    validateDocumentBindings,
+    type BindingAnalysisOptions,
+    type BindingCapabilityError,
+    type BindingQueryCapability,
+    type BindingValueSchema,
+} from "cms-content/blocs/core/markup/validation/bindingAnalysis";
 export { isUserFacingTextAttribute } from "cms-content/pages/core/rendering/userFacingTextAttributes";
 export {
     pageBlocHostAttributesIssue,
