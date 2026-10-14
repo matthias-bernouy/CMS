@@ -4,7 +4,7 @@
         <ulvia-official-surface slot="content" appearance="elevated" padding="lg">
             <h2 slot="content">{{ cms.i18n.ulvia-official.ui-create-a-page }}</h2>
             <p slot="content">{{ cms.i18n.ulvia-official.ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it }}</p>
-            <form slot="content" cms-source="/.cms/call/ulvia.cms.pages/create as created" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?ulvia-official-page-id={{ created.body.id }}">
+            <form slot="content" cms-mutation="ulvia.cms.pages:create as created" data-cms-success-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?ulvia-official-page-id={{ created.data.id }}">
                 <ulvia-official-grid gap="md">
                     <ulvia-official-field slot="items" label-position="top">
                         <label slot="label" for="new-page-title">{{ cms.i18n.ulvia-official.ui-title }}</label>
@@ -21,11 +21,22 @@
                     </ulvia-official-field>
                 </ulvia-official-grid>
                 <ulvia-official-form-actions align="end">
-                    <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">{{ cms.i18n.ulvia-official.ui-creating }}</p>
-                    <p slot="actions" role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid }}</p>
+                    <p slot="actions" role="status" aria-live="polite" cms-condition="created.activity === 'submitting'">{{ cms.i18n.ulvia-official.ui-creating }}</p>
+                    <p slot="actions" role="alert" cms-condition="(created.outcome.kind === 'error' || created.outcome.kind === 'failure')">{{ cms.i18n.ulvia-official.ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid }}</p>
                     <ulvia-official-action slot="actions" variant="filled" tone="primary"><button type="submit">{{ cms.i18n.ulvia-official.ui-create-page }}</button></ulvia-official-action>
                 </ulvia-official-form-actions>
-            </form>
+
+<div cms-match="created.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="created.outcome.code">
+<p role="alert" cms-case='"PATH_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"INVALID_PAGE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
         </ulvia-official-surface>
         <section id="pages-list" slot="content" cms-query="ulvia.cms.pages:list as pages" cms-query-input="{&quot;limit&quot;:{&quot;from&quot;:&quot;literal&quot;,&quot;value&quot;:100}}">
             <div role="status" aria-live="polite" cms-condition="pages.activity === 'fetching'">
@@ -56,7 +67,7 @@
                                     <small>{{ cms.i18n.ulvia-official.ui-revision }} {{ page.revision }}</small>
                                 </header>
                                 <ulvia-official-action slot="items" variant="filled" tone="secondary" size="sm"><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?ulvia-official-page-id={{ page.id }}">{{ cms.i18n.ulvia-official.ui-open-page }}</a></ulvia-official-action>
-                                <form slot="items" cms-source="/.cms/call/ulvia.cms.pages/rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="pages">
+                                <form slot="items" cms-mutation="ulvia.cms.pages:rename as mutation" cms-mutation-invalidates="pages">
                                     <input type="hidden" name="id" value="{{ page.id }}">
                                     <input type="hidden" name="expectedRevision" value="{{ page.revision }}" cms-form-value-type="number">
                                     <ulvia-official-field label-position="top">
@@ -68,9 +79,21 @@
                                     <ulvia-official-action variant="outline" tone="secondary" size="sm">
                                         <button type="submit">{{ cms.i18n.ulvia-official.ui-rename }}</button>
                                     </ulvia-official-action>
-                                    <p role="status" aria-live="polite" cms-condition="$source.loading">{{ cms.i18n.ulvia-official.ui-saving }}</p>
-                                    <p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-reload-this-catalogue-before-retrying }}</p>
-                                </form>
+                                    <p role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">{{ cms.i18n.ulvia-official.ui-saving }}</p>
+                                    <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">{{ cms.i18n.ulvia-official.ui-reload-this-catalogue-before-retrying }}</p>
+
+<div cms-match="mutation.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="mutation.outcome.code">
+<p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"INVALID_TITLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
                             </ulvia-official-stack>
                         </ulvia-official-surface>
                     </ulvia-official-grid>

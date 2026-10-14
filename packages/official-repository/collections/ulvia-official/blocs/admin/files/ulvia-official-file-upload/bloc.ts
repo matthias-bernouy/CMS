@@ -1,4 +1,4 @@
-import { Component, sourceFormRequest } from "@bernouy/cms-content/browser";
+import { Component, mutationFormRequest } from "@bernouy/cms-content/browser";
 import template from "./shadowdom.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { writeWorkspaceUpload } from "./runtime/upload";
@@ -41,7 +41,7 @@ export class Bloc extends Component {
         }
         this.show("uploading");
         try {
-            const ticket = (await sourceFormRequest(this, "file-upload-create", {
+            const ticket = (await mutationFormRequest(this, "fileUploadCreate", {
                 filename: file.name,
                 contentType: file.type || null,
                 size: file.size,
@@ -49,7 +49,7 @@ export class Bloc extends Component {
                 ...(fileId ? { fileId } : {}),
             })) as UploadTicket;
             await writeWorkspaceUpload(ticket, file, this.lifecycle.signal);
-            await sourceFormRequest(this, "file-upload-complete", { uploadId: ticket.uploadId });
+            await mutationFormRequest(this, "fileUploadComplete", { uploadId: ticket.uploadId });
             if (this.input) {
                 this.input.value = "";
             }

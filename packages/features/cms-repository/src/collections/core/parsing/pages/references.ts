@@ -28,7 +28,7 @@ function validateStablePageLink(
     if (successReference !== undefined && tag !== "form") {
         invalid("data-cms-success-page-ref is only allowed on forms", path);
     }
-    if (successReference !== undefined && attributes["cms-source"] === undefined) {
+    if (successReference !== undefined && attributes["cms-mutation"] === undefined) {
         invalid("data-cms-success-page-ref requires a capability form", path);
     }
     if (pageReference !== undefined && successReference !== undefined) {

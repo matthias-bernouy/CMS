@@ -1,4 +1,4 @@
-import { Component, sourceFormRequest } from "@bernouy/cms-content/browser";
+import { Component, mutationFormRequest } from "@bernouy/cms-content/browser";
 import template from "./shadowdom.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 
@@ -45,7 +45,7 @@ export class Bloc extends Component {
         if (!fileId || !generation) {
             throw new Error();
         }
-        const result = (await sourceFormRequest(this, "private-file-sign", {
+        const result = (await mutationFormRequest(this, "privateFileSign", {
             fileId,
             generation,
             expiresIn: 300,

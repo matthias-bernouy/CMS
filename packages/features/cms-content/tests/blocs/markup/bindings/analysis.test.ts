@@ -115,6 +115,26 @@ describe("typed binding analysis", () => {
             "must exhaustively match declared errors",
         );
     });
+
+    test("validates mutation redirect suffixes in the implicit success branch", () => {
+        const html = `<form cms-mutation="catalog:save as saved"
+            data-cms-success-page-ref='{"kind":"path","path":"/saved"}'
+            data-cms-page-suffix="?id={{ saved.data.items.length }}">
+            <div cms-match="saved.outcome.kind">
+                <span cms-case='"none"'></span>
+                <p cms-case='"success"'>Saved</p>
+                <div cms-case='"error"' cms-match="saved.outcome.code">
+                    <p cms-case='"NOT_FOUND"'>Missing</p>
+                    <p cms-case='"CONFLICT"'>Conflict</p>
+                </div>
+                <p cms-case='"failure"'>Offline</p>
+            </div>
+        </form>`;
+        expect(() => validate(html)).not.toThrow();
+        expect(() => validate(html.replace("saved.data.items.length", "saved.data.missing"))).toThrow(
+            "is not declared by the output schema",
+        );
+    });
 });
 
 function validate(html: string): void {

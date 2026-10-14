@@ -22,13 +22,9 @@
             </div>
             <ulvia-official-surface cms-case='"success"' appearance="elevated" padding="lg">
                 <form
-                    slot="content"
-                    cms-source="/.cms/call/ulvia.cms.access/update-site as savedSite"
-                    cms-source-method="POST"
-                    cms-source-trigger="submit"
-                    cms-source-serialization="typed-json"
-                    cms-source-success-reload="settingsAccess settingsLocalization"
-                    cms-source-success-reset="false"
+                    slot="content" cms-mutation="ulvia.cms.access:update-site as savedSite"
+                    cms-mutation-invalidates="settingsAccess settingsLocalization"
+                    cms-mutation-reset="false"
                 >
                     <input
                         type="hidden"
@@ -99,13 +95,13 @@
                             </ulvia-official-select>
                         </ulvia-official-field>
                         <ulvia-official-form-actions slot="items" align="end">
-                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="savedSite.activity === 'submitting'">
                                 {{ cms.i18n.ulvia-official.ui-working }}
                             </p>
-                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="savedSite.outcome.kind === 'success'">
                                 {{ cms.i18n.ulvia-official.ui-general-settings-saved }}
                             </p>
-                            <p slot="actions" role="alert" cms-condition="$source.error">
+                            <p slot="actions" role="alert" cms-condition="(savedSite.outcome.kind === 'error' || savedSite.outcome.kind === 'failure')">
                                 {{ cms.i18n.ulvia-official.ui-request-failed }}
                             </p>
                             <ulvia-official-action slot="actions" variant="filled" tone="primary">
@@ -113,7 +109,18 @@
                             </ulvia-official-action>
                         </ulvia-official-form-actions>
                     </ulvia-official-stack>
-                </form>
+
+<div cms-match="savedSite.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="savedSite.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
             </ulvia-official-surface>
             <p role="alert" cms-case='"failure"'>
                 {{ cms.i18n.ulvia-official.ui-request-failed }}
@@ -138,13 +145,9 @@
             </div>
             <ulvia-official-surface cms-case='"success"' appearance="elevated" padding="lg">
                 <form
-                    slot="content"
-                    cms-source="/.cms/call/ulvia.cms.localization/update-languages as savedLanguages"
-                    cms-source-method="POST"
-                    cms-source-trigger="submit"
-                    cms-source-serialization="typed-json"
-                    cms-source-success-reload="settingsLocalization settingsAccess"
-                    cms-source-success-reset="false"
+                    slot="content" cms-mutation="ulvia.cms.localization:update-languages as savedLanguages"
+                    cms-mutation-invalidates="settingsLocalization settingsAccess"
+                    cms-mutation-reset="false"
                 >
                     <input
                         type="hidden"
@@ -206,13 +209,13 @@
                             </ulvia-official-textarea>
                         </ulvia-official-field>
                         <ulvia-official-form-actions slot="items" align="end">
-                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="savedLanguages.activity === 'submitting'">
                                 {{ cms.i18n.ulvia-official.ui-working }}
                             </p>
-                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="savedLanguages.outcome.kind === 'success'">
                                 {{ cms.i18n.ulvia-official.ui-languages-saved }}
                             </p>
-                            <p slot="actions" role="alert" cms-condition="$source.error">
+                            <p slot="actions" role="alert" cms-condition="(savedLanguages.outcome.kind === 'error' || savedLanguages.outcome.kind === 'failure')">
                                 {{ cms.i18n.ulvia-official.ui-request-failed }}
                             </p>
                             <ulvia-official-action slot="actions" variant="filled" tone="primary">
@@ -220,7 +223,19 @@
                             </ulvia-official-action>
                         </ulvia-official-form-actions>
                     </ulvia-official-stack>
-                </form>
+
+<div cms-match="savedLanguages.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="savedLanguages.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"MIGRATION_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
             </ulvia-official-surface>
             <p role="alert" cms-case='"failure"'>
                 {{ cms.i18n.ulvia-official.ui-request-failed }}

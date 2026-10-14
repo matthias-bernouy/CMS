@@ -78,12 +78,8 @@
                 </ulvia-official-badge>
                 <form
                     slot="items"
-                    cms-condition="collectionTheme.data.profileActive === false"
-                    cms-source="/.cms/call/ulvia.cms.theme/activate as activatedTheme"
-                    cms-source-method="POST"
-                    cms-source-trigger="submit"
-                    cms-source-serialization="typed-json"
-                    cms-source-success-reload="collectionTheme"
+                    cms-condition="collectionTheme.data.profileActive === false" cms-mutation="ulvia.cms.theme:activate as activatedTheme"
+                    cms-mutation-invalidates="collectionTheme"
                 >
                     <input
                         type="hidden"
@@ -95,8 +91,20 @@
                     <ulvia-official-action variant="outline" tone="secondary">
                         <button type="submit">{{ cms.i18n.ulvia-official.ui-activate-theme }}</button>
                     </ulvia-official-action>
-                    <p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                </form>
+                    <p role="alert" cms-condition="(activatedTheme.outcome.kind === 'error' || activatedTheme.outcome.kind === 'failure')">{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+
+<div cms-match="activatedTheme.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="activatedTheme.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
             </ulvia-official-cluster>
             <p slot="items" cms-condition="collectionTheme.data.sourceFound === false">
                 {{ cms.i18n.ulvia-official.ui-this-collection-publishes-no-theme-catalogue }}
@@ -138,13 +146,9 @@
                         <code>{{ collectionTheme.data.token.variable }}</code>
                     </header>
                     <form
-                        slot="items"
-                        cms-source="/.cms/call/ulvia.cms.theme/save-token as savedThemeToken"
-                        cms-source-method="POST"
-                        cms-source-trigger="submit"
-                        cms-source-serialization="typed-json"
-                        cms-source-success-reload="collectionTheme"
-                        cms-source-success-reset="false"
+                        slot="items" cms-mutation="ulvia.cms.theme:save-token as savedThemeToken"
+                        cms-mutation-invalidates="collectionTheme"
+                        cms-mutation-reset="false"
                     >
                         <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
                         <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
@@ -167,10 +171,10 @@
                                 </ulvia-official-input>
                             </ulvia-official-field>
                             <ulvia-official-form-actions slot="items" align="end">
-                                <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
+                                <p slot="actions" role="status" aria-live="polite" cms-condition="savedThemeToken.outcome.kind === 'success'">
                                     {{ cms.i18n.ulvia-official.ui-theme-value-saved }}
                                 </p>
-                                <p slot="actions" role="alert" cms-condition="$source.error">
+                                <p slot="actions" role="alert" cms-condition="(savedThemeToken.outcome.kind === 'error' || savedThemeToken.outcome.kind === 'failure')">
                                     {{ cms.i18n.ulvia-official.ui-request-failed }}
                                 </p>
                                 <ulvia-official-action slot="actions" variant="filled" tone="primary">
@@ -178,15 +182,23 @@
                                 </ulvia-official-action>
                             </ulvia-official-form-actions>
                         </ulvia-official-stack>
-                    </form>
+
+<div cms-match="savedThemeToken.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="savedThemeToken.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
                     <form
                         slot="items"
-                        cms-condition="collectionTheme.data.token.overridden"
-                        cms-source="/.cms/call/ulvia.cms.theme/reset-token as resetThemeToken"
-                        cms-source-method="POST"
-                        cms-source-trigger="submit"
-                        cms-source-serialization="typed-json"
-                        cms-source-success-reload="collectionTheme"
+                        cms-condition="collectionTheme.data.token.overridden" cms-mutation="ulvia.cms.theme:reset-token as resetThemeToken"
+                        cms-mutation-invalidates="collectionTheme"
                     >
                         <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
                         <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
@@ -195,8 +207,20 @@
                         <ulvia-official-action variant="outline" tone="secondary">
                             <button type="submit">{{ cms.i18n.ulvia-official.ui-reset-to-collection-value }}</button>
                         </ulvia-official-action>
-                        <p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                    </form>
+                        <p role="alert" cms-condition="(resetThemeToken.outcome.kind === 'error' || resetThemeToken.outcome.kind === 'failure')">{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+
+<div cms-match="resetThemeToken.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="resetThemeToken.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
                 </ulvia-official-stack>
             </ulvia-official-surface>
         </ulvia-official-stack>

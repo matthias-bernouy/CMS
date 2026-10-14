@@ -79,13 +79,9 @@
             <ulvia-official-stack slot="items" gap="md" cms-condition="collectionTexts.data.items.length">
                 <form
                     slot="items"
-                    cms-repeat="collectionTexts.data.items as text"
-                    cms-source="/.cms/call/ulvia.cms.localization/save-text as savedText"
-                    cms-source-method="POST"
-                    cms-source-trigger="submit"
-                    cms-source-serialization="typed-json"
-                    cms-source-success-reload="collectionTexts"
-                    cms-source-success-reset="false"
+                    cms-repeat="collectionTexts.data.items as text" cms-mutation="ulvia.cms.localization:save-text as savedText"
+                    cms-mutation-invalidates="collectionTexts"
+                    cms-mutation-reset="false"
                 >
                     <input type="hidden" name="collectionId" value="{{ collectionTexts.data.collectionId }}">
                     <input
@@ -122,13 +118,13 @@
                                 </ulvia-official-textarea>
                             </ulvia-official-field>
                             <ulvia-official-form-actions slot="items" align="end">
-                                <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">
+                                <p slot="actions" role="status" aria-live="polite" cms-condition="savedText.activity === 'submitting'">
                                     {{ cms.i18n.ulvia-official.ui-working }}
                                 </p>
-                                <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loaded">
+                                <p slot="actions" role="status" aria-live="polite" cms-condition="savedText.outcome.kind === 'success'">
                                     {{ cms.i18n.ulvia-official.ui-translation-saved }}
                                 </p>
-                                <p slot="actions" role="alert" cms-condition="$source.error">
+                                <p slot="actions" role="alert" cms-condition="(savedText.outcome.kind === 'error' || savedText.outcome.kind === 'failure')">
                                     {{ cms.i18n.ulvia-official.ui-request-failed }}
                                 </p>
                                 <ulvia-official-action slot="actions" variant="filled" tone="primary">
@@ -137,7 +133,20 @@
                             </ulvia-official-form-actions>
                         </ulvia-official-stack>
                     </ulvia-official-surface>
-                </form>
+
+<div cms-match="savedText.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="savedText.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"MIGRATION_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
             </ulvia-official-stack>
         </ulvia-official-stack>
         <p role="alert" cms-case='"failure"'>

@@ -58,12 +58,8 @@
                         </header>
                         <form
                             slot="items"
-                            cms-condition="installation.status === 'enabled'"
-                            cms-source="/.cms/call/ulvia.cms.providers/set-status"
-                            cms-source-method="POST"
-                            cms-source-trigger="submit"
-                            cms-source-serialization="typed-json"
-                            cms-source-success-reload="providers"
+                            cms-condition="installation.status === 'enabled'" cms-mutation="ulvia.cms.providers:set-status as mutation"
+                            cms-mutation-invalidates="providers"
                         >
                             <input type="hidden" name="installationId" value="{{ installation.id }}">
                             <input
@@ -81,15 +77,24 @@
                                     {{ cms.i18n.ulvia-official.ui-disable }}
                                 </button>
                             </ulvia-official-action>
-                        </form>
+
+<div cms-match="mutation.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="mutation.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
                         <form
                             slot="items"
-                            cms-condition="installation.status === 'disabled'"
-                            cms-source="/.cms/call/ulvia.cms.providers/set-status"
-                            cms-source-method="POST"
-                            cms-source-trigger="submit"
-                            cms-source-serialization="typed-json"
-                            cms-source-success-reload="providers"
+                            cms-condition="installation.status === 'disabled'" cms-mutation="ulvia.cms.providers:set-status as mutation"
+                            cms-mutation-invalidates="providers"
                         >
                             <input type="hidden" name="installationId" value="{{ installation.id }}">
                             <input
@@ -102,16 +107,25 @@
                             <ulvia-official-action variant="filled" tone="primary" size="sm">
                                 <button type="submit">{{ cms.i18n.ulvia-official.ui-enable }}</button>
                             </ulvia-official-action>
-                        </form>
+
+<div cms-match="mutation.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="mutation.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
                         <details slot="items" cms-condition="installation.status !== 'revoked'">
                             <summary>{{ cms.i18n.ulvia-official.ui-revoke }}</summary>
                             <p>{{ cms.i18n.ulvia-official.ui-revocation-is-terminal-and-deletes-stored-credentials }}</p>
-                            <form
-                                cms-source="/.cms/call/ulvia.cms.providers/set-status"
-                                cms-source-method="POST"
-                                cms-source-trigger="submit"
-                                cms-source-serialization="typed-json"
-                                cms-source-success-reload="providers"
+                            <form cms-mutation="ulvia.cms.providers:set-status as mutation"
+                                cms-mutation-invalidates="providers"
                             >
                                 <input type="hidden" name="installationId" value="{{ installation.id }}">
                                 <input
@@ -129,7 +143,20 @@
                                         {{ cms.i18n.ulvia-official.ui-revoke }}
                                     </button>
                                 </ulvia-official-action>
-                            </form>
+
+<div cms-match="mutation.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="mutation.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
                         </details>
                     </ulvia-official-stack>
                 </ulvia-official-surface>
@@ -145,13 +172,9 @@
 
             <ulvia-official-surface slot="items" appearance="elevated" padding="lg">
                 <form
-                    slot="content"
-                    cms-source="/.cms/call/ulvia.cms.providers/replace-selections"
-                    cms-source-method="POST"
-                    cms-source-trigger="submit"
-                    cms-source-serialization="typed-json"
-                    cms-source-success-reload="providers"
-                    cms-source-success-reset="false"
+                    slot="content" cms-mutation="ulvia.cms.providers:replace-selections as mutation"
+                    cms-mutation-invalidates="providers"
+                    cms-mutation-reset="false"
                 >
                     <input
                         type="hidden"
@@ -197,10 +220,10 @@
                             {{ cms.i18n.ulvia-official.ui-no-contract-route-is-available }}
                         </p>
                         <ulvia-official-form-actions slot="items" align="end">
-                            <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">
                                 {{ cms.i18n.ulvia-official.ui-saving }}
                             </p>
-                            <p slot="actions" role="alert" cms-condition="$source.error">
+                            <p slot="actions" role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
                                 {{ cms.i18n.ulvia-official.ui-request-failed }}
                             </p>
                             <ulvia-official-action slot="actions" variant="filled" tone="primary">
@@ -208,7 +231,19 @@
                             </ulvia-official-action>
                         </ulvia-official-form-actions>
                     </ulvia-official-stack>
-                </form>
+
+<div cms-match="mutation.outcome.kind">
+<span cms-case='"none"' hidden></span>
+<span cms-case='"success"' hidden></span>
+<div cms-case='"error"' cms-match="mutation.outcome.code">
+<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"INVALID_SELECTION"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+</div>
+</form>
             </ulvia-official-surface>
         </ulvia-official-stack>
         <div role="alert" cms-case='"failure"'>

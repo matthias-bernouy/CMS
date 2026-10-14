@@ -20,6 +20,8 @@ export const hostRuntimeExternalsPlugin: BunPlugin = {
                 return {
                     contents: [
                         "export const Component = window.cmsRuntime.Component;",
+                        "export const mutationFormRequest = window.cmsRuntime.mutationFormRequest;",
+                        "export const MutationFormError = window.cmsRuntime.MutationFormError;",
                         "export const sourceFormRequest = window.cmsRuntime.sourceFormRequest;",
                         "export const SourceFormError = window.cmsRuntime.SourceFormError;",
                     ].join("\n"),

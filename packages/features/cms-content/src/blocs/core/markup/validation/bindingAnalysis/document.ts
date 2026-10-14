@@ -12,7 +12,7 @@ import {
     parseRepeatRange,
 } from "cms-content/blocs/core/markup/bindings";
 import type { BindingFacts, BindingScope, BindingVariable } from "./model";
-import { addVariable, emptyFacts } from "./model";
+import { addVariable, emptyFacts, withFact } from "./model";
 import { analyzeBindingExpression, factsForMatchCase } from "./expressions";
 import { resolveBindingPath } from "./paths";
 import type { BindingAnalysisOptions, BindingCapability } from "./types";
@@ -80,7 +80,7 @@ function walk(
     if (condition) {
         facts = analyzeBindingExpression(condition, scope, facts).whenTrue;
     }
-    validateInterpolations(element, scope, facts);
+    validateInterpolations(element, scope, facts, declaration?.name);
     if (declaration?.variable.kind === "operation") {
         validateOperationCoverage(element, declaration.name, declaration.variable.capability);
     }
@@ -132,13 +132,22 @@ function operationVariable(
     return { name: binding.name, variable: { kind: "operation", capability } };
 }
 
-function validateInterpolations(element: Element, scope: BindingScope, facts: BindingFacts): void {
+function validateInterpolations(
+    element: Element,
+    scope: BindingScope,
+    facts: BindingFacts,
+    operationName?: string,
+): void {
     for (const attribute of element.getAttributeNames()) {
         if (IGNORED_ATTRIBUTES.has(attribute)) {
             continue;
         }
+        const attributeFacts =
+            attribute === "data-cms-page-suffix" && operationName
+                ? withFact(facts, `${operationName}.outcome.kind`, "success")
+                : facts;
         for (const expression of interpolationExpressions(element.getAttribute(attribute) ?? "") ?? []) {
-            analyzeBindingExpression(expression, scope, facts);
+            analyzeBindingExpression(expression, scope, attributeFacts);
         }
     }
     for (const node of Array.from(element.childNodes)) {
