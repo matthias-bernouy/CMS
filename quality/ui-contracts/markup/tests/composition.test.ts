@@ -8,8 +8,8 @@ test("accepts component-owned light-DOM bindings without a private core or style
     expect(
         inspect(`class WidgetList extends HTMLElement {
             connectedCallback() {
-                this.innerHTML = \`<section cms-source="/api/widgets as widgets">
-                    <template cms-repeat="widgets as widget">
+                this.innerHTML = \`<section cms-query="catalog.widgets:list as widgets">
+                    <template cms-repeat="widgets.data as widget">
                         <p9r-card cms-condition="widget.visible">
                             <span>{{ widget.title }}</span>
                         </p9r-card>
