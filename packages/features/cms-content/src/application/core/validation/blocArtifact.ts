@@ -36,7 +36,11 @@ export async function validateBlocArtifact(
         },
         catalogue,
     );
-    if (bindingOptions.resolveQueryCapabilities || bindingOptions.requireQueryCapabilityResolution) {
+    if (
+        bindingOptions.resolveCapabilities ||
+        bindingOptions.resolveQueryCapabilities ||
+        bindingOptions.requireQueryCapabilityResolution
+    ) {
         validateBlocDocument(
             {
                 ...contract,
@@ -45,7 +49,7 @@ export async function validateBlocArtifact(
             },
             catalogue,
             [],
-            await resolveBindingAnalysisOptions(validated.queries, bindingOptions),
+            await resolveBindingAnalysisOptions(validated.queries, validated.mutations, bindingOptions),
         );
     }
     const artifact: TBloc = {

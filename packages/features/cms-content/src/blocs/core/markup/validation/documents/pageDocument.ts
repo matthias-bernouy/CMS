@@ -5,6 +5,7 @@ import { parseSource } from "cms-content/blocs/core/markup/bindings";
 import { managedNativeElementIssue } from "cms-content/blocs/core/markup/validation/managedNativeElements";
 import {
     extractQueries,
+    extractMutations,
     validatePageContentMarkup,
     type ContentQuery,
 } from "cms-content/blocs/core/markup/validation/nativeContent";
@@ -26,6 +27,7 @@ export type UnresolvedPageDocumentBloc = {
 export type PageDocumentValidationResult = {
     readonly html: string;
     readonly queries: readonly ContentQuery[];
+    readonly mutations: readonly ContentQuery[];
     readonly sources: readonly PageDocumentSource[];
     readonly uses: readonly string[];
 };
@@ -66,6 +68,7 @@ export function validatePageDocument(
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = normalized;
     const queries = extractQueries(document);
+    const mutations = extractMutations(document);
     if (options.capabilities || options.requireCapabilityResolution) {
         validateDocumentBindings(document, options);
     }
@@ -84,7 +87,7 @@ export function validatePageDocument(
               }
             : null;
     }).filter((source): source is PageDocumentSource => source !== null);
-    return { html: document.body.innerHTML, queries, sources, uses };
+    return { html: document.body.innerHTML, queries, mutations, sources, uses };
 }
 
 function validateHosts(

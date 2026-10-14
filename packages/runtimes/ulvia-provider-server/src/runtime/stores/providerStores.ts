@@ -41,7 +41,7 @@ import {
     MongoProviderManifestCatalogue,
 } from "@bernouy/cms-repository/providers/mongo";
 import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
-import { selectedQueryCapabilityResolver } from "./selectedQueryCapabilities";
+import { selectedCapabilityResolver } from "./selectedQueryCapabilities";
 
 const SCOPE_ID = "default";
 
@@ -93,7 +93,7 @@ export async function createProviderStores(env: ProviderStoreConfig) {
     const validatedRepo = new ValidatingCmsRepository(
         withInstalledCollections(innerRepo, migrationCollections, SCOPE_ID, pageRoutes),
         {
-            resolveQueryCapabilities: selectedQueryCapabilityResolver(SCOPE_ID, selections, releases),
+            resolveCapabilities: selectedCapabilityResolver(SCOPE_ID, selections, releases),
             requireQueryCapabilityResolution: true,
         },
     );

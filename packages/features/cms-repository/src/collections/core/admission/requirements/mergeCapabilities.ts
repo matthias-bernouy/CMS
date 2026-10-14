@@ -12,12 +12,31 @@ export function mergeQueryCapabilities(
     capabilities: readonly (CapabilityDefinition | undefined)[],
     path: string,
 ): BindingQueryCapability {
+    return mergeCapabilities(contractId, capabilityId, capabilities, "query", path);
+}
+
+export function mergeMutationCapabilities(
+    contractId: string,
+    capabilityId: string,
+    capabilities: readonly (CapabilityDefinition | undefined)[],
+    path: string,
+): BindingQueryCapability {
+    return mergeCapabilities(contractId, capabilityId, capabilities, "command", path);
+}
+
+function mergeCapabilities(
+    contractId: string,
+    capabilityId: string,
+    capabilities: readonly (CapabilityDefinition | undefined)[],
+    effect: "query" | "command",
+    path: string,
+): BindingQueryCapability {
     const present = capabilities.filter((capability): capability is CapabilityDefinition => capability !== undefined);
     if (present.length !== capabilities.length || present.length === 0) {
         throw incompatible(contractId, capabilityId, "is not available in every compatible release", path);
     }
-    if (present.some((capability) => capability.behavior.effect !== "query" || capability.output.type === "binary")) {
-        throw incompatible(contractId, capabilityId, "is not a structured query in every compatible release", path);
+    if (present.some((capability) => capability.behavior.effect !== effect || capability.output.type === "binary")) {
+        throw incompatible(contractId, capabilityId, `is not a structured ${effect} in every compatible release`, path);
     }
     return {
         contractId,

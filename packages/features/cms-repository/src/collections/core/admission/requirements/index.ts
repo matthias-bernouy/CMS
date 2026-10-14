@@ -1,4 +1,4 @@
-import { parseQuery } from "@bernouy/cms-content/bindings";
+import { parseMutation, parseQuery } from "@bernouy/cms-content/bindings";
 import { validateDocumentBindings } from "@bernouy/cms-content/page-document";
 import type { BindingQueryCapability } from "@bernouy/cms-content/page-document";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
@@ -7,7 +7,13 @@ import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
 import type { CollectionCapabilityRequirement, CollectionRelease } from "../../../interfaces/CollectionRelease";
 import { CollectionValidationError } from "../../errors";
 import { parseHTML } from "linkedom";
-import { mergeQueryCapabilities } from "./mergeCapabilities";
+import { mergeMutationCapabilities, mergeQueryCapabilities } from "./mergeCapabilities";
+
+type BindingTarget = {
+    readonly contractId: string;
+    readonly capabilityId: string;
+    readonly effect: "query" | "command";
+};
 
 /** Each resource and its used blocs need joint witnesses; unrelated resources stay independent. */
 export async function verifyCollectionRequirements(
@@ -20,7 +26,7 @@ export async function verifyCollectionRequirements(
         const closure = used.flatMap((item) => item.requires);
         const capabilities = await verifyRequirements(
             closure,
-            queryTargets(used.map((item) => item.lightdom ?? "")),
+            bindingTargets(used.map((item) => item.lightdom ?? "")),
             `$.blocs.${bloc.id}.requires`,
             "this bloc and its used blocs",
             catalogue,
@@ -35,7 +41,7 @@ export async function verifyCollectionRequirements(
         const closure = [...page.requires, ...used.flatMap((item) => item.requires)];
         const capabilities = await verifyRequirements(
             closure,
-            queryTargets([page.document.html, ...used.map((item) => item.lightdom ?? "")]),
+            bindingTargets([page.document.html, ...used.map((item) => item.lightdom ?? "")]),
             `$.pages.${page.id}.requires`,
             "this page and its used blocs",
             catalogue,
@@ -46,7 +52,7 @@ export async function verifyCollectionRequirements(
 
 async function verifyRequirements(
     closure: readonly CollectionCapabilityRequirement[],
-    queries: ReadonlySet<string>,
+    targets: readonly BindingTarget[],
     path: string,
     owner: string,
     catalogue?: ReleaseCatalogue,
@@ -66,8 +72,18 @@ async function verifyRequirements(
                         contract.capabilities.some(
                             (capability) =>
                                 capability.id === requirement.capabilityId &&
-                                (!queries.has(`${contractId}/${requirement.capabilityId}`) ||
-                                    (capability.behavior.effect === "query" && capability.output.type !== "binary")),
+                                (!targets.some(
+                                    (target) =>
+                                        target.contractId === contractId &&
+                                        target.capabilityId === requirement.capabilityId,
+                                ) ||
+                                    (targets.some(
+                                        (target) =>
+                                            target.contractId === contractId &&
+                                            target.capabilityId === requirement.capabilityId &&
+                                            target.effect === capability.behavior.effect,
+                                    ) &&
+                                        capability.output.type !== "binary")),
                         ),
                 )
             );
@@ -79,17 +95,18 @@ async function verifyRequirements(
                 path,
             );
         }
-        for (const target of queries) {
-            if (!target.startsWith(`${contractId}/`)) {
+        for (const target of targets) {
+            if (target.contractId !== contractId) {
                 continue;
             }
-            const capabilityId = target.slice(contractId.length + 1);
             result.push(
-                mergeQueryCapabilities(
+                (target.effect === "query" ? mergeQueryCapabilities : mergeMutationCapabilities)(
                     contractId,
-                    capabilityId,
+                    target.capabilityId,
                     witnesses.map((entry) =>
-                        entry.admission.release.capabilities.find((capability) => capability.id === capabilityId),
+                        entry.admission.release.capabilities.find(
+                            (capability) => capability.id === target.capabilityId,
+                        ),
                     ),
                     path,
                 ),
@@ -113,19 +130,35 @@ function validateBindings(html: string, capabilities: readonly BindingQueryCapab
     }
 }
 
-function queryTargets(markups: readonly string[]): ReadonlySet<string> {
-    const targets = new Set<string>();
+function bindingTargets(markups: readonly string[]): readonly BindingTarget[] {
+    const targets = new Map<string, BindingTarget>();
     for (const html of markups) {
         const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
         document.body.innerHTML = html;
         for (const element of Array.from(document.querySelectorAll("[cms-query]"))) {
             const query = parseQuery(element.getAttribute("cms-query") ?? "");
             if (query && "contractId" in query && !query.contractId.startsWith("kernel.")) {
-                targets.add(`${query.contractId}/${query.capabilityId}`);
+                const target = {
+                    contractId: query.contractId,
+                    capabilityId: query.capabilityId,
+                    effect: "query" as const,
+                };
+                targets.set(`${target.contractId}\0${target.capabilityId}`, target);
+            }
+        }
+        for (const element of Array.from(document.querySelectorAll("form[cms-mutation]"))) {
+            const mutation = parseMutation(element.getAttribute("cms-mutation") ?? "");
+            if (mutation && !mutation.contractId.startsWith("kernel.")) {
+                const target = {
+                    contractId: mutation.contractId,
+                    capabilityId: mutation.capabilityId,
+                    effect: "command" as const,
+                };
+                targets.set(`${target.contractId}\0${target.capabilityId}`, target);
             }
         }
     }
-    return targets;
+    return [...targets.values()];
 }
 
 function usedBlocs(root: CollectionBloc, blocs: ReadonlyMap<string, CollectionBloc>): CollectionBloc[] {

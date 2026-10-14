@@ -4,7 +4,7 @@ import { ContentValidationError } from "cms-content/application/core/validation/
 import { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenStoredHtml";
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { storedMarkupSecurityIssue } from "cms-content/blocs/core/markup/security/storedMarkupIssue";
-import { parseQuery, parseSource } from "cms-content/blocs/core/markup/bindings";
+import { parseMutation, parseQuery, parseSource } from "cms-content/blocs/core/markup/bindings";
 import { parseCmsSourceSuccessReload } from "cms-content/blocs/core/validation/nativeBindings/formValues";
 import {
     assertBlocBindingSourceBudget,
@@ -15,6 +15,7 @@ import {
 export type BlocContentMarkupResult = {
     readonly html: string;
     readonly queries: readonly ContentQuery[];
+    readonly mutations: readonly ContentMutation[];
     readonly sources: readonly { readonly method?: string; readonly url: string }[];
 };
 
@@ -23,6 +24,8 @@ export type ContentQuery = {
     readonly capabilityId: string;
     readonly name: string;
 };
+
+export type ContentMutation = ContentQuery;
 
 export function validatePageContentMarkup(value: string): string {
     const normalized = validateNativeMarkup(value, "content");
@@ -73,6 +76,7 @@ export function validateBlocContentMarkup(
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = html;
     const queries = extractQueries(document);
+    const mutations = extractMutations(document);
     const sources = Array.from(document.querySelectorAll("[cms-source]"), (element) => {
         const source = parseSource(element.getAttribute("cms-source") ?? "");
         return source
@@ -84,8 +88,8 @@ export function validateBlocContentMarkup(
               }
             : null;
     }).filter((source): source is NonNullable<typeof source> => source !== null);
-    assertBlocBindingSourceBudget(options.field, sources.length + queries.length);
-    return { html, queries, sources };
+    assertBlocBindingSourceBudget(options.field, sources.length + queries.length + mutations.length);
+    return { html, queries, mutations, sources };
 }
 
 export function extractQueries(document: Document): readonly ContentQuery[] {
@@ -111,7 +115,25 @@ export function extractQueries(document: Document): readonly ContentQuery[] {
             }
         }
     }
+    for (const form of Array.from(document.querySelectorAll("form[cms-mutation-invalidates]"))) {
+        const targets = parseCmsSourceSuccessReload(form.getAttribute("cms-mutation-invalidates"));
+        for (const target of targets ?? []) {
+            if (!names.has(target)) {
+                throw new ContentValidationError(
+                    "content",
+                    `CMS mutation invalidation references unknown query ${JSON.stringify(target)}`,
+                );
+            }
+        }
+    }
     return queries;
+}
+
+export function extractMutations(document: Document): readonly ContentMutation[] {
+    const bindings = Array.from(document.querySelectorAll("form[cms-mutation]"), (element) =>
+        parseMutation(element.getAttribute("cms-mutation") ?? ""),
+    ).filter((mutation): mutation is NonNullable<typeof mutation> => mutation !== null);
+    return bindings.filter((mutation) => !mutation.contractId.startsWith("kernel."));
 }
 
 function validateNativeMarkup(

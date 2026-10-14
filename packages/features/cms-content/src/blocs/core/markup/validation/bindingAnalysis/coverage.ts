@@ -1,8 +1,14 @@
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
-import { CMS_BINDING_ATTRIBUTES, parseCase, parseMatch, parseQuery } from "cms-content/blocs/core/markup/bindings";
-import type { BindingQueryCapability } from "./types";
+import {
+    CMS_BINDING_ATTRIBUTES,
+    parseCase,
+    parseMatch,
+    parseMutation,
+    parseQuery,
+} from "cms-content/blocs/core/markup/bindings";
+import type { BindingCapability } from "./types";
 
-export function validateQueryCoverage(owner: Element, name: string, capability: BindingQueryCapability): void {
+export function validateOperationCoverage(owner: Element, name: string, capability: BindingCapability): void {
     const expected = new Set(["none", "success", "failure", ...(capability.errors.length > 0 ? ["error"] : [])]);
     const matches = descendantsOwnedBy(owner, name).filter(
         (element) => parseMatch(element.getAttribute(CMS_BINDING_ATTRIBUTES.match) ?? "") === `${name}.outcome.kind`,
@@ -11,7 +17,7 @@ export function validateQueryCoverage(owner: Element, name: string, capability: 
     if (!complete) {
         throw new ContentValidationError(
             "content",
-            `CMS query ${JSON.stringify(name)} must exhaustively match outcomes: ${[...expected].join(", ")}`,
+            `CMS operation ${JSON.stringify(name)} must exhaustively match outcomes: ${[...expected].join(", ")}`,
         );
     }
     if (capability.errors.length === 0) {
@@ -30,7 +36,7 @@ export function validateQueryCoverage(owner: Element, name: string, capability: 
     if (!errorMatches.some((element) => sameSet(caseValues(element), errorCodes))) {
         throw new ContentValidationError(
             "content",
-            `CMS query ${JSON.stringify(name)} must exhaustively match declared errors: ${[...errorCodes].join(", ")}`,
+            `CMS operation ${JSON.stringify(name)} must exhaustively match declared errors: ${[...errorCodes].join(", ")}`,
         );
     }
 }
@@ -39,7 +45,8 @@ function descendantsOwnedBy(owner: Element, queryName: string): Element[] {
     const result: Element[] = [];
     const visit = (element: Element): void => {
         const query = parseQuery(element.getAttribute(CMS_BINDING_ATTRIBUTES.query) ?? "");
-        if (element !== owner && query && query.name !== queryName) {
+        const mutation = parseMutation(element.getAttribute(CMS_BINDING_ATTRIBUTES.mutation) ?? "");
+        if (element !== owner && ((query && query.name !== queryName) || (mutation && mutation.name !== queryName))) {
             return;
         }
         result.push(element);

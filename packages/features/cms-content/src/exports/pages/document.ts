@@ -20,6 +20,7 @@ export {
     validatePageContentMarkup,
     type BlocContentMarkupResult,
     type ContentQuery,
+    type ContentMutation,
 } from "cms-content/blocs/core/markup/validation/nativeContent";
 export {
     validatePageDocument,
@@ -37,6 +38,9 @@ export { assertContentRefsExist } from "cms-content/blocs/core/markup/validation
 export {
     validateDocumentBindings,
     type BindingAnalysisOptions,
+    type BindingCapability,
+    type BindingCapabilityResolver,
+    type BindingCapabilityTarget,
     type BindingCapabilityError,
     type BindingQueryCapability,
     type BindingQueryCapabilityResolver,

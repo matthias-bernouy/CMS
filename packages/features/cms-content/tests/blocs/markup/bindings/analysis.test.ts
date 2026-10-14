@@ -28,6 +28,7 @@ const capability: BindingQueryCapability = {
         { code: "CONFLICT", retryable: true },
     ],
 };
+const mutationCapability: BindingQueryCapability = { ...capability, capabilityId: "save" };
 
 describe("typed binding analysis", () => {
     test("accepts exhaustive outcomes, declared errors, repeats and proven indexed access", () => {
@@ -93,12 +94,36 @@ describe("typed binding analysis", () => {
         </section>`;
         expect(() => validateDocumentBindings(document, { requireCapabilityResolution: true })).not.toThrow();
     });
+
+    test("validates mutation outcomes and command output paths", () => {
+        const html = `<form cms-mutation="catalog:save as saved">
+            <div cms-match="saved.outcome.kind">
+                <span cms-case='"none"'></span>
+                <p cms-case='"success"'>{{ saved.data.items.length }}</p>
+                <div cms-case='"error"' cms-match="saved.outcome.code">
+                    <p cms-case='"NOT_FOUND"'>{{ saved.outcome.output.reason }}</p>
+                    <p cms-case='"CONFLICT"'>Conflict</p>
+                </div>
+                <p cms-case='"failure"'>Offline</p>
+            </div>
+        </form>`;
+        expect(() => validate(html)).not.toThrow();
+        expect(() => validate(html.replace("saved.data.items.length", "saved.data.unknown"))).toThrow(
+            "is not declared by the output schema",
+        );
+        expect(() => validate(html.replace("<p cms-case='\"CONFLICT\"'>Conflict</p>", ""))).toThrow(
+            "must exhaustively match declared errors",
+        );
+    });
 });
 
 function validate(html: string): void {
     const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
     document.body.innerHTML = html;
-    validateDocumentBindings(document, { capabilities: [capability], requireCapabilityResolution: true });
+    validateDocumentBindings(document, {
+        capabilities: [capability, mutationCapability],
+        requireCapabilityResolution: true,
+    });
 }
 
 function validDocument(beforeMatch = "", success = ""): string {

@@ -1,7 +1,7 @@
-import type { BindingQueryCapability, BindingValueSchema } from "./types";
+import type { BindingCapability, BindingValueSchema } from "./types";
 
 export type BindingVariable =
-    | { readonly kind: "query"; readonly capability: BindingQueryCapability }
+    | { readonly kind: "operation"; readonly capability: BindingCapability }
     | { readonly kind: "schema"; readonly schema: BindingValueSchema }
     | { readonly kind: "unknown" };
 

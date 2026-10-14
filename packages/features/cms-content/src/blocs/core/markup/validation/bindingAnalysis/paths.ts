@@ -17,15 +17,15 @@ export function resolveBindingPath(path: string, scope: BindingScope, facts: Bin
     if (variable.kind === "unknown" || segments.length === 0) {
         return variable;
     }
-    return variable.kind === "query"
-        ? resolveQueryPath(root, segments, variable, facts)
+    return variable.kind === "operation"
+        ? resolveOperationPath(root, segments, variable, facts)
         : { kind: "schema", schema: resolveSchemaPath(variable.schema, segments, root, facts) };
 }
 
-function resolveQueryPath(
+function resolveOperationPath(
     name: string,
     segments: string[],
-    variable: Extract<BindingVariable, { kind: "query" }>,
+    variable: Extract<BindingVariable, { kind: "operation" }>,
     facts: BindingFacts,
 ): BindingVariable {
     const [head, ...tail] = segments;
@@ -56,7 +56,7 @@ function resolveQueryPath(
 function resolveOutcomePath(
     name: string,
     segments: string[],
-    variable: Extract<BindingVariable, { kind: "query" }>,
+    variable: Extract<BindingVariable, { kind: "operation" }>,
     facts: BindingFacts,
 ): BindingVariable {
     const [head, ...tail] = segments;

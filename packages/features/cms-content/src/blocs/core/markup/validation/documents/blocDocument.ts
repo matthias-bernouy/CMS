@@ -27,6 +27,7 @@ export type BlocDocumentValidationResult = {
     readonly defaultContent?: string;
     readonly fixedContent?: string;
     readonly queries: BlocContentMarkupResult["queries"];
+    readonly mutations: BlocContentMarkupResult["mutations"];
     readonly sources: BlocContentMarkupResult["sources"];
 };
 
@@ -68,6 +69,7 @@ export function validateBlocDocument(
         ...(defaultContent === undefined ? {} : { defaultContent }),
         ...(fixed === undefined ? {} : { fixedContent: fixed.html }),
         queries: [...(fixed?.queries ?? []), ...(defaultResult?.queries ?? [])],
+        mutations: [...(fixed?.mutations ?? []), ...(defaultResult?.mutations ?? [])],
         sources: [...(fixed?.sources ?? []), ...(defaultResult?.sources ?? [])],
     };
 }

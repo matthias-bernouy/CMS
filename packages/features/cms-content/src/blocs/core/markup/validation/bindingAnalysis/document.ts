@@ -5,6 +5,7 @@ import {
     parseCase,
     parseCondition,
     parseMatch,
+    parseMutation,
     parseQueries,
     parseQuery,
     parseRepeat,
@@ -14,8 +15,8 @@ import type { BindingFacts, BindingScope, BindingVariable } from "./model";
 import { addVariable, emptyFacts } from "./model";
 import { analyzeBindingExpression, factsForMatchCase } from "./expressions";
 import { resolveBindingPath } from "./paths";
-import type { BindingAnalysisOptions, BindingQueryCapability } from "./types";
-import { validateQueryCoverage } from "./coverage";
+import type { BindingAnalysisOptions, BindingCapability } from "./types";
+import { validateOperationCoverage } from "./coverage";
 
 const IGNORED_ATTRIBUTES = new Set<string>([
     CMS_BINDING_ATTRIBUTES.query,
@@ -23,6 +24,13 @@ const IGNORED_ATTRIBUTES = new Set<string>([
     CMS_BINDING_ATTRIBUTES.queryInput,
     CMS_BINDING_ATTRIBUTES.queryListen,
     CMS_BINDING_ATTRIBUTES.queryRefresh,
+    CMS_BINDING_ATTRIBUTES.mutation,
+    CMS_BINDING_ATTRIBUTES.mutationInput,
+    CMS_BINDING_ATTRIBUTES.mutationIdempotency,
+    CMS_BINDING_ATTRIBUTES.mutationInvalidates,
+    CMS_BINDING_ATTRIBUTES.mutationRedirect,
+    CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
+    CMS_BINDING_ATTRIBUTES.mutationReset,
     CMS_BINDING_ATTRIBUTES.repeat,
     CMS_BINDING_ATTRIBUTES.condition,
     CMS_BINDING_ATTRIBUTES.match,
@@ -45,10 +53,10 @@ function walk(
     element: Element,
     parentScope: BindingScope,
     parentFacts: BindingFacts,
-    capabilities: ReadonlyMap<string, BindingQueryCapability>,
+    capabilities: ReadonlyMap<string, BindingCapability>,
     requireResolution: boolean,
 ): void {
-    const declaration = queryVariable(element, capabilities, requireResolution);
+    const declaration = operationVariable(element, capabilities, requireResolution);
     let scope = declaration ? addVariable(parentScope, declaration.name, declaration.variable) : parentScope;
     for (const imported of parseQueries(element.getAttribute(CMS_BINDING_ATTRIBUTES.queries)) ?? []) {
         scope = addVariable(scope, imported.name, { kind: "unknown" });
@@ -73,8 +81,8 @@ function walk(
         facts = analyzeBindingExpression(condition, scope, facts).whenTrue;
     }
     validateInterpolations(element, scope, facts);
-    if (declaration?.variable.kind === "query") {
-        validateQueryCoverage(element, declaration.name, declaration.variable.capability);
+    if (declaration?.variable.kind === "operation") {
+        validateOperationCoverage(element, declaration.name, declaration.variable.capability);
     }
 
     const match = parseMatch(element.getAttribute(CMS_BINDING_ATTRIBUTES.match) ?? "");
@@ -97,29 +105,31 @@ function walk(
     }
 }
 
-function queryVariable(
+function operationVariable(
     element: Element,
-    capabilities: ReadonlyMap<string, BindingQueryCapability>,
+    capabilities: ReadonlyMap<string, BindingCapability>,
     requireResolution: boolean,
 ): { readonly name: string; readonly variable: BindingVariable } | null {
     const query = parseQuery(element.getAttribute(CMS_BINDING_ATTRIBUTES.query) ?? "");
-    if (!query) {
+    const mutation = parseMutation(element.getAttribute(CMS_BINDING_ATTRIBUTES.mutation) ?? "");
+    const binding = query ?? mutation;
+    if (!binding) {
         return null;
     }
-    if ("sync" in query || query.contractId.startsWith("kernel.")) {
-        return { name: query.name, variable: { kind: "unknown" } };
+    if ("sync" in binding || binding.contractId.startsWith("kernel.")) {
+        return { name: binding.name, variable: { kind: "unknown" } };
     }
-    const capability = capabilities.get(targetKey(query.contractId, query.capabilityId));
+    const capability = capabilities.get(targetKey(binding.contractId, binding.capabilityId));
     if (!capability) {
         if (requireResolution) {
             throw new ContentValidationError(
                 "content",
-                `CMS query ${query.contractId}:${query.capabilityId} cannot be resolved to an exact contract schema`,
+                `CMS operation ${binding.contractId}:${binding.capabilityId} cannot be resolved to an exact contract schema`,
             );
         }
-        return { name: query.name, variable: { kind: "unknown" } };
+        return { name: binding.name, variable: { kind: "unknown" } };
     }
-    return { name: query.name, variable: { kind: "query", capability } };
+    return { name: binding.name, variable: { kind: "operation", capability } };
 }
 
 function validateInterpolations(element: Element, scope: BindingScope, facts: BindingFacts): void {

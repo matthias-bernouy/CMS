@@ -24,12 +24,14 @@ export interface BindingCapabilityError {
     readonly output?: BindingValueSchema;
 }
 
-export interface BindingQueryCapability {
+export interface BindingCapability {
     readonly contractId: string;
     readonly capabilityId: string;
     readonly output: BindingValueSchema;
     readonly errors: readonly BindingCapabilityError[];
 }
+
+export type BindingQueryCapability = BindingCapability;
 
 export interface BindingQueryTarget {
     readonly contractId: string;
@@ -40,8 +42,16 @@ export type BindingQueryCapabilityResolver = (
     targets: readonly BindingQueryTarget[],
 ) => Promise<readonly BindingQueryCapability[]>;
 
+export interface BindingCapabilityTarget extends BindingQueryTarget {
+    readonly effect: "query" | "command";
+}
+
+export type BindingCapabilityResolver = (
+    targets: readonly BindingCapabilityTarget[],
+) => Promise<readonly BindingCapability[]>;
+
 export interface BindingAnalysisOptions {
-    readonly capabilities?: readonly BindingQueryCapability[];
+    readonly capabilities?: readonly BindingCapability[];
     /** When true, every provider query must resolve to an exact supplied capability description. */
     readonly requireCapabilityResolution?: boolean;
 }

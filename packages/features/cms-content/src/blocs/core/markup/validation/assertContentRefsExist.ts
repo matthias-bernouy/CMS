@@ -48,7 +48,11 @@ export async function assertContentRefsExist(
             ...(bloc.settings ? { settings: bloc.settings } : {}),
         })),
     );
-    if (bindingOptions.resolveQueryCapabilities || bindingOptions.requireQueryCapabilityResolution) {
+    if (
+        bindingOptions.resolveCapabilities ||
+        bindingOptions.resolveQueryCapabilities ||
+        bindingOptions.requireQueryCapabilityResolution
+    ) {
         validatePageDocument(
             document.html,
             registeredBlocs.map((bloc) => ({
@@ -58,7 +62,7 @@ export async function assertContentRefsExist(
                 ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
                 ...(bloc.settings ? { settings: bloc.settings } : {}),
             })),
-            await resolveBindingAnalysisOptions(document.queries, bindingOptions),
+            await resolveBindingAnalysisOptions(document.queries, document.mutations, bindingOptions),
         );
     }
     const { document: expandedDocument } = parseHTML("<!DOCTYPE html><html><body></body></html>");
