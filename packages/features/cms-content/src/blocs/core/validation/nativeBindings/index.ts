@@ -141,6 +141,9 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
         if (binding && "sync" in binding && sync !== undefined) {
             return "synchronized-state queries cannot republish the state they consume";
         }
+        if (binding && "contractId" in binding && sync !== undefined && parseSyncTarget(sync)?.scope === "param") {
+            return "remote queries cannot publish structured state to URL parameters";
+        }
         if (
             binding &&
             "sync" in binding &&

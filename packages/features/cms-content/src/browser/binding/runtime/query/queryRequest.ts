@@ -7,6 +7,7 @@ import type { SerializedFormData } from "../../submit/types";
 export type QueryRequest = {
     url: string;
     init: RequestInit;
+    input?: SerializedFormData;
 };
 
 const KERNEL_QUERIES = new Map([["kernel.auth:methods", { url: "/.cms/auth/methods", method: "GET" }]]);
@@ -50,6 +51,7 @@ export function queryRequest(element: Element): QueryRequest {
             headers: { "content-type": "application/json" },
             body: JSON.stringify(body),
         },
+        input: body,
     };
 }
 

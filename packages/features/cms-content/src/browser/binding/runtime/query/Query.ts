@@ -10,6 +10,7 @@ import { connectQueryReload } from "../../source/runtime/refresh/registry";
 import { connectSourceData, disconnectSourceData, readSourceData, rememberSourceData } from "../../source/values";
 import { listenQueryRefresh } from "./queryRefresh";
 import { queryRequest } from "./queryRequest";
+import { parseSyncAttribute, readSyncValue, subscribeSyncValue, writeSyncValue } from "../../params/SyncState";
 import {
     failedQueryState,
     initialQueryState,
@@ -18,6 +19,7 @@ import {
     refreshFailedQueryState,
     refreshingQueryState,
     type QueryState,
+    isQueryState,
 } from "./queryState";
 
 type QueryOptions = {
@@ -33,6 +35,8 @@ export class Query {
     private stopRefresh: (() => void) | null = null;
     private stopContext: (() => void) | null = null;
     private stopReload: (() => void) | null = null;
+    private stopSync: (() => void) | null = null;
+    private input: unknown;
     private pending: Promise<boolean> | null = null;
     private queued: Promise<boolean> | null = null;
 
@@ -46,6 +50,12 @@ export class Query {
 
     start(): void {
         this.stopContext = connectSourceContext(this.element, () => this.render());
+        const binding = parseQuery(this.element.getAttribute(QUERY_ATTR) ?? "");
+        if (binding && "sync" in binding) {
+            this.startSynchronizedQuery(binding.sync);
+            this.element.setAttribute(READY_ATTR, "");
+            return;
+        }
         this.stopReload = connectQueryReload(
             this.element,
             () => this.requestIdentity(),
@@ -72,6 +82,8 @@ export class Query {
         this.stopReload = null;
         this.stopContext?.();
         this.stopContext = null;
+        this.stopSync?.();
+        this.stopSync = null;
         disconnectSourceData(this.element);
     }
 
@@ -106,8 +118,9 @@ export class Query {
             this.update(failedQueryState(null, error instanceof Error ? error.message : String(error)));
             return false;
         }
+        this.input = request.input;
         const refreshing = this.state.loaded;
-        this.update(refreshing ? refreshingQueryState(this.state) : loadingQueryState());
+        this.update(this.withInput(refreshing ? refreshingQueryState(this.state) : loadingQueryState()));
         this.abort?.abort();
         const controller = new AbortController();
         this.abort = controller;
@@ -133,7 +146,7 @@ export class Query {
 
     private accept(value: unknown): void {
         rememberSourceData(this.element, value);
-        this.update(loadedQueryState(value));
+        this.update(this.withInput(loadedQueryState(value)));
     }
 
     private renderForced(state: Exclude<SourceState, "loaded">): void {
@@ -148,6 +161,14 @@ export class Query {
 
     private update(state: QueryState): void {
         this.state = state;
+        const target = parseSyncAttribute(this.element);
+        if (target) {
+            try {
+                writeSyncValue(target, state, this.element.ownerDocument);
+            } catch (error) {
+                console.warn("cms-sync could not publish query state", error);
+            }
+        }
         this.render();
     }
 
@@ -161,11 +182,36 @@ export class Query {
     }
 
     private requestIdentity(): string {
+        const binding = parseQuery(this.element.getAttribute(QUERY_ATTR) ?? "");
+        if (binding && "sync" in binding) {
+            return `@${binding.sync.scope}:${binding.sync.key}`;
+        }
         try {
             const request = queryRequest(this.element);
             return `${request.init.method ?? "GET"}\u0000${request.url}\u0000${request.init.body ?? ""}`;
         } catch {
             return "";
         }
+    }
+
+    private startSynchronizedQuery(target: { scope: "param" | "page" | "session" | "persistent"; key: string }): void {
+        const accept = (value: unknown) => {
+            if (value === undefined) {
+                this.state = initialQueryState();
+                this.render();
+            } else if (isQueryState(value)) {
+                this.state = value;
+                rememberSourceData(this.element, value.data);
+                this.render();
+            } else {
+                this.accept(value);
+            }
+        };
+        accept(readSyncValue(target, this.element.ownerDocument));
+        this.stopSync = subscribeSyncValue(target, accept, this.element.ownerDocument);
+    }
+
+    private withInput(state: QueryState): QueryState {
+        return this.input === undefined ? state : { ...state, input: this.input };
     }
 }

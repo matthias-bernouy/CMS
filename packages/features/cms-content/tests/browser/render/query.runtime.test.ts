@@ -2,6 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { Query } from "../../../src/browser/binding/runtime/query/Query";
 import { queryRequest } from "../../../src/browser/binding/runtime/query/queryRequest";
 import { readSourceData } from "../../../src/browser/binding/source/values";
+import { readSyncValue, writeSyncValue } from "../../../src/browser/binding/params/SyncState";
 import { el, resetDom, waitFor } from "../support/testUtils";
 
 afterEach(resetDom);
@@ -19,6 +20,7 @@ test("a Provider query with input uses the logical QUERY transport", () => {
             headers: { "content-type": "application/json" },
             body: '{"limit":20}',
         },
+        input: { limit: 20 },
     });
 });
 
@@ -100,6 +102,53 @@ test("the alias owns the complete query state and data", async () => {
     expect(host.querySelector('[cms-condition="products.loading"]')).toBeNull();
     expect(readSourceData(host)).toEqual([{ name: "Racket" }]);
     query.dispose();
+});
+
+test("a remote query publishes its lifecycle and resolved input", async () => {
+    const target = { scope: "page", key: "ulvia-official-products" } as const;
+    const host = el(`<section
+        cms-query="catalog.items:list as products"
+        cms-query-input='{"limit":{"from":"raw","value":20}}'
+        cms-sync="@page:ulvia-official-products"
+    ><p>{{ products.data[0].name }}</p></section>`);
+    document.body.appendChild(host);
+    const query = new Query(host, {}, { request: async () => ({ kind: "success", data: [{ name: "Racket" }] }) });
+
+    query.start();
+    await waitFor(() => host.textContent?.includes("Racket") === true);
+
+    expect(readSyncValue(target)).toMatchObject({
+        loaded: true,
+        input: { limit: 20 },
+        data: [{ name: "Racket" }],
+    });
+    query.dispose();
+    writeSyncValue(target, undefined);
+});
+
+test("a synchronized-state query consumes the producer snapshot without HTTP", () => {
+    const target = { scope: "page", key: "ulvia-official-shared-products" } as const;
+    const host = el(`<section cms-query="@page:ulvia-official-shared-products as products">
+        <p cms-condition="products.loaded">{{ products.data.name }}</p>
+    </section>`);
+    document.body.appendChild(host);
+    const query = new Query(host, {}, { request: async () => Promise.reject(new Error("must not fetch")) });
+
+    query.start();
+    writeSyncValue(target, {
+        loading: false,
+        loaded: true,
+        empty: false,
+        error: false,
+        refreshing: false,
+        refreshError: false,
+        data: { name: "Shared" },
+    });
+
+    expect(host.textContent).toContain("Shared");
+    expect(readSourceData(host)).toEqual({ name: "Shared" });
+    query.dispose();
+    writeSyncValue(target, undefined);
 });
 
 test("a refresh failure retains the previous data and exposes refreshError", async () => {

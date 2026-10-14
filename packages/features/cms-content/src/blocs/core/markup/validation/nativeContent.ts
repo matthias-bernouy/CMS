@@ -89,16 +89,17 @@ export function validateBlocContentMarkup(
 }
 
 export function extractQueries(document: Document): readonly ContentQuery[] {
-    const queries = Array.from(document.querySelectorAll("[cms-query]"), (element) =>
+    const bindings = Array.from(document.querySelectorAll("[cms-query]"), (element) =>
         parseQuery(element.getAttribute("cms-query") ?? ""),
-    ).filter((query): query is ContentQuery => query !== null && "contractId" in query);
+    ).filter((query): query is NonNullable<typeof query> => query !== null);
     const names = new Set<string>();
-    for (const query of queries) {
+    for (const query of bindings) {
         if (names.has(query.name)) {
             throw new ContentValidationError("content", `CMS query name ${JSON.stringify(query.name)} must be unique`);
         }
         names.add(query.name);
     }
+    const queries = bindings.filter((query): query is ContentQuery => "contractId" in query);
     for (const form of Array.from(document.querySelectorAll("form[cms-source-success-reload]"))) {
         const targets = parseCmsSourceSuccessReload(form.getAttribute("cms-source-success-reload"));
         for (const target of targets ?? []) {

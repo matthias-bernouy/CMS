@@ -8,12 +8,29 @@ export type QueryState = {
     refreshing: boolean;
     refreshError: boolean;
     data: unknown;
+    input?: unknown;
     status?: number | null;
     message?: string;
 };
 
 export function initialQueryState(): QueryState {
     return flags({ loading: false });
+}
+
+export function isQueryState(value: unknown): value is QueryState {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+        return false;
+    }
+    const state = value as Record<string, unknown>;
+    return (
+        typeof state.loading === "boolean" &&
+        typeof state.loaded === "boolean" &&
+        typeof state.empty === "boolean" &&
+        typeof state.error === "boolean" &&
+        typeof state.refreshing === "boolean" &&
+        typeof state.refreshError === "boolean" &&
+        "data" in state
+    );
 }
 
 export function loadingQueryState(): QueryState {
