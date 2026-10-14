@@ -277,7 +277,6 @@ export {
     detectPageIndexingCandidates,
     type PageIndexingCandidate,
     type PageIndexingDetection,
-    type PageIndexingDetectionOptions,
     type PageIndexingDetectionStatus,
 } from "cms-content/pages/core/indexing/detection";
 export {

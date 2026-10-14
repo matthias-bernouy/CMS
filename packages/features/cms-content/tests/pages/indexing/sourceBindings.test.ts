@@ -1,5 +1,38 @@
 import { describe, expect, test } from "bun:test";
-import { collectCmsSourceBindings } from "@bernouy/cms-content";
+import { collectCmsQueryBindings, collectCmsSourceBindings } from "@bernouy/cms-content";
+
+describe("collectCmsQueryBindings", () => {
+    test("extracts remote query identities and their typed inputs", () => {
+        expect(
+            collectCmsQueryBindings(`
+            <section cms-query="catalog:products.list as products" cms-query-input='{"limit":{"from":"raw","value":20},"category":{"from":"sync","key":"@param:shop-category"}}'></section>
+            <section cms-query="@page:shop-products as shared"></section>
+        `),
+        ).toEqual([
+            {
+                contractId: "catalog",
+                capabilityId: "products.list",
+                alias: "products",
+                input: {
+                    limit: { from: "raw", value: 20 },
+                    category: { from: "sync", key: "@param:shop-category" },
+                },
+            },
+        ]);
+    });
+
+    test("omits malformed and absent inputs without inventing defaults", () => {
+        expect(
+            collectCmsQueryBindings(`
+            <section cms-query="catalog:products.list as products"></section>
+            <section cms-query="catalog:product.get as product" cms-query-input="not-json"></section>
+        `),
+        ).toEqual([
+            { contractId: "catalog", capabilityId: "products.list", alias: "products" },
+            { contractId: "catalog", capabilityId: "product.get", alias: "product" },
+        ]);
+    });
+});
 
 describe("collectCmsSourceBindings", () => {
     test("extracts source URLs, aliases, methods, and triggers", () => {

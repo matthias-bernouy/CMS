@@ -4,9 +4,11 @@ import {
     isCmsSourceMethod,
     isCmsSourceTrigger,
     parseQuery,
+    parseQueryInput,
     parseSource,
     parseSourceBody,
     type CmsSourceBodyBinding,
+    type CmsQueryInput,
     type CmsSourceMethod,
     type CmsSourceTrigger,
 } from "cms-content/blocs/core/markup/bindings";
@@ -23,6 +25,7 @@ export type CmsQueryBindingReference = {
     contractId: string;
     capabilityId: string;
     alias: string;
+    input?: CmsQueryInput;
 };
 
 /** Extract direct logical query targets without resolving any Provider transport binding. */
@@ -32,10 +35,12 @@ export function collectCmsQueryBindings(html: string): CmsQueryBindingReference[
     for (const element of Array.from(document.querySelectorAll(`[${CMS_BINDING_ATTRIBUTES.query}]`))) {
         const query = parseQuery(element.getAttribute(CMS_BINDING_ATTRIBUTES.query) ?? "");
         if (query && "contractId" in query) {
+            const input = parseQueryInput(element.getAttribute(CMS_BINDING_ATTRIBUTES.queryInput));
             bindings.push({
                 contractId: query.contractId,
                 capabilityId: query.capabilityId,
                 alias: query.name,
+                ...(input ? { input } : {}),
             });
         }
     }

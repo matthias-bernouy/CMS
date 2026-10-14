@@ -6,7 +6,7 @@ import {
 } from "@bernouy/cms-content";
 
 const bound = (contract: string, capability: string, param: string, pageParam: string) =>
-    `<main cms-source="/.cms/call/${contract}/${capability}" cms-source-method="POST" cms-source-body='{"${param}":{"from":"sync","key":"@param:site-${pageParam}"}}'></main>`;
+    `<main cms-query="${contract}:${capability} as entity" cms-query-input='{"${param}":{"from":"sync","key":"@param:site-${pageParam}"}}'></main>`;
 
 describe("detectPageIndexingCandidates", () => {
     test("keeps CMS metadata scopes reserved", () => {
@@ -28,22 +28,17 @@ describe("detectPageIndexingCandidates", () => {
         });
     });
 
-    test("ignores submitted, external, malformed, and old Source bindings", () => {
-        const html = `${bound("commerce", "product.get", "slug", "product").replace("<main ", '<main cms-source-trigger="submit" ')}
-            <div cms-source="https://external.test/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"sync","key":"@param:site-product"}}'></div>
-            <div cms-source="/.cms/sources/commerce/product"></div>`;
+    test("ignores local, missing-input, malformed, and old Source bindings", () => {
+        const html = `<div cms-query="@page:site-product as product"></div>
+            <div cms-query="commerce:product.get as product"></div>
+            <div cms-query="commerce:product.get" cms-query-input='{"slug":{"from":"sync","key":"@param:site-product"}}'></div>
+            <div cms-source="/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"sync","key":"@param:site-product"}}'></div>`;
         expect(detectPageIndexingCandidates(html)).toEqual({ status: "none", candidates: [] });
     });
 
-    test("deduplicates bindings, reports ambiguity, and supports a base path", () => {
+    test("deduplicates bindings and reports ambiguity", () => {
         const html = `${bound("commerce", "product.get", "slug", "product")}${bound("commerce", "product.get", "slug", "product")}${bound("events", "event.get", "id", "event")}`;
         expect(detectPageIndexingCandidates(html).status).toBe("ambiguous");
         expect(detectPageIndexingCandidates(html).candidates).toHaveLength(2);
-        expect(
-            detectPageIndexingCandidates(
-                bound("commerce", "product.get", "slug", "product").replaceAll("/.cms/call/", "/shop/.cms/call/"),
-                { gatewayPrefix: "/shop/.cms/call" },
-            ).status,
-        ).toBe("detected");
     });
 });
