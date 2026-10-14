@@ -128,10 +128,6 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     const source = attributes[CMS_BINDING_ATTRIBUTES.source];
     const sync = attributes[CMS_BINDING_ATTRIBUTES.sync];
     const match = attributes[CMS_BINDING_ATTRIBUTES.match];
-    const caseValue = attributes[CMS_BINDING_ATTRIBUTES.case];
-    if (match !== undefined && caseValue !== undefined) {
-        return "CMS match and CMS case cannot coexist on the same element";
-    }
     if (match !== undefined && isQueryRendererForbiddenTag(tag)) {
         return `CMS matches require an element that can contain rendered cases; native <${tag}> cannot own a match`;
     }

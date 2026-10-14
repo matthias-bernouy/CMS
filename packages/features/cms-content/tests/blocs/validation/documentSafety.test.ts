@@ -70,6 +70,16 @@ describe("Bloc document budgets", () => {
         expect(() =>
             fixed(`<section cms-match="status"><p cms-case="'ready'">One</p><p cms-case="'ready'">Two</p></section>`),
         ).toThrow("duplicate case");
+        expect(() =>
+            fixed(
+                `<section cms-match="outcome.kind">
+                    <div cms-case="'success'">Done</div>
+                    <div cms-case="'error'" cms-match="outcome.code">
+                        <p cms-case="'NOT_FOUND'">Missing</p>
+                    </div>
+                </section>`,
+            ),
+        ).not.toThrow();
     });
 
     test("bounds component runtime and retained source bundles", () => {
