@@ -2,7 +2,7 @@
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-page-details }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-update-the-shared-page-document-through-revision-checked-provider-capabilities }}</p>
         <ulvia-official-action slot="actions" variant="outline" tone="secondary"><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"overview"}'>{{ cms.i18n.ulvia-official.ui-back-to-pages }}</a></ulvia-official-action>
-        <section id="page-detail" slot="content" cms-query="ulvia.cms.pages:get as selected" cms-query-input='{"id":{"from":"state","key":"@param:ulvia-official-page-id"}}'>
+        <section id="page-detail" slot="content" cms-query="ulvia.cms.pages:get as selected" cms-query-input='{"id":{"from":"state","key":"@param:ulvia-official-page-id"}}' cms-query-listen="@param:ulvia-official-page-id">
             <div role="status" aria-live="polite" cms-condition="selected.loading">
                 <h2>{{ cms.i18n.ulvia-official.ui-loading-page }}</h2>
                 <p>{{ cms.i18n.ulvia-official.ui-the-latest-revision-is-being-read-from-the-provider }}</p>

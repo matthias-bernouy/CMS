@@ -8,6 +8,7 @@
         slot="content"
         cms-query="ulvia.cms.collections:get as collection"
         cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia-official-collection"}}'
+        cms-query-listen="@param:ulvia-official-collection"
     >
         <div cms-condition="collection.loading">
             {{ cms.i18n.ulvia-official.ui-reading-collection-details }}
