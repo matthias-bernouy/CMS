@@ -507,9 +507,10 @@ describe("collection release parsing", () => {
             delete producer.defaultContent;
             producer.slots = {};
             producer.uses = [];
-            producer.requires = markup.includes("cms-query") || markup.includes("cms-source")
-                ? [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }]
-                : [];
+            producer.requires =
+                markup.includes("cms-query") || markup.includes("cms-source")
+                    ? [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }]
+                    : [];
             return source;
         };
 

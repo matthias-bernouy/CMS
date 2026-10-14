@@ -37,12 +37,16 @@ test("CLI audits imported browser helpers, reports real violations, and fails cl
         const blocked = await run();
         expect(blocked.code).toBe(1);
         const audit = JSON.parse(blocked.stdout) as UiAudit;
-        expect(audit.findings.map(({ severity }) => severity).sort()).toEqual(["ERROR", "WARNING"]);
+        expect(audit.findings.map(({ severity }) => severity).sort()).toEqual(["ERROR", "ERROR", "WARNING"]);
         expect(audit.findings.find(({ severity }) => severity === "WARNING")?.file).toEndWith("/core/data.ts");
         await write(template, '<div cms-source="/api/items"></div>');
-        const advisory = await run();
-        expect(advisory.code).toBe(0);
-        expect((JSON.parse(advisory.stdout) as UiAudit).findings).toHaveLength(1);
+        const sourceViolation = await run();
+        expect(sourceViolation.code).toBe(1);
+        const sourceAudit = JSON.parse(sourceViolation.stdout) as UiAudit;
+        expect(sourceAudit.findings).toHaveLength(2);
+        expect(sourceAudit.findings.find(({ rule }) => rule === "source-form-owner")).toMatchObject({
+            severity: "ERROR",
+        });
     } finally {
         await rm(root, { recursive: true, force: true });
     }
