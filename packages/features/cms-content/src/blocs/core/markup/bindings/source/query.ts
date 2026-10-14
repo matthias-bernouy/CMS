@@ -1,4 +1,5 @@
 import type {
+    CmsMutationBinding,
     CmsQueriesBinding,
     CmsQueryBinding,
     CmsQueryInput,
@@ -18,6 +19,22 @@ const MAX_QUERY_LISTEN_TARGETS = 16;
 const MIN_QUERY_REFRESH_INTERVAL_MS = 1_000;
 const MAX_QUERY_REFRESH_INTERVAL_MS = 60 * 60 * 1_000;
 const RESERVED_QUERY_NAMES = new Set(["cms"]);
+
+export function parseMutation(value: string): CmsMutationBinding | null {
+    const match = QUERY_PATTERN.exec(value);
+    if (!match || RESERVED_QUERY_NAMES.has(match[3]!)) {
+        return null;
+    }
+    return { contractId: match[1]!, capabilityId: match[2]!, name: match[3]! };
+}
+
+export function asMutation(mutation: CmsMutationBinding): string {
+    const value = `${mutation.contractId}:${mutation.capabilityId} as ${mutation.name}`;
+    if (!parseMutation(value)) {
+        throw new TypeError("Invalid CMS mutation binding");
+    }
+    return value;
+}
 
 export function asQuery(query: CmsQueryBinding): string {
     const value =

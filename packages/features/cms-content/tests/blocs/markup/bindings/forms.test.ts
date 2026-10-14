@@ -25,6 +25,20 @@ function repository() {
 }
 
 describe("declarative form contracts", () => {
+    test("accepts the compact mutation grammar without transport attributes", () => {
+        expect(
+            nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutation, "ulvia.cms.pages:update as saved"),
+        ).toBeNull();
+        expect(
+            nativeBindingAttributeIssue(
+                CMS_BINDING_ATTRIBUTES.mutationInput,
+                '{"id":{"from":"literal","value":"page"}}',
+            ),
+        ).toBeNull();
+        expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutationInvalidates, "page pages")).toBeNull();
+        expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutationReset, "false")).toBeNull();
+    });
+
     test("exposes controlled serialization and control-value helpers", () => {
         expect(CMS_SOURCE_SERIALIZATIONS).toEqual(["typed-json"]);
         expect(CMS_FORM_VALUE_TYPES).toEqual(["string", "number", "boolean", "json"]);

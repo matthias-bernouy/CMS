@@ -13,6 +13,7 @@ import {
     parseCondition,
     parseCase,
     parseMatch,
+    parseMutation,
     parseQuery,
     parseQueries,
     parseQueryListen,
@@ -64,6 +65,29 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     }
     if (name === CMS_BINDING_ATTRIBUTES.queryRefresh) {
         return parseQueryRefresh(value) ? null : "CMS query refresh policy is invalid";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.mutation) {
+        return parseMutation(value) ? null : "CMS mutation must identify one command capability as name";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.mutationInput) {
+        return isTypedSourceBody(value) ? null : "CMS mutation input must be a typed parameter map";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.mutationInvalidates) {
+        return isCmsSourceSuccessReload(value)
+            ? null
+            : "CMS mutation invalidation must identify one to eight unique queries by name";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.mutationIdempotency) {
+        return value === "auto" ? null : "CMS mutation idempotency must be auto";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.mutationReset) {
+        return value === "true" || value === "false" ? null : "CMS mutation reset behavior must be true or false";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.mutationRedirect) {
+        return isSafeInternalRedirect(value) ? null : "CMS mutation redirect must stay on this site";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.mutationRedirectParam) {
+        return isCmsQueryParamName(value) ? null : "CMS mutation redirect parameter is invalid";
     }
     if (name === CMS_BINDING_ATTRIBUTES.source) {
         const source = parseSource(value);
@@ -126,13 +150,17 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     const query = attributes[CMS_BINDING_ATTRIBUTES.query];
     const queries = attributes[CMS_BINDING_ATTRIBUTES.queries];
     const source = attributes[CMS_BINDING_ATTRIBUTES.source];
+    const mutation = attributes[CMS_BINDING_ATTRIBUTES.mutation];
     const sync = attributes[CMS_BINDING_ATTRIBUTES.sync];
     const match = attributes[CMS_BINDING_ATTRIBUTES.match];
     if (match !== undefined && isQueryRendererForbiddenTag(tag)) {
         return `CMS matches require an element that can contain rendered cases; native <${tag}> cannot own a match`;
     }
-    if (match !== undefined && (query !== undefined || queries !== undefined || source !== undefined)) {
-        return "CMS match must be nested inside query or source content, not declared on the binding owner";
+    if (
+        match !== undefined &&
+        (query !== undefined || queries !== undefined || source !== undefined || mutation !== undefined)
+    ) {
+        return "CMS match must be nested inside query or mutation content, not declared on the binding owner";
     }
     if (query !== undefined && tag === "form") {
         return "CMS queries cannot be declared on forms";
@@ -149,8 +177,24 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     if (queries !== undefined && source !== undefined) {
         return "CMS query imports and CMS source cannot coexist on the same element";
     }
+    if ((query !== undefined || queries !== undefined) && mutation !== undefined) {
+        return "CMS queries and CMS mutation cannot coexist on the same element";
+    }
+    if (source !== undefined && mutation !== undefined) {
+        return "CMS source and CMS mutation cannot coexist on the same element";
+    }
     if (source !== undefined && tag !== "form") {
         return "CMS sources are reserved for form submissions; use cms-query for reads";
+    }
+    if (mutation !== undefined && tag !== "form") {
+        return "CMS mutations are reserved for form submissions";
+    }
+    const mutationBinding = mutation === undefined ? null : parseMutation(mutation);
+    if (
+        mutationBinding?.contractId.startsWith("kernel.") &&
+        `${mutationBinding.contractId}:${mutationBinding.capabilityId}` !== "kernel.auth:login"
+    ) {
+        return "CMS mutation targets an unknown Kernel capability";
     }
     if (query !== undefined) {
         const binding = parseQuery(query);
@@ -221,6 +265,12 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
         }
     }
     for (const name of [
+        CMS_BINDING_ATTRIBUTES.mutationInput,
+        CMS_BINDING_ATTRIBUTES.mutationIdempotency,
+        CMS_BINDING_ATTRIBUTES.mutationInvalidates,
+        CMS_BINDING_ATTRIBUTES.mutationRedirect,
+        CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
+        CMS_BINDING_ATTRIBUTES.mutationReset,
         CMS_BINDING_ATTRIBUTES.sourceIdempotency,
         CMS_BINDING_ATTRIBUTES.sourceSerialization,
         CMS_BINDING_ATTRIBUTES.sourceSuccessReload,
@@ -248,6 +298,27 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
         }
     }
     const source = attributes[CMS_BINDING_ATTRIBUTES.source];
+    const mutation = attributes[CMS_BINDING_ATTRIBUTES.mutation];
+    if (mutation) {
+        if (nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutation, mutation)) {
+            return "native forms require a declared CMS mutation";
+        }
+        for (const name of [
+            CMS_BINDING_ATTRIBUTES.mutationInput,
+            CMS_BINDING_ATTRIBUTES.mutationIdempotency,
+            CMS_BINDING_ATTRIBUTES.mutationInvalidates,
+            CMS_BINDING_ATTRIBUTES.mutationRedirect,
+            CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
+            CMS_BINDING_ATTRIBUTES.mutationReset,
+        ]) {
+            const value = attributes[name];
+            const issue = value === undefined ? null : nativeBindingAttributeIssue(name, value);
+            if (issue) {
+                return issue;
+            }
+        }
+        return null;
+    }
     if (!source || nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.source, source)) {
         return "native forms require a declared CMS source endpoint";
     }

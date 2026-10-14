@@ -12,6 +12,13 @@ export const CMS_BINDING_ATTRIBUTES = {
     queryInput: "cms-query-input",
     queryListen: "cms-query-listen",
     queryRefresh: "cms-query-refresh",
+    mutation: "cms-mutation",
+    mutationInput: "cms-mutation-input",
+    mutationIdempotency: "cms-mutation-idempotency",
+    mutationInvalidates: "cms-mutation-invalidates",
+    mutationRedirect: "cms-mutation-redirect",
+    mutationRedirectParam: "cms-mutation-redirect-param",
+    mutationReset: "cms-mutation-reset",
     repeat: "cms-repeat",
     source: "cms-source",
     sourceBody: "cms-source-body",
@@ -94,6 +101,8 @@ export type CmsQueryRefreshPolicy = {
     readonly focus: boolean;
     readonly reconnect: boolean;
 };
+export type CmsMutationBinding = CmsRemoteQueryBinding;
+export type CmsMutationInput = CmsBindingInputMap;
 
 export const CMS_SOURCE_SERIALIZATIONS = ["typed-json"] as const;
 export const CMS_FORM_VALUE_TYPES = ["string", "number", "boolean", "json"] as const;

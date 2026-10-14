@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     asInterpolation,
+    asMutation,
     asQuery,
     asQueries,
     asQueryInput,
@@ -12,6 +13,7 @@ import {
     isCmsQueryParamName,
     isInterpolation,
     parseInterpolation,
+    parseMutation,
     parseQuery,
     parseQueries,
     parseQueryInput,
@@ -122,6 +124,25 @@ describe("binding syntax", () => {
             "@global:ulvia-pages as pages",
         ]) {
             expect(parseQuery(value)).toBeNull();
+        }
+    });
+
+    test("requires one command target and explicit name for mutations", () => {
+        expect(asMutation({ contractId: "ulvia.cms.pages", capabilityId: "update", name: "saved" })).toBe(
+            "ulvia.cms.pages:update as saved",
+        );
+        expect(parseMutation(" ulvia.cms.pages:update as saved ")).toEqual({
+            contractId: "ulvia.cms.pages",
+            capabilityId: "update",
+            name: "saved",
+        });
+        for (const value of [
+            "ulvia.cms.pages:update",
+            "/.cms/call/ulvia.cms.pages/update as saved",
+            "ulvia.cms.pages:update as cms",
+            "@page:ulvia-official-page as saved",
+        ]) {
+            expect(parseMutation(value)).toBeNull();
         }
     });
 
