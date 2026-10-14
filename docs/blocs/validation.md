@@ -36,9 +36,8 @@ From the repository root run:
 
 ```bash
 bun run format
-bun run check:all
 bun run build
-bun test
+bun run verify
 ```
 
 `check:all` covers architecture, package exports, repository shape, style, UI

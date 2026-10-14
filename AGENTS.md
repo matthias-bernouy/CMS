@@ -121,6 +121,8 @@ Use Bun commands from the workspace root unless a package says otherwise:
 ```bash
 bun install
 bun run check:all
+bun run verify
+bun run verify:full
 bun run check:style
 bun run format
 bun run build
@@ -136,9 +138,10 @@ bun run clean
 
 - In a new worktree, make frozen dependencies available with
   `bun install --frozen-lockfile` before running the initial check.
-- For code changes, run `bun run check:all` before making changes and again before
-  handoff. Run it in the same task workspace both times so the final report can
-  be compared with that task's starting state.
+- For code changes, run `bun run check:all` before making changes and `bun run
+  verify` before handoff. Run them in the same task workspace so the final report
+  can be compared with that task's starting state. Use `bun run verify:full` when
+  the complete local Kernel journey is in scope.
 - When concurrent work may modify the same checkout, create or use an isolated
   Git worktree before the initial check. Read-only reviews can share a checkout.
   Do not fix findings from another worktree or unrelated pre-existing findings

@@ -148,9 +148,8 @@ From the repository root:
 
 ```bash
 bun run ulvia -- release packages/official-repository/collections/ulvia-official
-bun run check:all
 bun run build
-bun test
+bun run verify
 ```
 
 See [collection admission](collections.md), [bindings](data-bindings.md),

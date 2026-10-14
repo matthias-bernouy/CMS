@@ -58,6 +58,8 @@ automatically.
 | Command | Purpose |
 | --- | --- |
 | `bun run check:all` | Architecture, UI contracts, repository shape, style, workspace types, dead code and tooling types. |
+| `bun run verify` | Run every static workspace check, then the complete Bun test suite. This is the default pre-handoff command for code changes. |
+| `bun run verify:full` | Run `verify`, then exercise the complete local Kernel browser journey. |
 | `bun run check:dead-code` | Report unused declarations, exports, exported types and package dependencies. |
 | `bun run check:style` | Read-only Biome check. |
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
@@ -67,10 +69,11 @@ automatically.
 | `bun run test:kernel-smoke` | Exercise a fresh local Kernel installation, representative mutations and restart through Chromium. |
 | `bun run clean` | Clean TypeScript build outputs through `tsc --build --clean`. |
 
-`check:all` is an aggregate static check; it does not execute the application
-test suite or browser scenarios. Run focused tests for behavior changes and the
-build when generated browser assets are affected. Browser/network integration
-tests require an environment that permits Chromium and local listeners.
+`check:all` remains the fast aggregate static check; it does not execute the
+application test suite or browser scenarios. Use `verify` before handing off a
+code change. Use `verify:full` when the complete Provider, instance and Kernel
+journey is in scope. Browser/network integration tests require an environment
+that permits Chromium and local listeners.
 
 The fresh-install Kernel smoke test additionally requires Docker Compose. It is
 opt-in locally and runs for every pull request, every push to `master`, every
@@ -80,8 +83,9 @@ night and on demand through the dedicated GitHub Actions workflow.
 exports, exported types or package dependencies. Public exports can be
 intentional; confirm their package contract before removing them.
 
-For code changes, capture `check:all` before and after the work in the same
-workspace. Address introduced errors and inspect new warnings in scope.
+For code changes, capture `check:all` before the work and run `verify` after it
+in the same workspace. Address introduced errors and inspect new warnings in
+scope.
 Documentation-only changes normally need a diff whitespace check and validation
 of moved links; check executable examples when their behavior changes.
 

@@ -16,6 +16,8 @@
         "ulvia": "bun run packages/runtimes/ulvia-cli/src/index.ts",
         "build": "bun run build.ts",
         "check:all": "bun run quality/ci/check-all.ts",
+        "verify": "bun run check:all && bun test",
+        "verify:full": "bun run verify && bun run test:kernel-smoke",
         "check:architecture": "bun run quality/architecture/check.ts",
         "check:dead-code": "bun run quality/dead-code/check.ts",
         "check:directory-fanout": "bun run quality/ci/repository-shape/directory-fanout/check.ts",
