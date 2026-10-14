@@ -48,11 +48,8 @@ function normalizeJsonValue(value: unknown, depth: number, ancestors: Set<object
         }
         const object: Record<string, CmsJsonValue> = {};
         for (const [key, item] of Object.entries(value)) {
-            if (FORBIDDEN_KEYS.has(key)) {
+            if (FORBIDDEN_KEYS.has(key) || item === undefined) {
                 return undefined;
-            }
-            if (item === undefined) {
-                continue;
             }
             const normalized = normalizeJsonValue(item, depth + 1, ancestors);
             if (normalized === undefined) {

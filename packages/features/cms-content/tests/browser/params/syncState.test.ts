@@ -47,9 +47,20 @@ describe("synchronized state", () => {
 
     test("rejects non-JSON values in every structured scope", () => {
         expect(() => writeSyncValue(page, new Date())).toThrow("finite, acyclic JSON value");
+        expect(() => writeSyncValue(page, { missing: undefined })).toThrow("finite, acyclic JSON value");
         const cyclic: Record<string, unknown> = {};
         cyclic.self = cyclic;
         expect(() => writeSyncValue(session, cyclic)).toThrow("finite, acyclic JSON value");
+    });
+
+    test("discards invalid values injected directly into browser storage", () => {
+        localStorage.setItem(
+            "cms-sync:v1:persistent:ulvia-official-preferences",
+            '{"version":1,"value":{"__proto__":{"polluted":true}}}',
+        );
+
+        expect(readSyncValue(persistent)).toBeUndefined();
+        expect(localStorage.getItem("cms-sync:v1:persistent:ulvia-official-preferences")).toBeNull();
     });
 
     test("writes scalar URL parameters and notifies only matching subscribers", () => {

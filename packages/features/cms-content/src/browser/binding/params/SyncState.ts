@@ -209,7 +209,12 @@ function parseStoredValue(value: string | null): StoredValue | null {
         ) {
             return null;
         }
-        return parsed as StoredValue;
+        const normalized = parseJsonValue(serializeJsonValue(record.value));
+        return {
+            version: 1,
+            value: normalized,
+            ...(record.expiresAt === undefined ? {} : { expiresAt: record.expiresAt }),
+        };
     } catch {
         return null;
     }

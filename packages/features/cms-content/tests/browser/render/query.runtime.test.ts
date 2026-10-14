@@ -237,6 +237,44 @@ test("a remote query ignores state changes outside its selected path", async () 
     writeSyncValue(target, undefined);
 });
 
+test("a remote query restarts after its input changes away and back while in flight", async () => {
+    const target = { scope: "page", key: "ulvia-official-fast-filter" } as const;
+    writeSyncValue(target, "draft");
+    const host = el(`<section
+        cms-query="catalog.items:list as products"
+        cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-fast-filter"}}'
+    ></section>`);
+    document.body.appendChild(host);
+    const inputs: unknown[] = [];
+    let releaseFirst!: () => void;
+    const firstRequest = new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+    });
+    const query = new Query(
+        host,
+        {},
+        {
+            request: async (_url, _signal, init) => {
+                inputs.push(JSON.parse(String(init?.body)));
+                if (inputs.length === 1) {
+                    await firstRequest;
+                }
+                return { kind: "success", data: [] };
+            },
+        },
+    );
+
+    query.start();
+    await waitFor(() => inputs.length === 1);
+    writeSyncValue(target, "published");
+    writeSyncValue(target, "draft");
+    releaseFirst();
+    await waitFor(() => inputs.length === 2);
+    expect(inputs).toEqual([{ status: "draft" }, { status: "draft" }]);
+    query.dispose();
+    writeSyncValue(target, undefined);
+});
+
 test("a synchronized-state query consumes the producer snapshot without HTTP", () => {
     const target = { scope: "page", key: "ulvia-official-shared-products" } as const;
     const host = el(`<section cms-query="@page:ulvia-official-shared-products as products">

@@ -105,6 +105,7 @@ export class Query {
         if (this.pending) {
             this.queuedForce ||= !options.onlyIfInputChanged;
             if (options.onlyIfInputChanged && this.requestIdentity() !== this.activeIdentity) {
+                this.lastInputIdentity = null;
                 this.abort?.abort();
             }
             this.queued ??= this.pending.then(() => {
