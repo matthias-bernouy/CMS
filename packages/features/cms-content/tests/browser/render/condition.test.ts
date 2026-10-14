@@ -28,6 +28,8 @@ describe("cms-condition evaluator", () => {
         expect(evaluateCondition('plan.status === "active" && plan.price > 0', scope)).toBe(true);
         expect(evaluateCondition("plan.status !== 'draft' && items.length >= 2", scope)).toBe(true);
         expect(evaluateCondition("plan.stock === 0 || $sources.products.error", scope)).toBe(true);
+        expect(evaluateCondition("plan.visible || (plan.archived && plan.price < 0)", scope)).toBe(true);
+        expect(evaluateCondition("(plan.visible || plan.archived) && plan.price > 0", scope)).toBe(true);
         expect(evaluateCondition("plan.price < 10", scope)).toBe(false);
     });
 
@@ -43,7 +45,7 @@ describe("cms-condition evaluator", () => {
             warnings.push(args);
         };
         try {
-            const condition = compileCondition("(plan.visible)");
+            const condition = compileCondition("(plan.visible");
             expect(condition.valid).toBe(false);
             expect(condition.evaluate(scope)).toBe(false);
             expect(condition.evaluate(scope)).toBe(false);

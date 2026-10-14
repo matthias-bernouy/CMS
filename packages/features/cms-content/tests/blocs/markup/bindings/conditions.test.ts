@@ -32,6 +32,10 @@ describe("binding conditions", () => {
         expect(parseCondition("   ")).toBeNull();
         expect(parseCondition("plan.status == 'active'")).toBeNull();
         expect(parseCondition("plan.status != 'draft'")).toBeNull();
+        expect(parseCondition("plan.ready || (plan.selected && plan.available)")).toBe(
+            "plan.ready || (plan.selected && plan.available)",
+        );
+        expect(parseCondition("plan.ready || (plan.selected && plan.available")).toBeNull();
     });
 
     test("formats field condition expressions", () => {

@@ -64,6 +64,13 @@ class Parser {
         if (token.kind === "path") {
             return this.parsePath(token.value);
         }
+        if (token.kind === "punctuation" && token.value === "(") {
+            const node = this.parseOr();
+            if (!this.punctuation(")")) {
+                throw new Error("expected closing parenthesis");
+            }
+            return node;
+        }
         if (token.kind === "end") {
             throw new Error("unexpected end of expression");
         }
