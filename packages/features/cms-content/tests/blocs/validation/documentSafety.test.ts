@@ -57,6 +57,21 @@ describe("Bloc document budgets", () => {
         ).toThrow("must be unique");
     });
 
+    test("enforces the structural cms-match and cms-case grammar", () => {
+        expect(() =>
+            fixed(
+                `<section cms-match="status"><p cms-case="'ready'">Ready</p><p cms-case="'failed'">Failed</p></section>`,
+            ),
+        ).not.toThrow();
+        expect(() => fixed(`<section><p cms-case="'ready'">Ready</p></section>`)).toThrow("direct child of cms-match");
+        expect(() => fixed(`<section cms-match="status"><p>Missing case</p></section>`)).toThrow(
+            "must each declare cms-case",
+        );
+        expect(() =>
+            fixed(`<section cms-match="status"><p cms-case="'ready'">One</p><p cms-case="'ready'">Two</p></section>`),
+        ).toThrow("duplicate case");
+    });
+
     test("bounds component runtime and retained source bundles", () => {
         expect(() =>
             validateBlocWrite({

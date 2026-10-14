@@ -1,6 +1,6 @@
 import type { FilterMap } from "../core/interpolate";
 import type { LiveBindingSite } from "./MountedRegion";
-import { AttributeSite, ConditionSite, RawHtmlSite, RepeatSite, TextSite } from "./templateSites";
+import { AttributeSite, ConditionSite, MatchSite, RawHtmlSite, RepeatSite, TextSite } from "./templateSites";
 import type { CompilePlan, NodePath } from "./templatePlan";
 
 export function instantiateSites(root: Node, plan: CompilePlan, filters: FilterMap): LiveBindingSite[] {
@@ -12,6 +12,7 @@ export function instantiateSites(root: Node, plan: CompilePlan, filters: FilterM
     const conditionTargets = plan.conditions.map((item) => ({ item, node: nodeAtPath(root, item.path) }));
     const repeatTargets = plan.repeats.map((item) => ({ item, node: nodeAtPath(root, item.path) }));
     const rawHtmlTargets = plan.rawHtml.map((item) => ({ item, node: nodeAtPath(root, item.path) }));
+    const matchTargets = plan.matches.map((item) => ({ item, node: nodeAtPath(root, item.path) }));
 
     for (const { item: text, node } of textTargets) {
         if (node.nodeType !== Node.TEXT_NODE) {
@@ -49,6 +50,12 @@ export function instantiateSites(root: Node, plan: CompilePlan, filters: FilterM
     for (const { item: rawHtml, node } of rawHtmlTargets) {
         const range = replaceWithAnchors(node, `cms-html ${rawHtml.expression}`);
         sites.push(new RawHtmlSite(range.start, range.end, rawHtml.expression));
+    }
+    for (const { item: match, node } of matchTargets) {
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+            throw new Error("Compiled CMS match no longer points to an element.");
+        }
+        sites.push(new MatchSite(node as Element, match.expression, match.cases));
     }
     // Native selects receive their value after repeated/conditional options are mounted.
     return [...sites, ...controlSites];

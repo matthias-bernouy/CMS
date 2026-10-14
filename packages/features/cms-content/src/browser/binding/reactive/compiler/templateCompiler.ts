@@ -3,7 +3,7 @@ import type { FilterMap } from "../../core/interpolate";
 import { bindingOwnedBySubmitSource, pathOwnedBySubmitSource, submitBoundary } from "./submitOwnership";
 import { compileAttributes, rawHtmlExpression } from "./templateBindings";
 import type { CompileOptions, CompilePlan, NodePath, SubmitSourceBoundary, TemplateFactory } from "../templatePlan";
-import { compileConditional, compileRepeat } from "./templateStructures";
+import { compileConditional, compileMatch, compileRepeat } from "./templateStructures";
 
 export function compileTemplatePlan(
     fragment: DocumentFragment,
@@ -11,7 +11,7 @@ export function compileTemplatePlan(
     options: CompileOptions,
     createTemplate: TemplateFactory,
 ): CompilePlan {
-    const plan: CompilePlan = { text: [], attributes: [], conditions: [], repeats: [], rawHtml: [] };
+    const plan: CompilePlan = { text: [], attributes: [], conditions: [], repeats: [], rawHtml: [], matches: [] };
     Array.from(fragment.childNodes).forEach((child, index) => {
         compileNode(
             child,
@@ -53,6 +53,9 @@ function compileNode(
         return;
     }
     if (compileConditional(element, path, options, plan, filters, createTemplate)) {
+        return;
+    }
+    if (compileMatch(element, path, plan, filters, createTemplate)) {
         return;
     }
 

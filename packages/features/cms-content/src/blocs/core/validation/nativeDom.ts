@@ -5,7 +5,7 @@ import {
     type NativePolicyElement,
 } from "cms-content/blocs/core/markup/validation/nativeElementPolicy";
 import { isNativeHtmlTag, isPlatformNativeContentTag } from "cms-content/blocs/core/validation/nativeHtml";
-import { CMS_BINDING_CORE_TAG } from "cms-content/blocs/core/markup/bindings";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, parseCase } from "cms-content/blocs/core/markup/bindings";
 
 type NativePolicyRoot = { readonly children: ArrayLike<NativePolicyElement> };
 
@@ -26,6 +26,7 @@ export function nativeDomTreeIssue(root: NativePolicyRoot, options: NativeDomPol
     for (const element of Array.from(root.children)) {
         const issue = elementIssue(
             element,
+            undefined,
             options.rootParentTag,
             options.rootIsComponentChild === true,
             true,
@@ -40,12 +41,17 @@ export function nativeDomTreeIssue(root: NativePolicyRoot, options: NativeDomPol
 
 function elementIssue(
     element: NativePolicyElement,
+    parent: NativePolicyElement | undefined,
     parentTag: string | undefined,
     componentOwned: boolean,
     rootElement: boolean,
     options: NativeDomPolicyOptions,
 ): string | null {
     const tag = element.localName.toLowerCase();
+    const bindingStructureIssue = bindingTreeIssue(element, parent);
+    if (bindingStructureIssue) {
+        return bindingStructureIssue;
+    }
     const custom = isValidCustomElementTag(tag);
     if (tag === "slot" && options.allowTemplateSlots) {
         const slotIssue = templateSlotIssue(element);
@@ -53,7 +59,7 @@ function elementIssue(
             return slotIssue;
         }
         for (const child of Array.from(element.children)) {
-            const issue = elementIssue(child, tag, true, false, options);
+            const issue = elementIssue(child, element, tag, true, false, options);
             if (issue) {
                 return `<slot> contains invalid fallback content: ${issue}`;
             }
@@ -105,12 +111,42 @@ function elementIssue(
 
     const ownsChildren = componentOwned || (custom && tag !== CMS_BINDING_CORE_TAG);
     for (const child of Array.from(element.children)) {
-        const issue = elementIssue(child, tag, ownsChildren, false, options);
+        const issue = elementIssue(child, element, tag, ownsChildren, false, options);
         if (issue) {
             return `<${tag}> contains invalid content: ${issue}`;
         }
     }
     return null;
+}
+
+function bindingTreeIssue(element: NativePolicyElement, parent: NativePolicyElement | undefined): string | null {
+    const ownsMatch = element.getAttribute(CMS_BINDING_ATTRIBUTES.match) !== null;
+    const isCase = element.getAttribute(CMS_BINDING_ATTRIBUTES.case) !== null;
+    if (isCase && (!parent || parent.getAttribute(CMS_BINDING_ATTRIBUTES.match) === null)) {
+        return "cms-case must be a direct child of cms-match";
+    }
+    if (!ownsMatch) {
+        return null;
+    }
+    if (element.children.length === 0) {
+        return "cms-match requires at least one cms-case child";
+    }
+    const cases = new Set<string>();
+    for (const child of Array.from(element.children)) {
+        if (child.getAttribute(CMS_BINDING_ATTRIBUTES.case) === null) {
+            return "cms-match element children must each declare cms-case";
+        }
+        const value = parseCase(child.getAttribute(CMS_BINDING_ATTRIBUTES.case) ?? "");
+        const key = `${typeof value}:${String(value)}`;
+        if (cases.has(key)) {
+            return `cms-match cannot declare duplicate case ${JSON.stringify(value)}`;
+        }
+        cases.add(key);
+    }
+    const authoredText = Array.from(element.childNodes).some(
+        (child) => child.nodeType === 3 && Boolean(child.textContent?.trim()),
+    );
+    return authoredText ? "cms-match cannot contain direct authored text outside cms-case" : null;
 }
 
 function templateSlotIssue(element: NativePolicyElement): string | null {

@@ -1,6 +1,8 @@
-import { CONDITION_ATTR, REPEAT_ATTR } from "../../core/attrs";
+import { CASE_ATTR, CONDITION_ATTR, MATCH_ATTR, REPEAT_ATTR } from "../../core/attrs";
+import { parseCase } from "cms-content/blocs/core/markup/bindings";
 import type { FilterMap } from "../../core/interpolate";
 import { compileCondition } from "../../render/condition";
+import { compileExpression } from "../../render/expression";
 import { parseRepeat } from "../../render/repeat";
 import { conditionOwnedBySubmitSource, pathOwnedBySubmitSource } from "./submitOwnership";
 import type { CompilePlan, MountableTemplate, NodePath, SubmitSourceBoundary, TemplateFactory } from "../templatePlan";
@@ -59,6 +61,35 @@ export function compileConditional(
             removeCondition: !!options.submitBoundary,
             submitBoundary: options.submitBoundary,
         }),
+    });
+    return true;
+}
+
+export function compileMatch(
+    element: Element,
+    path: NodePath,
+    plan: CompilePlan,
+    filters: FilterMap,
+    createTemplate: TemplateFactory,
+): boolean {
+    if (!element.hasAttribute(MATCH_ATTR)) {
+        return false;
+    }
+    const cases = Array.from(element.children, (child) => {
+        const value = parseCase(child.getAttribute(CASE_ATTR) ?? "");
+        if (value === undefined) {
+            throw new TypeError("Invalid cms-case binding");
+        }
+        const fragment = (element.ownerDocument ?? document).createDocumentFragment();
+        const clone = child.cloneNode(true) as Element;
+        clone.removeAttribute(CASE_ATTR);
+        fragment.appendChild(clone);
+        return { value, template: createTemplate(fragment, filters) };
+    });
+    plan.matches.push({
+        path,
+        expression: compileExpression(element.getAttribute(MATCH_ATTR) ?? "", filters),
+        cases,
     });
     return true;
 }

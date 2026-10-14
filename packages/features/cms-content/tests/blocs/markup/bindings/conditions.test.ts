@@ -14,6 +14,8 @@ import {
     isCmsSourceState,
     isCmsSourceTrigger,
     parseCondition,
+    parseCase,
+    parseMatch,
     parseSourceStatusCondition,
     parseSourceStatusConditionDetails,
     parseSourceStatusConditions,
@@ -33,6 +35,16 @@ describe("binding conditions", () => {
             "plan.ready || (plan.selected && plan.available)",
         );
         expect(parseCondition("plan.ready || (plan.selected && plan.available")).toBeNull();
+    });
+
+    test("parses generic matches and literal cases", () => {
+        expect(parseMatch(" page.outcome.kind ")).toBe("page.outcome.kind");
+        expect(parseMatch("page.outcome.kind === 'success'")).toBe("page.outcome.kind === 'success'");
+        expect(parseCase("'success'")).toBe("success");
+        expect(parseCase("42")).toBe(42);
+        expect(parseCase("false")).toBe(false);
+        expect(parseCase("null")).toBeNull();
+        expect(parseCase("page.outcome.kind")).toBeUndefined();
     });
 
     test("formats field condition expressions", () => {
@@ -81,6 +93,8 @@ describe("binding conditions", () => {
         expect(CMS_BINDING_CORE_TAG).toBe("cms-binding-core");
         expect(CMS_BINDING_ATTRIBUTES).toEqual({
             condition: "cms-condition",
+            match: "cms-match",
+            case: "cms-case",
             formValueType: "cms-form-value-type",
             formEmpty: "cms-form-empty",
             query: "cms-query",

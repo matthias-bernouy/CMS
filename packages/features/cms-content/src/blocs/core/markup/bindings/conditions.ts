@@ -1,7 +1,9 @@
 import type {
+    CmsCaseValue,
     CmsConditionExpression,
     CmsConditionFieldOperator,
     CmsConditionLiteral,
+    CmsMatchExpression,
 } from "cms-content/blocs/core/markup/bindings/types";
 import { parseBindingExpression } from "cms-content/blocs/core/markup/expression/parser";
 
@@ -19,6 +21,23 @@ export function parseCondition(value: string): CmsConditionExpression | null {
         return expression;
     } catch {
         return null;
+    }
+}
+
+export function parseMatch(value: string): CmsMatchExpression | null {
+    return parseCondition(value);
+}
+
+export function parseCase(value: string): CmsCaseValue | null | undefined {
+    const expression = value.trim();
+    if (!expression) {
+        return undefined;
+    }
+    try {
+        const node = parseBindingExpression(expression);
+        return node.kind === "literal" ? node.value : undefined;
+    } catch {
+        return undefined;
     }
 }
 

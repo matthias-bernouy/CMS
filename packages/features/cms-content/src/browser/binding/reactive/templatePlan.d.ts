@@ -1,6 +1,7 @@
 import type { FilterMap } from "../core/interpolate";
 import type { Scope } from "../core/scope";
 import type { CompiledCondition } from "../render/condition";
+import type { CompiledExpression } from "../render/expression";
 import type { RepeatSpec } from "../render/repeat";
 import type { MountedRegion } from "./MountedRegion";
 
@@ -31,6 +32,11 @@ export type RepeatPlan = {
     rootCondition: CompiledCondition | null;
 };
 export type RawHtmlPlan = { path: NodePath; expression: string };
+export type MatchPlan = {
+    path: NodePath;
+    expression: CompiledExpression;
+    cases: readonly { value: string | number | boolean | null; template: MountableTemplate }[];
+};
 
 export type CompilePlan = {
     text: TextPlan[];
@@ -38,6 +44,7 @@ export type CompilePlan = {
     conditions: ConditionPlan[];
     repeats: RepeatPlan[];
     rawHtml: RawHtmlPlan[];
+    matches: MatchPlan[];
 };
 
 export type CompileOptions = {

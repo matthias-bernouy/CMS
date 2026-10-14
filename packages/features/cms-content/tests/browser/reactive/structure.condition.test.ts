@@ -45,3 +45,40 @@ describe("CompiledTemplate — cms-condition", () => {
         expect(text(host.querySelector("p"))).toBe("Hello Lin");
     });
 });
+
+describe("CompiledTemplate — cms-match", () => {
+    test("mounts exactly one literal case and updates the active branch", () => {
+        const { host, region } = mount(
+            `<section cms-match="status">
+                <p cms-case="'idle'">Idle</p>
+                <p cms-case="'ready'">Ready {{ name }}</p>
+                <p cms-case="'failed'">Failed</p>
+            </section>`,
+            { status: "idle", name: "Initial" },
+        );
+        expect(text(host.querySelector("p"))).toBe("Idle");
+        expect(host.querySelector("[cms-case]")).toBeNull();
+        region.update({ value: { status: "ready", name: "Ada" } });
+        expect(text(host.querySelector("p"))).toBe("Ready Ada");
+        region.update({ value: { status: "unknown", name: "Nobody" } });
+        expect(host.querySelector("p")).toBeNull();
+    });
+
+    test("supports nested matches with independently narrowed values", () => {
+        const { host, region } = mount(
+            `<div cms-match="outcome.kind">
+                <article cms-case="'success'">{{ data.title }}</article>
+                <section cms-case="'error'" cms-match="outcome.code">
+                    <p cms-case="'NOT_FOUND'">Missing</p>
+                    <p cms-case="'FORBIDDEN'">Forbidden</p>
+                </section>
+            </div>`,
+            { outcome: { kind: "error", code: "NOT_FOUND" }, data: null },
+        );
+        expect(text(host.querySelector("p"))).toBe("Missing");
+        region.update({ value: { outcome: { kind: "error", code: "FORBIDDEN" }, data: null } });
+        expect(text(host.querySelector("p"))).toBe("Forbidden");
+        region.update({ value: { outcome: { kind: "success" }, data: { title: "Published" } } });
+        expect(text(host.querySelector("article"))).toBe("Published");
+    });
+});

@@ -11,6 +11,8 @@ import {
     isCmsFormEmptyBehavior,
     isCmsSourceTrigger,
     parseCondition,
+    parseCase,
+    parseMatch,
     parseQuery,
     parseQueries,
     parseQueryListen,
@@ -26,7 +28,6 @@ const SOURCE_ID = /^[A-Za-z_$][\w$-]*$/;
 
 const BINDING_ATTRIBUTE_SET = new Set<string>(Object.values(CMS_BINDING_ATTRIBUTES));
 const FORM_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE"]);
-const QUERY_RENDERER_FORBIDDEN_TAGS = new Set([...HTML_VOID_ELEMENT_TAGS, "svg"]);
 
 export function isCmsBindingAttribute(attribute: string): boolean {
     return BINDING_ATTRIBUTE_SET.has(attribute.toLowerCase());
@@ -39,6 +40,12 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     }
     if (name === CMS_BINDING_ATTRIBUTES.condition) {
         return parseCondition(value) ? null : "CMS condition must not be empty";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.match) {
+        return parseMatch(value) ? null : "CMS match must contain a valid expression";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.case) {
+        return parseCase(value) !== undefined ? null : "CMS case must contain one literal value";
     }
     if (name === CMS_BINDING_ATTRIBUTES.repeat) {
         return parseRepeat(value) ? null : "CMS repeat binding must not be empty";
@@ -120,13 +127,24 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     const queries = attributes[CMS_BINDING_ATTRIBUTES.queries];
     const source = attributes[CMS_BINDING_ATTRIBUTES.source];
     const sync = attributes[CMS_BINDING_ATTRIBUTES.sync];
+    const match = attributes[CMS_BINDING_ATTRIBUTES.match];
+    const caseValue = attributes[CMS_BINDING_ATTRIBUTES.case];
+    if (match !== undefined && caseValue !== undefined) {
+        return "CMS match and CMS case cannot coexist on the same element";
+    }
+    if (match !== undefined && isQueryRendererForbiddenTag(tag)) {
+        return `CMS matches require an element that can contain rendered cases; native <${tag}> cannot own a match`;
+    }
+    if (match !== undefined && (query !== undefined || queries !== undefined || source !== undefined)) {
+        return "CMS match must be nested inside query or source content, not declared on the binding owner";
+    }
     if (query !== undefined && tag === "form") {
         return "CMS queries cannot be declared on forms";
     }
     if (queries !== undefined && tag === "form") {
         return "CMS query imports cannot be declared on forms";
     }
-    if ((query !== undefined || queries !== undefined) && QUERY_RENDERER_FORBIDDEN_TAGS.has(tag)) {
+    if ((query !== undefined || queries !== undefined) && isQueryRendererForbiddenTag(tag)) {
         return `CMS queries require an element that can contain rendered content; native <${tag}> cannot own a query renderer`;
     }
     if (query !== undefined && source !== undefined) {
@@ -221,6 +239,10 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
         }
     }
     return null;
+}
+
+function isQueryRendererForbiddenTag(tag: string): boolean {
+    return tag === "svg" || HTML_VOID_ELEMENT_TAGS.has(tag);
 }
 
 export function nativeFormBindingIssue(attributes: Readonly<Record<string, string>>): string | null {

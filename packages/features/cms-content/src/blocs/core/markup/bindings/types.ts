@@ -2,6 +2,8 @@ export const CMS_BINDING_CORE_TAG = "cms-binding-core";
 
 export const CMS_BINDING_ATTRIBUTES = {
     condition: "cms-condition",
+    match: "cms-match",
+    case: "cms-case",
     formValueType: "cms-form-value-type",
     formEmpty: "cms-form-empty",
     sync: "cms-sync",
@@ -63,6 +65,8 @@ export type CmsSourceBinding = { url: string; alias?: string };
 export type CmsSourceBodyBinding = CmsBindingInputMap;
 export type CmsSourceUrl = string;
 export type CmsConditionExpression = string;
+export type CmsMatchExpression = string;
+export type CmsCaseValue = string | number | boolean | null;
 export type CmsConditionLiteral = string | number | boolean | null;
 export type CmsConditionFieldOperator = (typeof CMS_CONDITION_FIELD_OPERATORS)[number];
 export type CmsRepeatBinding = { path: string; alias?: string };

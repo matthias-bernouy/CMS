@@ -129,6 +129,49 @@ export class ConditionSite implements LiveBindingSite {
     }
 }
 
+export class MatchSite implements LiveBindingSite {
+    private readonly start: Comment;
+    private readonly end: Comment;
+    private child: MountedRegion | null = null;
+    private active = -1;
+
+    constructor(
+        element: Element,
+        private readonly expression: CompiledExpression,
+        private readonly cases: readonly {
+            value: string | number | boolean | null;
+            template: MountableTemplate;
+        }[],
+    ) {
+        const doc = element.ownerDocument ?? document;
+        this.start = doc.createComment("cms-match start");
+        this.end = doc.createComment("cms-match end");
+        element.replaceChildren(this.start, this.end);
+    }
+
+    update(scope: Scope): void {
+        const value = this.expression.evaluate(scope);
+        const next = this.cases.findIndex((entry) => Object.is(entry.value, value));
+        if (next === this.active && this.child) {
+            this.child.update(scope);
+            return;
+        }
+        this.unmount();
+        this.active = next;
+        const parent = this.end.parentNode;
+        if (next >= 0 && parent) {
+            this.child = this.cases[next]!.template.mount(parent, scope, this.end);
+        }
+    }
+
+    unmount(): void {
+        this.child?.unmount();
+        this.child = null;
+        this.active = -1;
+        clearBetween(this.start, this.end);
+    }
+}
+
 export class RepeatSite implements LiveBindingSite {
     private regions: MountedRegion[] = [];
     private entries: unknown[] = [];
