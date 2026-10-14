@@ -92,6 +92,9 @@ export class ProviderKernelClient {
             request,
         );
 
+    declarativeQuery = (request: Request): Promise<Response> =>
+        this.forward(`/ulvia/kernel/v1/queries${new URL(request.url).pathname.slice("/.cms/query".length)}`, request);
+
     collectionAsset = (request: Request): Promise<Response> =>
         this.forward(
             `/ulvia/kernel/v1/collections${new URL(request.url).pathname.slice("/.cms/collections".length)}${new URL(request.url).search}`,

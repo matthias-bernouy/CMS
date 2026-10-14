@@ -112,3 +112,37 @@ test("Page calls activate the complete exact plan of the same-origin referring P
         },
     ]);
 });
+
+test("Page execution resolves logical cms-query targets without provider HTTP routes", async () => {
+    const service = new PageExecutionService({
+        siteId: "site-a",
+        content: { getRenderablePage: async () => null },
+        invoker: {
+            resolveHttp: async () => {
+                throw new Error("logical queries must not resolve an HTTP route");
+            },
+        },
+        authority: {
+            activate: async () => ({}) as never,
+            authorize: async () => ({}) as never,
+        },
+        resolveCapability: async (contractId, capabilityId) =>
+            contractId === "catalog.items" && capabilityId === "list"
+                ? { access: "authenticated", version: "3.2.1" }
+                : null,
+    });
+    const selected = {
+        page: {
+            ...page,
+            content: '<section cms-query="catalog.items:list as products"></section>',
+        },
+        requirements: [],
+    };
+
+    expect(await service.requiredAccess(selected, new URL("https://example.test/products"), "/.cms/call")).toBe(
+        "authenticated",
+    );
+    expect(await service.resolveRequirements(selected, new URL("https://example.test/products"), "/.cms/call")).toEqual(
+        [{ contractId: "catalog.items", capabilityId: "list", versionRange: "=3.2.1" }],
+    );
+});

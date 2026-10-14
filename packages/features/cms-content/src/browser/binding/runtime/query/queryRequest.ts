@@ -31,11 +31,17 @@ export function queryRequest(element: Element): QueryRequest {
     if (input !== null && !parseQueryInput(input)) {
         throw new TypeError("Invalid cms-query-input binding.");
     }
+    if (input === null) {
+        return {
+            url: `/.cms/query/${binding.contractId}/${binding.capabilityId}`,
+            init: { method: "GET" },
+        };
+    }
     const body = resolveSourceBodyFields(input, element.ownerDocument) ?? {};
     return {
-        url: `/.cms/call/${binding.contractId}/${binding.capabilityId}`,
+        url: `/.cms/query/${binding.contractId}/${binding.capabilityId}`,
         init: {
-            method: "POST",
+            method: "QUERY",
             headers: { "content-type": "application/json" },
             body: JSON.stringify(body),
         },

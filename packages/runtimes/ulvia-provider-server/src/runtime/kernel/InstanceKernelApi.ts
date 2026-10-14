@@ -2,7 +2,7 @@ import type { Subject } from "@bernouy/cms-auth";
 import { localLoginHandler, localLogoutHandler } from "@bernouy/cms-auth/http";
 import { createContentReader, type ContentReader } from "@bernouy/cms-content/rendering";
 import { PageExecutionService } from "@bernouy/cms-gateway/execution";
-import { createCapabilityHttpHandler } from "@bernouy/cms-gateway/http/handlers";
+import { createCapabilityHttpHandler, createCapabilityQueryHandler } from "@bernouy/cms-gateway/http/handlers";
 import { serveInstalledCollectionAsset } from "@bernouy/cms-repository/collections/http";
 import { createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-seo/http";
 import type { KernelInstanceApi, KernelProviderQuery } from "@bernouy/ulvia-provider/kernel";
@@ -34,12 +34,22 @@ export async function createInstanceKernelApi(
         resolveActor: async (request) =>
             resolveActor(request, (await getAuthentication()).auth, gateway.isAdministrator),
     });
+    const query = createCapabilityQueryHandler({
+        siteId: gateway.siteId,
+        basePath: "",
+        invoker: gateway.invoker,
+        pageExecution,
+        resolveCapability: gateway.resolvePageCapability,
+        resolveActor: async (request) =>
+            resolveActor(request, (await getAuthentication()).auth, gateway.isAdministrator),
+    });
     const sitemap = createSitemapHandler({ content, store: stores.sitemapStore, isReservedPath: isReservedPath });
     const sitemapChunk = createSitemapChunkHandler({ store: stores.sitemapStore, basePath: "" });
     return {
         query: (query) => executeQuery(query, content, getAuthentication, stores, gateway, pageExecution),
         handleAuth: async (action, request) => handleAuth(action, request, await getAuthentication()),
         handleCapability: (request) => capability(rewritePath(request, "/ulvia/kernel/v1/call", "/.cms/call")),
+        handleQuery: (request) => query(rewritePath(request, "/ulvia/kernel/v1/queries", "/.cms/query")),
         handleCollectionAsset: (request) =>
             serveInstalledCollectionAsset(
                 rewritePath(request, "/ulvia/kernel/v1/collections", "/.cms/collections"),

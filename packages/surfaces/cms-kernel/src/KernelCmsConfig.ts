@@ -36,9 +36,14 @@ export type KernelCmsConfig = {
         readonly invoker: GatewayInvoker;
         readonly isAdministrator: (subject: Subject) => Promise<boolean>;
         readonly authenticateProvider?: (token: string) => Promise<string | null>;
+        readonly resolveCapability?: (
+            contractId: string,
+            capabilityId: string,
+        ) => Promise<{ readonly effect: "query" | "command"; readonly outputType: string } | null>;
     };
     pageExecution?: PageExecutionService | PageExecutionHttpPort;
     capabilityHandler?: (request: Request) => Promise<Response>;
+    queryHandler?: (request: Request) => Promise<Response>;
     collectionAssetHandler?: (request: Request) => Promise<Response>;
     sitemapHandler?: (request: Request) => Promise<Response>;
     sitemapChunkHandler?: (request: Request) => Promise<Response>;

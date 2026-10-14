@@ -19,6 +19,7 @@ export default class KernelCms {
     readonly capabilityGateway;
     readonly pageExecution;
     readonly capabilityHandler;
+    readonly queryHandler;
     readonly collectionAssetHandler;
     readonly sitemapHandler;
     readonly sitemapChunkHandler;
@@ -40,6 +41,7 @@ export default class KernelCms {
         this.capabilityGateway = config.capabilityGateway;
         this.pageExecution = config.pageExecution;
         this.capabilityHandler = config.capabilityHandler;
+        this.queryHandler = config.queryHandler;
         this.collectionAssetHandler = config.collectionAssetHandler;
         this.sitemapHandler = config.sitemapHandler;
         this.sitemapChunkHandler = config.sitemapChunkHandler;

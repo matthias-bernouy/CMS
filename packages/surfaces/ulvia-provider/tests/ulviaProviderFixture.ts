@@ -56,6 +56,7 @@ function kernelApi(overrides: Partial<KernelInstanceApi>): KernelInstanceApi {
         query: async () => null,
         handleAuth: async () => new Response(null, { status: 404 }),
         handleCapability: async () => new Response(null, { status: 404 }),
+        handleQuery: async () => new Response(null, { status: 404 }),
         handleCollectionAsset: async () => new Response(null, { status: 404 }),
         handleSitemap: async () => new Response(null, { status: 404 }),
         ...overrides,

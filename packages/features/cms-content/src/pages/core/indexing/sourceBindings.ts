@@ -3,6 +3,7 @@ import {
     CMS_BINDING_ATTRIBUTES,
     isCmsSourceMethod,
     isCmsSourceTrigger,
+    parseQuery,
     parseSource,
     parseSourceBody,
     type CmsSourceBodyBinding,
@@ -17,6 +18,29 @@ export type CmsSourceBindingReference = {
     trigger: CmsSourceTrigger;
     body?: CmsSourceBodyBinding;
 };
+
+export type CmsQueryBindingReference = {
+    contractId: string;
+    capabilityId: string;
+    alias: string;
+};
+
+/** Extract direct logical query targets without resolving any Provider transport binding. */
+export function collectCmsQueryBindings(html: string): CmsQueryBindingReference[] {
+    const { document } = parseHTML(html);
+    const bindings: CmsQueryBindingReference[] = [];
+    for (const element of Array.from(document.querySelectorAll(`[${CMS_BINDING_ATTRIBUTES.query}]`))) {
+        const query = parseQuery(element.getAttribute(CMS_BINDING_ATTRIBUTES.query) ?? "");
+        if (query) {
+            bindings.push({
+                contractId: query.contractId,
+                capabilityId: query.capabilityId,
+                alias: query.name,
+            });
+        }
+    }
+    return bindings;
+}
 
 /**
  * Extract authored `cms-source` references from a stored HTML fragment.

@@ -9,7 +9,12 @@ import {
     servePublishedPageSnapshot,
 } from "@bernouy/cms-content/rendering";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
-import { CMS_CAPABILITY_CALL_ROUTE, createCapabilityHttpHandler } from "@bernouy/cms-gateway/http/handlers";
+import {
+    CMS_CAPABILITY_CALL_ROUTE,
+    CMS_CAPABILITY_QUERY_ROUTE,
+    createCapabilityHttpHandler,
+    createCapabilityQueryHandler,
+} from "@bernouy/cms-gateway/http/handlers";
 import { handlePageRequest } from "cms-kernel/http/pages/handlePageRequest";
 import { FAVICON_ROUTE } from "cms-kernel/http/assets/favicon";
 import { matchRootSitemapChunkPath } from "@bernouy/cms-seo";
@@ -135,6 +140,21 @@ export function mountKernelRoutes(kernel: KernelCms) {
             for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const) {
                 callRunner.setDefaultEndpoint(method, capabilityHandler);
             }
+        });
+    }
+    if (kernel.queryHandler || kernel.capabilityGateway?.resolveCapability) {
+        const queryHandler =
+            kernel.queryHandler ??
+            createCapabilityQueryHandler({
+                ...kernel.capabilityGateway!,
+                resolveCapability: kernel.capabilityGateway!.resolveCapability!,
+                basePath: kernel.basePath,
+                pageExecution: kernel.pageExecution,
+                resolveActor: (request) => resolveRequestActor(kernel, request),
+            });
+        runner.group(CMS_CAPABILITY_QUERY_ROUTE, (queryRunner) => {
+            queryRunner.setDefaultEndpoint("GET", queryHandler);
+            queryRunner.setDefaultEndpoint("QUERY", queryHandler);
         });
     }
 

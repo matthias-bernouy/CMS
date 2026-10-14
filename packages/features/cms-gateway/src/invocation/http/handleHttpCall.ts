@@ -43,7 +43,7 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             ...(binaryBody ? { binaryBody } : {}),
             input,
         });
-        return resultResponse(result, request.method);
+        return gatewayResultResponse(result, request.method);
     } catch (error) {
         const head = request.method === "HEAD";
         if (!(error instanceof GatewayError)) {
@@ -201,7 +201,7 @@ function parseIdempotencyKey(value: string | null): string | undefined {
     return value;
 }
 
-function resultResponse(result: GatewayResult, method: string): Response {
+export function gatewayResultResponse(result: GatewayResult, method: string): Response {
     if (result.kind === "binary") {
         if (method === "HEAD") {
             void result.stream.cancel();

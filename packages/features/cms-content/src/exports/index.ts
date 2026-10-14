@@ -268,7 +268,9 @@ export {
 } from "cms-content/blocs/core/composition/expandCompositions";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 export {
+    collectCmsQueryBindings,
     collectCmsSourceBindings,
+    type CmsQueryBindingReference,
     type CmsSourceBindingReference,
 } from "cms-content/pages/core/indexing/sourceBindings";
 export {

@@ -20,14 +20,14 @@ import type { CmsFilesService } from "@bernouy/cms-files";
 
 const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
-    ["ulvia.cms.access", "overview", "POST", "/overview", {}],
-    ["ulvia.cms.collections", "list", "POST", "/list", {}],
+    ["ulvia.cms.access", "overview", "QUERY", "/overview", {}],
+    ["ulvia.cms.collections", "list", "GET", "/list", undefined],
     ["ulvia.cms.files", "namespace.create", "POST", "/namespaces", { name: "Test", defaultVisibility: "private" }],
-    ["ulvia.cms.jobs", "list", "POST", "/list", {}],
-    ["ulvia.cms.localization", "overview", "POST", "/overview", {}],
-    ["ulvia.cms.pages", "list", "POST", "/list", {}],
-    ["ulvia.cms.providers", "list", "POST", "/list", {}],
-    ["ulvia.cms.theme", "get", "POST", "/get", {}],
+    ["ulvia.cms.jobs", "list", "QUERY", "/list", {}],
+    ["ulvia.cms.localization", "overview", "GET", "/overview", undefined],
+    ["ulvia.cms.pages", "list", "QUERY", "/list", {}],
+    ["ulvia.cms.providers", "list", "GET", "/list", undefined],
+    ["ulvia.cms.theme", "get", "GET", "/get", undefined],
 ] as const;
 
 test("mounts and dispatches every official CMS contract release", async () => {
@@ -57,6 +57,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
             query: async () => null,
             handleAuth: async () => new Response(null, { status: 404 }),
             handleCapability: async () => new Response(null, { status: 404 }),
+            handleQuery: async () => new Response(null, { status: 404 }),
             handleCollectionAsset: async () => new Response(null, { status: 404 }),
             handleSitemap: async () => new Response(null, { status: 404 }),
         },
@@ -83,9 +84,9 @@ test("mounts and dispatches every official CMS contract release", async () => {
             const response = await server.request(method, path, {
                 headers: {
                     ...requestHeaders(requestId, contractId, capabilityId),
-                    "content-type": "application/json",
+                    ...(body === undefined ? {} : { "content-type": "application/json" }),
                 },
-                body: JSON.stringify(body),
+                ...(body === undefined ? {} : { body: JSON.stringify(body) }),
             });
             expect(response.status, `${contractId}/${capabilityId}`).toBe(503);
             expect(await response.json()).toEqual({ error: { code: "CORE_UNAVAILABLE" } });

@@ -66,7 +66,12 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
         const route = await routes.resolve(siteId, contractId);
         const capability = route?.release.admission.release.capabilities.find(({ id }) => id === capabilityId);
         return route && capability
-            ? { access: capability.access, version: route.release.admission.release.version }
+            ? {
+                  access: capability.access,
+                  version: route.release.admission.release.version,
+                  effect: capability.behavior.effect,
+                  outputType: capability.output.type,
+              }
             : null;
     };
 

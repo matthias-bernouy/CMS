@@ -42,6 +42,7 @@ export interface KernelInstanceApi {
     query(query: KernelProviderQuery): Promise<unknown>;
     handleAuth(action: string, request: Request): Promise<Response>;
     handleCapability(request: Request): Promise<Response>;
+    handleQuery(request: Request): Promise<Response>;
     handleCollectionAsset(request: Request): Promise<Response>;
     handleSitemap(request: Request): Promise<Response>;
 }

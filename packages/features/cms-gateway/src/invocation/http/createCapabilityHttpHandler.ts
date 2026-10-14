@@ -2,8 +2,9 @@ import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayActor, GatewayInvoker } from "cms-gateway/invocation/interfaces/Invocation";
 import type { PageCapabilityAccess, PageExecutionPage } from "cms-gateway/execution/core/PageExecutionService";
 import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/PageExecution";
-import { gatewayRoutePrefix, CMS_CAPABILITY_CALL_ROUTE } from "./routes";
-import { handleGatewayHttpCall } from "./handleHttpCall";
+import { gatewayRoutePrefix, CMS_CAPABILITY_CALL_ROUTE, CMS_CAPABILITY_QUERY_ROUTE } from "./routes";
+import { gatewayResultResponse, handleGatewayHttpCall } from "./handleHttpCall";
+import { readGatewayHttpInput } from "./readHttpInput";
 
 export type CapabilityHttpHandlerConfig = {
     siteId: string;
@@ -23,6 +24,13 @@ export interface PageExecutionHttpPort {
         capabilityId: string,
     ): Promise<GatewayExecutionPin>;
 }
+
+export type CapabilityQueryHandlerConfig = Omit<CapabilityHttpHandlerConfig, "authenticateProvider"> & {
+    resolveCapability(
+        contractId: string,
+        capabilityId: string,
+    ): Promise<{ readonly effect: "query" | "command"; readonly outputType: string } | null>;
+};
 
 /** Create the complete provider/page capability HTTP adapter. */
 export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig) {
@@ -66,6 +74,69 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
     };
 }
 
+/** Invoke one logical read capability without exposing its admitted HTTP binding to authored content. */
+export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfig) {
+    return async (request: Request): Promise<Response> => {
+        let actor: GatewayActor = { kind: "anonymous" };
+        try {
+            if (request.method !== "GET" && request.method !== "QUERY") {
+                throw new GatewayError("invalid_route", "query transport accepts GET or QUERY only");
+            }
+            const { contractId, capabilityId } = queryIdentifiers(request, config.basePath);
+            if (!config.pageExecution) {
+                throw new GatewayError("not_authorized", "Page execution is unavailable");
+            }
+            const execution = await config.pageExecution.authorizeCall(
+                request,
+                config.basePath,
+                contractId,
+                capabilityId,
+            );
+            const capability = await config.resolveCapability(contractId, capabilityId);
+            if (!capability) {
+                throw new GatewayError("not_selected", "query capability is not selected");
+            }
+            if (capability.effect !== "query") {
+                throw new GatewayError("invalid_route", "query transport rejects command capabilities");
+            }
+            if (capability.outputType === "binary") {
+                throw new GatewayError("invalid_route", "declarative queries require structured output");
+            }
+            if (request.method === "GET" && request.body) {
+                throw new GatewayError("invalid_input", "GET queries cannot carry a request body");
+            }
+            const input = request.method === "GET" ? {} : await readGatewayHttpInput(request);
+            if (!input || typeof input !== "object" || Array.isArray(input)) {
+                throw new GatewayError("invalid_input", "query input must be a JSON object");
+            }
+            actor = await config.resolveActor(request);
+            const result = await config.invoker.invoke({
+                siteId: config.siteId,
+                contractId,
+                capabilityId,
+                input,
+                origin: "page",
+                actor,
+                execution,
+            });
+            return gatewayResultResponse(result, request.method);
+        } catch (error) {
+            const code = error instanceof GatewayError ? error.code : "internal_error";
+            const status =
+                code === "invalid_input"
+                    ? 400
+                    : code === "not_authorized"
+                      ? actor.kind === "anonymous"
+                          ? 401
+                          : 403
+                      : code === "not_selected" || code === "invalid_route"
+                        ? 404
+                        : 503;
+            return Response.json({ error: { code } }, { status, headers: { "cache-control": "private, no-store" } });
+        }
+    };
+}
+
 async function capabilityIdentifiers(request: Request, config: CapabilityHttpHandlerConfig) {
     const prefix = routePrefix(config.basePath);
     const pathname = new URL(request.url).pathname;
@@ -100,4 +171,30 @@ async function providerInstallation(config: CapabilityHttpHandlerConfig, request
 
 function routePrefix(basePath: string): string {
     return gatewayRoutePrefix(basePath || "/", CMS_CAPABILITY_CALL_ROUTE);
+}
+
+function queryIdentifiers(request: Request, basePath: string): { contractId: string; capabilityId: string } {
+    const prefix = gatewayRoutePrefix(basePath || "/", CMS_CAPABILITY_QUERY_ROUTE);
+    const url = new URL(request.url);
+    const pathname = url.pathname;
+    if (url.search) {
+        throw new GatewayError("invalid_input", "query transport does not accept URL parameters");
+    }
+    if (!pathname.startsWith(`${prefix}/`)) {
+        throw new GatewayError("invalid_route", "query route is invalid");
+    }
+    let identifiers: string[];
+    try {
+        identifiers = pathname
+            .slice(prefix.length + 1)
+            .split("/")
+            .map(decodeURIComponent);
+    } catch {
+        throw new GatewayError("invalid_input", "query identifiers are malformed");
+    }
+    const controlled = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
+    if (identifiers.length !== 2 || identifiers.some((value) => !controlled.test(value))) {
+        throw new GatewayError("invalid_input", "query identifiers are invalid");
+    }
+    return { contractId: identifiers[0]!, capabilityId: identifiers[1]! };
 }

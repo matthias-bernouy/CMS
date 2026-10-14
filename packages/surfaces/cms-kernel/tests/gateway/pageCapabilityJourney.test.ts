@@ -20,7 +20,8 @@ test("a published Page renders and invokes only its exact capability plan", asyn
         group: "catalogue",
         description: "Displays products returned by the catalogue provider.",
         viewJS: "customElements.define('catalog-products', class extends HTMLElement {})",
-        componentHTML: '<section cms-source="/.cms/call/shop/products as products" cms-source-method="POST"></section>',
+        componentHTML:
+            '<section cms-query="shop:list-products as products" cms-query-input=\'{"category":{"from":"raw","value":"shoes"}}\'></section>',
         ownership: { kind: "code-managed" },
         slots: {},
     });
@@ -28,7 +29,7 @@ test("a published Page renders and invokes only its exact capability plan", asyn
     const draft = await repository.getPage("/products");
     const published = await repository.updatePage({ id: draft!.id, visible: true }, draft!.revision);
     repository.getPageRequirements = async () => [
-        { contractId: "shop", capabilityId: "listProducts", versionRange: "=2.3.0" },
+        { contractId: "shop", capabilityId: "list-products", versionRange: "=2.3.0" },
     ];
 
     const activations: Parameters<PageExecutionAuthority["activate"]>[0][] = [];
@@ -42,7 +43,7 @@ test("a published Page renders and invokes only its exact capability plan", asyn
         invoker,
         authority,
         resolveCapability: async (contractId, capabilityId) =>
-            contractId === "shop" && capabilityId === "listProducts" ? { access: "public", version: "2.3.0" } : null,
+            contractId === "shop" && capabilityId === "list-products" ? { access: "public", version: "2.3.0" } : null,
     });
     const runner = new CaptureRunner();
     new KernelCms({
@@ -50,7 +51,12 @@ test("a published Page renders and invokes only its exact capability plan", asyn
         content: createContentReader(repository),
         authentication: new InMemoryAuthentication(),
         cache: new InMemoryCache(),
-        capabilityGateway: { siteId: "site-a", invoker, isAdministrator: async () => false },
+        capabilityGateway: {
+            siteId: "site-a",
+            invoker,
+            isAdministrator: async () => false,
+            resolveCapability: async () => ({ effect: "query", outputType: "object" }),
+        },
         pageExecution,
     });
 
@@ -58,15 +64,15 @@ test("a published Page renders and invokes only its exact capability plan", asyn
     const html = await pageResponse.text();
     expect(pageResponse.status).toBe(200);
     expect(html).toContain("<catalog-products");
-    expect(html).toContain("/.cms/call/shop/products as products");
+    expect(html).toContain("shop:list-products as products");
     expect(html).toContain("/.cms/assets/component.js?v=");
 
     const callResponse = await runner.defaultHandler(
-        "POST",
-        "/.cms/call",
+        "QUERY",
+        "/.cms/query",
     )(
-        new Request("https://site.test/.cms/call/shop/products", {
-            method: "POST",
+        new Request("https://site.test/.cms/query/shop/list-products", {
+            method: "QUERY",
             headers: { "content-type": "application/json", referer: "https://site.test/products" },
             body: '{"category":"shoes"}',
         }),
@@ -76,7 +82,7 @@ test("a published Page renders and invokes only its exact capability plan", asyn
     expect(activations).toEqual([
         {
             consumer: { kind: "site", siteId: "site-a", pageId: published!.id, pageRevision: published!.revision },
-            requirements: [{ contractId: "shop", capabilityId: "listProducts", versionRange: "=2.3.0" }],
+            requirements: [{ contractId: "shop", capabilityId: "list-products", versionRange: "=2.3.0" }],
         },
     ]);
     expect(authorizations).toEqual([
@@ -86,14 +92,14 @@ test("a published Page renders and invokes only its exact capability plan", asyn
             pageId: published!.id,
             pageRevision: published!.revision,
             contractId: "shop",
-            capabilityId: "listProducts",
+            capabilityId: "list-products",
         },
     ]);
     expect(invocations).toEqual([
         {
             siteId: "site-a",
             contractId: "shop",
-            capabilityId: "listProducts",
+            capabilityId: "list-products",
             input: { category: "shoes" },
             origin: "page",
             actor: { kind: "user", subjectId: "dev-user" },
@@ -133,7 +139,7 @@ function catalogueInvoker(invocations: GatewayInvocation[]): GatewayInvoker {
         resolveHttp: async () =>
             ({
                 capability: {
-                    id: "listProducts",
+                    id: "list-products",
                     input: {
                         type: "object",
                         properties: { category: { type: "string", maxLength: 50 } },

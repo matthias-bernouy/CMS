@@ -88,6 +88,8 @@ describe("collection authored bundle admission", () => {
             effect: "query",
             execution: "sync",
         };
+        (((query.capabilities as Record<string, unknown>[])[0]!.binding as Record<string, unknown>).method as string) =
+            "QUERY";
         const source = collectionDocument();
         (source.blocs as Record<string, unknown>[]).push({
             kind: "composition",
@@ -106,6 +108,17 @@ describe("collection authored bundle admission", () => {
         await expect(
             admitCollectionRelease(source, [], { contracts: await releaseCatalogue(query) }),
         ).resolves.toMatchObject({ release: { collectionId: "atlas" } });
+        const binaryQuery = structuredClone(query);
+        const binaryCapability = (binaryQuery.capabilities as Record<string, unknown>[])[0]!;
+        binaryCapability.output = { type: "binary", maxBytes: 1024 };
+        (binaryCapability.binding as Record<string, unknown>).response = {
+            successStatuses: [200],
+            contentTypes: ["application/octet-stream"],
+            errorStatuses: {},
+        };
+        await expect(
+            admitCollectionRelease(source, [], { contracts: await releaseCatalogue(binaryQuery) }),
+        ).rejects.toMatchObject({ code: "resolution_failed" });
     });
 
     test("snapshots release and all asset bytes before any asynchronous work", async () => {

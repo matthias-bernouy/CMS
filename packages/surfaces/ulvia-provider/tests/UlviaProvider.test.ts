@@ -25,6 +25,7 @@ describe("UlviaProvider", () => {
             origin: string;
             cookie: string | null;
         }> = [];
+        const forwardedQueries: Array<{ method: string; path: string; authorization: string | null }> = [];
         const runner = new BunRunner();
         new UlviaProvider(
             runner,
@@ -38,6 +39,14 @@ describe("UlviaProvider", () => {
                         cookie: request.headers.get("cookie"),
                     });
                     return Response.json({ ok: true });
+                },
+                handleQuery: async (request) => {
+                    forwardedQueries.push({
+                        method: request.method,
+                        path: new URL(request.url).pathname,
+                        authorization: request.headers.get("authorization"),
+                    });
+                    return Response.json({ items: [] });
                 },
             }),
         );
@@ -71,6 +80,22 @@ describe("UlviaProvider", () => {
                     originalOriginHeader: null,
                     origin: "http://kernel.test",
                     cookie: "cms-session=session-token",
+                },
+            ]);
+            const query = await server.request("QUERY", "/ulvia/kernel/v1/queries/catalog.items/list", {
+                headers: {
+                    ...reportAuthorization(),
+                    "content-type": "application/json",
+                    "x-ulvia-actor-authorization": "Bearer user-pat",
+                },
+                body: '{"limit":20}',
+            });
+            expect(query.status).toBe(200);
+            expect(forwardedQueries).toEqual([
+                {
+                    method: "QUERY",
+                    path: "/ulvia/kernel/v1/queries/catalog.items/list",
+                    authorization: "Bearer user-pat",
                 },
             ]);
         } finally {

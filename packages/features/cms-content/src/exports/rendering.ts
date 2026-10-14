@@ -33,7 +33,7 @@ export {
 export { buildBlocFoucShellCss } from "cms-content/blocs/core/composition/buildBlocFoucShellCss";
 export { expandCompositions } from "cms-content/blocs/core/composition/expandCompositions";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
-export { collectCmsSourceBindings } from "cms-content/pages/core/indexing/sourceBindings";
+export { collectCmsQueryBindings, collectCmsSourceBindings } from "cms-content/pages/core/indexing/sourceBindings";
 export {
     projectResolvedIndexingEntity,
     projectIndexingDiscoveryPage,

@@ -54,6 +54,7 @@ describe("production Kernel mounting", () => {
                 gateway: token("gateway"),
                 pageExecution: token("page-execution"),
                 capability: async () => new Response(),
+                declarativeQuery: async () => new Response(),
                 collectionAsset: async () => new Response(),
                 sitemap: async () => new Response(),
             },
@@ -67,6 +68,7 @@ describe("production Kernel mounting", () => {
             runner: expect.any(FakeRunner),
             publicAuth: { name: "public-auth", allowSignup: false },
             capabilityGateway: options.provider.gateway,
+            queryHandler: options.provider.declarativeQuery,
         });
         expect(events).toContain('start:{"port":3100,"hostname":"127.0.0.1"}');
         expect(logs).toContain("🚀 CMS listening");

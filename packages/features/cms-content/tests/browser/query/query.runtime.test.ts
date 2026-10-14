@@ -6,19 +6,28 @@ import { el, resetDom, waitFor } from "../support/testUtils";
 
 afterEach(resetDom);
 
-test("a Provider query maps its logical target to the private gateway transport", () => {
+test("a Provider query with input uses the logical QUERY transport", () => {
     const query = el(`<section
         cms-query="ulvia.cms.pages:list as pages"
         cms-query-input='{"limit":{"from":"raw","value":20}}'
     ></section>`);
 
     expect(queryRequest(query)).toEqual({
-        url: "/.cms/call/ulvia.cms.pages/list",
+        url: "/.cms/query/ulvia.cms.pages/list",
         init: {
-            method: "POST",
+            method: "QUERY",
             headers: { "content-type": "application/json" },
             body: '{"limit":20}',
         },
+    });
+});
+
+test("a Provider query without input uses the cache-compatible logical GET transport", () => {
+    const query = el('<section cms-query="ulvia.cms.pages:list as pages"></section>');
+
+    expect(queryRequest(query)).toEqual({
+        url: "/.cms/query/ulvia.cms.pages/list",
+        init: { method: "GET" },
     });
 });
 

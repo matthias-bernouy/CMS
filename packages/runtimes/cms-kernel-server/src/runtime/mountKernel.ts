@@ -32,6 +32,7 @@ export async function mountProductionKernel(
         capabilityGateway: provider.gateway,
         pageExecution: provider.pageExecution,
         capabilityHandler: provider.capability,
+        queryHandler: provider.declarativeQuery,
         collectionAssetHandler: provider.collectionAsset,
         collectionAssets: provider.collectionAssets,
         sitemapHandler: provider.sitemap,

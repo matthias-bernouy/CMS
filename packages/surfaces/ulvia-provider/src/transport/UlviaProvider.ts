@@ -113,6 +113,15 @@ export class UlviaProvider {
                 );
             }
         });
+        runner.group("/ulvia/kernel/v1/queries", (queryRunner) => {
+            for (const method of ["GET", "QUERY"] as const) {
+                queryRunner.setDefaultEndpoint(method, (request) =>
+                    withKernelRuntime(request, options, (runtime, forwardedRequest) =>
+                        runtime.kernel.handleQuery(forwardedRequest),
+                    ),
+                );
+            }
+        });
         runner.group("/ulvia/kernel/v1/collections", (assetRunner) => {
             for (const method of ["GET", "HEAD"] as const) {
                 assetRunner.setDefaultEndpoint(method, (request) =>

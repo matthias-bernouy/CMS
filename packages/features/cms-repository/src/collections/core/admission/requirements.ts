@@ -62,7 +62,7 @@ async function verifyRequirements(
                             (capability) =>
                                 capability.id === requirement.capabilityId &&
                                 (!queries.has(`${contractId}/${requirement.capabilityId}`) ||
-                                    capability.behavior.effect === "query"),
+                                    (capability.behavior.effect === "query" && capability.output.type !== "binary")),
                         ),
                 )
             );

@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { fetchProviderHandshake } from "../../src/runtime/gateway/fetchProviderReport";
 import { ProviderKernelTransport } from "../../src/runtime/provider/ProviderKernelTransport";
+import { ProviderKernelClient } from "../../src/runtime/provider/ProviderKernelClient";
 
 test("provider handshakes accept the configured private service endpoint", async () => {
     const requests: Array<{ url: string; init?: RequestInit }> = [];
@@ -85,6 +86,33 @@ test("provider forwarding preserves streaming and removes hop-by-hop headers", a
     expect(response.headers.has("connection")).toBe(false);
     expect(response.headers.get("content-length")).toBe("6");
     expect(await response.text()).toBe("stream");
+});
+
+test("logical Page queries preserve GET or QUERY across the private Provider boundary", async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    const transport = new ProviderKernelTransport(
+        "http://ulvia-provider:5103",
+        "provider-token-at-least-twenty",
+        (async (url, init) => {
+            requests.push({ url: url.toString(), init });
+            return Response.json({ items: [] });
+        }) as typeof fetch,
+    );
+    const client = new ProviderKernelClient(transport, "http://kernel.test");
+    const request = new Request("http://kernel.test/.cms/query/catalog.items/list", {
+        method: "QUERY",
+        headers: { "content-type": "application/json", cookie: "cms-session=session-a" },
+        body: '{"limit":20}',
+    });
+
+    const response = await client.declarativeQuery(request);
+
+    expect(response.status).toBe(200);
+    expect(requests[0]?.url).toBe("http://ulvia-provider:5103/ulvia/kernel/v1/queries/catalog.items/list");
+    expect(requests[0]?.init?.method).toBe("QUERY");
+    expect(new Headers(requests[0]?.init?.headers).get("authorization")).toBe("Bearer provider-token-at-least-twenty");
+    expect(new Headers(requests[0]?.init?.headers).get("cookie")).toBe("cms-session=session-a");
+    expect(await new Response(requests[0]?.init?.body).text()).toBe('{"limit":20}');
 });
 
 function providerReport() {

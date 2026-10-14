@@ -4,7 +4,7 @@ import type {
     RenderablePage,
     RenderablePageSource,
 } from "@bernouy/cms-content/rendering";
-import { collectCmsSourceBindings } from "@bernouy/cms-content/rendering";
+import { collectCmsQueryBindings, collectCmsSourceBindings } from "@bernouy/cms-content/rendering";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayInvoker } from "cms-gateway/invocation/interfaces/Invocation";
 import type { GatewayExecutionPin, PageExecutionAuthority, PageExecutionConsumer } from "../interfaces/PageExecution";
@@ -20,7 +20,11 @@ export type ResolvedPageCapability = {
 export type PageExecutionPage = Pick<RenderablePage, "page" | "requirements">;
 
 export function pageRequiresCapabilityExecution(page: PageExecutionPage): boolean {
-    return page.requirements.length > 0 || collectCmsSourceBindings(page.page.content).length > 0;
+    return (
+        page.requirements.length > 0 ||
+        collectCmsQueryBindings(page.page.content).length > 0 ||
+        collectCmsSourceBindings(page.page.content).length > 0
+    );
 }
 
 export type PageExecutionServiceOptions = {
@@ -88,6 +92,23 @@ export class PageExecutionService {
         prefix: string,
     ): Promise<readonly PageCapabilityRequirement[] | null> {
         const requirements = new Map(page.requirements.map((item) => [requirementKey(item), item]));
+        for (const query of collectCmsQueryBindings(page.page.content)) {
+            if (query.contractId.startsWith("kernel.")) {
+                continue;
+            }
+            const capability = await this.options
+                .resolveCapability(query.contractId, query.capabilityId)
+                .catch(() => null);
+            if (!capability) {
+                return null;
+            }
+            const requirement = {
+                contractId: query.contractId,
+                capabilityId: query.capabilityId,
+                versionRange: `=${capability.version}`,
+            };
+            requirements.set(requirementKey(requirement), requirement);
+        }
         for (const binding of collectCmsSourceBindings(page.page.content)) {
             const route = sourceRoute(binding.url, pageUrl, prefix);
             if (!route) {
