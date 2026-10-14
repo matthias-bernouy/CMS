@@ -84,6 +84,7 @@ describe("binding conditions", () => {
             formValueType: "cms-form-value-type",
             formEmpty: "cms-form-empty",
             query: "cms-query",
+            queries: "cms-queries",
             queryInput: "cms-query-input",
             queryListen: "cms-query-listen",
             queryRefresh: "cms-query-refresh",

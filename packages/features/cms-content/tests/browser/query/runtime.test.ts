@@ -334,6 +334,56 @@ test("a synchronized-state query consumes the producer snapshot without HTTP", (
     writeSyncValue(target, undefined);
 });
 
+test("query imports compose several synchronized query states without HTTP", () => {
+    const pages = { scope: "page", key: "ulvia-official-shared-pages" } as const;
+    const user = { scope: "session", key: "ulvia-official-shared-user" } as const;
+    writeSyncValue(pages, { total: 2 });
+    writeSyncValue(user, { name: "Ada" });
+    const host =
+        el(`<section cms-queries="@page:ulvia-official-shared-pages as pages @session:ulvia-official-shared-user as user">
+        <p>{{ user.data.name }}: {{ pages.data.total }}</p>
+    </section>`);
+    document.body.appendChild(host);
+    let requests = 0;
+    const query = new Query(
+        host,
+        {},
+        {
+            request: async () => {
+                requests += 1;
+                return { kind: "success", data: null };
+            },
+        },
+    );
+
+    query.start();
+    expect(host.textContent).toContain("Ada: 2");
+    expect(requests).toBe(0);
+
+    writeSyncValue(pages, { total: 3 });
+    expect(host.textContent).toContain("Ada: 3");
+    query.dispose();
+    writeSyncValue(pages, undefined);
+    writeSyncValue(user, undefined);
+});
+
+test("a primary query renders with imported synchronized query states", async () => {
+    const user = { scope: "page", key: "ulvia-official-query-user" } as const;
+    writeSyncValue(user, { name: "Ada" });
+    const host = el(`<section
+        cms-query="catalog.items:list as products"
+        cms-queries="@page:ulvia-official-query-user as user"
+    ><p>{{ user.data.name }}: {{ products.data.length }}</p></section>`);
+    document.body.appendChild(host);
+    const query = new Query(host, {}, { request: async () => ({ kind: "success", data: ["one", "two"] }) });
+
+    query.start();
+    await waitFor(() => host.textContent?.includes("Ada: 2") === true);
+    expect(host.textContent).toContain("Ada: 2");
+    query.dispose();
+    writeSyncValue(user, undefined);
+});
+
 test("a refresh failure retains the previous data and exposes refreshError", async () => {
     const host = el(`<section cms-query="catalog.items:list as products">
         <p>{{ products.data.name }}</p>

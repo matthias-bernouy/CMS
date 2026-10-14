@@ -53,6 +53,68 @@ describe("cms-sync validation", () => {
                 "cms-query-listen": "@page:ulvia-official-revision",
             }),
         ).toContain("requires cms-query");
+        expect(
+            nativeBindingElementIssue("section", {
+                "cms-queries": "@page:ulvia-official-products as products @session:ulvia-official-user as user",
+            }),
+        ).toBeNull();
+        expect(
+            nativeBindingElementIssue("section", {
+                "cms-query": "catalog.items:list as products",
+                "cms-queries": "@session:ulvia-official-user as user",
+            }),
+        ).toBeNull();
+        expect(
+            nativeBindingElementIssue("section", {
+                "cms-query": "catalog.items:list as products",
+                "cms-queries": "@page:ulvia-official-products as products",
+            }),
+        ).toContain("conflicts");
+        expect(
+            nativeBindingElementIssue("section", {
+                "cms-queries": "@page:ulvia-official-products as products",
+                "cms-sync": "@page:ulvia-official-copy",
+            }),
+        ).toContain("cannot publish");
+    });
+
+    test("requires query boundaries to own rendered content", () => {
+        for (const tag of [
+            "area",
+            "base",
+            "br",
+            "col",
+            "embed",
+            "hr",
+            "img",
+            "input",
+            "link",
+            "meta",
+            "param",
+            "source",
+            "svg",
+            "track",
+            "wbr",
+        ]) {
+            expect(
+                nativeBindingElementIssue(tag, {
+                    "cms-query": "catalog.items:list as products",
+                }),
+            ).toContain("cannot own a query renderer");
+            expect(
+                nativeBindingElementIssue(tag, {
+                    "cms-queries": "@page:ulvia-official-products as products",
+                }),
+            ).toContain("cannot own a query renderer");
+        }
+
+        for (const tag of ["section", "ul", "tbody", "select", "atlas-panel"]) {
+            expect(
+                nativeBindingElementIssue(tag, {
+                    "cms-query": "catalog.items:list as products",
+                }),
+            ).toBeNull();
+        }
     });
 
     test("prevents structured query state from being written into URL parameters", () => {

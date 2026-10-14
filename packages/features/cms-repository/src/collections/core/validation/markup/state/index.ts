@@ -1,6 +1,7 @@
 import { parseHTML } from "linkedom";
 import {
     parseQuery,
+    parseQueries,
     parseQueryInput,
     parseQueryListen,
     parseSourceBody,
@@ -47,7 +48,7 @@ export function validateCollectionStateBindings(
                 assertOwnedWrite(target, own, element, path);
             }
         }
-        for (const element of Array.from(document.body.querySelectorAll("[cms-query]"))) {
+        for (const element of Array.from(document.body.querySelectorAll("[cms-query], [cms-queries]"))) {
             const query = parseQuery(element.getAttribute("cms-query") ?? "");
             if (query && "sync" in query) {
                 assertReadable(query.sync, own, imported, installed, path);
@@ -61,6 +62,9 @@ export function validateCollectionStateBindings(
             );
             for (const target of parseQueryListen(element.getAttribute("cms-query-listen")) ?? []) {
                 assertReadable(target, own, imported, installed, path);
+            }
+            for (const binding of parseQueries(element.getAttribute("cms-queries")) ?? []) {
+                assertReadable(binding.sync, own, imported, installed, path);
             }
         }
         for (const element of Array.from(document.body.querySelectorAll("[cms-source-body]"))) {

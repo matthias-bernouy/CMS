@@ -9,6 +9,7 @@ import { isCmsSourceTrigger } from "cms-content/blocs/core/markup/bindings/sourc
 
 export const BINDING_CORE_TAG = CMS_BINDING_CORE_TAG;
 export const QUERY_ATTR = CMS_BINDING_ATTRIBUTES.query;
+export const QUERIES_ATTR = CMS_BINDING_ATTRIBUTES.queries;
 export const QUERY_INPUT_ATTR = CMS_BINDING_ATTRIBUTES.queryInput;
 export const QUERY_LISTEN_ATTR = CMS_BINDING_ATTRIBUTES.queryListen;
 export const QUERY_REFRESH_ATTR = CMS_BINDING_ATTRIBUTES.queryRefresh;

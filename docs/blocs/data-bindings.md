@@ -144,6 +144,30 @@ Another binding can consume that snapshot without another HTTP request:
 </aside>
 ```
 
+One rendering boundary can import several synchronized query snapshots without
+starting additional requests:
+
+```html
+<section
+  cms-queries="@page:shop-products as products @session:shop-user as user"
+>
+  <span>{{ user.data.name }}</span>
+  <span>{{ products.data.items.length }} products</span>
+</section>
+```
+
+`cms-queries` accepts one to sixteen unique `@scope:key as alias` imports. It
+may coexist with one primary `cms-query`; the primary query and every imported
+alias then share one renderer. Query input, listeners, refresh policies,
+publication through `cms-sync`, and targeted mutation reloads still belong only
+to the primary query. An imports-only boundary never performs HTTP or publishes
+a composite state.
+
+Both query attributes define a rendering boundary. They are therefore invalid
+on HTML void elements and on the CMS-managed atomic `svg` element. Put the
+query on a containing element and bind its result into the nested media or form
+control instead.
+
 Local state queries cannot declare remote input or refresh policies and cannot
 republish the state they consume.
 

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
     asInterpolation,
     asQuery,
+    asQueries,
     asQueryInput,
     asQueryListen,
     asRepeat,
@@ -12,6 +13,7 @@ import {
     isInterpolation,
     parseInterpolation,
     parseQuery,
+    parseQueries,
     parseQueryInput,
     parseQueryListen,
     parseQueryRefresh,
@@ -121,6 +123,32 @@ describe("binding syntax", () => {
         ]) {
             expect(parseQuery(value)).toBeNull();
         }
+    });
+
+    test("formats and parses bounded synchronized query imports", () => {
+        const imports = [
+            { sync: { scope: "page" as const, key: "ulvia-official-pages" }, name: "pages" },
+            { sync: { scope: "session" as const, key: "ulvia-official-user" }, name: "user" },
+        ];
+        expect(asQueries(imports)).toBe("@page:ulvia-official-pages as pages @session:ulvia-official-user as user");
+        expect(parseQueries(" @page:ulvia-official-pages as pages  @session:ulvia-official-user as user ")).toEqual(
+            imports,
+        );
+        for (const value of [
+            "",
+            "ulvia.cms.pages:list as pages",
+            "@page:ulvia-official-pages pages",
+            "@page:ulvia-official-pages as cms",
+            "@page:ulvia-official-pages as pages @page:ulvia-official-pages as duplicate",
+            "@page:ulvia-official-pages as pages @session:ulvia-official-user as pages",
+        ]) {
+            expect(parseQueries(value)).toBeNull();
+        }
+        expect(
+            parseQueries(
+                Array.from({ length: 17 }, (_, index) => `@page:site-query-${index} as query_${index}`).join(" "),
+            ),
+        ).toBeNull();
     });
 
     test("parses bounded synchronized-state targets", () => {

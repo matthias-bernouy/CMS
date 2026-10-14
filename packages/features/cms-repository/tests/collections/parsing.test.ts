@@ -494,6 +494,14 @@ describe("collection release parsing", () => {
         expect(parseCollectionRelease(source).states?.[0]?.id).toBe("products");
 
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
+            '<atlas-panel cms-queries="@page:atlas-products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></atlas-panel>';
+        expect(parseCollectionRelease(source).states?.[0]?.id).toBe("products");
+
+        (source.blocs as Record<string, unknown>[])[1]!.lightdom =
+            '<atlas-panel cms-queries="@page:atlas-undeclared as products"><slot name="main" slot="body"></slot></atlas-panel>';
+        expect(() => parseCollectionRelease(source)).toThrow("declared locally or explicitly imported");
+
+        (source.blocs as Record<string, unknown>[])[1]!.lightdom =
             '<atlas-panel cms-query="@page:atlas-undeclared as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></atlas-panel>';
         expect(() => parseCollectionRelease(source)).toThrow("declared locally or explicitly imported");
 

@@ -3,6 +3,7 @@ import { validateSiteBlocDefaultContent } from "cms-content/blocs/core/markup/va
 import { COMPOSITION_CONTROLLER_ATTRIBUTE } from "cms-content/blocs/core/composition/expandCompositions";
 import { isCmsBindingAttribute, nativeBindingAttributeIssue } from "cms-content/blocs/core/validation/nativeBindings";
 import {
+    HTML_VOID_ELEMENT_TAGS,
     isSiteBlocNativeAttributeAllowed,
     isSiteBlocNativeStructureTag,
 } from "cms-content/blocs/core/validation/nativeHtml";
@@ -14,23 +15,6 @@ const TAG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const ATTRIBUTE = /^[A-Za-z_:][A-Za-z0-9_.:-]*$/;
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
-const VOID_TAGS = new Set([
-    "area",
-    "base",
-    "br",
-    "col",
-    "embed",
-    "hr",
-    "img",
-    "input",
-    "link",
-    "meta",
-    "param",
-    "source",
-    "track",
-    "wbr",
-]);
-
 export function serializeSiteBlocTemplate(snapshot: SiteBlocSnapshot): string {
     const slots = slotMap(snapshot.slots);
     const usedSlots = new Set<string>();
@@ -87,7 +71,7 @@ function serializeNode(
     if (node.tag === CMS_BINDING_CORE_TAG) {
         throw new Error(`Binding runtime tag "${node.tag}" is forbidden in a site bloc structure`);
     }
-    if (VOID_TAGS.has(node.tag) && node.children.length > 0) {
+    if (HTML_VOID_ELEMENT_TAGS.has(node.tag) && node.children.length > 0) {
         throw new Error(`Void element "${node.tag}" cannot contain site bloc children`);
     }
     if (isSiteBlocNativeStructureTag(node.tag)) {
@@ -99,7 +83,7 @@ function serializeNode(
         .join("");
     const controllerAttribute = behaviorController ? ` ${COMPOSITION_CONTROLLER_ATTRIBUTE}` : "";
     const opening = `<${node.tag}${attributes}${controllerAttribute}>`;
-    if (VOID_TAGS.has(node.tag)) {
+    if (HTML_VOID_ELEMENT_TAGS.has(node.tag)) {
         return opening;
     }
     const children = node.children.map((child) => serializeNode(child, slots, usedSlots, true, node.tag)).join("");

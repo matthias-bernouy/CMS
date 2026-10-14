@@ -9,6 +9,7 @@ import { runFetch } from "./queryFetch";
 import { listenQueryRefresh } from "./queryRefresh";
 import { queryRequest } from "./queryRequest";
 import { shareUnchanged } from "./reconcile";
+import { QueryImports } from "./QueryImports";
 import {
     failedQueryState,
     initialQueryState,
@@ -28,6 +29,7 @@ type QueryOptions = {
 
 export class Query {
     private readonly renderer: BindingRenderer;
+    private readonly imports: QueryImports;
     private state = initialQueryState();
     private abort: AbortController | null = null;
     private stopRefresh: (() => void) | null = null;
@@ -47,10 +49,16 @@ export class Query {
         private readonly options: QueryOptions = {},
     ) {
         this.renderer = new BindingRenderer(element, captureBindingContent(element), filters);
+        this.imports = new QueryImports(element, () => this.render());
     }
 
     start(): void {
+        this.imports.start();
         const binding = parseQuery(this.element.getAttribute(QUERY_ATTR) ?? "");
+        if (!binding) {
+            this.render();
+            return;
+        }
         if (binding && "sync" in binding) {
             this.startSynchronizedQuery(binding.sync);
             return;
@@ -73,6 +81,7 @@ export class Query {
         this.stopReload = null;
         this.stopSync?.();
         this.stopSync = null;
+        this.imports.dispose();
     }
 
     renderTemplate(): void {
@@ -186,10 +195,11 @@ export class Query {
 
     private render(): void {
         const binding = parseQuery(this.element.getAttribute(QUERY_ATTR) ?? "");
-        if (!binding) {
-            return;
+        const vars: Record<string, unknown> = this.imports.variables();
+        if (binding) {
+            vars[binding.name] = this.state;
         }
-        this.renderer.body({ value: this.state.data, vars: { [binding.name]: this.state } });
+        this.renderer.body({ value: binding ? this.state.data : undefined, vars });
         this.options.afterRender?.(this.element);
     }
 

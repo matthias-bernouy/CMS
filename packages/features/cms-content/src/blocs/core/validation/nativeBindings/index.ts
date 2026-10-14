@@ -1,4 +1,5 @@
 import { isTypedQueryInput, isTypedSourceBody } from "cms-content/blocs/core/validation/nativeBindings/sourceBody";
+import { HTML_VOID_ELEMENT_TAGS } from "cms-content/blocs/core/validation/nativeHtml";
 import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 import {
     CMS_BINDING_ATTRIBUTES,
@@ -11,6 +12,7 @@ import {
     isCmsSourceTrigger,
     parseCondition,
     parseQuery,
+    parseQueries,
     parseQueryListen,
     parseQueryRefresh,
     parseRepeat,
@@ -24,6 +26,7 @@ const SOURCE_ID = /^[A-Za-z_$][\w$-]*$/;
 
 const BINDING_ATTRIBUTE_SET = new Set<string>(Object.values(CMS_BINDING_ATTRIBUTES));
 const FORM_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE"]);
+const QUERY_RENDERER_FORBIDDEN_TAGS = new Set([...HTML_VOID_ELEMENT_TAGS, "svg"]);
 
 export function isCmsBindingAttribute(attribute: string): boolean {
     return BINDING_ATTRIBUTE_SET.has(attribute.toLowerCase());
@@ -42,6 +45,9 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     }
     if (name === CMS_BINDING_ATTRIBUTES.query) {
         return parseQuery(value) ? null : "CMS query must identify a capability or synchronized state as name";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.queries) {
+        return parseQueries(value) ? null : "CMS query imports must identify one to sixteen unique states as names";
     }
     if (name === CMS_BINDING_ATTRIBUTES.queryInput) {
         return isTypedQueryInput(value) ? null : "CMS query input must be a typed parameter map";
@@ -111,19 +117,33 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
 
 export function nativeBindingElementIssue(tag: string, attributes: Readonly<Record<string, string>>): string | null {
     const query = attributes[CMS_BINDING_ATTRIBUTES.query];
+    const queries = attributes[CMS_BINDING_ATTRIBUTES.queries];
     const source = attributes[CMS_BINDING_ATTRIBUTES.source];
     const sync = attributes[CMS_BINDING_ATTRIBUTES.sync];
     if (query !== undefined && tag === "form") {
         return "CMS queries cannot be declared on forms";
     }
+    if (queries !== undefined && tag === "form") {
+        return "CMS query imports cannot be declared on forms";
+    }
+    if ((query !== undefined || queries !== undefined) && QUERY_RENDERER_FORBIDDEN_TAGS.has(tag)) {
+        return `CMS queries require an element that can contain rendered content; native <${tag}> cannot own a query renderer`;
+    }
     if (query !== undefined && source !== undefined) {
         return "CMS query and CMS source cannot coexist on the same element";
+    }
+    if (queries !== undefined && source !== undefined) {
+        return "CMS query imports and CMS source cannot coexist on the same element";
     }
     if (source !== undefined && tag !== "form") {
         return "CMS sources are reserved for form submissions; use cms-query for reads";
     }
     if (query !== undefined) {
         const binding = parseQuery(query);
+        const imported = parseQueries(queries);
+        if (binding && imported?.some(({ name }) => name === binding.name)) {
+            return `CMS query name ${JSON.stringify(binding.name)} conflicts with an imported query`;
+        }
         if (binding && "sync" in binding && sync !== undefined) {
             return "synchronized-state queries cannot republish the state they consume";
         }
@@ -156,9 +176,13 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
             return "Kernel authentication queries do not accept input";
         }
     }
+    if (queries !== undefined && query === undefined && sync !== undefined) {
+        return "CMS query imports cannot publish synchronized state without a primary query";
+    }
     if (
         sync !== undefined &&
         query === undefined &&
+        queries === undefined &&
         !["form", "input", "select", "textarea"].includes(tag) &&
         !tag.includes("-")
     ) {

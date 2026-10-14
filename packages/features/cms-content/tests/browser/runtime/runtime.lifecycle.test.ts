@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { BindingRuntime } from "../../../src/browser/binding/runtime/BindingRuntime";
+import { writeSyncValue } from "../../../src/browser/binding/state/SyncState";
 import { el, resetDom, text, waitFor } from "../support/testUtils";
 
 afterEach(resetDom);
@@ -41,5 +42,25 @@ describe("BindingRuntime — lifecycle", () => {
         await waitFor(() => requests.length === 1);
         expect(requests).toEqual(["http://localhost/save"]);
         runtime.stop();
+    });
+
+    test("discovers a query-import-only rendering boundary", () => {
+        const pages = { scope: "page", key: "test-shared-pages" } as const;
+        const user = { scope: "page", key: "test-shared-user" } as const;
+        writeSyncValue(pages, { count: 2 });
+        writeSyncValue(user, { name: "Ada" });
+        const root = el(`<div><section cms-queries="@page:test-shared-pages as pages @page:test-shared-user as user">
+            <p>{{ user.data.name }}: {{ pages.data.count }}</p>
+        </section></div>`);
+        document.body.appendChild(root);
+        const runtime = new BindingRuntime(root);
+
+        runtime.start();
+        expect(text(root.querySelector("p"))).toBe("Ada: 2");
+        expect(runtime.size).toBe(1);
+        runtime.stop();
+        expect(text(root.querySelector("p"))).toBe("{{ user.data.name }}: {{ pages.data.count }}");
+        writeSyncValue(pages, undefined);
+        writeSyncValue(user, undefined);
     });
 });

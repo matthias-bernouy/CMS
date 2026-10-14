@@ -1,4 +1,4 @@
-import { BINDING_CORE_TAG, QUERY_ATTR, SOURCE_ATTR, SOURCE_TRIGGER_ATTR } from "../../core/attrs";
+import { BINDING_CORE_TAG, QUERIES_ATTR, QUERY_ATTR, SOURCE_ATTR, SOURCE_TRIGGER_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import { bindingOwnedBySubmitSource, pathOwnedBySubmitSource, submitBoundary } from "./submitOwnership";
 import { compileAttributes, rawHtmlExpression } from "./templateBindings";
@@ -56,7 +56,7 @@ function compileNode(
         return;
     }
 
-    if (element.hasAttribute(QUERY_ATTR)) {
+    if (element.hasAttribute(QUERY_ATTR) || element.hasAttribute(QUERIES_ATTR)) {
         compileAttributes(element, path, plan, options.submitBoundary);
         return;
     }

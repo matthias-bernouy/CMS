@@ -1,4 +1,4 @@
-import { BINDING_CORE_TAG, QUERY_ATTR, SOURCE_ATTR } from "../core/attrs";
+import { BINDING_CORE_TAG, QUERIES_ATTR, QUERY_ATTR, SOURCE_ATTR } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
 import { SyncControl } from "../state/SyncControl";
 import { Query } from "./query/Query";
@@ -39,7 +39,7 @@ export class BindingRegistry {
     }
 
     reconcileQuery(element: Element): void {
-        if (!element.hasAttribute(QUERY_ATTR)) {
+        if (!element.hasAttribute(QUERY_ATTR) && !element.hasAttribute(QUERIES_ATTR)) {
             this.unregisterQuery(element);
             return;
         }
