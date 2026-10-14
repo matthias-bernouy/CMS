@@ -8,11 +8,11 @@
                     <ulvia-official-heading slot="items" size="lg"><h1>{{ cms.i18n.ulvia-official.ui-welcome-back }}</h1></ulvia-official-heading>
                     <ulvia-official-prose slot="items"><p slot="content">{{ cms.i18n.ulvia-official.ui-sign-in-to-continue-to-your-administration-workspace }}</p></ulvia-official-prose>
                 </ulvia-official-stack>
-                <section slot="items" cms-source="/.cms/auth/methods as methods" cms-source-method="GET">
-                    <p role="status" aria-live="polite" cms-condition="$source.loading">{{ cms.i18n.ulvia-official.ui-loading-sign-in-methods }}</p>
-                    <p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-sign-in-methods-unavailable }}</p>
-                    <p role="status" cms-condition="$source.empty">{{ cms.i18n.ulvia-official.ui-no-sign-in-method-is-currently-available }}</p>
-                    <form cms-repeat="methods as method" cms-condition="method.fields" cms-source="/.cms/auth/login as session" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-redirect="/admin" cms-source-success-redirect-param="returnTo">
+                <section slot="items" cms-query="kernel.auth:methods as methods">
+                    <p role="status" aria-live="polite" cms-condition="methods.loading">{{ cms.i18n.ulvia-official.ui-loading-sign-in-methods }}</p>
+                    <p role="alert" cms-condition="methods.error">{{ cms.i18n.ulvia-official.ui-sign-in-methods-unavailable }}</p>
+                    <p role="status" cms-condition="methods.empty">{{ cms.i18n.ulvia-official.ui-no-sign-in-method-is-currently-available }}</p>
+                    <form cms-repeat="methods.data as method" cms-condition="method.fields" cms-source="/.cms/auth/login as session" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-redirect="/admin" cms-source-success-redirect-param="returnTo">
                         <ulvia-official-stack gap="md">
                             <ulvia-official-field slot="items" label-position="top">
                                 <span slot="label">{{ cms.i18n.ulvia-official.ui-email-address }}</span>
@@ -29,8 +29,8 @@
                             <p slot="items" role="alert" cms-condition="$source.status === 429">{{ cms.i18n.ulvia-official.ui-too-many-attempts-please-wait-and-try-again }}</p>
                         </ulvia-official-stack>
                     </form>
-                    <p cms-repeat="methods as method" cms-condition="method.loginUrl">{{ cms.i18n.ulvia-official.ui-continue-with }}</p>
-                    <ulvia-official-login-method cms-repeat="methods as method" cms-condition="method.loginUrl" login-url="{{ method.loginUrl }}"><button type="button">{{ method.displayName }}</button></ulvia-official-login-method>
+                    <p cms-repeat="methods.data as method" cms-condition="method.loginUrl">{{ cms.i18n.ulvia-official.ui-continue-with }}</p>
+                    <ulvia-official-login-method cms-repeat="methods.data as method" cms-condition="method.loginUrl" login-url="{{ method.loginUrl }}"><button type="button">{{ method.displayName }}</button></ulvia-official-login-method>
                 </section>
             </ulvia-official-stack>
         </ulvia-official-surface>
