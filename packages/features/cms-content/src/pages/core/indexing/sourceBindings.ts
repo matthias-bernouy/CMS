@@ -31,7 +31,7 @@ export function collectCmsQueryBindings(html: string): CmsQueryBindingReference[
     const bindings: CmsQueryBindingReference[] = [];
     for (const element of Array.from(document.querySelectorAll(`[${CMS_BINDING_ATTRIBUTES.query}]`))) {
         const query = parseQuery(element.getAttribute(CMS_BINDING_ATTRIBUTES.query) ?? "");
-        if (query) {
+        if (query && "contractId" in query) {
             bindings.push({
                 contractId: query.contractId,
                 capabilityId: query.capabilityId,

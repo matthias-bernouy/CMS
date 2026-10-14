@@ -91,7 +91,7 @@ export function validateBlocContentMarkup(
 export function extractQueries(document: Document): readonly ContentQuery[] {
     const queries = Array.from(document.querySelectorAll("[cms-query]"), (element) =>
         parseQuery(element.getAttribute("cms-query") ?? ""),
-    ).filter((query): query is ContentQuery => query !== null);
+    ).filter((query): query is ContentQuery => query !== null && "contractId" in query);
     const names = new Set<string>();
     for (const query of queries) {
         if (names.has(query.name)) {

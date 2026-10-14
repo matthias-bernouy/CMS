@@ -15,6 +15,7 @@ import {
     parseQueryRefresh,
     parseRepeat,
     parseSource,
+    parseSyncTarget,
 } from "cms-content/blocs/core/markup/bindings";
 
 const CONTROL_CHARACTER = /[\u0000-\u001F\u007F]/;
@@ -42,7 +43,7 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
         return parseRepeat(value) ? null : "CMS repeat binding must not be empty";
     }
     if (name === CMS_BINDING_ATTRIBUTES.query) {
-        return parseQuery(value) ? null : "CMS query must identify contract:capability as name";
+        return parseQuery(value) ? null : "CMS query must identify a capability or synchronized state as name";
     }
     if (name === CMS_BINDING_ATTRIBUTES.queryInput) {
         return isTypedQueryInput(value) ? null : "CMS query input must be a typed parameter map";
@@ -107,6 +108,9 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
             ? null
             : "CMS source publication events are invalid";
     }
+    if (name === CMS_BINDING_ATTRIBUTES.sync) {
+        return parseSyncTarget(value) ? null : "CMS sync target is invalid";
+    }
     if (name === CMS_BINDING_ATTRIBUTES.paramSync) {
         return isCmsQueryParamName(value) ? null : "CMS query parameter binding is invalid";
     }
@@ -134,12 +138,19 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     if (query !== undefined) {
         const binding = parseQuery(query);
         if (
-            binding?.contractId.startsWith("kernel.") &&
+            binding &&
+            "contractId" in binding &&
+            binding.contractId.startsWith("kernel.") &&
             `${binding.contractId}:${binding.capabilityId}` !== "kernel.auth:methods"
         ) {
             return "CMS query targets an unknown Kernel capability";
         }
-        if (binding?.contractId === "kernel.auth" && attributes[CMS_BINDING_ATTRIBUTES.queryInput] !== undefined) {
+        if (
+            binding &&
+            "contractId" in binding &&
+            binding.contractId === "kernel.auth" &&
+            attributes[CMS_BINDING_ATTRIBUTES.queryInput] !== undefined
+        ) {
             return "Kernel authentication methods query does not accept input";
         }
     }

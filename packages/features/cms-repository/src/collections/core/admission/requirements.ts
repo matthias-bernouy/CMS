@@ -84,7 +84,7 @@ function queryTargets(markups: readonly string[]): ReadonlySet<string> {
         document.body.innerHTML = html;
         for (const element of Array.from(document.querySelectorAll("[cms-query]"))) {
             const query = parseQuery(element.getAttribute("cms-query") ?? "");
-            if (query && !query.contractId.startsWith("kernel.")) {
+            if (query && "contractId" in query && !query.contractId.startsWith("kernel.")) {
                 targets.add(`${query.contractId}/${query.capabilityId}`);
             }
         }

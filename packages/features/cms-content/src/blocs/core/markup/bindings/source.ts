@@ -9,12 +9,14 @@ import type {
     CmsQueryRefreshPolicy,
 } from "cms-content/blocs/core/markup/bindings/types";
 import { asQueryParamToken } from "cms-content/blocs/core/markup/bindings/queryParams";
+import { asSyncTarget, parseSyncTarget } from "cms-content/blocs/core/markup/bindings/sync";
 
 const INTERPOLATION_PATTERN = /^\s*\{\{\s*([\s\S]*?)\s*\}\}\s*$/;
 const INTERPOLATION_TOKEN_PATTERN = /\{\{\s*([\s\S]*?)\s*\}\}/gu;
 const SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
 const QUERY_PATTERN =
     /^\s*([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*):([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u;
+const SYNC_QUERY_PATTERN = /^\s*(@(?:param|page|session|persistent):[^\s]+)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u;
 const QUERY_REFRESH_INTERVAL = /^interval\((\d+)(ms|s|m)\)$/u;
 const MIN_QUERY_REFRESH_INTERVAL_MS = 1_000;
 const MAX_QUERY_REFRESH_INTERVAL_MS = 60 * 60 * 1_000;
@@ -70,7 +72,10 @@ export function parseSource(value: string): CmsSourceBinding | null {
 }
 
 export function asQuery(query: CmsQueryBinding): string {
-    const value = `${query.contractId}:${query.capabilityId} as ${query.name}`;
+    const value =
+        "sync" in query
+            ? `${asSyncTarget(query.sync)} as ${query.name}`
+            : `${query.contractId}:${query.capabilityId} as ${query.name}`;
     if (!parseQuery(value)) {
         throw new TypeError("Invalid CMS query binding");
     }
@@ -78,6 +83,11 @@ export function asQuery(query: CmsQueryBinding): string {
 }
 
 export function parseQuery(value: string): CmsQueryBinding | null {
+    const syncMatch = SYNC_QUERY_PATTERN.exec(value);
+    if (syncMatch) {
+        const sync = parseSyncTarget(syncMatch[1]);
+        return sync && !RESERVED_QUERY_NAMES.has(syncMatch[2]!) ? { sync, name: syncMatch[2]! } : null;
+    }
     const match = QUERY_PATTERN.exec(value);
     if (!match || RESERVED_QUERY_NAMES.has(match[3]!)) {
         return null;

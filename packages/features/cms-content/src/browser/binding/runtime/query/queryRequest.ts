@@ -16,6 +16,9 @@ export function queryRequest(element: Element): QueryRequest {
     if (!binding) {
         throw new TypeError("Invalid cms-query binding.");
     }
+    if (!("contractId" in binding)) {
+        throw new TypeError("Synchronized-state queries do not use HTTP transport.");
+    }
 
     const key = `${binding.contractId}:${binding.capabilityId}`;
     if (binding.contractId.startsWith("kernel.")) {

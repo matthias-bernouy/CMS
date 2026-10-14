@@ -7,6 +7,7 @@ import {
     asRepeat,
     asSource,
     asSourceBody,
+    asSyncTarget,
     isCmsQueryParamName,
     isInterpolation,
     parseInterpolation,
@@ -17,6 +18,7 @@ import {
     parseRepeat,
     parseSource,
     parseSourceBody,
+    parseSyncTarget,
 } from "@bernouy/cms-content/bindings";
 
 describe("binding syntax", () => {
@@ -144,14 +146,36 @@ describe("binding syntax", () => {
             capabilityId: "list",
             name: "pages",
         });
+        expect(asQuery({ sync: { scope: "page", key: "ulvia-official-pages" }, name: "pages" })).toBe(
+            "@page:ulvia-official-pages as pages",
+        );
+        expect(parseQuery(" @session:ulvia-official-user as user ")).toEqual({
+            sync: { scope: "session", key: "ulvia-official-user" },
+            name: "user",
+        });
         for (const value of [
             "ulvia.cms.pages:list",
             "/.cms/call/ulvia.cms.pages/list as pages",
             "ulvia.cms.pages:list as cms",
             "ulvia.cms.pages:list as page-list",
             "ulvia.cms.pages:list as $pages",
+            "@page:Ulvia-pages as pages",
+            "@global:ulvia-pages as pages",
         ]) {
             expect(parseQuery(value)).toBeNull();
+        }
+    });
+
+    test("parses bounded synchronized-state targets", () => {
+        expect(asSyncTarget({ scope: "persistent", key: "ulvia-official-preferences.theme" })).toBe(
+            "@persistent:ulvia-official-preferences.theme",
+        );
+        expect(parseSyncTarget(" @param:ulvia-official-search ")).toEqual({
+            scope: "param",
+            key: "ulvia-official-search",
+        });
+        for (const value of ["page:key", "@page:key/value", "@page:-key", "@memory:key", "@page:KEY"]) {
+            expect(parseSyncTarget(value)).toBeNull();
         }
     });
 

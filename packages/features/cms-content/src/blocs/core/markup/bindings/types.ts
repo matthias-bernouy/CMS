@@ -7,6 +7,7 @@ export const CMS_BINDING_ATTRIBUTES = {
     formEmpty: "cms-form-empty",
     paramSync: "cms-param-sync",
     pageState: "cms-page-state",
+    sync: "cms-sync",
     query: "cms-query",
     queryInput: "cms-query-input",
     queryRefresh: "cms-query-refresh",
@@ -71,7 +72,12 @@ export type CmsQueryTarget = {
     readonly contractId: string;
     readonly capabilityId: string;
 };
-export type CmsQueryBinding = CmsQueryTarget & { readonly name: string };
+export const CMS_SYNC_SCOPES = ["param", "page", "session", "persistent"] as const;
+export type CmsSyncScope = (typeof CMS_SYNC_SCOPES)[number];
+export type CmsSyncTarget = { readonly scope: CmsSyncScope; readonly key: string };
+export type CmsRemoteQueryBinding = CmsQueryTarget & { readonly name: string };
+export type CmsSyncQueryBinding = { readonly sync: CmsSyncTarget; readonly name: string };
+export type CmsQueryBinding = CmsRemoteQueryBinding | CmsSyncQueryBinding;
 export type CmsQueryInput = CmsSourceParamMap;
 export type CmsQueryRefreshPolicy = {
     readonly intervalMs?: number;
