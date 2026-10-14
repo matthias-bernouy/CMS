@@ -1,6 +1,6 @@
 import { parseQuery } from "cms-content/blocs/core/markup/bindings/source";
 import { parseCmsSourceSuccessReload } from "cms-content/blocs/core/validation/nativeBindings/formValues";
-import { BINDING_CORE_TAG, QUERY_ATTR, SOURCE_SUCCESS_RELOAD_ATTR } from "../../core/attrs";
+import { BINDING_CORE_TAG, MUTATION_INVALIDATES_ATTR, QUERY_ATTR, SOURCE_SUCCESS_RELOAD_ATTR } from "../../core/attrs";
 
 type Reader = {
     url: () => string;
@@ -50,13 +50,13 @@ export function connectQueryReload(
 }
 
 export function formMutationReload(form: HTMLFormElement) {
-    const rawNames = form.getAttribute(SOURCE_SUCCESS_RELOAD_ATTR);
+    const rawNames = form.getAttribute(MUTATION_INVALIDATES_ATTR) ?? form.getAttribute(SOURCE_SUCCESS_RELOAD_ATTR);
     if (!rawNames?.trim()) {
         return null;
     }
     const names = parseCmsSourceSuccessReload(rawNames);
     if (!names) {
-        throw new Error("cms-source-success-reload must identify one to eight unique queries by name.");
+        throw new Error("cms-mutation-invalidates must identify one to eight unique queries by name.");
     }
     const core = form.closest(BINDING_CORE_TAG);
     const selected = names.map((name) => selectReader(core, name));
@@ -88,11 +88,11 @@ function selectReader(core: Element | null, name: string): SelectedReader {
     const source = matches.length === 1 ? matches[0]! : null;
     const reader = source ? readers.get(source) : undefined;
     if (!source || !reader || source.closest(BINDING_CORE_TAG) !== core || !source.hasAttribute(QUERY_ATTR)) {
-        throw new Error(`cms-source-success-reload requires one active query named ${JSON.stringify(name)}.`);
+        throw new Error(`cms-mutation-invalidates requires one active query named ${JSON.stringify(name)}.`);
     }
     const url = reader.url();
     if (!url) {
-        throw new Error(`cms-source-success-reload requires query ${JSON.stringify(name)} to be valid.`);
+        throw new Error(`cms-mutation-invalidates requires query ${JSON.stringify(name)} to be valid.`);
     }
     return { source, reader, url, generation: reader.generation() };
 }

@@ -42,7 +42,12 @@ export {
     type CmsSourceResultEventMap,
 } from "./runtime/mutation/events/resultEvents";
 export type { FormSubmitResult } from "./form/formSubmit";
-export { sourceFormRequest, SourceFormError } from "./runtime/mutation/programmaticRequest";
+export {
+    mutationFormRequest,
+    MutationFormError,
+    sourceFormRequest,
+    SourceFormError,
+} from "./runtime/mutation/programmaticRequest";
 
 const BINDING_FILTERS_KEY = Symbol.for("@bernouy/cms-content.browser.binding.filters");
 

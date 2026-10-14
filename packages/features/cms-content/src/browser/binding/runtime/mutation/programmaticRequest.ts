@@ -1,4 +1,5 @@
 import type { FormSubmitResult } from "../../form/formSubmit";
+import { parseMutation } from "cms-content/blocs/core/markup/bindings";
 import { CMS_SOURCE_FAILED_EVENT, CMS_SOURCE_SUCCESS_EVENT } from "./events/resultEvents";
 
 const submittedControls = new WeakMap<HTMLFormElement, HTMLElement[]>();
@@ -24,6 +25,32 @@ export class SourceFormError extends Error {
     }
 }
 
+export { SourceFormError as MutationFormError };
+
+/** Submit a declarative mutation form and await its successful output. */
+export async function mutationFormRequest(
+    host: ParentNode,
+    mutationName: string,
+    values: Record<string, unknown> = {},
+): Promise<unknown> {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(mutationName)) {
+        throw new Error(`Invalid declarative mutation name: ${mutationName}`);
+    }
+    const candidates = mutationForms(host);
+    const root = host instanceof Node ? host.getRootNode() : null;
+    const parentHost = root instanceof ShadowRoot ? root.host : null;
+    if (parentHost) {
+        candidates.push(...mutationForms(parentHost));
+    }
+    const matches = candidates.filter(
+        (form) => parseMutation(form.getAttribute("cms-mutation") ?? "")?.name === mutationName,
+    );
+    if (matches.length !== 1) {
+        throw new Error(`Expected one declarative mutation form named ${mutationName}, found ${matches.length}`);
+    }
+    return requestForm(matches[0]!, values);
+}
+
 /** Submit a declarative form source and await the result owned by binding. */
 export async function sourceFormRequest(
     host: ParentNode,
@@ -41,6 +68,10 @@ export async function sourceFormRequest(
     if (!(form instanceof HTMLFormElement)) {
         throw new Error(`Missing declarative source form: ${sourceId}`);
     }
+    return requestForm(form, values);
+}
+
+async function requestForm(form: HTMLFormElement, values: Record<string, unknown>): Promise<unknown> {
     await sourceReady(form);
     replaceSubmittedControls(form, values);
     const result = await submit(form);
@@ -48,6 +79,12 @@ export async function sourceFormRequest(
         throw new SourceFormError(resultMessage(result), result.status || 0, result.body);
     }
     return result.body;
+}
+
+function mutationForms(root: ParentNode): HTMLFormElement[] {
+    return Array.from(root.querySelectorAll("form[cms-mutation]")).filter(
+        (element): element is HTMLFormElement => element instanceof HTMLFormElement,
+    );
 }
 
 function replaceSubmittedControls(form: HTMLFormElement, values: Record<string, unknown>): void {

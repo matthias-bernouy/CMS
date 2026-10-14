@@ -1,4 +1,7 @@
 import {
+    MUTATION_ATTR,
+    MUTATION_IDEMPOTENCY_ATTR,
+    MUTATION_INPUT_ATTR,
     SOURCE_BODY_ATTR,
     SOURCE_IDEMPOTENCY_ATTR,
     SOURCE_INHERIT_QUERY_ATTR,
@@ -94,10 +97,11 @@ export class MutationRequest {
     }
 
     private resolveBodyFields(required: boolean): AdditionalFormFields | undefined {
-        const resolved = resolveBindingInput(this.element.getAttribute(SOURCE_BODY_ATTR), this.element.ownerDocument);
+        const value = this.element.getAttribute(MUTATION_INPUT_ATTR) ?? this.element.getAttribute(SOURCE_BODY_ATTR);
+        const resolved = resolveBindingInput(value, this.element.ownerDocument);
         if (!resolved.ready) {
             if (required) {
-                throw new TypeError("cms-source-body requires synchronized state that is not available");
+                throw new TypeError("cms-mutation-input requires synchronized state that is not available");
             }
             return undefined;
         }
@@ -112,12 +116,13 @@ export class MutationRequest {
     }
 
     private idempotency(form: HTMLFormElement, serialized: SerializedForm): { idempotencyKey?: string } {
-        const mode = this.element.getAttribute(SOURCE_IDEMPOTENCY_ATTR);
+        const mode =
+            this.element.getAttribute(MUTATION_IDEMPOTENCY_ATTR) ?? this.element.getAttribute(SOURCE_IDEMPOTENCY_ATTR);
         if (mode === null) {
             return {};
         }
         if (mode.trim().toLowerCase() !== "auto") {
-            throw new Error("cms-source-idempotency must be auto when specified.");
+            throw new Error("cms-mutation-idempotency must be auto when specified.");
         }
         const fingerprint = submissionFingerprint(serialized);
         const current = idempotencyAttempts.get(form);
@@ -130,11 +135,17 @@ export class MutationRequest {
     }
 
     private sourceMethod(): SourceMethod {
+        if (this.element.hasAttribute(MUTATION_ATTR)) {
+            return "POST";
+        }
         return normalizeFormMethod(this.element.getAttribute(SOURCE_METHOD_ATTR), "POST") as SourceMethod;
     }
 
     private submitUrl(url: string): string {
         const next = new URL(url, location.href);
+        if (this.element.hasAttribute(MUTATION_ATTR)) {
+            return next.toString();
+        }
         if (this.element.getAttribute(SOURCE_INHERIT_QUERY_ATTR)?.trim().toLowerCase() !== "false") {
             for (const [key, value] of new URLSearchParams(location.search)) {
                 next.searchParams.append(key, value);

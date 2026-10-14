@@ -2,7 +2,7 @@ import { collectFormData } from "./formControls";
 import { appendSerializedValue } from "./nestedFormData";
 import type { AdditionalFormFields, FormSubmitMethod, SerializedForm, SerializedFormData } from "./types";
 import { serializeTypedForm } from "./typed/serialize";
-import { SOURCE_SERIALIZATION_ATTR } from "../core/attrs";
+import { MUTATION_ATTR, SOURCE_SERIALIZATION_ATTR } from "../core/attrs";
 
 const BODY_METHODS = new Set<FormSubmitMethod>(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -19,7 +19,7 @@ export function serializeForm(
     options: { url: string; method: FormSubmitMethod; bodyFields?: AdditionalFormFields; formData?: FormData },
 ): SerializedForm {
     const formData = options.formData ?? collectFormData(form);
-    const mode = form.getAttribute(SOURCE_SERIALIZATION_ATTR);
+    const mode = form.hasAttribute(MUTATION_ATTR) ? "typed-json" : form.getAttribute(SOURCE_SERIALIZATION_ATTR);
     if (mode && mode !== "typed-json") {
         throw new Error("cms-source-serialization must be typed-json when specified.");
     }

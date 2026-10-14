@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import {
     CMS_SOURCE_SUCCESS_EVENT,
+    mutationFormRequest,
     type FormSubmitResult,
     sourceFormRequest,
     SourceFormError,
@@ -11,6 +12,35 @@ import { el, resetDom, settle, text, waitFor } from "../support/testUtils";
 afterEach(resetDom);
 
 describe("Form mutation — submit request", () => {
+    test("submits a logical mutation through the canonical Gateway route", async () => {
+        let request: { url: string; init?: RequestInit } | null = null;
+        location.href = "http://localhost/";
+        globalThis.fetch = (async (url: string, init?: RequestInit) => {
+            request = { url, init };
+            return Response.json({ id: "page-1" });
+        }) as typeof fetch;
+        const host = el(`
+            <div>
+                <form cms-mutation="ulvia.cms.pages:create as created">
+                    <input name="title" value="Welcome">
+                </form>
+            </div>
+        `);
+        document.body.append(host);
+        const runtime = new BindingRuntime(host);
+        runtime.start();
+
+        const result = await mutationFormRequest(host, "created");
+
+        const captured = request as unknown as { url: string; init?: RequestInit };
+        expect(captured.url).toBe("http://localhost/.cms/call/ulvia.cms.pages/create");
+        expect(captured.init?.method).toBe("POST");
+        expect(captured.init?.headers).toEqual(expect.any(Headers));
+        expect(JSON.parse(String(captured.init?.body))).toEqual({ title: "Welcome" });
+        expect(result).toEqual({ id: "page-1" });
+        runtime.stop();
+    });
+
     test("form-owned submit source sends JSON without replacing form controls", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
         let result: FormSubmitResult | undefined;

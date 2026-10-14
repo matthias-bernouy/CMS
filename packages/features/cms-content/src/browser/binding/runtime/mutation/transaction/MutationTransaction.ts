@@ -1,4 +1,4 @@
-import { SOURCE_SERIALIZATION_ATTR } from "../../../core/attrs";
+import { MUTATION_ATTR, SOURCE_SERIALIZATION_ATTR } from "../../../core/attrs";
 import type { FormSubmitResult } from "../../../form/types";
 import { formMutationReload } from "../../query/mutationRefresh";
 import type { MutationRequest } from "../MutationRequest";
@@ -21,7 +21,10 @@ export class MutationTransaction {
         if (!captured) {
             return null;
         }
-        const needsLock = reload || element.getAttribute(SOURCE_SERIALIZATION_ATTR) === "typed-json";
+        const needsLock =
+            reload ||
+            element.hasAttribute(MUTATION_ATTR) ||
+            element.getAttribute(SOURCE_SERIALIZATION_ATTR) === "typed-json";
         const unlock = needsLock ? lockEditing(reload?.source ?? element, captured.form) : null;
         if (needsLock && !unlock) {
             return null;

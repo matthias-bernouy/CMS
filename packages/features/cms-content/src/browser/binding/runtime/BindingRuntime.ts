@@ -1,6 +1,6 @@
 /** Discovers binding features and owns their lifecycle for one root. */
 
-import { QUERIES_ATTR, QUERY_ATTR, SOURCE_ATTR, SYNC_ATTR } from "../core/attrs";
+import { MUTATION_ATTR, QUERIES_ATTR, QUERY_ATTR, SOURCE_ATTR, SYNC_ATTR } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
 import type { FormMutation } from "./mutation/FormMutation";
 import type { Query } from "./query/Query";
@@ -60,7 +60,7 @@ export class BindingRuntime {
         });
         this.observer.observe(this.root, {
             attributes: true,
-            attributeFilter: [QUERY_ATTR, QUERIES_ATTR, SOURCE_ATTR, SYNC_ATTR],
+            attributeFilter: [QUERY_ATTR, QUERIES_ATTR, MUTATION_ATTR, SOURCE_ATTR, SYNC_ATTR],
             childList: true,
             subtree: true,
         });

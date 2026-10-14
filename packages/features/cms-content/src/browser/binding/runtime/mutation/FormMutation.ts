@@ -1,7 +1,7 @@
 /** Executes one native form-owned `cms-source` mutation. */
 
-import { parseSource } from "cms-content/blocs/core/markup/bindings/source";
-import { SOURCE_ATTR } from "../../core/attrs";
+import { parseMutation, parseSource } from "cms-content/blocs/core/markup/bindings/source";
+import { MUTATION_ATTR, SOURCE_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import { BindingRenderer } from "../../reactive/renderer/BindingRenderer";
 import { cloneBindingContent } from "../../reactive/renderer/bindingContent";
@@ -63,7 +63,7 @@ export class FormMutation {
             onChange: () => this.changeScheduler.run(),
         });
         this.form.addEventListener("input", this.onFormInput);
-        const spec = parseSource(this.form.getAttribute(SOURCE_ATTR) ?? "");
+        const spec = mutationBinding(this.form);
         if (spec) {
             this.presenter.initial(spec.alias);
             this.afterRender();
@@ -95,7 +95,7 @@ export class FormMutation {
         if (this.transaction?.locked) {
             return false;
         }
-        const spec = parseSource(this.form.getAttribute(SOURCE_ATTR) ?? "");
+        const spec = mutationBinding(this.form);
         if (!spec) {
             return false;
         }
@@ -167,7 +167,7 @@ export class FormMutation {
 
     private readonly onFormInput = (): void => {
         this.syncDirty = true;
-        const spec = parseSource(this.form.getAttribute(SOURCE_ATTR) ?? "");
+        const spec = mutationBinding(this.form);
         if (spec) {
             this.request.captureInput(spec.url);
         }
@@ -182,4 +182,17 @@ export class FormMutation {
     private publishFormSync(): void {
         publishFormSync(this.form, this.status, this.request.input, this.syncDirty);
     }
+}
+
+function mutationBinding(form: HTMLFormElement): { readonly url: string; readonly alias?: string } | null {
+    const mutation = parseMutation(form.getAttribute(MUTATION_ATTR) ?? "");
+    if (mutation) {
+        const key = `${mutation.contractId}:${mutation.capabilityId}`;
+        const url =
+            key === "kernel.auth:login"
+                ? "/.cms/auth/login"
+                : `/.cms/call/${mutation.contractId}/${mutation.capabilityId}`;
+        return { url, alias: mutation.name };
+    }
+    return parseSource(form.getAttribute(SOURCE_ATTR) ?? "");
 }

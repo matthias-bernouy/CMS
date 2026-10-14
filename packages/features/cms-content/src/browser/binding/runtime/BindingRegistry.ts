@@ -1,4 +1,4 @@
-import { BINDING_CORE_TAG, QUERIES_ATTR, QUERY_ATTR, SOURCE_ATTR } from "../core/attrs";
+import { BINDING_CORE_TAG, MUTATION_ATTR, QUERIES_ATTR, QUERY_ATTR, SOURCE_ATTR } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
 import { SyncControl } from "../state/SyncControl";
 import { Query } from "./query/Query";
@@ -70,7 +70,10 @@ export class BindingRegistry {
     }
 
     reconcileSource(element: Element): void {
-        if (!element.hasAttribute(SOURCE_ATTR) || element.localName !== "form") {
+        if (
+            (!element.hasAttribute(SOURCE_ATTR) && !element.hasAttribute(MUTATION_ATTR)) ||
+            element.localName !== "form"
+        ) {
             this.unregisterSource(element);
             return;
         }

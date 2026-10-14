@@ -1,4 +1,8 @@
 import {
+    MUTATION_INVALIDATES_ATTR,
+    MUTATION_REDIRECT_ATTR,
+    MUTATION_REDIRECT_PARAM_ATTR,
+    MUTATION_RESET_ATTR,
     SOURCE_SUCCESS_REDIRECT_ATTR,
     SOURCE_SUCCESS_REDIRECT_PARAM_ATTR,
     SOURCE_SUCCESS_RELOAD_ATTR,
@@ -43,23 +47,36 @@ export class MutationResult {
     }
 
     private shouldReset(method: SourceMethod): boolean {
-        const value = this.element.getAttribute(SOURCE_SUCCESS_RESET_ATTR)?.trim().toLowerCase();
+        const value = (
+            this.element.getAttribute(MUTATION_RESET_ATTR) ?? this.element.getAttribute(SOURCE_SUCCESS_RESET_ATTR)
+        )
+            ?.trim()
+            .toLowerCase();
         if (value === "false" || value === "0" || value === "no") {
             return false;
         }
         if (value === "true" || value === "1" || value === "yes" || value === "") {
             return true;
         }
-        return !this.element.hasAttribute(SOURCE_SUCCESS_RELOAD_ATTR) && method !== "GET";
+        return (
+            !this.element.hasAttribute(MUTATION_INVALIDATES_ATTR) &&
+            !this.element.hasAttribute(SOURCE_SUCCESS_RELOAD_ATTR) &&
+            method !== "GET"
+        );
     }
 
     private successRedirect(result: FormSubmitResult, alias: string | undefined): string {
-        const param = this.element.getAttribute(SOURCE_SUCCESS_REDIRECT_PARAM_ATTR)?.trim();
+        const param = (
+            this.element.getAttribute(MUTATION_REDIRECT_PARAM_ATTR) ??
+            this.element.getAttribute(SOURCE_SUCCESS_REDIRECT_PARAM_ATTR)
+        )?.trim();
         const requested = param ? new URLSearchParams(location.search).get(param)?.trim() : "";
         if (requested && this.redirectUrl(requested)) {
             return requested;
         }
-        const template = this.element.getAttribute(SOURCE_SUCCESS_REDIRECT_ATTR)?.trim();
+        const template = (
+            this.element.getAttribute(MUTATION_REDIRECT_ATTR) ?? this.element.getAttribute(SOURCE_SUCCESS_REDIRECT_ATTR)
+        )?.trim();
         if (!template) {
             return "";
         }
