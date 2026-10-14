@@ -25,7 +25,7 @@ runtime maps this closed Kernel query to `GET /.cms/auth/me`. Action forms can
 submit to the corresponding auth route. For example:
 
 ```html
-<form cms-source="/.cms/auth/login" cms-source-method="POST" cms-source-trigger="submit" cms-source-inherit-query="false">
+<form cms-mutation="kernel.auth:login as session">
   <input name="email" type="email" required>
   <input name="password" type="password" required>
   <button type="submit">Log in</button>

@@ -20,7 +20,10 @@ test("discovery follows browser helpers but excludes server-only code, tests and
             `${pkg}/src/core/server.ts`,
             'export async function server() { return fetch("https://provider.test"); }',
         );
-        await file(`${pkg}/src/core/admin/auth/templates/example.html`, '<div cms-source="/api/data"></div>');
+        await file(
+            `${pkg}/src/core/admin/auth/templates/example.html`,
+            '<form cms-mutation="catalog:save as saved"></form>',
+        );
         await file(`${pkg}/tests/example.test.ts`, 'fetch("/api/test");');
         await file(`${pkg}/src/browser/admin-runtime.js`, 'fetch("/compiled");');
         await file(`${pkg}/dist/index.js`, 'fetch("/generated");');

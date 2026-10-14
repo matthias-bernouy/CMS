@@ -10,8 +10,8 @@
             </ulvia-official-form-actions>
         </ulvia-official-grid>
 
-        <form id="catalogue-search-form" slot="items" cms-source="/.cms/call/forms/submission.create" cms-source-method="POST" cms-source-trigger="submit" hidden></form>
-        <form slot="items" cms-source="/.cms/call/forms/submission.create" cms-source-method="POST" cms-source-trigger="submit">
+        <form id="catalogue-search-form" slot="items" cms-mutation="forms:submission.create as submission" hidden></form>
+        <form slot="items" cms-mutation="forms:submission.create as submission">
             <ulvia-official-stack align="stretch" gap="lg">
                 <ulvia-official-form-section appearance="elevated" slot="items">
                     <span slot="legend">Core fields</span>

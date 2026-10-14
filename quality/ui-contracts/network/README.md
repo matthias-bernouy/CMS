@@ -17,7 +17,7 @@ Known HTTP clients are recognized from exact package imports: `axios`, `ky`,
 `ofetch`, `undici`, `node-fetch`, and `cross-fetch`. Findings require an actual
 request invocation. Imports, client construction through `create`/`extend`,
 and unrelated local objects named after a client do not create findings.
-Named `sourceFormRequest` imports from `@bernouy/cms-content/browser`
+Named `mutationFormRequest` imports from `@bernouy/cms-content/browser`
 (including aliases) are also reviewed: sharing binding transport does not make
 an imperative operation declarative or exempt it from review. Other browser
 runtime imports do not produce network findings.
@@ -29,8 +29,8 @@ HTTP usage produces `ui.network.http` warnings recommending declarative
 binding where it fits UI loading or submission. Three exact files produce
 informational findings instead, with their purpose recorded in `policy.ts`:
 
-- `packages/features/cms-content/src/browser/binding/source/fetcher.ts`: binding transport.
-- `packages/features/cms-content/src/browser/binding/submit/submitRequest.ts`: binding form submission.
+- `packages/features/cms-content/src/browser/binding/runtime/query/queryFetch.ts`: query transport.
+- `packages/features/cms-content/src/browser/binding/form/submitRequest.ts`: mutation form submission.
 
 WebSocket and EventSource constructors produce separate informational rules
 for protocol purpose and connection lifecycle review. They are not presented

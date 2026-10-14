@@ -12,7 +12,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     await page.locator("#new-page-path").fill("/smoke-page");
     await Promise.all([
         page.waitForURL(/\/admin\/pages\?id=/u),
-        page.locator('form[cms-source*="ulvia.cms.pages/create"] button[type="submit"]').click(),
+        page.locator('form[cms-mutation^="ulvia.cms.pages:create "] button[type="submit"]').click(),
     ]);
     await page
         .getByRole("heading", { name: "Smoke Page" })
@@ -63,7 +63,7 @@ async function fillLatestVisibleElementContent(page: Page, value: string): Promi
 }
 
 async function submitPageDetails(page: Page) {
-    const form = page.locator('form[cms-source*="ulvia.cms.pages/update as saved"]');
+    const form = page.locator('form[cms-mutation="ulvia.cms.pages:update as saved"]');
     const revision = form.locator('input[name="expectedRevision"]');
     const initialRevision = await revision.inputValue();
     const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/get"));
@@ -167,7 +167,7 @@ function mutationButton(page: Page, capability: string) {
         return page.getByRole("button", { name: "Save document", exact: true });
     }
     const mutationForm = page
-        .locator(`form[cms-source^="/.cms/call/ulvia.cms.pages/${capability} "]`)
+        .locator(`form[cms-mutation^="ulvia.cms.pages:${capability} "]`)
         .filter({ has: page.locator('input[name="visible"][value="true"]') });
     return mutationForm.locator('button[type="submit"]');
 }

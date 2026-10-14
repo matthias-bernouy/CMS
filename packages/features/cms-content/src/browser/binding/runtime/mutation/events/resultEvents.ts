@@ -14,10 +14,10 @@ export const CMS_MUTATION_FAILED_EVENT = "cms-mutation:failed" as const;
 /** The mutation succeeded, but its requested read failed; do not replay the mutation. */
 export const CMS_MUTATION_REFRESH_FAILED_EVENT = "cms-mutation:refresh-failed" as const;
 
-/** Public event payload shared by successful and failed source submissions. */
+/** Public event payload shared by successful and failed mutation submissions. */
 export type CmsMutationResultEvent = CustomEvent<FormSubmitResult>;
 
-/** Event map exposed for consumers that wrap or forward source submissions. */
+/** Event map exposed for consumers that wrap or forward mutation submissions. */
 export interface CmsMutationResultEventMap {
     [CMS_MUTATION_SUCCESS_EVENT]: CmsMutationResultEvent;
     [CMS_MUTATION_FAILED_EVENT]: CmsMutationResultEvent;

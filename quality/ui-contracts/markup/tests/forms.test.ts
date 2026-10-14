@@ -2,63 +2,47 @@ import { describe, expect, test } from "bun:test";
 import { inspectMarkup } from "../index";
 
 const path = "packages/surfaces/cms-kernel/src/core/admin/auth/templates/example.html";
-const inspect = (content: string, file = path) => inspectMarkup({ path: file, content, kind: "html", browser: true });
+const inspect = (content: string) => inspectMarkup({ path, content, kind: "html", browser: true });
 
-describe("declarative source form contracts", () => {
-    test("reserves sources for native form submissions", () => {
-        expect(inspect('<form cms-source="/api/search" cms-source-method="POST"></form>')).toEqual([]);
-        expect(
-            inspect('<form cms-source="/api/search" cms-source-trigger="submit" cms-source-method="POST"></form>'),
-        ).toEqual([]);
-        expect(inspect('<div cms-source="/api/search"></div>')[0]).toMatchObject({
+describe("declarative mutation form contracts", () => {
+    test("reserves mutations for native forms", () => {
+        expect(inspect('<form cms-mutation="catalog:save as saved"></form>')).toEqual([]);
+        expect(inspect('<div cms-mutation="catalog:save as saved"></div>')[0]).toMatchObject({
             severity: "ERROR",
-            rule: "source-form-owner",
+            rule: "mutation-form-owner",
         });
     });
 
-    test("rejects removed automatic triggers and HEAD transport", () => {
-        expect(inspect('<form cms-source="/api/search" cms-source-trigger="auto"></form>')[0]).toMatchObject({
-            severity: "ERROR",
-            rule: "source-trigger-contract",
-        });
-        expect(inspect('<form cms-source="/api/search" cms-source-method="HEAD"></form>')[0]).toMatchObject({
-            severity: "ERROR",
-            rule: "source-method-contract",
-        });
+    test("requires one logical target and an explicit alias", () => {
+        for (const mutation of ["", "/.cms/call/catalog/save", "catalog:save", "catalog:save as bad-name"]) {
+            expect(inspect(`<form cms-mutation="${mutation}"></form>`)[0]).toMatchObject({
+                severity: "ERROR",
+                rule: "mutation-contract",
+            });
+        }
     });
 
-    test("does not guess dynamic trigger or method values", () => {
+    test("checks typed mutation input descriptors", () => {
+        const input = (value: unknown) =>
+            inspect(`<form cms-mutation="catalog:save as saved" cms-mutation-input='${JSON.stringify(value)}'></form>`);
         expect(
-            inspect(
-                '<form cms-source="/api/search" cms-source-trigger="{{ trigger }}" cms-source-method="{{ method }}"></form>',
-            ),
-        ).toEqual([]);
-    });
-
-    test("checks the supported source-body descriptor shape rather than ordinary payload JSON", () => {
-        const body = (value: unknown, method = "POST") =>
-            inspect(
-                `<form cms-source="/api/save" cms-source-trigger="submit" cms-source-method="${method}" cms-source-body='${JSON.stringify(value)}'></form>`,
-            );
-        expect(
-            body({
+            input({
                 id: { from: "state", key: "@param:site-id" },
                 draft: { from: "state", key: "@page:site-draft" },
                 enabled: { from: "literal", value: false },
-                count: { from: "literal", value: 0 },
             }),
         ).toEqual([]);
         for (const value of [{ id: 12 }, [{ id: 12 }], { id: { from: "state", key: "@param:site/id" } }, {}]) {
-            expect(body(value)[0]).toMatchObject({ severity: "WARNING", rule: "source-body-contract" });
+            expect(input(value)[0]).toMatchObject({ severity: "ERROR", rule: "mutation-input-contract" });
         }
-        expect(body({ id: { from: "literal", value: [] } })).toEqual([]);
-        expect(body({ id: { from: "literal", value: "" } })).toEqual([]);
-        expect(body({ id: 12 }, "GET")).toEqual([]);
-        expect(body({ id: { from: "literal", value: "{{ id }}" } })).toEqual([]);
     });
 
-    test("respects quoted delimiters, HTML entities and first duplicate attributes", () => {
-        const source = `<form title="a > b" cms-source="/api/save" cms-source-trigger="submit" cms-source-trigger="auto" cms-source-method="POST" cms-source-body="{&quot;id&quot;:{&quot;from&quot;:&quot;literal&quot;,&quot;value&quot;:12}}"></form>`;
-        expect(inspect(source)).toEqual([]);
+    test("rejects every legacy source attribute", () => {
+        for (const name of ["cms-source", "cms-source-method", "cms-source-body", "cms-source-success-reload"]) {
+            expect(inspect(`<form ${name}="value"></form>`)[0]).toMatchObject({
+                severity: "ERROR",
+                rule: "legacy-source-binding",
+            });
+        }
     });
 });

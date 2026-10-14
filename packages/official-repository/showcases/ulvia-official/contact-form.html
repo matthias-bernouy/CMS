@@ -9,7 +9,7 @@
             <ulvia-official-action size="md" tone="neutral" variant="ghost" slot="items"><a href="/forms/catalogue">View every form component</a></ulvia-official-action>
         </ulvia-official-stack>
 
-        <form slot="items" cms-source="/.cms/call/forms/submission.create" cms-source-method="POST" cms-source-trigger="submit">
+        <form slot="items" cms-mutation="forms:submission.create as submission">
                 <ulvia-official-form-section appearance="elevated">
                     <span slot="legend">Contact details</span>
                     <span slot="description">Required fields are marked with an asterisk.</span>

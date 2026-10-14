@@ -95,15 +95,19 @@ describe("browser network contracts", () => {
     });
 
     test("uses exact infrastructure paths and preserves browser helper findings", () => {
-        const path = "packages/features/cms-content/src/browser/binding/source/fetcher.ts";
+        const path = "packages/features/cms-content/src/browser/binding/runtime/query/queryFetch.ts";
         expect(inspect("fetch(url)", { path })[0]).toMatchObject({
             severity: "INFO",
-            message: expect.stringContaining("declarative cms-source"),
+            message: expect.stringContaining("declarative query"),
         });
         expect(
-            inspect("fetch(url)", { path: path.replace("source/fetcher.ts", "submit/submitRequest.ts") })[0]?.severity,
+            inspect("fetch(url)", {
+                path: "packages/features/cms-content/src/browser/binding/form/submitRequest.ts",
+            })[0]?.severity,
         ).toBe("INFO");
-        expect(inspect("fetch(url)", { path: path.replace("fetcher.ts", "helper.ts") })[0]?.severity).toBe("WARNING");
+        expect(inspect("fetch(url)", { path: path.replace("queryFetch.ts", "helper.ts") })[0]?.severity).toBe(
+            "WARNING",
+        );
         expect(inspect("fetch(url)", { path: `/other/${path}` })[0]?.severity).toBe("WARNING");
         expect(
             inspect("fetch(url)", { path: "packages/surfaces/cms-kernel/src/core/admin/helper.ts" })[0]?.severity,
@@ -133,7 +137,7 @@ describe("browser network contracts", () => {
 
 test("programmatic binding requests remain visible without being classified as imperative HTTP", () => {
     const findings = inspect(
-        'import { sourceFormRequest as request, Component } from "@bernouy/cms-content/browser"; request(form); new Component();',
+        'import { mutationFormRequest as request, Component } from "@bernouy/cms-content/browser"; request(form); new Component();',
     );
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({

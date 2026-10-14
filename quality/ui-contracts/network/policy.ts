@@ -3,10 +3,10 @@ import type { NetworkTarget } from "./clients";
 
 /** Exact runtime boundaries; directories and generic helpers are never exempted. */
 const INFRASTRUCTURE: Readonly<Record<string, string>> = {
-    "packages/features/cms-content/src/browser/binding/source/fetcher.ts":
-        "The declarative cms-source transport executes binding requests.",
-    "packages/features/cms-content/src/browser/binding/submit/submitRequest.ts":
-        "The declarative form transport submits serialized binding state.",
+    "packages/features/cms-content/src/browser/binding/runtime/query/queryFetch.ts":
+        "The declarative query transport executes capability reads.",
+    "packages/features/cms-content/src/browser/binding/form/submitRequest.ts":
+        "The declarative mutation transport submits serialized native forms.",
 };
 
 export function networkPolicy(
@@ -41,6 +41,6 @@ export function networkPolicy(
             : `${target.name} performs imperative browser HTTP work.`,
         recommendation: purpose
             ? "Keep request execution inside this explicit runtime boundary; callers should use its supported contract."
-            : "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            : "For UI data loading or form submission, consider declarative cms-query or cms-mutation bindings. Otherwise document the concrete lifecycle or transport requirement.",
     };
 }

@@ -61,9 +61,9 @@ test("official collection scripts use only the common capability transport", asy
     const pages = await officialCollectionFiles("*/pages/control/**/*.html");
     for (const path of pages) {
         const source = await readFile(path, "utf8");
-        for (const match of source.matchAll(/\bcms-source="([^"]+)"/gu)) {
-            const endpoint = match[1]!.split(" as ", 1)[0]!;
-            expect(endpoint.startsWith("/.cms/call/"), `${path}: ${endpoint}`).toBeTrue();
+        for (const match of source.matchAll(/\bcms-mutation="([^"]+)"/gu)) {
+            const target = match[1]!.split(" as ", 1)[0]!;
+            expect(target.includes(":"), `${path}: ${target}`).toBeTrue();
         }
     }
 });

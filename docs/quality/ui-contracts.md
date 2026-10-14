@@ -32,13 +32,13 @@ An empty or invalid workspace fails instead of reporting a successful audit.
 | `binding-core-owner` | ERROR / INFO | Only explicitly declared document producers create a `cms-binding-core`. Known producers remain visible as INFO. |
 | `ui.network.http` | WARNING / INFO | Browser HTTP requests require review. Exact documented infrastructure boundaries are INFO. |
 | `ui.network.websocket`, `ui.network.eventsource` | INFO | Review connection ownership and lifecycle; ordinary HTTP binding does not replace these protocols. |
-| `source-form-owner` | ERROR | `cms-source` is used outside its native form mutation boundary. Reads must use `cms-query`. |
-| `source-trigger-contract` | ERROR | `cms-source-trigger` is not `submit` or `change`. |
-| `source-method-contract` | ERROR | `cms-source-method` is outside the closed form transport set. |
-| `source-body-contract` | WARNING | A static `cms-source-body` contains descriptors the runtime ignores. |
+| `mutation-form-owner` | ERROR | `cms-mutation` is used outside its native form boundary. Reads use `cms-query`. |
+| `mutation-contract` | ERROR | A mutation does not use `contract:capability as alias`. |
+| `mutation-input-contract` | ERROR | A static `cms-mutation-input` is not a typed binding input map. |
+| `legacy-source-binding` | ERROR | A removed `cms-source*` attribute remains in authored markup. |
 
 `cms-query` owns ordinary UI data loading and refresh state. Native forms own
-mutations through `cms-source`; `cms-sync` connects declared browser state,
+commands through `cms-mutation`; `cms-sync` connects declared browser state,
 query inputs, controls, and producer snapshots. Components retain local interaction such as
 focus, selection, drag-and-drop, and rendering third-party canvases. A chart or
 file input does not automatically need its own HTTP client: queries support
@@ -51,7 +51,7 @@ its tests remain valid.
 ## Component composition and styles
 
 A custom element may own and compose children in **light DOM**. Those children
-remain discoverable by the existing document core, so their `cms-source`,
+remain discoverable by the existing document core, so their `cms-mutation`,
 `cms-query`, `cms-repeat`, and `cms-condition` bindings are valid. The markup does not all
 have to be inlined into the page file. Reusable component composition is an
 accepted architecture; being a custom element is not a binding boundary.

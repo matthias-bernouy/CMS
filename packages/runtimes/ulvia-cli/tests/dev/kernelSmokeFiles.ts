@@ -119,12 +119,12 @@ function filePageLink(page: Page) {
 }
 
 function capabilityForm(card: Locator, capabilityId: string): Locator {
-    return card.locator(`form[cms-source*="${capabilityId}"]`);
+    return card.locator(`form[cms-mutation*="${capabilityId}"]`);
 }
 
 function visibilityButton(card: Locator, visibility: "private" | "public"): Locator {
     return card.locator(
-        `form[cms-source*="workspace.files.set-visibility"]:has(input[name="visibility"][value="${visibility}"]) button[type="submit"]`,
+        `form[cms-mutation*="workspace.files.set-visibility"]:has(input[name="visibility"][value="${visibility}"]) button[type="submit"]`,
     );
 }
 

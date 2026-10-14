@@ -33,18 +33,18 @@ test("CLI audits imported browser helpers, reports real violations, and fails cl
         await write(`${pkg}/src/core/data.ts`, 'export const load = () => fetch("/api/items");');
         await write(`${pkg}/src/core/server.ts`, 'fetch("https://provider.test");');
         const template = `${pkg}/src/components/view.html`;
-        await write(template, '<cms-binding-core><div cms-source="/api/items"></div></cms-binding-core>');
+        await write(template, '<cms-binding-core><div cms-mutation="catalog:save as saved"></div></cms-binding-core>');
         const blocked = await run();
         expect(blocked.code).toBe(1);
         const audit = JSON.parse(blocked.stdout) as UiAudit;
         expect(audit.findings.map(({ severity }) => severity).sort()).toEqual(["ERROR", "ERROR", "WARNING"]);
         expect(audit.findings.find(({ severity }) => severity === "WARNING")?.file).toEndWith("/core/data.ts");
-        await write(template, '<div cms-source="/api/items"></div>');
-        const sourceViolation = await run();
-        expect(sourceViolation.code).toBe(1);
-        const sourceAudit = JSON.parse(sourceViolation.stdout) as UiAudit;
-        expect(sourceAudit.findings).toHaveLength(2);
-        expect(sourceAudit.findings.find(({ rule }) => rule === "source-form-owner")).toMatchObject({
+        await write(template, '<div cms-mutation="catalog:save as saved"></div>');
+        const mutationViolation = await run();
+        expect(mutationViolation.code).toBe(1);
+        const mutationAudit = JSON.parse(mutationViolation.stdout) as UiAudit;
+        expect(mutationAudit.findings).toHaveLength(2);
+        expect(mutationAudit.findings.find(({ rule }) => rule === "mutation-form-owner")).toMatchObject({
             severity: "ERROR",
         });
     } finally {

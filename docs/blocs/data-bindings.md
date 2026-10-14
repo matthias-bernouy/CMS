@@ -20,26 +20,38 @@ unique local alias:
   cms-query-listen="@param:shop-category"
   cms-query-refresh="focus reconnect"
 >
-  <p cms-condition="products.loading">Loading products…</p>
-  <p role="alert" cms-condition="products.error">Products could not be loaded.</p>
-  <p cms-condition="products.empty">No products are available.</p>
-  <ul cms-condition="products.loaded">
-    <li cms-repeat="products.data.items as product">
-      <a href="/products/{{ product.slug }}">{{ product.name }}</a>
-    </li>
-  </ul>
+  <p cms-condition="products.activity === 'fetching'">Loading products…</p>
+  <section cms-match="products.outcome.kind">
+    <div cms-case="'none'"></div>
+    <ul cms-case="'success'">
+      <li cms-repeat="products.data.items as product">
+        <a href="/products/{{ product.slug }}">{{ product.name }}</a>
+      </li>
+    </ul>
+    <div cms-case="'error'" cms-match="products.outcome.code">
+      <p role="alert" cms-case="'CATALOG_UNAVAILABLE'">The catalog is unavailable.</p>
+    </div>
+    <p role="alert" cms-case="'failure'">The request could not be completed.</p>
+  </section>
 </section>
 ```
 
-The alias owns a complete state:
+The alias owns a complete typed state:
 
-- `waiting` means that at least one required synchronized input is absent;
-- `loading`, `loaded`, `empty`, and `error` describe the initial request;
-- `refreshing` and `refreshError` describe a refresh without hiding existing
-  data;
-- `data` contains the successful capability output;
+- `activity` is `idle`, `waiting`, or `fetching`;
+- `hasData` states whether a successful result is retained;
+- `data` contains that successful capability output;
 - `input` contains the resolved logical input when one was supplied;
-- `status` and `message` describe a failure when available.
+- `outcome.kind` is `none`, `success`, `error`, or `failure`;
+- a declared provider error exposes its contract `code`, typed `output`,
+  `retryable`, HTTP `status`, and optional `requestId`;
+- a transport or protocol `failure` exposes a runtime code and never pretends
+  to be a provider-declared error.
+
+Contract-aware validation requires every declared outcome and error code to be
+handled with `cms-match`/`cms-case`. Capability output is accessible only in a
+proven `success` branch. Arrays additionally require a length proof before
+indexed access.
 
 `cms-query-input` is a JSON object. Every field is either a JSON literal or a
 reference to synchronized state:
@@ -179,44 +191,55 @@ and generation-pinned by the collection dependency.
 
 ## Forms and mutations
 
-`cms-source` is reserved for native form submissions. Its URL is static and
-same-site; it does not interpolate synchronized state. Named controls and an
-optional `cms-source-body` provide mutation input.
+`cms-mutation` binds a native form to one provider-neutral command capability.
+The author declares no URL, HTTP method, trigger, or serialization mode. The
+Kernel and the admitted contract own transport; native form submission owns
+activation. Named controls and optional `cms-mutation-input` descriptors form
+the logical input.
 
 ```html
 <form
-  cms-source="/.cms/call/newsletter/subscriptions.create as result"
-  cms-source-method="POST"
-  cms-source-trigger="submit"
-  cms-source-serialization="typed-json"
-  cms-source-success-reload="subscriptions"
+  cms-mutation="newsletter:subscriptions.create as result"
+  cms-mutation-invalidates="subscriptions"
+  cms-mutation-idempotency="auto"
+  cms-mutation-reset="true"
   cms-sync="@page:newsletter-form"
 >
   <input name="email" type="email" required>
   <input name="returnTo" type="hidden" value="{{ page.path }}">
-  <button type="submit" disabled="{{ $source.loading }}">Subscribe</button>
-  <p role="status" cms-condition="$source.loaded">Subscription confirmed.</p>
-  <p role="alert" cms-condition="$source.error">Subscription failed.</p>
+  <button type="submit" disabled="{{ result.activity === 'submitting' }}">Subscribe</button>
+  <section cms-match="result.outcome.kind">
+    <div cms-case="'none'"></div>
+    <p role="status" cms-case="'success'">Subscription confirmed.</p>
+    <div cms-case="'error'" cms-match="result.outcome.code">
+      <p role="alert" cms-case="'ALREADY_SUBSCRIBED'">This address is already subscribed.</p>
+    </div>
+    <p role="alert" cms-case="'failure'">Subscription could not be completed.</p>
+  </section>
 </form>
 ```
 
-The trigger is `submit` or `change`. Supported methods are `GET`, `POST`,
-`PUT`, `PATCH`, and `DELETE`. Body methods normally use
-`cms-source-serialization="typed-json"`; bracketed field names create nested
-objects and arrays. `cms-form-value-type` and `cms-form-empty` provide explicit
-scalar and empty-value conventions.
+Mutations always use the admitted command transport and are submitted as a
+logical typed input. Bracketed field names create nested objects and arrays.
+`cms-form-value-type` and `cms-form-empty` provide explicit scalar and
+empty-value conventions.
 
-`cms-source-body` accepts the same `literal` and `state` descriptors as query
-input. It supplements named controls; it is not a dynamic URL mechanism. A form
+`cms-mutation-input` accepts the same `literal` and `state` descriptors as
+query input. It supplements named controls and cannot override them. A form
 cannot submit while a required state input is absent. Binary values come from
-native file controls and use `FormData` when present. Provider capabilities
-currently accept bounded JSON unless their transport contract explicitly
-supports binary input.
+native file controls and switch the request to `FormData`; the selected
+capability must admit that transport.
 
-`cms-source-success-reload` contains one to eight query aliases. After a
+`cms-mutation-invalidates` contains one to eight query aliases. After a
 successful mutation, only those live queries are refreshed. The mutation result
-is never silently merged into query data. `cms-source-success-reset`, internal
-redirect attributes and automatic idempotency retain their bounded form semantics.
+is never silently merged into query data. `cms-mutation-reset` controls native
+form reset, `cms-mutation-redirect` and `cms-mutation-redirect-param` permit
+same-origin success navigation, and `cms-mutation-idempotency="auto"` reuses one
+key while retrying an unchanged submission.
+
+Like queries, mutations expose `activity`, retained `data`, resolved `input`,
+and the exhaustive `outcome` union. Provider errors remain distinct from
+transport/protocol failures and are checked against the selected contract.
 
 When a form also declares `cms-sync`, it publishes its lifecycle, current
 serialized `input`, successful result `data`, and `dirty` flag. URL parameter

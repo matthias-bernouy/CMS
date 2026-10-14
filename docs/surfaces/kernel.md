@@ -40,5 +40,5 @@ Collection Pages link by stable identity rather than by an authored URL:
 Successful capability forms use `data-cms-success-page-ref` with the same
 reference shape. Admission accepts only bounded, exact references and optional
 query/fragment suffixes. The kernel resolves the current site route override,
-writes the final `href` or `cms-source-success-redirect`, and removes the source
+writes the final `href` or `cms-mutation-redirect`, and removes the source
 metadata before returning HTML.

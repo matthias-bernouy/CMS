@@ -55,7 +55,8 @@ The old `cms-sources`, `cms-source-images`, `cms-identities` and `cms-secrets`
 packages are absent. Provider invocation and identities belong to Gateway;
 file and image semantics belong to Files providers; generic binary inspection,
 blob storage, secret storage and image processing belong to Foundation.
-The `cms-source` HTML attribute remains the active binding API.
+Declarative reads use `cms-query`; native form commands use `cms-mutation`.
+The removed `cms-source` transport grammar is not accepted.
 
 ## Official Products
 
