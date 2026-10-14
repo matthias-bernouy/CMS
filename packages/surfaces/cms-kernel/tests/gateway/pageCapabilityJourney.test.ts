@@ -21,7 +21,7 @@ test("a published Page renders and invokes only its exact capability plan", asyn
         description: "Displays products returned by the catalogue provider.",
         viewJS: "customElements.define('catalog-products', class extends HTMLElement {})",
         componentHTML:
-            '<section cms-query="shop:list-products as products" cms-query-input=\'{"category":{"from":"raw","value":"shoes"}}\'></section>',
+            '<section cms-query="shop:list-products as products" cms-query-input=\'{"category":{"from":"literal","value":"shoes"}}\'></section>',
         ownership: { kind: "code-managed" },
         slots: {},
     });

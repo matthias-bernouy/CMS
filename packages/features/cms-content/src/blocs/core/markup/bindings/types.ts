@@ -47,7 +47,19 @@ export const CMS_SOURCE_STATUS_SCOPE = "$source";
 export const CMS_SOURCES_STATUS_SCOPE = "$sources";
 
 export type CmsBindingAttribute = (typeof CMS_BINDING_ATTRIBUTES)[keyof typeof CMS_BINDING_ATTRIBUTES];
-export type CmsBindingInputValue = { from: "sync"; key: string } | { from: "raw"; value: string | number | boolean };
+export type CmsJsonValue = null | string | number | boolean | CmsJsonValue[] | { [key: string]: CmsJsonValue };
+export type CmsBindingInputCast = "string" | "number" | "integer" | "boolean";
+export type CmsBindingInputPath = readonly (string | number)[];
+export type CmsBindingInputValue =
+    | { readonly from: "literal"; readonly value: CmsJsonValue }
+    | {
+          readonly from: "state";
+          readonly key: string;
+          readonly path?: CmsBindingInputPath;
+          readonly cast?: CmsBindingInputCast;
+          readonly optional?: boolean;
+          readonly fallback?: CmsJsonValue;
+      };
 export type CmsBindingInputMap = Record<string, CmsBindingInputValue | null | undefined>;
 export type CmsSourceBinding = { url: string; alias?: string };
 export type CmsSourceBodyBinding = CmsBindingInputMap;

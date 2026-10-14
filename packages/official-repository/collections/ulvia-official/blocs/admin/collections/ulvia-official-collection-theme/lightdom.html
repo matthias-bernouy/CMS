@@ -1,6 +1,6 @@
 <section
     cms-query="ulvia.cms.theme:get as collectionTheme"
-    cms-query-input='{"collectionId":{"from":"sync","key":"@param:ulvia-official-collection"},"profileId":{"from":"sync","key":"@param:ulvia-official-theme-profile"},"mode":{"from":"sync","key":"@param:ulvia-official-theme-mode"},"tokenId":{"from":"sync","key":"@param:ulvia-official-theme-token"},"search":{"from":"sync","key":"@param:ulvia-official-theme-search"}}'
+    cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia-official-collection"},"profileId":{"from":"state","key":"@param:ulvia-official-theme-profile","optional":true},"mode":{"from":"state","key":"@param:ulvia-official-theme-mode","optional":true},"tokenId":{"from":"state","key":"@param:ulvia-official-theme-token","optional":true},"search":{"from":"state","key":"@param:ulvia-official-theme-search","optional":true}}'
 >
     <p role="status" aria-live="polite" cms-condition="collectionTheme.loading">
         {{ cms.i18n.ulvia-official.ui-working }}

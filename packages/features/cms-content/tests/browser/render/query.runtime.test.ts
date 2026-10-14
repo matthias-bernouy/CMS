@@ -10,7 +10,7 @@ afterEach(resetDom);
 test("a Provider query with input uses the logical QUERY transport", () => {
     const query = el(`<section
         cms-query="ulvia.cms.pages:list as pages"
-        cms-query-input='{"limit":{"from":"raw","value":20}}'
+        cms-query-input='{"limit":{"from":"literal","value":20}}'
     ></section>`);
 
     expect(queryRequest(query)).toEqual({
@@ -29,10 +29,10 @@ test("a Provider query input builds nested objects and arrays from typed paths",
     const query = el(`<section
         cms-query="ulvia.cms.collections:plan-migration as plan"
         cms-query-input='{
-            "targets[0][repositoryId]":{"from":"sync","key":"@param:site-repository"},
-            "targets[0][collectionId]":{"from":"sync","key":"@param:site-collection"},
-            "targets[0][version]":{"from":"sync","key":"@param:site-version"},
-            "targets[0][publisherId]":{"from":"raw","value":"ulvia.official"}
+            "targets[0][repositoryId]":{"from":"state","key":"@param:site-repository"},
+            "targets[0][collectionId]":{"from":"state","key":"@param:site-collection"},
+            "targets[0][version]":{"from":"state","key":"@param:site-version"},
+            "targets[0][publisherId]":{"from":"literal","value":"ulvia.official"}
         }'
     ></section>`);
 
@@ -46,13 +46,57 @@ test("a Provider query omits absent optional query parameters", () => {
     const query = el(`<section
         cms-query="ulvia.cms.theme:get as theme"
         cms-query-input='{
-            "collectionId":{"from":"sync","key":"@param:site-collection"},
-            "profileId":{"from":"sync","key":"@param:site-theme-profile"},
-            "mode":{"from":"sync","key":"@param:site-theme-mode"}
+            "collectionId":{"from":"state","key":"@param:site-collection"},
+            "profileId":{"from":"state","key":"@param:site-theme-profile","optional":true},
+            "mode":{"from":"state","key":"@param:site-theme-mode","optional":true}
         }'
     ></section>`);
 
     expect(queryRequest(query).init.body).toBe('{"collectionId":"ulvia","mode":""}');
+});
+
+test("a Provider query selects and strictly casts synchronized state", () => {
+    const target = { scope: "page", key: "ulvia-official-selection" } as const;
+    writeSyncValue(target, { data: { product: { id: "42" } } });
+    const query = el(`<section
+        cms-query="catalog.items:get as product"
+        cms-query-input='{
+            "id":{"from":"state","key":"@page:ulvia-official-selection","path":["data","product","id"],"cast":"integer"},
+            "locale":{"from":"state","key":"@param:site-locale","fallback":"en"}
+        }'
+    ></section>`);
+
+    expect(queryRequest(query)).toMatchObject({ input: { id: 42, locale: "en" } });
+    writeSyncValue(target, undefined);
+});
+
+test("a Provider query waits for required synchronized input", async () => {
+    const target = { scope: "page", key: "ulvia-official-required-filter" } as const;
+    const host = el(`<section
+        cms-query="catalog.items:list as products"
+        cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-required-filter"}}'
+    ><p cms-condition="products.waiting">Waiting</p></section>`);
+    document.body.appendChild(host);
+    const inputs: unknown[] = [];
+    const query = new Query(
+        host,
+        {},
+        {
+            request: async (_url, _signal, init) => {
+                inputs.push(JSON.parse(String(init?.body)));
+                return { kind: "success", data: [] };
+            },
+        },
+    );
+
+    query.start();
+    expect(host.textContent).toContain("Waiting");
+    expect(inputs).toEqual([]);
+    writeSyncValue(target, "published");
+    await waitFor(() => inputs.length === 1);
+    expect(inputs).toEqual([{ status: "published" }]);
+    query.dispose();
+    writeSyncValue(target, undefined);
 });
 
 test("a Provider query without input uses the cache-compatible logical GET transport", () => {
@@ -108,7 +152,7 @@ test("a remote query publishes its lifecycle and resolved input", async () => {
     const target = { scope: "page", key: "ulvia-official-products" } as const;
     const host = el(`<section
         cms-query="catalog.items:list as products"
-        cms-query-input='{"limit":{"from":"raw","value":20}}'
+        cms-query-input='{"limit":{"from":"literal","value":20}}'
         cms-sync="@page:ulvia-official-products"
     ><p>{{ products.data[0].name }}</p></section>`);
     document.body.appendChild(host);
@@ -132,7 +176,7 @@ test("a remote query refreshes only when one of its synchronized inputs changes"
     writeSyncValue(target, "draft");
     const host = el(`<section
         cms-query="catalog.items:list as products"
-        cms-query-input='{"status":{"from":"sync","key":"@page:ulvia-official-filter"}}'
+        cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-filter"}}'
     ></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
@@ -161,6 +205,38 @@ test("a remote query refreshes only when one of its synchronized inputs changes"
     writeSyncValue(unrelated, undefined);
 });
 
+test("a remote query ignores state changes outside its selected path", async () => {
+    const target = { scope: "page", key: "ulvia-official-selection-snapshot" } as const;
+    writeSyncValue(target, { data: { id: "one" }, refreshing: false });
+    const host = el(`<section
+        cms-query="catalog.items:get as product"
+        cms-query-input='{"id":{"from":"state","key":"@page:ulvia-official-selection-snapshot","path":["data","id"]}}'
+    ></section>`);
+    document.body.appendChild(host);
+    const inputs: unknown[] = [];
+    const query = new Query(
+        host,
+        {},
+        {
+            request: async (_url, _signal, init) => {
+                inputs.push(JSON.parse(String(init?.body)));
+                return { kind: "success", data: {} };
+            },
+        },
+    );
+
+    query.start();
+    await waitFor(() => inputs.length === 1);
+    writeSyncValue(target, { data: { id: "one" }, refreshing: true });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(inputs).toHaveLength(1);
+    writeSyncValue(target, { data: { id: "two" }, refreshing: false });
+    await waitFor(() => inputs.length === 2);
+    expect(inputs).toEqual([{ id: "one" }, { id: "two" }]);
+    query.dispose();
+    writeSyncValue(target, undefined);
+});
+
 test("a synchronized-state query consumes the producer snapshot without HTTP", () => {
     const target = { scope: "page", key: "ulvia-official-shared-products" } as const;
     const host = el(`<section cms-query="@page:ulvia-official-shared-products as products">
@@ -171,6 +247,7 @@ test("a synchronized-state query consumes the producer snapshot without HTTP", (
 
     query.start();
     writeSyncValue(target, {
+        waiting: false,
         loading: false,
         loaded: true,
         empty: false,

@@ -17,10 +17,10 @@ describe("Source — submit payload and publication", () => {
         location.href = "http://localhost/?site-return-to=%2Fdashboard";
         writeSyncValue({ scope: "page", key: "site-auth-token" }, "abc123");
         const body = JSON.stringify({
-            email: { from: "raw", value: "bound@example.com" },
-            returnTo: { from: "sync", key: "@param:site-return-to" },
-            token: { from: "sync", key: "@page:site-auth-token" },
-            remember: { from: "raw", value: true },
+            email: { from: "literal", value: "bound@example.com" },
+            returnTo: { from: "state", key: "@param:site-return-to" },
+            token: { from: "state", key: "@page:site-auth-token" },
+            remember: { from: "literal", value: true },
         });
 
         const root = el(`
@@ -75,6 +75,29 @@ describe("Source — submit payload and publication", () => {
 
         expect(url).toBe("http://localhost/api/search?kind=public&q=plans");
         expect(root.querySelector<HTMLInputElement>("[name=q]")!.value).toBe("plans");
+        runtime.stop();
+    });
+
+    test("form-owned submit does not send a required state input before it exists", async () => {
+        let calls = 0;
+        globalThis.fetch = (async () => {
+            calls += 1;
+            return new Response("{}", { headers: { "content-type": "application/json" } });
+        }) as typeof fetch;
+        const root = el(`
+            <form cms-source="/api/login as result" cms-source-trigger="submit" cms-source-method="POST"
+                cms-source-body='{"token":{"from":"state","key":"@page:site-missing-token"}}'>
+                <button type="submit">Login</button>
+            </form>
+        `) as HTMLFormElement;
+        document.body.append(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+
+        root.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        await settle();
+
+        expect(calls).toBe(0);
         runtime.stop();
     });
 

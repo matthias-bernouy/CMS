@@ -42,7 +42,7 @@ test("automatic POST bindings send JSON input independently", async () => {
     for (const host of hosts) {
         host.setAttribute("cms-source", "/.cms/call/catalog/item.list");
         host.setAttribute("cms-source-method", "POST");
-        host.setAttribute("cms-source-body", '{"term":{"from":"raw","value":"one"}}');
+        host.setAttribute("cms-source-body", '{"term":{"from":"literal","value":"one"}}');
     }
     const sources = hosts.map((host) => new Source(host));
     try {

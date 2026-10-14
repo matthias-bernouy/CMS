@@ -12,13 +12,14 @@ import {
 } from "../core/attrs";
 import { interpolateString, type FilterMap } from "../core/interpolate";
 import type { Scope } from "../core/scope";
-import { resolveSourceBodyFields } from "./presentation/sourceBody";
+import { resolveBindingInput } from "./presentation/sourceBody";
 import { CMS_SOURCE_FAILED_EVENT, CMS_SOURCE_REFRESH_FAILED_EVENT, CMS_SOURCE_SUCCESS_EVENT } from "./submissionEvents";
 import {
     collectFormData,
     normalizeFormMethod,
     serializeForm,
     submitForm,
+    type AdditionalFormFields,
     type FormSubmitResult,
     type SerializedForm,
 } from "../submit/formSubmit";
@@ -27,7 +28,7 @@ type CapturedSubmission = {
     form: HTMLFormElement;
     method: SourceMethod;
     formData: FormData;
-    bodyFields: ReturnType<typeof resolveSourceBodyFields>;
+    bodyFields: AdditionalFormFields | undefined;
     serialized: SerializedForm;
     idempotencyKey?: string;
 };
@@ -50,10 +51,7 @@ export class SourceSubmission {
         }
         const method = this.sourceMethod();
         const formData = collectFormData(form);
-        const bodyFields =
-            method === "GET" || method === "HEAD"
-                ? undefined
-                : resolveSourceBodyFields(this.element.getAttribute(SOURCE_BODY_ATTR), this.element.ownerDocument);
+        const bodyFields = method === "GET" || method === "HEAD" ? undefined : this.resolveBodyFields(true);
         const serialized = serializeForm(form, { url: this.submitUrl(url), method, formData, bodyFields });
         this.latestInput = serialized.data;
         return {
@@ -77,10 +75,7 @@ export class SourceSubmission {
         }
         const method = this.sourceMethod();
         const formData = collectFormData(form);
-        const bodyFields =
-            method === "GET" || method === "HEAD"
-                ? undefined
-                : resolveSourceBodyFields(this.element.getAttribute(SOURCE_BODY_ATTR), this.element.ownerDocument);
+        const bodyFields = method === "GET" || method === "HEAD" ? undefined : this.resolveBodyFields(false);
         this.latestInput = serializeForm(form, {
             url: this.submitUrl(url),
             method,
@@ -99,6 +94,17 @@ export class SourceSubmission {
             serialized: captured.serialized,
             ...(captured.idempotencyKey ? { headers: { "Idempotency-Key": captured.idempotencyKey } } : {}),
         });
+    }
+
+    private resolveBodyFields(required: boolean): AdditionalFormFields | undefined {
+        const resolved = resolveBindingInput(this.element.getAttribute(SOURCE_BODY_ATTR), this.element.ownerDocument);
+        if (!resolved.ready) {
+            if (required) {
+                throw new TypeError("cms-source-body requires synchronized state that is not available");
+            }
+            return undefined;
+        }
+        return Object.keys(resolved.fields).length ? resolved.fields : undefined;
     }
 
     complete(result: FormSubmitResult, alias: string | undefined): void {

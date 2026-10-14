@@ -71,22 +71,20 @@ describe("binding syntax", () => {
 
     test("formats and parses source body bindings", () => {
         const body = {
-            email: { from: "sync" as const, key: "@param:site-email" },
-            minimum: { from: "sync" as const, key: " @param:site-racket-minimum " },
-            token: { from: "sync" as const, key: "@page:site-auth-token" },
-            active: { from: "raw" as const, value: true },
-            count: { from: "raw" as const, value: 2 },
-            label: { from: "raw" as const, value: "Newsletter" },
+            email: { from: "state" as const, key: "@param:site-email", optional: true },
+            minimum: { from: "state" as const, key: " @param:site-racket-minimum ", cast: "number" as const },
+            token: { from: "state" as const, key: "@page:site-auth-token", path: ["data", "token"] },
+            active: { from: "literal" as const, value: true },
+            options: { from: "literal" as const, value: { count: 2, labels: ["Newsletter"] } },
             skipped: undefined,
         };
         const formatted = asSourceBody(body);
         const expected = {
-            email: { from: "sync", key: "@param:site-email" },
-            minimum: { from: "sync", key: "@param:site-racket-minimum" },
-            token: { from: "sync", key: "@page:site-auth-token" },
-            active: { from: "raw", value: true },
-            count: { from: "raw", value: 2 },
-            label: { from: "raw", value: "Newsletter" },
+            email: { from: "state", key: "@param:site-email", optional: true },
+            minimum: { from: "state", key: "@param:site-racket-minimum", cast: "number" },
+            token: { from: "state", key: "@page:site-auth-token", path: ["data", "token"] },
+            active: { from: "literal", value: true },
+            options: { from: "literal", value: { count: 2, labels: ["Newsletter"] } },
         };
         expect(JSON.parse(formatted)).toEqual(expected);
         expect(parseSourceBody(formatted)).toEqual(expected);
@@ -138,19 +136,19 @@ describe("binding syntax", () => {
 
     test("shares typed logical inputs without exposing an HTTP body", () => {
         const encoded = asQueryInput({
-            limit: { from: "raw", value: 100 },
-            page: { from: "sync", key: "@param:site-page" },
+            limit: { from: "literal", value: 100 },
+            page: { from: "state", key: "@param:site-page" },
         });
         expect(parseQueryInput(encoded)).toEqual({
-            limit: { from: "raw", value: 100 },
-            page: { from: "sync", key: "@param:site-page" },
+            limit: { from: "literal", value: 100 },
+            page: { from: "state", key: "@param:site-page" },
         });
 
         const nested = asQueryInput({
-            "targets[0][digest]": { from: "sync", key: "@param:site-digest" },
+            "targets[0][digest]": { from: "state", key: "@param:site-digest" },
         });
         expect(parseQueryInput(nested)).toEqual({
-            "targets[0][digest]": { from: "sync", key: "@param:site-digest" },
+            "targets[0][digest]": { from: "state", key: "@param:site-digest" },
         });
     });
 
@@ -167,12 +165,19 @@ describe("binding syntax", () => {
     });
 
     test("rejects malformed synchronized input targets", () => {
-        const formatted = asSourceBody({
-            external: { from: "sync", key: "@param:site/query" },
-        });
-
-        expect(formatted).toBe("");
-        expect(parseSourceBody('{"external":{"from":"sync","key":"@param:site/query"}}')).toBeNull();
+        expect(() =>
+            asSourceBody({
+                external: { from: "state", key: "@param:site/query" },
+            }),
+        ).toThrow("Invalid CMS binding input field");
+        for (const invalid of [
+            '{"external":{"from":"state","key":"@param:site/query"}}',
+            '{"external":{"from":"state","key":"@page:site-value","path":["__proto__"]}}',
+            '{"external":{"from":"state","key":"@page:site-value","optional":true,"fallback":null}}',
+            '{"external":{"from":"raw","value":true}}',
+        ]) {
+            expect(parseSourceBody(invalid)).toBeNull();
+        }
     });
 
     test("formats repeat bindings", () => {

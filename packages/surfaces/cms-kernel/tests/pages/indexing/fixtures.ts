@@ -5,7 +5,7 @@ export const PRODUCT_PAGE = {
     path: "/products/detail",
     title: "${content.title} — ${site.name}",
     description: "${content.description}",
-    content: `<main cms-query="commerce:product.get as product" cms-query-input='{"slug":{"from":"sync","key":"@param:site-product"}}'></main>`,
+    content: `<main cms-query="commerce:product.get as product" cms-query-input='{"slug":{"from":"state","key":"@param:site-product"}}'></main>`,
     visible: true,
     tags: [],
     indexing: {

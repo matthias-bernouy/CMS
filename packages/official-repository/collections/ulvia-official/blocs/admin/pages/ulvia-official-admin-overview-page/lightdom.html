@@ -27,7 +27,7 @@
                 </ulvia-official-form-actions>
             </form>
         </ulvia-official-surface>
-        <section id="pages-list" slot="content" cms-query="ulvia.cms.pages:list as pages" cms-query-input="{&quot;limit&quot;:{&quot;from&quot;:&quot;raw&quot;,&quot;value&quot;:100}}">
+        <section id="pages-list" slot="content" cms-query="ulvia.cms.pages:list as pages" cms-query-input="{&quot;limit&quot;:{&quot;from&quot;:&quot;literal&quot;,&quot;value&quot;:100}}">
             <div role="status" aria-live="polite" cms-condition="pages.loading">
                 <h2>{{ cms.i18n.ulvia-official.ui-loading-pages }}</h2>
                 <p>{{ cms.i18n.ulvia-official.ui-the-latest-page-catalogue-is-being-read-from-the-provider }}</p>

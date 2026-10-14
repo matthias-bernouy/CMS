@@ -1,6 +1,6 @@
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { collectionThemeTokenId } from "../../core/namespace";
-import { validateCollectionStateBindings } from "../../core/validation/markup/stateBindings";
+import { validateCollectionStateBindings } from "../../core/validation/markup/state";
 import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";

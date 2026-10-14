@@ -61,28 +61,23 @@ describe("declarative source form contracts", () => {
             );
         expect(
             body({
-                id: { from: "sync", key: "@param:site-id" },
-                draft: { from: "sync", key: "@page:site-draft" },
-                enabled: { from: "raw", value: false },
-                count: { from: "raw", value: 0 },
+                id: { from: "state", key: "@param:site-id" },
+                draft: { from: "state", key: "@page:site-draft" },
+                enabled: { from: "literal", value: false },
+                count: { from: "literal", value: 0 },
             }),
         ).toEqual([]);
-        for (const value of [
-            { id: 12 },
-            [{ id: 12 }],
-            { id: { from: "raw", value: [] } },
-            { id: { from: "sync", key: "@param:site/id" } },
-            { id: { from: "raw", value: "" } },
-        ]) {
+        for (const value of [{ id: 12 }, [{ id: 12 }], { id: { from: "state", key: "@param:site/id" } }, {}]) {
             expect(body(value)[0]).toMatchObject({ severity: "WARNING", rule: "source-body-contract" });
         }
+        expect(body({ id: { from: "literal", value: [] } })).toEqual([]);
+        expect(body({ id: { from: "literal", value: "" } })).toEqual([]);
         expect(body({ id: 12 }, "GET")).toEqual([]);
-        expect(body({ id: { from: "raw", value: "{{ id }}" } })).toEqual([]);
-        expect(body({})).toEqual([]);
+        expect(body({ id: { from: "literal", value: "{{ id }}" } })).toEqual([]);
     });
 
     test("respects quoted delimiters, HTML entities and first duplicate attributes", () => {
-        const source = `<form title="a > b" cms-source="/api/save" cms-source-trigger="submit" cms-source-trigger="auto" cms-source-method="POST" cms-source-body="{&quot;id&quot;:{&quot;from&quot;:&quot;raw&quot;,&quot;value&quot;:12}}"></form>`;
+        const source = `<form title="a > b" cms-source="/api/save" cms-source-trigger="submit" cms-source-trigger="auto" cms-source-method="POST" cms-source-body="{&quot;id&quot;:{&quot;from&quot;:&quot;literal&quot;,&quot;value&quot;:12}}"></form>`;
         expect(inspect(source)).toEqual([]);
         const loop = inspect(
             '<form\n cms-source="/api/save" cms-source-trigger="submit"\n cms-source-publish="x&#32;y" cms-reload-on="y"></form>',

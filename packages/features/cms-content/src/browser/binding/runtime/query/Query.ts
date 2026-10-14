@@ -20,6 +20,7 @@ import {
     refreshingQueryState,
     type QueryState,
     isQueryState,
+    waitingQueryState,
 } from "./queryState";
 
 type QueryOptions = {
@@ -39,6 +40,9 @@ export class Query {
     private input: unknown;
     private pending: Promise<boolean> | null = null;
     private queued: Promise<boolean> | null = null;
+    private queuedForce = false;
+    private activeIdentity: string | null = null;
+    private lastInputIdentity: string | null = null;
 
     constructor(
         private readonly element: Element,
@@ -61,7 +65,11 @@ export class Query {
             () => this.requestIdentity(),
             () => this.run(),
         );
-        this.stopRefresh = listenQueryRefresh(this.element, () => void this.run());
+        this.stopRefresh = listenQueryRefresh(
+            this.element,
+            () => void this.run(),
+            () => void this.run({ onlyIfInputChanged: true }),
+        );
         const supplied = connectSourceData(this.element, (value) => this.accept(value));
         if (supplied && !this.options.sourceStateForce) {
             this.accept(supplied.value);
@@ -93,15 +101,21 @@ export class Query {
         this.renderer.template();
     }
 
-    run(): Promise<boolean> {
+    run(options: { readonly onlyIfInputChanged?: boolean } = {}): Promise<boolean> {
         if (this.pending) {
+            this.queuedForce ||= !options.onlyIfInputChanged;
+            if (options.onlyIfInputChanged && this.requestIdentity() !== this.activeIdentity) {
+                this.abort?.abort();
+            }
             this.queued ??= this.pending.then(() => {
+                const force = this.queuedForce;
                 this.queued = null;
-                return this.element.isConnected ? this.run() : false;
+                this.queuedForce = false;
+                return this.element.isConnected ? this.run({ onlyIfInputChanged: !force }) : false;
             });
             return this.queued;
         }
-        const operation = this.execute().finally(() => {
+        const operation = this.execute(options).finally(() => {
             if (this.pending === operation) {
                 this.pending = null;
             }
@@ -110,7 +124,7 @@ export class Query {
         return operation;
     }
 
-    private async execute(): Promise<boolean> {
+    private async execute(options: { readonly onlyIfInputChanged?: boolean }): Promise<boolean> {
         let request: ReturnType<typeof queryRequest>;
         try {
             request = queryRequest(this.element);
@@ -118,6 +132,23 @@ export class Query {
             this.update(failedQueryState(null, error instanceof Error ? error.message : String(error)));
             return false;
         }
+        if ("waiting" in request) {
+            this.abort?.abort();
+            this.abort = null;
+            this.input = undefined;
+            this.activeIdentity = null;
+            if (this.lastInputIdentity !== "waiting" || !options.onlyIfInputChanged) {
+                this.lastInputIdentity = "waiting";
+                this.update(waitingQueryState());
+            }
+            return false;
+        }
+        const identity = `${request.init.method ?? "GET"}\u0000${request.url}\u0000${request.init.body ?? ""}`;
+        if (options.onlyIfInputChanged && identity === this.lastInputIdentity) {
+            return false;
+        }
+        this.lastInputIdentity = identity;
+        this.activeIdentity = identity;
         this.input = request.input;
         const refreshing = this.state.loaded;
         this.update(this.withInput(refreshing ? refreshingQueryState(this.state) : loadingQueryState()));
@@ -129,6 +160,9 @@ export class Query {
             this.abort = null;
         }
         if (controller.signal.aborted || outcome.kind === "aborted") {
+            return false;
+        }
+        if (this.activeIdentity !== identity) {
             return false;
         }
         if (outcome.kind === "error") {
@@ -188,6 +222,9 @@ export class Query {
         }
         try {
             const request = queryRequest(this.element);
+            if ("waiting" in request) {
+                return "waiting";
+            }
             return `${request.init.method ?? "GET"}\u0000${request.url}\u0000${request.init.body ?? ""}`;
         } catch {
             return "";

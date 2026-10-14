@@ -1,85 +1,97 @@
-import { parseSyncTarget } from "cms-content/blocs/core/markup/bindings";
+import {
+    parseSourceBody,
+    parseSyncTarget,
+    type CmsBindingInputCast,
+    type CmsJsonValue,
+} from "cms-content/blocs/core/markup/bindings";
 import { readSyncValue } from "../../params/SyncState";
 import type { AdditionalFormFields, SerializedFormValue } from "../../submit/formSubmit";
 
-type SourceBodyValue = { from: "sync"; key: string } | { from: "raw"; value: string | number | boolean };
+export type ResolvedBindingInput =
+    | { readonly ready: true; readonly fields: AdditionalFormFields }
+    | { readonly ready: false };
 
-type SourceBodyBinding = Record<string, SourceBodyValue>;
+const JSON_NUMBER = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/u;
+const JSON_INTEGER = /^-?(?:0|[1-9]\d*)$/u;
 
-export function resolveSourceBodyFields(value: string | null, doc: Document): AdditionalFormFields | undefined {
+export function resolveBindingInput(value: string | null, doc: Document): ResolvedBindingInput {
     const binding = parseSourceBody(value);
     if (!binding) {
-        return undefined;
+        return { ready: true, fields: {} };
     }
 
     const fields: AdditionalFormFields = {};
     for (const [name, source] of Object.entries(binding)) {
-        if (source.from === "sync") {
-            const target = parseSyncTarget(source.key);
-            const value = target ? readSyncValue(target, doc) : undefined;
-            if (value === undefined) {
-                continue;
+        if (!source || source.from === "literal") {
+            if (source) {
+                fields[name] = source.value as SerializedFormValue;
             }
-            fields[name] = value as SerializedFormValue;
-        } else {
-            fields[name] = source.value;
+            continue;
         }
-    }
-    return Object.keys(fields).length ? fields : undefined;
-}
-
-function parseSourceBody(value: string | null): SourceBodyBinding | null {
-    const raw = value?.trim() ?? "";
-    if (!raw) {
-        return null;
-    }
-
-    let parsed: unknown;
-    try {
-        parsed = JSON.parse(raw);
-    } catch {
-        return null;
-    }
-
-    if (!isRecord(parsed)) {
-        return null;
-    }
-    const binding: SourceBodyBinding = {};
-    for (const [name, source] of Object.entries(parsed)) {
-        const normalized = normalizeSourceBodyValue(source);
-        if (name.trim() && normalized) {
-            binding[name] = normalized;
+        const target = parseSyncTarget(source.key);
+        let selected = target ? selectPath(readSyncValue(target, doc), source.path) : undefined;
+        if (selected === undefined) {
+            if (Object.hasOwn(source, "fallback")) {
+                selected = source.fallback;
+            } else if (source.optional) {
+                continue;
+            } else {
+                return { ready: false };
+            }
         }
+        fields[name] = castValue(selected, source.cast) as SerializedFormValue;
     }
-    return Object.keys(binding).length ? binding : null;
+    return { ready: true, fields };
 }
 
-function normalizeSourceBodyValue(value: unknown): SourceBodyValue | null {
-    if (!isRecord(value) || typeof value.from !== "string") {
-        return null;
-    }
-
-    if (value.from === "sync") {
-        const key = typeof value.key === "string" ? value.key : "";
-        const target = parseSyncTarget(key);
-        return target ? { from: "sync", key: key.trim() } : null;
-    }
-
-    if (value.from !== "raw") {
-        return null;
-    }
-    if (typeof value.value === "string") {
-        return value.value.trim() ? { from: "raw", value: value.value } : null;
-    }
-    if (typeof value.value === "number" && Number.isFinite(value.value)) {
-        return { from: "raw", value: value.value };
-    }
-    if (typeof value.value === "boolean") {
-        return { from: "raw", value: value.value };
-    }
-    return null;
+/** Compatibility helper for form submission callers that already handle an absent body. */
+export function resolveSourceBodyFields(value: string | null, doc: Document): AdditionalFormFields | undefined {
+    const resolved = resolveBindingInput(value, doc);
+    return resolved.ready && Object.keys(resolved.fields).length ? resolved.fields : undefined;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
+function selectPath(value: unknown, path: readonly (string | number)[] | undefined): unknown {
+    let selected = value;
+    for (const segment of path ?? []) {
+        if (selected === null || typeof selected !== "object" || !Object.hasOwn(selected, segment)) {
+            return undefined;
+        }
+        selected = (selected as Record<string | number, unknown>)[segment];
+    }
+    return selected;
+}
+
+function castValue(value: unknown, cast: CmsBindingInputCast | undefined): CmsJsonValue {
+    if (!cast) {
+        return value as CmsJsonValue;
+    }
+    if (cast === "string") {
+        if (typeof value === "string" || typeof value === "boolean" || typeof value === "number") {
+            return String(value);
+        }
+        throw new TypeError("CMS state input cannot cast a structured value to string");
+    }
+    if (cast === "boolean") {
+        if (typeof value === "boolean") {
+            return value;
+        }
+        if (value === "true" || value === "false") {
+            return value === "true";
+        }
+        throw new TypeError('CMS state input boolean cast accepts only booleans or "true"/"false"');
+    }
+    if (typeof value === "number") {
+        if (Number.isFinite(value) && (cast === "number" || Number.isSafeInteger(value))) {
+            return value;
+        }
+        throw new TypeError(`CMS state input cannot cast the number to ${cast}`);
+    }
+    if (typeof value !== "string" || !(cast === "number" ? JSON_NUMBER : JSON_INTEGER).test(value)) {
+        throw new TypeError(`CMS state input cannot cast the value to ${cast}`);
+    }
+    const converted = Number(value);
+    if (!Number.isFinite(converted) || (cast === "integer" && !Number.isSafeInteger(converted))) {
+        throw new TypeError(`CMS state input cannot cast the value to ${cast}`);
+    }
+    return converted;
 }

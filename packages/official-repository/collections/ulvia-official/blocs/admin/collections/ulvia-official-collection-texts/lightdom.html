@@ -1,6 +1,6 @@
 <section
     cms-query="ulvia.cms.localization:get-texts as collectionTexts"
-    cms-query-input='{"collectionId":{"from":"sync","key":"@param:ulvia-official-collection"},"locale":{"from":"sync","key":"@param:ulvia-official-locale"},"group":{"from":"sync","key":"@param:ulvia-official-group"},"search":{"from":"sync","key":"@param:ulvia-official-search"}}'
+    cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia-official-collection"},"locale":{"from":"state","key":"@param:ulvia-official-locale","optional":true},"group":{"from":"state","key":"@param:ulvia-official-group","optional":true},"search":{"from":"state","key":"@param:ulvia-official-search","optional":true}}'
 >
     <p role="status" aria-live="polite" cms-condition="collectionTexts.loading">
         {{ cms.i18n.ulvia-official.ui-working }}

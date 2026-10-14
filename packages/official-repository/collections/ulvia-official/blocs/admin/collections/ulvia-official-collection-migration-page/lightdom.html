@@ -7,7 +7,7 @@
     <section
         slot="content"
         cms-query="ulvia.cms.collections:plan-migration as plan"
-        cms-query-input='{"targets[0][repositoryId]":{"from":"sync","key":"@param:ulvia-official-repository"},"targets[0][publisherId]":{"from":"sync","key":"@param:ulvia-official-publisher"},"targets[0][collectionId]":{"from":"sync","key":"@param:ulvia-official-collection"},"targets[0][version]":{"from":"sync","key":"@param:ulvia-official-version"},"targets[0][digest]":{"from":"sync","key":"@param:ulvia-official-digest"}}'
+        cms-query-input='{"targets[0][repositoryId]":{"from":"state","key":"@param:ulvia-official-repository"},"targets[0][publisherId]":{"from":"state","key":"@param:ulvia-official-publisher"},"targets[0][collectionId]":{"from":"state","key":"@param:ulvia-official-collection"},"targets[0][version]":{"from":"state","key":"@param:ulvia-official-version"},"targets[0][digest]":{"from":"state","key":"@param:ulvia-official-digest"}}'
     >
         <div cms-condition="plan.loading">{{ cms.i18n.ulvia-official.ui-preparing-migration-plan }}</div>
         <div cms-condition="plan.error">{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>

@@ -1,11 +1,12 @@
 import { parseSyncTarget, type CmsSyncTarget } from "cms-content/blocs/core/markup/bindings";
+import { parseJsonValue, serializeJsonValue } from "./jsonValue";
 
 export const CMS_SYNC_CHANGE_EVENT = "cms-sync:change";
 
 type StoredValue = { readonly version: 1; readonly value: unknown; readonly expiresAt?: number };
 type SyncChange = { readonly target: string };
 
-const PAGE_VALUES = new WeakMap<Document, Map<string, unknown>>();
+const PAGE_VALUES = new WeakMap<Document, Map<string, string>>();
 const STORAGE_PREFIX = "cms-sync:v1:";
 const MAX_SESSION_BYTES = 128 * 1024;
 const MAX_PERSISTENT_BYTES = 256 * 1024;
@@ -15,7 +16,8 @@ export function readSyncValue(target: CmsSyncTarget, doc: Document = document): 
         return currentParamsFor(doc).get(target.key) ?? undefined;
     }
     if (target.scope === "page") {
-        return pageValues(doc).get(target.key);
+        const serialized = pageValues(doc).get(target.key);
+        return serialized === undefined ? undefined : parseJsonValue(serialized);
     }
     const storage = browserStorage(target.scope, doc);
     if (!storage) {
@@ -51,14 +53,15 @@ export function writeSyncValue(
     }
     if (target.scope === "page") {
         const values = pageValues(doc);
+        const serialized = value === undefined ? undefined : serializeJsonValue(value);
         const previous = values.get(target.key);
-        if (Object.is(previous, value)) {
+        if (previous === serialized) {
             return;
         }
-        if (value === undefined) {
+        if (serialized === undefined) {
             values.delete(target.key);
         } else {
-            values.set(target.key, value);
+            values.set(target.key, serialized);
         }
         dispatchChange(target, doc);
         return;
@@ -152,7 +155,7 @@ function paramValue(value: unknown): string {
     throw new TypeError("URL parameter synchronization only accepts scalar values");
 }
 
-function pageValues(doc: Document): Map<string, unknown> {
+function pageValues(doc: Document): Map<string, string> {
     let values = PAGE_VALUES.get(doc);
     if (!values) {
         values = new Map();
@@ -176,11 +179,9 @@ function storageKey(target: CmsSyncTarget): string {
 }
 
 function serializeStoredValue(value: unknown, scope: "session" | "persistent", expiresAt?: number): string {
-    const payload: StoredValue = { version: 1, value, ...(expiresAt === undefined ? {} : { expiresAt }) };
+    const normalized = parseJsonValue(serializeJsonValue(value));
+    const payload: StoredValue = { version: 1, value: normalized, ...(expiresAt === undefined ? {} : { expiresAt }) };
     const serialized = JSON.stringify(payload);
-    if (serialized === undefined) {
-        throw new TypeError("Synchronized state must be JSON-serializable");
-    }
     const bytes = new TextEncoder().encode(serialized).byteLength;
     const limit = scope === "session" ? MAX_SESSION_BYTES : MAX_PERSISTENT_BYTES;
     if (bytes > limit) {

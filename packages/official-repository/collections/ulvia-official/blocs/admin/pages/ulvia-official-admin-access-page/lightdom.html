@@ -1,7 +1,7 @@
 <ulvia-official-admin-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-users }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-manage-cms-members-administrator-access-and-sign-in-methods }}</p>
-        <section id="access-overview" slot="content" cms-query="ulvia.cms.access:overview as access" cms-query-input='{"limit":{"from":"raw","value":100}}'>
+        <section id="access-overview" slot="content" cms-query="ulvia.cms.access:overview as access" cms-query-input='{"limit":{"from":"literal","value":100}}'>
             <p role="status" aria-live="polite" cms-condition="access.loading">{{ cms.i18n.ulvia-official.ui-loading-access-configuration }}</p>
             <div role="alert" cms-condition="access.error"><h2>{{ cms.i18n.ulvia-official.ui-access-unavailable }}</h2><p>{{ cms.i18n.ulvia-official.ui-users-and-settings-could-not-be-read }}</p></div>
             <div cms-condition="access.loaded">

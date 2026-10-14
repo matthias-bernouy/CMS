@@ -1,14 +1,14 @@
 import type {
-    CmsBindingInputMap,
-    CmsBindingInputValue,
-    CmsSourceBinding,
-    CmsSourceBodyBinding,
-    CmsSourceUrl,
     CmsQueryBinding,
     CmsQueryInput,
     CmsQueryRefreshPolicy,
+    CmsSourceBinding,
+    CmsSourceUrl,
 } from "cms-content/blocs/core/markup/bindings/types";
 import { asSyncTarget, parseSyncTarget } from "cms-content/blocs/core/markup/bindings/sync";
+import { asSourceBody, parseSourceBody } from "./input";
+
+export { asSourceBody, parseSourceBody } from "./input";
 
 const INTERPOLATION_PATTERN = /^\s*\{\{\s*([\s\S]*?)\s*\}\}\s*$/;
 const INTERPOLATION_TOKEN_PATTERN = /\{\{\s*([\s\S]*?)\s*\}\}/gu;
@@ -135,68 +135,4 @@ export function parseQueryRefresh(value: string | null | undefined): CmsQueryRef
         }
     }
     return { ...(intervalMs === undefined ? {} : { intervalMs }), focus, reconnect };
-}
-
-export function asSourceBody(body: CmsSourceBodyBinding): string {
-    const normalized = normalizeSourceParamMap(body);
-    return Object.keys(normalized).length ? JSON.stringify(normalized) : "";
-}
-
-export function parseSourceBody(value: string | null | undefined): CmsSourceBodyBinding | null {
-    const raw = value?.trim() ?? "";
-    if (!raw) {
-        return null;
-    }
-    let parsed: unknown;
-    try {
-        parsed = JSON.parse(raw);
-    } catch {
-        return null;
-    }
-    if (!isRecord(parsed)) {
-        return null;
-    }
-    const body: CmsSourceBodyBinding = {};
-    for (const [name, source] of Object.entries(parsed)) {
-        const param = normalizeSourceParamValue(source);
-        if (name.trim() && param) {
-            body[name] = param;
-        }
-    }
-    return Object.keys(body).length ? body : null;
-}
-
-function normalizeSourceParamMap(params: CmsBindingInputMap): Record<string, CmsBindingInputValue> {
-    const normalized: Record<string, CmsBindingInputValue> = {};
-    for (const [name, value] of Object.entries(params)) {
-        const param = normalizeSourceParamValue(value);
-        if (name.trim() && param) {
-            normalized[name] = param;
-        }
-    }
-    return normalized;
-}
-
-function normalizeSourceParamValue(value: unknown): CmsBindingInputValue | null {
-    if (!isRecord(value) || typeof value.from !== "string") {
-        return null;
-    }
-    if (value.from === "sync") {
-        const target = typeof value.key === "string" ? parseSyncTarget(value.key) : null;
-        return target ? { from: "sync", key: asSyncTarget(target) } : null;
-    }
-    if (value.from !== "raw") {
-        return null;
-    }
-    if (typeof value.value === "string") {
-        return value.value.trim() ? { from: "raw", value: value.value } : null;
-    }
-    if (typeof value.value === "number" && Number.isFinite(value.value)) {
-        return { from: "raw", value: value.value };
-    }
-    return typeof value.value === "boolean" ? { from: "raw", value: value.value } : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
 }

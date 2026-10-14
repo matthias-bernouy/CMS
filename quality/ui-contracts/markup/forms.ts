@@ -67,8 +67,8 @@ export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
             "cms-source-body",
             "source-body-contract",
             "WARNING",
-            "The literal cms-source-body contains entries the runtime ignores.",
-            'Use a JSON object whose fields contain {from:"sync",key:"@scope:key"} or {from:"raw",value}; raw values must be nonempty strings, finite numbers, or booleans.',
+            "The literal cms-source-body is not a valid binding input object.",
+            'Use a JSON object whose fields contain {from:"state",key:"@scope:key"} or {from:"literal",value}.',
         );
     }
     return findings;
@@ -85,26 +85,44 @@ function validBody(value: string): boolean {
     } catch {
         return false;
     }
-    if (!record(parsed)) {
+    if (!record(parsed) || Object.keys(parsed).length === 0) {
         return false;
     }
-    return Object.entries(parsed).every(([name, entry]) => {
-        if (!name.trim() || !record(entry)) {
-            return false;
-        }
-        if (entry.from === "sync") {
-            return (
-                typeof entry.key === "string" &&
-                /^@(param|page|session|persistent):[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(entry.key)
-            );
-        }
-        return (
-            entry.from === "raw" &&
-            (typeof entry.value === "boolean" ||
-                (typeof entry.value === "number" && Number.isFinite(entry.value)) ||
-                (typeof entry.value === "string" && Boolean(entry.value.trim())))
-        );
-    });
+    return Object.entries(parsed).every(([name, entry]) => name.trim() && validInput(entry));
+}
+
+function validInput(value: unknown): boolean {
+    if (!record(value)) {
+        return false;
+    }
+    if (value.from === "literal") {
+        return exactKeys(value, ["from", "value"]) && Object.hasOwn(value, "value");
+    }
+    if (value.from !== "state" || !exactKeys(value, ["from", "key", "path", "cast", "optional", "fallback"])) {
+        return false;
+    }
+    const path = value.path;
+    const optional = value.optional;
+    return (
+        typeof value.key === "string" &&
+        /^@(param|page|session|persistent):[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(value.key) &&
+        (path === undefined ||
+            (Array.isArray(path) &&
+                path.length > 0 &&
+                path.length <= 24 &&
+                path.every((part) =>
+                    typeof part === "string"
+                        ? part.length > 0 && !["__proto__", "constructor", "prototype"].includes(part)
+                        : Number.isSafeInteger(part) && part >= 0 && part <= 10_000,
+                ))) &&
+        (value.cast === undefined || ["string", "number", "integer", "boolean"].includes(String(value.cast))) &&
+        (optional === undefined || typeof optional === "boolean") &&
+        !(optional === true && Object.hasOwn(value, "fallback"))
+    );
+}
+
+function exactKeys(value: Record<string, unknown>, accepted: readonly string[]): boolean {
+    return Object.keys(value).every((key) => accepted.includes(key));
 }
 
 function record(value: unknown): value is Record<string, unknown> {

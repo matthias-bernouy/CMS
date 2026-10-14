@@ -8,7 +8,7 @@
         id="settings-general"
         slot="items"
         cms-query="ulvia.cms.access:overview as settingsAccess"
-        cms-query-input='{"limit":{"from":"raw","value":1}}'
+        cms-query-input='{"limit":{"from":"literal","value":1}}'
     >
         <p role="status" aria-live="polite" cms-condition="settingsAccess.loading">
             {{ cms.i18n.ulvia-official.ui-working }}

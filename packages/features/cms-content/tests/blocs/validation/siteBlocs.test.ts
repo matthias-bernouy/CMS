@@ -109,7 +109,7 @@ describe("site bloc validation", () => {
                         tag: "site-results",
                         attributes: {
                             "cms-query": "catalog:search as results",
-                            "cms-query-input": '{"query":{"from":"sync","key":"@param:site-query"}}',
+                            "cms-query-input": '{"query":{"from":"state","key":"@param:site-query"}}',
                         },
                         children: [
                             {
@@ -305,7 +305,7 @@ describe("site bloc validation", () => {
             [
                 `<form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
                     cms-source-trigger="submit"
-                    cms-source-body='{"safe":{"from":"raw","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
+                    cms-source-body='{"safe":{"from":"literal","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
             [

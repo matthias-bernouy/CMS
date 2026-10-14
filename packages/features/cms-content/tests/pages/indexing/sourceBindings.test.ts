@@ -5,7 +5,7 @@ describe("collectCmsQueryBindings", () => {
     test("extracts remote query identities and their typed inputs", () => {
         expect(
             collectCmsQueryBindings(`
-            <section cms-query="catalog:products.list as products" cms-query-input='{"limit":{"from":"raw","value":20},"category":{"from":"sync","key":"@param:shop-category"}}'></section>
+            <section cms-query="catalog:products.list as products" cms-query-input='{"limit":{"from":"literal","value":20},"category":{"from":"state","key":"@param:shop-category"}}'></section>
             <section cms-query="@page:shop-products as shared"></section>
         `),
         ).toEqual([
@@ -14,8 +14,8 @@ describe("collectCmsQueryBindings", () => {
                 capabilityId: "products.list",
                 alias: "products",
                 input: {
-                    limit: { from: "raw", value: 20 },
-                    category: { from: "sync", key: "@param:shop-category" },
+                    limit: { from: "literal", value: 20 },
+                    category: { from: "state", key: "@param:shop-category" },
                 },
             },
         ]);

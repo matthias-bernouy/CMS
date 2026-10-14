@@ -36,7 +36,7 @@ describe("generated site Bloc source", () => {
                     tag: "basic-container",
                     attributes: {
                         "cms-query": "catalog:items as items",
-                        "cms-query-input": '{"query":{"from":"sync","key":"@param:site-query"}}',
+                        "cms-query-input": '{"query":{"from":"state","key":"@param:site-query"}}',
                     },
                     children: [
                         { kind: "slot", slotId: "title" },

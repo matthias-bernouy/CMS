@@ -123,7 +123,7 @@ test("collection system Pages admit only the closed authentication bindings", ()
         authentication.lightdom.replace("kernel.auth:methods", "kernel.auth:secrets"),
         authentication.lightdom.replace(
             'cms-query="kernel.auth:methods as methods"',
-            'cms-query="kernel.auth:methods as methods" cms-query-input=\'{"id":{"from":"raw","value":"x"}}\'',
+            'cms-query="kernel.auth:methods as methods" cms-query-input=\'{"id":{"from":"literal","value":"x"}}\'',
         ),
     ]) {
         expect(() =>

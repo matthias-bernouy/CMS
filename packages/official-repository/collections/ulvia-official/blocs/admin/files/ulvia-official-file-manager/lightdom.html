@@ -18,7 +18,7 @@
         </ulvia-official-file-upload>
     </ulvia-official-surface>
 
-    <section id="file-library" slot="items" cms-query="ulvia.cms.files:workspace.get as workspace" cms-query-input='{"offset":{"from":"raw","value":0},"limit":{"from":"raw","value":100}}'>
+    <section id="file-library" slot="items" cms-query="ulvia.cms.files:workspace.get as workspace" cms-query-input='{"offset":{"from":"literal","value":0},"limit":{"from":"literal","value":100}}'>
         <div role="status" aria-live="polite" cms-condition="workspace.loading">
             <h2>{{ cms.i18n.ulvia-official.ui-loading-files }}</h2>
         </div>

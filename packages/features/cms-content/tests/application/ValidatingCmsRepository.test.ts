@@ -171,7 +171,7 @@ describe("ValidatingCmsRepository — pages", () => {
             [
                 `<form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
                     cms-source-trigger="submit"
-                    cms-source-body='{"safe":{"from":"raw","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
+                    cms-source-body='{"safe":{"from":"literal","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
             [

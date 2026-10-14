@@ -22,7 +22,8 @@ describe("synchronized state", () => {
 
         writeSyncValue(page, value);
 
-        expect(readSyncValue(page)).toBe(value);
+        expect(readSyncValue(page)).toEqual(value);
+        expect(readSyncValue(page)).not.toBe(value);
         expect(values).toEqual([value]);
         stop();
     });
@@ -42,6 +43,13 @@ describe("synchronized state", () => {
 
     test("rejects structured URL parameter state", () => {
         expect(() => writeSyncValue(param, { invalid: true })).toThrow("only accepts scalar");
+    });
+
+    test("rejects non-JSON values in every structured scope", () => {
+        expect(() => writeSyncValue(page, new Date())).toThrow("finite, acyclic JSON value");
+        const cyclic: Record<string, unknown> = {};
+        cyclic.self = cyclic;
+        expect(() => writeSyncValue(session, cyclic)).toThrow("finite, acyclic JSON value");
     });
 
     test("writes scalar URL parameters and notifies only matching subscribers", () => {

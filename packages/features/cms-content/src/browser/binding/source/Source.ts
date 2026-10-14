@@ -364,13 +364,23 @@ export class Source {
             return;
         }
         try {
+            const data = this.status.data;
+            const synchronizedStatus =
+                data && typeof data === "object" && "form" in data
+                    ? { ...this.status, data: formResultState(data as Record<string, unknown>) }
+                    : this.status;
             writeSyncValue(
                 target,
-                { ...this.status, input: this.submission?.input, dirty: this.syncDirty },
+                { ...synchronizedStatus, input: this.submission?.input, dirty: this.syncDirty },
                 this.el.ownerDocument,
             );
         } catch (error) {
             console.warn("cms-sync could not publish form state", error);
         }
     }
+}
+
+function formResultState(result: Record<string, unknown>): Record<string, unknown> {
+    const { form: _form, ...serializable } = result;
+    return serializable;
 }

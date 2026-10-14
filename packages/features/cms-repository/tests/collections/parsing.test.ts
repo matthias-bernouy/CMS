@@ -542,6 +542,66 @@ describe("collection release parsing", () => {
         ).toThrow("requires a nonnullable object state");
     });
 
+    test("validates state input selections, casts and fallbacks against known schemas", () => {
+        const source = collectionDocument();
+        source.states = [
+            {
+                id: "filters",
+                scope: "page",
+                schema: {
+                    type: "object",
+                    properties: {
+                        page: { type: "string", maxLength: 8 },
+                        tags: { type: "array", items: { type: "string", maxLength: 32 }, maxItems: 10 },
+                    },
+                    required: [],
+                },
+            },
+        ];
+        const consumer = (source.blocs as Record<string, unknown>[])[1]!;
+        consumer.requires = [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
+        consumer.lightdom = `<atlas-panel
+            cms-query="catalog:items.list as items"
+            cms-query-input='{"page":{"from":"state","key":"@page:atlas-filters","path":["page"],"cast":"integer","fallback":"1"}}'
+        ><slot name="main" slot="body"><p>{{ items.data }}</p></slot></atlas-panel>`;
+        expect(() => parseCollectionRelease(source)).not.toThrow();
+
+        for (const input of [
+            '{"page":{"from":"state","key":"@page:atlas-filters","path":["missing"]}}',
+            '{"page":{"from":"state","key":"@page:atlas-filters","path":["tags","first"]}}',
+            '{"page":{"from":"state","key":"@page:atlas-filters","cast":"string"}}',
+            '{"page":{"from":"state","key":"@page:atlas-filters","path":["page"],"fallback":12}}',
+        ]) {
+            consumer.lightdom = `<atlas-panel cms-query="catalog:items.list as items" cms-query-input='${input}'><slot name="main" slot="body"></slot></atlas-panel>`;
+            expect(() => parseCollectionRelease(source)).toThrow(/state input/);
+        }
+    });
+
+    test("rejects automatic query feedback within one Light DOM document", () => {
+        const source = collectionDocument();
+        source.states = ["left", "right"].map((id) => ({
+            id,
+            scope: "page",
+            schema: { type: "object", properties: {}, required: [] },
+        }));
+        const producer = (source.blocs as Record<string, unknown>[])[1]!;
+        producer.requires = [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
+        producer.slots = {};
+        producer.uses = [];
+        producer.lightdom = `<section>
+            <div cms-query="catalog:items.list as left" cms-query-input='{"right":{"from":"state","key":"@page:atlas-right"}}' cms-sync="@page:atlas-left"></div>
+            <div cms-query="catalog:items.list as right" cms-query-input='{"left":{"from":"state","key":"@page:atlas-left"}}' cms-sync="@page:atlas-right"></div>
+        </section>`;
+        delete producer.defaultContent;
+        expect(() => parseCollectionRelease(source)).toThrow(/automatic state query cycle/);
+
+        producer.lightdom = `<section>
+            <div cms-query="catalog:items.list as first" cms-sync="@page:atlas-left"></div>
+            <div cms-query="catalog:items.list as second" cms-sync="@page:atlas-left"></div>
+        </section>`;
+        expect(() => parseCollectionRelease(source)).toThrow(/multiple automatic query producers/);
+    });
+
     test("validates reusable translation keys and locale fallback", () => {
         const source = collectionDocument({ "theme.label": "Atlas theme" });
         (source.translations as Record<string, Record<string, string>>).fr = {

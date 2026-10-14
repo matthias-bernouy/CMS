@@ -19,7 +19,7 @@ export function detectPageIndexingCandidates(html: string): PageIndexingDetectio
             continue;
         }
         for (const [inputParam, value] of Object.entries(binding.input)) {
-            const target = value?.from === "sync" ? parseSyncTarget(value.key) : null;
+            const target = value?.from === "state" ? parseSyncTarget(value.key) : null;
             if (!target || target.scope !== "param") {
                 continue;
             }

@@ -6,7 +6,7 @@ import {
 } from "@bernouy/cms-content";
 
 const bound = (contract: string, capability: string, param: string, pageParam: string) =>
-    `<main cms-query="${contract}:${capability} as entity" cms-query-input='{"${param}":{"from":"sync","key":"@param:site-${pageParam}"}}'></main>`;
+    `<main cms-query="${contract}:${capability} as entity" cms-query-input='{"${param}":{"from":"state","key":"@param:site-${pageParam}"}}'></main>`;
 
 describe("detectPageIndexingCandidates", () => {
     test("keeps CMS metadata scopes reserved", () => {
@@ -31,8 +31,8 @@ describe("detectPageIndexingCandidates", () => {
     test("ignores local, missing-input, malformed, and old Source bindings", () => {
         const html = `<div cms-query="@page:site-product as product"></div>
             <div cms-query="commerce:product.get as product"></div>
-            <div cms-query="commerce:product.get" cms-query-input='{"slug":{"from":"sync","key":"@param:site-product"}}'></div>
-            <div cms-source="/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"sync","key":"@param:site-product"}}'></div>`;
+            <div cms-query="commerce:product.get" cms-query-input='{"slug":{"from":"state","key":"@param:site-product"}}'></div>
+            <div cms-source="/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"state","key":"@param:site-product"}}'></div>`;
         expect(detectPageIndexingCandidates(html)).toEqual({ status: "none", candidates: [] });
     });
 

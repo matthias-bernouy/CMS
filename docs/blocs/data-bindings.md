@@ -16,7 +16,7 @@ unique local alias:
 ```html
 <section
   cms-query="catalog:products.list as products"
-  cms-query-input='{"category":{"from":"sync","key":"@param:shop-category"},"limit":{"from":"raw","value":20}}'
+  cms-query-input='{"category":{"from":"state","key":"@param:shop-category"},"limit":{"from":"literal","value":20}}'
   cms-query-refresh="focus reconnect"
 >
   <p cms-condition="products.loading">Loading products…</p>
@@ -32,6 +32,7 @@ unique local alias:
 
 The alias owns a complete state:
 
+- `waiting` means that at least one required synchronized input is absent;
 - `loading`, `loaded`, `empty`, and `error` describe the initial request;
 - `refreshing` and `refreshError` describe a refresh without hiding existing
   data;
@@ -39,22 +40,50 @@ The alias owns a complete state:
 - `input` contains the resolved logical input when one was supplied;
 - `status` and `message` describe a failure when available.
 
-`cms-query-input` is a JSON object. Every field is either a scalar literal or a
+`cms-query-input` is a JSON object. Every field is either a JSON literal or a
 reference to synchronized state:
 
 ```json
 {
-  "limit": { "from": "raw", "value": 20 },
-  "category": { "from": "sync", "key": "@param:shop-category" }
+  "limit": { "from": "literal", "value": 20 },
+  "category": { "from": "state", "key": "@param:shop-category" }
 }
 ```
+
+A state input is required by default. The query remains in `waiting` without
+sending a request until the value exists. Use `optional: true` to omit an absent
+field, or `fallback` to supply a JSON fallback; those two options are mutually
+exclusive. `path` selects a nested object property or array item, and `cast`
+may be `string`, `number`, `integer`, or `boolean`:
+
+```json
+{
+  "page": {
+    "from": "state",
+    "key": "@page:shop-filters",
+    "path": ["pagination", "page"],
+    "cast": "integer",
+    "fallback": "1"
+  },
+  "search": {
+    "from": "state",
+    "key": "@param:shop-search",
+    "optional": true
+  }
+}
+```
+
+Collection admission validates known state paths, cast compatibility and
+fallbacks against declared state schemas. Invalid or unknown descriptors are
+rejected rather than silently ignored.
 
 A query without input uses an HTTP `GET`. A query with input uses an HTTP
 `QUERY` request with a bounded JSON body. The binding describes a logical
 capability, not a gateway URL; the Kernel owns the transport route and provider
 selection.
 
-The query reruns when one of its exact synchronized inputs changes.
+The query reruns only when its resolved logical input changes. A change outside
+a selected `path` does not issue another request.
 `cms-query-refresh` may additionally contain `focus`, `reconnect`, and one
 bounded interval such as `interval(5s)`. These policies do not change the
 capability or its input.
@@ -138,11 +167,12 @@ The trigger is `submit` or `change`. Supported methods are `GET`, `POST`,
 objects and arrays. `cms-form-value-type` and `cms-form-empty` provide explicit
 scalar and empty-value conventions.
 
-`cms-source-body` accepts the same `raw` and `sync` descriptors as query input.
-It supplements named controls; it is not a dynamic URL mechanism. Binary values
-come from native file controls and use `FormData` when present. Provider
-capabilities currently accept bounded JSON unless their transport contract
-explicitly supports binary input.
+`cms-source-body` accepts the same `literal` and `state` descriptors as query
+input. It supplements named controls; it is not a dynamic URL mechanism. A form
+cannot submit while a required state input is absent. Binary values come from
+native file controls and use `FormData` when present. Provider capabilities
+currently accept bounded JSON unless their transport contract explicitly
+supports binary input.
 
 `cms-source-success-reload` contains one to eight query aliases. After a
 successful mutation, only those live queries are refreshed. The mutation result

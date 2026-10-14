@@ -7,11 +7,13 @@ import {
     type CmsSourceBodyBinding,
     type CmsSyncTarget,
 } from "@bernouy/cms-content/bindings";
-import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
-import type { CollectionDependency, CollectionRelease } from "../../../interfaces/CollectionRelease";
-import type { CollectionPage } from "../../../interfaces/CollectionPage";
-import type { CollectionState } from "../../../interfaces/CollectionState";
-import { invalid } from "../../errors";
+import type { CollectionBloc } from "../../../../interfaces/CollectionBloc";
+import type { CollectionDependency, CollectionRelease } from "../../../../interfaces/CollectionRelease";
+import type { CollectionPage } from "../../../../interfaces/CollectionPage";
+import type { CollectionState } from "../../../../interfaces/CollectionState";
+import { invalid } from "../../../errors";
+import { validateDocumentStateCycles } from "./cycles";
+import { validateStateInput } from "./input";
 
 type StateOwner = {
     readonly collectionId: string;
@@ -66,6 +68,7 @@ export function validateCollectionStateBindings(
                 path,
             );
         }
+        validateDocumentStateCycles(document, path);
     }
 }
 
@@ -77,10 +80,13 @@ function validateInputReads(
     path: string,
 ): void {
     for (const source of Object.values(input ?? {})) {
-        if (source?.from === "sync") {
+        if (source?.from === "state") {
             const target = parseSyncTarget(source.key);
             if (target) {
-                assertReadable(target, own, imported, installed, path);
+                const state = assertReadable(target, own, imported, installed, path);
+                if (state) {
+                    validateStateInput(source, state, path);
+                }
             }
         }
     }
@@ -133,13 +139,13 @@ function assertReadable(
     imported: ReadonlyMap<string, { collectionId: string; id: string }>,
     installed: ReadonlyMap<string, CollectionRelease>,
     path: string,
-): void {
+): CollectionState | undefined {
     const local = own.get(target.key);
     if (local) {
         if (local.scope !== target.scope) {
             invalid(`cms-query scope must match declared ${local.scope} state ${target.key}`, path);
         }
-        return;
+        return local;
     }
     const external = imported.get(target.key);
     if (!external) {
@@ -147,12 +153,13 @@ function assertReadable(
     }
     const release = installed.get(external.collectionId);
     if (!release) {
-        return;
+        return undefined;
     }
     const state = release.states?.find(({ id }) => id === external.id);
     if (!state || state.scope !== target.scope) {
         invalid(`imported state ${target.key} does not expose ${target.scope} scope`, path);
     }
+    return state;
 }
 
 function collectionMarkups(owner: StateOwner): readonly { html: string; path: string }[] {

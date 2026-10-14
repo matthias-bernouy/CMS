@@ -1,6 +1,7 @@
 import { isEmpty } from "../../source/presentation/sourceContent";
 
 export type QueryState = {
+    waiting: boolean;
     loading: boolean;
     loaded: boolean;
     empty: boolean;
@@ -24,6 +25,7 @@ export function isQueryState(value: unknown): value is QueryState {
     const state = value as Record<string, unknown>;
     return (
         typeof state.loading === "boolean" &&
+        typeof state.waiting === "boolean" &&
         typeof state.loaded === "boolean" &&
         typeof state.empty === "boolean" &&
         typeof state.error === "boolean" &&
@@ -35,6 +37,10 @@ export function isQueryState(value: unknown): value is QueryState {
 
 export function loadingQueryState(): QueryState {
     return flags({ loading: true });
+}
+
+export function waitingQueryState(): QueryState {
+    return flags({ waiting: true });
 }
 
 export function loadedQueryState(data: unknown): QueryState {
@@ -55,6 +61,7 @@ export function refreshFailedQueryState(current: QueryState, status: number | nu
 
 function flags(values: Partial<QueryState>): QueryState {
     return {
+        waiting: false,
         loading: false,
         loaded: false,
         empty: false,

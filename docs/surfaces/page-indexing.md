@@ -11,7 +11,7 @@ is a synchronized `@param:` state identifies a candidate in the administration U
 ```html
 <main
   cms-query="commerce:product.get as product"
-  cms-query-input='{"slug":{"from":"sync","key":"@param:commerce-product"}}'
+  cms-query-input='{"slug":{"from":"state","key":"@param:commerce-product"}}'
 ></main>
 ```
 

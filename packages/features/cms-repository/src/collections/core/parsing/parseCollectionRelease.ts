@@ -20,7 +20,7 @@ import { parseCollectionDependencies, parseCollectionExports, validateCollection
 import { parseCollectionMigrations } from "../admission/releaseMigrations";
 import { validateCollectionAssetReferences } from "../validation/markup/assets";
 import { parseCollectionStates } from "./states";
-import { validateCollectionStateBindings } from "../validation/markup/stateBindings";
+import { validateCollectionStateBindings } from "../validation/markup/state";
 
 export function parseCollectionRelease(
     value: unknown,

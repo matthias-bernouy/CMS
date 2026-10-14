@@ -152,7 +152,7 @@
     <section
         slot="items"
         cms-query="ulvia.cms.collections:migration-status as migrations"
-        cms-query-input='{"limit":{"from":"raw","value":20}}'
+        cms-query-input='{"limit":{"from":"literal","value":20}}'
         cms-query-refresh="interval(5s) focus reconnect"
     >
         <ulvia-official-surface appearance="outlined" padding="lg">
@@ -175,7 +175,7 @@
     <section
         slot="items"
         cms-query="ulvia.cms.jobs:list as jobs"
-        cms-query-input='{"limit":{"from":"raw","value":50}}'
+        cms-query-input='{"limit":{"from":"literal","value":50}}'
         cms-query-refresh="interval(5s) focus reconnect"
     >
         <ulvia-official-surface appearance="outlined" padding="lg">

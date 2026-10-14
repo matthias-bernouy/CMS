@@ -2,7 +2,7 @@
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-diagnostics }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-live-operational-signals-from-the-selected-cms-contracts }}</p>
     <ulvia-official-stack slot="content" gap="lg">
-        <section slot="items" aria-labelledby="migration-health" cms-query="ulvia.cms.collections:migration-status as migrations" cms-query-input='{"limit":{"from":"raw","value":20}}'>
+        <section slot="items" aria-labelledby="migration-health" cms-query="ulvia.cms.collections:migration-status as migrations" cms-query-input='{"limit":{"from":"literal","value":20}}'>
             <ulvia-official-surface appearance="elevated" padding="lg">
                 <h2 slot="content" id="migration-health">{{ cms.i18n.ulvia-official.ui-content-maintenance }}</h2>
                 <p slot="content" role="status" cms-condition="migrations.loading">{{ cms.i18n.ulvia-official.ui-reading-migration-state }}</p>
@@ -24,7 +24,7 @@
                 </ulvia-official-stack>
             </ulvia-official-surface>
         </section>
-        <section slot="items" aria-labelledby="job-health" cms-query="ulvia.cms.jobs:list as jobs" cms-query-input='{"limit":{"from":"raw","value":50}}'>
+        <section slot="items" aria-labelledby="job-health" cms-query="ulvia.cms.jobs:list as jobs" cms-query-input='{"limit":{"from":"literal","value":50}}'>
             <ulvia-official-surface appearance="outlined" padding="lg">
                 <h2 slot="content" id="job-health">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</h2>
                 <p slot="content" role="status" cms-condition="jobs.loading">{{ cms.i18n.ulvia-official.ui-reading-durable-jobs }}</p>

@@ -2,7 +2,11 @@ import { parseQueryInput, parseQueryRefresh, parseSyncTarget } from "cms-content
 import { QUERY_INPUT_ATTR, QUERY_REFRESH_ATTR } from "../../core/attrs";
 import { subscribeSyncValue } from "../../params/SyncState";
 
-export function listenQueryRefresh(element: Element, refresh: () => void): () => void {
+export function listenQueryRefresh(
+    element: Element,
+    refresh: () => void,
+    inputChanged: () => void = refresh,
+): () => void {
     const doc = element.ownerDocument;
     const win = doc.defaultView;
     const policy = parseQueryRefresh(element.getAttribute(QUERY_REFRESH_ATTR));
@@ -15,13 +19,13 @@ export function listenQueryRefresh(element: Element, refresh: () => void): () =>
 
     const targets = new Map<string, NonNullable<ReturnType<typeof parseSyncTarget>>>();
     for (const source of Object.values(parseQueryInput(element.getAttribute(QUERY_INPUT_ATTR)) ?? {})) {
-        const target = source?.from === "sync" ? parseSyncTarget(source.key) : null;
+        const target = source?.from === "state" ? parseSyncTarget(source.key) : null;
         if (target) {
             targets.set(`@${target.scope}:${target.key}`, target);
         }
     }
     for (const target of targets.values()) {
-        stops.push(subscribeSyncValue(target, onRefresh, doc));
+        stops.push(subscribeSyncValue(target, inputChanged, doc));
     }
     if (policy?.focus) {
         listen(doc, "visibilitychange", () => {
