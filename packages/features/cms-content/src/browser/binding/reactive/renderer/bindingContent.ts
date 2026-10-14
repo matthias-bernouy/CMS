@@ -47,16 +47,3 @@ export function cloneBindingContent(el: Element): CapturedBindingContent {
 
     return { template, body };
 }
-
-export function isEmpty(data: unknown): boolean {
-    if (data == null) {
-        return true;
-    }
-    if (Array.isArray(data)) {
-        return data.length === 0;
-    }
-    if (typeof data === "object") {
-        return Object.keys(data as object).length === 0;
-    }
-    return false;
-}
