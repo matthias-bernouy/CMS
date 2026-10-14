@@ -20,6 +20,7 @@ import { parseCollectionDependencies, parseCollectionExports, validateCollection
 import { parseCollectionMigrations } from "../admission/releaseMigrations";
 import { validateCollectionAssetReferences } from "../validation/markup/assets";
 import { parseCollectionStates } from "./states";
+import { validateCollectionStateBindings } from "../validation/markup/stateBindings";
 
 export function parseCollectionRelease(
     value: unknown,
@@ -164,6 +165,7 @@ export function parseCollectionRelease(
             blocs,
             ...(pages === undefined ? {} : { pages }),
         };
+        validateCollectionStateBindings(release);
         validateDeclaredPageReferences(release);
         validateCollectionTranslationReferences(release);
         assertSize(release, limits);

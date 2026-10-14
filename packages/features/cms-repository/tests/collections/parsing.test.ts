@@ -462,6 +462,24 @@ describe("collection release parsing", () => {
         }
     });
 
+    test("validates collection ownership for declarative state bindings", () => {
+        const source = collectionDocument();
+        source.states = [
+            {
+                id: "products",
+                scope: "page",
+                schema: { type: "array", items: { type: "string", maxLength: 64 }, maxItems: 20 },
+            },
+        ];
+        (source.blocs as Record<string, unknown>[])[1]!.lightdom =
+            '<atlas-panel cms-query="@page:atlas-products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></atlas-panel>';
+        expect(parseCollectionRelease(source).states?.[0]?.id).toBe("products");
+
+        (source.blocs as Record<string, unknown>[])[1]!.lightdom =
+            '<atlas-panel cms-query="@page:atlas-undeclared as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></atlas-panel>';
+        expect(() => parseCollectionRelease(source)).toThrow("declared locally or explicitly imported");
+    });
+
     test("validates reusable translation keys and locale fallback", () => {
         const source = collectionDocument({ "theme.label": "Atlas theme" });
         (source.translations as Record<string, Record<string, string>>).fr = {

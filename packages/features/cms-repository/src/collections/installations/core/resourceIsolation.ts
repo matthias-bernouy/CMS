@@ -1,5 +1,6 @@
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { collectionThemeTokenId } from "../../core/namespace";
+import { validateCollectionStateBindings } from "../../core/validation/markup/stateBindings";
 import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
@@ -94,6 +95,7 @@ function assertCollectionDependencies(releases: readonly CollectionRelease[]): v
     const visited = new Set<string>();
     for (const release of releases) {
         validateDependencies(release, byId);
+        validateCollectionStateBindings(release, byId);
         visit(release.collectionId, byId, visiting, visited, []);
     }
 }
