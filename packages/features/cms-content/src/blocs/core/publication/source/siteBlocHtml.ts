@@ -1,4 +1,4 @@
-import { CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES } from "cms-content/blocs/core/markup/bindings/types";
+import { CMS_BINDING_CORE_TAG } from "cms-content/blocs/core/markup/bindings/types";
 import { validateSiteBlocDefaultContent } from "cms-content/blocs/core/markup/validation/nativeContent";
 import { COMPOSITION_CONTROLLER_ATTRIBUTE } from "cms-content/blocs/core/composition/expandCompositions";
 import { isCmsBindingAttribute, nativeBindingAttributeIssue } from "cms-content/blocs/core/validation/nativeBindings";
@@ -14,7 +14,6 @@ const TAG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const ATTRIBUTE = /^[A-Za-z_:][A-Za-z0-9_.:-]*$/;
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
-const BINDING_RUNTIME_ATTRIBUTES = new Set<string>(Object.values(CMS_BINDING_RUNTIME_ATTRIBUTES));
 const VOID_TAGS = new Set([
     "area",
     "base",
@@ -112,7 +111,7 @@ function serializeAttribute(tag: string, name: string, value: string): string {
         throw new Error(`Invalid site bloc attribute name "${name}"`);
     }
     const normalized = name.toLowerCase();
-    if (normalized === "style" || normalized.startsWith("on") || BINDING_RUNTIME_ATTRIBUTES.has(normalized)) {
+    if (normalized === "style" || normalized.startsWith("on")) {
         throw new Error(`Site bloc attribute "${name}" is forbidden in the site bloc structure`);
     }
     if (isCmsBindingAttribute(normalized)) {
@@ -124,6 +123,9 @@ function serializeAttribute(tag: string, name: string, value: string): string {
             throw new Error(issue);
         }
         return ` ${normalized}="${escapeBindingAttribute(value)}"`;
+    }
+    if (normalized.startsWith("cms-")) {
+        throw new Error(`Site bloc attribute "${name}" is not a declared CMS binding`);
     }
     if (
         isSiteBlocNativeStructureTag(tag) &&

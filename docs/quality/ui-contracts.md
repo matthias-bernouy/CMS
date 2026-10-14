@@ -33,7 +33,8 @@ An empty or invalid workspace fails instead of reporting a successful audit.
 | `ui.network.http` | WARNING / INFO | Browser HTTP requests require review. Exact documented infrastructure boundaries are INFO. |
 | `ui.network.websocket`, `ui.network.eventsource` | INFO | Review connection ownership and lifecycle; ordinary HTTP binding does not replace these protocols. |
 | `source-form-owner` | ERROR | `cms-source` is used outside its native form mutation boundary. Reads must use `cms-query`. |
-| `source-publish-reload-loop` | ERROR | A submitted form reloads on an event its own success emits, causing another submission. |
+| `source-trigger-contract` | ERROR | `cms-source-trigger` is not `submit` or `change`. |
+| `source-method-contract` | ERROR | `cms-source-method` is outside the closed form transport set. |
 | `source-body-contract` | WARNING | A static `cms-source-body` contains descriptors the runtime ignores. |
 
 `cms-query` owns ordinary UI data loading and refresh state. Native forms own

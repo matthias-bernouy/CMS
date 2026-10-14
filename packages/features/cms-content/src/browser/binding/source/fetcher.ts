@@ -1,6 +1,6 @@
 /**
- * The network primitive for `cms-source`. Resolves a URL to a discriminated
- * outcome and NEVER throws — the controller branches on `kind` to pick a slot.
+ * Shared JSON network primitive for declarative queries and form mutations.
+ * It resolves a URL to a discriminated outcome and never throws.
  *
  * Status handling (decided in the design pass):
  *  - 2xx with a JSON body            → `success` with the parsed data.

@@ -3,7 +3,6 @@ import {
     SOURCE_IDEMPOTENCY_ATTR,
     SOURCE_INHERIT_QUERY_ATTR,
     SOURCE_METHOD_ATTR,
-    SOURCE_PUBLISH_ATTR,
     SOURCE_SUCCESS_REDIRECT_ATTR,
     SOURCE_SUCCESS_REDIRECT_PARAM_ATTR,
     SOURCE_SUCCESS_RESET_ATTR,
@@ -51,7 +50,7 @@ export class SourceSubmission {
         }
         const method = this.sourceMethod();
         const formData = collectFormData(form);
-        const bodyFields = method === "GET" || method === "HEAD" ? undefined : this.resolveBodyFields(true);
+        const bodyFields = method === "GET" ? undefined : this.resolveBodyFields(true);
         const serialized = serializeForm(form, { url: this.submitUrl(url), method, formData, bodyFields });
         this.latestInput = serialized.data;
         return {
@@ -75,7 +74,7 @@ export class SourceSubmission {
         }
         const method = this.sourceMethod();
         const formData = collectFormData(form);
-        const bodyFields = method === "GET" || method === "HEAD" ? undefined : this.resolveBodyFields(false);
+        const bodyFields = method === "GET" ? undefined : this.resolveBodyFields(false);
         this.latestInput = serializeForm(form, {
             url: this.submitUrl(url),
             method,
@@ -119,7 +118,6 @@ export class SourceSubmission {
             return;
         }
         idempotencyAttempts.delete(result.form);
-        this.publish(result);
         if (this.shouldReset()) {
             result.form.reset();
         }
@@ -167,15 +165,6 @@ export class SourceSubmission {
         this.element.dispatchEvent(new CustomEvent(type, init));
     }
 
-    private publish(result: FormSubmitResult): void {
-        const events = (this.element.getAttribute(SOURCE_PUBLISH_ATTR) ?? "").split(/\s+/).filter(Boolean);
-        for (const eventName of events) {
-            this.element.ownerDocument.dispatchEvent(
-                new CustomEvent(eventName, { bubbles: true, composed: true, detail: result }),
-            );
-        }
-    }
-
     private shouldReset(): boolean {
         const value = this.element.getAttribute(SOURCE_SUCCESS_RESET_ATTR)?.trim().toLowerCase();
         if (value === "false" || value === "0" || value === "no") {
@@ -188,7 +177,7 @@ export class SourceSubmission {
             return false;
         }
         const method = this.sourceMethod();
-        return method !== "GET" && method !== "HEAD";
+        return method !== "GET";
     }
 
     private successRedirect(result: FormSubmitResult, alias: string | undefined): string {
@@ -250,7 +239,7 @@ function submissionFingerprint(serialized: SerializedForm): string {
     throw new Error("Automatic idempotency is not available for multipart forms.");
 }
 
-export function ownerForm(value: EventTarget | null, document: Document): HTMLFormElement | null {
+function ownerForm(value: EventTarget | null, document: Document): HTMLFormElement | null {
     const ctor = document.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof ctor === "function" && value instanceof ctor ? (value as HTMLFormElement) : null;
 }

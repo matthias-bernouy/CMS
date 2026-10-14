@@ -1,10 +1,9 @@
 /**
- * Captures a `cms-source` authored body once, then leaves the element empty so
- * the runtime can mount reactive regions into it.
+ * Captures an authored binding body so the runtime can mount reactive regions.
  */
 
 export type CapturedSourceContent = {
-    /** Authored editable template, kept raw for editor deactivation. */
+    /** Raw authored template restored when the binding is torn down. */
     template: DocumentFragment;
     /** Default data template, compiled by the reactive runtime. */
     body: DocumentFragment;

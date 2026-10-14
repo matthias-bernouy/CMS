@@ -5,25 +5,25 @@ import { mount } from "./compiledTemplateTestUtils";
 afterEach(resetDom);
 
 describe("CompiledTemplate — boundaries", () => {
-    test("binds a nested source's own attributes but does not descend into its subtree", () => {
+    test("binds a nested query's ordinary attributes but does not descend into its subtree", () => {
         const { host, region } = mount(
             `
             <div>
-                <div cms-source="/api/{{ id }}" data-id="{{ id }}">
+                <div cms-query="catalog:item as item" data-id="{{ id }}">
                     <span>{{ id }}</span>
                 </div>
             </div>
         `,
             { id: 7 },
         );
-        const source = host.querySelector("[cms-source]")!;
+        const source = host.querySelector("[cms-query]")!;
 
-        expect(source.getAttribute("cms-source")).toBe("/api/7");
+        expect(source.getAttribute("cms-query")).toBe("catalog:item as item");
         expect(source.getAttribute("data-id")).toBe("7");
         expect(text(source.querySelector("span"))).toBe("{{ id }}");
 
         region.update({ value: { id: 8 } });
-        expect(source.getAttribute("cms-source")).toBe("/api/8");
+        expect(source.getAttribute("cms-query")).toBe("catalog:item as item");
         expect(source.getAttribute("data-id")).toBe("8");
         expect(text(source.querySelector("span"))).toBe("{{ id }}");
     });
@@ -104,7 +104,7 @@ describe("CompiledTemplate — boundaries", () => {
                 <input required="{{ required }}">
                 <button disabled="{{ result.pending }}">Save</button>
             </form>
-            <section cms-source="/nested" hidden="{{ hidden }}">
+            <section cms-query="catalog:nested as nested" hidden="{{ hidden }}">
                 <input required="{{ required }}">
             </section>`,
             { required: true, hidden: true, result: { pending: false } },
@@ -112,8 +112,8 @@ describe("CompiledTemplate — boundaries", () => {
         expect(host.querySelector("form input")!.hasAttribute("required")).toBe(true);
         expect(host.querySelector("button")!.hasAttribute("disabled")).toBe(true);
         expect(host.querySelector("section")!.hasAttribute("hidden")).toBe(true);
-        // This outer renderer does not own the nested source body. Its authored
-        // (or SSR-resolved) state remains untouched until that source mounts.
+        // This outer renderer does not own the nested query body. Its authored
+        // (or SSR-resolved) state remains untouched until that query mounts.
         expect(host.querySelector("section input")!.hasAttribute("required")).toBe(true);
         region.update({ value: { required: false, hidden: false, result: { pending: false } } });
         expect(host.querySelector("form input")!.hasAttribute("required")).toBe(false);

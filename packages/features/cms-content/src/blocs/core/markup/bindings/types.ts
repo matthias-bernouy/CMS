@@ -1,7 +1,6 @@
 export const CMS_BINDING_CORE_TAG = "cms-binding-core";
 
 export const CMS_BINDING_ATTRIBUTES = {
-    bindingDisabled: "cms-binding-disabled",
     condition: "cms-condition",
     formValueType: "cms-form-value-type",
     formEmpty: "cms-form-empty",
@@ -18,17 +17,14 @@ export const CMS_BINDING_ATTRIBUTES = {
     sourceIdempotency: "cms-source-idempotency",
     sourceId: "cms-source-id",
     sourceMethod: "cms-source-method",
-    sourcePublish: "cms-source-publish",
     sourceSerialization: "cms-source-serialization",
     sourceSuccessReload: "cms-source-success-reload",
     sourceSuccessRedirect: "cms-source-success-redirect",
     sourceSuccessRedirectParam: "cms-source-success-redirect-param",
     sourceSuccessReset: "cms-source-success-reset",
-    sourceStateForce: "cms-source-state-force",
     sourceTrigger: "cms-source-trigger",
 } as const;
 
-export const CMS_BINDING_RUNTIME_ATTRIBUTES = { ready: "cms-ready" } as const;
 export const CMS_CONDITION_FIELD_OPERATORS = [
     "truthy",
     "falsy",
@@ -41,8 +37,8 @@ export const CMS_CONDITION_FIELD_OPERATORS = [
     "empty",
     "notEmpty",
 ] as const;
-export const CMS_SOURCE_TRIGGERS = ["auto", "submit", "change"] as const;
-export const CMS_SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"] as const;
+export const CMS_SOURCE_TRIGGERS = ["submit", "change"] as const;
+export const CMS_SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
 export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export const CMS_SOURCE_STATUS_SCOPE = "$source";
 export const CMS_SOURCES_STATUS_SCOPE = "$sources";
@@ -73,7 +69,6 @@ export type CmsRepeatRangeBinding = { count: number; alias: string };
 export type CmsSourceTrigger = (typeof CMS_SOURCE_TRIGGERS)[number];
 export type CmsSourceMethod = (typeof CMS_SOURCE_METHODS)[number];
 export type CmsSourceState = (typeof CMS_SOURCE_STATES)[number];
-export type CmsSourceStateForce = CmsSourceState;
 export type CmsSourceStatusCondition = { sourceId?: string; state: CmsSourceState };
 
 export type CmsQueryTarget = {

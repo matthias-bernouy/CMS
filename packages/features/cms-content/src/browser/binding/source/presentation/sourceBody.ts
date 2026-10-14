@@ -44,12 +44,6 @@ export function resolveBindingInput(value: string | null, doc: Document): Resolv
     return { ready: true, fields };
 }
 
-/** Compatibility helper for form submission callers that already handle an absent body. */
-export function resolveSourceBodyFields(value: string | null, doc: Document): AdditionalFormFields | undefined {
-    const resolved = resolveBindingInput(value, doc);
-    return resolved.ready && Object.keys(resolved.fields).length ? resolved.fields : undefined;
-}
-
 function selectPath(value: unknown, path: readonly (string | number)[] | undefined): unknown {
     let selected = value;
     for (const segment of path ?? []) {

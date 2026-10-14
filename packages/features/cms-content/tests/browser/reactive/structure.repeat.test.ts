@@ -135,15 +135,15 @@ describe("CompiledTemplate — cms-repeat", () => {
         expect(Array.from(host.querySelectorAll("li")).map(text)).toEqual(["Grace"]);
     });
 
-    test("nested source attributes bind inside repeated clones while source content stays inert", () => {
+    test("nested query attributes bind inside repeated clones while query content stays inert", () => {
         const { host, region } = mount(
             `<section cms-repeat="items as item">
-                <div cms-source="{{ item.endpoint }}" data-id="{{ item.id }}"><p>{{ label }}</p></div>
+                <div cms-query="catalog:item as detail" data-endpoint="{{ item.endpoint }}" data-id="{{ item.id }}"><p>{{ label }}</p></div>
             </section>`,
             { items: [{ id: "a", endpoint: "/a" }] },
         );
-        const source = host.querySelector("[cms-source]")!;
-        expect(source.getAttribute("cms-source")).toBe("/a");
+        const source = host.querySelector("[cms-query]")!;
+        expect(source.getAttribute("data-endpoint")).toBe("/a");
         expect(source.getAttribute("data-id")).toBe("a");
         expect(text(source.querySelector("p"))).toBe("{{ label }}");
         region.update({
@@ -155,9 +155,9 @@ describe("CompiledTemplate — cms-repeat", () => {
             },
         });
         expect(
-            Array.from(host.querySelectorAll("[cms-source]")).map((item) => item.getAttribute("cms-source")),
+            Array.from(host.querySelectorAll("[cms-query]")).map((item) => item.getAttribute("data-endpoint")),
         ).toEqual(["/b", "/c"]);
-        expect(Array.from(host.querySelectorAll("[cms-source] p")).map(text)).toEqual(["{{ label }}", "{{ label }}"]);
+        expect(Array.from(host.querySelectorAll("[cms-query] p")).map(text)).toEqual(["{{ label }}", "{{ label }}"]);
     });
 });
 

@@ -35,19 +35,13 @@ describe("collectCmsQueryBindings", () => {
 });
 
 describe("collectCmsSourceBindings", () => {
-    test("extracts source URLs, aliases, methods, and triggers", () => {
+    test("extracts only form-owned mutation URLs, aliases, methods, and triggers", () => {
         expect(
             collectCmsSourceBindings(`
             <section cms-source="/.cms/call/catalog/search?limit=20 as products"></section>
             <form cms-source="/.cms/call/newsletter/subscribe" cms-source-method="post" cms-source-trigger="submit"></form>
         `),
         ).toEqual([
-            {
-                url: "/.cms/call/catalog/search?limit=20",
-                alias: "products",
-                method: "GET",
-                trigger: "auto",
-            },
             {
                 url: "/.cms/call/newsletter/subscribe",
                 method: "POST",
@@ -56,17 +50,18 @@ describe("collectCmsSourceBindings", () => {
         ]);
     });
 
-    test("ignores empty source attributes and normalizes invalid options", () => {
+    test("ignores non-form and empty source attributes and normalizes invalid form options", () => {
         expect(
             collectCmsSourceBindings(`
             <section cms-source=" "></section>
-            <section cms-source="/api/items" cms-source-method="TRACE" cms-source-trigger="hover"></section>
+            <section cms-source="/api/items"></section>
+            <form cms-source="/api/items" cms-source-method="TRACE" cms-source-trigger="hover"></form>
         `),
         ).toEqual([
             {
                 url: "/api/items",
-                method: "GET",
-                trigger: "auto",
+                method: "POST",
+                trigger: "submit",
             },
         ]);
     });

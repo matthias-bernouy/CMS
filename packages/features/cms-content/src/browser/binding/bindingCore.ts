@@ -13,33 +13,18 @@
  * the page-global scope (query / route / user) shared by every source within.
  */
 
-import { BindingRuntime, revealSources } from "./runtime/BindingRuntime";
+import { BindingRuntime } from "./runtime/BindingRuntime";
 import { createBuiltinFilters, type FilterMap } from "./core/interpolate";
 import { injectCloak } from "./core/cloak";
-import {
-    BINDING_CORE_TAG,
-    BINDING_DISABLED_ATTR,
-    BIND_STOP_ATTR,
-    isSourceState,
-    SOURCE_STATE_FORCE_ATTR,
-    type SourceState,
-} from "./core/attrs";
 
-/** Exported through `@bernouy/cms-content/browser` so authoring tools can strip
- * the runtime's own stamps from serialized Page content. */
-export { clearRuntimeStamps } from "./source/Source";
 export {
     BINDING_CORE_TAG,
-    BINDING_DISABLED_ATTR,
-    BIND_STOP_ATTR,
     QUERY_ATTR,
     QUERY_INPUT_ATTR,
     QUERY_LISTEN_ATTR,
     QUERY_REFRESH_ATTR,
-    READY_ATTR,
     SOURCE_BODY_ATTR,
     SOURCE_ID_ATTR,
-    SOURCE_STATE_FORCE_ATTR,
     SOURCE_TRIGGER_ATTR,
     SYNC_ATTR,
 } from "./core/attrs";
@@ -57,8 +42,7 @@ export {
     type CmsSourceResultEventMap,
 } from "./source/submissionEvents";
 export type { FormSubmitResult } from "./submit/formSubmit";
-export { readSourceData, setSourceData } from "./source/values";
-export { reloadSource } from "./source/runtime/refresh/registry";
+export { readSourceData } from "./source/values";
 export { setSourceContext, refreshSourceContext, type SourceContext } from "./source/presentation/sourceContext";
 export { observeSource, type SourceObservation } from "./source/runtime/observation";
 export { sourceFormRequest, SourceFormError } from "./source/runtime/formRequest";
@@ -80,99 +64,19 @@ export function setBindingFilters(filters: FilterMap): void {
 export class BindingCore extends HTMLElement {
     private _runtime: BindingRuntime | null = null;
 
-    static get observedAttributes(): string[] {
-        return [BINDING_DISABLED_ATTR, SOURCE_STATE_FORCE_ATTR];
-    }
-
     connectedCallback(): void {
         injectCloak(this.ownerDocument ?? document);
-        this._syncRuntime();
-    }
-
-    disconnectedCallback(): void {
-        this._runtime?.stop();
-        this._runtime = null;
-    }
-
-    /**
-     * The live binding runtime over this subtree, or null while torn down.
-     * Exposed so an external controller — the CMS editor — can pause the binding
-     * (`core.runtime?.deactivate()`) WITHOUT this element carrying any editor-mode
-     * concept: deciding WHEN to pause/resume is the editor's job, not the runtime
-     * element's.
-     */
-    get runtime(): BindingRuntime | null {
-        return this._runtime;
-    }
-
-    /**
-     * (Re)build and start the runtime — on connect, and when the editor resumes
-     * binding after a pause. `BindingRuntime` is single-use (stop/deactivate are
-     * permanent), so resuming needs a fresh instance. No-op if one is running.
-     */
-    startRuntime(): void {
-        if (this._isRuntimeDisabled()) {
-            this._revealInertSources();
-            return;
-        }
         if (this._runtime && !this._runtime.isStopped) {
             return;
         }
         const locale = this.ownerDocument?.documentElement.lang;
         const filters = { ...createBuiltinFilters(locale), ...bindingFilters() };
-        this._runtime = new BindingRuntime(this, filters, {
-            sourceStateForce: this._sourceStateForce(),
-        });
+        this._runtime = new BindingRuntime(this, filters);
         this._runtime.start();
     }
 
-    attributeChangedCallback(): void {
-        if (!this.isConnected) {
-            return;
-        }
-        this._syncRuntime({ restart: true });
-    }
-
-    private _syncRuntime(options: { restart?: boolean } = {}): void {
-        if (this._isRuntimeDisabled()) {
-            this._runtime?.deactivate();
-            this._runtime = null;
-            this._revealInertSources();
-            return;
-        }
-
-        if (options.restart) {
-            this._runtime?.deactivate();
-            this._runtime = null;
-        }
-        this.startRuntime();
-    }
-
-    private _isRuntimeDisabled(): boolean {
-        if (this.hasAttribute(BINDING_DISABLED_ATTR) || this.closest(`[${BIND_STOP_ATTR}]`) !== null) {
-            return true;
-        }
-
-        for (let parent = this.parentElement; parent; parent = parent.parentElement) {
-            if (parent.localName === BINDING_CORE_TAG && parent.hasAttribute(BINDING_DISABLED_ATTR)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private _sourceStateForce(): SourceState | undefined {
-        const value = this.getAttribute(SOURCE_STATE_FORCE_ATTR);
-        return isSourceState(value) ? value : undefined;
-    }
-
-    private _revealInertSources(): void {
-        revealSources(this);
-        queueMicrotask(() => {
-            if (this.isConnected && this._isRuntimeDisabled()) {
-                revealSources(this);
-            }
-        });
+    disconnectedCallback(): void {
+        this._runtime?.stop();
+        this._runtime = null;
     }
 }

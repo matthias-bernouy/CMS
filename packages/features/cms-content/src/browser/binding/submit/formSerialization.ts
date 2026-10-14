@@ -8,14 +8,7 @@ const BODY_METHODS = new Set<FormSubmitMethod>(["POST", "PUT", "PATCH", "DELETE"
 
 export function normalizeFormMethod(value: string | null | undefined, fallback: FormSubmitMethod): FormSubmitMethod {
     const method = (value ?? "").trim().toUpperCase();
-    if (
-        method === "GET" ||
-        method === "POST" ||
-        method === "PUT" ||
-        method === "PATCH" ||
-        method === "DELETE" ||
-        method === "HEAD"
-    ) {
+    if (method === "GET" || method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE") {
         return method;
     }
     return fallback;
@@ -37,7 +30,7 @@ export function serializeForm(
         const data = withAdditionalFields(serializeTypedForm(form), formData, options.bodyFields);
         return { kind: "json", url: options.url, formData, data, body: JSON.stringify(data) };
     }
-    if (options.method === "GET" || options.method === "HEAD") {
+    if (options.method === "GET") {
         return {
             kind: "query",
             url: appendQuery(options.url, formData),

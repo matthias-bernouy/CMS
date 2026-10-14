@@ -134,7 +134,18 @@ describe("site bloc validation", () => {
                 }),
             ]),
         );
-        for (const attributes of [{ "cms-query": "https://example.com/private" }, { "cms-ready": "" }]) {
+        const rejectedAttributes = [
+            { "cms-query": "https://example.com/private" },
+            ...[
+                "cms-binding-disabled",
+                "cms-bind-stop",
+                "cms-ready",
+                "cms-reload-on",
+                "cms-source-publish",
+                "cms-source-state-force",
+            ].map((name) => ({ [name]: "" })),
+        ];
+        for (const attributes of rejectedAttributes) {
             expect(() =>
                 validateSiteBlocSnapshot(
                     siteBlocSnapshot({

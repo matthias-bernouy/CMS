@@ -160,7 +160,9 @@ async function inspectDiagnostics(page: Page): Promise<void> {
     await adminPageLink(page, "diagnostics").click();
     await page.getByRole("heading", { name: "Diagnostics", exact: true }).waitFor();
     await page.locator("#migration-health").waitFor();
-    await page.locator('section[cms-source*="ulvia.cms.jobs/list"] p[cms-condition*="jobs.items.length"]').waitFor();
+    await page
+        .locator('section[cms-query*="ulvia.cms.jobs:list"] p[cms-condition*="jobs.data.items.length"]')
+        .waitFor();
 }
 
 async function expectAdminValue(page: Page, label: string, expected: string): Promise<void> {

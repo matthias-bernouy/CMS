@@ -33,12 +33,12 @@ describe("expandCompositions", () => {
             {
                 id: "test-card",
                 componentHTML:
-                    '<cms-host cms-source="/shared as data"><slot name="title" slot="body"></slot><section slot="body"><p>Shared copy</p></section></cms-host>',
+                    '<cms-host cms-query="catalog:shared as data"><slot name="title" slot="body"></slot><section slot="body"><p>Shared copy</p></section></cms-host>',
             },
         ]);
 
         const host = document.querySelector("test-card")!;
-        expect(host.getAttribute("cms-source")).toBe("/shared as data");
+        expect(host.getAttribute("cms-query")).toBe("catalog:shared as data");
         expect(host.querySelector("section")?.getAttribute("slot")).toBe("body");
         expect(host.querySelector("h2")?.getAttribute("slot")).toBe("body");
         expect(host.textContent).toBe("Page titleShared copy");
@@ -112,9 +112,9 @@ describe("expandCompositions", () => {
     });
 
     test("preserves site host bindings on the generated behavior controller", () => {
-        const document = body(`<site-header cms-source="/.cms/call/system-auth/me as auth">
-            <a slot="actions" cms-condition="!auth.subject">Log in</a>
-            <user-menu slot="actions" cms-condition="auth.subject">Account</user-menu>
+        const document = body(`<site-header cms-query="kernel.auth:me as auth">
+            <a slot="actions" cms-condition="!auth.data.subject">Log in</a>
+            <user-menu slot="actions" cms-condition="auth.data.subject">Account</user-menu>
         </site-header>`);
 
         expandCompositions(document.body, [
@@ -126,10 +126,12 @@ describe("expandCompositions", () => {
         ]);
 
         const navbar = document.querySelector("site-navbar")!;
-        expect(navbar.getAttribute("cms-source")).toBe("/.cms/call/system-auth/me as auth");
+        expect(navbar.getAttribute("cms-query")).toBe("kernel.auth:me as auth");
         expect(navbar.hasAttribute("data-cms-composition-controller")).toBe(false);
-        expect(navbar.querySelector('a[slot="actions"]')?.getAttribute("cms-condition")).toBe("!auth.subject");
-        expect(navbar.querySelector('user-menu[slot="actions"]')?.getAttribute("cms-condition")).toBe("auth.subject");
+        expect(navbar.querySelector('a[slot="actions"]')?.getAttribute("cms-condition")).toBe("!auth.data.subject");
+        expect(navbar.querySelector('user-menu[slot="actions"]')?.getAttribute("cms-condition")).toBe(
+            "auth.data.subject",
+        );
     });
 });
 

@@ -1,4 +1,4 @@
-export type FormSubmitMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
+export type FormSubmitMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export type SerializedFormValue =
     | null

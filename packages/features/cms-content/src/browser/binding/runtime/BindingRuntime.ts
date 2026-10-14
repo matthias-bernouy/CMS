@@ -1,14 +1,12 @@
 /** Discovers binding features and owns their lifecycle for one root. */
 
-import { QUERY_ATTR, SOURCE_ATTR, SYNC_ATTR, type SourceState } from "../core/attrs";
+import { QUERY_ATTR, SOURCE_ATTR, SYNC_ATTR } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
 import type { Source } from "../source/Source";
 import type { Query } from "./query/Query";
 import { reconcileAttribute, registerWithin, unregisterWithin } from "./BindingDiscovery";
 import { BindingRegistry } from "./BindingRegistry";
 import { FixedRangeRuntime } from "./FixedRangeRuntime";
-import { revealInertSources, revealSources } from "./revealSources";
-export { revealSources } from "./revealSources";
 
 export class BindingRuntime {
     private readonly registry: BindingRegistry;
@@ -19,29 +17,17 @@ export class BindingRuntime {
     constructor(
         private readonly root: Element,
         filters: FilterMap = {},
-        options: { sourceStateForce?: SourceState } = {},
     ) {
-        this.registry = new BindingRegistry(root, filters, options, (source) => this.afterSourceRender(source));
+        this.registry = new BindingRegistry(root, filters, (source) => this.afterSourceRender(source));
         this.fixedRanges = new FixedRangeRuntime(root, filters);
     }
 
     start(): void {
-        if (typeof document !== "undefined" && document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", () => this.activate(), { once: true });
-        } else {
-            this.activate();
-        }
+        this.activate();
     }
 
     stop(): void {
         this.teardown({ beforeSourceDispose: (source) => source.renderTemplate() });
-    }
-
-    deactivate(): void {
-        this.teardown({
-            beforeSourceDispose: (source) => source.renderTemplate(),
-            afterDispose: () => revealSources(this.root),
-        });
     }
 
     get isStopped(): boolean {
@@ -56,7 +42,6 @@ export class BindingRuntime {
         if (this.stopped) {
             return;
         }
-        revealInertSources(this.root);
         this.fixedRanges.mountWithin(this.root);
         registerWithin(this.root, this.root, this.registry);
         const Observer = this.root.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
@@ -68,7 +53,6 @@ export class BindingRuntime {
                 }
                 record.removedNodes.forEach((node) => unregisterWithin(node, this.root, this.registry));
                 record.addedNodes.forEach((node) => {
-                    revealInertSources(node);
                     this.fixedRanges.mountWithin(node);
                     registerWithin(node, this.root, this.registry);
                 });
@@ -82,10 +66,7 @@ export class BindingRuntime {
         });
     }
 
-    private teardown(hooks?: {
-        beforeSourceDispose?: (source: Source | Query) => void;
-        afterDispose?: () => void;
-    }): void {
+    private teardown(hooks?: { beforeSourceDispose?: (source: Source | Query) => void }): void {
         if (this.stopped) {
             return;
         }
@@ -94,7 +75,6 @@ export class BindingRuntime {
         this.observer = null;
         this.registry.teardown(hooks);
         this.fixedRanges.restore();
-        hooks?.afterDispose?.();
     }
 
     private afterSourceRender(source: Element): void {

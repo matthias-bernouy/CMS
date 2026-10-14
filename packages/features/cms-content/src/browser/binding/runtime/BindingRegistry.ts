@@ -1,30 +1,21 @@
-import { BIND_STOP_ATTR, BINDING_CORE_TAG, QUERY_ATTR, SOURCE_ATTR, type SourceState } from "../core/attrs";
+import { BINDING_CORE_TAG, QUERY_ATTR, SOURCE_ATTR } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
 import { SyncControl } from "../params/SyncControl";
 import { Query } from "./query/Query";
 import { Source } from "../source/Source";
-import { sourceTrigger } from "../source/sourceEvents";
 import type { SourceStatusValue } from "../source/presentation/sourceStatus";
-import { hasLocalSourceData } from "../source/values";
-import { sourceUrl } from "../source/runtime/sourceSpec";
 import { sourceStatusScope } from "./sourceStatusScope";
-import { ReadRequests } from "../source/runtime/readRequests";
 
 export class BindingRegistry {
     private readonly queries = new Map<Element, Query>();
     private readonly sources = new Map<Element, Source>();
     private readonly sourceStatuses = new Map<Element, SourceStatusValue>();
     private readonly syncControls = new Map<Element, SyncControl>();
-    private readonly reads: ReadRequests;
-
     constructor(
         private readonly root: Element,
         private readonly filters: FilterMap,
-        private readonly options: { sourceStateForce?: SourceState },
         private readonly afterSourceRender: (source: Element) => void,
-    ) {
-        this.reads = new ReadRequests(root.ownerDocument);
-    }
+    ) {}
 
     get sourceCount(): number {
         return this.queries.size + this.sources.size;
@@ -62,10 +53,7 @@ export class BindingRegistry {
         if (!element.isConnected || this.queries.has(element)) {
             return;
         }
-        const query = new Query(element, this.filters, {
-            ...this.options,
-            afterRender: this.afterSourceRender,
-        });
+        const query = new Query(element, this.filters, { afterRender: this.afterSourceRender });
         this.queries.set(element, query);
         query.start();
     }
@@ -83,27 +71,26 @@ export class BindingRegistry {
     }
 
     reconcileSource(element: Element): void {
-        if (!element.hasAttribute(SOURCE_ATTR) || !this.hasSourceInput(element)) {
+        if (!element.hasAttribute(SOURCE_ATTR) || element.localName !== "form") {
             this.unregisterSource(element);
             return;
         }
-        const existing = this.sources.get(element);
-        if (existing) {
-            if (sourceTrigger(element) === "auto") {
-                void existing.run({ onlyIfUrlChanged: true });
-            }
-        } else {
+        if (!this.sources.has(element)) {
             this.registerSource(element);
         }
     }
 
     registerSource(element: Element): void {
-        if (!element.isConnected || this.sources.has(element) || !this.hasSourceInput(element)) {
+        const Form = element.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
+        if (
+            !element.isConnected ||
+            this.sources.has(element) ||
+            typeof Form !== "function" ||
+            !(element instanceof Form)
+        ) {
             return;
         }
-        const source = new Source(element, this.filters, {
-            ...this.options,
-            read: this.reads.read,
+        const source = new Source(element as HTMLFormElement, this.filters, {
             setSourceStatus: (current, status) => this.sourceStatuses.set(current, status),
             sourceStatusesFor: (current, status) => sourceStatusScope(this.root, this.sourceStatuses, current, status),
             afterSourceRender: this.afterSourceRender,
@@ -166,17 +153,10 @@ export class BindingRegistry {
             return false;
         }
         for (let parent = element.parentElement; parent && parent !== this.root; parent = parent.parentElement) {
-            if (parent.localName === BINDING_CORE_TAG || parent.hasAttribute(BIND_STOP_ATTR)) {
+            if (parent.localName === BINDING_CORE_TAG) {
                 return false;
             }
         }
         return true;
-    }
-
-    private hasSourceInput(element: Element): boolean {
-        return (
-            sourceUrl(element.getAttribute(SOURCE_ATTR) ?? "").trim() !== "" ||
-            (sourceTrigger(element) === "auto" && hasLocalSourceData(element))
-        );
     }
 }

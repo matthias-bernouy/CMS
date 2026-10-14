@@ -11,7 +11,6 @@ import {
     nativeFormBindingIssue,
 } from "cms-content/blocs/core/validation/nativeBindings";
 import { nativeAttributeSetIssue } from "cms-content/blocs/core/validation/nativeAttributeValues";
-import { CMS_BINDING_RUNTIME_ATTRIBUTES } from "cms-content/blocs/core/markup/bindings";
 import type { SiteBlocNode } from "cms-content/blocs/interfaces/blocs";
 
 export function validateNativeSiteBlocNode(
@@ -80,8 +79,8 @@ export function validateSiteBlocBindingAttributes(node: Extract<SiteBlocNode, { 
     }
     for (const [attribute, value] of Object.entries(node.attributes)) {
         const normalized = attribute.toLowerCase();
-        if (normalized === CMS_BINDING_RUNTIME_ATTRIBUTES.ready) {
-            throw new ContentValidationError(field, "CMS runtime binding state cannot be persisted");
+        if (normalized.startsWith("cms-") && !isCmsBindingAttribute(attribute)) {
+            throw new ContentValidationError(field, `attribute "${attribute}" is not a declared CMS binding`);
         }
         if (!isCmsBindingAttribute(attribute)) {
             continue;

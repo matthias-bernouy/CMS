@@ -39,7 +39,7 @@ export class CompiledTemplate {
             template.appendChild(child.cloneNode(true));
         }
         const plan = compileTemplatePlan(template, filters, {}, CompiledTemplate.fromTemplate);
-        // The parent read source keeps its bindings; this in-place submit scope
+        // The parent query keeps its bindings; this in-place submit scope
         // owns only attributes that explicitly reference its result.
         if (parent.parentElement?.closest("[cms-source]")) {
             const boundary = submitBoundary(parent);

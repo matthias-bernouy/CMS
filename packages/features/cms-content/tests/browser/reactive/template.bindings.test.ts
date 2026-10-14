@@ -113,9 +113,9 @@ test("disposing an ordinary attribute binding cancels its queued control update"
     expect(received).toEqual([]);
 });
 
-test("native elements are not arbitrary property receivers and nested reads own their contents", () => {
+test("native elements are not arbitrary property receivers and nested queries own their contents", () => {
     const { host } = mount(
-        '<div value="{{ name }}"></div><section cms-source="/other"><test-value-control value="{{ name }}"></test-value-control></section>',
+        '<div value="{{ name }}"></div><section cms-query="catalog:other as other"><test-value-control value="{{ name }}"></test-value-control></section>',
         { name: "Initial" },
     );
     expect((host.querySelector("test-value-control") as ValueControl).received).toEqual([]);

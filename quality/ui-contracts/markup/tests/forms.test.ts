@@ -16,40 +16,21 @@ describe("declarative source form contracts", () => {
         });
     });
 
-    test("does not confuse static method metadata with dynamic values", () => {
-        expect(
-            inspect(
-                '<form cms-source="/api/search" cms-source-trigger="{{ trigger }}" cms-source-method="POST"></form>',
-            ),
-        ).toEqual([]);
+    test("rejects removed automatic triggers and HEAD transport", () => {
+        expect(inspect('<form cms-source="/api/search" cms-source-trigger="auto"></form>')[0]).toMatchObject({
+            severity: "ERROR",
+            rule: "source-trigger-contract",
+        });
+        expect(inspect('<form cms-source="/api/search" cms-source-method="HEAD"></form>')[0]).toMatchObject({
+            severity: "ERROR",
+            rule: "source-method-contract",
+        });
     });
 
-    test("rejects explicit publish/reload self loops, including native success events", () => {
-        for (const trigger of ["submit", "change"]) {
-            for (const event of ["settings:saved", "cms-source:success", "form:success"]) {
-                expect(
-                    inspect(
-                        `<form cms-source="/api/settings" cms-source-trigger="${trigger}" cms-source-publish="${event}" cms-reload-on="other ${event}"></form>`,
-                    )[0],
-                ).toMatchObject({ severity: "ERROR", rule: "source-publish-reload-loop" });
-            }
-        }
+    test("does not guess dynamic trigger or method values", () => {
         expect(
             inspect(
-                '<form cms-source="/api/settings" cms-source-trigger="submit" cms-reload-on="cms-source:success"></form>',
-            )[0]?.rule,
-        ).toBe("source-publish-reload-loop");
-    });
-
-    test("allows forms to publish distinct reload events", () => {
-        expect(
-            inspect(
-                '<form cms-source="/api/settings" cms-source-trigger="submit" cms-source-publish="settings:saved" cms-reload-on="refresh:form"></form>',
-            ),
-        ).toEqual([]);
-        expect(
-            inspect(
-                '<form cms-source="/api/settings" cms-source-trigger="submit" cms-source-publish="{{ event }}" cms-reload-on="settings:saved"></form>',
+                '<form cms-source="/api/search" cms-source-trigger="{{ trigger }}" cms-source-method="{{ method }}"></form>',
             ),
         ).toEqual([]);
     });
@@ -79,19 +60,5 @@ describe("declarative source form contracts", () => {
     test("respects quoted delimiters, HTML entities and first duplicate attributes", () => {
         const source = `<form title="a > b" cms-source="/api/save" cms-source-trigger="submit" cms-source-trigger="auto" cms-source-method="POST" cms-source-body="{&quot;id&quot;:{&quot;from&quot;:&quot;literal&quot;,&quot;value&quot;:12}}"></form>`;
         expect(inspect(source)).toEqual([]);
-        const loop = inspect(
-            '<form\n cms-source="/api/save" cms-source-trigger="submit"\n cms-source-publish="x&#32;y" cms-reload-on="y"></form>',
-        );
-        expect(loop[0]).toMatchObject({ line: 3, column: 31, rule: "source-publish-reload-loop" });
-    });
-
-    test("also checks rendered forms in script strings", () => {
-        const findings = inspectMarkup({
-            path: "example.ts",
-            kind: "script",
-            browser: true,
-            content: `function render() { return '<form cms-source="/api/save" cms-source-trigger="submit" cms-source-publish="changed" cms-reload-on="changed"></form>'; }`,
-        });
-        expect(findings[0]?.rule).toBe("source-publish-reload-loop");
     });
 });

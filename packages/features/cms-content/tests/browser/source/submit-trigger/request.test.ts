@@ -141,58 +141,55 @@ describe("Source — submit request", () => {
     });
 
     test("programmatic requests submit the declarative source form through binding events", async () => {
-        const host = el('<div><form cms-source-id="save" cms-ready></form></div>');
-        const form = host.querySelector("form")!;
-        form.addEventListener("submit", (event) => {
-            event.preventDefault();
-            expect(form.querySelector<HTMLInputElement>('[name="name"]')?.value).toBe("Ada");
-            expect(form.querySelector('[name="count"]')?.getAttribute("cms-form-value-type")).toBe("number");
-            expect(form.querySelector('[name="enabled"]')?.getAttribute("cms-form-value-type")).toBe("boolean");
-            expect(form.querySelectorAll('[name="tags[]"]')).toHaveLength(2);
-            expect(form.querySelector('[name="profile[city]"]')).not.toBeNull();
-            expect(form.querySelector<HTMLSelectElement>('[name="navigation"]')?.multiple).toBe(true);
-            form.dispatchEvent(
-                new CustomEvent("cms-source:success", {
-                    bubbles: true,
-                    detail: { ok: true, status: 200, statusText: "OK", body: { saved: true }, message: "", form },
-                }),
-            );
+        let payload: unknown;
+        globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+            payload = JSON.parse(String(init?.body));
+            return Response.json({ saved: true });
+        }) as typeof fetch;
+        const host = el(
+            '<div><form cms-source="/save as result" cms-source-trigger="submit" cms-source-id="save" cms-source-serialization="typed-json"></form></div>',
+        );
+        document.body.append(host);
+        const runtime = new BindingRuntime(host);
+        runtime.start();
+
+        const result = await sourceFormRequest(host, "save", {
+            name: "Ada",
+            count: 2,
+            enabled: false,
+            navigation: [],
+            tags: ["binding", "cms"],
+            profile: { city: "Paris" },
         });
 
-        await expect(
-            sourceFormRequest(host, "save", {
-                name: "Ada",
-                count: 2,
-                enabled: false,
-                tags: ["binding", "cms"],
-                profile: { city: "Paris" },
-                navigation: [],
-            }),
-        ).resolves.toEqual({ saved: true });
+        expect(result).toEqual({ saved: true });
+        expect(payload).toEqual({
+            name: "Ada",
+            count: 2,
+            enabled: false,
+            navigation: [],
+            tags: ["binding", "cms"],
+            profile: { city: "Paris" },
+        });
+        runtime.stop();
     });
 
     test("programmatic requests expose declarative source failures", async () => {
-        const host = el('<div><form cms-source-id="save" cms-ready></form></div>');
-        const form = host.querySelector("form")!;
-        form.addEventListener("submit", (event) => {
-            event.preventDefault();
-            form.dispatchEvent(
-                new CustomEvent("cms-source:failed", {
-                    bubbles: true,
-                    detail: {
-                        ok: false,
-                        status: 422,
-                        statusText: "Unprocessable Content",
-                        body: { error: "Invalid profile" },
-                        message: "",
-                        form,
-                    },
-                }),
-            );
-        });
+        globalThis.fetch = (async () =>
+            Response.json(
+                { error: "Invalid profile" },
+                { status: 422, statusText: "Unprocessable Content" },
+            )) as typeof fetch;
+        const host = el(
+            '<div><form cms-source="/save as result" cms-source-trigger="submit" cms-source-id="save"></form></div>',
+        );
+        document.body.append(host);
+        const runtime = new BindingRuntime(host);
+        runtime.start();
 
         const error = await sourceFormRequest(host, "save").catch((reason) => reason);
         expect(error).toBeInstanceOf(SourceFormError);
         expect(error).toMatchObject({ message: "Invalid profile", status: 422, body: { error: "Invalid profile" } });
+        runtime.stop();
     });
 });

@@ -74,7 +74,7 @@ describe("binding document ownership", () => {
     test("recognizes HTML Response bodies without treating arbitrary constructors as markup sinks", () => {
         const content = `import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/bindings";
             function preview() {
-                return new Response(\`<!doctype html><html><body><\${CMS_BINDING_CORE_TAG} cms-binding-disabled></\${CMS_BINDING_CORE_TAG}></body></html>\`, { headers: { "Content-Type": "text/html" } });
+                return new Response(\`<!doctype html><html><body><\${CMS_BINDING_CORE_TAG}></\${CMS_BINDING_CORE_TAG}></body></html>\`, { headers: { "Content-Type": "text/html" } });
             }`;
         expect(script(content)[0]).toMatchObject({ rule: "binding-core-owner", severity: "ERROR" });
         expect(

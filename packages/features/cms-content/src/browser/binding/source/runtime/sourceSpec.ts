@@ -5,10 +5,6 @@ export type SourceSpec = {
     alias?: string;
 };
 
-export function sourceUrl(value: string): string {
-    return parseSourceSpec(value).url;
-}
-
 export function parseSourceSpec(value: string): SourceSpec {
     const match = SOURCE_ALIAS_PATTERN.exec(value);
     if (!match) {

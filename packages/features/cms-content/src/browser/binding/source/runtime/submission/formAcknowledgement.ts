@@ -1,6 +1,7 @@
 let acknowledged: HTMLFormElement | undefined;
 
-export function acknowledgeForm(form: HTMLFormElement | undefined, render: () => void): void {
+/** Let one successful form refresh re-apply unchanged server values to its controls. */
+export function withFormAcknowledgement(form: HTMLFormElement | undefined, render: () => void): void {
     const previous = acknowledged;
     acknowledged = form;
     try {
@@ -10,7 +11,6 @@ export function acknowledgeForm(form: HTMLFormElement | undefined, render: () =>
     }
 }
 
-/** A saved field must accept server normalization even when the server value stayed unchanged. */
 export function acknowledgesControl(element: Element): boolean {
     return Boolean(
         acknowledged && (acknowledged.contains(element) || (element as HTMLInputElement).form === acknowledged),

@@ -12,7 +12,10 @@ export type QueryRequest =
       }
     | { waiting: true };
 
-const KERNEL_QUERIES = new Map([["kernel.auth:methods", { url: "/.cms/auth/methods", method: "GET" }]]);
+const KERNEL_QUERIES = new Map([
+    ["kernel.auth:me", { url: "/.cms/auth/me", method: "GET" }],
+    ["kernel.auth:methods", { url: "/.cms/auth/methods", method: "GET" }],
+]);
 
 export function queryRequest(element: Element): QueryRequest {
     const binding = parseQuery(element.getAttribute(QUERY_ATTR) ?? "");

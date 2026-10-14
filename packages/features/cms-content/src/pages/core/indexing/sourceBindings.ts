@@ -56,7 +56,7 @@ export function collectCmsSourceBindings(html: string): CmsSourceBindingReferenc
     const { document } = parseHTML(html);
     const bindings: CmsSourceBindingReference[] = [];
 
-    for (const element of Array.from(document.querySelectorAll(`[${CMS_BINDING_ATTRIBUTES.source}]`))) {
+    for (const element of Array.from(document.querySelectorAll(`form[${CMS_BINDING_ATTRIBUTES.source}]`))) {
         const source = parseSource(element.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
         if (!source) {
             continue;
@@ -78,10 +78,10 @@ export function collectCmsSourceBindings(html: string): CmsSourceBindingReferenc
 
 function sourceMethod(value: string | null): CmsSourceMethod {
     const method = (value ?? "").trim().toUpperCase();
-    return isCmsSourceMethod(method) ? method : "GET";
+    return isCmsSourceMethod(method) ? method : "POST";
 }
 
 function sourceTrigger(value: string | null): CmsSourceTrigger {
     const trigger = (value ?? "").trim().toLowerCase();
-    return isCmsSourceTrigger(trigger) ? trigger : "auto";
+    return isCmsSourceTrigger(trigger) ? trigger : "submit";
 }

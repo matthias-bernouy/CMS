@@ -54,9 +54,6 @@ export function customElementAttributesIssue(element: NativePolicyElement): stri
         if (name.startsWith("cms-") && !isCmsBindingAttribute(name)) {
             return `attribute "${name}" is not a declared CMS binding`;
         }
-        if (name.toLowerCase() === "cms-ready") {
-            return "CMS runtime binding state cannot be persisted";
-        }
     }
     return null;
 }

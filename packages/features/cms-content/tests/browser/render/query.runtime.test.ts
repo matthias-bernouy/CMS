@@ -110,6 +110,9 @@ test("a Provider query without input uses the cache-compatible logical GET trans
 });
 
 test("the closed Kernel query map does not expose arbitrary URLs", () => {
+    const account = el('<section cms-query="kernel.auth:me as account"></section>');
+    expect(queryRequest(account)).toEqual({ url: "/.cms/auth/me", init: { method: "GET" } });
+
     const methods = el('<section cms-query="kernel.auth:methods as methods"></section>');
     expect(queryRequest(methods)).toEqual({ url: "/.cms/auth/methods", init: { method: "GET" } });
 
@@ -386,5 +389,26 @@ test("a reload queued during an active query waits for a fresh result", async ()
     releases.shift()?.();
     expect(await reload).toBe(true);
     expect(calls).toBe(2);
+    query.dispose();
+});
+
+test("an acknowledged query refresh reapplies unchanged server values to that form", async () => {
+    const host = el(`<section cms-query="profile:get as profile">
+        <form>
+            <input name="name" value="{{ profile.data.name }}">
+        </form>
+    </section>`);
+    document.body.appendChild(host);
+    const query = new Query(host, {}, { request: async () => ({ kind: "success", data: { name: "Server" } }) });
+
+    query.start();
+    await waitFor(() => host.querySelector<HTMLInputElement>("input")?.value === "Server");
+    const form = host.querySelector("form")!;
+    const input = form.querySelector("input")!;
+    input.value = "Local draft";
+
+    await query.run({ acknowledge: form });
+
+    expect(input.value).toBe("Server");
     query.dispose();
 });

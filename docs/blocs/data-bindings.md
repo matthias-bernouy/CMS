@@ -192,8 +192,7 @@ supports binary input.
 `cms-source-success-reload` contains one to eight query aliases. After a
 successful mutation, only those live queries are refreshed. The mutation result
 is never silently merged into query data. `cms-source-success-reset`, internal
-redirect attributes, publication events, and automatic idempotency retain their
-bounded form semantics.
+redirect attributes and automatic idempotency retain their bounded form semantics.
 
 When a form also declares `cms-sync`, it publishes its lifecycle, current
 serialized `input`, successful result `data`, and `dirty` flag. URL parameter

@@ -32,14 +32,15 @@ export function buildAssetPreloads(
     }
 }
 
-/** Hide binding-owned source bodies before the deferred binding runtime starts. */
+/** Hide binding-owned bodies until the deferred custom element is defined. */
 export function buildBindingCloak(document: Document, head: HTMLElement, enabled: boolean): void {
     if (!enabled) {
         return;
     }
     const style = document.createElement("style");
     style.id = "cms-binding-cloak";
-    style.textContent = "cms-binding-core{display:contents}[cms-source]:not([cms-ready]){visibility:hidden}";
+    style.textContent =
+        "cms-binding-core{display:contents}cms-binding-core:not(:defined) :is([cms-source],[cms-query]){visibility:hidden}";
     head.appendChild(style);
 }
 

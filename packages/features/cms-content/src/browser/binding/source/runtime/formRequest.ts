@@ -1,8 +1,18 @@
-import { READY_ATTR } from "../../core/attrs";
 import type { FormSubmitResult } from "../../submit/formSubmit";
 import { CMS_SOURCE_FAILED_EVENT, CMS_SOURCE_SUCCESS_EVENT } from "../submissionEvents";
 
 const submittedControls = new WeakMap<HTMLFormElement, HTMLElement[]>();
+const activeForms = new WeakSet<HTMLFormElement>();
+const activationWaiters = new WeakMap<HTMLFormElement, Set<() => void>>();
+
+export function activateSourceForm(form: HTMLFormElement): () => void {
+    activeForms.add(form);
+    for (const resolve of activationWaiters.get(form) ?? []) {
+        resolve();
+    }
+    activationWaiters.delete(form);
+    return () => activeForms.delete(form);
+}
 
 export class SourceFormError extends Error {
     constructor(
@@ -124,18 +134,13 @@ function submit(form: HTMLFormElement): Promise<FormSubmitResult> {
 }
 
 function sourceReady(form: HTMLFormElement): Promise<void> {
-    if (form.hasAttribute(READY_ATTR)) {
+    if (activeForms.has(form)) {
         return Promise.resolve();
     }
     return new Promise((resolve) => {
-        const Observer = form.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
-        const observer = new Observer(() => {
-            if (form.hasAttribute(READY_ATTR)) {
-                observer.disconnect();
-                resolve();
-            }
-        });
-        observer.observe(form, { attributes: true, attributeFilter: [READY_ATTR] });
+        const waiters = activationWaiters.get(form) ?? new Set();
+        waiters.add(resolve);
+        activationWaiters.set(form, waiters);
     });
 }
 

@@ -1,9 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { parseHTML } from "linkedom";
 import {
     CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
-    CMS_BINDING_RUNTIME_ATTRIBUTES,
     CMS_SOURCE_STATES,
     CMS_SOURCE_TRIGGERS,
     applySourceStatusCondition,
@@ -12,7 +10,6 @@ import {
     asFieldCondition,
     asSourceStatusCondition,
     asSourceStatusConditions,
-    clearBindingRuntimeState,
     clearSourceStatusCondition,
     isCmsSourceState,
     isCmsSourceTrigger,
@@ -83,7 +80,6 @@ describe("binding conditions", () => {
     test("exposes stable binding attribute names", () => {
         expect(CMS_BINDING_CORE_TAG).toBe("cms-binding-core");
         expect(CMS_BINDING_ATTRIBUTES).toEqual({
-            bindingDisabled: "cms-binding-disabled",
             condition: "cms-condition",
             formValueType: "cms-form-value-type",
             formEmpty: "cms-form-empty",
@@ -99,22 +95,19 @@ describe("binding conditions", () => {
             sourceIdempotency: "cms-source-idempotency",
             sourceId: "cms-source-id",
             sourceMethod: "cms-source-method",
-            sourcePublish: "cms-source-publish",
             sourceSerialization: "cms-source-serialization",
             sourceSuccessReload: "cms-source-success-reload",
-            sourceStateForce: "cms-source-state-force",
             sourceSuccessRedirect: "cms-source-success-redirect",
             sourceSuccessRedirectParam: "cms-source-success-redirect-param",
             sourceSuccessReset: "cms-source-success-reset",
             sourceTrigger: "cms-source-trigger",
             sync: "cms-sync",
         });
-        expect(CMS_BINDING_RUNTIME_ATTRIBUTES).toEqual({ ready: "cms-ready" });
     });
 
     test("exposes stable source states and triggers", () => {
         expect(CMS_SOURCE_STATES).toEqual(["loaded", "loading", "empty", "error"]);
-        expect(CMS_SOURCE_TRIGGERS).toEqual(["auto", "submit", "change"]);
+        expect(CMS_SOURCE_TRIGGERS).toEqual(["submit", "change"]);
         for (const state of CMS_SOURCE_STATES) {
             expect(isCmsSourceState(state)).toBe(true);
         }
@@ -125,19 +118,8 @@ describe("binding conditions", () => {
         }
         expect(isCmsSourceTrigger("manual")).toBe(false);
     });
-
-    test("clears binding runtime state from serialized content", () => {
-        const { document } = parseHTML(
-            '<main cms-ready><section cms-source="/api" cms-ready><p>Plan</p></section></main>',
-        );
-        const content = document.querySelector("main")!;
-        clearBindingRuntimeState(content);
-        expect(content.hasAttribute("cms-ready")).toBe(false);
-        expect(content.querySelector("[cms-source]")?.hasAttribute("cms-ready")).toBe(false);
-        expect(content.querySelector("[cms-source]")?.getAttribute("cms-source")).toBe("/api");
-    });
 });
 
 function createElement(): Element {
-    return parseHTML("<!DOCTYPE html><html><body><p></p></body></html>").document.querySelector("p")!;
+    return document.createElement("p");
 }

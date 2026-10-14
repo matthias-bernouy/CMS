@@ -31,14 +31,16 @@ export function sourceStatusConditions(fragment: DocumentFragment): Set<SourceSt
 }
 
 export function statusValue(state: SourceState, value: unknown): SourceStatusValue {
+    const status = isStatusObject(value) ? value.status : undefined;
+    const message = isStatusObject(value) ? value.message : undefined;
     return {
         loading: state === "loading",
         loaded: state === "loaded",
         empty: state === "empty",
         error: state === "error",
         ...(state === "loaded" || state === "empty" ? { data: value } : {}),
-        status: isStatusObject(value) ? value.status : undefined,
-        message: isStatusObject(value) ? value.message : undefined,
+        ...(status === undefined ? {} : { status }),
+        ...(message === undefined ? {} : { message }),
     };
 }
 

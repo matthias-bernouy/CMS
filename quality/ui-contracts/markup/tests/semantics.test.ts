@@ -3,40 +3,19 @@ import { inspectMarkup } from "../index";
 
 const inspect = (content: string) => inspectMarkup({ path: "example.html", content, kind: "html", browser: true });
 
-describe("source submission ownership and document events", () => {
+describe("source submission ownership", () => {
     test("rejects non-form sources regardless of trigger or method", () => {
         for (const trigger of ["submit", "change"]) {
-            for (const method of ["POST", "DELETE", "HEAD"]) {
+            for (const method of ["POST", "DELETE"]) {
                 const content = `<form><section cms-source="/api/search" cms-source-trigger="${trigger}" cms-source-method="${method}"></section></form>`;
                 expect(inspect(content)[0]).toMatchObject({ rule: "source-form-owner", severity: "ERROR" });
             }
         }
     });
 
-    test("preserves native form methods", () => {
-        for (const trigger of ["submit", "change"]) {
-            expect(
-                inspect(
-                    `<form cms-source="/api/search" cms-source-trigger="${trigger}" cms-source-method="HEAD"></form>`,
-                ),
-            ).toEqual([]);
-        }
-    });
-
-    test("accepts automatic HEAD sources", () => {
-        expect(inspect('<form cms-source="/api/search" cms-source-method="HEAD"></form>')).toEqual([]);
-    });
-
-    test("source aliases and repeated rows do not isolate document reload events", () => {
-        const content =
-            '<form cms-repeat="rows" cms-source="/api/save as rowResult" cms-source-trigger="submit" cms-source-publish="row:saved" cms-reload-on="row:saved"></form>';
-        expect(inspect(content)[0]).toMatchObject({ rule: "source-publish-reload-loop", severity: "ERROR" });
-    });
-
-    test("known bubbling success events still loop when explicit publication is dynamic", () => {
-        for (const event of ["cms-source:success", "form:success"]) {
-            const content = `<form cms-source="/api/save" cms-source-trigger="submit" cms-source-publish="{{ event }}" cms-reload-on="${event}"></form>`;
-            expect(inspect(content)[0]).toMatchObject({ rule: "source-publish-reload-loop", severity: "ERROR" });
+    test("accepts the closed form method set", () => {
+        for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"]) {
+            expect(inspect(`<form cms-source="/api/search" cms-source-method="${method}"></form>`)).toEqual([]);
         }
     });
 });

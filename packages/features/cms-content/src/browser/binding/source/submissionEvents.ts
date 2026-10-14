@@ -1,7 +1,7 @@
 import type { FormSubmitResult } from "../submit/formSubmit";
 
 /**
- * Dispatched by a submitted `cms-source` after a successful HTTP response and any requested read, and
+ * Dispatched by a submitted `cms-source` after a successful HTTP response and any requested query refresh, and
  * before publication, form reset, or redirection.
  */
 export const CMS_SOURCE_SUCCESS_EVENT = "cms-source:success" as const;

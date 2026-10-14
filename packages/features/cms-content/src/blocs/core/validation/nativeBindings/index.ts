@@ -8,7 +8,6 @@ import {
     isCmsSourceSuccessReload,
     isCmsFormValueType,
     isCmsFormEmptyBehavior,
-    isCmsSourceState,
     isCmsSourceTrigger,
     parseCondition,
     parseQuery,
@@ -22,7 +21,6 @@ import {
 const CONTROL_CHARACTER = /[\u0000-\u001F\u007F]/;
 const URL_WHITESPACE_OR_CONTROL = /[\u0000-\u0020\u007F]/;
 const SOURCE_ID = /^[A-Za-z_$][\w$-]*$/;
-const PUBLISHED_EVENT = /^[A-Za-z][A-Za-z0-9_.:-]*$/;
 
 const BINDING_ATTRIBUTE_SET = new Set<string>(Object.values(CMS_BINDING_ATTRIBUTES));
 const FORM_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE"]);
@@ -105,17 +103,8 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     if (name === CMS_BINDING_ATTRIBUTES.sourceSuccessRedirectParam) {
         return isCmsQueryParamName(value) ? null : "CMS source redirect parameter is invalid";
     }
-    if (name === CMS_BINDING_ATTRIBUTES.sourcePublish) {
-        const events = value.split(/\s+/).filter(Boolean);
-        return events.length > 0 && events.every((event) => PUBLISHED_EVENT.test(event))
-            ? null
-            : "CMS source publication events are invalid";
-    }
     if (name === CMS_BINDING_ATTRIBUTES.sync) {
         return parseSyncTarget(value) ? null : "CMS sync target is invalid";
-    }
-    if (name === CMS_BINDING_ATTRIBUTES.sourceStateForce) {
-        return isCmsSourceState(value) ? "CMS preview state cannot be persisted" : "CMS source state is invalid";
     }
     return "CMS runtime binding state cannot be persisted";
 }
@@ -154,7 +143,7 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
             binding &&
             "contractId" in binding &&
             binding.contractId.startsWith("kernel.") &&
-            `${binding.contractId}:${binding.capabilityId}` !== "kernel.auth:methods"
+            !["kernel.auth:me", "kernel.auth:methods"].includes(`${binding.contractId}:${binding.capabilityId}`)
         ) {
             return "CMS query targets an unknown Kernel capability";
         }
@@ -164,7 +153,7 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
             binding.contractId === "kernel.auth" &&
             attributes[CMS_BINDING_ATTRIBUTES.queryInput] !== undefined
         ) {
-            return "Kernel authentication methods query does not accept input";
+            return "Kernel authentication queries do not accept input";
         }
     }
     if (
@@ -241,7 +230,6 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
         CMS_BINDING_ATTRIBUTES.sourceDelay,
         CMS_BINDING_ATTRIBUTES.sourceInheritQuery,
         CMS_BINDING_ATTRIBUTES.sourceId,
-        CMS_BINDING_ATTRIBUTES.sourcePublish,
         CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect,
         CMS_BINDING_ATTRIBUTES.sourceSuccessRedirectParam,
         CMS_BINDING_ATTRIBUTES.sourceSuccessReset,

@@ -8,7 +8,7 @@ describe("Source — nested submit sources", () => {
     test("nested submit source owns its local $source conditions", async () => {
         location.href = "http://localhost/";
         globalThis.fetch = (async (url: string) => {
-            if (url === "/account") {
+            if (url === "/.cms/query/account.profile/get") {
                 return new Response(JSON.stringify({ givenName: "Ada" }), {
                     headers: { "content-type": "application/json" },
                 });
@@ -19,9 +19,9 @@ describe("Source — nested submit sources", () => {
         }) as typeof fetch;
 
         const root = el(`
-            <section cms-source="/account">
+            <section cms-query="account.profile:get as account">
                 <form cms-source="/account/update" cms-source-trigger="submit" cms-source-method="POST">
-                    <input name="givenName" value="{{ givenName }}">
+                    <input name="givenName" value="{{ account.data.givenName }}">
                     <p class="saving" cms-condition="$source.loading">Saving</p>
                     <p class="saved" cms-condition="$source.loaded">Saved</p>
                     <p class="failed" cms-condition="$source.error">Failed</p>
@@ -48,7 +48,7 @@ describe("Source — nested submit sources", () => {
         let request: { url: string; init?: RequestInit } | null = null;
         location.href = "http://localhost/";
         globalThis.fetch = (async (url: string, init?: RequestInit) => {
-            if (url === "/settings") {
+            if (url === "/.cms/query/settings/get") {
                 return new Response(
                     JSON.stringify({
                         site: { name: "Demo" },
@@ -67,15 +67,15 @@ describe("Source — nested submit sources", () => {
         }) as typeof fetch;
 
         const root = el(`
-            <section cms-source="/settings">
+            <section cms-query="settings:get as settings">
                 <template>
                     <form cms-source="/api/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false">
-                        <input name="site.name" value="{{ site.name }}">
+                        <input name="site.name" value="{{ settings.data.site.name }}">
                         <select name="site.notFound">
-                            <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
+                            <option cms-repeat="settings.data.pages as page" value="{{ page.path }}">{{ page.title }}</option>
                         </select>
-                        <input class="enabled" cms-condition="email.enabled" name="email.enabled" value="true">
-                        <input class="disabled" cms-condition="!email.enabled" name="email.enabled" value="true">
+                        <input class="enabled" cms-condition="settings.data.email.enabled" name="email.enabled" value="true">
+                        <input class="disabled" cms-condition="!settings.data.email.enabled" name="email.enabled" value="true">
                         <p class="success" cms-condition="result.ok">Saved {{ result.body.id }}</p>
                         <button type="submit">Save</button>
                     </form>
@@ -111,20 +111,15 @@ describe("Source — nested submit sources", () => {
         runtime.stop();
     });
 
-    test("change form keeps an auth-bound hidden field around a nested read source", async () => {
+    test("change form keeps an auth-bound hidden field around a nested query", async () => {
         let submittedBody: BodyInit | null | undefined;
         globalThis.fetch = (async (url: string, init?: RequestInit) => {
-            if (url === "/account") {
-                return new Response(JSON.stringify({ metadata: {} }), {
-                    headers: { "content-type": "application/json" },
-                });
-            }
-            if (url === "/me") {
+            if (url === "/.cms/query/account/me") {
                 return new Response(JSON.stringify({ subject: { email: "seller+2@example.com" } }), {
                     headers: { "content-type": "application/json" },
                 });
             }
-            if (url === "/subscription?email=seller%2B2%40example.com") {
+            if (url === "/.cms/query/subscription/get") {
                 return new Response(JSON.stringify({ subscribed: false }), {
                     headers: { "content-type": "application/json" },
                 });
@@ -136,15 +131,13 @@ describe("Source — nested submit sources", () => {
         }) as typeof fetch;
 
         const root = el(`
-            <section cms-source="/account as data">
-                <div cms-source="/me as auth">
+            <section cms-query="account:me as auth">
                     <form cms-source="/subscription as result" cms-source-trigger="change" cms-source-method="POST" cms-source-success-reset="false">
-                        <input type="hidden" name="email" value="{{ auth.subject.email }}">
-                        <div cms-source="/subscription?email={{ auth.subject.email | urlencode }} as subscription">
+                        <input type="hidden" name="email" value="{{ auth.data.subject.email }}">
+                        <div cms-query="subscription:get as subscription">
                             <input name="subscribed" value="true">
                         </div>
                     </form>
-                </div>
             </section>
         `);
         document.body.append(root);

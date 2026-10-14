@@ -20,8 +20,9 @@ Signup is mounted only when the configured public auth actions allow it. It
 creates a local credential and CMS membership, then sends the verification
 message. Extra JSON fields are rejected by the auth action input parser.
 
-Use `GET /.cms/auth/me` in a `cms-source` binding for account state. Action
-forms can submit to the corresponding auth route. For example:
+Use `cms-query="kernel.auth:me as account"` for account state. The binding
+runtime maps this closed Kernel query to `GET /.cms/auth/me`. Action forms can
+submit to the corresponding auth route. For example:
 
 ```html
 <form cms-source="/.cms/auth/login" cms-source-method="POST" cms-source-trigger="submit" cms-source-inherit-query="false">

@@ -9,7 +9,7 @@ type Reader = {
 };
 const readers = new WeakMap<Element, Reader>();
 
-export function connectSourceReload(source: Element, reader: Reader): () => void {
+function connectReader(source: Element, reader: Reader): () => void {
     readers.set(source, reader);
     return () => {
         if (readers.get(source) === reader) {
@@ -18,22 +18,17 @@ export function connectSourceReload(source: Element, reader: Reader): () => void
     };
 }
 
-export function connectQueryReload(query: Element, identity: () => string, reload: () => Promise<boolean>): () => void {
+export function connectQueryReload(
+    query: Element,
+    identity: () => string,
+    reload: (acknowledge?: HTMLFormElement) => Promise<boolean>,
+): () => void {
     const reader: Reader = {
         generation: () => 0,
         url: identity,
         reload,
     };
-    return connectSourceReload(query, reader);
-}
-
-/** Reload exactly one active read source, retaining its current presentation. */
-export async function reloadSource(source: Element): Promise<boolean> {
-    const reader = readers.get(source);
-    if (!reader || !source.isConnected || !reader.url()) {
-        throw new Error("reloadSource requires an active automatic source.");
-    }
-    return reader.reload();
+    return connectReader(query, reader);
 }
 
 export function submissionReload(form: HTMLFormElement) {

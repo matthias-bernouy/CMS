@@ -1,10 +1,8 @@
 export const BINDING_CORE_TAG = "cms-binding-core";
-export const BINDING_DISABLED_ATTR = "cms-binding-disabled";
 export const QUERY_ATTR = "cms-query";
 export const QUERY_INPUT_ATTR = "cms-query-input";
 export const QUERY_LISTEN_ATTR = "cms-query-listen";
 export const QUERY_REFRESH_ATTR = "cms-query-refresh";
-export const SOURCE_STATE_FORCE_ATTR = "cms-source-state-force";
 export const SOURCE_ATTR = "cms-source";
 export const SOURCE_INHERIT_QUERY_ATTR = "cms-source-inherit-query";
 export const SOURCE_IDEMPOTENCY_ATTR = "cms-source-idempotency";
@@ -13,7 +11,6 @@ export const SOURCE_DELAY_ATTR = "cms-source-delay";
 export const SOURCE_ID_ATTR = "cms-source-id";
 export const SOURCE_TRIGGER_ATTR = "cms-source-trigger";
 export const SOURCE_METHOD_ATTR = "cms-source-method";
-export const SOURCE_PUBLISH_ATTR = "cms-source-publish";
 export const SOURCE_SUCCESS_RESET_ATTR = "cms-source-success-reset";
 export const SOURCE_SUCCESS_RELOAD_ATTR = "cms-source-success-reload";
 export const SOURCE_SERIALIZATION_ATTR = "cms-source-serialization";
@@ -25,33 +22,11 @@ export const SYNC_ATTR = "cms-sync";
 
 const SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type SourceState = (typeof SOURCE_STATES)[number];
-const SOURCE_TRIGGERS = ["auto", "submit", "change"] as const;
+const SOURCE_TRIGGERS = ["submit", "change"] as const;
 export type SourceTrigger = (typeof SOURCE_TRIGGERS)[number];
-const SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"] as const;
+const SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
 export type SourceMethod = (typeof SOURCE_METHODS)[number];
-
-/**
- * Marks a subtree the runtime must NOT discover sources within. Unlike a
- * nested `<cms-binding-core>` (which owns its own data), a `[cms-bind-stop]`
- * region is left INERT: the editor wraps the injected page content in it so the
- * chrome core still INJECTS the content (`{{ content | innerHTML }}` runs
- * through the reactive template) but never registers or
- * executes the content's own declarative bindings. The content stays
- * an editable template; rendering it with data is delivery's job. Runtime
- * discovery boundary only, and a complete
- * no-op in delivery where no element carries it.
- */
-export const BIND_STOP_ATTR = "cms-bind-stop";
-export const READY_ATTR = "cms-ready";
-
-export function isSourceState(value: string | null): value is SourceState {
-    return (SOURCE_STATES as readonly string[]).includes(value ?? "");
-}
 
 export function isSourceTrigger(value: string | null): value is SourceTrigger {
     return (SOURCE_TRIGGERS as readonly string[]).includes(value ?? "");
-}
-
-export function isSourceMethod(value: string | null): value is SourceMethod {
-    return (SOURCE_METHODS as readonly string[]).includes((value ?? "").toUpperCase());
 }

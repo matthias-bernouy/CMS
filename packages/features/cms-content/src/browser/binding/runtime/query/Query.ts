@@ -1,5 +1,5 @@
 import { parseQuery } from "cms-content/blocs/core/markup/bindings/source";
-import { QUERY_ATTR, READY_ATTR, type SourceState } from "../../core/attrs";
+import { QUERY_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import { runFetch } from "../../source/fetcher";
 import { captureSourceContent } from "../../source/presentation/sourceContent";
@@ -7,7 +7,8 @@ import { connectSourceContext } from "../../source/presentation/sourceContext";
 import { SourceRenderer } from "../../source/presentation/sourceRenderer";
 import { shareUnchanged } from "../../source/runtime/refresh/reconcile";
 import { connectQueryReload } from "../../source/runtime/refresh/registry";
-import { connectSourceData, disconnectSourceData, readSourceData, rememberSourceData } from "../../source/values";
+import { withFormAcknowledgement } from "../../source/runtime/submission/formAcknowledgement";
+import { disconnectSourceData, readSourceData, rememberSourceData } from "../../source/values";
 import { listenQueryRefresh } from "./queryRefresh";
 import { queryRequest } from "./queryRequest";
 import { parseSyncAttribute, readSyncValue, subscribeSyncValue, writeSyncValue } from "../../params/SyncState";
@@ -24,7 +25,6 @@ import {
 } from "./queryState";
 
 type QueryOptions = {
-    sourceStateForce?: SourceState;
     afterRender?: (query: Element) => void;
     request?: typeof runFetch;
 };
@@ -41,6 +41,7 @@ export class Query {
     private pending: Promise<boolean> | null = null;
     private queued: Promise<boolean> | null = null;
     private queuedForce = false;
+    private queuedAcknowledgement: HTMLFormElement | undefined;
     private activeIdentity: string | null = null;
     private lastInputIdentity: string | null = null;
 
@@ -57,24 +58,15 @@ export class Query {
         const binding = parseQuery(this.element.getAttribute(QUERY_ATTR) ?? "");
         if (binding && "sync" in binding) {
             this.startSynchronizedQuery(binding.sync);
-            this.element.setAttribute(READY_ATTR, "");
             return;
         }
         this.stopReload = connectQueryReload(
             this.element,
             () => this.requestIdentity(),
-            () => this.run(),
+            (acknowledge) => this.run({ acknowledge }),
         );
         this.stopRefresh = listenQueryRefresh(this.element, () => void this.run());
-        const supplied = connectSourceData(this.element, (value) => this.accept(value));
-        if (supplied && !this.options.sourceStateForce) {
-            this.accept(supplied.value);
-        } else if (this.options.sourceStateForce && this.options.sourceStateForce !== "loaded") {
-            this.renderForced(this.options.sourceStateForce);
-        } else {
-            void this.run();
-        }
-        this.element.setAttribute(READY_ATTR, "");
+        void this.run();
     }
 
     dispose(): void {
@@ -97,18 +89,23 @@ export class Query {
         this.renderer.template();
     }
 
-    run(options: { readonly onlyIfInputChanged?: boolean } = {}): Promise<boolean> {
+    run(
+        options: { readonly onlyIfInputChanged?: boolean; readonly acknowledge?: HTMLFormElement } = {},
+    ): Promise<boolean> {
         if (this.pending) {
             this.queuedForce ||= !options.onlyIfInputChanged;
+            this.queuedAcknowledgement = options.acknowledge ?? this.queuedAcknowledgement;
             if (this.requestIdentity() !== this.activeIdentity) {
                 this.lastInputIdentity = null;
                 this.abort?.abort();
             }
             this.queued ??= this.pending.then(() => {
                 const force = this.queuedForce;
+                const acknowledge = this.queuedAcknowledgement;
                 this.queued = null;
                 this.queuedForce = false;
-                return this.element.isConnected ? this.run({ onlyIfInputChanged: !force }) : false;
+                this.queuedAcknowledgement = undefined;
+                return this.element.isConnected ? this.run({ onlyIfInputChanged: !force, acknowledge }) : false;
             });
             return this.queued;
         }
@@ -121,7 +118,10 @@ export class Query {
         return operation;
     }
 
-    private async execute(options: { readonly onlyIfInputChanged?: boolean }): Promise<boolean> {
+    private async execute(options: {
+        readonly onlyIfInputChanged?: boolean;
+        readonly acknowledge?: HTMLFormElement;
+    }): Promise<boolean> {
         let request: ReturnType<typeof queryRequest>;
         try {
             request = queryRequest(this.element);
@@ -171,23 +171,13 @@ export class Query {
             return false;
         }
         const value = refreshing ? shareUnchanged(readSourceData(this.element), outcome.data) : outcome.data;
-        this.accept(value);
+        this.accept(value, options.acknowledge);
         return true;
     }
 
-    private accept(value: unknown): void {
+    private accept(value: unknown, acknowledge?: HTMLFormElement): void {
         rememberSourceData(this.element, value);
-        this.update(this.withInput(loadedQueryState(value)));
-    }
-
-    private renderForced(state: Exclude<SourceState, "loaded">): void {
-        if (state === "loading") {
-            this.update(loadingQueryState());
-        } else if (state === "error") {
-            this.update(failedQueryState(0, "Forced error state"));
-        } else {
-            this.update(loadedQueryState(null));
-        }
+        withFormAcknowledgement(acknowledge, () => this.update(this.withInput(loadedQueryState(value))));
     }
 
     private update(state: QueryState): void {

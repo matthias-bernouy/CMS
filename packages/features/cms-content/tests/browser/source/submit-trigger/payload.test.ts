@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { writeSyncValue } from "../../../../src/browser/binding/params/SyncState";
 import { BindingRuntime } from "../../../../src/browser/binding/runtime/BindingRuntime";
-import { el, resetDom, settle, text, waitFor } from "../../support/testUtils";
+import { el, resetDom, settle, waitFor } from "../../support/testUtils";
 
 afterEach(resetDom);
 
-describe("Source — submit payload and publication", () => {
+describe("Source — submit payload", () => {
     test("form-owned submit resolves cms-source-body fields", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
         globalThis.fetch = (async (url: string, init?: RequestInit) => {
@@ -98,38 +98,6 @@ describe("Source — submit payload and publication", () => {
         await settle();
 
         expect(calls).toBe(0);
-        runtime.stop();
-    });
-
-    test("form-owned submit publishes binding reload channels", async () => {
-        let calls = 0;
-        const urls: string[] = [];
-        globalThis.fetch = (async (url: string) => {
-            calls++;
-            urls.push(url);
-            return new Response(JSON.stringify({ calls }), {
-                headers: { "content-type": "application/json" },
-            });
-        }) as typeof fetch;
-
-        const root = el(`
-            <div>
-                <form cms-source="/api/create as result" cms-source-trigger="submit" cms-source-publish="items:changed">
-                    <input name="title" value="Hello">
-                    <button type="submit">Save</button>
-                </form>
-                <section cms-source="/api/items" cms-reload-on="items:changed"><p>{{ calls }}</p></section>
-            </div>
-        `);
-        document.body.append(root);
-        const runtime = new BindingRuntime(root);
-        runtime.start();
-        await waitFor(() => text(root.querySelector("section p")) === "1");
-
-        root.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-        await waitFor(() => text(root.querySelector("section p")) === "3");
-
-        expect(urls).toEqual(["/api/items", "http://localhost/api/create", "/api/items"]);
         runtime.stop();
     });
 });

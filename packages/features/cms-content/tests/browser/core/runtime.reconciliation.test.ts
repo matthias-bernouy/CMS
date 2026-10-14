@@ -5,18 +5,20 @@ import { el, res, resetDom, waitFor } from "../support/testUtils";
 
 afterEach(resetDom);
 
-describe("BindingRuntime — source render reconciliation", () => {
+describe("BindingRuntime — query render reconciliation", () => {
     test("disposes detached synchronized controls without observer delivery", async () => {
         const paramTarget = { scope: "param", key: "test-detached-param" } as const;
         const pageTarget = { scope: "page", key: "test-detached-state" } as const;
+        const refreshTarget = { scope: "page", key: "test-query-refresh" } as const;
         writeSyncValue(paramTarget, undefined);
         writeSyncValue(pageTarget, undefined);
+        writeSyncValue(refreshTarget, undefined);
         let outerCalls = 0;
         globalThis.fetch = (async () => res(200, JSON.stringify({ items: [++outerCalls] }))) as unknown as typeof fetch;
         const root = el(`
             <div>
-                <div cms-source="/outer" cms-reload-on="refresh">
-                    <section cms-repeat="items as item">
+                <div cms-query="kernel.auth:methods as outer" cms-query-listen="@page:test-query-refresh">
+                    <section cms-repeat="outer.data.items as item">
                         <input class="param" cms-sync="@param:test-detached-param" value="{{ item }}">
                         <input class="state" cms-sync="@page:test-detached-state" value="{{ item }}">
                     </section>
@@ -37,9 +39,9 @@ describe("BindingRuntime — source render reconciliation", () => {
             const detachedParam = root.querySelector<HTMLInputElement>(".param")!;
             const detachedState = root.querySelector<HTMLInputElement>(".state")!;
 
-            // Exercise the synchronous Source-render path independently from mutation delivery.
+            // Exercise the synchronous Query-render path independently from mutation delivery.
             (runtime as unknown as { observer: MutationObserver | null }).observer?.disconnect();
-            document.dispatchEvent(new Event("refresh"));
+            writeSyncValue(refreshTarget, outerCalls);
             await waitFor(() => outerCalls === 2 && root.querySelector(".param") !== detachedParam);
 
             detachedParam.value = "stale";
@@ -62,6 +64,7 @@ describe("BindingRuntime — source render reconciliation", () => {
             runtime.stop();
             writeSyncValue(paramTarget, undefined);
             writeSyncValue(pageTarget, undefined);
+            writeSyncValue(refreshTarget, undefined);
         }
     });
 });

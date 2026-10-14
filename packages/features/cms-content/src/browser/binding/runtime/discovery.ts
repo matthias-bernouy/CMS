@@ -1,8 +1,8 @@
-import { BINDING_CORE_TAG, BIND_STOP_ATTR } from "../core/attrs";
+import { BINDING_CORE_TAG } from "../core/attrs";
 
 /**
  * Invoke `cb` for `node` and every descendant carrying `attr`, without crossing
- * nested binding-core or bind-stop boundaries.
+ * nested binding-core boundaries.
  */
 export function eachMatching(node: Node, attr: string, root: Element, cb: (el: Element) => void): void {
     if (node.nodeType !== Node.ELEMENT_NODE) {
@@ -25,7 +25,7 @@ export function eachMatching(node: Node, attr: string, root: Element, cb: (el: E
 
 function crossesBoundary(el: Element, root: Element): boolean {
     for (let p = el.parentElement; p && p !== root; p = p.parentElement) {
-        if (p.localName === BINDING_CORE_TAG || p.hasAttribute(BIND_STOP_ATTR)) {
+        if (p.localName === BINDING_CORE_TAG) {
             return true;
         }
     }

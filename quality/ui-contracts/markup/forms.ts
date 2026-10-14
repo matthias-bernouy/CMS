@@ -25,7 +25,7 @@ export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
             }),
         );
     };
-    const trigger = attrs.get("cms-source-trigger")?.value ?? "";
+    const trigger = attrs.get("cms-source-trigger")?.value.trim() || "submit";
     const method = attrs.get("cms-source-method")?.value.trim().toUpperCase();
     if (tag.name !== "form") {
         report(
@@ -37,32 +37,30 @@ export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
         );
         return findings;
     }
-    const formSubmission = tag.name === "form" && ["submit", "change"].includes(trigger);
+    if (!dynamic(trigger) && !["submit", "change"].includes(trigger)) {
+        report(
+            "cms-source-trigger",
+            "source-trigger-contract",
+            "ERROR",
+            "cms-source-trigger only accepts submit or change.",
+            "Use a native form event trigger: submit or change.",
+        );
+    }
+    if (method && !dynamic(method) && !["GET", "POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+        report(
+            "cms-source-method",
+            "source-method-contract",
+            "ERROR",
+            "cms-source-method uses an unsupported form method.",
+            "Use GET, POST, PUT, PATCH, or DELETE.",
+        );
+    }
+    const formSubmission = ["submit", "change"].includes(trigger);
     if (!formSubmission) {
         return findings;
     }
-    const published = attrs.get("cms-source-publish")?.value ?? "";
-    const reload = attrs.get("cms-reload-on")?.value ?? "";
-    if (!dynamic(reload)) {
-        // Success events bubble to the same document that owns explicit reload listeners.
-        const emitted = new Set([
-            ...(dynamic(published) ? [] : published.split(/\s+/)),
-            "cms-source:success",
-            "form:success",
-        ]);
-        const loops = reload.split(/\s+/).filter((event) => event && emitted.has(event));
-        if (loops.length) {
-            report(
-                "cms-reload-on",
-                "source-publish-reload-loop",
-                "ERROR",
-                `A successful submission emits its own reload event: ${[...new Set(loops)].join(", ")}.`,
-                "Publish events for other data sources, but remove them from this form's cms-reload-on.",
-            );
-        }
-    }
     const body = attrs.get("cms-source-body")?.value;
-    if (body?.trim() && !dynamic(body) && !["GET", "HEAD"].includes(method ?? "POST") && !validBody(body)) {
+    if (body?.trim() && !dynamic(body) && method !== "GET" && !validBody(body)) {
         report(
             "cms-source-body",
             "source-body-contract",

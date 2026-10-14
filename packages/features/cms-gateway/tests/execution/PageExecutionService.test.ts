@@ -8,7 +8,7 @@ const page: TPage = {
     path: "/products",
     title: "Products",
     description: "",
-    content: `<section cms-source="/.cms/call/shop/products as products" cms-source-method="post"></section>`,
+    content: `<form cms-source="/.cms/call/shop/products as products" cms-source-method="post"></form>`,
     visible: true,
     tags: [],
 };
