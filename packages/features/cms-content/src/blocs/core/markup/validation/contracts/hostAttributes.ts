@@ -1,7 +1,11 @@
 import type { BlocSettingItem, BlocSettings } from "cms-content/pages/interfaces/document";
 import { COMPOSITION_CONTROLLER_ATTRIBUTE } from "cms-content/blocs/core/composition/expandCompositions";
-import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
+import {
+    implementationAccessibilityAttributeIssue,
+    isSupportedAriaAttribute,
+} from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
 import { isCmsBindingAttribute } from "cms-content/blocs/core/validation/nativeBindings";
+import { boundAttributeValueIssue } from "cms-content/blocs/core/markup/validation/contracts/attributeBindings";
 
 const JSON_NUMBER = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/u;
 const SLOT_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
@@ -16,11 +20,11 @@ export function pageBlocHostAttributesIssue(
     attributes: Readonly<Record<string, string>>,
     contract: PageBlocHostContract,
     nested: boolean,
-    allowDynamicSettings = false,
+    allowDynamicSettings = true,
     allowImplementationAttributes = false,
 ): string | null {
     const settings = contract.settings ?? [];
-    const settingIds = new Set(settings.map((item) => item.id));
+    const settingsById = new Map(settings.map((item) => [item.id, item]));
     for (const [name, value] of Object.entries(attributes)) {
         if (allowImplementationAttributes && name === COMPOSITION_CONTROLLER_ATTRIBUTE) {
             if (value !== "") {
@@ -37,8 +41,34 @@ export function pageBlocHostAttributesIssue(
             }
             continue;
         }
+        const setting = settingsById.get(name);
+        if (setting) {
+            const kind = setting.type === "string" ? "declared-string" : setting.type;
+            const bindingIssue = boundAttributeValueIssue(value, kind);
+            if (bindingIssue !== undefined) {
+                if (!allowDynamicSettings) {
+                    return `Bloc <${contract.id}> setting ${JSON.stringify(name)} cannot be dynamic here`;
+                }
+                if (bindingIssue) {
+                    return `Bloc <${contract.id}> setting ${JSON.stringify(name)} is invalid: ${bindingIssue}`;
+                }
+                continue;
+            }
+        }
         if (allowImplementationAttributes && isCmsBindingAttribute(name)) {
             continue;
+        }
+        if (allowImplementationAttributes) {
+            const implementationKind = dynamicImplementationAttributeKind(name);
+            if (implementationKind) {
+                const bindingIssue = boundAttributeValueIssue(value, implementationKind);
+                if (bindingIssue !== undefined) {
+                    if (bindingIssue) {
+                        return `Bloc <${contract.id}> attribute ${JSON.stringify(name)} is invalid: ${bindingIssue}`;
+                    }
+                    continue;
+                }
+            }
         }
         if (allowImplementationAttributes && isImplementationAttribute(name, value)) {
             continue;
@@ -52,14 +82,15 @@ export function pageBlocHostAttributesIssue(
             }
             continue;
         }
-        if (!settingIds.has(name)) {
+        if (!settingsById.has(name)) {
             return `Bloc <${contract.id}> attribute ${JSON.stringify(name)} is not a declared setting`;
         }
     }
     try {
         for (const setting of settings) {
             const value = attributes[setting.id];
-            if (allowDynamicSettings && value !== undefined && /(?:\{\{|#\{|@\{)/u.test(value)) {
+            const kind = setting.type === "string" ? "declared-string" : setting.type;
+            if (value !== undefined && boundAttributeValueIssue(value, kind) !== undefined) {
                 continue;
             }
             validateSettingValue(setting, value);
@@ -68,6 +99,16 @@ export function pageBlocHostAttributesIssue(
     } catch (error) {
         return `Bloc <${contract.id}> settings are invalid: ${error instanceof Error ? error.message : "constraint mismatch"}`;
     }
+}
+
+function dynamicImplementationAttributeKind(name: string): "boolean" | "string" | null {
+    if (name === "hidden") {
+        return "boolean";
+    }
+    if (name === "id" || name === "tabindex" || /^data-(?!cms-)[a-z][a-z0-9-]*$/u.test(name)) {
+        return "string";
+    }
+    return isSupportedAriaAttribute(name) ? "string" : null;
 }
 
 function isImplementationAttribute(name: string, value: string): boolean {

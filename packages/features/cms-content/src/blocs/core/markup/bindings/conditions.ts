@@ -3,6 +3,7 @@ import type {
     CmsConditionFieldOperator,
     CmsConditionLiteral,
 } from "cms-content/blocs/core/markup/bindings/types";
+import { parseBindingExpression } from "cms-content/blocs/core/markup/expression/parser";
 
 export function asCondition(expression: CmsConditionExpression): string {
     return expression.trim();
@@ -10,7 +11,15 @@ export function asCondition(expression: CmsConditionExpression): string {
 
 export function parseCondition(value: string): CmsConditionExpression | null {
     const expression = value.trim();
-    return expression || null;
+    if (!expression) {
+        return null;
+    }
+    try {
+        parseBindingExpression(expression);
+        return expression;
+    } catch {
+        return null;
+    }
 }
 
 export function asFieldCondition(
@@ -26,7 +35,7 @@ export function asFieldCondition(
         return `!${normalizedPath}`;
     }
     if (operator === "empty") {
-        return `${normalizedPath}.length == 0`;
+        return `${normalizedPath}.length === 0`;
     }
     if (operator === "notEmpty") {
         return `${normalizedPath}.length > 0`;
@@ -64,10 +73,10 @@ function normalizeConditionPath(path: string): string {
     return normalized;
 }
 
-function comparisonOperator(operator: CmsConditionFieldOperator): "==" | "!=" | ">" | ">=" | "<" | "<=" {
-    const operators: Partial<Record<CmsConditionFieldOperator, "==" | "!=" | ">" | ">=" | "<" | "<=">> = {
-        equals: "==",
-        notEquals: "!=",
+function comparisonOperator(operator: CmsConditionFieldOperator): "===" | "!==" | ">" | ">=" | "<" | "<=" {
+    const operators: Partial<Record<CmsConditionFieldOperator, "===" | "!==" | ">" | ">=" | "<" | "<=">> = {
+        equals: "===",
+        notEquals: "!==",
         greaterThan: ">",
         greaterThanOrEqual: ">=",
         lessThan: "<",

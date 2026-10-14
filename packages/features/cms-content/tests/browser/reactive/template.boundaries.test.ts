@@ -101,18 +101,20 @@ describe("CompiledTemplate — boundaries", () => {
     test("boolean attributes respect nested source and submit-result ownership", () => {
         const { host, region } = mount(
             `<form cms-source="/save as result" cms-source-trigger="submit">
-                <input cms-bind-boolean-required="required">
-                <button cms-bind-boolean-disabled="result.pending" disabled>Save</button>
+                <input required="{{ required }}">
+                <button disabled="{{ result.pending }}">Save</button>
             </form>
-            <section cms-source="/nested" cms-bind-boolean-hidden="hidden">
-                <input cms-bind-boolean-required="required">
+            <section cms-source="/nested" hidden="{{ hidden }}">
+                <input required="{{ required }}">
             </section>`,
             { required: true, hidden: true, result: { pending: false } },
         );
         expect(host.querySelector("form input")!.hasAttribute("required")).toBe(true);
         expect(host.querySelector("button")!.hasAttribute("disabled")).toBe(true);
         expect(host.querySelector("section")!.hasAttribute("hidden")).toBe(true);
-        expect(host.querySelector("section input")!.hasAttribute("required")).toBe(false);
+        // This outer renderer does not own the nested source body. Its authored
+        // (or SSR-resolved) state remains untouched until that source mounts.
+        expect(host.querySelector("section input")!.hasAttribute("required")).toBe(true);
         region.update({ value: { required: false, hidden: false, result: { pending: false } } });
         expect(host.querySelector("form input")!.hasAttribute("required")).toBe(false);
         expect(host.querySelector("button")!.hasAttribute("disabled")).toBe(true);

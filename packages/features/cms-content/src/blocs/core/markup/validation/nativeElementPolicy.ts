@@ -10,7 +10,11 @@ import {
 } from "cms-content/blocs/core/validation/nativeAttributeValues";
 import { isPlatformNativeAttributeAllowed } from "cms-content/blocs/core/validation/nativeHtml";
 import { accessibleSvgIssue, componentImageIssue } from "cms-content/blocs/core/markup/validation/nativeMediaPolicy";
-import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
+import {
+    implementationAccessibilityAttributeIssue,
+    isSupportedAriaAttribute,
+} from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
+import { boundAttributeValueIssue } from "cms-content/blocs/core/markup/validation/contracts/attributeBindings";
 
 export type NativePolicyElement = {
     readonly localName: string;
@@ -46,6 +50,9 @@ export function customElementAttributesIssue(element: NativePolicyElement): stri
             if (issue) {
                 return issue;
             }
+        }
+        if (name.startsWith("cms-") && !isCmsBindingAttribute(name)) {
+            return `attribute "${name}" is not a declared CMS binding`;
         }
         if (name.toLowerCase() === "cms-ready") {
             return "CMS runtime binding state cannot be persisted";
@@ -147,6 +154,16 @@ function nativeAttributesIssue(
             return `attribute "${name}" is not a declared CMS binding`;
         }
         if (allowImplementationAttributes) {
+            const dynamicKind = implementationAttributeBindingKind(name);
+            if (dynamicKind) {
+                const bindingIssue = boundAttributeValueIssue(value, dynamicKind);
+                if (bindingIssue !== undefined) {
+                    if (bindingIssue) {
+                        return bindingIssue;
+                    }
+                    continue;
+                }
+            }
             const accessibilityIssue = implementationAccessibilityAttributeIssue(name, value);
             if (accessibilityIssue !== undefined) {
                 if (accessibilityIssue) {
@@ -190,6 +207,16 @@ function nativeAttributesIssue(
         return null;
     }
     return nativeAttributeSetIssue(tag, controlled);
+}
+
+function implementationAttributeBindingKind(name: string): "boolean" | "string" | null {
+    if (name === "hidden") {
+        return "boolean";
+    }
+    if (name === "id" || name === "tabindex" || /^data-(?!cms-)[a-z][a-z0-9-]*$/u.test(name)) {
+        return "string";
+    }
+    return isSupportedAriaAttribute(name) ? "string" : null;
 }
 
 function isImplementationAttribute(name: string, value: string): boolean {

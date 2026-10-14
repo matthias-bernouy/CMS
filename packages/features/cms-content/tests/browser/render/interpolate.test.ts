@@ -90,6 +90,12 @@ describe("interpolateString — filters (injected)", () => {
         ).toBe("email=seller%2B2%40example.com");
     });
 
+    test("does not let host filters override the system string conversion", () => {
+        expect(interpolateString("{{ open | string }}", s({ open: false }), { string: () => "overridden" })).toBe(
+            "false",
+        );
+    });
+
     test("passes a scoped argument to injected filters", () => {
         const withUnit: FilterMap = { measure: (value, unit) => `${value} ${unit}` };
         expect(interpolateString("{{ amount | measure(unit) }}", s({ amount: 12, unit: "kg" }), withUnit)).toBe(

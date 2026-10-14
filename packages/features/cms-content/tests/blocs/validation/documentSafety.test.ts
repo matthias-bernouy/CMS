@@ -98,3 +98,46 @@ describe("Bloc document cycles", () => {
         ).toThrow("cannot reference itself");
     });
 });
+
+describe("Bloc document host attributes", () => {
+    const target = {
+        id: "fixture-target",
+        kind: "component" as const,
+        slots: {},
+        settings: [
+            {
+                id: "expanded",
+                label: "Expanded",
+                type: "boolean" as const,
+                default: false,
+                control: { kind: "toggle" as const },
+            },
+            {
+                id: "label",
+                label: "Label",
+                type: "string" as const,
+                default: "",
+                control: { kind: "text" as const },
+            },
+        ],
+    };
+
+    const validateBinding = (attributes: string) =>
+        validateBlocDocument(
+            {
+                id: "fixture-owner",
+                kind: "composition",
+                slots: {},
+                fixedContent: `<fixture-target ${attributes}></fixture-target>`,
+            },
+            [target],
+        );
+
+    test("uses target Bloc settings to validate bindings inside another Bloc", () => {
+        expect(() => validateBinding('expanded="{{ item.open }}" label="{{ item.title }}"')).not.toThrow();
+        expect(() => validateBinding("expanded=\"{{ item.state === 'open' }}\"")).not.toThrow();
+        expect(() => validateBinding('expanded="{{ item.open | string }}"')).toThrow("boolean attribute binding");
+        expect(() => validateBinding('label="{{ item.open === true }}"')).toThrow("string setting binding");
+        expect(() => validateBinding('unknown="{{ item.value }}"')).toThrow("not a declared setting");
+    });
+});

@@ -2,7 +2,7 @@ import { type FilterMap } from "../core/interpolate";
 import { prepareNetworkInertBindings } from "../core/networkBindings";
 import { type Scope } from "../core/scope";
 import { MountedInPlaceRegion, MountedRegion } from "./MountedRegion";
-import { pathOwnedBySubmitSource, submitBoundary } from "./compiler/submitOwnership";
+import { bindingOwnedBySubmitSource, submitBoundary } from "./compiler/submitOwnership";
 import { compileTemplatePlan } from "./compiler/templateCompiler";
 import { instantiateSites } from "./templateInstantiation";
 import type { CompileOptions, CompilePlan } from "./templatePlan";
@@ -39,13 +39,11 @@ export class CompiledTemplate {
             template.appendChild(child.cloneNode(true));
         }
         const plan = compileTemplatePlan(template, filters, {}, CompiledTemplate.fromTemplate);
-        // The parent read source already owns persistent boolean directives in a nested form.
-        // Its interpolated attributes are consumed, but these directives remain in the light DOM.
+        // The parent read source keeps its bindings; this in-place submit scope
+        // owns only attributes that explicitly reference its result.
         if (parent.parentElement?.closest("[cms-source]")) {
             const boundary = submitBoundary(parent);
-            plan.attributes = plan.attributes.filter(
-                (item) => !item.boolean || pathOwnedBySubmitSource(item.template, boundary),
-            );
+            plan.attributes = plan.attributes.filter((item) => bindingOwnedBySubmitSource(item.template, boundary));
         }
         const region = new MountedInPlaceRegion(instantiateSites(parent, plan, filters));
         region.update(scope);

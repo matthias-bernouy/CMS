@@ -25,9 +25,9 @@ describe("cms-condition evaluator", () => {
     });
 
     test("supports boolean combinations and comparisons", () => {
-        expect(evaluateCondition('plan.status == "active" && plan.price > 0', scope)).toBe(true);
-        expect(evaluateCondition("plan.status != 'draft' && items.length >= 2", scope)).toBe(true);
-        expect(evaluateCondition("plan.stock == 0 || $sources.products.error", scope)).toBe(true);
+        expect(evaluateCondition('plan.status === "active" && plan.price > 0', scope)).toBe(true);
+        expect(evaluateCondition("plan.status !== 'draft' && items.length >= 2", scope)).toBe(true);
+        expect(evaluateCondition("plan.stock === 0 || $sources.products.error", scope)).toBe(true);
         expect(evaluateCondition("plan.price < 10", scope)).toBe(false);
     });
 
@@ -54,7 +54,7 @@ describe("cms-condition evaluator", () => {
     });
 
     test("collects path references from valid and invalid expressions", () => {
-        expect(collectConditionReferences("result.ok && email.enabled == true")).toEqual([
+        expect(collectConditionReferences("result.ok && email.enabled === true")).toEqual([
             "result.ok",
             "email.enabled",
         ]);
@@ -74,8 +74,8 @@ describe("cms-condition evaluator", () => {
         expect(evaluateCondition("items | count >= 2 && !plan.archived", scope, filters)).toBe(true);
         expect(evaluateCondition("!items | includes(plan.status)", scope, filters)).toBe(true);
         expect(evaluateCondition("items | includes(items.0)", scope, filters)).toBe(true);
-        expect(evaluateCondition("missing | count == 0", scope, filters)).toBe(false);
-        expect(evaluateCondition('plan.status | urlencode == "active"', scope)).toBe(true);
+        expect(evaluateCondition("missing | count === 0", scope, filters)).toBe(false);
+        expect(evaluateCondition('plan.status | urlencode === "active"', scope)).toBe(true);
         for (const expression of [
             "items | unknown",
             "items | constructor",

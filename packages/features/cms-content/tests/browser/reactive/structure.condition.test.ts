@@ -7,8 +7,8 @@ afterEach(resetDom);
 describe("CompiledTemplate — cms-condition", () => {
     test("uses registered predicates to distinguish scalar values from lists without a DOM renderer", () => {
         const { host, region } = mount(
-            `<span cms-condition="items | kind == 'scalar'">{{ items }}</span>
-             <ul cms-condition="items | kind == 'list'">
+            `<span cms-condition="items | kind === 'scalar'">{{ items }}</span>
+             <ul cms-condition="items | kind === 'list'">
                <li cms-repeat="items as item" cms-condition="item | text">{{ item | text }}</li>
              </ul>`,
             { items: "Initial" },

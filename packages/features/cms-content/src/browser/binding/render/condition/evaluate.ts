@@ -1,8 +1,8 @@
 import { lookup, type Scope } from "../../core/scope";
 import { bindingFilter, type FilterMap } from "../../core/interpolate";
-import type { CompareOperator, ConditionNode } from "./types";
+import type { ExpressionCompareOperator, ExpressionNode } from "cms-content/blocs/core/markup/expression/types";
 
-export function evaluateNode(node: ConditionNode, scope: Scope, filters: FilterMap): unknown {
+export function evaluateNode(node: ExpressionNode, scope: Scope, filters: FilterMap): unknown {
     if (node.kind === "literal") {
         return node.value;
     }
@@ -46,11 +46,11 @@ function truthy(value: unknown): boolean {
     return Boolean(value);
 }
 
-function compare(left: unknown, right: unknown, operator: CompareOperator): boolean {
-    if (operator === "==") {
+function compare(left: unknown, right: unknown, operator: ExpressionCompareOperator): boolean {
+    if (operator === "===") {
         return Object.is(left, right);
     }
-    if (operator === "!=") {
+    if (operator === "!==") {
         return !Object.is(left, right);
     }
 

@@ -45,6 +45,28 @@ test("managed native children use the closed native attribute policy", async () 
     ).rejects.toThrow("aria-current");
 });
 
+test("validates typed native attribute interpolation before storing a Page", async () => {
+    await validate(
+        '<fixture-action><button type="button" disabled="{{ request.loading }}" aria-expanded="{{ menu.open }}">Save</button></fixture-action>',
+    );
+    await validate(
+        '<fixture-action><button type="button" disabled="{{ request.state === \'pending\' }}">Save</button></fixture-action>',
+    );
+    for (const attribute of [
+        'disabled="before {{ request.loading }}"',
+        "disabled=\"{{ request.state == 'pending' }}\"",
+        'disabled="{{ request.state | string }}"',
+        'disabled="{{ request.loading | custom }}"',
+        'disabled="#{request.loading}"',
+        'disabled="@{request.loading}"',
+        'cms-bind-boolean-disabled="request.loading"',
+    ]) {
+        await expect(
+            validate(`<fixture-action><button type="button" ${attribute}>Save</button></fixture-action>`),
+        ).rejects.toThrow();
+    }
+});
+
 test("Page documents reject comments", () => {
     expect(() => validatePageContentMarkup("<!-- hidden --><fixture-card></fixture-card>")).toThrow("comments");
 });

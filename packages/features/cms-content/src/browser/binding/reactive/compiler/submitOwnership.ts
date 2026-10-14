@@ -2,8 +2,7 @@ import { SOURCE_ATTR } from "../../core/attrs";
 import { collectConditionReferences } from "../../render/condition";
 import { parseSourceSpec } from "../../source/runtime/sourceSpec";
 import type { SubmitSourceBoundary } from "../templatePlan";
-
-const BINDING_TOKEN = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+import { interpolationExpressions } from "cms-content/blocs/core/markup/bindings";
 
 export function submitBoundary(element: Element): SubmitSourceBoundary {
     return { alias: parseSourceSpec(element.getAttribute(SOURCE_ATTR) ?? "").alias };
@@ -13,9 +12,8 @@ export function bindingOwnedBySubmitSource(value: string, boundary: SubmitSource
     if (!boundary) {
         return false;
     }
-    BINDING_TOKEN.lastIndex = 0;
-    for (const match of value.matchAll(BINDING_TOKEN)) {
-        if (pathOwnedBySubmitSource(match[1] ?? "", boundary)) {
+    for (const expression of interpolationExpressions(value) ?? []) {
+        if (collectConditionReferences(expression).some((path) => pathOwnedBySubmitSource(path, boundary))) {
             return true;
         }
     }

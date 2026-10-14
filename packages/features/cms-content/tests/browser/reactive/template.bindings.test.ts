@@ -74,6 +74,25 @@ test("custom form controls use ordinary value interpolation and preserve mounted
     expect(host.firstElementChild).toBe(control);
 });
 
+test("exact expressions preserve booleans while string destinations serialize them", () => {
+    const { host, region } = mount(
+        '<button disabled="{{ state === \'pending\' }}" aria-expanded="{{ open }}">Save</button><test-value-control expanded="{{ open }}" state="{{ open | string }}"></test-value-control>',
+        { state: "idle", open: false },
+    );
+    const button = host.querySelector("button")!;
+    const control = host.querySelector("test-value-control")!;
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    expect(control.hasAttribute("expanded")).toBe(false);
+    expect(control.getAttribute("state")).toBe("false");
+
+    region.update({ value: { state: "pending", open: true } });
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute("aria-expanded")).toBe("true");
+    expect(control.hasAttribute("expanded")).toBe(true);
+    expect(control.getAttribute("state")).toBe("true");
+});
+
 test("disposing an ordinary attribute binding cancels its queued control update", async () => {
     const { region } = mount('<test-late-control value="{{ name }}"></test-late-control>', { name: "Initial" });
     region.unmount();
@@ -104,13 +123,10 @@ test("native elements are not arbitrary property receivers and nested reads own 
 });
 
 test("a bound native checkbox receives booleans and retains a local edit on an unchanged refresh", () => {
-    const { host, region } = mount(
-        '<input type="checkbox" cms-bind-boolean-checked="enabled"><span>{{ name }}</span>',
-        {
-            enabled: false,
-            name: "Initial",
-        },
-    );
+    const { host, region } = mount('<input type="checkbox" checked="{{ enabled }}"><span>{{ name }}</span>', {
+        enabled: false,
+        name: "Initial",
+    });
     const input = host.querySelector("input")!;
     expect(input.checked).toBe(false);
     input.click();
@@ -153,49 +169,49 @@ test("native text and select bindings preserve drafts until their bound value ch
 });
 
 test("boolean attribute bindings remove false flags without replacing the focused control", () => {
-    const { host, region } = mount('<input cms-bind-boolean-invalid="failed" cms-bind-boolean-required="required">', {
+    const { host, region } = mount('<input readonly="{{ failed }}" required="{{ required }}">', {
         failed: true,
         required: false,
     });
     const input = host.querySelector("input")!;
-    expect(input.getAttribute("invalid")).toBe("");
+    expect(input.readOnly).toBe(true);
     expect(input.required).toBe(false);
     input.focus();
     input.value = "Keep this draft";
     input.setSelectionRange(1, 4);
     for (const failed of [false, undefined, null, "true", "false", 1]) {
         region.update({ value: { failed, required: true } });
-        expect(input.hasAttribute("invalid")).toBe(false);
+        expect(input.readOnly).toBe(false);
         expect(input.required).toBe(true);
         expect([input.value, input.selectionStart, input.selectionEnd]).toEqual(["Keep this draft", 1, 4]);
         expect(document.activeElement).toBe(input);
     }
     region.update({ value: { failed: true } });
-    expect(input.hasAttribute("invalid")).toBe(true);
+    expect(input.readOnly).toBe(true);
     expect(input.required).toBe(false);
 });
 
 test("unchanged external validation bindings leave local field validation feedback intact", () => {
-    const { host, region } = mount('<input cms-bind-boolean-invalid="failed" hint="{{ message }}">', {
+    const { host, region } = mount('<input aria-invalid="{{ failed }}" title="{{ message }}">', {
         failed: false,
         message: "",
     });
     const input = host.querySelector("input")!;
-    input.setAttribute("invalid", "");
-    input.setAttribute("hint", "This field is required.");
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("title", "This field is required.");
     region.update({ value: { failed: false, message: "", unrelated: "Changed" } });
-    expect(input.hasAttribute("invalid")).toBe(true);
-    expect(input.getAttribute("hint")).toBe("This field is required.");
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(input.getAttribute("title")).toBe("This field is required.");
     region.update({ value: { failed: true, message: "Directory unavailable" } });
-    expect(input.getAttribute("hint")).toBe("Directory unavailable");
+    expect(input.getAttribute("title")).toBe("Directory unavailable");
     region.update({ value: { failed: false, message: "" } });
-    expect(input.hasAttribute("invalid")).toBe(false);
-    expect(input.getAttribute("hint")).toBe("");
+    expect(input.getAttribute("aria-invalid")).toBe("false");
+    expect(input.getAttribute("title")).toBe("");
 });
 
 test("multiple select options use boolean attributes and retain edits until their bound selection changes", () => {
     const { host, region } = mount(
-        '<select multiple><option value="a" cms-bind-boolean-selected="a">A</option><option value="b" cms-bind-boolean-selected="b">B</option></select>',
+        '<select multiple><option value="a" selected="{{ a }}">A</option><option value="b" selected="{{ b }}">B</option></select>',
         { a: true, b: false },
     );
     const select = host.querySelector("select")!;

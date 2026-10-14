@@ -25,20 +25,22 @@ import {
 } from "@bernouy/cms-content/bindings";
 
 describe("binding conditions", () => {
-    test("formats and parses condition expressions as opaque expressions", () => {
+    test("formats and parses condition expressions with strict equality", () => {
         expect(asCondition(" plan.visible ")).toBe("plan.visible");
-        expect(parseCondition(" plan.status == 'active' ")).toBe("plan.status == 'active'");
+        expect(parseCondition(" plan.status === 'active' ")).toBe("plan.status === 'active'");
         expect(parseCondition("")).toBeNull();
         expect(parseCondition("   ")).toBeNull();
+        expect(parseCondition("plan.status == 'active'")).toBeNull();
+        expect(parseCondition("plan.status != 'draft'")).toBeNull();
     });
 
     test("formats field condition expressions", () => {
         expect(asFieldCondition(" . ")).toBe(".");
         expect(asFieldCondition(".", "falsy")).toBe("!.");
-        expect(asFieldCondition(".", "equals", "active")).toBe('. == "active"');
+        expect(asFieldCondition(".", "equals", "active")).toBe('. === "active"');
         expect(asFieldCondition("plan.visible")).toBe("plan.visible");
         expect(asFieldCondition("plan.archived", "falsy")).toBe("!plan.archived");
-        expect(asFieldCondition("plan.status", "equals", "active")).toBe('plan.status == "active"');
+        expect(asFieldCondition("plan.status", "equals", "active")).toBe('plan.status === "active"');
         expect(asFieldCondition("items", "notEmpty")).toBe("items.length > 0");
     });
 

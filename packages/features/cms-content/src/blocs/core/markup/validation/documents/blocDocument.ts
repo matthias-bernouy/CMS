@@ -136,7 +136,7 @@ function validateHostAttributes(
     known: ReadonlyMap<string, PageDocumentBlocContract>,
     unresolved: ReadonlySet<string>,
     fragmentOwned: boolean,
-    allowDynamicSettings = false,
+    allowDynamicSettings = true,
 ): void {
     for (const host of Array.from(document.body.querySelectorAll("*"))) {
         const tag = host.localName.toLowerCase();

@@ -96,9 +96,9 @@
                         <div slot="items">
                             <h2>{{ cms.i18n.ulvia-official.ui-publication }}</h2>
                             <ulvia-official-badge cms-condition="selected.visible" tone="success"><span slot="label">{{ cms.i18n.ulvia-official.ui-published }}</span></ulvia-official-badge>
-                            <ulvia-official-badge cms-condition="selected.visible == false" tone="neutral"><span slot="label">{{ cms.i18n.ulvia-official.ui-draft }}</span></ulvia-official-badge>
+                            <ulvia-official-badge cms-condition="selected.visible === false" tone="neutral"><span slot="label">{{ cms.i18n.ulvia-official.ui-draft }}</span></ulvia-official-badge>
                         </div>
-                        <form slot="items" cms-condition="selected.visible == false" cms-source="/.cms/call/ulvia.cms.pages/publish as publication" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail">
+                        <form slot="items" cms-condition="selected.visible === false" cms-source="/.cms/call/ulvia.cms.pages/publish as publication" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail">
                             <input type="hidden" name="id" value="{{ selected.id }}">
                             <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
                             <input type="hidden" name="visible" value="true" cms-form-value-type="boolean">

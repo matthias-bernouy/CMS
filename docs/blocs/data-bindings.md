@@ -50,7 +50,7 @@ Use `cms-source-id` and `$sources.<id>.<state>` when one element must observe a
 specific source among several ancestors.
 
 Conditions can use the same registered value filters as interpolation:
-`cms-condition="items | kind == 'list'"` or
+`cms-condition="items | kind === 'list'"` or
 `cms-condition="items | includes(selection.id)"`. The host supplies pure `kind`
 and `includes` filters in these examples. A filter takes one resolved input and
 optionally one argument path. It runs before comparisons and boolean operators;
@@ -100,14 +100,14 @@ no separate typed component receiver method.
 ```html
 <input name="quantity" type="number" value="{{ item.quantity }}">
 <select name="status" value="{{ item.status }}">...</select>
-<input name="enabled" type="checkbox" cms-bind-boolean-checked="item.enabled">
+<input name="enabled" type="checkbox" checked="{{ item.enabled }}">
 ```
 
-Checkboxes use the existing boolean-presence binding: only boolean `true`
-checks the input. Never interpolate `checked="false"`, since native HTML treats
-its presence as checked. Repeated native select options are mounted before the
-select value is applied. Multiple selects can bind each option's `selected`
-attribute with the same boolean mechanism.
+Exact attribute interpolation preserves the evaluated type. Known HTML boolean
+attributes such as `checked`, `disabled`, `required`, and `selected` are present
+only when that value is the boolean `true`; strings such as `"true"` and
+`"false"` both remove them. Repeated native select options are mounted before
+the select value is applied.
 
 Unchanged bound values preserve local drafts, focus and selection. A changed
 value updates its existing control. After a successful Save and targeted read,
@@ -116,15 +116,28 @@ input back to its previous value. File inputs never receive a programmatically
 assigned value. Late custom-element definitions receive the latest pending
 attribute value; disposing the binding cancels that pending property update.
 
-Use `cms-bind-boolean-invalid="directory.failed"` to bind an attribute's
-presence to a scope path. Only the boolean `true` adds the named attribute;
-every other value removes it. The suffix is a lowercase attribute name, and
-the expression accepts a path only. This also works with native boolean
-attributes such as `disabled` or `required`. Use ordinary interpolation for
-string-valued attributes such as `aria-expanded`, where `"false"` is meaningful.
+The same exact interpolation accepts the closed condition expression grammar,
+including strict comparisons:
 
-Both interpolated attributes and boolean attribute bindings apply only when
-their evaluated result changes. Unrelated context refreshes therefore preserve
+```html
+<button disabled="{{ request.state === 'pending' }}"
+        aria-expanded="{{ menu.open }}">Save</button>
+```
+
+ARIA attributes are string-valued destinations, so the boolean values above
+become `"true"` and `"false"`; they do not use HTML presence semantics. The
+safe `string` filter is available when an explicit scalar conversion makes an
+author's intent clearer: `data-state="{{ menu.open | string }}"`. It rejects
+objects and arrays instead of emitting `"[object Object]"`.
+
+Custom-element attributes must correspond to declared Bloc settings. Boolean
+settings use presence semantics; string, number, and integer settings use their
+declared value type. Invalid targets and incompatible expression shapes are
+rejected when a Page or Bloc document is validated, before the browser runtime
+sees them. Dynamic URL destinations retain their dedicated security policy.
+
+Interpolated attributes apply only when their evaluated result changes.
+Unrelated context refreshes therefore preserve
 local control feedback, such as a required-field error. A changed bound result
 replaces that local attribute value. Source and submit-result boundaries still
 determine which scope owns a binding.

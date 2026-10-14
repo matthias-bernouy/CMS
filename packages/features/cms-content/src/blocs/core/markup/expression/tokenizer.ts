@@ -1,21 +1,31 @@
-import type { Token } from "./types";
+import type { ExpressionToken } from "cms-content/blocs/core/markup/expression/types";
 
-export function tokenize(expression: string): Token[] {
-    const tokens: Token[] = [];
+export function tokenizeExpression(expression: string): ExpressionToken[] {
+    const tokens: ExpressionToken[] = [];
     let index = 0;
 
     while (index < expression.length) {
         const char = expression[index]!;
-        if (/\s/.test(char)) {
+        if (/\s/u.test(char)) {
             index += 1;
             continue;
         }
 
+        const three = expression.slice(index, index + 3);
+        if (three === "===" || three === "!==") {
+            tokens.push({ kind: "operator", value: three });
+            index += 3;
+            continue;
+        }
+
         const two = expression.slice(index, index + 2);
-        if (two === "&&" || two === "||" || two === "==" || two === "!=" || two === ">=" || two === "<=") {
+        if (two === "&&" || two === "||" || two === ">=" || two === "<=") {
             tokens.push({ kind: "operator", value: two });
             index += 2;
             continue;
+        }
+        if (two === "==" || two === "!=") {
+            throw new Error(`operator "${two}" is not supported; use "${two}="`);
         }
 
         if (char === "!" || char === ">" || char === "<") {
@@ -23,21 +33,29 @@ export function tokenize(expression: string): Token[] {
             index += 1;
             continue;
         }
-
-        if (char === "|" || char === "(" || char === ")") {
+        if (char === "|") {
             tokens.push({ kind: "punctuation", value: char });
             index += 1;
             continue;
         }
-
-        if (char === "'" || char === '"') {
+        if (char === "(" || char === ")") {
+            tokens.push({ kind: "punctuation", value: char });
+            index += 1;
+            continue;
+        }
+        if (char === "'") {
             const parsed = readString(expression, index, char);
             tokens.push({ kind: "literal", value: parsed.value });
             index = parsed.next;
             continue;
         }
-
-        if ((char === "-" && /\d/.test(expression[index + 1] ?? "")) || /\d/.test(char)) {
+        if (char === '"') {
+            const parsed = readString(expression, index, char);
+            tokens.push({ kind: "literal", value: parsed.value });
+            index = parsed.next;
+            continue;
+        }
+        if ((char === "-" && /\d/u.test(expression[index + 1] ?? "")) || /\d/u.test(char)) {
             const parsed = readNumber(expression, index);
             tokens.push({ kind: "literal", value: parsed.value });
             index = parsed.next;
@@ -100,16 +118,15 @@ function readNumber(expression: string, start: number): { value: number; next: n
     if (expression[index] === "-") {
         index += 1;
     }
-    while (/\d/.test(expression[index] ?? "")) {
+    while (/\d/u.test(expression[index] ?? "")) {
         index += 1;
     }
     if (expression[index] === ".") {
         index += 1;
-        while (/\d/.test(expression[index] ?? "")) {
+        while (/\d/u.test(expression[index] ?? "")) {
             index += 1;
         }
     }
-
     const raw = expression.slice(start, index);
     const value = Number(raw);
     if (!Number.isFinite(value)) {
@@ -120,23 +137,19 @@ function readNumber(expression: string, start: number): { value: number; next: n
 
 function readBareToken(expression: string, start: number): { value: string; next: number } {
     let index = start;
-    while (index < expression.length && !/\s/.test(expression[index]!) && !"!&|=<>\"'()".includes(expression[index]!)) {
+    while (
+        index < expression.length &&
+        !/\s/u.test(expression[index]!) &&
+        !"!&|=<>\"'()".includes(expression[index]!)
+    ) {
         index += 1;
     }
-
     const value = expression.slice(start, index);
     if (!value) {
         throw new Error(`unexpected token "${expression[start] ?? ""}"`);
     }
-    if (!isValidPath(value)) {
+    if (value !== "." && !/^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/u.test(value)) {
         throw new Error(`invalid path "${value}"`);
     }
     return { value, next: index };
-}
-
-function isValidPath(value: string): boolean {
-    if (value === ".") {
-        return true;
-    }
-    return /^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(value);
 }

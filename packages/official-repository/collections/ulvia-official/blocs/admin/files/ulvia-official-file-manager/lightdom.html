@@ -37,8 +37,8 @@
                         <header slot="items">
                             <h3>{{ file.name }}</h3>
                             <p>{{ file.mimeType }} {{ file.size }} {{ cms.i18n.ulvia-official.ui-bytes }}</p>
-                            <p cms-condition="file.visibility == 'private'">{{ cms.i18n.ulvia-official.ui-private }}</p>
-                            <p cms-condition="file.visibility == 'public'">{{ cms.i18n.ulvia-official.ui-public }}</p>
+                            <p cms-condition="file.visibility === 'private'">{{ cms.i18n.ulvia-official.ui-private }}</p>
+                            <p cms-condition="file.visibility === 'public'">{{ cms.i18n.ulvia-official.ui-public }}</p>
                         </header>
                         <form slot="items" cms-source="/.cms/call/ulvia.cms.files/workspace.files.update" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library" cms-source-success-reset="false">
                             <input type="hidden" name="fileId" value="{{ file.fileId }}">
@@ -67,23 +67,23 @@
                             <output slot="content" name="upload-status" role="status" aria-live="polite"></output>
                         </ulvia-official-file-upload>
                         <ulvia-official-cluster slot="items" align="center">
-                            <ulvia-official-file-link slot="items" cms-condition="file.visibility == 'public'" url="{{ file.url }}">
+                            <ulvia-official-file-link slot="items" cms-condition="file.visibility === 'public'" url="{{ file.url }}">
                                 <button slot="content" type="button">{{ cms.i18n.ulvia-official.ui-open-file }}</button>
                                 <output slot="content" name="file-link-error-label" hidden>{{ cms.i18n.ulvia-official.ui-file-could-not-be-opened }}</output>
                                 <output slot="content" name="file-link-error" role="alert"></output>
                             </ulvia-official-file-link>
-                            <ulvia-official-file-link slot="items" cms-condition="file.visibility == 'private'" file-id="{{ file.fileId }}" generation="{{ file.generation }}">
+                            <ulvia-official-file-link slot="items" cms-condition="file.visibility === 'private'" file-id="{{ file.fileId }}" generation="{{ file.generation }}">
                                 <button slot="content" type="button">{{ cms.i18n.ulvia-official.ui-open-file }}</button>
                                 <form slot="content" hidden cms-source="/.cms/call/ulvia.cms.files/workspace.files.sign" cms-source-id="private-file-sign" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json"></form>
                                 <output slot="content" name="file-link-error-label" hidden>{{ cms.i18n.ulvia-official.ui-private-file-could-not-be-opened }}</output>
                                 <output slot="content" name="file-link-error" role="alert"></output>
                             </ulvia-official-file-link>
-                            <form slot="items" cms-condition="file.visibility == 'private'" cms-source="/.cms/call/ulvia.cms.files/workspace.files.set-visibility" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library">
+                            <form slot="items" cms-condition="file.visibility === 'private'" cms-source="/.cms/call/ulvia.cms.files/workspace.files.set-visibility" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library">
                                 <input type="hidden" name="fileId" value="{{ file.fileId }}">
                                 <input type="hidden" name="visibility" value="public">
                                 <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-publish }}</button></ulvia-official-action>
                             </form>
-                            <form slot="items" cms-condition="file.visibility == 'public'" cms-source="/.cms/call/ulvia.cms.files/workspace.files.set-visibility" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library">
+                            <form slot="items" cms-condition="file.visibility === 'public'" cms-source="/.cms/call/ulvia.cms.files/workspace.files.set-visibility" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#file-library">
                                 <input type="hidden" name="fileId" value="{{ file.fileId }}">
                                 <input type="hidden" name="visibility" value="private">
                                 <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-make-private }}</button></ulvia-official-action>
@@ -101,7 +101,7 @@
                     </ulvia-official-stack>
                 </ulvia-official-surface>
             </ulvia-official-grid>
-            <ulvia-official-surface slot="items" cms-condition="workspace.items.length == 0" appearance="subtle" padding="lg">
+            <ulvia-official-surface slot="items" cms-condition="workspace.items.length === 0" appearance="subtle" padding="lg">
                 <p slot="content">{{ cms.i18n.ulvia-official.ui-this-folder-is-empty }}</p>
             </ulvia-official-surface>
         </ulvia-official-stack>

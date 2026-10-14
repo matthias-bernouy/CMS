@@ -1,5 +1,6 @@
 import type { ManagedNativeElement, ManagedNativeElementTag } from "cms-content/pages/interfaces/document";
 import { isCmsBindingAttribute } from "cms-content/blocs/core/validation/nativeBindings";
+import { isDeclaredPlatformNativeAttributeAllowed } from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";
 
 export const MANAGED_NATIVE_ELEMENT_TAGS = [
     "h1",
@@ -20,46 +21,6 @@ export const MANAGED_NATIVE_ELEMENT_TAGS = [
     "span",
 ] as const satisfies readonly ManagedNativeElementTag[];
 
-const NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> = {
-    a: new Set(["href", "target", "rel", "aria-current", "aria-label", "data-cms-page-ref", "data-cms-page-suffix"]),
-    button: new Set(["type", "disabled", "name", "value", "aria-label"]),
-    img: new Set(["src", "alt", "role", "aria-hidden", "loading", "fetchpriority", "width", "height", "decoding"]),
-    input: new Set([
-        "type",
-        "name",
-        "value",
-        "checked",
-        "disabled",
-        "required",
-        "readonly",
-        "autocomplete",
-        "placeholder",
-        "maxlength",
-        "min",
-        "max",
-        "step",
-        "multiple",
-        "accept",
-        "inputmode",
-        "role",
-        "aria-label",
-    ]),
-    output: new Set(["name", "for", "aria-live", "aria-label"]),
-    select: new Set(["name", "multiple", "size", "required", "disabled", "aria-label"]),
-    svg: new Set(["role", "aria-hidden", "aria-label"]),
-    textarea: new Set([
-        "name",
-        "rows",
-        "required",
-        "readonly",
-        "disabled",
-        "autocomplete",
-        "placeholder",
-        "maxlength",
-        "aria-label",
-    ]),
-};
-
 export function managedNativeAttributesIssue(
     contract: ManagedNativeElement,
     attributes: Readonly<Record<string, string>>,
@@ -67,11 +28,10 @@ export function managedNativeAttributesIssue(
     options: { allowUnknown?: boolean } = {},
 ): string | null {
     if (tag && !options.allowUnknown) {
-        const allowed = NATIVE_ATTRIBUTES[tag] ?? new Set<string>();
         for (const name of Object.keys(attributes)) {
             if (
                 name !== "id" &&
-                !allowed.has(name) &&
+                !isDeclaredPlatformNativeAttributeAllowed(tag, name) &&
                 !isCmsBindingAttribute(name) &&
                 !Object.hasOwn(contract.attributes ?? {}, name)
             ) {

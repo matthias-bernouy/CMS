@@ -24,8 +24,19 @@ export function instantiateSites(root: Node, plan: CompilePlan, filters: FilterM
             throw new Error("Compiled attribute binding no longer points to an element.");
         }
         const target =
-            attribute.name === "value" || (attribute.boolean && attribute.name === "checked") ? controlSites : sites;
-        target.push(new AttributeSite(node as Element, attribute.name, attribute.template, filters, attribute.boolean));
+            attribute.name === "value" || (attribute.kind === "boolean" && attribute.name === "checked")
+                ? controlSites
+                : sites;
+        target.push(
+            new AttributeSite(
+                node as Element,
+                attribute.name,
+                attribute.template,
+                filters,
+                attribute.kind,
+                attribute.expression,
+            ),
+        );
     }
     for (const { item: condition, node } of conditionTargets) {
         const range = replaceWithAnchors(node, "cms-condition");

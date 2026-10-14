@@ -7,6 +7,8 @@ import { clearBetween, type LiveBindingSite, type MountedRegion } from "./Mounte
 import type { MountableTemplate } from "./templatePlan";
 import { acknowledgesControl } from "../source/runtime/submission/acknowledgement";
 import { applyControlAttribute } from "./controls/value";
+import { compileExpression, type CompiledExpression } from "../render/expression";
+import type { AttributeBindingKind } from "./templatePlan";
 
 export class TextSite implements LiveBindingSite {
     constructor(
@@ -25,24 +27,29 @@ export class TextSite implements LiveBindingSite {
 export class AttributeSite implements LiveBindingSite {
     private revision = 0;
     private applied = false;
-    private lastValue: string | boolean = "";
+    private lastValue: string | boolean | null = null;
+    private readonly compiled: CompiledExpression | null;
     constructor(
         private readonly element: Element,
         private readonly name: string,
         private readonly template: string,
         private readonly filters: FilterMap,
-        private readonly boolean = false,
-    ) {}
+        private readonly kind: AttributeBindingKind,
+        expression?: string,
+    ) {
+        this.compiled = expression ? compileExpression(expression, filters) : null;
+    }
     update(scope: Scope): void {
-        const next = this.boolean
-            ? lookup(scope, this.template).value === true
+        const evaluated = this.compiled
+            ? this.compiled.evaluate(scope)
             : interpolateString(this.template, scope, this.filters);
+        const next = normalizeAttributeValue(evaluated, this.kind);
         if (this.applied && next === this.lastValue && !acknowledgesControl(this.element)) {
             return;
         }
         this.applied = true;
         this.lastValue = next;
-        if (this.boolean) {
+        if (typeof next === "boolean") {
             const present = next === true;
             if (this.element.hasAttribute(this.name) !== present) {
                 this.element.toggleAttribute(this.name, present);
@@ -50,20 +57,21 @@ export class AttributeSite implements LiveBindingSite {
             this.applyControl(next);
             return;
         }
-        const value = String(next);
-        if (this.element.getAttribute(this.name) !== value) {
-            this.element.setAttribute(this.name, value);
+        if (next === null) {
+            this.element.removeAttribute(this.name);
+        } else if (this.element.getAttribute(this.name) !== next) {
+            this.element.setAttribute(this.name, next);
         }
         this.applyControl(next);
     }
-    private applyControl(value: string | boolean): void {
-        if (this.name !== "value" && !(this.boolean && ["checked", "selected"].includes(this.name))) {
+    private applyControl(value: string | boolean | null): void {
+        if (this.name !== "value" && !(typeof value === "boolean" && ["checked", "selected"].includes(this.name))) {
             return;
         }
         const revision = ++this.revision;
         const apply = () => {
             if (revision === this.revision) {
-                applyControlAttribute(this.element as HTMLElement, this.name, value);
+                applyControlAttribute(this.element as HTMLElement, this.name, value ?? "");
             }
         };
         const registry = this.element.ownerDocument.defaultView?.customElements;
@@ -77,6 +85,19 @@ export class AttributeSite implements LiveBindingSite {
     unmount(): void {
         this.revision++;
     }
+}
+
+function normalizeAttributeValue(value: unknown, kind: AttributeBindingKind): string | boolean | null {
+    if (kind === "boolean") {
+        return value === true;
+    }
+    if (kind === "auto" && typeof value === "boolean") {
+        return value;
+    }
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        return String(value);
+    }
+    return null;
 }
 
 export class ConditionSite implements LiveBindingSite {

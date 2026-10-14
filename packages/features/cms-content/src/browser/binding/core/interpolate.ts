@@ -30,6 +30,9 @@ export type FilterMap = Record<string, Filter>;
 const BUILTIN_FILTERS = createBuiltinFilters();
 
 export function bindingFilter(name: string, filters: FilterMap): Filter | undefined {
+    if (name === "string") {
+        return BUILTIN_FILTERS.string;
+    }
     return Object.hasOwn(filters, name)
         ? filters[name]
         : Object.hasOwn(BUILTIN_FILTERS, name)
@@ -42,8 +45,18 @@ export function createBuiltinFilters(locale?: string): FilterMap {
     return {
         dateLong: (value) => formatLongDate(value, normalizedLocale),
         minorCurrency: (value, currency) => formatMinorCurrency(value, currency, normalizedLocale),
+        string: (value) => stringifyScalar(value),
         urlencode: (value) => encodeURIComponent(value == null ? "" : String(value)),
     };
+}
+
+function stringifyScalar(value: unknown): string | undefined {
+    if (value == null) {
+        return "";
+    }
+    return typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+        ? String(value)
+        : undefined;
 }
 
 /** `{{ path }}`, `{{ path | filter }}`, or `{{ path | filter(arg.path) }}`.

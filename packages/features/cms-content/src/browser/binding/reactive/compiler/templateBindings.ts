@@ -1,5 +1,7 @@
-import { bindingOwnedBySubmitSource, pathOwnedBySubmitSource } from "./submitOwnership";
+import { bindingOwnedBySubmitSource } from "./submitOwnership";
 import type { CompilePlan, NodePath, SubmitSourceBoundary } from "../templatePlan";
+import { parseInterpolation } from "cms-content/blocs/core/markup/bindings";
+import { nativeAttributeBindingKind } from "cms-content/blocs/core/validation/nativeHtml";
 
 export function compileAttributes(
     element: Element,
@@ -8,21 +10,24 @@ export function compileAttributes(
     boundary: SubmitSourceBoundary | null,
 ): void {
     for (const attribute of Array.from(element.attributes)) {
-        if (attribute.name.startsWith("cms-bind-boolean-")) {
-            const name = attribute.name.slice("cms-bind-boolean-".length);
-            if (
-                /^[a-z][a-z0-9-]*$/.test(name) &&
-                /^[\w$.-]+$/.test(attribute.value) &&
-                !pathOwnedBySubmitSource(attribute.value, boundary)
-            ) {
-                plan.attributes.push({ path, name, template: attribute.value, boolean: true });
-            }
-            continue;
-        }
         if (attribute.value.includes("{{") && !bindingOwnedBySubmitSource(attribute.value, boundary)) {
-            plan.attributes.push({ path, name: attribute.name, template: attribute.value });
+            const expression = parseInterpolation(attribute.value) ?? undefined;
+            plan.attributes.push({
+                path,
+                name: attribute.name,
+                template: attribute.value,
+                ...(expression ? { expression } : {}),
+                kind: bindingKind(element, attribute.name),
+            });
         }
     }
+}
+
+function bindingKind(element: Element, attribute: string): "boolean" | "string" | "auto" {
+    if (attribute.startsWith("aria-")) {
+        return "string";
+    }
+    return element.localName.includes("-") ? "auto" : nativeAttributeBindingKind(attribute);
 }
 
 const RAW_HTML = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;

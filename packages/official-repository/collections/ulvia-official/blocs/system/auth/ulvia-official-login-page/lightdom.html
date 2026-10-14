@@ -25,8 +25,8 @@
                             <ulvia-official-form-actions slot="items" wide>
                                 <ulvia-official-action slot="actions"><button type="submit">{{ cms.i18n.ulvia-official.ui-sign-in }}</button></ulvia-official-action>
                             </ulvia-official-form-actions>
-                            <p slot="items" role="alert" cms-condition="$source.error &amp;&amp; $source.status != 429">{{ cms.i18n.ulvia-official.ui-invalid-email-or-password }}</p>
-                            <p slot="items" role="alert" cms-condition="$source.status == 429">{{ cms.i18n.ulvia-official.ui-too-many-attempts-please-wait-and-try-again }}</p>
+                            <p slot="items" role="alert" cms-condition="$source.error &amp;&amp; $source.status !== 429">{{ cms.i18n.ulvia-official.ui-invalid-email-or-password }}</p>
+                            <p slot="items" role="alert" cms-condition="$source.status === 429">{{ cms.i18n.ulvia-official.ui-too-many-attempts-please-wait-and-try-again }}</p>
                         </ulvia-official-stack>
                     </form>
                     <p cms-repeat="methods as method" cms-condition="method.loginUrl">{{ cms.i18n.ulvia-official.ui-continue-with }}</p>

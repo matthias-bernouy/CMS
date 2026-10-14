@@ -195,4 +195,52 @@ describe("assertContentRefsExist", () => {
             "settings are invalid",
         );
     });
+
+    test("validates dynamic Bloc attributes against declared setting types", async () => {
+        const cms: any = {
+            getBlocsList: async () => [
+                {
+                    id: "fixture-card",
+                    settings: [
+                        {
+                            id: "expanded",
+                            label: "Expanded",
+                            type: "boolean",
+                            default: false,
+                            control: { kind: "toggle" },
+                        },
+                        {
+                            id: "tone",
+                            label: "Tone",
+                            type: "string",
+                            default: "quiet",
+                            control: { kind: "text" },
+                        },
+                        {
+                            id: "count",
+                            label: "Count",
+                            type: "integer",
+                            default: 0,
+                            control: { kind: "number" },
+                        },
+                    ],
+                },
+            ],
+        };
+
+        await assertContentRefsExist(
+            cms,
+            '<fixture-card expanded="{{ item.open }}" tone="{{ item.tone }}" count="{{ item.count }}"></fixture-card>',
+        );
+        await assertContentRefsExist(cms, "<fixture-card expanded=\"{{ item.state === 'open' }}\"></fixture-card>");
+        for (const content of [
+            '<fixture-card expanded="prefix {{ item.open }}"></fixture-card>',
+            '<fixture-card expanded="{{ item.open | string }}"></fixture-card>',
+            '<fixture-card count="{{ item.open === true }}"></fixture-card>',
+            '<fixture-card tone="{{ item.open === true }}"></fixture-card>',
+            '<fixture-card mystery="{{ item.value }}"></fixture-card>',
+        ]) {
+            await expect(assertContentRefsExist(cms, content)).rejects.toThrow();
+        }
+    });
 });

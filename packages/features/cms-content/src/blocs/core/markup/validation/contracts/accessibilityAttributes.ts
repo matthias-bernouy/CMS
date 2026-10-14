@@ -57,6 +57,19 @@ const POSITIVE_INTEGER_ATTRIBUTES = new Set([
 const SIGNED_INTEGER_ATTRIBUTES = new Set(["aria-colcount", "aria-rowcount", "aria-setsize"]);
 const NUMBER_ATTRIBUTES = new Set(["aria-valuemax", "aria-valuemin", "aria-valuenow"]);
 
+export function isSupportedAriaAttribute(name: string): boolean {
+    return (
+        TOKENS[name] !== undefined ||
+        TEXT.has(name) ||
+        SINGLE_ID_ATTRIBUTES.has(name) ||
+        ID_LIST_ATTRIBUTES.has(name) ||
+        POSITIVE_INTEGER_ATTRIBUTES.has(name) ||
+        SIGNED_INTEGER_ATTRIBUTES.has(name) ||
+        NUMBER_ATTRIBUTES.has(name) ||
+        name === "aria-relevant"
+    );
+}
+
 /** Returns undefined when the attribute is not accessibility-related. */
 export function implementationAccessibilityAttributeIssue(name: string, value: string): string | null | undefined {
     if (name === "role") {

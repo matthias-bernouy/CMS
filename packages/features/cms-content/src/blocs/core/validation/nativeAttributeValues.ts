@@ -1,4 +1,7 @@
 import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
+import { boundAttributeValueIssue } from "cms-content/blocs/core/markup/validation/contracts/attributeBindings";
+import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
+import { nativeAttributeBindingKind } from "cms-content/blocs/core/validation/nativeHtml";
 
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
@@ -50,7 +53,8 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
         ((normalizedTag === "a" && normalizedAttribute === "href") ||
             (normalizedTag === "img" && normalizedAttribute === "src"));
     if (DYNAMIC_TOKEN.test(value) && isRuntimeBoundNativeAttribute(normalizedTag, normalizedAttribute)) {
-        return null;
+        const issue = boundAttributeValueIssue(value, nativeAttributeBindingKind(normalizedAttribute));
+        return issue === undefined ? `attribute "${attribute}" only accepts {{ expression }} bindings` : issue;
     }
     if ((DYNAMIC_TOKEN.test(value) && !contributedAssetUrl) || CONTROL_CHARACTER.test(value)) {
         return `attribute "${attribute}" must be a static value without control characters`;
@@ -69,6 +73,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     }
     if (normalizedAttribute === "aria-live") {
         return ARIA_LIVE_VALUES.has(value) ? null : "native aria-live value is not controlled";
+    }
+    if (normalizedAttribute.startsWith("aria-") && normalizedTag !== "img" && normalizedTag !== "svg") {
+        return implementationAccessibilityAttributeIssue(normalizedAttribute, value) ?? null;
     }
     if (normalizedTag === "a" && normalizedAttribute === "href") {
         return contributedAssetUrl || isSafeNavigationalUrl(value)
@@ -109,6 +116,8 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
 
 function isRuntimeBoundNativeAttribute(tag: string, attribute: string): boolean {
     return (
+        nativeAttributeBindingKind(attribute) === "boolean" ||
+        attribute.startsWith("aria-") ||
         attribute === "id" ||
         (tag === "label" && attribute === "for") ||
         (["input", "option", "output", "select", "textarea"].includes(tag) && attribute === "value")

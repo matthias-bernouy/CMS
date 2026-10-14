@@ -1,16 +1,21 @@
-import { tokenize } from "./tokenizer";
-import type { CompareOperator, ConditionNode, Operator, Token } from "./types";
+import { tokenizeExpression } from "cms-content/blocs/core/markup/expression/tokenizer";
+import type {
+    ExpressionCompareOperator,
+    ExpressionNode,
+    ExpressionOperator,
+    ExpressionToken,
+} from "cms-content/blocs/core/markup/expression/types";
 
-export function parseConditionExpression(expression: string): ConditionNode {
-    return new Parser(tokenize(expression)).parse();
+export function parseBindingExpression(expression: string): ExpressionNode {
+    return new Parser(tokenizeExpression(expression)).parse();
 }
 
 class Parser {
     private index = 0;
 
-    constructor(private readonly tokens: Token[]) {}
+    constructor(private readonly tokens: ExpressionToken[]) {}
 
-    parse(): ConditionNode {
+    parse(): ExpressionNode {
         const root = this.parseOr();
         if (this.peek().kind !== "end") {
             throw new Error("unexpected trailing tokens");
@@ -18,7 +23,7 @@ class Parser {
         return root;
     }
 
-    private parseOr(): ConditionNode {
+    private parseOr(): ExpressionNode {
         let node = this.parseAnd();
         while (this.match("||")) {
             node = { kind: "or", left: node, right: this.parseAnd() };
@@ -26,7 +31,7 @@ class Parser {
         return node;
     }
 
-    private parseAnd(): ConditionNode {
+    private parseAnd(): ExpressionNode {
         let node = this.parseComparison();
         while (this.match("&&")) {
             node = { kind: "and", left: node, right: this.parseComparison() };
@@ -34,7 +39,7 @@ class Parser {
         return node;
     }
 
-    private parseComparison(): ConditionNode {
+    private parseComparison(): ExpressionNode {
         const left = this.parseUnary();
         const operator = this.comparisonOperator();
         if (!operator) {
@@ -44,14 +49,14 @@ class Parser {
         return { kind: "compare", operator, left, right: this.parseUnary() };
     }
 
-    private parseUnary(): ConditionNode {
+    private parseUnary(): ExpressionNode {
         if (this.match("!")) {
             return { kind: "not", node: this.parseUnary() };
         }
         return this.parsePrimary();
     }
 
-    private parsePrimary(): ConditionNode {
+    private parsePrimary(): ExpressionNode {
         const token = this.next();
         if (token.kind === "literal") {
             return { kind: "literal", value: token.value };
@@ -62,15 +67,15 @@ class Parser {
         if (token.kind === "end") {
             throw new Error("unexpected end of expression");
         }
-        throw new Error(`unexpected operator "${token.value}"`);
+        throw new Error(`unexpected ${token.kind} "${token.value}"`);
     }
 
-    private parsePath(path: string): ConditionNode {
+    private parsePath(path: string): ExpressionNode {
         if (!this.punctuation("|")) {
             return { kind: "path", path };
         }
         const filter = this.next();
-        if (filter.kind !== "path" || !/^\w+$/.test(filter.value)) {
+        if (filter.kind !== "path" || !/^\w+$/u.test(filter.value)) {
             throw new Error("expected a registered filter name");
         }
         if (!this.punctuation("(")) {
@@ -92,7 +97,7 @@ class Parser {
         return true;
     }
 
-    private match(operator: Operator): boolean {
+    private match(operator: ExpressionOperator): boolean {
         const token = this.peek();
         if (token.kind !== "operator" || token.value !== operator) {
             return false;
@@ -101,29 +106,26 @@ class Parser {
         return true;
     }
 
-    private comparisonOperator(): CompareOperator | null {
+    private comparisonOperator(): ExpressionCompareOperator | null {
         const token = this.peek();
         if (token.kind !== "operator") {
             return null;
         }
-        if (
-            token.value === "==" ||
-            token.value === "!=" ||
+        return token.value === "===" ||
+            token.value === "!==" ||
             token.value === ">" ||
             token.value === ">=" ||
             token.value === "<" ||
             token.value === "<="
-        ) {
-            return token.value;
-        }
-        return null;
+            ? token.value
+            : null;
     }
 
-    private peek(): Token {
+    private peek(): ExpressionToken {
         return this.tokens[this.index] ?? { kind: "end" };
     }
 
-    private next(): Token {
+    private next(): ExpressionToken {
         const token = this.peek();
         this.index += 1;
         return token;
