@@ -4,6 +4,7 @@ import type { CollectionTheme } from "./CollectionTheme";
 import type { CollectionBloc } from "./CollectionBloc";
 import type { CollectionAssetDefinition } from "./CollectionAssets";
 import type { CollectionPage } from "./CollectionPage";
+import type { CollectionState } from "./CollectionState";
 
 export interface CollectionConfiguration {
     readonly generation?: number;
@@ -43,7 +44,7 @@ export interface CollectionDataMigration {
     readonly operations: readonly CollectionMigrationOperation[];
 }
 
-export type CollectionResourceKind = "bloc" | "theme-token" | "configuration" | "text" | "asset" | "page";
+export type CollectionResourceKind = "bloc" | "theme-token" | "configuration" | "text" | "asset" | "page" | "state";
 
 export interface CollectionResourceDescriptor {
     readonly kind: CollectionResourceKind;
@@ -70,6 +71,7 @@ export interface CollectionResourceSelection {
     /** Collection-local immutable asset IDs. References remain qualified by their owner collection. */
     readonly assets?: readonly string[];
     readonly pages?: readonly string[];
+    readonly states?: readonly string[];
 }
 
 export interface CollectionResourceImport {
@@ -84,6 +86,7 @@ export interface CollectionResourceImportSelection {
     readonly texts?: readonly CollectionResourceImport[];
     readonly assets?: readonly CollectionResourceImport[];
     readonly pages?: readonly CollectionResourceImport[];
+    readonly states?: readonly CollectionResourceImport[];
 }
 
 /** A selective dependency on another collection's public resource surface. */
@@ -124,6 +127,7 @@ export interface CollectionRelease {
     readonly texts?: readonly CollectionText[];
     readonly theme?: CollectionTheme;
     readonly assets: readonly CollectionAssetDefinition[];
+    readonly states?: readonly CollectionState[];
     readonly blocs: readonly CollectionBloc[];
     readonly pages?: readonly CollectionPage[];
 }

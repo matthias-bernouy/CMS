@@ -90,7 +90,8 @@ export function parseCollectionDependencies(
             imports.themeTokens.length === 0 &&
             (imports.texts?.length ?? 0) === 0 &&
             (imports.assets?.length ?? 0) === 0 &&
-            (imports.pages?.length ?? 0) === 0
+            (imports.pages?.length ?? 0) === 0 &&
+            (imports.states?.length ?? 0) === 0
         ) {
             invalid("must import at least one collection resource", `${path}.imports`);
         }
@@ -115,7 +116,7 @@ function parseResourceImports(
     limits: Readonly<CollectionLimits>,
 ): CollectionResourceImportSelection {
     const source = record(value, path);
-    keys(source, ["blocs", "themeTokens", "texts", "assets", "pages"], path);
+    keys(source, ["blocs", "themeTokens", "texts", "assets", "pages", "states"], path);
     return {
         blocs: importedResources(source.blocs, limits.maxBlocs, `${path}.blocs`, (entry, at) =>
             parseCollectionBlocTag(entry, collectionId, at),
@@ -137,6 +138,7 @@ function parseResourceImports(
         ...optionalImports(source.texts, limits.maxTexts, `${path}.texts`, (entry) => textIdentifier(entry)),
         ...optionalImports(source.assets, limits.maxAssets, `${path}.assets`, assetIdentifier),
         ...optionalImports(source.pages, limits.maxPages, `${path}.pages`, (entry, at) => identifier(entry, at)),
+        ...optionalImports(source.states, limits.maxStates, `${path}.states`, (entry, at) => identifier(entry, at)),
     };
 }
 
@@ -145,9 +147,15 @@ function optionalImports(
     maximum: number,
     path: string,
     parseId: (value: unknown, path: string) => string,
-): Partial<Record<"texts" | "assets" | "pages", readonly CollectionResourceImport[]>> {
+): Partial<Record<"texts" | "assets" | "pages" | "states", readonly CollectionResourceImport[]>> {
     const resources = importedResources(value, maximum, path, parseId);
-    const property = path.endsWith(".texts") ? "texts" : path.endsWith(".assets") ? "assets" : "pages";
+    const property = path.endsWith(".texts")
+        ? "texts"
+        : path.endsWith(".assets")
+          ? "assets"
+          : path.endsWith(".pages")
+            ? "pages"
+            : "states";
     return resources.length ? { [property]: resources } : {};
 }
 
@@ -188,6 +196,7 @@ export function validateCollectionExports(
     textIds: ReadonlySet<string>,
     assetIds: ReadonlySet<string>,
     pageIds: ReadonlySet<string>,
+    stateIds: ReadonlySet<string>,
 ): void {
     for (const bloc of exports.blocs) {
         if (!blocIds.has(bloc)) {
@@ -214,6 +223,11 @@ export function validateCollectionExports(
             invalid(`unknown exported page ${page}`, "$.exports.pages");
         }
     }
+    for (const state of exports.states ?? []) {
+        if (!stateIds.has(state)) {
+            invalid(`unknown exported state ${state}`, "$.exports.states");
+        }
+    }
 }
 
 function parseResourceSelection(
@@ -223,7 +237,7 @@ function parseResourceSelection(
     limits: Readonly<CollectionLimits>,
 ): CollectionResourceSelection {
     const source = record(value, path);
-    keys(source, ["blocs", "themeTokens", "texts", "assets", "pages"], path);
+    keys(source, ["blocs", "themeTokens", "texts", "assets", "pages", "states"], path);
     const blocs = array(source.blocs ?? [], limits.maxBlocs, `${path}.blocs`).map((entry, index) =>
         parseCollectionBlocTag(entry, collectionId, `${path}.blocs[${index}]`),
     );
@@ -251,17 +265,22 @@ function parseResourceSelection(
     const pages = array(source.pages ?? [], limits.maxPages, `${path}.pages`).map((entry, index) =>
         identifier(entry, `${path}.pages[${index}]`),
     );
+    const states = array(source.states ?? [], limits.maxStates, `${path}.states`).map((entry, index) =>
+        identifier(entry, `${path}.states[${index}]`),
+    );
     unique(blocs, `${path}.blocs`);
     unique(themeTokens, `${path}.themeTokens`);
     unique(texts, `${path}.texts`);
     unique(assets, `${path}.assets`);
     unique(pages, `${path}.pages`);
+    unique(states, `${path}.states`);
     return {
         blocs: blocs.sort(ordinal),
         themeTokens: themeTokens.sort(ordinal),
         ...(texts.length ? { texts: texts.sort(ordinal) } : {}),
         ...(assets.length ? { assets: assets.sort(ordinal) } : {}),
         ...(pages.length ? { pages: pages.sort(ordinal) } : {}),
+        ...(states.length ? { states: states.sort(ordinal) } : {}),
     };
 }
 

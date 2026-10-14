@@ -48,6 +48,7 @@ export function dependencyIssues(
             const tokens = new Set(target.exports?.themeTokens ?? []);
             const texts = new Set(target.exports?.texts ?? []);
             const assets = new Set(target.exports?.assets ?? []);
+            const states = new Set(target.exports?.states ?? []);
             const blocGenerations = new Map(target.blocs.map((item) => [item.id, item.generation ?? 1]));
             const tokenGenerations = new Map(
                 target.theme?.categories.flatMap((category) =>
@@ -56,6 +57,7 @@ export function dependencyIssues(
             );
             const textGenerations = new Map((target.texts ?? []).map((item) => [item.id, item.generation ?? 1]));
             const assetGenerations = new Map(target.assets.map((item) => [item.id, item.generation ?? 1]));
+            const stateGenerations = new Map((target.states ?? []).map((item) => [item.id, item.generation ?? 1]));
             dependency.imports.blocs
                 .filter(({ id, generation }) => !blocs.has(id) || blocGenerations.get(id) !== generation)
                 .forEach(({ id, generation }) =>
@@ -80,6 +82,13 @@ export function dependencyIssues(
                 .forEach(({ id, generation }) =>
                     issues.push(
                         `${release.collectionId} requires asset ${target.collectionId}.${id} generation ${generation}.`,
+                    ),
+                );
+            dependency.imports.states
+                ?.filter(({ id, generation }) => !states.has(id) || stateGenerations.get(id) !== generation)
+                .forEach(({ id, generation }) =>
+                    issues.push(
+                        `${release.collectionId} requires state ${target.collectionId}-${id} generation ${generation}.`,
                     ),
                 );
         }

@@ -161,6 +161,15 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
                 );
             }
         }
+        const exportedStates = new Set(target.exports?.states ?? []);
+        const targetStates = new Map((target.states ?? []).map((state) => [state.id, state.generation ?? 1]));
+        for (const state of dependency.imports.states ?? []) {
+            if (!exportedStates.has(state.id) || targetStates.get(state.id) !== state.generation) {
+                reject(
+                    `Collection ${release.collectionId} imports unavailable state ${target.collectionId}-${state.id} generation ${state.generation}`,
+                );
+            }
+        }
     }
     validateImportedThemeTypes(release, byId);
 }

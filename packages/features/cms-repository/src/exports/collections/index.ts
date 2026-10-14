@@ -14,6 +14,10 @@ export type {
     CollectionResourceKind,
 } from "cms-repository/collections/interfaces/CollectionRelease";
 export type {
+    CollectionState,
+    CollectionStateScope,
+} from "cms-repository/collections/interfaces/CollectionState";
+export type {
     CollectionPage,
     CollectionPageDocument,
     PageDocument,

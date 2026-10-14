@@ -117,6 +117,20 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
             implementation: { resource: page, translations: referencedTranslations(release, page) },
         })) ?? []),
     );
+    resources.push(
+        ...(release.states?.map((state) => ({
+            kind: "state" as const,
+            id: state.id,
+            generation: state.generation ?? 1,
+            contract: {
+                id: state.id,
+                generation: state.generation ?? 1,
+                scope: state.scope,
+                schema: state.schema,
+            },
+            implementation: state,
+        })) ?? []),
+    );
     return resources;
 }
 

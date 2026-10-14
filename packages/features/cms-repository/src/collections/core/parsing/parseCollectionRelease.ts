@@ -19,6 +19,7 @@ import { validateCollectionTranslationReferences } from "../texts/translationRef
 import { parseCollectionDependencies, parseCollectionExports, validateCollectionExports } from "./requirements";
 import { parseCollectionMigrations } from "../admission/releaseMigrations";
 import { validateCollectionAssetReferences } from "../validation/markup/assets";
+import { parseCollectionStates } from "./states";
 
 export function parseCollectionRelease(
     value: unknown,
@@ -51,6 +52,7 @@ export function parseCollectionRelease(
                 "assets",
                 "blocs",
                 "pages",
+                "states",
             ],
             "$",
         );
@@ -74,6 +76,7 @@ export function parseCollectionRelease(
         const translations = parseCollectionTranslations(source.translations, locale);
         const texts = source.texts === undefined ? undefined : parseTexts(source.texts, locale, limits);
         const assets = parseAssets(source.assets === undefined ? [] : source.assets, limits);
+        const states = parseCollectionStates(source.states, limits);
         const dependencies =
             source.dependencies === undefined
                 ? undefined
@@ -131,6 +134,7 @@ export function parseCollectionRelease(
                 new Set(texts?.map((text) => text.id) ?? []),
                 new Set(assets.map((asset) => asset.id)),
                 new Set(pages?.map((page) => page.id) ?? []),
+                new Set(states.map((state) => state.id)),
             );
         }
         const release: CollectionRelease = {
@@ -156,6 +160,7 @@ export function parseCollectionRelease(
                 ? {}
                 : { configuration: parseConfiguration(source.configuration, "$.configuration", limits) }),
             assets,
+            ...(states.length ? { states } : {}),
             blocs,
             ...(pages === undefined ? {} : { pages }),
         };

@@ -138,6 +138,7 @@ export function assertCompatibleCollectionUpgrade(previous: CollectionRelease, n
     }
     assertThemeCompatibility(previous, next);
     assertAssetCompatibility(previous, next);
+    assertStateCompatibility(previous, next);
 }
 
 function assertAssetCompatibility(previous: CollectionRelease, next: CollectionRelease): void {
@@ -151,7 +152,7 @@ function assertAssetCompatibility(previous: CollectionRelease, next: CollectionR
 }
 
 export type CollectionBreakingResource = {
-    kind: "bloc" | "theme-token" | "configuration" | "text" | "asset" | "page";
+    kind: "bloc" | "theme-token" | "configuration" | "text" | "asset" | "page" | "state";
     id: string;
     reason: string;
 };
@@ -210,7 +211,32 @@ export function collectionUpgradeBreakingResources(
     ) {
         changes.push({ kind: "configuration", id: previous.collectionId, reason: "configuration schema narrowed" });
     }
+    const nextStates = new Map((next.states ?? []).map((state) => [state.id, state]));
+    for (const state of previous.states ?? []) {
+        const replacement = nextStates.get(state.id);
+        if (
+            !replacement ||
+            replacement.scope !== state.scope ||
+            firstSchemaSubsetViolation(state.schema, replacement.schema, `state.${state.id}`)
+        ) {
+            changes.push({ kind: "state", id: state.id, reason: `state ${state.id} was removed or narrowed` });
+        }
+    }
     return changes;
+}
+
+function assertStateCompatibility(previous: CollectionRelease, next: CollectionRelease): void {
+    const nextStates = new Map((next.states ?? []).map((state) => [state.id, state]));
+    for (const state of previous.states ?? []) {
+        const replacement = nextStates.get(state.id);
+        if (
+            !replacement ||
+            replacement.scope !== state.scope ||
+            firstSchemaSubsetViolation(state.schema, replacement.schema, `state.${state.id}`)
+        ) {
+            reject(`Upgrade removes or narrows existing state ${state.id}`);
+        }
+    }
 }
 
 function collectBreak(

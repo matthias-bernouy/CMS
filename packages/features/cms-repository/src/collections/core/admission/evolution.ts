@@ -101,6 +101,7 @@ function dependencyContractRestricted(previous: CollectionRelease, next: Collect
             ...(prior.imports.texts ?? []).map((item) => [`text:${item.id}`, item.generation] as const),
             ...(prior.imports.assets ?? []).map((item) => [`asset:${item.id}`, item.generation] as const),
             ...(prior.imports.pages ?? []).map((item) => [`page:${item.id}`, item.generation] as const),
+            ...(prior.imports.states ?? []).map((item) => [`state:${item.id}`, item.generation] as const),
         ]);
         return [
             ...dependency.imports.blocs.map((item) => [`bloc:${item.id}`, item.generation] as const),
@@ -108,6 +109,7 @@ function dependencyContractRestricted(previous: CollectionRelease, next: Collect
             ...(dependency.imports.texts ?? []).map((item) => [`text:${item.id}`, item.generation] as const),
             ...(dependency.imports.assets ?? []).map((item) => [`asset:${item.id}`, item.generation] as const),
             ...(dependency.imports.pages ?? []).map((item) => [`page:${item.id}`, item.generation] as const),
+            ...(dependency.imports.states ?? []).map((item) => [`state:${item.id}`, item.generation] as const),
         ].some(([key, generation]) => {
             const oldGeneration = previousImports.get(key);
             return oldGeneration !== undefined && oldGeneration !== generation;
@@ -157,7 +159,7 @@ function removedCollectionExports(
     next: CollectionResourceSelection | undefined,
 ): string[] {
     const removed: string[] = [];
-    for (const key of ["blocs", "themeTokens", "texts", "assets", "pages"] as const) {
+    for (const key of ["blocs", "themeTokens", "texts", "assets", "pages", "states"] as const) {
         const available = new Set(next?.[key] ?? []);
         for (const id of previous?.[key] ?? []) {
             if (!available.has(id)) {

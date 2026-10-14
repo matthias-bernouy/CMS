@@ -112,6 +112,7 @@ describe("collection release parsing", () => {
             maxAssets: 1_024,
             maxTexts: 4_096,
             maxPages: 256,
+            maxStates: 512,
             maxDependencies: 128,
             maxThemeCategories: 64,
             maxThemeTokens: 4_096,
@@ -341,7 +342,23 @@ describe("collection release parsing", () => {
                 document: { html: "<atlas-panel></atlas-panel>" },
             },
         ];
-        source.exports = { blocs: ["atlas-panel"], themeTokens: ["accent"], pages: ["overview"] };
+        source.states = [
+            {
+                id: "filters",
+                scope: "page",
+                schema: {
+                    type: "object",
+                    properties: { search: { type: "string", maxLength: 100 } },
+                    required: ["search"],
+                },
+            },
+        ];
+        source.exports = {
+            blocs: ["atlas-panel"],
+            themeTokens: ["accent"],
+            pages: ["overview"],
+            states: ["filters"],
+        };
         source.dependencies = [
             {
                 collectionId: "ulvia-official",
@@ -351,6 +368,7 @@ describe("collection release parsing", () => {
                     blocs: [{ id: "ulvia-official-button", generation: 1 }],
                     themeTokens: [{ id: "primary", generation: 1 }],
                     pages: [{ id: "home", generation: 2 }],
+                    states: [{ id: "selection", generation: 1 }],
                 },
             },
         ];
@@ -363,7 +381,24 @@ describe("collection release parsing", () => {
             '<atlas-panel><slot name="main" slot="body"></slot><ulvia-official-button slot="body"></ulvia-official-button></atlas-panel>';
 
         const parsed = parseCollectionRelease(source);
-        expect(parsed.exports).toEqual({ blocs: ["atlas-panel"], themeTokens: ["accent"], pages: ["overview"] });
+        expect(parsed.exports).toEqual({
+            blocs: ["atlas-panel"],
+            themeTokens: ["accent"],
+            pages: ["overview"],
+            states: ["filters"],
+        });
+        expect(parsed.states).toEqual([
+            {
+                id: "filters",
+                generation: 1,
+                scope: "page",
+                schema: {
+                    type: "object",
+                    properties: { search: { type: "string", maxLength: 100 } },
+                    required: ["search"],
+                },
+            },
+        ]);
         expect(parsed.dependencies?.[0]).toEqual({
             collectionId: "ulvia-official",
             publisherId: "ulvia.official",
@@ -372,6 +407,7 @@ describe("collection release parsing", () => {
                 blocs: [{ id: "ulvia-official-button", generation: 1 }],
                 themeTokens: [{ id: "primary", generation: 1 }],
                 pages: [{ id: "home", generation: 2 }],
+                states: [{ id: "selection", generation: 1 }],
             },
         });
 
@@ -411,6 +447,19 @@ describe("collection release parsing", () => {
                 })),
             }),
         ).toThrow(/generation/);
+    });
+
+    test("rejects binary state and structured URL parameter contracts", () => {
+        for (const state of [
+            { id: "file", scope: "page", schema: { type: "binary", maxBytes: 10 } },
+            {
+                id: "filters",
+                scope: "param",
+                schema: { type: "object", properties: {}, required: [] },
+            },
+        ]) {
+            expect(() => parseCollectionRelease({ ...collectionDocument(), states: [state] })).toThrow();
+        }
     });
 
     test("validates reusable translation keys and locale fallback", () => {

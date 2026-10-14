@@ -95,6 +95,7 @@ function collectionResourceKeys(releases: readonly CollectionRelease[]): Set<str
             ["text", release.texts ?? []],
             ["asset", release.assets],
             ["page", release.pages ?? []],
+            ["state", release.states ?? []],
         ] as const) {
             for (const resource of resources) {
                 keys.add(resourceKey(kind, release.collectionId, resource.id));
