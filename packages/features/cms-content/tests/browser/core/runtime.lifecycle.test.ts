@@ -36,6 +36,25 @@ describe("BindingRuntime — discovery", () => {
         expect(rt.size).toBe(2); // outer + inner
         rt.stop();
     });
+
+    test("resolves authored boolean attributes before revealing a submit source", async () => {
+        const root = el(`<div>
+            <form cms-source="/save as result" cms-source-trigger="submit">
+                <button type="submit" disabled="{{ $source.loading }}">Save</button>
+            </form>
+        </div>`);
+        document.body.appendChild(root);
+        const source = root.querySelector("[cms-source]")!;
+        const button = root.querySelector("button")!;
+
+        expect(button.hasAttribute("disabled")).toBe(true);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+        await waitFor(() => source.hasAttribute("cms-ready"));
+
+        expect(button.hasAttribute("disabled")).toBe(false);
+        runtime.stop();
+    });
 });
 
 describe("BindingRuntime — no leak on reload", () => {
