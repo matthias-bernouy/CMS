@@ -22,5 +22,89 @@
         "label": "text.ui-providers-and-contracts.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-contract-routing",
+        "label": "text.ui-contract-routing.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-choose-an-exact-immutable-release",
+        "label": "text.ui-choose-an-exact-immutable-release.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-disable",
+        "label": "text.ui-disable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-enable",
+        "label": "text.ui-enable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-no-contract-route-is-available",
+        "label": "text.ui-no-contract-route-is-available.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-no-provider-installation-has-been-approved",
+        "label": "text.ui-no-provider-installation-has-been-approved.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-not-selected",
+        "label": "text.ui-not-selected.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-provider-configuration-unavailable",
+        "label": "text.ui-provider-configuration-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-reading-provider-configuration",
+        "label": "text.ui-reading-provider-configuration.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-revoke",
+        "label": "text.ui-revoke.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-revocation-is-terminal-and-deletes-stored-credentials",
+        "label": "text.ui-revocation-is-terminal-and-deletes-stored-credentials.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-reroute-selected-contracts-before-changing-this-provider",
+        "label": "text.ui-reroute-selected-contracts-before-changing-this-provider.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-save-contract-routing",
+        "label": "text.ui-save-contract-routing.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-selected-contracts",
+        "label": "text.ui-selected-contracts.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
     }
 ]

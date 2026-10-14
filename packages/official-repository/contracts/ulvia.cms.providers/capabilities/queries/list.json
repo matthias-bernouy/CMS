@@ -1,6 +1,6 @@
 {
     "id": "list",
-    "description": "List approved provider installations and selected contract releases.",
+    "description": "List approved provider installations and their selectable contract routes.",
     "access": "admin",
     "behavior": {
         "effect": "query",
@@ -60,6 +60,11 @@
                             "minimum": 1,
                             "maximum": 9007199254740991
                         },
+                        "selectionCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 256
+                        },
                         "observedAt": {
                             "type": "string",
                             "format": "date-time",
@@ -73,7 +78,8 @@
                         "endpoint",
                         "status",
                         "manifestVersion",
-                        "revision"
+                        "revision",
+                        "selectionCount"
                     ]
                 }
             },
@@ -107,12 +113,97 @@
                         "installationId"
                     ]
                 }
+            },
+            "routes": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "contractId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "selectedInstallationId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "selectedDigest": {
+                            "type": "string",
+                            "maxLength": 71
+                        },
+                        "options": {
+                            "type": "array",
+                            "maxItems": 128,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "providerId": {
+                                        "type": "string",
+                                        "maxLength": 96
+                                    },
+                                    "accountId": {
+                                        "type": "string",
+                                        "maxLength": 160
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ready",
+                                            "setup-required",
+                                            "unavailable"
+                                        ],
+                                        "maxLength": 14
+                                    },
+                                    "selection": {
+                                        "type": "object",
+                                        "properties": {
+                                            "contractId": {
+                                                "type": "string",
+                                                "maxLength": 96
+                                            },
+                                            "version": {
+                                                "type": "string",
+                                                "maxLength": 64
+                                            },
+                                            "digest": {
+                                                "type": "string",
+                                                "maxLength": 71
+                                            },
+                                            "installationId": {
+                                                "type": "string",
+                                                "maxLength": 96
+                                            }
+                                        },
+                                        "required": [
+                                            "contractId",
+                                            "version",
+                                            "digest",
+                                            "installationId"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "providerId",
+                                    "accountId",
+                                    "status",
+                                    "selection"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "contractId",
+                        "options"
+                    ]
+                }
             }
         },
         "required": [
             "selectionRevision",
             "installations",
-            "selections"
+            "selections",
+            "routes"
         ]
     },
     "errors": [

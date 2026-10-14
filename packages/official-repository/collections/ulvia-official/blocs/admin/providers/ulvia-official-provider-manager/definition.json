@@ -6,10 +6,18 @@
     "category": "bloc.category.administration",
     "order": 30,
     "internal": true,
-    "uses": ["ulvia-official-action", "ulvia-official-badge", "ulvia-official-card", "ulvia-official-select"],
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-badge",
+        "ulvia-official-field",
+        "ulvia-official-form-actions",
+        "ulvia-official-grid",
+        "ulvia-official-select",
+        "ulvia-official-stack",
+        "ulvia-official-surface"
+    ],
     "requires": [
         { "contractId": "ulvia.cms.providers", "capabilityId": "list", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.providers", "capabilityId": "get", "versionRange": "^1.0.0" },
         { "contractId": "ulvia.cms.providers", "capabilityId": "replace-selections", "versionRange": "^1.0.0" },
         { "contractId": "ulvia.cms.providers", "capabilityId": "set-status", "versionRange": "^1.0.0" }
     ],

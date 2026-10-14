@@ -12,10 +12,16 @@ export function registerProviderCapabilities(
             active.installations.list(active.siteId),
             active.selections.get(active.siteId),
         ]);
+        const selections = selected?.plan.selections ?? [];
         return {
             selectionRevision: selected?.revision ?? 0,
-            installations: installed.map(projectInstallation),
-            selections: selected?.plan.selections.map(projectSelection) ?? [],
+            installations: installed.map((entry) => ({
+                ...projectInstallation(entry),
+                selectionCount: selections.filter(({ installationId }) => installationId === entry.installation.id)
+                    .length,
+            })),
+            selections: selections.map(projectSelection),
+            routes: projectRoutes(installed, selections),
         };
     });
     dispatcher.register("ulvia.cms.providers", "get", async (input) => {
@@ -83,6 +89,64 @@ function projectSelection(selection: { contractId: string; version: string; dige
         digest: selection.digest,
         installationId: selection.installationId,
     };
+}
+
+type StoredInstallation = Awaited<ReturnType<UlviaProviderGateway["installations"]["list"]>>[number];
+type StoredSelection = Parameters<typeof projectSelection>[0];
+
+function projectRoutes(installed: readonly StoredInstallation[], selections: readonly StoredSelection[]) {
+    const routes = new Map<
+        string,
+        {
+            contractId: string;
+            selectedInstallationId?: string;
+            selectedDigest?: string;
+            options: Array<{
+                providerId: string;
+                accountId: string;
+                status: string;
+                selection: ReturnType<typeof projectSelection>;
+            }>;
+        }
+    >();
+    for (const selection of selections) {
+        routes.set(selection.contractId, {
+            contractId: selection.contractId,
+            selectedInstallationId: selection.installationId,
+            selectedDigest: selection.digest,
+            options: [],
+        });
+    }
+    for (const stored of installed) {
+        for (const implementation of stored.observation?.report.implementations ?? []) {
+            const route = routes.get(implementation.contractId) ?? {
+                contractId: implementation.contractId,
+                options: [],
+            };
+            route.options.push({
+                providerId: stored.installation.providerId,
+                accountId: stored.installation.accountId,
+                status: implementation.status,
+                selection: projectSelection({
+                    contractId: implementation.contractId,
+                    version: implementation.version,
+                    digest: implementation.digest,
+                    installationId: stored.installation.id,
+                }),
+            });
+            routes.set(implementation.contractId, route);
+        }
+    }
+    return [...routes.values()]
+        .map((route) => ({
+            ...route,
+            options: route.options.sort((left, right) =>
+                `${left.providerId}\0${left.accountId}\0${left.selection.version}`.localeCompare(
+                    `${right.providerId}\0${right.accountId}\0${right.selection.version}`,
+                ),
+            ),
+        }))
+        .sort((left, right) => left.contractId.localeCompare(right.contractId));
 }
 
 async function providerCommand<T>(operation: () => Promise<T>): Promise<T> {

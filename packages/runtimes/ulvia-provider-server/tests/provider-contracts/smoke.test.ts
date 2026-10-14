@@ -64,10 +64,37 @@ test("all eight administration domains dispatch outputs matching their official 
                         status: "enabled",
                         approval: { manifestVersion: "0.6.0" },
                     },
+                    observation: {
+                        observedAt: now.toISOString(),
+                        report: {
+                            implementations: [
+                                {
+                                    contractId: "ulvia.cms.pages",
+                                    version: "1.0.0",
+                                    digest: `sha256:${"a".repeat(64)}`,
+                                    status: "ready",
+                                },
+                            ],
+                        },
+                    },
                 },
             ],
         },
-        selections: { get: async () => ({ revision: 1, plan: { selections: [] } }) },
+        selections: {
+            get: async () => ({
+                revision: 1,
+                plan: {
+                    selections: [
+                        {
+                            contractId: "ulvia.cms.pages",
+                            version: "1.0.0",
+                            digest: `sha256:${"a".repeat(64)}`,
+                            installationId: "official",
+                        },
+                    ],
+                },
+            }),
+        },
         administrators: {
             get: async (sub: string) => ({ sub, enabled: true, revision: 1, bootstrap: true }),
             list: async () => ["local:user-1"],

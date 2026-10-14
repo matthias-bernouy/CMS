@@ -2,5 +2,19 @@
     "text.ui-approved-provider-accounts-and-exact-contract-releases-selected-by-this-cms.label": "Approved provider accounts and exact contract releases selected by this CMS.",
     "text.ui-configure-the-site-identity-availability-and-languages.label": "Configure the site identity, availability and languages.",
     "text.ui-install-immutable-releases-configure-collections-and-preview-migrations-before-applying-them.label": "Install immutable releases, configure collections and preview migrations before applying them.",
-    "text.ui-providers-and-contracts.label": "Providers & contracts"
+    "text.ui-providers-and-contracts.label": "Providers & contracts",
+    "text.ui-contract-routing.label": "Contract routing",
+    "text.ui-choose-an-exact-immutable-release.label": "Choose an exact immutable release",
+    "text.ui-disable.label": "Disable",
+    "text.ui-enable.label": "Enable",
+    "text.ui-no-contract-route-is-available.label": "No contract route is available.",
+    "text.ui-no-provider-installation-has-been-approved.label": "No provider installation has been approved.",
+    "text.ui-not-selected.label": "Not selected",
+    "text.ui-provider-configuration-unavailable.label": "Provider configuration is unavailable.",
+    "text.ui-reading-provider-configuration.label": "Reading provider configuration…",
+    "text.ui-revoke.label": "Revoke",
+    "text.ui-revocation-is-terminal-and-deletes-stored-credentials.label": "Revocation is terminal and deletes stored credentials.",
+    "text.ui-reroute-selected-contracts-before-changing-this-provider.label": "Reroute selected contracts before changing this provider.",
+    "text.ui-save-contract-routing.label": "Save contract routing",
+    "text.ui-selected-contracts.label": "selected contracts"
 }

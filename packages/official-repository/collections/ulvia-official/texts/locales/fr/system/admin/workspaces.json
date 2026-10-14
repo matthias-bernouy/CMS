@@ -2,5 +2,19 @@
     "ui-approved-provider-accounts-and-exact-contract-releases-selected-by-this-cms": "Comptes de providers approuvés et versions exactes des contrats sélectionnées par ce CMS.",
     "ui-configure-the-site-identity-availability-and-languages": "Configurez l’identité, la disponibilité et les langues du site.",
     "ui-install-immutable-releases-configure-collections-and-preview-migrations-before-applying-them": "Installez des releases immuables, configurez les Collections et prévisualisez les migrations avant de les appliquer.",
-    "ui-providers-and-contracts": "Providers et contrats"
+    "ui-providers-and-contracts": "Providers et contrats",
+    "ui-contract-routing": "Routage des contrats",
+    "ui-choose-an-exact-immutable-release": "Choisissez une release immuable exacte",
+    "ui-disable": "Désactiver",
+    "ui-enable": "Activer",
+    "ui-no-contract-route-is-available": "Aucune route de contrat n’est disponible.",
+    "ui-no-provider-installation-has-been-approved": "Aucune installation de provider n’a été approuvée.",
+    "ui-not-selected": "Non sélectionné",
+    "ui-provider-configuration-unavailable": "La configuration des providers est indisponible.",
+    "ui-reading-provider-configuration": "Lecture de la configuration des providers…",
+    "ui-revoke": "Révoquer",
+    "ui-revocation-is-terminal-and-deletes-stored-credentials": "La révocation est définitive et supprime les identifiants enregistrés.",
+    "ui-reroute-selected-contracts-before-changing-this-provider": "Redirigez les contrats sélectionnés avant de modifier ce provider.",
+    "ui-save-contract-routing": "Enregistrer le routage des contrats",
+    "ui-selected-contracts": "contrats sélectionnés"
 }
