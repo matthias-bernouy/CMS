@@ -1,5 +1,5 @@
 import type { CmsBindingInputValue } from "@bernouy/cms-content/bindings";
-import { validateSchemaValue, type UlviaSchema } from "@bernouy/cms-repository/contracts/schema";
+import { validateSchemaValue, type UlviaSchema } from "cms-repository/exports/contracts/schema";
 import type { CollectionState } from "../../../../interfaces/CollectionState";
 import { invalid } from "../../../errors";
 
