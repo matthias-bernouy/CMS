@@ -2,7 +2,7 @@
 
 import { QUERY_ATTR, SOURCE_ATTR, SYNC_ATTR } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
-import type { Source } from "../source/Source";
+import type { FormMutation } from "./mutation/FormMutation";
 import type { Query } from "./query/Query";
 import { reconcileAttribute, registerWithin, unregisterWithin } from "./BindingDiscovery";
 import { BindingRegistry } from "./BindingRegistry";
@@ -18,7 +18,7 @@ export class BindingRuntime {
         private readonly root: Element,
         filters: FilterMap = {},
     ) {
-        this.registry = new BindingRegistry(root, filters, (source) => this.afterSourceRender(source));
+        this.registry = new BindingRegistry(root, filters, (source) => this.afterRender(source));
         this.fixedRanges = new FixedRangeRuntime(root, filters);
     }
 
@@ -27,7 +27,7 @@ export class BindingRuntime {
     }
 
     stop(): void {
-        this.teardown({ beforeSourceDispose: (source) => source.renderTemplate() });
+        this.teardown({ beforeBindingDispose: (binding) => binding.renderTemplate() });
     }
 
     get isStopped(): boolean {
@@ -66,7 +66,7 @@ export class BindingRuntime {
         });
     }
 
-    private teardown(hooks?: { beforeSourceDispose?: (source: Source | Query) => void }): void {
+    private teardown(hooks?: { beforeBindingDispose?: (binding: FormMutation | Query) => void }): void {
         if (this.stopped) {
             return;
         }
@@ -77,7 +77,7 @@ export class BindingRuntime {
         this.fixedRanges.restore();
     }
 
-    private afterSourceRender(source: Element): void {
+    private afterRender(source: Element): void {
         if (this.stopped) {
             return;
         }

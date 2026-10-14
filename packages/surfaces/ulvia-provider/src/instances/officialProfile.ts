@@ -22,7 +22,7 @@ const PROFILE_1_0_0 = Object.freeze({
         publisherId: "ulvia.official",
         collectionId: "ulvia-official",
         version: "1.0.0",
-        digest: "sha256:c05e07ac19a6b971fb5e3bcf4ce7a8a85a87c39f4c70515d59e5badf6f403b5d",
+        digest: "sha256:8b7929038c9e0331a9bed879ea7faf0f778c082c2892cd10d1837ba61aa6d99a",
     },
 });
 

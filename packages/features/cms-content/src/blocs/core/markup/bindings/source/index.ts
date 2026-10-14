@@ -66,7 +66,8 @@ export function parseSource(value: string): CmsSourceBinding | null {
     const match = SOURCE_ALIAS_PATTERN.exec(value);
     if (match) {
         const url = match[1]!.trim();
-        return url ? { url, alias: match[2]! } : null;
+        const alias = match[2]!;
+        return url && !RESERVED_QUERY_NAMES.has(alias) ? { url, alias } : null;
     }
     const url = value.trim();
     return url ? { url } : null;

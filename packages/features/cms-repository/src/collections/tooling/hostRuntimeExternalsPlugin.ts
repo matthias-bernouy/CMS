@@ -20,10 +20,6 @@ export const hostRuntimeExternalsPlugin: BunPlugin = {
                 return {
                     contents: [
                         "export const Component = window.cmsRuntime.Component;",
-                        "export const observeSource = window.cmsRuntime.observeSource;",
-                        "export const readSourceData = window.cmsRuntime.readSourceData;",
-                        "export const refreshSourceContext = window.cmsRuntime.refreshSourceContext;",
-                        "export const setSourceContext = window.cmsRuntime.setSourceContext;",
                         "export const sourceFormRequest = window.cmsRuntime.sourceFormRequest;",
                         "export const SourceFormError = window.cmsRuntime.SourceFormError;",
                     ].join("\n"),

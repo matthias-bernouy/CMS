@@ -1,14 +1,13 @@
 import { parseQuery, parseQueryInput } from "cms-content/blocs/core/markup/bindings/source";
 import { QUERY_ATTR, QUERY_INPUT_ATTR } from "../../core/attrs";
-import { resolveBindingInput } from "../../source/presentation/sourceBody";
-import { setTypedPath } from "../../submit/typed/paths";
-import type { SerializedFormData } from "../../submit/types";
+import { resolveBindingInput } from "../../state/bindingInput";
+import { setStructuredPath, type StructuredData } from "../../state/structuredData";
 
 export type QueryRequest =
     | {
           url: string;
           init: RequestInit;
-          input?: SerializedFormData;
+          input?: StructuredData;
       }
     | { waiting: true };
 
@@ -63,15 +62,15 @@ export function queryRequest(element: Element): QueryRequest {
     };
 }
 
-function structuredQueryInput(input: string, document: Document): SerializedFormData | null {
+function structuredQueryInput(input: string, document: Document): StructuredData | null {
     const resolved = resolveBindingInput(input, document);
     if (!resolved.ready) {
         return null;
     }
-    const body: SerializedFormData = {};
+    const body: StructuredData = {};
     const assigned = new Set<string>();
     for (const [name, value] of Object.entries(resolved.fields)) {
-        setTypedPath(body, name, value, assigned);
+        setStructuredPath(body, name, value, assigned);
     }
     return body;
 }

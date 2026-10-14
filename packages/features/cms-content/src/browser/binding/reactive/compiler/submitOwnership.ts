@@ -1,11 +1,10 @@
 import { SOURCE_ATTR } from "../../core/attrs";
 import { collectConditionReferences } from "../../render/condition";
-import { parseSourceSpec } from "../../source/runtime/sourceSpec";
 import type { SubmitSourceBoundary } from "../templatePlan";
-import { interpolationExpressions } from "cms-content/blocs/core/markup/bindings";
+import { interpolationExpressions, parseSource } from "cms-content/blocs/core/markup/bindings";
 
 export function submitBoundary(element: Element): SubmitSourceBoundary {
-    return { alias: parseSourceSpec(element.getAttribute(SOURCE_ATTR) ?? "").alias };
+    return { alias: parseSource(element.getAttribute(SOURCE_ATTR) ?? "")?.alias };
 }
 
 export function bindingOwnedBySubmitSource(value: string, boundary: SubmitSourceBoundary | null): boolean {

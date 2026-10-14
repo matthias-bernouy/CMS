@@ -1,6 +1,6 @@
 import { parseQueryListen, parseQueryRefresh } from "cms-content/blocs/core/markup/bindings";
 import { QUERY_LISTEN_ATTR, QUERY_REFRESH_ATTR } from "../../core/attrs";
-import { subscribeSyncValue } from "../../params/SyncState";
+import { subscribeSyncValue } from "../../state/SyncState";
 
 export function listenQueryRefresh(element: Element, refresh: () => void): () => void {
     const doc = element.ownerDocument;

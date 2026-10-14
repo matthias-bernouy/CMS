@@ -1,4 +1,4 @@
-import { parseSourceSpec } from "../../../src/browser/binding/source/runtime/sourceSpec";
+import { parseSource } from "../../../src/blocs/core/markup/bindings/source";
 import { parseRepeat } from "../../../src/browser/binding/render/repeat";
 import { describe, test, expect } from "bun:test";
 import { lookup, type Scope } from "../../../src/browser/binding/core/scope";
@@ -118,8 +118,8 @@ test("cms is reserved even when implicit values, aliases or parents supply it", 
 });
 
 test("source and repeat aliases cannot claim the reserved root", () => {
-    expect(() => parseSourceSpec("/api/items as cms")).toThrow("reserved");
+    expect(parseSource("/api/items as cms")).toBeNull();
     expect(() => parseRepeat("items as cms")).toThrow("reserved");
-    expect(parseSourceSpec("/api/items as cmsData").alias).toBe("cmsData");
+    expect(parseSource("/api/items as cmsData")?.alias).toBe("cmsData");
     expect(parseRepeat("items as cmsData").name).toBe("cmsData");
 });

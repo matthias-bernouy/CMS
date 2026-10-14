@@ -1,17 +1,14 @@
 import { parseQuery } from "cms-content/blocs/core/markup/bindings/source";
 import { QUERY_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
-import { runFetch } from "../../source/fetcher";
-import { captureSourceContent } from "../../source/presentation/sourceContent";
-import { connectSourceContext } from "../../source/presentation/sourceContext";
-import { SourceRenderer } from "../../source/presentation/sourceRenderer";
-import { shareUnchanged } from "../../source/runtime/refresh/reconcile";
-import { connectQueryReload } from "../../source/runtime/refresh/registry";
-import { withFormAcknowledgement } from "../../source/runtime/submission/formAcknowledgement";
-import { disconnectSourceData, readSourceData, rememberSourceData } from "../../source/values";
+import { BindingRenderer } from "../../reactive/renderer/BindingRenderer";
+import { captureBindingContent } from "../../reactive/renderer/bindingContent";
+import { parseSyncAttribute, readSyncValue, subscribeSyncValue, writeSyncValue } from "../../state/SyncState";
+import { withFormAcknowledgement, connectQueryReload } from "./mutationRefresh";
+import { runFetch } from "./queryFetch";
 import { listenQueryRefresh } from "./queryRefresh";
 import { queryRequest } from "./queryRequest";
-import { parseSyncAttribute, readSyncValue, subscribeSyncValue, writeSyncValue } from "../../params/SyncState";
+import { shareUnchanged } from "./reconcile";
 import {
     failedQueryState,
     initialQueryState,
@@ -30,11 +27,10 @@ type QueryOptions = {
 };
 
 export class Query {
-    private readonly renderer: SourceRenderer;
+    private readonly renderer: BindingRenderer;
     private state = initialQueryState();
     private abort: AbortController | null = null;
     private stopRefresh: (() => void) | null = null;
-    private stopContext: (() => void) | null = null;
     private stopReload: (() => void) | null = null;
     private stopSync: (() => void) | null = null;
     private input: unknown;
@@ -50,11 +46,10 @@ export class Query {
         filters: FilterMap = {},
         private readonly options: QueryOptions = {},
     ) {
-        this.renderer = new SourceRenderer(element, captureSourceContent(element), filters);
+        this.renderer = new BindingRenderer(element, captureBindingContent(element), filters);
     }
 
     start(): void {
-        this.stopContext = connectSourceContext(this.element, () => this.render());
         const binding = parseQuery(this.element.getAttribute(QUERY_ATTR) ?? "");
         if (binding && "sync" in binding) {
             this.startSynchronizedQuery(binding.sync);
@@ -76,11 +71,8 @@ export class Query {
         this.stopRefresh = null;
         this.stopReload?.();
         this.stopReload = null;
-        this.stopContext?.();
-        this.stopContext = null;
         this.stopSync?.();
         this.stopSync = null;
-        disconnectSourceData(this.element);
     }
 
     renderTemplate(): void {
@@ -170,13 +162,12 @@ export class Query {
             );
             return false;
         }
-        const value = refreshing ? shareUnchanged(readSourceData(this.element), outcome.data) : outcome.data;
+        const value = refreshing ? shareUnchanged(this.state.data, outcome.data) : outcome.data;
         this.accept(value, options.acknowledge);
         return true;
     }
 
     private accept(value: unknown, acknowledge?: HTMLFormElement): void {
-        rememberSourceData(this.element, value);
         withFormAcknowledgement(acknowledge, () => this.update(this.withInput(loadedQueryState(value))));
     }
 
@@ -225,7 +216,6 @@ export class Query {
                 this.render();
             } else if (isQueryState(value)) {
                 this.state = value;
-                rememberSourceData(this.element, value.data);
                 this.render();
             } else {
                 this.accept(value);

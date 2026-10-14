@@ -1,41 +1,40 @@
 import { BINDING_CORE_TAG, QUERY_ATTR, SOURCE_ATTR } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
-import { SyncControl } from "../params/SyncControl";
+import { SyncControl } from "../state/SyncControl";
 import { Query } from "./query/Query";
-import { Source } from "../source/Source";
-import type { SourceStatusValue } from "../source/presentation/sourceStatus";
-import { sourceStatusScope } from "./sourceStatusScope";
+import { FormMutation } from "./mutation/FormMutation";
+import { mutationStateScope, type MutationState } from "./mutation/mutationState";
 
 export class BindingRegistry {
     private readonly queries = new Map<Element, Query>();
-    private readonly sources = new Map<Element, Source>();
-    private readonly sourceStatuses = new Map<Element, SourceStatusValue>();
+    private readonly mutations = new Map<Element, FormMutation>();
+    private readonly mutationStates = new Map<Element, MutationState>();
     private readonly syncControls = new Map<Element, SyncControl>();
     constructor(
         private readonly root: Element,
         private readonly filters: FilterMap,
-        private readonly afterSourceRender: (source: Element) => void,
+        private readonly afterRender: (source: Element) => void,
     ) {}
 
     get sourceCount(): number {
-        return this.queries.size + this.sources.size;
+        return this.queries.size + this.mutations.size;
     }
 
-    teardown(hooks?: { beforeSourceDispose?: (source: Source | Query) => void }): void {
+    teardown(hooks?: { beforeBindingDispose?: (binding: FormMutation | Query) => void }): void {
         for (const query of this.queries.values()) {
-            hooks?.beforeSourceDispose?.(query);
+            hooks?.beforeBindingDispose?.(query);
             query.dispose();
         }
-        for (const source of this.sources.values()) {
-            hooks?.beforeSourceDispose?.(source);
-            source.dispose();
+        for (const mutation of this.mutations.values()) {
+            hooks?.beforeBindingDispose?.(mutation);
+            mutation.dispose();
         }
         for (const sync of this.syncControls.values()) {
             sync.dispose();
         }
         this.queries.clear();
-        this.sources.clear();
-        this.sourceStatuses.clear();
+        this.mutations.clear();
+        this.mutationStates.clear();
         this.syncControls.clear();
     }
 
@@ -53,7 +52,7 @@ export class BindingRegistry {
         if (!element.isConnected || this.queries.has(element)) {
             return;
         }
-        const query = new Query(element, this.filters, { afterRender: this.afterSourceRender });
+        const query = new Query(element, this.filters, { afterRender: this.afterRender });
         this.queries.set(element, query);
         query.start();
     }
@@ -75,7 +74,7 @@ export class BindingRegistry {
             this.unregisterSource(element);
             return;
         }
-        if (!this.sources.has(element)) {
+        if (!this.mutations.has(element)) {
             this.registerSource(element);
         }
     }
@@ -84,32 +83,32 @@ export class BindingRegistry {
         const Form = element.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
         if (
             !element.isConnected ||
-            this.sources.has(element) ||
+            this.mutations.has(element) ||
             typeof Form !== "function" ||
             !(element instanceof Form)
         ) {
             return;
         }
-        const source = new Source(element as HTMLFormElement, this.filters, {
-            setSourceStatus: (current, status) => this.sourceStatuses.set(current, status),
-            sourceStatusesFor: (current, status) => sourceStatusScope(this.root, this.sourceStatuses, current, status),
-            afterSourceRender: this.afterSourceRender,
+        const mutation = new FormMutation(element as HTMLFormElement, this.filters, {
+            setMutationState: (current, status) => this.mutationStates.set(current, status),
+            mutationStatesFor: (current, status) => mutationStateScope(this.root, this.mutationStates, current, status),
+            afterMutationRender: this.afterRender,
         });
-        this.sources.set(element, source);
-        source.start();
+        this.mutations.set(element, mutation);
+        mutation.start();
     }
 
     unregisterSource(element: Element): void {
-        const source = this.sources.get(element);
-        if (!source) {
+        const mutation = this.mutations.get(element);
+        if (!mutation) {
             return;
         }
         if (!element.isConnected) {
-            source.renderTemplate();
+            mutation.renderTemplate();
         }
-        source.dispose();
-        this.sources.delete(element);
-        this.sourceStatuses.delete(element);
+        mutation.dispose();
+        this.mutations.delete(element);
+        this.mutationStates.delete(element);
     }
 
     registerSyncControl(element: Element): void {
@@ -136,9 +135,9 @@ export class BindingRegistry {
                 this.unregisterQuery(query);
             }
         }
-        for (const source of this.sources.keys()) {
-            if (!source.isConnected) {
-                this.unregisterSource(source);
+        for (const mutation of this.mutations.keys()) {
+            if (!mutation.isConnected) {
+                this.unregisterSource(mutation);
             }
         }
         for (const sync of this.syncControls.keys()) {

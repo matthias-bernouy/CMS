@@ -1,4 +1,4 @@
-import { isEmpty } from "../../source/presentation/sourceContent";
+import { isEmpty } from "../../reactive/renderer/bindingContent";
 
 export type QueryState = {
     waiting: boolean;
