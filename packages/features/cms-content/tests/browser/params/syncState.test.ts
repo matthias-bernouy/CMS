@@ -5,11 +5,13 @@ import { readSyncValue, subscribeSyncValue, writeSyncValue } from "../../../src/
 const page = { scope: "page", key: "ulvia-official-editor" } satisfies CmsSyncTarget;
 const session = { scope: "session", key: "ulvia-official-session" } satisfies CmsSyncTarget;
 const persistent = { scope: "persistent", key: "ulvia-official-preferences" } satisfies CmsSyncTarget;
+const param = { scope: "param", key: "ulvia-official-search" } satisfies CmsSyncTarget;
 
 afterEach(() => {
     writeSyncValue(page, undefined);
     writeSyncValue(session, undefined);
     writeSyncValue(persistent, undefined);
+    writeSyncValue(param, undefined);
 });
 
 describe("synchronized state", () => {
@@ -39,7 +41,24 @@ describe("synchronized state", () => {
     });
 
     test("rejects structured URL parameter state", () => {
-        const target = { scope: "param", key: "ulvia-official-filter" } satisfies CmsSyncTarget;
-        expect(() => writeSyncValue(target, { invalid: true })).toThrow("only accepts scalar");
+        expect(() => writeSyncValue(param, { invalid: true })).toThrow("only accepts scalar");
+    });
+
+    test("writes scalar URL parameters and notifies only matching subscribers", () => {
+        const values: unknown[] = [];
+        const unrelated: unknown[] = [];
+        const stop = subscribeSyncValue(param, (value) => values.push(value));
+        const stopUnrelated = subscribeSyncValue({ scope: "param", key: "ulvia-official-unrelated" }, (value) =>
+            unrelated.push(value),
+        );
+
+        writeSyncValue(param, "articles");
+
+        expect(new URLSearchParams(location.search).get(param.key)).toBe("articles");
+        expect(readSyncValue(param)).toBe("articles");
+        expect(values).toEqual(["articles"]);
+        expect(unrelated).toEqual([]);
+        stop();
+        stopUnrelated();
     });
 });

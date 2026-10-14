@@ -44,6 +44,8 @@ describe("declarative form contracts", () => {
         for (const value of [null, "", "order-detail", "#detail", "detail detail", "#{target}", "{{ target }}"]) {
             expect(isCmsSourceSuccessReload(value)).toBe(false);
         }
+        expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.source, "/api/search?q=#{search}")).not.toBeNull();
+        expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.source, "/api/search?q=@{page:key}")).not.toBeNull();
     });
 
     test("rejects typed forms that are not owned by a Bloc contract", async () => {

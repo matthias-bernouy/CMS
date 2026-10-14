@@ -6,6 +6,8 @@ export class SyncControl {
     private readonly target;
     private timer: ReturnType<typeof setTimeout> | null = null;
     private reflecting = false;
+    private active = false;
+    private waitingForDefinition = false;
     private stopSubscription: (() => void) | null = null;
     private childObserver: MutationObserver | null = null;
     private readonly onInput = () => this.schedule();
@@ -20,6 +22,7 @@ export class SyncControl {
         if (!this.target) {
             return;
         }
+        this.active = true;
         this.reflect(readSyncValue(this.target, this.element.ownerDocument));
         this.stopSubscription = subscribeSyncValue(
             this.target,
@@ -34,6 +37,7 @@ export class SyncControl {
     }
 
     dispose(): void {
+        this.active = false;
         this.stopSubscription?.();
         this.stopSubscription = null;
         this.element.removeEventListener("input", this.onInput);
@@ -47,7 +51,7 @@ export class SyncControl {
     }
 
     private reflect(value: unknown): void {
-        if (value === undefined || this.timer) {
+        if (!this.controlIsDefined() || value === undefined || this.timer) {
             return;
         }
         const control = this.element as HTMLInputElement;
@@ -61,6 +65,24 @@ export class SyncControl {
         } finally {
             this.reflecting = false;
         }
+    }
+
+    private controlIsDefined(): boolean {
+        const tag = this.element.localName;
+        const registry = this.element.ownerDocument.defaultView?.customElements;
+        if (!tag.includes("-") || !registry || registry.get(tag)) {
+            return true;
+        }
+        if (!this.waitingForDefinition) {
+            this.waitingForDefinition = true;
+            void registry.whenDefined(tag).then(() => {
+                this.waitingForDefinition = false;
+                if (this.active && this.target) {
+                    this.reflect(readSyncValue(this.target, this.element.ownerDocument));
+                }
+            });
+        }
+        return false;
     }
 
     private schedule(): void {

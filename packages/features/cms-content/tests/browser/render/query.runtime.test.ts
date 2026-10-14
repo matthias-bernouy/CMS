@@ -126,6 +126,41 @@ test("a remote query publishes its lifecycle and resolved input", async () => {
     writeSyncValue(target, undefined);
 });
 
+test("a remote query refreshes only when one of its synchronized inputs changes", async () => {
+    const target = { scope: "page", key: "ulvia-official-filter" } as const;
+    const unrelated = { scope: "page", key: "ulvia-official-unrelated" } as const;
+    writeSyncValue(target, "draft");
+    const host = el(`<section
+        cms-query="catalog.items:list as products"
+        cms-query-input='{"status":{"from":"sync","key":"@page:ulvia-official-filter"}}'
+    ></section>`);
+    document.body.appendChild(host);
+    const inputs: unknown[] = [];
+    const query = new Query(
+        host,
+        {},
+        {
+            request: async (_url, _signal, init) => {
+                inputs.push(JSON.parse(String(init?.body)));
+                return { kind: "success", data: [] };
+            },
+        },
+    );
+
+    query.start();
+    await waitFor(() => inputs.length === 1);
+    writeSyncValue(unrelated, "ignored");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(inputs).toHaveLength(1);
+
+    writeSyncValue(target, "published");
+    await waitFor(() => inputs.length === 2);
+    expect(inputs).toEqual([{ status: "draft" }, { status: "published" }]);
+    query.dispose();
+    writeSyncValue(target, undefined);
+    writeSyncValue(unrelated, undefined);
+});
+
 test("a synchronized-state query consumes the producer snapshot without HTTP", () => {
     const target = { scope: "page", key: "ulvia-official-shared-products" } as const;
     const host = el(`<section cms-query="@page:ulvia-official-shared-products as products">

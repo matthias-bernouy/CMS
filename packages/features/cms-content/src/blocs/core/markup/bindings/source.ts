@@ -1,8 +1,8 @@
 import type {
+    CmsBindingInputMap,
+    CmsBindingInputValue,
     CmsSourceBinding,
     CmsSourceBodyBinding,
-    CmsSourceParamMap,
-    CmsSourceParamValue,
     CmsSourceUrl,
     CmsQueryBinding,
     CmsQueryInput,
@@ -55,7 +55,7 @@ export function asSource(source: CmsSourceUrl | CmsSourceBinding): string {
     if (typeof source === "string") {
         return source.trim();
     }
-    const url = sourceUrlWithParams(source.url, source.params);
+    const url = source.url.trim();
     const alias = source.alias?.trim();
     return alias ? `${url} as ${alias}` : url;
 }
@@ -166,44 +166,8 @@ export function parseSourceBody(value: string | null | undefined): CmsSourceBody
     return Object.keys(body).length ? body : null;
 }
 
-function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string {
-    const url = rawUrl.trim();
-    if (!params) {
-        return url;
-    }
-    const normalized = normalizeSourceParamMap(params);
-    for (const [name, value] of Object.entries(params)) {
-        if (value?.from === "sync" && normalized[name] === undefined) {
-            throw new TypeError("Invalid CMS source parameter");
-        }
-    }
-    const entries = Object.entries(normalized);
-    if (entries.length === 0) {
-        return url;
-    }
-    const hashIndex = url.indexOf("#");
-    const beforeHash = hashIndex === -1 ? url : url.slice(0, hashIndex);
-    const hash = hashIndex === -1 ? "" : url.slice(hashIndex);
-    const separator = beforeHash.endsWith("?") || beforeHash.endsWith("&") ? "" : beforeHash.includes("?") ? "&" : "?";
-    const query = entries
-        .map(([name, source]) => `${encodeURIComponent(name)}=${encodeSourceParamValue(source)}`)
-        .join("&");
-    return `${beforeHash}${separator}${query}${hash}`;
-}
-
-function encodeSourceParamValue(value: CmsSourceParamValue): string {
-    if (value.from === "sync") {
-        const target = parseSyncTarget(value.key);
-        if (!target) {
-            throw new TypeError("Invalid synchronized source parameter");
-        }
-        return `@{${asSyncTarget(target).slice(1)}}`;
-    }
-    return encodeURIComponent(String(value.value).trim());
-}
-
-function normalizeSourceParamMap(params: CmsSourceParamMap): Record<string, CmsSourceParamValue> {
-    const normalized: Record<string, CmsSourceParamValue> = {};
+function normalizeSourceParamMap(params: CmsBindingInputMap): Record<string, CmsBindingInputValue> {
+    const normalized: Record<string, CmsBindingInputValue> = {};
     for (const [name, value] of Object.entries(params)) {
         const param = normalizeSourceParamValue(value);
         if (name.trim() && param) {
@@ -213,7 +177,7 @@ function normalizeSourceParamMap(params: CmsSourceParamMap): Record<string, CmsS
     return normalized;
 }
 
-function normalizeSourceParamValue(value: unknown): CmsSourceParamValue | null {
+function normalizeSourceParamValue(value: unknown): CmsBindingInputValue | null {
     if (!isRecord(value) || typeof value.from !== "string") {
         return null;
     }

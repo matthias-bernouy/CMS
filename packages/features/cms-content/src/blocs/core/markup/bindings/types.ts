@@ -5,8 +5,6 @@ export const CMS_BINDING_ATTRIBUTES = {
     condition: "cms-condition",
     formValueType: "cms-form-value-type",
     formEmpty: "cms-form-empty",
-    paramSync: "cms-param-sync",
-    pageState: "cms-page-state",
     sync: "cms-sync",
     query: "cms-query",
     queryInput: "cms-query-input",
@@ -49,10 +47,10 @@ export const CMS_SOURCE_STATUS_SCOPE = "$source";
 export const CMS_SOURCES_STATUS_SCOPE = "$sources";
 
 export type CmsBindingAttribute = (typeof CMS_BINDING_ATTRIBUTES)[keyof typeof CMS_BINDING_ATTRIBUTES];
-export type CmsSourceParamValue = { from: "sync"; key: string } | { from: "raw"; value: string | number | boolean };
-export type CmsSourceParamMap = Record<string, CmsSourceParamValue | null | undefined>;
-export type CmsSourceBinding = { url: string; alias?: string; params?: CmsSourceParamMap };
-export type CmsSourceBodyBinding = CmsSourceParamMap;
+export type CmsBindingInputValue = { from: "sync"; key: string } | { from: "raw"; value: string | number | boolean };
+export type CmsBindingInputMap = Record<string, CmsBindingInputValue | null | undefined>;
+export type CmsSourceBinding = { url: string; alias?: string };
+export type CmsSourceBodyBinding = CmsBindingInputMap;
 export type CmsSourceUrl = string;
 export type CmsConditionExpression = string;
 export type CmsConditionLiteral = string | number | boolean | null;
@@ -75,7 +73,7 @@ export type CmsSyncTarget = { readonly scope: CmsSyncScope; readonly key: string
 export type CmsRemoteQueryBinding = CmsQueryTarget & { readonly name: string };
 export type CmsSyncQueryBinding = { readonly sync: CmsSyncTarget; readonly name: string };
 export type CmsQueryBinding = CmsRemoteQueryBinding | CmsSyncQueryBinding;
-export type CmsQueryInput = CmsSourceParamMap;
+export type CmsQueryInput = CmsBindingInputMap;
 export type CmsQueryRefreshPolicy = {
     readonly intervalMs?: number;
     readonly focus: boolean;

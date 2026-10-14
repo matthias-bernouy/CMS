@@ -1,22 +1,24 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { currentState, PARAMS_CHANGE_EVENT, setState } from "../../../src/browser/binding/params";
 import { BindingRuntime } from "../../../src/browser/binding/runtime/BindingRuntime";
+import { readSyncValue, subscribeSyncValue, writeSyncValue } from "../../../src/browser/binding/params/SyncState";
 import { el, res, resetDom, waitFor } from "../support/testUtils";
 
 afterEach(resetDom);
 
 describe("BindingRuntime — source render reconciliation", () => {
-    test("disposes detached parameter and page-state controls without observer delivery", async () => {
-        const stateKey = "detached-control-state";
-        setState(stateKey, "", document);
+    test("disposes detached synchronized controls without observer delivery", async () => {
+        const paramTarget = { scope: "param", key: "test-detached-param" } as const;
+        const pageTarget = { scope: "page", key: "test-detached-state" } as const;
+        writeSyncValue(paramTarget, undefined);
+        writeSyncValue(pageTarget, undefined);
         let outerCalls = 0;
         globalThis.fetch = (async () => res(200, JSON.stringify({ items: [++outerCalls] }))) as unknown as typeof fetch;
         const root = el(`
             <div>
                 <div cms-source="/outer" cms-reload-on="refresh">
                     <section cms-repeat="items as item">
-                        <input class="param" cms-param-sync="detached-control-param" value="{{ item }}">
-                        <input class="state" cms-page-state="${stateKey}" value="{{ item }}">
+                        <input class="param" cms-sync="@param:test-detached-param" value="{{ item }}">
+                        <input class="state" cms-sync="@page:test-detached-state" value="{{ item }}">
                     </section>
                 </div>
             </div>
@@ -27,7 +29,7 @@ describe("BindingRuntime — source render reconciliation", () => {
         const onParamChange = () => {
             paramChanges++;
         };
-        document.addEventListener(PARAMS_CHANGE_EVENT, onParamChange);
+        const stopParam = subscribeSyncValue(paramTarget, onParamChange);
 
         try {
             runtime.start();
@@ -45,7 +47,7 @@ describe("BindingRuntime — source render reconciliation", () => {
             detachedState.value = "stale";
             detachedState.dispatchEvent(new Event("change"));
             expect(paramChanges).toBe(0);
-            expect(currentState(stateKey, document)).toBe("");
+            expect(readSyncValue(pageTarget)).toBeUndefined();
 
             const activeParam = root.querySelector<HTMLInputElement>(".param")!;
             const activeState = root.querySelector<HTMLInputElement>(".state")!;
@@ -54,11 +56,12 @@ describe("BindingRuntime — source render reconciliation", () => {
             activeState.value = "active";
             activeState.dispatchEvent(new Event("change"));
             expect(paramChanges).toBe(1);
-            expect(currentState(stateKey, document)).toBe("active");
+            expect(readSyncValue(pageTarget)).toBe("active");
         } finally {
-            document.removeEventListener(PARAMS_CHANGE_EVENT, onParamChange);
+            stopParam();
             runtime.stop();
-            setState(stateKey, "", document);
+            writeSyncValue(paramTarget, undefined);
+            writeSyncValue(pageTarget, undefined);
         }
     });
 });

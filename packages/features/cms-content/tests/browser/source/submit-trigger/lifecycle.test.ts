@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { PARAMS_CHANGE_EVENT } from "../../../../src/browser/binding/params";
 import { BindingRuntime } from "../../../../src/browser/binding/runtime/BindingRuntime";
 import { readSyncValue, writeSyncValue } from "../../../../src/browser/binding/params/SyncState";
 import { el, res, resetDom, settle, text, waitFor } from "../../support/testUtils";
@@ -118,12 +117,10 @@ describe("Source — submit trigger lifecycle", () => {
             urls.push(url);
             return res(200, JSON.stringify({ n: calls }));
         }) as unknown as typeof fetch;
-        location.href = "http://localhost/?search=foo";
-
         const root = el(`
             <form>
                 <input name="q" value="plans">
-                <div cms-source="/api/search?q=#{search}" cms-source-trigger="submit"><p>{{ n }}</p></div>
+                <div cms-source="/api/search" cms-source-trigger="submit"><p>{{ n }}</p></div>
             </form>
         `);
         document.body.appendChild(root);
@@ -133,18 +130,13 @@ describe("Source — submit trigger lifecycle", () => {
         expect(calls).toBe(0);
         expect(root.querySelector("p")).not.toBeNull();
 
-        location.href = "http://localhost/?search=bar";
-        document.dispatchEvent(new Event(PARAMS_CHANGE_EVENT));
-        await settle();
-        expect(calls).toBe(0);
-
         const event = new Event("submit", { bubbles: true, cancelable: true });
         root.dispatchEvent(event);
 
         expect(event.defaultPrevented).toBe(true);
         await waitFor(() => text(root.querySelector("p")) === "1");
         expect(calls).toBe(1);
-        expect(urls).toEqual(["/api/search?q=bar"]);
+        expect(urls).toEqual(["/api/search"]);
         runtime.stop();
     });
 

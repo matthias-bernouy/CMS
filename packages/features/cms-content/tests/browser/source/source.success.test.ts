@@ -22,8 +22,7 @@ describe("Source — success", () => {
                 text: async () => JSON.stringify({ name: "Ada" }),
             };
         }) as unknown as typeof fetch;
-        const src = el(`<div cms-source="/x?q=#{q} as result"><p>{{ name }}</p></div>`);
-        history.replaceState(history.state, "", `${location.pathname}?q=ada${location.hash}`);
+        const src = el(`<div cms-source="/x?q=ada as result"><p>{{ name }}</p></div>`);
 
         await new Source(src).run();
 

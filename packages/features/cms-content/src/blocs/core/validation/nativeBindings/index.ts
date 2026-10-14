@@ -21,7 +21,6 @@ import {
 const CONTROL_CHARACTER = /[\u0000-\u001F\u007F]/;
 const URL_WHITESPACE_OR_CONTROL = /[\u0000-\u0020\u007F]/;
 const SOURCE_ID = /^[A-Za-z_$][\w$-]*$/;
-const PAGE_STATE_KEY = /^[A-Za-z0-9_][A-Za-z0-9_.:-]*$/;
 const PUBLISHED_EVENT = /^[A-Za-z][A-Za-z0-9_.:-]*$/;
 
 const BINDING_ATTRIBUTE_SET = new Set<string>(Object.values(CMS_BINDING_ATTRIBUTES));
@@ -110,12 +109,6 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     }
     if (name === CMS_BINDING_ATTRIBUTES.sync) {
         return parseSyncTarget(value) ? null : "CMS sync target is invalid";
-    }
-    if (name === CMS_BINDING_ATTRIBUTES.paramSync) {
-        return isCmsQueryParamName(value) ? null : "CMS query parameter binding is invalid";
-    }
-    if (name === CMS_BINDING_ATTRIBUTES.pageState) {
-        return PAGE_STATE_KEY.test(value) ? null : "CMS page-state binding is invalid";
     }
     if (name === CMS_BINDING_ATTRIBUTES.sourceStateForce) {
         return isCmsSourceState(value) ? "CMS preview state cannot be persisted" : "CMS source state is invalid";
@@ -252,6 +245,8 @@ function isInternalEndpoint(value: string): boolean {
         value.startsWith("/") &&
         !value.startsWith("//") &&
         !value.includes("\\") &&
+        !value.includes("{") &&
+        !value.includes("}") &&
         !URL_WHITESPACE_OR_CONTROL.test(value)
     );
 }

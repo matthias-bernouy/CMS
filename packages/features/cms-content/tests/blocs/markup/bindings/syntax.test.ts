@@ -3,7 +3,6 @@ import {
     asInterpolation,
     asQuery,
     asQueryInput,
-    asQueryParamToken,
     asRepeat,
     asSource,
     asSourceBody,
@@ -14,7 +13,6 @@ import {
     parseQuery,
     parseQueryInput,
     parseQueryRefresh,
-    parseQueryParamToken,
     parseRepeat,
     parseSource,
     parseSourceBody,
@@ -32,19 +30,6 @@ describe("binding syntax", () => {
         expect(isCmsQueryParamName("filter racket:gte")).toBe(false);
         expect(isCmsQueryParamName("filter/racket:gte")).toBe(false);
         expect(isCmsQueryParamName("filter_{racket}:gte")).toBe(false);
-    });
-
-    test("formats and parses query-param tokens", () => {
-        const name = "filter_racket-weight:gte";
-        expect(asQueryParamToken(name)).toBe(`#{${name}}`);
-        expect(asQueryParamToken(` ${name} `)).toBe(`#{${name}}`);
-        expect(parseQueryParamToken(`#{${name}}`)).toBe(name);
-        expect(parseQueryParamToken(`  #{ ${name} }  `)).toBe(name);
-
-        expect(parseQueryParamToken("#{filter racket:gte}")).toBeNull();
-        expect(parseQueryParamToken("#{filter/racket:gte}")).toBeNull();
-        expect(parseQueryParamToken("#{filter_racket}:gte}")).toBeNull();
-        expect(() => asQueryParamToken("filter racket:gte")).toThrow();
     });
 
     test("formats interpolation expressions", () => {
@@ -68,46 +53,18 @@ describe("binding syntax", () => {
         expect(asSource(" /api/plans ")).toBe("/api/plans");
         expect(asSource("https://example.com/api/plans")).toBe("https://example.com/api/plans");
         expect(asSource({ url: " /api/plans ", alias: " plans " })).toBe("/api/plans as plans");
-        expect(
-            asSource({
-                url: "/.cms/call/catalog/search",
-                alias: "addresses",
-                params: {
-                    q: { from: "sync", key: "@param:site-address" },
-                    minimum: { from: "sync", key: " @param:site-racket-minimum " },
-                    delivery: { from: "sync", key: "@page:site-delivery-address" },
-                    limit: { from: "raw", value: 5 },
-                    type: { from: "raw", value: "housenumber street" },
-                    empty: { from: "raw", value: "" },
-                    skipped: undefined,
-                },
-            }),
-        ).toBe(
-            "/.cms/call/catalog/search?q=@{param:site-address}&minimum=@{param:site-racket-minimum}&delivery=@{page:site-delivery-address}&limit=5&type=housenumber%20street as addresses",
+        expect(asSource({ url: "/.cms/call/catalog/search?limit=5", alias: "addresses" })).toBe(
+            "/.cms/call/catalog/search?limit=5 as addresses",
         );
-        expect(asSource({ url: "/api/plans?", params: { q: { from: "raw", value: "hello" } } })).toBe(
-            "/api/plans?q=hello",
-        );
-        expect(
-            asSource({
-                url: "/api/plans?existing=1#results",
-                params: { q: { from: "sync", key: "@param:site-search" } },
-            }),
-        ).toBe("/api/plans?existing=1&q=@{param:site-search}#results");
-        expect(() =>
-            asSource({
-                url: "/api/plans",
-                params: { q: { from: "sync", key: "@param:site/filter" } },
-            }),
-        ).toThrow();
     });
 
     test("parses source bindings", () => {
         expect(parseSource(" {{BASE_PATH}}/api/plans ")).toEqual({ url: "{{BASE_PATH}}/api/plans" });
         expect(parseSource("/api/plans as plans")).toEqual({ url: "/api/plans", alias: "plans" });
-        expect(
-            parseSource("  /.cms/call/catalog/search?q=#{address}&delivery=@{deliveryAddress}   as   addresses  "),
-        ).toEqual({ url: "/.cms/call/catalog/search?q=#{address}&delivery=@{deliveryAddress}", alias: "addresses" });
+        expect(parseSource("  /.cms/call/catalog/search?limit=5   as   addresses  ")).toEqual({
+            url: "/.cms/call/catalog/search?limit=5",
+            alias: "addresses",
+        });
         expect(parseSource("")).toBeNull();
         expect(parseSource("   ")).toBeNull();
     });

@@ -2,8 +2,6 @@
 
 import { QUERY_ATTR, SOURCE_ATTR, SYNC_ATTR, type SourceState } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
-import { PAGE_STATE_ATTR } from "../params/PageStateSync";
-import { PARAM_SYNC_ATTR } from "../params/ParamSync";
 import type { Source } from "../source/Source";
 import type { Query } from "./query/Query";
 import { reconcileAttribute, registerWithin, unregisterWithin } from "./BindingDiscovery";
@@ -78,7 +76,7 @@ export class BindingRuntime {
         });
         this.observer.observe(this.root, {
             attributes: true,
-            attributeFilter: [QUERY_ATTR, SOURCE_ATTR, PARAM_SYNC_ATTR, PAGE_STATE_ATTR, SYNC_ATTR],
+            attributeFilter: [QUERY_ATTR, SOURCE_ATTR, SYNC_ATTR],
             childList: true,
             subtree: true,
         });

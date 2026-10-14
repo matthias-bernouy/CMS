@@ -31,7 +31,7 @@ describe("detectPageIndexingCandidates", () => {
     test("ignores submitted, external, malformed, and old Source bindings", () => {
         const html = `${bound("commerce", "product.get", "slug", "product").replace("<main ", '<main cms-source-trigger="submit" ')}
             <div cms-source="https://external.test/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"sync","key":"@param:site-product"}}'></div>
-            <div cms-source="/.cms/sources/commerce/product?slug=#{product}"></div>`;
+            <div cms-source="/.cms/sources/commerce/product"></div>`;
         expect(detectPageIndexingCandidates(html)).toEqual({ status: "none", candidates: [] });
     });
 

@@ -1,5 +1,4 @@
 import { parseSyncTarget, type CmsSyncTarget } from "cms-content/blocs/core/markup/bindings";
-import { currentParams, PARAMS_CHANGE_EVENT, setParam } from "../params";
 
 export const CMS_SYNC_CHANGE_EVENT = "cms-sync:change";
 
@@ -46,7 +45,8 @@ export function writeSyncValue(
         if ((currentParamsFor(doc).get(target.key) ?? "") === next) {
             return;
         }
-        setParam(target.key, next);
+        writeParam(target.key, next, doc);
+        dispatchChange(target, doc);
         return;
     }
     if (target.scope === "page") {
@@ -92,7 +92,7 @@ export function subscribeSyncValue(
             listener(readSyncValue(target, doc));
         }
     };
-    const onParamChange = () => {
+    const onNavigation = () => {
         if (target.scope === "param") {
             listener(readSyncValue(target, doc));
         }
@@ -104,15 +104,13 @@ export function subscribeSyncValue(
     };
     doc.addEventListener(CMS_SYNC_CHANGE_EVENT, onChange);
     if (target.scope === "param") {
-        doc.addEventListener(PARAMS_CHANGE_EVENT, onParamChange);
-        doc.defaultView?.addEventListener("popstate", onParamChange);
+        doc.defaultView?.addEventListener("popstate", onNavigation);
     } else if (target.scope === "persistent" || target.scope === "session") {
         doc.defaultView?.addEventListener("storage", onStorage);
     }
     return () => {
         doc.removeEventListener(CMS_SYNC_CHANGE_EVENT, onChange);
-        doc.removeEventListener(PARAMS_CHANGE_EVENT, onParamChange);
-        doc.defaultView?.removeEventListener("popstate", onParamChange);
+        doc.defaultView?.removeEventListener("popstate", onNavigation);
         doc.defaultView?.removeEventListener("storage", onStorage);
     };
 }
@@ -122,7 +120,26 @@ export function parseSyncAttribute(element: Element): CmsSyncTarget | null {
 }
 
 function currentParamsFor(doc: Document): URLSearchParams {
-    return doc === globalThis.document ? currentParams() : new URLSearchParams(doc.defaultView?.location.search ?? "");
+    return new URLSearchParams(doc.defaultView?.location.search ?? "");
+}
+
+function writeParam(name: string, value: string, doc: Document): void {
+    const win = doc.defaultView;
+    if (!win) {
+        throw new Error("URL parameter synchronization requires a browser window");
+    }
+    const params = currentParamsFor(doc);
+    if (value === "") {
+        params.delete(name);
+    } else {
+        params.set(name, value);
+    }
+    const query = params.toString();
+    win.history.replaceState(
+        win.history.state,
+        "",
+        `${win.location.pathname}${query ? `?${query}` : ""}${win.location.hash}`,
+    );
 }
 
 function paramValue(value: unknown): string {

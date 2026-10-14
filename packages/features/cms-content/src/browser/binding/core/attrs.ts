@@ -20,7 +20,6 @@ export const SOURCE_SUCCESS_REDIRECT_ATTR = "cms-source-success-redirect";
 export const SOURCE_SUCCESS_REDIRECT_PARAM_ATTR = "cms-source-success-redirect-param";
 export const REPEAT_ATTR = "cms-repeat";
 export const CONDITION_ATTR = "cms-condition";
-export const PAGE_STATE_ATTR = "cms-page-state";
 export const SYNC_ATTR = "cms-sync";
 
 const SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
@@ -36,7 +35,7 @@ export type SourceMethod = (typeof SOURCE_METHODS)[number];
  * region is left INERT: the editor wraps the injected page content in it so the
  * chrome core still INJECTS the content (`{{ content | innerHTML }}` runs
  * through the reactive template) but never registers or
- * executes the content's own `cms-source` / `cms-param-sync`. The content stays
+ * executes the content's own declarative bindings. The content stays
  * an editable template; rendering it with data is delivery's job. Runtime
  * discovery boundary only, and a complete
  * no-op in delivery where no element carries it.

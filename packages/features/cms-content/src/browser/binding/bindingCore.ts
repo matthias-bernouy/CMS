@@ -32,7 +32,6 @@ export {
     BINDING_CORE_TAG,
     BINDING_DISABLED_ATTR,
     BIND_STOP_ATTR,
-    PAGE_STATE_ATTR,
     QUERY_ATTR,
     QUERY_INPUT_ATTR,
     QUERY_REFRESH_ATTR,
@@ -43,7 +42,6 @@ export {
     SOURCE_TRIGGER_ATTR,
     SYNC_ATTR,
 } from "./core/attrs";
-export { currentState, setState, STATE_CHANGE_EVENT } from "./params";
 export {
     CMS_SYNC_CHANGE_EVENT,
     readSyncValue,

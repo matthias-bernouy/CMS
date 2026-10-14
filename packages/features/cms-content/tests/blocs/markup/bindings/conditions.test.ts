@@ -87,8 +87,6 @@ describe("binding conditions", () => {
             condition: "cms-condition",
             formValueType: "cms-form-value-type",
             formEmpty: "cms-form-empty",
-            paramSync: "cms-param-sync",
-            pageState: "cms-page-state",
             query: "cms-query",
             queryInput: "cms-query-input",
             queryRefresh: "cms-query-refresh",

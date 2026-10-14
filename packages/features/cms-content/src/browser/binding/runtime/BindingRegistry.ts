@@ -1,7 +1,5 @@
 import { BIND_STOP_ATTR, BINDING_CORE_TAG, QUERY_ATTR, SOURCE_ATTR, type SourceState } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
-import { PageStateSync } from "../params/PageStateSync";
-import { ParamSync } from "../params/ParamSync";
 import { SyncControl } from "../params/SyncControl";
 import { Query } from "./query/Query";
 import { Source } from "../source/Source";
@@ -16,8 +14,6 @@ export class BindingRegistry {
     private readonly queries = new Map<Element, Query>();
     private readonly sources = new Map<Element, Source>();
     private readonly sourceStatuses = new Map<Element, SourceStatusValue>();
-    private readonly paramSyncs = new Map<Element, ParamSync>();
-    private readonly pageStateSyncs = new Map<Element, PageStateSync>();
     private readonly syncControls = new Map<Element, SyncControl>();
     private readonly reads: ReadRequests;
 
@@ -43,20 +39,12 @@ export class BindingRegistry {
             hooks?.beforeSourceDispose?.(source);
             source.dispose();
         }
-        for (const sync of this.paramSyncs.values()) {
-            sync.dispose();
-        }
-        for (const sync of this.pageStateSyncs.values()) {
-            sync.dispose();
-        }
         for (const sync of this.syncControls.values()) {
             sync.dispose();
         }
         this.queries.clear();
         this.sources.clear();
         this.sourceStatuses.clear();
-        this.paramSyncs.clear();
-        this.pageStateSyncs.clear();
         this.syncControls.clear();
     }
 
@@ -137,42 +125,6 @@ export class BindingRegistry {
         this.sourceStatuses.delete(element);
     }
 
-    registerParamSync(element: Element): void {
-        if (!element.isConnected || this.paramSyncs.has(element)) {
-            return;
-        }
-        const sync = new ParamSync(element);
-        this.paramSyncs.set(element, sync);
-        sync.start();
-    }
-
-    unregisterParamSync(element: Element): void {
-        const sync = this.paramSyncs.get(element);
-        if (!sync) {
-            return;
-        }
-        sync.dispose();
-        this.paramSyncs.delete(element);
-    }
-
-    registerPageStateSync(element: Element): void {
-        if (!element.isConnected || this.pageStateSyncs.has(element)) {
-            return;
-        }
-        const sync = new PageStateSync(element);
-        this.pageStateSyncs.set(element, sync);
-        sync.start();
-    }
-
-    unregisterPageStateSync(element: Element): void {
-        const sync = this.pageStateSyncs.get(element);
-        if (!sync) {
-            return;
-        }
-        sync.dispose();
-        this.pageStateSyncs.delete(element);
-    }
-
     registerSyncControl(element: Element): void {
         if (!element.isConnected || this.syncControls.has(element)) {
             return;
@@ -200,16 +152,6 @@ export class BindingRegistry {
         for (const source of this.sources.keys()) {
             if (!source.isConnected) {
                 this.unregisterSource(source);
-            }
-        }
-        for (const sync of this.paramSyncs.keys()) {
-            if (!sync.isConnected) {
-                this.unregisterParamSync(sync);
-            }
-        }
-        for (const sync of this.pageStateSyncs.keys()) {
-            if (!sync.isConnected) {
-                this.unregisterPageStateSync(sync);
             }
         }
         for (const sync of this.syncControls.keys()) {

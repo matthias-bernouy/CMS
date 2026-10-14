@@ -1,6 +1,6 @@
-import { parseQueryRefresh } from "cms-content/blocs/core/markup/bindings/source";
-import { QUERY_REFRESH_ATTR } from "../../core/attrs";
-import { PARAMS_CHANGE_EVENT, STATE_CHANGE_EVENT } from "../../params";
+import { parseQueryInput, parseQueryRefresh, parseSyncTarget } from "cms-content/blocs/core/markup/bindings";
+import { QUERY_INPUT_ATTR, QUERY_REFRESH_ATTR } from "../../core/attrs";
+import { subscribeSyncValue } from "../../params/SyncState";
 
 export function listenQueryRefresh(element: Element, refresh: () => void): () => void {
     const doc = element.ownerDocument;
@@ -13,9 +13,16 @@ export function listenQueryRefresh(element: Element, refresh: () => void): () =>
     };
     const onRefresh = () => refresh();
 
-    listen(doc, PARAMS_CHANGE_EVENT, onRefresh);
-    listen(doc, STATE_CHANGE_EVENT, onRefresh);
-    listen(win, "popstate", onRefresh);
+    const targets = new Map<string, NonNullable<ReturnType<typeof parseSyncTarget>>>();
+    for (const source of Object.values(parseQueryInput(element.getAttribute(QUERY_INPUT_ATTR)) ?? {})) {
+        const target = source?.from === "sync" ? parseSyncTarget(source.key) : null;
+        if (target) {
+            targets.set(`@${target.scope}:${target.key}`, target);
+        }
+    }
+    for (const target of targets.values()) {
+        stops.push(subscribeSyncValue(target, onRefresh, doc));
+    }
     if (policy?.focus) {
         listen(doc, "visibilitychange", () => {
             if (doc.visibilityState !== "hidden") {

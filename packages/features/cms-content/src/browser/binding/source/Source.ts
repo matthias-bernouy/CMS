@@ -14,7 +14,6 @@ import {
 import { captureSourceContent, cloneSourceContent } from "./presentation/sourceContent";
 import { listenSourceEvents, sourceTrigger } from "./sourceEvents";
 import { parseSourceSpec } from "./runtime/sourceSpec";
-import { resolveReactiveUrl } from "./runtime/reactiveUrl";
 import { SourceRenderer } from "./presentation/sourceRenderer";
 import { SourcePresenter } from "./presentation/sourcePresenter";
 import { resolveSourceBodyFields } from "./presentation/sourceBody";
@@ -67,11 +66,6 @@ export class Source {
             void this.run();
         }
     };
-    private readonly onReactiveUrlChange = () => {
-        if (this.el.isConnected) {
-            void this.run({ onlyIfUrlChanged: true });
-        }
-    };
     private readonly onSubmit = (event: SubmitEvent) => {
         const form = ownerForm(event.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
         const valid = typeof form?.reportValidity === "function" ? form.reportValidity() : true;
@@ -108,7 +102,7 @@ export class Source {
         this.syncDirty = true;
         const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
         if (spec.url) {
-            this.submission?.captureInput(resolveReactiveUrl(spec.url, this.el.ownerDocument));
+            this.submission?.captureInput(spec.url);
         }
         this.publishFormSync();
     };
@@ -135,16 +129,9 @@ export class Source {
         if (sourceTrigger(this.el) === "auto") {
             this.stopReload = connectSourceReload(this.el, {
                 generation: () => this.selectionEpoch,
-                url: () =>
-                    resolveReactiveUrl(
-                        parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "").url,
-                        this.el.ownerDocument,
-                    ),
+                url: () => parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "").url,
                 reload: (acknowledge) => {
-                    const url = resolveReactiveUrl(
-                        parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "").url,
-                        this.el.ownerDocument,
-                    );
+                    const url = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "").url;
                     if (this.pendingRefresh?.url === url) {
                         return this.pendingRefresh.promise;
                     }
@@ -171,7 +158,6 @@ export class Source {
                 : undefined;
         this.stopListeners = listenSourceEvents(this.el, {
             onReload: this.onReload,
-            onReactiveUrlChange: this.onReactiveUrlChange,
             onSubmit: this.onSubmit,
             onChange: this.onChange,
         });
@@ -233,7 +219,7 @@ export class Source {
         if (!spec.url) {
             return false;
         }
-        const url = resolveReactiveUrl(spec.url, this.el.ownerDocument);
+        const url = spec.url;
         if (opts?.onlyIfUrlChanged && url === this.lastUrl) {
             return false;
         }
@@ -332,7 +318,7 @@ export class Source {
             return false;
         }
         const current = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
-        if (resolveReactiveUrl(current.url, this.el.ownerDocument) !== url) {
+        if (current.url !== url) {
             void this.run({ onlyIfUrlChanged: true });
             return false;
         }
@@ -360,7 +346,7 @@ export class Source {
         rememberSourceData(this.el, value);
         this.hasData = true;
         const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
-        this.lastUrl = resolveReactiveUrl(spec.url, this.el.ownerDocument);
+        this.lastUrl = spec.url;
         this.dataUrl = this.lastUrl;
         acknowledgeForm(acknowledge, () => this.presenter.data(spec.alias, value));
         this.afterRender();

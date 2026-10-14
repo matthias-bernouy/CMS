@@ -1,12 +1,4 @@
-import {
-    SOURCE_ATTR,
-    SOURCE_DELAY_ATTR,
-    SOURCE_TRIGGER_ATTR,
-    isSourceTrigger,
-    type SourceTrigger,
-} from "../core/attrs";
-import { listenReactiveUrlChanges } from "./runtime/reactiveUrl";
-import { sourceUrl } from "./runtime/sourceSpec";
+import { SOURCE_DELAY_ATTR, SOURCE_TRIGGER_ATTR, isSourceTrigger, type SourceTrigger } from "../core/attrs";
 
 /** Space-separated event names in this attribute re-run the source. */
 const RELOAD_ATTR = "cms-reload-on";
@@ -15,7 +7,6 @@ export const RELOAD_EVENT = "cms-source:reload";
 
 export type SourceEventCallbacks = {
     onReload: () => void;
-    onReactiveUrlChange: () => void;
     onSubmit: (event: SubmitEvent) => void;
     onChange: (event: Event) => void;
 };
@@ -69,16 +60,10 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
         };
     }
 
-    const stopUrlListeners = listenReactiveUrlChanges(
-        sourceUrl(source.getAttribute(SOURCE_ATTR) ?? ""),
-        doc,
-        callbacks.onReactiveUrlChange,
-    );
     return () => {
         for (const eventName of reloadEvents) {
             doc.removeEventListener(eventName, onReload);
         }
-        stopUrlListeners();
     };
 }
 

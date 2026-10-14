@@ -83,7 +83,7 @@ export function inspectForms(source: UiSource, tag: MarkupTag): UiFinding[] {
             "source-body-contract",
             "WARNING",
             "The literal cms-source-body contains entries the runtime ignores.",
-            'Use a JSON object whose fields contain {from:"queryParam",name}, {from:"state",name}, or {from:"raw",value}; raw values must be nonempty strings, finite numbers, or booleans.',
+            'Use a JSON object whose fields contain {from:"sync",key:"@scope:key"} or {from:"raw",value}; raw values must be nonempty strings, finite numbers, or booleans.',
         );
     }
     return findings;
@@ -116,8 +116,11 @@ function validBody(value: string): boolean {
         if (!name.trim() || !record(entry)) {
             return false;
         }
-        if (entry.from === "queryParam" || entry.from === "state") {
-            return typeof entry.name === "string" && Boolean(entry.name.trim());
+        if (entry.from === "sync") {
+            return (
+                typeof entry.key === "string" &&
+                /^@(param|page|session|persistent):[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(entry.key)
+            );
         }
         return (
             entry.from === "raw" &&
