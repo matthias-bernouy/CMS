@@ -109,6 +109,7 @@ export function validateResponse(
             requestId,
             status: response.status,
             errorCode: definition.code,
+            retryable: definition.retryable,
             output,
             responseHeaders: errorHeaders,
         });

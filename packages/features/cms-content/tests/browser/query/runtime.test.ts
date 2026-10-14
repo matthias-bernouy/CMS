@@ -75,7 +75,7 @@ test("a Provider query waits for required synchronized input", async () => {
         cms-query="catalog.items:list as products"
         cms-query-input='{"status":{"from":"state","key":"@page:ulvia-official-required-filter"}}'
         cms-query-listen="@page:ulvia-official-required-filter"
-    ><p cms-condition="products.waiting">Waiting</p></section>`);
+    ><p cms-condition="products.activity === 'waiting'">Waiting</p></section>`);
     document.body.appendChild(host);
     const inputs: unknown[] = [];
     const query = new Query(
@@ -121,8 +121,8 @@ test("the closed Kernel query map does not expose arbitrary URLs", () => {
 
 test("the alias owns the complete query state and data", async () => {
     const host = el(`<section cms-query="catalog.items:list as products">
-        <p cms-condition="products.loading">Loading</p>
-        <ul cms-condition="products.loaded">
+        <p cms-condition="products.activity === 'fetching'">Loading</p>
+        <ul cms-condition="products.hasData">
             <li cms-repeat="products.data as product">{{ product.name }}</li>
         </ul>
     </section>`);
@@ -146,7 +146,7 @@ test("the alias owns the complete query state and data", async () => {
     expect(host.textContent).toContain("Loading");
     release();
     await waitFor(() => host.textContent?.includes("Racket") === true);
-    expect(host.querySelector('[cms-condition="products.loading"]')).toBeNull();
+    expect(host.querySelector("[cms-condition=\"products.activity === 'fetching'\"]")).toBeNull();
     query.dispose();
 });
 
@@ -164,7 +164,9 @@ test("a remote query publishes its lifecycle and resolved input", async () => {
     await waitFor(() => host.textContent?.includes("Racket") === true);
 
     expect(readSyncValue(target)).toMatchObject({
-        loaded: true,
+        activity: "idle",
+        hasData: true,
+        outcome: { kind: "success", status: 200 },
         input: { limit: 20 },
         data: [{ name: "Racket" }],
     });
@@ -312,21 +314,17 @@ test("a remote query treats synchronized inputs as snapshots without an explicit
 test("a synchronized-state query consumes the producer snapshot without HTTP", () => {
     const target = { scope: "page", key: "ulvia-official-shared-products" } as const;
     const host = el(`<section cms-query="@page:ulvia-official-shared-products as products">
-        <p cms-condition="products.loaded">{{ products.data.name }}</p>
+        <p cms-condition="products.hasData">{{ products.data.name }}</p>
     </section>`);
     document.body.appendChild(host);
     const query = new Query(host, {}, { request: async () => Promise.reject(new Error("must not fetch")) });
 
     query.start();
     writeSyncValue(target, {
-        waiting: false,
-        loading: false,
-        loaded: true,
-        empty: false,
-        error: false,
-        refreshing: false,
-        refreshError: false,
+        activity: "idle",
+        hasData: true,
         data: { name: "Shared" },
+        outcome: { kind: "success", status: 200 },
     });
 
     expect(host.textContent).toContain("Shared");
@@ -384,10 +382,10 @@ test("a primary query renders with imported synchronized query states", async ()
     writeSyncValue(user, undefined);
 });
 
-test("a refresh failure retains the previous data and exposes refreshError", async () => {
+test("a refresh failure retains the previous data and exposes its outcome", async () => {
     const host = el(`<section cms-query="catalog.items:list as products">
         <p>{{ products.data.name }}</p>
-        <span cms-condition="products.refreshError">Refresh failed</span>
+        <span cms-condition="products.outcome.kind === 'failure'">Refresh failed</span>
     </section>`);
     document.body.appendChild(host);
     let calls = 0;
@@ -399,7 +397,7 @@ test("a refresh failure retains the previous data and exposes refreshError", asy
                 calls += 1;
                 return calls === 1
                     ? { kind: "success", data: { name: "Current" } }
-                    : { kind: "error", status: 503, message: "Unavailable" };
+                    : { kind: "failure", status: 503, code: "not_ready", retryable: true };
             },
         },
     );

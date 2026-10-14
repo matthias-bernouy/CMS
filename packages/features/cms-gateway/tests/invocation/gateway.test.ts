@@ -335,6 +335,7 @@ describe("capability gateway", () => {
             kind: "declared-error",
             status: 404,
             errorCode: "NOT_FOUND",
+            retryable: false,
         });
         scope.setResponse({ status: 404, contentType: "application/json", errorCode: "PRIVATE" });
         await expect(scope.gateway.invoke(invocation())).rejects.toMatchObject({ code: "invalid_provider_response" });

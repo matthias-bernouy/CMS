@@ -98,6 +98,7 @@ export type GatewayResult =
     | (GatewayResultBase & {
           readonly kind: "declared-error";
           readonly errorCode: string;
+          readonly retryable: boolean;
           readonly output?: unknown;
       });
 

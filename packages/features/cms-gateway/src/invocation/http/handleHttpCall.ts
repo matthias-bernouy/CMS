@@ -50,12 +50,12 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             if (head) {
                 return headFailure("internal_error", 500);
             }
-            return jsonResponse({ error: { code: "internal_error" } }, 500);
+            return gatewayFailureResponse("internal_error", 500);
         }
         if (head) {
             return headFailure(error.code, errorStatus(error, options.actor), error.requestId);
         }
-        return jsonResponse({ error: { code: error.code } }, errorStatus(error, options.actor), error.requestId);
+        return gatewayFailureResponse(error.code, errorStatus(error, options.actor), error.requestId);
     }
 }
 
@@ -237,11 +237,33 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
     return result.kind === "success"
         ? jsonResponse(result.output ?? null, result.status, result.requestId)
         : jsonResponse(
-              { error: { code: result.errorCode, output: result.output } },
+              {
+                  error: {
+                      code: result.errorCode,
+                      retryable: result.retryable,
+                      ...(result.output === undefined ? {} : { output: result.output }),
+                  },
+              },
               result.status,
               result.requestId,
               result.responseHeaders,
           );
+}
+
+export function gatewayFailureResponse(code: string, status: number, requestId?: string): Response {
+    return jsonResponse({ failure: { code, retryable: retryableGatewayFailure(code) } }, status, requestId);
+}
+
+function retryableGatewayFailure(code: string): boolean {
+    return [
+        "installation_unavailable",
+        "internal_error",
+        "media_busy",
+        "media_unavailable",
+        "not_ready",
+        "stale_route",
+        "transport_failure",
+    ].includes(code);
 }
 
 function errorStatus(error: GatewayError, actor: GatewayActor): number {

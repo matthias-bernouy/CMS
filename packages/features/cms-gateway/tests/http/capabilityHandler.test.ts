@@ -51,7 +51,7 @@ test("projects gateway authorization failures", async () => {
     );
 
     expect(denied.status).toBe(403);
-    expect(await denied.json()).toEqual({ error: { code: "not_authorized" } });
+    expect(await denied.json()).toEqual({ failure: { code: "not_authorized", retryable: false } });
 });
 
 test("logical Page queries use GET without input and QUERY with structured input", async () => {

@@ -1,64 +1,101 @@
-/**
- * Shared JSON network primitive for declarative queries and form mutations.
- * It resolves a URL to a discriminated outcome and never throws.
- *
- * Status handling (decided in the design pass):
- *  - 2xx with a JSON body            → `success` with the parsed data.
- *  - 2xx empty body / 204 No Content → `success` with `null` (an empty result,
- *                                      not an error — the `empty` slot, if any,
- *                                      handles the display).
- *  - 2xx with an unparseable body    → `error` (status carried, message says so).
- *  - non-2xx                         → `error` with the HTTP `status`, so a
- *                                      template can branch (`{{ status }}`) and a
- *                                      future global interceptor can act on
- *                                      401/403 without each source knowing.
- *  - aborted request                 → `aborted` (caller drops it silently).
- *  - network failure                 → `error` with `status: null`.
- */
-
 export type FetchOutcome =
-    | { kind: "success"; data: unknown }
-    | { kind: "error"; status: number | null; message: string }
-    | { kind: "aborted" };
+    | { readonly kind: "success"; readonly data: unknown; readonly status?: number; readonly requestId?: string }
+    | {
+          readonly kind: "error";
+          readonly code: string;
+          readonly output?: unknown;
+          readonly retryable: boolean;
+          readonly status: number;
+          readonly requestId?: string;
+      }
+    | {
+          readonly kind: "failure";
+          readonly code: string;
+          readonly retryable: boolean;
+          readonly status?: number;
+          readonly requestId?: string;
+      }
+    | { readonly kind: "aborted" };
 
 export async function runFetch(url: string, signal: AbortSignal, init: RequestInit = {}): Promise<FetchOutcome> {
-    let res: Response;
+    let response: Response;
     try {
         const headers = new Headers(init.headers);
         if (!headers.has("Accept")) {
             headers.set("Accept", "application/json");
         }
-        res = await fetch(url, { ...init, headers, signal });
-    } catch (err) {
-        return isAbort(err) ? { kind: "aborted" } : { kind: "error", status: null, message: messageOf(err) };
+        response = await fetch(url, { ...init, headers, signal });
+    } catch (error) {
+        return isAbort(error) ? { kind: "aborted" } : { kind: "failure", code: "network_error", retryable: true };
     }
 
-    if (!res.ok) {
-        return { kind: "error", status: res.status, message: `HTTP ${res.status}` };
-    }
-
+    const requestId = response.headers?.get("x-ulvia-request-id") ?? undefined;
     let body: string;
     try {
-        body = await res.text();
-    } catch (err) {
-        return isAbort(err) ? { kind: "aborted" } : { kind: "error", status: res.status, message: messageOf(err) };
+        body = await response.text();
+    } catch (error) {
+        return isAbort(error) ? { kind: "aborted" } : failure("network_error", true, response.status, requestId);
     }
 
+    if (!response.ok) {
+        return decodeFailureResponse(body, response.status, requestId);
+    }
     if (body.trim() === "") {
-        return { kind: "success", data: null };
+        return success(null, response.status, requestId);
     }
-
     try {
-        return { kind: "success", data: JSON.parse(body) };
+        return success(JSON.parse(body), response.status, requestId);
     } catch {
-        return { kind: "error", status: res.status, message: "Invalid JSON response" };
+        return failure("invalid_response", false, response.status, requestId);
     }
 }
 
-function isAbort(err: unknown): boolean {
-    return (err as { name?: string } | null)?.name === "AbortError";
+function decodeFailureResponse(body: string, status: number, requestId?: string): FetchOutcome {
+    let value: unknown;
+    try {
+        value = JSON.parse(body);
+    } catch {
+        return failure("invalid_response", false, status, requestId);
+    }
+    if (!isRecord(value)) {
+        return failure("invalid_response", false, status, requestId);
+    }
+    const declared = isRecord(value.error) ? value.error : null;
+    if (declared && typeof declared.code === "string" && typeof declared.retryable === "boolean") {
+        return {
+            kind: "error",
+            code: declared.code,
+            retryable: declared.retryable,
+            status,
+            ...(Object.hasOwn(declared, "output") ? { output: declared.output } : {}),
+            ...(requestId ? { requestId } : {}),
+        };
+    }
+    const technical = isRecord(value.failure) ? value.failure : null;
+    if (technical && typeof technical.code === "string" && typeof technical.retryable === "boolean") {
+        return failure(technical.code, technical.retryable, status, requestId);
+    }
+    return failure("invalid_response", false, status, requestId);
 }
 
-function messageOf(err: unknown): string {
-    return err instanceof Error ? err.message : String(err);
+function success(data: unknown, status: number, requestId?: string): FetchOutcome {
+    return { kind: "success", data, status, ...(requestId ? { requestId } : {}) };
+}
+
+function failure(code: string, retryable: boolean, status?: number, requestId?: string): FetchOutcome {
+    return {
+        kind: "failure",
+        code,
+        retryable,
+        ...(status === undefined ? {} : { status }),
+        ...(requestId ? { requestId } : {}),
+    };
+}
+
+function isAbort(error: unknown): boolean {
+    return (error as { name?: string } | null)?.name === "AbortError";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }

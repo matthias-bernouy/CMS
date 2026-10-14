@@ -1,7 +1,7 @@
 import { parseQueries } from "cms-content/blocs/core/markup/bindings";
 import { QUERIES_ATTR } from "../../core/attrs";
 import { readSyncValue, subscribeSyncValue } from "../../state/SyncState";
-import { initialQueryState, isQueryState, loadedQueryState, type QueryState } from "./queryState";
+import { initialQueryState, isQueryState, successfulQueryState, type QueryState } from "./queryState";
 
 export class QueryImports {
     private readonly states = new Map<string, QueryState>();
@@ -48,5 +48,5 @@ function normalizeQueryState(value: unknown): QueryState {
     if (value === undefined) {
         return initialQueryState();
     }
-    return isQueryState(value) ? value : loadedQueryState(value);
+    return isQueryState(value) ? value : successfulQueryState(initialQueryState(), value, { status: 200 });
 }

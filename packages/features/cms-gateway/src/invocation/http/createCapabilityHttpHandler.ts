@@ -3,7 +3,7 @@ import type { GatewayActor, GatewayInvoker } from "cms-gateway/invocation/interf
 import type { PageCapabilityAccess, PageExecutionPage } from "cms-gateway/execution/core/PageExecutionService";
 import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/PageExecution";
 import { gatewayRoutePrefix, CMS_CAPABILITY_CALL_ROUTE, CMS_CAPABILITY_QUERY_ROUTE } from "./routes";
-import { gatewayResultResponse, handleGatewayHttpCall } from "./handleHttpCall";
+import { gatewayFailureResponse, gatewayResultResponse, handleGatewayHttpCall } from "./handleHttpCall";
 import { readGatewayHttpInput } from "./readHttpInput";
 
 export type CapabilityHttpHandlerConfig = {
@@ -61,7 +61,7 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
         } catch (error) {
             const code = error instanceof GatewayError ? error.code : "internal_error";
             const status = code === "not_authorized" ? 403 : code === "not_selected" ? 404 : 503;
-            return Response.json({ error: { code } }, { status, headers: { "cache-control": "private, no-store" } });
+            return gatewayFailureResponse(code, status);
         }
         return handleGatewayHttpCall(request, {
             siteId: config.siteId,
@@ -132,7 +132,7 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
                       : code === "not_selected" || code === "invalid_route"
                         ? 404
                         : 503;
-            return Response.json({ error: { code } }, { status, headers: { "cache-control": "private, no-store" } });
+            return gatewayFailureResponse(code, status, error instanceof GatewayError ? error.requestId : undefined);
         }
     };
 }

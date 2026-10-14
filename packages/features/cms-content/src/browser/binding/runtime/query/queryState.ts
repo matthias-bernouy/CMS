@@ -1,74 +1,115 @@
-import { isEmpty } from "../../reactive/renderer/bindingContent";
+export type QueryOutcome =
+    | { readonly kind: "none" }
+    | { readonly kind: "success"; readonly status: number; readonly requestId?: string }
+    | {
+          readonly kind: "error";
+          readonly code: string;
+          readonly output?: unknown;
+          readonly retryable: boolean;
+          readonly status: number;
+          readonly requestId?: string;
+      }
+    | {
+          readonly kind: "failure";
+          readonly code: string;
+          readonly retryable: boolean;
+          readonly status?: number;
+          readonly requestId?: string;
+      };
 
 export type QueryState = {
-    waiting: boolean;
-    loading: boolean;
-    loaded: boolean;
-    empty: boolean;
-    error: boolean;
-    refreshing: boolean;
-    refreshError: boolean;
-    data: unknown;
-    input?: unknown;
-    status?: number | null;
-    message?: string;
+    readonly activity: "idle" | "waiting" | "fetching";
+    readonly hasData: boolean;
+    readonly data: unknown;
+    readonly outcome: QueryOutcome;
+    readonly input?: unknown;
 };
 
 export function initialQueryState(): QueryState {
-    return flags({ loading: false });
+    return state();
 }
 
 export function isQueryState(value: unknown): value is QueryState {
-    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    if (!isRecord(value) || !["idle", "waiting", "fetching"].includes(String(value.activity))) {
         return false;
     }
-    const state = value as Record<string, unknown>;
-    return (
-        typeof state.loading === "boolean" &&
-        typeof state.waiting === "boolean" &&
-        typeof state.loaded === "boolean" &&
-        typeof state.empty === "boolean" &&
-        typeof state.error === "boolean" &&
-        typeof state.refreshing === "boolean" &&
-        typeof state.refreshError === "boolean" &&
-        "data" in state
-    );
-}
-
-export function loadingQueryState(): QueryState {
-    return flags({ loading: true });
+    if (typeof value.hasData !== "boolean" || !("data" in value) || !isRecord(value.outcome)) {
+        return false;
+    }
+    return isQueryOutcome(value.outcome);
 }
 
 export function waitingQueryState(): QueryState {
-    return flags({ waiting: true });
+    return state({ activity: "waiting" });
 }
 
-export function loadedQueryState(data: unknown): QueryState {
-    return flags({ loaded: true, empty: isEmpty(data), data });
+export function fetchingQueryState(current: QueryState): QueryState {
+    return { ...current, activity: "fetching" };
 }
 
-export function failedQueryState(status: number | null, message: string): QueryState {
-    return flags({ error: true, status, message });
+export function successfulQueryState(
+    current: QueryState,
+    data: unknown,
+    result: { readonly status: number; readonly requestId?: string },
+): QueryState {
+    return state({
+        data,
+        hasData: true,
+        outcome: {
+            kind: "success",
+            status: result.status,
+            ...(result.requestId ? { requestId: result.requestId } : {}),
+        },
+        ...(current.input === undefined ? {} : { input: current.input }),
+    });
 }
 
-export function refreshingQueryState(current: QueryState): QueryState {
-    return { ...current, refreshing: true, refreshError: false, status: undefined, message: undefined };
+export function failedQueryState(
+    current: QueryState,
+    outcome: Exclude<QueryOutcome, { kind: "none" | "success" }>,
+): QueryState {
+    return state({
+        data: current.data,
+        hasData: current.hasData,
+        outcome,
+        ...(current.input === undefined ? {} : { input: current.input }),
+    });
 }
 
-export function refreshFailedQueryState(current: QueryState, status: number | null, message: string): QueryState {
-    return { ...current, refreshing: false, refreshError: true, status, message };
-}
-
-function flags(values: Partial<QueryState>): QueryState {
+function state(values: Partial<QueryState> = {}): QueryState {
     return {
-        waiting: false,
-        loading: false,
-        loaded: false,
-        empty: false,
-        error: false,
-        refreshing: false,
-        refreshError: false,
+        activity: "idle",
+        hasData: false,
         data: null,
+        outcome: { kind: "none" },
         ...values,
     };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isQueryOutcome(value: Record<string, unknown>): value is QueryOutcome {
+    if (value.kind === "none") {
+        return true;
+    }
+    if (value.kind === "success") {
+        return typeof value.status === "number" && isOptionalString(value.requestId);
+    }
+    if (value.kind !== "error" && value.kind !== "failure") {
+        return false;
+    }
+    if (typeof value.code !== "string" || typeof value.retryable !== "boolean" || !isOptionalString(value.requestId)) {
+        return false;
+    }
+    return value.kind === "failure" ? isOptionalNumber(value.status) : typeof value.status === "number";
+}
+
+function isOptionalString(value: unknown): boolean {
+    return value === undefined || typeof value === "string";
+}
+
+function isOptionalNumber(value: unknown): boolean {
+    return value === undefined || typeof value === "number";
 }

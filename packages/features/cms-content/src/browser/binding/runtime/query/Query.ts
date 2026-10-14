@@ -12,13 +12,11 @@ import { shareUnchanged } from "./reconcile";
 import { QueryImports } from "./QueryImports";
 import {
     failedQueryState,
+    fetchingQueryState,
     initialQueryState,
-    loadedQueryState,
-    loadingQueryState,
-    refreshFailedQueryState,
-    refreshingQueryState,
-    type QueryState,
     isQueryState,
+    successfulQueryState,
+    type QueryState,
     waitingQueryState,
 } from "./queryState";
 
@@ -127,7 +125,13 @@ export class Query {
         try {
             request = queryRequest(this.element);
         } catch (error) {
-            this.update(failedQueryState(null, error instanceof Error ? error.message : String(error)));
+            this.update(
+                failedQueryState(this.state, {
+                    kind: "failure",
+                    code: "invalid_query",
+                    retryable: false,
+                }),
+            );
             return false;
         }
         if ("waiting" in request) {
@@ -148,8 +152,7 @@ export class Query {
         this.lastInputIdentity = identity;
         this.activeIdentity = identity;
         this.input = request.input;
-        const refreshing = this.state.loaded;
-        this.update(this.withInput(refreshing ? refreshingQueryState(this.state) : loadingQueryState()));
+        this.update(this.withInput(fetchingQueryState(this.state)));
         this.abort?.abort();
         const controller = new AbortController();
         this.abort = controller;
@@ -163,21 +166,23 @@ export class Query {
         if (this.activeIdentity !== identity) {
             return false;
         }
-        if (outcome.kind === "error") {
-            this.update(
-                refreshing
-                    ? refreshFailedQueryState(this.state, outcome.status, outcome.message)
-                    : failedQueryState(outcome.status, outcome.message),
-            );
+        if (outcome.kind === "error" || outcome.kind === "failure") {
+            this.update(failedQueryState(this.state, outcome));
             return false;
         }
-        const value = refreshing ? shareUnchanged(this.state.data, outcome.data) : outcome.data;
-        this.accept(value, options.acknowledge);
+        const value = this.state.hasData ? shareUnchanged(this.state.data, outcome.data) : outcome.data;
+        this.accept(value, { ...outcome, status: outcome.status ?? 200 }, options.acknowledge);
         return true;
     }
 
-    private accept(value: unknown, acknowledge?: HTMLFormElement): void {
-        withFormAcknowledgement(acknowledge, () => this.update(this.withInput(loadedQueryState(value))));
+    private accept(
+        value: unknown,
+        result: { readonly status: number; readonly requestId?: string } = { status: 200 },
+        acknowledge?: HTMLFormElement,
+    ): void {
+        withFormAcknowledgement(acknowledge, () =>
+            this.update(this.withInput(successfulQueryState(this.state, value, result))),
+        );
     }
 
     private update(state: QueryState): void {
