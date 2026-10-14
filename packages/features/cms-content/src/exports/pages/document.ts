@@ -19,6 +19,7 @@ export {
     validateBlocContentMarkup,
     validatePageContentMarkup,
     type BlocContentMarkupResult,
+    type ContentQuery,
 } from "cms-content/blocs/core/markup/validation/nativeContent";
 export {
     validatePageDocument,

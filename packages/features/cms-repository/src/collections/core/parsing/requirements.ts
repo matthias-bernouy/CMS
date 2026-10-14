@@ -15,10 +15,9 @@ import { textIdentifier } from "../texts/validation";
 const CAPABILITY_SOURCE =
     /^\/\.cms\/call\/(?<contract>[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\/(?<capability>[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)$/u;
 
-const SYSTEM_SOURCES = new Map<string, "GET" | "POST">([
-    ["/.cms/auth/login", "POST"],
-    ["/.cms/auth/methods", "GET"],
-]);
+const SYSTEM_SOURCES = new Map<string, "GET" | "POST">([["/.cms/auth/login", "POST"]]);
+
+const SYSTEM_QUERIES = new Set(["kernel.auth:methods"]);
 
 export function capabilityCallKey(url: string): string | null {
     const match = CAPABILITY_SOURCE.exec(url);
@@ -28,6 +27,10 @@ export function capabilityCallKey(url: string): string | null {
 /** Closed, capability-free browser endpoints that official system Pages may bind to. */
 export function isCollectionSystemSource(url: string, method: string | undefined): boolean {
     return SYSTEM_SOURCES.get(url) === (method ?? "GET").toUpperCase();
+}
+
+export function isCollectionSystemQuery(contractId: string, capabilityId: string): boolean {
+    return SYSTEM_QUERIES.has(`${contractId}:${capabilityId}`);
 }
 
 export function parseRequirements(

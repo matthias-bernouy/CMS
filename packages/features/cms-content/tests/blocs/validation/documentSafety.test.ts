@@ -39,10 +39,22 @@ describe("Bloc document budgets", () => {
     });
 
     test("bounds CMS source bindings", () => {
-        const source = '<div cms-source="/.cms/call/example/items"></div>';
+        const source =
+            '<form cms-source="/.cms/call/example/items" cms-source-method="POST" cms-source-trigger="submit"><button>Save</button></form>';
         expect(() => fixed(source.repeat(BLOC_DOCUMENT_LIMITS.maxBindingSources + 1))).toThrow(
             "too many CMS source bindings",
         );
+    });
+
+    test("separates named queries from form submissions", () => {
+        expect(() => fixed('<section cms-source="/.cms/call/catalog/items"></section>')).toThrow(
+            "use cms-query for reads",
+        );
+        expect(() =>
+            fixed(
+                '<section cms-query="catalog:items as products"></section><section cms-query="catalog:featured as products"></section>',
+            ),
+        ).toThrow("must be unique");
     });
 
     test("bounds component runtime and retained source bundles", () => {

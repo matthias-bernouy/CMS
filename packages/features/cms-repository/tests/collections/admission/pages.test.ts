@@ -103,7 +103,7 @@ test("collection system Pages admit only the closed authentication bindings", ()
         kind: "composition",
         id: "atlas-authentication",
         label: "bloc.page.label",
-        lightdom: `<section cms-source="/.cms/auth/methods as methods" cms-source-method="GET">
+        lightdom: `<section cms-query="kernel.auth:methods as methods">
             <form cms-source="/.cms/auth/login as session" cms-source-method="POST" cms-source-trigger="submit">
                 <input type="email" name="email" required>
                 <input type="password" name="password" required>
@@ -120,8 +120,11 @@ test("collection system Pages admit only the closed authentication bindings", ()
     ).not.toThrow();
 
     for (const lightdom of [
-        authentication.lightdom.replace('cms-source-method="GET"', 'cms-source-method="POST"'),
-        authentication.lightdom.replace("/.cms/auth/methods", "/.cms/auth/secrets"),
+        authentication.lightdom.replace("kernel.auth:methods", "kernel.auth:secrets"),
+        authentication.lightdom.replace(
+            'cms-query="kernel.auth:methods as methods"',
+            'cms-query="kernel.auth:methods as methods" cms-query-input=\'{"id":{"from":"raw","value":"x"}}\'',
+        ),
     ]) {
         expect(() =>
             parseCollectionRelease({
@@ -129,7 +132,7 @@ test("collection system Pages admit only the closed authentication bindings", ()
                 blocs: [...source.blocs, { ...authentication, lightdom }],
                 pages: [login],
             }),
-        ).toThrow("canonical CMS capability");
+        ).toThrow();
     }
 });
 

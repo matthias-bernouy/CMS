@@ -35,8 +35,8 @@ describe("generated site Bloc source", () => {
                     kind: "bloc",
                     tag: "basic-container",
                     attributes: {
-                        "cms-source": "/api/items?query=#{query} as items",
-                        "cms-source-id": "items",
+                        "cms-query": "catalog:items as items",
+                        "cms-query-input": '{"query":{"from":"queryParam","name":"query"}}',
                     },
                     children: [
                         { kind: "slot", slotId: "title" },
@@ -45,9 +45,9 @@ describe("generated site Bloc source", () => {
                 },
             ],
         });
-        expect(bound["template.html"]).toContain('cms-source="/api/items?query=#{query} as items"');
+        expect(bound["template.html"]).toContain('cms-query="catalog:items as items"');
 
-        for (const attributes of [{ "cms-source": "https://example.com/items" }, { "cms-ready": "" }]) {
+        for (const attributes of [{ "cms-query": "https://example.com/items" }, { "cms-ready": "" }]) {
             expect(() =>
                 generateSiteBlocSourceBundle(base, {
                     ...base.draft,

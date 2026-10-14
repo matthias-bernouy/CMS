@@ -3,7 +3,11 @@ import { isValidCustomElementTag } from "cms-content/application/core/validation
 import { extractRefs } from "cms-content/blocs/core/markup/contentRefs";
 import { parseSource } from "cms-content/blocs/core/markup/bindings";
 import { managedNativeElementIssue } from "cms-content/blocs/core/markup/validation/managedNativeElements";
-import { validatePageContentMarkup } from "cms-content/blocs/core/markup/validation/nativeContent";
+import {
+    extractQueries,
+    validatePageContentMarkup,
+    type ContentQuery,
+} from "cms-content/blocs/core/markup/validation/nativeContent";
 import { pageBlocHostAttributesIssue } from "cms-content/blocs/core/markup/validation/contracts/hostAttributes";
 import { blocHostContractIssue } from "cms-content/blocs/core/markup/validation/contracts/pageSlotContracts";
 import type { PageBlocContract } from "cms-content/pages/interfaces/document";
@@ -17,6 +21,7 @@ export type UnresolvedPageDocumentBloc = {
 
 export type PageDocumentValidationResult = {
     readonly html: string;
+    readonly queries: readonly ContentQuery[];
     readonly sources: readonly PageDocumentSource[];
     readonly uses: readonly string[];
 };
@@ -56,6 +61,7 @@ export function validatePageDocument(
 
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = normalized;
+    const queries = extractQueries(document);
     validateRoots(document, known, new Set(unresolved.keys()));
     validateHosts(document, known, unresolved);
     validateManagedNative(normalized, blocs);
@@ -71,7 +77,7 @@ export function validatePageDocument(
               }
             : null;
     }).filter((source): source is PageDocumentSource => source !== null);
-    return { html: document.body.innerHTML, sources, uses };
+    return { html: document.body.innerHTML, queries, sources, uses };
 }
 
 function validateHosts(

@@ -22,6 +22,7 @@ export type BlocDocumentContract = PageDocumentBlocContract & {
 export type BlocDocumentValidationResult = {
     readonly defaultContent?: string;
     readonly fixedContent?: string;
+    readonly queries: BlocContentMarkupResult["queries"];
     readonly sources: BlocContentMarkupResult["sources"];
 };
 
@@ -57,6 +58,7 @@ export function validateBlocDocument(
     return {
         ...(defaultContent === undefined ? {} : { defaultContent }),
         ...(fixed === undefined ? {} : { fixedContent: fixed.html }),
+        queries: fixed?.queries ?? [],
         sources: fixed?.sources ?? [],
     };
 }

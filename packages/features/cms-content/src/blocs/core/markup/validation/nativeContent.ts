@@ -4,7 +4,7 @@ import { ContentValidationError } from "cms-content/application/core/validation/
 import { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenStoredHtml";
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { storedMarkupSecurityIssue } from "cms-content/blocs/core/markup/security/storedMarkupIssue";
-import { parseSource } from "cms-content/blocs/core/markup/bindings";
+import { parseQuery, parseSource } from "cms-content/blocs/core/markup/bindings";
 import {
     assertBlocBindingSourceBudget,
     assertBlocDomBudget,
@@ -13,7 +13,14 @@ import {
 
 export type BlocContentMarkupResult = {
     readonly html: string;
+    readonly queries: readonly ContentQuery[];
     readonly sources: readonly { readonly method?: string; readonly url: string }[];
+};
+
+export type ContentQuery = {
+    readonly contractId: string;
+    readonly capabilityId: string;
+    readonly name: string;
 };
 
 export function validatePageContentMarkup(value: string): string {
@@ -64,6 +71,7 @@ export function validateBlocContentMarkup(
     );
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = html;
+    const queries = extractQueries(document);
     const sources = Array.from(document.querySelectorAll("[cms-source]"), (element) => {
         const source = parseSource(element.getAttribute("cms-source") ?? "");
         return source
@@ -75,8 +83,22 @@ export function validateBlocContentMarkup(
               }
             : null;
     }).filter((source): source is NonNullable<typeof source> => source !== null);
-    assertBlocBindingSourceBudget(options.field, sources.length);
-    return { html, sources };
+    assertBlocBindingSourceBudget(options.field, sources.length + queries.length);
+    return { html, queries, sources };
+}
+
+export function extractQueries(document: Document): readonly ContentQuery[] {
+    const queries = Array.from(document.querySelectorAll("[cms-query]"), (element) =>
+        parseQuery(element.getAttribute("cms-query") ?? ""),
+    ).filter((query): query is ContentQuery => query !== null);
+    const names = new Set<string>();
+    for (const query of queries) {
+        if (names.has(query.name)) {
+            throw new ContentValidationError("content", `CMS query name ${JSON.stringify(query.name)} must be unique`);
+        }
+        names.add(query.name);
+    }
+    return queries;
 }
 
 function validateNativeMarkup(

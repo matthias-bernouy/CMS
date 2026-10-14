@@ -116,8 +116,27 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
 
 export function nativeBindingElementIssue(tag: string, attributes: Readonly<Record<string, string>>): string | null {
     const query = attributes[CMS_BINDING_ATTRIBUTES.query];
+    const source = attributes[CMS_BINDING_ATTRIBUTES.source];
     if (query !== undefined && tag === "form") {
         return "CMS queries cannot be declared on forms";
+    }
+    if (query !== undefined && source !== undefined) {
+        return "CMS query and CMS source cannot coexist on the same element";
+    }
+    if (source !== undefined && tag !== "form") {
+        return "CMS sources are reserved for form submissions; use cms-query for reads";
+    }
+    if (query !== undefined) {
+        const binding = parseQuery(query);
+        if (
+            binding?.contractId.startsWith("kernel.") &&
+            `${binding.contractId}:${binding.capabilityId}` !== "kernel.auth:methods"
+        ) {
+            return "CMS query targets an unknown Kernel capability";
+        }
+        if (binding?.contractId === "kernel.auth" && attributes[CMS_BINDING_ATTRIBUTES.queryInput] !== undefined) {
+            return "Kernel authentication methods query does not accept input";
+        }
     }
     for (const name of [CMS_BINDING_ATTRIBUTES.queryInput, CMS_BINDING_ATTRIBUTES.queryRefresh]) {
         if (attributes[name] !== undefined && query === undefined) {

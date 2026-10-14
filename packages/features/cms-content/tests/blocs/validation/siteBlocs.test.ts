@@ -108,8 +108,8 @@ describe("site bloc validation", () => {
                         kind: "bloc",
                         tag: "site-results",
                         attributes: {
-                            "cms-source": "/.cms/call/catalog/search?q=#{query} as results",
-                            "cms-source-id": "catalogResults",
+                            "cms-query": "catalog:search as results",
+                            "cms-query-input": '{"query":{"from":"queryParam","name":"query"}}',
                         },
                         children: [
                             {
@@ -129,12 +129,12 @@ describe("site bloc validation", () => {
             expect.arrayContaining([
                 expect.objectContaining({
                     attributes: expect.objectContaining({
-                        "cms-source": "/.cms/call/catalog/search?q=#{query} as results",
+                        "cms-query": "catalog:search as results",
                     }),
                 }),
             ]),
         );
-        for (const attributes of [{ "cms-source": "https://example.com/private" }, { "cms-ready": "" }]) {
+        for (const attributes of [{ "cms-query": "https://example.com/private" }, { "cms-ready": "" }]) {
             expect(() =>
                 validateSiteBlocSnapshot(
                     siteBlocSnapshot({

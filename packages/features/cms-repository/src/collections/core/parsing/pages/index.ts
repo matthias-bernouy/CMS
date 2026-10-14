@@ -3,7 +3,12 @@ import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, record, string, unique } from "../../values";
-import { capabilityCallKey, isCollectionSystemSource, parseRequirements } from "../requirements";
+import {
+    capabilityCallKey,
+    isCollectionSystemQuery,
+    isCollectionSystemSource,
+    parseRequirements,
+} from "../requirements";
 import { parseDefaultPath } from "./document";
 import { validatePageDocument, type PageDocumentValidationResult } from "@bernouy/cms-content/page-document";
 
@@ -37,7 +42,7 @@ export function parseCollectionPages(
         } catch (error) {
             invalid(error instanceof Error ? error.message : "invalid Page document", `${path}.document.html`);
         }
-        const { html, sources, uses } = validated!;
+        const { html, queries, sources, uses } = validated!;
         if (source.uses !== undefined) {
             const declared = array(source.uses, limits.maxBlocs, `${path}.uses`).map((item, itemIndex) =>
                 string(item, 128, `${path}.uses[${itemIndex}]`),
@@ -48,8 +53,8 @@ export function parseCollectionPages(
             }
         }
         const requires = parseRequirements(source.requires, `${path}.requires`, limits);
-        const calls = new Set(
-            sources
+        const calls = new Set([
+            ...sources
                 .map(({ method, url }) => {
                     if (isCollectionSystemSource(url, method)) {
                         return null;
@@ -64,7 +69,10 @@ export function parseCollectionPages(
                     return call;
                 })
                 .filter((call): call is string => call !== null),
-        );
+            ...queries
+                .filter(({ contractId, capabilityId }) => !isCollectionSystemQuery(contractId, capabilityId))
+                .map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
+        ]);
         const declaredCalls = new Set(requires.map((item) => `${item.contractId}/${item.capabilityId}`));
         if (declaredCalls.size !== calls.size || [...calls].some((call) => !declaredCalls.has(call))) {
             invalid("must exactly match the capabilities called by Page HTML", `${path}.requires`);

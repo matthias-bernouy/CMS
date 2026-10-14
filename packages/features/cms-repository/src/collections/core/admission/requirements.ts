@@ -4,6 +4,8 @@ import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import type { CollectionBloc } from "../../interfaces/CollectionBloc";
 import type { CollectionCapabilityRequirement } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError } from "../errors";
+import { parseQuery } from "@bernouy/cms-content/bindings";
+import { parseHTML } from "linkedom";
 
 /** Each resource and its used blocs need joint witnesses; unrelated resources stay independent. */
 export async function verifyCollectionRequirements(
@@ -12,23 +14,35 @@ export async function verifyCollectionRequirements(
 ): Promise<void> {
     const blocs = new Map(release.blocs.map((bloc) => [bloc.id, bloc]));
     for (const bloc of release.blocs) {
-        const closure = usedBlocs(bloc, blocs).flatMap((item) => item.requires);
-        await verifyRequirements(closure, `$.blocs.${bloc.id}.requires`, "this bloc and its used blocs", catalogue);
+        const used = usedBlocs(bloc, blocs);
+        const closure = used.flatMap((item) => item.requires);
+        await verifyRequirements(
+            closure,
+            queryTargets(used.map((item) => item.lightdom ?? "")),
+            `$.blocs.${bloc.id}.requires`,
+            "this bloc and its used blocs",
+            catalogue,
+        );
     }
     for (const page of release.pages ?? []) {
-        const closure = [
-            ...page.requires,
-            ...page.uses.flatMap((id) => {
-                const bloc = blocs.get(id);
-                return bloc ? usedBlocs(bloc, blocs).flatMap((item) => item.requires) : [];
-            }),
-        ];
-        await verifyRequirements(closure, `$.pages.${page.id}.requires`, "this page and its used blocs", catalogue);
+        const used = page.uses.flatMap((id) => {
+            const bloc = blocs.get(id);
+            return bloc ? usedBlocs(bloc, blocs) : [];
+        });
+        const closure = [...page.requires, ...used.flatMap((item) => item.requires)];
+        await verifyRequirements(
+            closure,
+            queryTargets([page.document.html, ...used.map((item) => item.lightdom ?? "")]),
+            `$.pages.${page.id}.requires`,
+            "this page and its used blocs",
+            catalogue,
+        );
     }
 }
 
 async function verifyRequirements(
     closure: readonly CollectionCapabilityRequirement[],
+    queries: ReadonlySet<string>,
     path: string,
     owner: string,
     catalogue?: ReleaseCatalogue,
@@ -44,7 +58,12 @@ async function verifyRequirements(
                 requirements.every(
                     (requirement) =>
                         satisfiesVersionRange(contract.version, requirement.versionRange) &&
-                        contract.capabilities.some((capability) => capability.id === requirement.capabilityId),
+                        contract.capabilities.some(
+                            (capability) =>
+                                capability.id === requirement.capabilityId &&
+                                (!queries.has(`${contractId}/${requirement.capabilityId}`) ||
+                                    capability.behavior.effect === "query"),
+                        ),
                 )
             );
         });
@@ -56,6 +75,21 @@ async function verifyRequirements(
             );
         }
     }
+}
+
+function queryTargets(markups: readonly string[]): ReadonlySet<string> {
+    const targets = new Set<string>();
+    for (const html of markups) {
+        const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
+        document.body.innerHTML = html;
+        for (const element of Array.from(document.querySelectorAll("[cms-query]"))) {
+            const query = parseQuery(element.getAttribute("cms-query") ?? "");
+            if (query && !query.contractId.startsWith("kernel.")) {
+                targets.add(`${query.contractId}/${query.capabilityId}`);
+            }
+        }
+    }
+    return targets;
 }
 
 function usedBlocs(root: CollectionBloc, blocs: ReadonlyMap<string, CollectionBloc>): CollectionBloc[] {

