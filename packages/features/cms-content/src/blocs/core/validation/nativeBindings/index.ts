@@ -172,10 +172,13 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     if (
         sync !== undefined &&
         query === undefined &&
-        !["input", "select", "textarea"].includes(tag) &&
+        !["form", "input", "select", "textarea"].includes(tag) &&
         !tag.includes("-")
     ) {
         return "CMS sync requires a query or form control";
+    }
+    if (sync !== undefined && tag === "form" && parseSyncTarget(sync)?.scope === "param") {
+        return "forms cannot publish structured state to URL parameters";
     }
     for (const name of [CMS_BINDING_ATTRIBUTES.queryInput, CMS_BINDING_ATTRIBUTES.queryRefresh]) {
         if (attributes[name] !== undefined && query === undefined) {

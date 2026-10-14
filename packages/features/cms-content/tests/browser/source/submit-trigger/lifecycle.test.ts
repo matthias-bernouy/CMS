@@ -1,11 +1,45 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { PARAMS_CHANGE_EVENT } from "../../../../src/browser/binding/params";
 import { BindingRuntime } from "../../../../src/browser/binding/runtime/BindingRuntime";
+import { readSyncValue, writeSyncValue } from "../../../../src/browser/binding/params/SyncState";
 import { el, res, resetDom, settle, text, waitFor } from "../../support/testUtils";
 
 afterEach(resetDom);
 
 describe("Source — submit trigger lifecycle", () => {
+    test("publishes form input, dirty state and result through cms-sync", async () => {
+        const target = { scope: "page", key: "ulvia-official-profile-form" } as const;
+        globalThis.fetch = (async () =>
+            new Response(JSON.stringify({ id: "profile-1" }), {
+                status: 201,
+                headers: { "content-type": "application/json" },
+            })) as typeof fetch;
+        const root = el(`
+            <form cms-source="/api/profile as result" cms-source-trigger="submit" cms-source-method="POST"
+                cms-sync="@page:ulvia-official-profile-form">
+                <input name="displayName" value="Ada">
+            </form>
+        `) as HTMLFormElement;
+        document.body.append(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+        const input = root.querySelector<HTMLInputElement>("input")!;
+
+        input.value = "Grace";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(readSyncValue(target)).toMatchObject({ dirty: true, input: { displayName: "Grace" } });
+
+        root.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        await waitFor(() => (readSyncValue(target) as { loaded?: boolean } | undefined)?.loaded === true);
+        expect(readSyncValue(target)).toMatchObject({
+            dirty: false,
+            input: { displayName: "Grace" },
+            data: { ok: true, status: 201, body: { id: "profile-1" } },
+        });
+        runtime.stop();
+        writeSyncValue(target, undefined);
+    });
+
     test("change-triggered form sources submit after a control change, not on startup", async () => {
         const requests: RequestInit[] = [];
         globalThis.fetch = (async (_url: string, init?: RequestInit) => {

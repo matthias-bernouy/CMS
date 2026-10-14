@@ -36,6 +36,8 @@ type IdempotencyAttempt = { fingerprint: string; key: string };
 const idempotencyAttempts = new WeakMap<HTMLFormElement, IdempotencyAttempt>();
 
 export class SourceSubmission {
+    private latestInput: SerializedForm["data"] | undefined;
+
     constructor(
         private readonly element: Element,
         private readonly filters: FilterMap,
@@ -53,6 +55,7 @@ export class SourceSubmission {
                 ? undefined
                 : resolveSourceBodyFields(this.element.getAttribute(SOURCE_BODY_ATTR), this.element.ownerDocument);
         const serialized = serializeForm(form, { url: this.submitUrl(url), method, formData, bodyFields });
+        this.latestInput = serialized.data;
         return {
             form,
             method,
@@ -61,6 +64,29 @@ export class SourceSubmission {
             serialized,
             ...this.idempotency(form, serialized),
         };
+    }
+
+    get input(): SerializedForm["data"] | undefined {
+        return this.latestInput;
+    }
+
+    captureInput(url: string): void {
+        const form = ownerForm(this.element, this.element.ownerDocument);
+        if (!form) {
+            return;
+        }
+        const method = this.sourceMethod();
+        const formData = collectFormData(form);
+        const bodyFields =
+            method === "GET" || method === "HEAD"
+                ? undefined
+                : resolveSourceBodyFields(this.element.getAttribute(SOURCE_BODY_ATTR), this.element.ownerDocument);
+        this.latestInput = serializeForm(form, {
+            url: this.submitUrl(url),
+            method,
+            formData,
+            bodyFields,
+        }).data;
     }
 
     async send(captured: CapturedSubmission, url: string, signal: AbortSignal): Promise<FormSubmitResult> {

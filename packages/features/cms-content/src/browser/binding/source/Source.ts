@@ -26,6 +26,7 @@ import { shareUnchanged } from "./runtime/refresh/reconcile";
 import { connectSourceReload } from "./runtime/refresh/registry";
 import { acknowledgeForm } from "./runtime/submission/acknowledgement";
 import { SubmissionTransaction } from "./runtime/submission/transaction";
+import { parseSyncAttribute, writeSyncValue } from "../params/SyncState";
 
 export { clearRuntimeStamps } from "./runtime/runtimeStamps";
 export { RELOAD_EVENT } from "./sourceEvents";
@@ -59,6 +60,7 @@ export class Source {
     };
     private readonly formOwned: boolean;
     private readonly submission: SourceSubmission | null;
+    private syncDirty = false;
 
     private readonly onReload = () => {
         if (this.el.isConnected && !this.pendingRefresh) {
@@ -98,6 +100,17 @@ export class Source {
                 this.onChange();
             }
         });
+    };
+    private readonly onFormInput = () => {
+        if (!this.formOwned) {
+            return;
+        }
+        this.syncDirty = true;
+        const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
+        if (spec.url) {
+            this.submission?.captureInput(resolveReactiveUrl(spec.url, this.el.ownerDocument));
+        }
+        this.publishFormSync();
     };
 
     constructor(
@@ -162,6 +175,9 @@ export class Source {
             onSubmit: this.onSubmit,
             onChange: this.onChange,
         });
+        if (this.formOwned) {
+            this.el.addEventListener("input", this.onFormInput);
+        }
         if (supplied && !this.options.sourceStateForce) {
             this.acceptData(supplied.value);
         } else if (sourceTrigger(this.el) === "auto" || this.options.sourceStateForce) {
@@ -189,6 +205,7 @@ export class Source {
         this.abort = null;
         this.stopListeners?.();
         this.stopListeners = null;
+        this.el.removeEventListener("input", this.onFormInput);
     }
 
     renderTemplate(): void {
@@ -274,6 +291,9 @@ export class Source {
                 }
                 this.abort = null;
                 rememberSourceData(this.el, result);
+                if (result.ok) {
+                    this.syncDirty = false;
+                }
                 this.presenter.result(spec.alias, result);
                 this.afterRender();
                 this.submission!.complete(result, spec.alias);
@@ -349,5 +369,22 @@ export class Source {
     private afterRender(): void {
         this.options.afterSourceRender?.(this.el);
         publishSourceObservation(this.el, this.status);
+        this.publishFormSync();
+    }
+
+    private publishFormSync(): void {
+        const target = this.formOwned ? parseSyncAttribute(this.el) : null;
+        if (!target) {
+            return;
+        }
+        try {
+            writeSyncValue(
+                target,
+                { ...this.status, input: this.submission?.input, dirty: this.syncDirty },
+                this.el.ownerDocument,
+            );
+        } catch (error) {
+            console.warn("cms-sync could not publish form state", error);
+        }
     }
 }
