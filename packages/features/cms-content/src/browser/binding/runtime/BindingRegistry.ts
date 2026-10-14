@@ -1,7 +1,8 @@
-import { BIND_STOP_ATTR, BINDING_CORE_TAG, SOURCE_ATTR, type SourceState } from "../core/attrs";
+import { BIND_STOP_ATTR, BINDING_CORE_TAG, QUERY_ATTR, SOURCE_ATTR, type SourceState } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
 import { PageStateSync } from "../params/PageStateSync";
 import { ParamSync } from "../params/ParamSync";
+import { Query } from "./query/Query";
 import { Source } from "../source/Source";
 import { sourceTrigger } from "../source/sourceEvents";
 import type { SourceStatusValue } from "../source/presentation/sourceStatus";
@@ -11,6 +12,7 @@ import { sourceStatusScope } from "./sourceStatusScope";
 import { ReadRequests } from "../source/runtime/readRequests";
 
 export class BindingRegistry {
+    private readonly queries = new Map<Element, Query>();
     private readonly sources = new Map<Element, Source>();
     private readonly sourceStatuses = new Map<Element, SourceStatusValue>();
     private readonly paramSyncs = new Map<Element, ParamSync>();
@@ -27,10 +29,14 @@ export class BindingRegistry {
     }
 
     get sourceCount(): number {
-        return this.sources.size;
+        return this.queries.size + this.sources.size;
     }
 
-    teardown(hooks?: { beforeSourceDispose?: (source: Source) => void }): void {
+    teardown(hooks?: { beforeSourceDispose?: (source: Source | Query) => void }): void {
+        for (const query of this.queries.values()) {
+            hooks?.beforeSourceDispose?.(query);
+            query.dispose();
+        }
         for (const source of this.sources.values()) {
             hooks?.beforeSourceDispose?.(source);
             source.dispose();
@@ -41,10 +47,45 @@ export class BindingRegistry {
         for (const sync of this.pageStateSyncs.values()) {
             sync.dispose();
         }
+        this.queries.clear();
         this.sources.clear();
         this.sourceStatuses.clear();
         this.paramSyncs.clear();
         this.pageStateSyncs.clear();
+    }
+
+    reconcileQuery(element: Element): void {
+        if (!element.hasAttribute(QUERY_ATTR)) {
+            this.unregisterQuery(element);
+            return;
+        }
+        if (!this.queries.has(element)) {
+            this.registerQuery(element);
+        }
+    }
+
+    registerQuery(element: Element): void {
+        if (!element.isConnected || this.queries.has(element)) {
+            return;
+        }
+        const query = new Query(element, this.filters, {
+            ...this.options,
+            afterRender: this.afterSourceRender,
+        });
+        this.queries.set(element, query);
+        query.start();
+    }
+
+    unregisterQuery(element: Element): void {
+        const query = this.queries.get(element);
+        if (!query) {
+            return;
+        }
+        if (!element.isConnected) {
+            query.renderTemplate();
+        }
+        query.dispose();
+        this.queries.delete(element);
     }
 
     reconcileSource(element: Element): void {
@@ -127,6 +168,11 @@ export class BindingRegistry {
     }
 
     pruneDetached(): void {
+        for (const query of this.queries.keys()) {
+            if (!query.isConnected) {
+                this.unregisterQuery(query);
+            }
+        }
         for (const source of this.sources.keys()) {
             if (!source.isConnected) {
                 this.unregisterSource(source);

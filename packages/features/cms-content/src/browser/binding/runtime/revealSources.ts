@@ -1,4 +1,4 @@
-import { BIND_STOP_ATTR, READY_ATTR, SOURCE_ATTR } from "../core/attrs";
+import { BIND_STOP_ATTR, QUERY_ATTR, READY_ATTR, SOURCE_ATTR } from "../core/attrs";
 
 export function revealSources(root: Node): void {
     if (root.nodeType !== Node.ELEMENT_NODE) {
@@ -6,10 +6,10 @@ export function revealSources(root: Node): void {
     }
 
     const el = root as Element;
-    if (el.hasAttribute(SOURCE_ATTR)) {
+    if (el.hasAttribute(SOURCE_ATTR) || el.hasAttribute(QUERY_ATTR)) {
         el.setAttribute(READY_ATTR, "");
     }
-    el.querySelectorAll(`[${SOURCE_ATTR}]`).forEach((source) => source.setAttribute(READY_ATTR, ""));
+    el.querySelectorAll(`[${SOURCE_ATTR}],[${QUERY_ATTR}]`).forEach((source) => source.setAttribute(READY_ATTR, ""));
 }
 
 export function revealInertSources(root: Node): void {

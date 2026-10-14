@@ -1,7 +1,7 @@
 /**
  * `<cms-binding-core>` — the declarative activation root for the data-binding
  * runtime. Wrap any region of HTML in it; on connect it runs a `BindingRuntime`
- * over its own subtree (discovering `cms-source` elements, expanding
+ * over its own subtree (discovering `cms-query` and `cms-source` elements, expanding
  * `cms-repeat`, interpolating `{{ }}`), and on disconnect it tears that runtime
  * down. The custom-element lifecycle replaces the old imperative bootstrap —
  * no head script, no DOMContentLoaded juggling.
@@ -20,6 +20,9 @@ import {
     BINDING_CORE_TAG,
     BINDING_DISABLED_ATTR,
     BIND_STOP_ATTR,
+    QUERY_ATTR,
+    QUERY_INPUT_ATTR,
+    QUERY_REFRESH_ATTR,
     isSourceState,
     SOURCE_STATE_FORCE_ATTR,
     type SourceState,
@@ -33,6 +36,9 @@ export {
     BINDING_DISABLED_ATTR,
     BIND_STOP_ATTR,
     PAGE_STATE_ATTR,
+    QUERY_ATTR,
+    QUERY_INPUT_ATTR,
+    QUERY_REFRESH_ATTR,
     READY_ATTR,
     SOURCE_BODY_ATTR,
     SOURCE_ID_ATTR,

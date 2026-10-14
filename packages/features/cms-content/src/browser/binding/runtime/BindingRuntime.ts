@@ -1,10 +1,11 @@
 /** Discovers binding features and owns their lifecycle for one root. */
 
-import { SOURCE_ATTR, type SourceState } from "../core/attrs";
+import { QUERY_ATTR, SOURCE_ATTR, type SourceState } from "../core/attrs";
 import type { FilterMap } from "../core/interpolate";
 import { PAGE_STATE_ATTR } from "../params/PageStateSync";
 import { PARAM_SYNC_ATTR } from "../params/ParamSync";
 import type { Source } from "../source/Source";
+import type { Query } from "./query/Query";
 import { reconcileAttribute, registerWithin, unregisterWithin } from "./BindingDiscovery";
 import { BindingRegistry } from "./BindingRegistry";
 import { FixedRangeRuntime } from "./FixedRangeRuntime";
@@ -77,13 +78,16 @@ export class BindingRuntime {
         });
         this.observer.observe(this.root, {
             attributes: true,
-            attributeFilter: [SOURCE_ATTR, PARAM_SYNC_ATTR, PAGE_STATE_ATTR],
+            attributeFilter: [QUERY_ATTR, SOURCE_ATTR, PARAM_SYNC_ATTR, PAGE_STATE_ATTR],
             childList: true,
             subtree: true,
         });
     }
 
-    private teardown(hooks?: { beforeSourceDispose?: (source: Source) => void; afterDispose?: () => void }): void {
+    private teardown(hooks?: {
+        beforeSourceDispose?: (source: Source | Query) => void;
+        afterDispose?: () => void;
+    }): void {
         if (this.stopped) {
             return;
         }

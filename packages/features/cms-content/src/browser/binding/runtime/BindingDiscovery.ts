@@ -1,16 +1,18 @@
 import { PAGE_STATE_ATTR } from "../params/PageStateSync";
 import { PARAM_SYNC_ATTR } from "../params/ParamSync";
-import { SOURCE_ATTR } from "../core/attrs";
+import { QUERY_ATTR, SOURCE_ATTR } from "../core/attrs";
 import type { BindingRegistry } from "./BindingRegistry";
 import { eachMatching } from "./discovery";
 
 export function registerWithin(node: Node, root: Element, registry: BindingRegistry): void {
+    eachMatching(node, QUERY_ATTR, root, (element) => registry.registerQuery(element));
     eachMatching(node, SOURCE_ATTR, root, (element) => registry.registerSource(element));
     eachMatching(node, PARAM_SYNC_ATTR, root, (element) => registry.registerParamSync(element));
     eachMatching(node, PAGE_STATE_ATTR, root, (element) => registry.registerPageStateSync(element));
 }
 
 export function unregisterWithin(node: Node, root: Element, registry: BindingRegistry): void {
+    eachMatching(node, QUERY_ATTR, root, (element) => registry.unregisterQuery(element));
     eachMatching(node, SOURCE_ATTR, root, (element) => registry.unregisterSource(element));
     eachMatching(node, PARAM_SYNC_ATTR, root, (element) => registry.unregisterParamSync(element));
     eachMatching(node, PAGE_STATE_ATTR, root, (element) => registry.unregisterPageStateSync(element));
@@ -25,7 +27,9 @@ export function reconcileAttribute(target: Node, attribute: string | null, regis
         return;
     }
 
-    if (attribute === SOURCE_ATTR) {
+    if (attribute === QUERY_ATTR) {
+        registry.reconcileQuery(element);
+    } else if (attribute === SOURCE_ATTR) {
         registry.reconcileSource(element);
     } else if (attribute === PARAM_SYNC_ATTR) {
         if (element.hasAttribute(PARAM_SYNC_ATTR)) {
