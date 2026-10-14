@@ -5,14 +5,6 @@ import { serializeTypedForm } from "./typed/serialize";
 
 const BODY_METHODS = new Set<FormSubmitMethod>(["POST", "PUT", "PATCH", "DELETE"]);
 
-export function normalizeFormMethod(value: string | null | undefined, fallback: FormSubmitMethod): FormSubmitMethod {
-    const method = (value ?? "").trim().toUpperCase();
-    if (method === "GET" || method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE") {
-        return method;
-    }
-    return fallback;
-}
-
 export function serializeForm(
     form: HTMLFormElement,
     options: {
