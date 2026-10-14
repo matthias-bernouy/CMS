@@ -173,6 +173,12 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     if (sync !== undefined && tag === "form" && parseSyncTarget(sync)?.scope === "param") {
         return "forms cannot publish structured state to URL parameters";
     }
+    if (sync !== undefined && tag === "input" && attributes.type?.toLowerCase() === "file") {
+        return "file inputs belong to form submission and cannot synchronize browser state";
+    }
+    if (sync !== undefined && tag === "select" && attributes.multiple !== undefined) {
+        return "multiple selects require an explicit collection value contract and cannot synchronize browser state";
+    }
     for (const name of [CMS_BINDING_ATTRIBUTES.queryInput, CMS_BINDING_ATTRIBUTES.queryRefresh]) {
         if (attributes[name] !== undefined && query === undefined) {
             return `CMS query attribute "${name}" requires cms-query`;

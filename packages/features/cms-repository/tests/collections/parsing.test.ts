@@ -449,7 +449,7 @@ describe("collection release parsing", () => {
         ).toThrow(/generation/);
     });
 
-    test("rejects binary state and structured URL parameter contracts", () => {
+    test("rejects binary state and non-string URL parameter contracts", () => {
         for (const state of [
             { id: "file", scope: "page", schema: { type: "binary", maxBytes: 10 } },
             {
@@ -457,6 +457,8 @@ describe("collection release parsing", () => {
                 scope: "param",
                 schema: { type: "object", properties: {}, required: [] },
             },
+            { id: "page", scope: "param", schema: { type: "integer", minimum: 1 } },
+            { id: "enabled", scope: "param", schema: { type: "boolean" } },
         ]) {
             expect(() => parseCollectionRelease({ ...collectionDocument(), states: [state] })).toThrow();
         }
@@ -494,6 +496,49 @@ describe("collection release parsing", () => {
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
             '<atlas-panel cms-query="@page:atlas-undeclared as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></atlas-panel>';
         expect(() => parseCollectionRelease(source)).toThrow("declared locally or explicitly imported");
+    });
+
+    test("validates known cms-sync producer types against declared state contracts", () => {
+        const state = (schema: Record<string, unknown>, markup: string) => {
+            const source = collectionDocument();
+            source.states = [{ id: "shared", scope: "page", schema }];
+            const producer = (source.blocs as Record<string, unknown>[])[1]!;
+            producer.lightdom = markup;
+            delete producer.defaultContent;
+            producer.slots = {};
+            producer.uses = [];
+            producer.requires = markup.includes("cms-query") || markup.includes("cms-source")
+                ? [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }]
+                : [];
+            return source;
+        };
+
+        expect(() =>
+            parseCollectionRelease(state({ type: "string", maxLength: 64 }, '<input cms-sync="@page:atlas-shared">')),
+        ).not.toThrow();
+        expect(() =>
+            parseCollectionRelease(state({ type: "boolean" }, '<input type="checkbox" cms-sync="@page:atlas-shared">')),
+        ).not.toThrow();
+        expect(() =>
+            parseCollectionRelease(
+                state(
+                    { type: "object", properties: {}, required: [] },
+                    '<section cms-query="catalog:items.list as items" cms-sync="@page:atlas-shared"></section>',
+                ),
+            ),
+        ).not.toThrow();
+
+        expect(() =>
+            parseCollectionRelease(state({ type: "boolean" }, '<input cms-sync="@page:atlas-shared">')),
+        ).toThrow("requires a nonnullable string state");
+        expect(() =>
+            parseCollectionRelease(
+                state(
+                    { type: "array", items: { type: "string", maxLength: 64 }, maxItems: 10 },
+                    '<form cms-source="/.cms/call/catalog/items.list" cms-source-method="POST" cms-source-trigger="submit" cms-sync="@page:atlas-shared"></form>',
+                ),
+            ),
+        ).toThrow("requires a nonnullable object state");
     });
 
     test("validates reusable translation keys and locale fallback", () => {

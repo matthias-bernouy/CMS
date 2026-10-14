@@ -71,7 +71,7 @@ The four scopes have distinct lifetimes:
 
 | Scope | Lifetime and storage |
 |---|---|
-| `@param:key` | Current URL query parameter; scalar values only. |
+| `@param:key` | Current URL query parameter; nonnullable strings only. |
 | `@page:key` | Current document lifetime; structured JSON values are allowed. |
 | `@session:key` | Browser tab session storage; structured, versioned JSON. |
 | `@persistent:key` | Browser local storage; structured, versioned JSON. |
@@ -80,6 +80,8 @@ Native `input`, `select`, and `textarea` elements synchronize their live value
 in both directions. Checkboxes publish booleans. A form-associated custom
 element uses the same `value` contract after its definition is registered.
 File inputs are submitted by their form and are not state controls.
+Native multiple selects also stay form-owned until the binding contract defines
+explicit array semantics.
 
 A remote query can publish its complete lifecycle snapshot:
 

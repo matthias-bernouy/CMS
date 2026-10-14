@@ -41,7 +41,7 @@ export function validateCollectionStateBindings(
         for (const element of Array.from(document.body.querySelectorAll("[cms-sync]"))) {
             const target = parseSyncTarget(element.getAttribute("cms-sync"));
             if (target) {
-                assertOwnedWrite(target, own, path);
+                assertOwnedWrite(target, own, element, path);
             }
         }
         for (const element of Array.from(document.body.querySelectorAll("[cms-query]"))) {
@@ -86,7 +86,12 @@ function validateInputReads(
     }
 }
 
-function assertOwnedWrite(target: CmsSyncTarget, own: ReadonlyMap<string, CollectionState>, path: string): void {
+function assertOwnedWrite(
+    target: CmsSyncTarget,
+    own: ReadonlyMap<string, CollectionState>,
+    element: Element,
+    path: string,
+): void {
     const state = own.get(target.key);
     if (!state) {
         invalid(`cms-sync may write only a state declared by this collection: ${target.key}`, path);
@@ -94,6 +99,32 @@ function assertOwnedWrite(target: CmsSyncTarget, own: ReadonlyMap<string, Collec
     if (state.scope !== target.scope) {
         invalid(`cms-sync scope must match declared ${state.scope} state ${target.key}`, path);
     }
+    const producerType = synchronizedProducerType(element, target.scope);
+    if (
+        producerType &&
+        (state.schema.type !== producerType || ("nullable" in state.schema && state.schema.nullable === true))
+    ) {
+        invalid(`cms-sync producer requires a nonnullable ${producerType} state: ${target.key}`, path);
+    }
+}
+
+function synchronizedProducerType(
+    element: Element,
+    scope: CmsSyncTarget["scope"],
+): "boolean" | "object" | "string" | null {
+    if (scope === "param") {
+        return "string";
+    }
+    if (element.hasAttribute("cms-query") || element.localName === "form") {
+        return "object";
+    }
+    if (element.localName === "input" && element.getAttribute("type")?.toLowerCase() === "checkbox") {
+        return "boolean";
+    }
+    if (["input", "select", "textarea"].includes(element.localName)) {
+        return "string";
+    }
+    return null;
 }
 
 function assertReadable(

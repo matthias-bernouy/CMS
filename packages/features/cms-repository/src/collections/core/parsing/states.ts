@@ -52,11 +52,8 @@ function assertBrowserStateSchema(schema: UlviaSchema, scope: CollectionStateSco
         invalid("browser state cannot contain binary values", path);
     }
     if (scope === "param") {
-        if (
-            ("nullable" in schema && schema.nullable) ||
-            !["string", "number", "integer", "boolean"].includes(schema.type)
-        ) {
-            invalid("URL parameter state must use a nonnullable scalar schema", path);
+        if (("nullable" in schema && schema.nullable) || schema.type !== "string") {
+            invalid("URL parameter state must use a nonnullable string schema", path);
         }
         return;
     }

@@ -43,4 +43,19 @@ describe("cms-sync validation", () => {
             }),
         ).toContain("cannot publish structured state");
     });
+
+    test("keeps binary and multi-value controls in their owning forms", () => {
+        expect(
+            nativeBindingElementIssue("input", {
+                [CMS_BINDING_ATTRIBUTES.sync]: "@page:ulvia-official-files",
+                type: "file",
+            }),
+        ).toContain("form submission");
+        expect(
+            nativeBindingElementIssue("select", {
+                [CMS_BINDING_ATTRIBUTES.sync]: "@page:ulvia-official-options",
+                multiple: "",
+            }),
+        ).toContain("explicit collection value contract");
+    });
 });
