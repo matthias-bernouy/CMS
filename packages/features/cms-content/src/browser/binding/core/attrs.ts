@@ -1,5 +1,8 @@
 export const BINDING_CORE_TAG = "cms-binding-core";
 export const BINDING_DISABLED_ATTR = "cms-binding-disabled";
+export const QUERY_ATTR = "cms-query";
+export const QUERY_INPUT_ATTR = "cms-query-input";
+export const QUERY_REFRESH_ATTR = "cms-query-refresh";
 export const SOURCE_STATE_FORCE_ATTR = "cms-source-state-force";
 export const SOURCE_ATTR = "cms-source";
 export const SOURCE_INHERIT_QUERY_ATTR = "cms-source-inherit-query";

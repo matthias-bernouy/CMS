@@ -4,12 +4,21 @@ import type {
     CmsSourceParamMap,
     CmsSourceParamValue,
     CmsSourceUrl,
+    CmsQueryBinding,
+    CmsQueryInput,
+    CmsQueryRefreshPolicy,
 } from "cms-content/blocs/core/markup/bindings/types";
 import { asQueryParamToken } from "cms-content/blocs/core/markup/bindings/queryParams";
 
 const INTERPOLATION_PATTERN = /^\s*\{\{\s*([\s\S]*?)\s*\}\}\s*$/;
 const INTERPOLATION_TOKEN_PATTERN = /\{\{\s*([\s\S]*?)\s*\}\}/gu;
 const SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+const QUERY_PATTERN =
+    /^\s*([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*):([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/u;
+const QUERY_REFRESH_INTERVAL = /^interval\((\d+)(ms|s|m)\)$/u;
+const MIN_QUERY_REFRESH_INTERVAL_MS = 1_000;
+const MAX_QUERY_REFRESH_INTERVAL_MS = 60 * 60 * 1_000;
+const RESERVED_QUERY_NAMES = new Set(["cms"]);
 
 export function asInterpolation(expression: string): string {
     return `{{ ${expression.trim()} }}`;
@@ -58,6 +67,65 @@ export function parseSource(value: string): CmsSourceBinding | null {
     }
     const url = value.trim();
     return url ? { url } : null;
+}
+
+export function asQuery(query: CmsQueryBinding): string {
+    const value = `${query.contractId}:${query.capabilityId} as ${query.name}`;
+    if (!parseQuery(value)) {
+        throw new TypeError("Invalid CMS query binding");
+    }
+    return value;
+}
+
+export function parseQuery(value: string): CmsQueryBinding | null {
+    const match = QUERY_PATTERN.exec(value);
+    if (!match || RESERVED_QUERY_NAMES.has(match[3]!)) {
+        return null;
+    }
+    return { contractId: match[1]!, capabilityId: match[2]!, name: match[3]! };
+}
+
+export function asQueryInput(input: CmsQueryInput): string {
+    return asSourceBody(input);
+}
+
+export function parseQueryInput(value: string | null | undefined): CmsQueryInput | null {
+    return parseSourceBody(value);
+}
+
+export function parseQueryRefresh(value: string | null | undefined): CmsQueryRefreshPolicy | null {
+    const tokens = value?.trim().split(/\s+/u).filter(Boolean) ?? [];
+    if (tokens.length === 0 || new Set(tokens).size !== tokens.length) {
+        return null;
+    }
+    let intervalMs: number | undefined;
+    let focus = false;
+    let reconnect = false;
+    for (const token of tokens) {
+        if (token === "focus") {
+            focus = true;
+            continue;
+        }
+        if (token === "reconnect") {
+            reconnect = true;
+            continue;
+        }
+        const interval = QUERY_REFRESH_INTERVAL.exec(token);
+        if (!interval || intervalMs !== undefined) {
+            return null;
+        }
+        const amount = Number(interval[1]);
+        const multiplier = interval[2] === "m" ? 60_000 : interval[2] === "s" ? 1_000 : 1;
+        intervalMs = amount * multiplier;
+        if (
+            !Number.isSafeInteger(intervalMs) ||
+            intervalMs < MIN_QUERY_REFRESH_INTERVAL_MS ||
+            intervalMs > MAX_QUERY_REFRESH_INTERVAL_MS
+        ) {
+            return null;
+        }
+    }
+    return { ...(intervalMs === undefined ? {} : { intervalMs }), focus, reconnect };
 }
 
 export function asSourceBody(body: CmsSourceBodyBinding): string {

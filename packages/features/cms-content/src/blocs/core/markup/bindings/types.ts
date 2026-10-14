@@ -7,6 +7,9 @@ export const CMS_BINDING_ATTRIBUTES = {
     formEmpty: "cms-form-empty",
     paramSync: "cms-param-sync",
     pageState: "cms-page-state",
+    query: "cms-query",
+    queryInput: "cms-query-input",
+    queryRefresh: "cms-query-refresh",
     repeat: "cms-repeat",
     source: "cms-source",
     sourceBody: "cms-source-body",
@@ -62,6 +65,18 @@ export type CmsSourceMethod = (typeof CMS_SOURCE_METHODS)[number];
 export type CmsSourceState = (typeof CMS_SOURCE_STATES)[number];
 export type CmsSourceStateForce = CmsSourceState;
 export type CmsSourceStatusCondition = { sourceId?: string; state: CmsSourceState };
+
+export type CmsQueryTarget = {
+    readonly contractId: string;
+    readonly capabilityId: string;
+};
+export type CmsQueryBinding = CmsQueryTarget & { readonly name: string };
+export type CmsQueryInput = CmsSourceParamMap;
+export type CmsQueryRefreshPolicy = {
+    readonly intervalMs?: number;
+    readonly focus: boolean;
+    readonly reconnect: boolean;
+};
 
 export const CMS_SOURCE_SERIALIZATIONS = ["typed-json"] as const;
 export const CMS_FORM_VALUE_TYPES = ["string", "number", "boolean"] as const;

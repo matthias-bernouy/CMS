@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
     asInterpolation,
+    asQuery,
+    asQueryInput,
     asQueryParamToken,
     asRepeat,
     asSource,
@@ -8,6 +10,9 @@ import {
     isCmsQueryParamName,
     isInterpolation,
     parseInterpolation,
+    parseQuery,
+    parseQueryInput,
+    parseQueryRefresh,
     parseQueryParamToken,
     parseRepeat,
     parseSource,
@@ -128,6 +133,49 @@ describe("binding syntax", () => {
         expect(parseSourceBody(formatted)).toEqual(expected);
         expect(parseSourceBody("")).toBeNull();
         expect(parseSourceBody("{bad")).toBeNull();
+    });
+
+    test("requires one logical target and safe name for queries", () => {
+        expect(asQuery({ contractId: "ulvia.cms.pages", capabilityId: "list", name: "pages" })).toBe(
+            "ulvia.cms.pages:list as pages",
+        );
+        expect(parseQuery(" ulvia.cms.pages:list as pages ")).toEqual({
+            contractId: "ulvia.cms.pages",
+            capabilityId: "list",
+            name: "pages",
+        });
+        for (const value of [
+            "ulvia.cms.pages:list",
+            "/.cms/call/ulvia.cms.pages/list as pages",
+            "ulvia.cms.pages:list as cms",
+            "ulvia.cms.pages:list as page-list",
+            "ulvia.cms.pages:list as $pages",
+        ]) {
+            expect(parseQuery(value)).toBeNull();
+        }
+    });
+
+    test("shares typed logical inputs without exposing an HTTP body", () => {
+        const encoded = asQueryInput({
+            limit: { from: "raw", value: 100 },
+            page: { from: "queryParam", name: "page" },
+        });
+        expect(parseQueryInput(encoded)).toEqual({
+            limit: { from: "raw", value: 100 },
+            page: { from: "queryParam", name: "page" },
+        });
+    });
+
+    test("parses bounded query refresh policies", () => {
+        expect(parseQueryRefresh("interval(5s) focus reconnect")).toEqual({
+            intervalMs: 5_000,
+            focus: true,
+            reconnect: true,
+        });
+        expect(parseQueryRefresh("focus")).toEqual({ focus: true, reconnect: false });
+        for (const value of ["", "interval(0ms)", "interval(2h)", "focus focus", "manual"]) {
+            expect(parseQueryRefresh(value)).toBeNull();
+        }
     });
 
     test("keeps structured body query-param names independent from URL token grammar", () => {

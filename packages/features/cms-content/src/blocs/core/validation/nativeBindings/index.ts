@@ -11,6 +11,8 @@ import {
     isCmsSourceState,
     isCmsSourceTrigger,
     parseCondition,
+    parseQuery,
+    parseQueryRefresh,
     parseRepeat,
     parseSource,
 } from "cms-content/blocs/core/markup/bindings";
@@ -38,6 +40,15 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     }
     if (name === CMS_BINDING_ATTRIBUTES.repeat) {
         return parseRepeat(value) ? null : "CMS repeat binding must not be empty";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.query) {
+        return parseQuery(value) ? null : "CMS query must identify contract:capability as name";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.queryInput) {
+        return isTypedSourceBody(value) ? null : "CMS query input must be a typed parameter map";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.queryRefresh) {
+        return parseQueryRefresh(value) ? null : "CMS query refresh policy is invalid";
     }
     if (name === CMS_BINDING_ATTRIBUTES.source) {
         const source = parseSource(value);
@@ -104,6 +115,15 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
 }
 
 export function nativeBindingElementIssue(tag: string, attributes: Readonly<Record<string, string>>): string | null {
+    const query = attributes[CMS_BINDING_ATTRIBUTES.query];
+    if (query !== undefined && tag === "form") {
+        return "CMS queries cannot be declared on forms";
+    }
+    for (const name of [CMS_BINDING_ATTRIBUTES.queryInput, CMS_BINDING_ATTRIBUTES.queryRefresh]) {
+        if (attributes[name] !== undefined && query === undefined) {
+            return `CMS query attribute "${name}" requires cms-query`;
+        }
+    }
     for (const name of [CMS_BINDING_ATTRIBUTES.sourceSerialization, CMS_BINDING_ATTRIBUTES.sourceSuccessReload]) {
         if (attributes[name] !== undefined && tag !== "form") {
             return `CMS submission attribute "${name}" requires a form`;
