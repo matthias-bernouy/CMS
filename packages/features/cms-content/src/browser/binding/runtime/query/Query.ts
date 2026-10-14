@@ -6,6 +6,7 @@ import { captureSourceContent } from "../../source/presentation/sourceContent";
 import { connectSourceContext } from "../../source/presentation/sourceContext";
 import { SourceRenderer } from "../../source/presentation/sourceRenderer";
 import { shareUnchanged } from "../../source/runtime/refresh/reconcile";
+import { connectQueryReload } from "../../source/runtime/refresh/registry";
 import { connectSourceData, disconnectSourceData, readSourceData, rememberSourceData } from "../../source/values";
 import { listenQueryRefresh } from "./queryRefresh";
 import { queryRequest } from "./queryRequest";
@@ -31,8 +32,9 @@ export class Query {
     private abort: AbortController | null = null;
     private stopRefresh: (() => void) | null = null;
     private stopContext: (() => void) | null = null;
-    private running = false;
-    private queued = false;
+    private stopReload: (() => void) | null = null;
+    private pending: Promise<boolean> | null = null;
+    private queued: Promise<boolean> | null = null;
 
     constructor(
         private readonly element: Element,
@@ -44,6 +46,11 @@ export class Query {
 
     start(): void {
         this.stopContext = connectSourceContext(this.element, () => this.render());
+        this.stopReload = connectQueryReload(
+            this.element,
+            () => this.requestIdentity(),
+            () => this.run(),
+        );
         this.stopRefresh = listenQueryRefresh(this.element, () => void this.run());
         const supplied = connectSourceData(this.element, (value) => this.accept(value));
         if (supplied && !this.options.sourceStateForce) {
@@ -61,6 +68,8 @@ export class Query {
         this.abort = null;
         this.stopRefresh?.();
         this.stopRefresh = null;
+        this.stopReload?.();
+        this.stopReload = null;
         this.stopContext?.();
         this.stopContext = null;
         disconnectSourceData(this.element);
@@ -72,21 +81,21 @@ export class Query {
         this.renderer.template();
     }
 
-    async run(): Promise<boolean> {
-        if (this.running) {
-            this.queued = true;
-            return false;
+    run(): Promise<boolean> {
+        if (this.pending) {
+            this.queued ??= this.pending.then(() => {
+                this.queued = null;
+                return this.element.isConnected ? this.run() : false;
+            });
+            return this.queued;
         }
-        this.running = true;
-        try {
-            return await this.execute();
-        } finally {
-            this.running = false;
-            if (this.queued && this.element.isConnected) {
-                this.queued = false;
-                void this.run();
+        const operation = this.execute().finally(() => {
+            if (this.pending === operation) {
+                this.pending = null;
             }
-        }
+        });
+        this.pending = operation;
+        return operation;
     }
 
     private async execute(): Promise<boolean> {
@@ -149,5 +158,14 @@ export class Query {
         }
         this.renderer.body({ value: this.state.data, vars: { [binding.name]: this.state } });
         this.options.afterRender?.(this.element);
+    }
+
+    private requestIdentity(): string {
+        try {
+            const request = queryRequest(this.element);
+            return `${request.init.method ?? "GET"}\u0000${request.url}\u0000${request.init.body ?? ""}`;
+        } catch {
+            return "";
+        }
     }
 }

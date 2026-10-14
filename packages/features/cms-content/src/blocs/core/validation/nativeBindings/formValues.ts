@@ -20,5 +20,5 @@ export function isCmsFormEmptyBehavior(value: string | null): value is CmsFormEm
 }
 
 export function isCmsSourceSuccessReload(value: string | null): boolean {
-    return /^#[A-Za-z_][\w:.-]*$/.test(value ?? "");
+    return /^[A-Za-z_][A-Za-z0-9_]*$/.test(value ?? "");
 }

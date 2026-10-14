@@ -89,3 +89,30 @@ test("a refresh failure retains the previous data and exposes refreshError", asy
     expect(host.textContent).toContain("Refresh failed");
     query.dispose();
 });
+
+test("a reload queued during an active query waits for a fresh result", async () => {
+    const host = el('<section cms-query="catalog.items:list as products"></section>');
+    document.body.appendChild(host);
+    const releases: Array<() => void> = [];
+    let calls = 0;
+    const query = new Query(
+        host,
+        {},
+        {
+            request: async () => {
+                calls += 1;
+                await new Promise<void>((resolve) => releases.push(resolve));
+                return { kind: "success", data: { calls } };
+            },
+        },
+    );
+
+    query.start();
+    const reload = query.run();
+    releases.shift()?.();
+    await waitFor(() => calls === 2);
+    releases.shift()?.();
+    expect(await reload).toBe(true);
+    expect(calls).toBe(2);
+    query.dispose();
+});

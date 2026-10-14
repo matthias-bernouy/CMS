@@ -39,8 +39,8 @@ describe("declarative form contracts", () => {
         }
         expect(isCmsFormValueType("object")).toBe(false);
         expect(isCmsFormEmptyBehavior("undefined")).toBe(false);
-        expect(isCmsSourceSuccessReload("#order-detail")).toBe(true);
-        for (const value of [null, "", "order-detail", "#detail .child", "#a,#b", "#{target}", "{{ target }}"]) {
+        expect(isCmsSourceSuccessReload("orderDetail")).toBe(true);
+        for (const value of [null, "", "order-detail", "#detail", "query child", "#{target}", "{{ target }}"]) {
             expect(isCmsSourceSuccessReload(value)).toBe(false);
         }
     });
@@ -48,7 +48,7 @@ describe("declarative form contracts", () => {
     test("rejects typed forms that are not owned by a Bloc contract", async () => {
         const { repo, writes } = repository();
         const content = form(
-            'cms-source-serialization="typed-json" cms-source-success-reload="#order-detail"',
+            'cms-source-serialization="typed-json" cms-source-success-reload="orderDetail"',
             '<input name="items[0][price]" cms-form-value-type="number" cms-form-empty="null"><fixture-field name="note" cms-form-value-type="string" cms-form-empty="omit"></fixture-field>',
         );
         await expect(repo.insertPage("/orders", "Orders", content)).rejects.toThrow("not a declared setting");
@@ -58,7 +58,7 @@ describe("declarative form contracts", () => {
 
     test("rejects invalid values and attribute placement at both page-write boundaries", async () => {
         const invalid = [
-            form('cms-source-success-reload="#detail .child"'),
+            form('cms-source-success-reload="detail child"'),
             form('cms-source-success-reload="{{ target }}"'),
             form('cms-source-serialization="json"'),
             form('cms-source-serialization="typed-json"', "", "GET"),
@@ -66,7 +66,7 @@ describe("declarative form contracts", () => {
             form("", '<input cms-form-empty="undefined">'),
             form('cms-form-value-type="string"'),
             form("", '<section cms-source-serialization="typed-json"></section>'),
-            form("", '<section cms-source-success-reload="#detail"></section>'),
+            form("", '<section cms-source-success-reload="detail"></section>'),
             form("", '<section cms-form-empty="null"></section>'),
             form('cms-source-success-update="#detail"'),
             form('cms-arbitrary="true"'),

@@ -71,7 +71,7 @@ test("collection Page hosts reject undeclared capability and resource attributes
 test("collection Pages admit typed capability forms owned by a composition", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const form =
-        '<form cms-source="/.cms/call/catalog.items/item.rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#catalog"><label for="title">{{ copy }}</label><input id="title" type="text" name="title" required><input type="hidden" name="expectedRevision" value="1" cms-form-value-type="number"><button type="submit">{{ copy }}</button></form>';
+        '<form cms-source="/.cms/call/catalog.items/item.rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json"><label for="title">{{ copy }}</label><input id="title" type="text" name="title" required><input type="hidden" name="expectedRevision" value="1" cms-form-value-type="number"><button type="submit">{{ copy }}</button></form>';
     (source.blocs as Record<string, unknown>[]).push({
         kind: "composition",
         id: "atlas-form-page",

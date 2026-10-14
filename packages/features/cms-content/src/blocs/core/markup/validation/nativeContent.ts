@@ -98,6 +98,15 @@ export function extractQueries(document: Document): readonly ContentQuery[] {
         }
         names.add(query.name);
     }
+    for (const form of Array.from(document.querySelectorAll("form[cms-source-success-reload]"))) {
+        const target = form.getAttribute("cms-source-success-reload") ?? "";
+        if (!names.has(target)) {
+            throw new ContentValidationError(
+                "content",
+                `CMS source success reload references unknown query ${JSON.stringify(target)}`,
+            );
+        }
+    }
     return queries;
 }
 

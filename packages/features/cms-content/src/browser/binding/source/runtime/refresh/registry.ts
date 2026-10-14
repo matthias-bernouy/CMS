@@ -1,5 +1,5 @@
-import { BINDING_CORE_TAG, SOURCE_ATTR, SOURCE_SUCCESS_RELOAD_ATTR } from "../../../core/attrs";
-import { sourceTrigger } from "../../sourceEvents";
+import { parseQuery } from "cms-content/blocs/core/markup/bindings/source";
+import { BINDING_CORE_TAG, QUERY_ATTR, SOURCE_SUCCESS_RELOAD_ATTR } from "../../../core/attrs";
 
 type Reader = {
     url: () => string;
@@ -17,6 +17,15 @@ export function connectSourceReload(source: Element, reader: Reader): () => void
     };
 }
 
+export function connectQueryReload(query: Element, identity: () => string, reload: () => Promise<boolean>): () => void {
+    const reader: Reader = {
+        generation: () => 0,
+        url: identity,
+        reload,
+    };
+    return connectSourceReload(query, reader);
+}
+
 /** Reload exactly one active read source, retaining its current presentation. */
 export async function reloadSource(source: Element): Promise<boolean> {
     const reader = readers.get(source);
@@ -27,33 +36,29 @@ export async function reloadSource(source: Element): Promise<boolean> {
 }
 
 export function submissionReload(form: HTMLFormElement) {
-    const selector = form.getAttribute(SOURCE_SUCCESS_RELOAD_ATTR)?.trim();
-    if (!selector) {
+    const name = form.getAttribute(SOURCE_SUCCESS_RELOAD_ATTR)?.trim();
+    if (!name) {
         return null;
     }
-    if (!/^#[A-Za-z_][\w:.-]*$/.test(selector)) {
-        throw new Error("cms-source-success-reload must identify one source by #id.");
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+        throw new Error("cms-source-success-reload must identify one query by name.");
     }
     const core = form.closest(BINDING_CORE_TAG);
     const matches = core
-        ? Array.from(core.querySelectorAll("[id]")).filter(
-              (el) => el.getAttribute("id") === selector.slice(1) && el.closest(BINDING_CORE_TAG) === core,
+        ? Array.from(core.querySelectorAll(`[${QUERY_ATTR}]`)).filter(
+              (element) =>
+                  parseQuery(element.getAttribute(QUERY_ATTR) ?? "")?.name === name &&
+                  element.closest(BINDING_CORE_TAG) === core,
           )
         : [];
     const source = matches.length === 1 ? matches[0]! : null;
     const reader = source ? readers.get(source) : undefined;
-    if (
-        !source ||
-        !reader ||
-        source.closest(BINDING_CORE_TAG) !== core ||
-        !source.hasAttribute(SOURCE_ATTR) ||
-        sourceTrigger(source) !== "auto"
-    ) {
-        throw new Error("cms-source-success-reload requires one active read source in the same binding core.");
+    if (!source || !reader || source.closest(BINDING_CORE_TAG) !== core || !source.hasAttribute(QUERY_ATTR)) {
+        throw new Error("cms-source-success-reload requires one active query with that name in the same binding core.");
     }
     const url = reader.url();
     if (!url) {
-        throw new Error("cms-source-success-reload requires a source URL.");
+        throw new Error("cms-source-success-reload requires a valid query.");
     }
     const generation = reader.generation();
     const current = () =>

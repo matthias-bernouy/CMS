@@ -55,7 +55,7 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
         return source && isInternalEndpoint(source.url) ? null : "CMS source must use a same-site endpoint";
     }
     if (name === CMS_BINDING_ATTRIBUTES.sourceSuccessReload) {
-        return isCmsSourceSuccessReload(value) ? null : "CMS source success reload must identify one source by #id";
+        return isCmsSourceSuccessReload(value) ? null : "CMS source success reload must identify one query by name";
     }
     if (name === CMS_BINDING_ATTRIBUTES.sourceSerialization) {
         return isCmsSourceSerialization(value) ? null : "CMS source serialization must be typed-json";

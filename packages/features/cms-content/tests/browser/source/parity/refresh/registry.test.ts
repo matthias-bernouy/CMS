@@ -1,5 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
 import {
+    connectQueryReload,
     connectSourceReload,
     reloadSource,
     submissionReload,
@@ -11,18 +12,18 @@ afterEach(resetDom);
 function setup() {
     const isolated = document;
     isolated.body.innerHTML =
-        '<cms-binding-core cms-binding-disabled><section id="detail" cms-source="/record"></section><form cms-source="/save" cms-source-trigger="submit" cms-source-success-reload="#detail"></form></cms-binding-core>';
+        '<cms-binding-core cms-binding-disabled><section cms-query="catalog:get as detail"></section><form cms-source="/save" cms-source-trigger="submit" cms-source-success-reload="detail"></form></cms-binding-core>';
     const source = isolated.querySelector("section")!;
     const form = isolated.querySelector("form")!;
-    const state = { url: "/record?id=1", generation: 1, calls: 0 };
-    const stop = connectSourceReload(source, {
-        url: () => state.url,
-        generation: () => state.generation,
-        reload: async () => {
+    const state = { calls: 0 };
+    const stop = connectQueryReload(
+        source,
+        () => source.getAttribute("cms-query") ?? "",
+        async () => {
             state.calls++;
             return true;
         },
-    });
+    );
     return { source, form, state, stop };
 }
 
@@ -30,11 +31,9 @@ test("reload targets one active read source and rejects replaced or changed sele
     const { source, form, state, stop } = setup();
     expect(await reloadSource(source)).toBe(true);
     const operation = submissionReload(form)!;
-    state.url = "/record?id=2";
+    source.setAttribute("cms-query", "catalog:get as replacement");
     expect(await operation.reload()).toBe(false);
-    state.url = "/record?id=1";
-    state.generation++;
-    expect(await operation.reload()).toBe(false);
+    source.setAttribute("cms-query", "catalog:get as detail");
     stop();
     expect(await operation.reload()).toBe(false);
     expect(state.calls).toBe(1);
@@ -48,17 +47,16 @@ test("a disposed registration cannot remove its replacement", async () => {
     expect(await reloadSource(source)).toBe(true);
 });
 
-test("selectors cannot cross cores, match duplicates, or target a submit source", () => {
+test("query names cannot cross cores or match duplicates", () => {
     const { source, form } = setup();
+    form.setAttribute("cms-source-success-reload", "bad-name");
+    expect(() => submissionReload(form)).toThrow("query by name");
     form.setAttribute("cms-source-success-reload", "section");
-    expect(() => submissionReload(form)).toThrow("#id");
-    form.setAttribute("cms-source-success-reload", "#detail");
+    expect(() => submissionReload(form)).toThrow("one active query");
+    form.setAttribute("cms-source-success-reload", "detail");
     source.parentElement!.append(source.cloneNode(true));
     expect(() => submissionReload(form)).toThrow("one active");
     source.nextElementSibling?.nextElementSibling?.remove();
-    source.setAttribute("cms-source-trigger", "submit");
-    expect(() => submissionReload(form)).toThrow("one active");
-    source.removeAttribute("cms-source-trigger");
     const nested = source.ownerDocument.createElement("cms-binding-core");
     nested.setAttribute("cms-binding-disabled", "");
     source.parentElement!.append(nested);
