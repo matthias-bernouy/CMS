@@ -3,7 +3,6 @@ import template from "./shadowdom.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { callCapability, CapabilityError } from "./runtime/client";
 import type { AccessOverview, LanguageSettings, LocalizationOverview, SiteSettings } from "./runtime/model";
-import { initializeSettingsWorkspace } from "./runtime/workspace";
 
 export class Bloc extends Component {
     private site: SiteSettings | null = null;
@@ -12,10 +11,10 @@ export class Bloc extends Component {
 
     constructor() {
         super({ css, template });
-        initializeSettingsWorkspace(this.shadowRoot!);
     }
 
     override connectedCallback(): void {
+        this.applyCopy();
         this.shadowRoot?.addEventListener("click", this.handleClick);
         this.shadowRoot?.addEventListener("submit", this.handleSubmit);
         this.selectSection(location.hash === "#settings-languages" ? "languages" : "general");
@@ -70,7 +69,7 @@ export class Bloc extends Component {
                 this.languages.revision = this.site.revision;
             }
             this.populateGeneral();
-        }, "General settings saved.");
+        }, this.copy("general-saved"));
     }
 
     private saveLanguages(): Promise<void> {
@@ -89,7 +88,7 @@ export class Bloc extends Component {
                 this.site.revision = next.revision;
             }
             this.populateLanguages();
-        }, "Languages saved.");
+        }, this.copy("languages-saved"));
     }
 
     private populate(): void {
@@ -134,13 +133,13 @@ export class Bloc extends Component {
         }
         this.busy = true;
         this.setBusy(true);
-        this.notice("Working…");
+        this.notice(this.copy("working"));
         try {
             await task();
             this.notice(success);
         } catch (error) {
             const suffix = error instanceof CapabilityError ? ` (${error.code})` : "";
-            this.notice(`${error instanceof Error ? error.message : "Request failed"}${suffix}`, true);
+            this.notice(`${error instanceof Error ? error.message : this.copy("request-failed")}${suffix}`, true);
         } finally {
             this.setBusy(false);
             this.busy = false;
@@ -158,6 +157,26 @@ export class Bloc extends Component {
         const notice = this.required("[data-notice]");
         notice.textContent = message;
         notice.toggleAttribute("data-error", error);
+    }
+
+    private applyCopy(): void {
+        for (const target of this.shadowRoot!.querySelectorAll<HTMLElement>("[data-copy-key]")) {
+            const value = this.copy(target.dataset.copyKey ?? "");
+            const attribute = target.dataset.copyAttribute;
+            if (attribute) {
+                target.setAttribute(attribute, value);
+            } else {
+                target.textContent = value;
+            }
+        }
+    }
+
+    private copy(key: string): string {
+        const value = this.querySelector<HTMLElement>(`[data-copy="${key}"]`)?.textContent?.trim();
+        if (!value) {
+            throw new Error(`Missing settings copy: ${key}`);
+        }
+        return value;
     }
 
     private required<T extends Element = HTMLElement>(selector: string): T {

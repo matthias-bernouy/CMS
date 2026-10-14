@@ -20,7 +20,8 @@ h2, p { margin: 0; }
 label { align-content: start; gap: .45rem; font-weight: 700; }
 label:last-child { grid-column: 1 / -1; }
 label small { font-weight: 400; line-height: 1.45; }
-ulvia-official-input, ulvia-official-select, ulvia-official-tag-input { width: 100%; }
+input, select { width: 100%; min-height: 2.75rem; padding: .6rem .75rem; border: 1px solid var(--ulvia-official-border-default, #c9d5d0); border-radius: .5rem; background: var(--ulvia-official-background-raised, #fff); }
+[data-emphasis="primary"] { min-height: 2.65rem; padding: .6rem .9rem; border: 1px solid var(--ulvia-official-primary, #176b4d); border-radius: .5rem; color: var(--ulvia-official-on-primary, #fff); background: var(--ulvia-official-primary, #176b4d); font-weight: 700; }
 [part="actions"] { display: flex; justify-content: flex-end; padding-top: .5rem; border-top: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
 [part="notice"]:empty { display: none; }
 [part="notice"] { padding: .8rem 1rem; border-inline-start: .25rem solid var(--ulvia-official-info, #2367a6); border-radius: var(--ulvia-official-radius-sm, .25rem); background: var(--ulvia-official-background-subtle, #f3f7f5); }

@@ -6,12 +6,7 @@
     "category": "bloc.category.administration",
     "order": 20,
     "internal": true,
-    "uses": [
-        "ulvia-official-action",
-        "ulvia-official-input",
-        "ulvia-official-select",
-        "ulvia-official-tag-input"
-    ],
+    "uses": [],
     "requires": [
         { "contractId": "ulvia.cms.access", "capabilityId": "overview", "versionRange": "^1.0.0" },
         { "contractId": "ulvia.cms.access", "capabilityId": "update-site", "versionRange": "^1.0.0" },
