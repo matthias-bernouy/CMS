@@ -6,7 +6,7 @@ const PROFILE_1_0_0 = Object.freeze({
     manifest: {
         providerId: "ulvia.official",
         version: "0.3.0",
-        digest: "sha256:d90ea747715dfd91ab59f08fd0f52dd56346db6a0c4a15f5cdfe7afac3e97f4a",
+        digest: "sha256:86f40a4b690ff94d77d0c8dca9aca0cf885925cdca38af92d86ef32f2b58afbb",
     },
     contracts: [
         ["ulvia.cms.access", "1.0.0", "sha256:c12027a8e15cc47633ff72b32eff0ac19b6b3da870c33d2270f51c9ec4c302e1"],
@@ -22,7 +22,7 @@ const PROFILE_1_0_0 = Object.freeze({
         publisherId: "ulvia.official",
         collectionId: "ulvia-official",
         version: "1.0.0",
-        digest: "sha256:9d433fbca1e3ab94de657ede66b5955ea3c51bf9feeb28194ef131125633fee2",
+        digest: "sha256:cf9dcbbf8d8a076ae51f93d009c8bc376173da554c422929e2cc8e5053f9c093",
     },
 });
 
