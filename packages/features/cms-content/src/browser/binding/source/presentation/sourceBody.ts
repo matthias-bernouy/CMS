@@ -8,7 +8,11 @@ type SourceBodyValue =
 
 type SourceBodyBinding = Record<string, SourceBodyValue>;
 
-export function resolveSourceBodyFields(value: string | null, doc: Document): AdditionalFormFields | undefined {
+export function resolveSourceBodyFields(
+    value: string | null,
+    doc: Document,
+    options: Readonly<{ omitMissingQueryParams?: boolean }> = {},
+): AdditionalFormFields | undefined {
     const binding = parseSourceBody(value);
     if (!binding) {
         return undefined;
@@ -18,6 +22,9 @@ export function resolveSourceBodyFields(value: string | null, doc: Document): Ad
     const params = currentParams();
     for (const [name, source] of Object.entries(binding)) {
         if (source.from === "queryParam") {
+            if (options.omitMissingQueryParams && !params.has(source.name)) {
+                continue;
+            }
             fields[name] = params.get(source.name) ?? "";
         } else if (source.from === "state") {
             fields[name] = currentState(source.name, doc);

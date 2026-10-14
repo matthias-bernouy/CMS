@@ -39,6 +39,20 @@ test("a Provider query input builds nested objects and arrays from typed paths",
     );
 });
 
+test("a Provider query omits absent optional query parameters", () => {
+    location.href = "http://localhost/?collection=ulvia&themeMode=";
+    const query = el(`<section
+        cms-query="ulvia.cms.theme:get as theme"
+        cms-query-input='{
+            "collectionId":{"from":"queryParam","name":"collection"},
+            "profileId":{"from":"queryParam","name":"themeProfile"},
+            "mode":{"from":"queryParam","name":"themeMode"}
+        }'
+    ></section>`);
+
+    expect(queryRequest(query).init.body).toBe('{"collectionId":"ulvia","mode":""}');
+});
+
 test("a Provider query without input uses the cache-compatible logical GET transport", () => {
     const query = el('<section cms-query="ulvia.cms.pages:list as pages"></section>');
 

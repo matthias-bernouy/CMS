@@ -51,7 +51,7 @@ export function queryRequest(element: Element): QueryRequest {
 }
 
 function structuredQueryInput(input: string, document: Document): SerializedFormData {
-    const fields = resolveSourceBodyFields(input, document) ?? {};
+    const fields = resolveSourceBodyFields(input, document, { omitMissingQueryParams: true }) ?? {};
     const body: SerializedFormData = {};
     const assigned = new Set<string>();
     for (const [name, value] of Object.entries(fields)) {
