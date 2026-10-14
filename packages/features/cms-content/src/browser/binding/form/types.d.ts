@@ -23,6 +23,7 @@ export type FormSubmitResult = {
     message: string;
     form: HTMLFormElement;
     refresh?: { ok: boolean; message: string };
+    outcome?: import("../runtime/query/queryState").QueryOutcome;
 };
 
 export type AdditionalFormFields = Record<string, SerializedFormValue>;

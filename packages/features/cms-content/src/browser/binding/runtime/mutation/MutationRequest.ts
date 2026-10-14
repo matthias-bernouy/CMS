@@ -20,6 +20,7 @@ import {
     type SerializedForm,
 } from "../../form/formSubmit";
 import { MutationResult } from "./events/MutationResult";
+import { runFetch } from "../query/queryFetch";
 
 type CapturedSubmission = {
     form: HTMLFormElement;
@@ -85,6 +86,47 @@ export class MutationRequest {
     }
 
     async send(captured: CapturedSubmission, url: string, signal: AbortSignal): Promise<FormSubmitResult> {
+        if (this.element.hasAttribute(MUTATION_ATTR)) {
+            const headers = new Headers();
+            headers.set("Accept", "application/json");
+            if (captured.idempotencyKey) {
+                headers.set("Idempotency-Key", captured.idempotencyKey);
+            }
+            const init: RequestInit = { method: "POST", headers, signal };
+            if (captured.serialized.kind === "json") {
+                headers.set("Content-Type", "application/json");
+                init.body = captured.serialized.body;
+            } else if (captured.serialized.kind === "formData") {
+                init.body = captured.serialized.body;
+            }
+            const outcome = await runFetch(captured.serialized.url, signal, init);
+            if (outcome.kind === "success") {
+                return {
+                    ok: true,
+                    status: outcome.status ?? 200,
+                    statusText: "OK",
+                    body: outcome.data,
+                    message: "",
+                    form: captured.form,
+                    outcome: {
+                        kind: "success",
+                        status: outcome.status ?? 200,
+                        ...(outcome.requestId ? { requestId: outcome.requestId } : {}),
+                    },
+                };
+            }
+            const failed =
+                outcome.kind === "aborted" ? { kind: "failure" as const, code: "aborted", retryable: false } : outcome;
+            return {
+                ok: false,
+                status: failed.status ?? 0,
+                statusText: failed.kind === "error" ? "Command rejected" : "Mutation failed",
+                body: failed.kind === "error" ? (failed.output ?? null) : null,
+                message: failed.code,
+                form: captured.form,
+                outcome: failed,
+            };
+        }
         return submitForm(captured.form, {
             url: this.submitUrl(url),
             method: captured.method,

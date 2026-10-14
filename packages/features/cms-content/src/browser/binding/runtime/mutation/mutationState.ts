@@ -1,5 +1,6 @@
 import { CONDITION_ATTR, SOURCE_ATTR, SOURCE_ID_ATTR, type SourceState } from "../../core/attrs";
 import { type Scope } from "../../core/scope";
+import type { QueryOutcome } from "../query/queryState";
 
 export type MutationState = {
     loading: boolean;
@@ -12,6 +13,47 @@ export type MutationState = {
     status?: unknown;
     message?: unknown;
 };
+
+export type TypedMutationState = {
+    readonly activity: "idle" | "submitting";
+    readonly hasData: boolean;
+    readonly data: unknown;
+    readonly outcome: QueryOutcome;
+    readonly input?: unknown;
+};
+
+export function initialTypedMutationState(input?: unknown): TypedMutationState {
+    return {
+        activity: "idle",
+        hasData: false,
+        data: null,
+        outcome: { kind: "none" },
+        ...(input === undefined ? {} : { input }),
+    };
+}
+
+export function submittingTypedMutationState(current: TypedMutationState, input?: unknown): TypedMutationState {
+    return { ...current, activity: "submitting", ...(input === undefined ? {} : { input }) };
+}
+
+export function completedTypedMutationState(
+    current: TypedMutationState,
+    result: { readonly ok: boolean; readonly body: unknown; readonly outcome?: QueryOutcome },
+    input?: unknown,
+): TypedMutationState {
+    const outcome: QueryOutcome =
+        result.outcome ??
+        (result.ok
+            ? { kind: "success", status: 200 }
+            : { kind: "failure", code: "invalid_response", retryable: false });
+    return {
+        activity: "idle",
+        hasData: result.ok,
+        data: result.ok ? result.body : current.data,
+        outcome,
+        ...(input === undefined ? {} : { input }),
+    };
+}
 
 export type MutationStateOptions = {
     setMutationState?: (source: Element, status: MutationState) => void;
@@ -54,11 +96,12 @@ export function scopeForMutationState(
     sourceStatus: MutationState,
     value: unknown,
     options: MutationStateOptions,
+    aliasValue: unknown = value,
 ): Scope {
     const sources = options.mutationStatesFor?.(source, sourceStatus) ?? localMutationStateScope(source, sourceStatus);
     const vars: Record<string, unknown> = { $source: sourceStatus, $sources: sources };
     if (alias) {
-        vars[alias] = value;
+        vars[alias] = aliasValue;
     }
     return { value, vars };
 }

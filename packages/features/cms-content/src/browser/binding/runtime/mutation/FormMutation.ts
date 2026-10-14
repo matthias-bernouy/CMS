@@ -65,7 +65,7 @@ export class FormMutation {
         this.form.addEventListener("input", this.onFormInput);
         const spec = mutationBinding(this.form);
         if (spec) {
-            this.presenter.initial(spec.alias);
+            this.presenter.initial(spec.alias, spec.typed);
             this.afterRender();
         }
         this.stopActivation = activateSourceForm(this.form);
@@ -115,13 +115,13 @@ export class FormMutation {
                 message: error instanceof Error ? error.message : String(error),
                 form: this.form,
             };
-            this.presenter.result(spec.alias, result);
+            this.presenter.result(spec.alias, result, spec.typed, this.request.input);
             this.afterRender();
             this.request.complete(result, spec.alias);
             return false;
         }
 
-        this.presenter.loading(spec.alias);
+        this.presenter.loading(spec.alias, spec.typed, this.request.input);
         this.afterRender();
         this.abort?.abort();
         const controller = new AbortController();
@@ -130,7 +130,7 @@ export class FormMutation {
             const result = await transaction.send(spec.url, controller.signal);
             if (!result) {
                 if (!controller.signal.aborted) {
-                    this.presenter.initial(spec.alias);
+                    this.presenter.initial(spec.alias, spec.typed);
                     this.afterRender();
                 }
                 return false;
@@ -138,7 +138,7 @@ export class FormMutation {
             if (result.ok) {
                 this.syncDirty = false;
             }
-            this.presenter.result(spec.alias, result);
+            this.presenter.result(spec.alias, result, spec.typed, this.request.input);
             this.afterRender();
             this.request.complete(result, spec.alias);
             return result.ok && result.refresh?.ok !== false;
@@ -184,7 +184,9 @@ export class FormMutation {
     }
 }
 
-function mutationBinding(form: HTMLFormElement): { readonly url: string; readonly alias?: string } | null {
+function mutationBinding(
+    form: HTMLFormElement,
+): { readonly url: string; readonly alias?: string; readonly typed: boolean } | null {
     const mutation = parseMutation(form.getAttribute(MUTATION_ATTR) ?? "");
     if (mutation) {
         const key = `${mutation.contractId}:${mutation.capabilityId}`;
@@ -192,7 +194,8 @@ function mutationBinding(form: HTMLFormElement): { readonly url: string; readonl
             key === "kernel.auth:login"
                 ? "/.cms/auth/login"
                 : `/.cms/call/${mutation.contractId}/${mutation.capabilityId}`;
-        return { url, alias: mutation.name };
+        return { url, alias: mutation.name, typed: true };
     }
-    return parseSource(form.getAttribute(SOURCE_ATTR) ?? "");
+    const source = parseSource(form.getAttribute(SOURCE_ATTR) ?? "");
+    return source ? { ...source, typed: false } : null;
 }

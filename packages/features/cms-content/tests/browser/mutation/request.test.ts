@@ -23,6 +23,7 @@ describe("Form mutation — submit request", () => {
             <div>
                 <form cms-mutation="ulvia.cms.pages:create as created">
                     <input name="title" value="Welcome">
+                    <p class="result" cms-condition="created.outcome.kind === 'success'">{{ created.data.id }}</p>
                 </form>
             </div>
         `);
@@ -38,6 +39,7 @@ describe("Form mutation — submit request", () => {
         expect(captured.init?.headers).toEqual(expect.any(Headers));
         expect(JSON.parse(String(captured.init?.body))).toEqual({ title: "Welcome" });
         expect(result).toEqual({ id: "page-1" });
+        expect(text(host.querySelector(".result"))).toBe("page-1");
         runtime.stop();
     });
 
