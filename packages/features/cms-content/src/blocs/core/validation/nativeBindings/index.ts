@@ -1,4 +1,4 @@
-import { isTypedSourceBody } from "cms-content/blocs/core/validation/nativeBindings/sourceBody";
+import { isTypedQueryInput, isTypedSourceBody } from "cms-content/blocs/core/validation/nativeBindings/sourceBody";
 import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 import {
     CMS_BINDING_ATTRIBUTES,
@@ -45,7 +45,7 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
         return parseQuery(value) ? null : "CMS query must identify contract:capability as name";
     }
     if (name === CMS_BINDING_ATTRIBUTES.queryInput) {
-        return isTypedSourceBody(value) ? null : "CMS query input must be a typed parameter map";
+        return isTypedQueryInput(value) ? null : "CMS query input must be a typed parameter map";
     }
     if (name === CMS_BINDING_ATTRIBUTES.queryRefresh) {
         return parseQueryRefresh(value) ? null : "CMS query refresh policy is invalid";

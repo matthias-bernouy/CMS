@@ -1,8 +1,17 @@
 import { isCmsQueryParamName } from "cms-content/blocs/core/markup/bindings";
 
 const PAGE_STATE_KEY = /^[A-Za-z0-9_][A-Za-z0-9_.:-]*$/;
+const TYPED_PATH = /^[A-Za-z0-9_-]+(?:\[[A-Za-z0-9_-]+\])*$/;
 
 export function isTypedSourceBody(value: string): boolean {
+    return isTypedParameterMap(value, (name) => Boolean(name.trim()));
+}
+
+export function isTypedQueryInput(value: string): boolean {
+    return isTypedParameterMap(value, (name) => TYPED_PATH.test(name));
+}
+
+function isTypedParameterMap(value: string, validName: (name: string) => boolean): boolean {
     let parsed: unknown;
     try {
         parsed = JSON.parse(value);
@@ -12,7 +21,7 @@ export function isTypedSourceBody(value: string): boolean {
     return (
         isRecord(parsed) &&
         Object.keys(parsed).length > 0 &&
-        Object.entries(parsed).every(([name, source]) => Boolean(name.trim()) && isTypedSourceParam(source))
+        Object.entries(parsed).every(([name, source]) => validName(name) && isTypedSourceParam(source))
     );
 }
 

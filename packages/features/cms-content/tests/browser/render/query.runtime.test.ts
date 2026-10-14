@@ -22,6 +22,23 @@ test("a Provider query with input uses the logical QUERY transport", () => {
     });
 });
 
+test("a Provider query input builds nested objects and arrays from typed paths", () => {
+    location.href = "http://localhost/?repository=official&collection=ulvia&version=2.0.0";
+    const query = el(`<section
+        cms-query="ulvia.cms.collections:plan-migration as plan"
+        cms-query-input='{
+            "targets[0][repositoryId]":{"from":"queryParam","name":"repository"},
+            "targets[0][collectionId]":{"from":"queryParam","name":"collection"},
+            "targets[0][version]":{"from":"queryParam","name":"version"},
+            "targets[0][publisherId]":{"from":"raw","value":"ulvia.official"}
+        }'
+    ></section>`);
+
+    expect(queryRequest(query).init.body).toBe(
+        '{"targets":[{"repositoryId":"official","collectionId":"ulvia","version":"2.0.0","publisherId":"ulvia.official"}]}',
+    );
+});
+
 test("a Provider query without input uses the cache-compatible logical GET transport", () => {
     const query = el('<section cms-query="ulvia.cms.pages:list as pages"></section>');
 

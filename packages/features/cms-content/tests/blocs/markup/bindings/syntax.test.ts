@@ -164,6 +164,13 @@ describe("binding syntax", () => {
             limit: { from: "raw", value: 100 },
             page: { from: "queryParam", name: "page" },
         });
+
+        const nested = asQueryInput({
+            "targets[0][digest]": { from: "queryParam", name: "digest" },
+        });
+        expect(parseQueryInput(nested)).toEqual({
+            "targets[0][digest]": { from: "queryParam", name: "digest" },
+        });
     });
 
     test("parses bounded query refresh policies", () => {

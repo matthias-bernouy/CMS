@@ -1,6 +1,8 @@
 import { parseQuery, parseQueryInput } from "cms-content/blocs/core/markup/bindings/source";
 import { QUERY_ATTR, QUERY_INPUT_ATTR } from "../../core/attrs";
 import { resolveSourceBodyFields } from "../../source/presentation/sourceBody";
+import { setTypedPath } from "../../submit/typed/paths";
+import type { SerializedFormData } from "../../submit/types";
 
 export type QueryRequest = {
     url: string;
@@ -37,7 +39,7 @@ export function queryRequest(element: Element): QueryRequest {
             init: { method: "GET" },
         };
     }
-    const body = resolveSourceBodyFields(input, element.ownerDocument) ?? {};
+    const body = structuredQueryInput(input, element.ownerDocument);
     return {
         url: `/.cms/query/${binding.contractId}/${binding.capabilityId}`,
         init: {
@@ -46,4 +48,14 @@ export function queryRequest(element: Element): QueryRequest {
             body: JSON.stringify(body),
         },
     };
+}
+
+function structuredQueryInput(input: string, document: Document): SerializedFormData {
+    const fields = resolveSourceBodyFields(input, document) ?? {};
+    const body: SerializedFormData = {};
+    const assigned = new Set<string>();
+    for (const [name, value] of Object.entries(fields)) {
+        setTypedPath(body, name, value, assigned);
+    }
+    return body;
 }
