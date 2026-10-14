@@ -9,7 +9,7 @@ describe("source submission ownership and document events", () => {
             for (const method of ["POST", "DELETE", "HEAD"]) {
                 const content = `<form><section cms-source="/api/search" cms-source-trigger="${trigger}" cms-source-method="${method}"></section></form>`;
                 expect(inspect(content)[0]).toMatchObject({ rule: "source-trigger-target", severity: "WARNING" });
-                expect(inspect(content)[0]?.message).toContain("performs GET");
+                expect(inspect(content)[0]?.message).toContain(`Only a native form serializes controls with ${method}`);
             }
         }
     });
@@ -34,10 +34,8 @@ describe("source submission ownership and document events", () => {
         }
     });
 
-    test("does not imply that automatic HEAD is honored", () => {
-        const findings = inspect('<form cms-source="/api/search" cms-source-method="HEAD"></form>');
-        expect(findings[0]).toMatchObject({ rule: "source-automatic-method", severity: "WARNING" });
-        expect(findings[0]?.message).toBe("Automatic sources perform GET; the declared HEAD method is ignored.");
+    test("accepts automatic HEAD sources", () => {
+        expect(inspect('<form cms-source="/api/search" cms-source-method="HEAD"></form>')).toEqual([]);
     });
 
     test("source aliases and repeated rows do not isolate document reload events", () => {

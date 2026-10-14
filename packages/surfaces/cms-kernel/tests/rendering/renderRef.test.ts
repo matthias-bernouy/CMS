@@ -20,8 +20,12 @@ function kernelWithDraftFallback(field: "notFound" | "forbidden" | "serverError"
                     login: null,
                 },
             }),
-            getPublishedPageById: async (id: string) => {
-                calls.push(id);
+            resolvePageReference: async (reference: { pageId: string }) => {
+                calls.push(`resolve:${reference.pageId}`);
+                return `/${reference.pageId}`;
+            },
+            getRenderablePage: async (path: string) => {
+                calls.push(`render:${path}`);
                 return null;
             },
             getPage: async () => {
@@ -38,7 +42,7 @@ describe("renderRef", () => {
 
         expect(res.status).toBe(404);
         expect(await res.text()).toBe("Page not found");
-        expect(kernel.calls).toEqual(["404"]);
+        expect(kernel.calls).toEqual(["resolve:404", "render:/404"]);
     });
 
     test("does not render a draft 500 fallback page publicly", async () => {
@@ -53,7 +57,7 @@ describe("renderRef", () => {
 
         expect(res.status).toBe(500);
         expect(await res.text()).toBe("Internal server error");
-        expect(kernel.calls).toEqual(["500"]);
+        expect(kernel.calls).toEqual(["resolve:500", "render:/500"]);
     });
 
     test("does not render a draft forbidden fallback page publicly", async () => {
@@ -62,6 +66,6 @@ describe("renderRef", () => {
 
         expect(res.status).toBe(403);
         expect(await res.text()).toBe("Forbidden");
-        expect(kernel.calls).toEqual(["forbidden"]);
+        expect(kernel.calls).toEqual(["resolve:forbidden", "render:/forbidden"]);
     });
 });
