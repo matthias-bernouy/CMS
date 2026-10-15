@@ -26,29 +26,23 @@
                     <h2 id="page-catalogue-title" slot="items">{{ cms.i18n.ulvia-official.ui-page-catalogue }}</h2>
                     <p slot="items">{{ pages.data.items.length }} {{ cms.i18n.ulvia-official.ui-pages-in-this-batch }}</p>
                 </ulvia-official-cluster>
-                <ulvia-official-stack slot="items" cms-condition="pages.data.items.length" gap="sm" role="list">
-                    <ulvia-official-surface slot="items" cms-repeat="pages.data.items as page" appearance="outlined" padding="md" role="listitem">
-                        <ulvia-official-cluster slot="content" align="center" justify="between">
-                            <div slot="items">
-                                <h3>{{ page.title }}</h3>
-                                <p><code>{{ page.path }}</code> <span>{{ cms.i18n.ulvia-official.ui-revision }} {{ page.revision }}</span></p>
-                            </div>
-                            <ulvia-official-cluster slot="items" align="center" justify="end" gap="sm">
-                                <ulvia-official-badge slot="items" cms-condition="page.visible" tone="success"
-                                    ><span slot="label">{{ cms.i18n.ulvia-official.ui-published }}</span></ulvia-official-badge
-                                >
-                                <ulvia-official-badge slot="items" cms-condition="page.visible === false" tone="neutral"
-                                    ><span slot="label">{{ cms.i18n.ulvia-official.ui-draft }}</span></ulvia-official-badge
-                                >
-                                <ulvia-official-action slot="items" variant="outline" tone="secondary" size="sm"
-                                    ><a href="/admin/pages?ulvia-official-page-id={{ page.id | urlencode }}">{{
-                                        cms.i18n.ulvia-official.ui-open-page
-                                    }}</a></ulvia-official-action
-                                >
-                            </ulvia-official-cluster>
-                        </ulvia-official-cluster>
-                    </ulvia-official-surface>
-                </ulvia-official-stack>
+                <ulvia-official-list slot="items" cms-condition="pages.data.items.length" role="list">
+                    <ulvia-official-list-item slot="items" cms-repeat="pages.data.items as page" role="listitem">
+                        <h3 slot="title">{{ page.title }}</h3>
+                        <span slot="description"><code>{{ page.path }}</code> <span>{{ cms.i18n.ulvia-official.ui-revision }} {{ page.revision }}</span></span>
+                        <ulvia-official-badge slot="meta" cms-condition="page.visible" tone="success"
+                            ><span slot="label">{{ cms.i18n.ulvia-official.ui-published }}</span></ulvia-official-badge
+                        >
+                        <ulvia-official-badge slot="meta" cms-condition="page.visible === false" tone="neutral"
+                            ><span slot="label">{{ cms.i18n.ulvia-official.ui-draft }}</span></ulvia-official-badge
+                        >
+                        <ulvia-official-action slot="actions" variant="outline" tone="secondary" size="sm"
+                            ><a href="/admin/pages?ulvia-official-page-id={{ page.id | urlencode }}">{{
+                                cms.i18n.ulvia-official.ui-open-page
+                            }}</a></ulvia-official-action
+                        >
+                    </ulvia-official-list-item>
+                </ulvia-official-list>
                 <ulvia-official-surface slot="items" cms-condition="pages.data.items.length === 0" appearance="subtle" padding="lg">
                     <h3 slot="content">{{ cms.i18n.ulvia-official.ui-no-pages-yet }}</h3>
                     <p slot="content">{{ cms.i18n.ulvia-official.ui-create-the-first-page-to-start-building-the-site }}</p>

@@ -1,6 +1,10 @@
 {
     "bloc.card.description": "A flexible card for concise content and actions",
     "bloc.card.label": "Card",
+    "bloc.list.description": "A structured list for related content and resources",
+    "bloc.list.label": "List",
+    "bloc.list-item.description": "A reusable list row with metadata, supporting content and actions",
+    "bloc.list-item.label": "List item",
     "bloc.category.components": "Components",
     "bloc.category.site": "Site structure",
     "bloc.faq-item.description": "A native disclosure for one question and answer",

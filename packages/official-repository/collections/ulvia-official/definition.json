@@ -45,6 +45,8 @@
             "ulvia-official-image",
             "ulvia-official-input",
             "ulvia-official-link",
+            "ulvia-official-list",
+            "ulvia-official-list-item",
             "ulvia-official-lookup",
             "ulvia-official-media-figure",
             "ulvia-official-multi-select",

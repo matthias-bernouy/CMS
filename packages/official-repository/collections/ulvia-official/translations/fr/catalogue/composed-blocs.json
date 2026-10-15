@@ -1,6 +1,10 @@
 {
     "bloc.card.description": "Une carte flexible pour des contenus concis et des actions",
     "bloc.card.label": "Carte",
+    "bloc.list.description": "Une liste structurée pour des contenus et ressources associés",
+    "bloc.list.label": "Liste",
+    "bloc.list-item.description": "Une ligne de liste réutilisable avec métadonnées, contenu complémentaire et actions",
+    "bloc.list-item.label": "Élément de liste",
     "bloc.category.components": "Composants",
     "bloc.category.site": "Structure du site",
     "bloc.faq-item.description": "Un élément natif dépliable pour une question et sa réponse",

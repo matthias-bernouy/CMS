@@ -1,0 +1,91 @@
+:host {
+    display: block;
+    min-width: 0;
+    color: var(--ulvia-official-text-primary, #17211d);
+    background: transparent;
+    container-type: inline-size;
+    font-family: var(--ulvia-official-font-family-main, inherit);
+    transition: background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
+}
+
+:host(:hover) {
+    background: color-mix(in srgb, var(--ulvia-official-background-subtle, #f3f7f5) 62%, transparent);
+}
+
+[part="item"] {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--ulvia-official-spacing-md, 1rem);
+    align-items: center;
+    padding: var(--list-item-padding, var(--ulvia-official-spacing-md, 1rem) var(--ulvia-official-spacing-lg, 1.5rem));
+}
+
+[part="leading"],
+[part="content"],
+[part="header"],
+[part="title"],
+[part="meta"],
+[part="description"],
+[part="body"],
+[part="actions"] {
+    min-width: 0;
+}
+
+[part="leading"]:empty,
+[part="meta"]:empty,
+[part="description"]:empty,
+[part="body"]:empty,
+[part="actions"]:empty {
+    display: none;
+}
+
+[part="content"] {
+    display: grid;
+    gap: var(--ulvia-official-spacing-2xs, 0.25rem);
+}
+
+[part="header"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem);
+    align-items: baseline;
+}
+
+[part="title"] {
+    font-weight: var(--ulvia-official-font-weight-semibold, 600);
+}
+
+[part="meta"],
+[part="description"] {
+    color: var(--ulvia-official-text-secondary, #4f625a);
+    font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+}
+
+[part="body"] {
+    padding-block-start: var(--ulvia-official-spacing-xs, 0.5rem);
+}
+
+[part="actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
+    align-items: center;
+    justify-content: flex-end;
+}
+
+:host([density="compact"]) {
+    --list-item-padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
+}
+
+@container (max-width: 36rem) {
+    [part="item"] {
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+    }
+
+    [part="actions"] {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+}

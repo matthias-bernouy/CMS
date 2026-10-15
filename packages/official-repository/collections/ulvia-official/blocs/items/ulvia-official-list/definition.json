@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-list",
+    "label": "bloc.list.label",
+    "description": "bloc.list.description",
+    "category": "bloc.category.components",
+    "order": 25,
+    "uses": ["ulvia-official-list-item"],
+    "requires": [],
+    "slots": {
+        "items": {
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-list-item" }]
+        }
+    }
+}

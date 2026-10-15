@@ -1,0 +1,34 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-list-item",
+    "label": "bloc.list-item.label",
+    "description": "bloc.list-item.description",
+    "category": "bloc.category.components",
+    "order": 35,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "leading": {
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }],
+            "max": 1
+        },
+        "title": {
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }],
+            "min": 1,
+            "max": 1
+        },
+        "meta": {
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }]
+        },
+        "description": {
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }],
+            "max": 1
+        },
+        "body": {
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
+        },
+        "actions": {
+            "accepts": [{ "kind": "any-component" }]
+        }
+    }
+}
