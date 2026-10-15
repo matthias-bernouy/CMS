@@ -13,7 +13,7 @@
         slot="items"
         cms-query="ulvia.cms.collections:catalogue as catalogue"
         cms-query-listen="@page:ulvia-official-collection-catalogue-mutation/lastSuccess/requestId"
-        cms-query-refresh="focus reconnect"
+        cms-query-refresh="interval(5s) focus reconnect"
     >
         <p role="status" cms-condition="catalogue.activity === 'fetching'">
             {{ cms.i18n.ulvia-official.ui-reading-collection-catalogue }}
