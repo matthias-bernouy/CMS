@@ -19,6 +19,7 @@ type CapturedSubmission = {
 
 type IdempotencyAttempt = { fingerprint: string; key: string };
 const idempotencyAttempts = new WeakMap<HTMLFormElement, IdempotencyAttempt>();
+const fileIdentities = new WeakMap<object, string>();
 
 export class MutationRequest {
     private latestInput: SerializedForm["data"] | undefined;
@@ -127,7 +128,7 @@ export class MutationRequest {
     }
 
     private idempotency(form: HTMLFormElement, serialized: SerializedForm): string {
-        const fingerprint = submissionFingerprint(serialized);
+        const fingerprint = submissionFingerprint(form, serialized);
         const current = idempotencyAttempts.get(form);
         if (current?.fingerprint === fingerprint) {
             return current.key;
@@ -142,7 +143,7 @@ export class MutationRequest {
     }
 }
 
-function submissionFingerprint(serialized: SerializedForm): string {
+function submissionFingerprint(form: HTMLFormElement, serialized: SerializedForm): string {
     if (serialized.kind === "json") {
         return `${serialized.kind}\0${serialized.url}\0${serialized.body}`;
     }
@@ -153,7 +154,7 @@ function submissionFingerprint(serialized: SerializedForm): string {
         name,
         typeof value === "string" ? { kind: "string", value } : fileFingerprint(value),
     ]);
-    return `${serialized.kind}\0${serialized.url}\0${JSON.stringify(entries)}`;
+    return `${serialized.kind}\0${serialized.url}\0${JSON.stringify(entries)}\0${formFileIdentityFingerprint(form)}`;
 }
 
 function fileFingerprint(value: unknown): Record<string, unknown> {
@@ -170,6 +171,31 @@ function fileFingerprint(value: unknown): Record<string, unknown> {
         type: file.type,
         lastModified: file.lastModified,
     };
+}
+
+function formFileIdentityFingerprint(form: HTMLFormElement): string {
+    const controls = Array.from(form.querySelectorAll<HTMLElement>("[name]"));
+    const files = controls.flatMap((control, controlIndex) => {
+        const values =
+            "files" in control ? Array.from((control as HTMLElement & { files?: FileList | File[] }).files ?? []) : [];
+        return values.map((file, fileIndex) => ({
+            controlIndex,
+            fileIndex,
+            name: (control as HTMLElement & { name?: string }).name ?? control.getAttribute("name") ?? "",
+            identity: fileIdentity(file),
+        }));
+    });
+    return JSON.stringify(files);
+}
+
+function fileIdentity(file: object): string {
+    const current = fileIdentities.get(file);
+    if (current) {
+        return current;
+    }
+    const identity = crypto.randomUUID();
+    fileIdentities.set(file, identity);
+    return identity;
 }
 
 function ownerForm(value: EventTarget | null, document: Document): HTMLFormElement | null {

@@ -157,6 +157,41 @@ describe("Form mutation — submit request", () => {
         runtime.stop();
     });
 
+    test("automatic idempotency distinguishes files with identical metadata", async () => {
+        const keys: string[] = [];
+        globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+            keys.push(new Headers(init?.headers).get("X-Ulvia-Automatic-Idempotency-Key") ?? "");
+            return Response.json({ error: { code: "UNAVAILABLE", retryable: true } }, { status: 503 });
+        }) as typeof fetch;
+        const root = el(`
+            <form cms-mutation="test.files:upload as result">
+                <upload-control name="file"></upload-control>
+                <button type="submit">Upload</button>
+            </form>
+        `) as HTMLFormElement;
+        document.body.append(root);
+        const control = root.querySelector("upload-control") as HTMLElement & { name: string; files: File[] };
+        control.name = "file";
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+        await settle();
+
+        control.files = [new File(["first"], "image.png", { type: "image/png", lastModified: 10 })];
+        root.requestSubmit();
+        await waitFor(() => keys.length === 1);
+        await settle();
+        root.requestSubmit();
+        await waitFor(() => keys.length === 2);
+        expect(keys[1]).toBe(keys[0]);
+
+        control.files = [new File(["other"], "image.png", { type: "image/png", lastModified: 10 })];
+        await settle();
+        root.requestSubmit();
+        await waitFor(() => keys.length === 3);
+        expect(keys[2]).not.toBe(keys[1]);
+        runtime.stop();
+    });
+
     test("programmatic requests submit through the active declarative mutation runtime", async () => {
         let payload: unknown;
         globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
@@ -204,5 +239,12 @@ describe("Form mutation — submit request", () => {
         expect(error).toBeInstanceOf(MutationFormError);
         expect(error).toMatchObject({ message: "Invalid profile", status: 422, body: { message: "Invalid profile" } });
         runtime.stop();
+    });
+
+    test("programmatic requests fail immediately while their declarative form is inactive", async () => {
+        const host = el('<div><form cms-mutation="test.profile:save as save"></form></div>');
+        document.body.append(host);
+
+        await expect(mutationFormRequest(host, "save")).rejects.toThrow("Declarative mutation form is not active");
     });
 });

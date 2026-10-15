@@ -4,14 +4,9 @@ import { parseMutation } from "cms-content/blocs/core/markup/bindings";
 const submittedControls = new WeakMap<HTMLFormElement, HTMLElement[]>();
 type MutationRunner = () => Promise<FormSubmitResult | null>;
 const activeForms = new WeakMap<HTMLFormElement, MutationRunner>();
-const activationWaiters = new WeakMap<HTMLFormElement, Set<(runner: MutationRunner) => void>>();
 
 export function activateMutationForm(form: HTMLFormElement, runner: MutationRunner): () => void {
     activeForms.set(form, runner);
-    for (const resolve of activationWaiters.get(form) ?? []) {
-        resolve(runner);
-    }
-    activationWaiters.delete(form);
     return () => {
         if (activeForms.get(form) === runner) {
             activeForms.delete(form);
@@ -54,7 +49,10 @@ export async function mutationFormRequest(
 }
 
 async function requestForm(form: HTMLFormElement, values: Record<string, unknown>): Promise<unknown> {
-    const run = await mutationReady(form);
+    const run = activeForms.get(form);
+    if (!run) {
+        throw new Error("Declarative mutation form is not active.");
+    }
     replaceSubmittedControls(form, values);
     const result = await run();
     if (!result) {
@@ -137,18 +135,6 @@ function appendValue(form: HTMLFormElement, controls: HTMLElement[], name: strin
     }
     input.value = String(value);
     controls.push(input);
-}
-
-function mutationReady(form: HTMLFormElement): Promise<MutationRunner> {
-    const active = activeForms.get(form);
-    if (active) {
-        return Promise.resolve(active);
-    }
-    return new Promise((resolve) => {
-        const waiters = activationWaiters.get(form) ?? new Set();
-        waiters.add(resolve);
-        activationWaiters.set(form, waiters);
-    });
 }
 
 function resultMessage(result: FormSubmitResult): string {
