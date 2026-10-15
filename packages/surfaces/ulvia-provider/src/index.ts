@@ -52,11 +52,8 @@ export type {
     InstanceTransitionStore,
 } from "./instances/transitions";
 export {
-    OFFICIAL_INSTANCE_PROFILE,
-    SUPPORTED_INSTANCE_PROFILES,
-    SYSTEM_CONTRACT_IDS,
+    OfficialInstanceProfiles,
     canUpgradeOfficialInstanceProfile,
-    resolveOfficialInstanceProfile,
     type OfficialInstanceProfile,
 } from "./instances/officialProfile";
 export {

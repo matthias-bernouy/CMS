@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { OFFICIAL_INSTANCE_PROFILE } from "./officialProfile";
+import type { OfficialInstanceProfiles } from "./officialProfile";
 import type { OfficialInstanceProvisioner, ProviderInstanceAdministrator } from "./provisioning";
 import type { ProviderInstanceRegistry } from "./registry";
 import type { ProviderInstanceProfile, ProviderInstanceRecord } from "./types";
@@ -40,6 +40,7 @@ export class ProviderInstanceLifecycle {
         private readonly instances: ProviderInstanceRegistry,
         private readonly credentials: ProviderInstanceCredentials,
         private readonly provisioner: OfficialInstanceProvisioner,
+        private readonly profiles: OfficialInstanceProfiles,
         private readonly idempotencySecret: string,
     ) {}
 
@@ -57,7 +58,10 @@ export class ProviderInstanceLifecycle {
                 kernelUrl: input.kernelUrl,
                 label: input.label.trim(),
                 status: "provisioning",
-                profile: { id: OFFICIAL_INSTANCE_PROFILE.id, version: OFFICIAL_INSTANCE_PROFILE.version },
+                profile: {
+                    id: this.profiles.defaultProfile.id,
+                    version: this.profiles.defaultProfile.version,
+                },
             });
         }
         assertMatchingFingerprint(instance.idempotencyFingerprint, idempotencyFingerprint);

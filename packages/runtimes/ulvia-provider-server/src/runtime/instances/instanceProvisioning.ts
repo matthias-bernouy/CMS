@@ -25,9 +25,9 @@ type TargetOptions = Readonly<{
 
 export function createInstanceProvisioningTarget(options: TargetOptions): OfficialInstanceProvisioningTarget {
     return {
-        importManifest: async (_profile, execution) => {
+        importManifest: async (profile, execution) => {
             execution.throwIfLeaseLost();
-            const manifest = await loadOfficialManifest(options.providerSource);
+            const manifest = await loadOfficialManifest(options.providerSource, profile);
             execution.throwIfLeaseLost();
             await options.composition.management.importManifest(manifest);
             execution.throwIfLeaseLost();

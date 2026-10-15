@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
-    OFFICIAL_INSTANCE_PROFILE,
+    OfficialInstanceProfiles,
     OfficialInstanceProvisioner,
     canUpgradeOfficialInstanceProfile,
     type CreateProviderInstanceRecord,
@@ -11,6 +11,23 @@ import {
     type ProviderInstanceRegistry,
     type UpdateProviderInstanceRecord,
 } from "../src";
+
+const OFFICIAL_INSTANCE_PROFILE = Object.freeze({
+    id: "ulvia.official",
+    version: "1.0.0",
+    upgradeFromVersions: Object.freeze([] as string[]),
+    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` }),
+    contracts: Object.freeze([
+        Object.freeze({ contractId: "ulvia.cms.pages", version: "1.0.0", digest: `sha256:${"b".repeat(64)}` }),
+    ]),
+    collection: Object.freeze({
+        publisherId: "ulvia.official",
+        collectionId: "ulvia-official",
+        version: "1.0.0",
+        digest: `sha256:${"c".repeat(64)}`,
+    }),
+});
+const PROFILES = new OfficialInstanceProfiles([OFFICIAL_INSTANCE_PROFILE]);
 
 describe("OfficialInstanceProvisioner", () => {
     test("journals provisioning steps and never replays a completed transition", async () => {
@@ -61,6 +78,7 @@ describe("OfficialInstanceProvisioner", () => {
                     throw new Error("secret store unavailable");
                 }
             }),
+            PROFILES,
         );
 
         await expect(provisioner.provision("instance:one")).rejects.toThrow("secret store unavailable");
@@ -117,6 +135,7 @@ describe("OfficialInstanceProvisioner", () => {
                 return target([], async () => undefined);
             },
             administratorCredentials(),
+            PROFILES,
             () => new Date(),
             3,
         );
@@ -151,6 +170,7 @@ function createProvisioner(
         transitions,
         async () => target(calls, installCollection),
         administratorCredentials(),
+        PROFILES,
     );
 }
 

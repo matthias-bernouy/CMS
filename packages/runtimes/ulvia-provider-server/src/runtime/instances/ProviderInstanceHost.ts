@@ -12,8 +12,8 @@ import {
     DefaultProviderCapabilityDispatcher,
     ProviderOperationExecutor,
     registerOfficialProviderCapabilities,
-    resolveOfficialInstanceProfile,
     type OfficialInstanceProfile,
+    type OfficialInstanceProfiles,
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceRecord,
     type UlviaProviderInstanceRuntime,
@@ -55,6 +55,7 @@ export class ProviderInstanceHost {
     constructor(
         private readonly env: ProviderRuntimeEnv,
         private readonly credentials: EncryptedInstanceCredentials,
+        private readonly profiles: OfficialInstanceProfiles,
     ) {
         this.#providerSource = new HttpProviderRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
         this.#collectionSource = new HttpCollectionRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
@@ -73,7 +74,7 @@ export class ProviderInstanceHost {
         return {
             resource: {
                 ...lease.resource.runtime,
-                report: providerReport(instance),
+                report: providerReport(instance, this.requiredProfile(instance.profile.id, instance.profile.version)),
                 instance: {
                     id: instance.id,
                     status: instance.status,
@@ -160,7 +161,7 @@ export class ProviderInstanceHost {
                     sources: [this.#providerSource],
                     readReport: async () => providerReport(instance, profile),
                 });
-            const profile = requiredProfile(instance.profile.id, instance.profile.version);
+            const profile = this.requiredProfile(instance.profile.id, instance.profile.version);
             const report = providerReport(instance, profile);
             const management = managementForProfile(profile);
             const observation = new OfficialProviderObservation(management, instance.id, profile);
@@ -175,7 +176,7 @@ export class ProviderInstanceHost {
                 stores,
                 gateway,
                 operations,
-                createProtectedProviderManagement(management, instance),
+                createProtectedProviderManagement(management, instance, profile),
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
                 new CmsFileWorkspace(stores.providerFiles, stores.secrets),
@@ -218,13 +219,16 @@ export class ProviderInstanceHost {
             throw error;
         }
     }
+    private requiredProfile(id: string, version: string): OfficialInstanceProfile {
+        const profile = this.profiles.resolve(id, version);
+        if (!profile) {
+            throw new Error(`Unsupported Provider instance profile: ${id}@${version}`);
+        }
+        return profile;
+    }
 }
 
-function providerReport(
-    instance: ProviderInstanceRecord,
-    selectedProfile?: OfficialInstanceProfile,
-): ProviderRuntimeReport {
-    const profile = selectedProfile ?? requiredProfile(instance.profile.id, instance.profile.version);
+function providerReport(instance: ProviderInstanceRecord, profile: OfficialInstanceProfile): ProviderRuntimeReport {
     return {
         protocol: "ulvia-provider/v1",
         providerId: profile.manifest.providerId,
@@ -238,14 +242,6 @@ function providerReport(
             status: "ready" as const,
         })),
     };
-}
-
-function requiredProfile(id: string, version: string): OfficialInstanceProfile {
-    const profile = resolveOfficialInstanceProfile(id, version);
-    if (!profile) {
-        throw new Error(`Unsupported Provider instance profile: ${id}@${version}`);
-    }
-    return profile;
 }
 
 function compositionKey(instance: ProviderInstanceRecord): string {

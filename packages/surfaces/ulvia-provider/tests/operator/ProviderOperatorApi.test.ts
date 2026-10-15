@@ -8,7 +8,7 @@ import type {
     ProviderInstanceRegistry,
     UpdateProviderInstanceRecord,
 } from "../../src";
-import { ProviderInstanceLifecycle, ProviderOperatorApi } from "../../src";
+import { OfficialInstanceProfiles, ProviderInstanceLifecycle, ProviderOperatorApi } from "../../src";
 
 const OPERATOR_TOKEN = "operator-token-that-is-long-enough";
 
@@ -79,6 +79,7 @@ test("an idempotency key can only replay the exact instance request", async () =
             clearAdministrator: async () => undefined,
         },
         { provision: async (id: string) => required(await registry.get(id)) } as unknown as OfficialInstanceProvisioner,
+        profiles(),
         "idempotency-secret",
     );
     const input = {
@@ -96,6 +97,24 @@ test("an idempotency key can only replay the exact instance request", async () =
         }),
     ).rejects.toThrow("different request");
 });
+
+function profiles(): OfficialInstanceProfiles {
+    return new OfficialInstanceProfiles([
+        {
+            id: "ulvia.official",
+            version: "1.0.0",
+            upgradeFromVersions: [],
+            manifest: { providerId: "ulvia.official", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` },
+            contracts: [],
+            collection: {
+                publisherId: "ulvia.official",
+                collectionId: "ulvia-official",
+                version: "1.0.0",
+                digest: `sha256:${"b".repeat(64)}`,
+            },
+        },
+    ]);
+}
 
 function readyInstance(): ProviderInstanceRecord {
     return {

@@ -1,31 +1,5 @@
 import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 
-const PROFILE_1_0_0 = Object.freeze({
-    id: "ulvia.official",
-    version: "1.0.0",
-    manifest: {
-        providerId: "ulvia.official",
-        version: "0.3.0",
-        digest: "sha256:86f40a4b690ff94d77d0c8dca9aca0cf885925cdca38af92d86ef32f2b58afbb",
-    },
-    contracts: [
-        ["ulvia.cms.access", "1.0.0", "sha256:c12027a8e15cc47633ff72b32eff0ac19b6b3da870c33d2270f51c9ec4c302e1"],
-        ["ulvia.cms.collections", "1.0.0", "sha256:2ba95ce154f6823b00243efce7e15916541fe4c489f7c6f79b055cf03bdb7ce1"],
-        ["ulvia.cms.files", "1.0.0", "sha256:fa9e6aac42c7c466a44ff10f39e77ae6941508bf105d87dc54dbd6c7a6d57fcc"],
-        ["ulvia.cms.jobs", "1.0.0", "sha256:27a89ae82a8417ce80df81fffe5e98355bbcc6c1d0cb3321ac3881c3b95d519a"],
-        ["ulvia.cms.localization", "1.0.0", "sha256:e588415389e6a61418de058d230e7aea0ef1153329686049cff4cc3c68897347"],
-        ["ulvia.cms.pages", "1.0.0", "sha256:5861aa84cd305cc2a634b28f0649b3b20793e5ce7d4777efe4fdaa91ca1c1248"],
-        ["ulvia.cms.providers", "1.0.0", "sha256:e8f3a7c7a88515aa4f26093895f66fbc9559564aed1293df8b652759f234449b"],
-        ["ulvia.cms.theme", "1.0.0", "sha256:84ab33385113a421c545d4d74416e0e22751a42183d51caa759d62a935ba6d0b"],
-    ].map(([contractId, version, digest]) => ({ contractId: contractId!, version: version!, digest: digest! })),
-    collection: {
-        publisherId: "ulvia.official",
-        collectionId: "ulvia-official",
-        version: "1.0.0",
-        digest: "sha256:1a59fec7f009ed87cfa9126cc34ab19e1f405fa339751a3dca68e2a4d05c6da7",
-    },
-});
-
 export type OfficialInstanceProfile = Readonly<{
     id: string;
     version: string;
@@ -40,17 +14,33 @@ export type OfficialInstanceProfile = Readonly<{
     }>;
 }>;
 
-const PROFILE_1_0_0_WITH_TRANSITIONS: OfficialInstanceProfile = Object.freeze({
-    ...PROFILE_1_0_0,
-    upgradeFromVersions: [],
-});
+export class OfficialInstanceProfiles {
+    readonly defaultProfile: OfficialInstanceProfile;
+    readonly profiles: readonly OfficialInstanceProfile[];
+    readonly #byCoordinate = new Map<string, OfficialInstanceProfile>();
 
-export const SUPPORTED_INSTANCE_PROFILES = Object.freeze([PROFILE_1_0_0_WITH_TRANSITIONS]);
+    constructor(profiles: readonly OfficialInstanceProfile[], defaultProfile: OfficialInstanceProfile = profiles[0]!) {
+        if (profiles.length === 0 || !profiles.includes(defaultProfile)) {
+            throw new TypeError("Official instance profiles require one declared default");
+        }
+        for (const profile of profiles) {
+            const key = coordinate(profile.id, profile.version);
+            if (this.#byCoordinate.has(key)) {
+                throw new TypeError(`Duplicate official instance profile: ${profile.id}@${profile.version}`);
+            }
+            this.#byCoordinate.set(key, profile);
+        }
+        this.profiles = Object.freeze([...profiles]);
+        this.defaultProfile = defaultProfile;
+    }
 
-export const OFFICIAL_INSTANCE_PROFILE = PROFILE_1_0_0_WITH_TRANSITIONS;
+    resolve(id: string, version: string): OfficialInstanceProfile | null {
+        return this.#byCoordinate.get(coordinate(id, version)) ?? null;
+    }
 
-export function resolveOfficialInstanceProfile(id: string, version: string): OfficialInstanceProfile | null {
-    return SUPPORTED_INSTANCE_PROFILES.find((profile) => profile.id === id && profile.version === version) ?? null;
+    canUpgrade(source: OfficialInstanceProfile, target: OfficialInstanceProfile): boolean {
+        return canUpgradeOfficialInstanceProfile(source, target);
+    }
 }
 
 export function canUpgradeOfficialInstanceProfile(
@@ -64,4 +54,6 @@ export function canUpgradeOfficialInstanceProfile(
     );
 }
 
-export const SYSTEM_CONTRACT_IDS = Object.freeze(PROFILE_1_0_0.contracts.map(({ contractId }) => contractId));
+function coordinate(id: string, version: string): string {
+    return `${id}\0${version}`;
+}

@@ -1,10 +1,26 @@
 import { describe, expect, test } from "bun:test";
-import { OFFICIAL_INSTANCE_PROFILE, type ProviderInstanceRecord } from "@bernouy/ulvia-provider";
+import type { OfficialInstanceProfile, ProviderInstanceRecord } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../src/runtimeEnv";
 import type { InstanceComposition } from "../src/runtime/instances/ProviderInstanceHost";
 import { createInstanceProvisioningTarget } from "../src/runtime/instances/instanceProvisioning";
 import { installOfficialCollection } from "../src/runtime/instances/instanceInitialization";
 import { OfficialProviderObservation } from "../src/runtime/instances/OfficialProviderObservation";
+
+const OFFICIAL_INSTANCE_PROFILE: OfficialInstanceProfile = Object.freeze({
+    id: "ulvia.official",
+    version: "1.0.0",
+    upgradeFromVersions: Object.freeze([]),
+    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` }),
+    contracts: Object.freeze([
+        Object.freeze({ contractId: "ulvia.cms.pages", version: "1.0.0", digest: `sha256:${"b".repeat(64)}` }),
+    ]),
+    collection: Object.freeze({
+        publisherId: "ulvia.official",
+        collectionId: "ulvia-official",
+        version: "1.0.0",
+        digest: `sha256:${"c".repeat(64)}`,
+    }),
+});
 
 test("the Provider owns every persistent instance service while remaining independent from Kernel", async () => {
     const [entrypoint, stores] = await Promise.all([
@@ -14,7 +30,7 @@ test("the Provider owns every persistent instance service while remaining indepe
 
     expect(entrypoint).not.toContain("cms-kernel-server");
     expect(entrypoint).not.toContain("cms-instance-runtime");
-    expect(entrypoint).toContain("host.recoverOperations");
+    expect(entrypoint).toContain("instanceHost.recoverOperations");
     expect(stores).toContain("MongoAuthTokenStore");
     expect(stores).toContain("MongoRateLimiter");
     expect(stores).toContain("sitemapStore");

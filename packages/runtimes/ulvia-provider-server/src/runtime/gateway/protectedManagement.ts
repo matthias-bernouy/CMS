@@ -1,15 +1,11 @@
 import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
-import type { UlviaProviderManagement } from "@bernouy/ulvia-provider";
-import { resolveOfficialInstanceProfile, type ProviderInstanceRecord } from "@bernouy/ulvia-provider";
+import type { OfficialInstanceProfile, ProviderInstanceRecord, UlviaProviderManagement } from "@bernouy/ulvia-provider";
 
 export function createProtectedProviderManagement(
     management: ProviderManagement,
     instance: ProviderInstanceRecord,
+    profile: OfficialInstanceProfile,
 ): UlviaProviderManagement {
-    const profile = resolveOfficialInstanceProfile(instance.profile.id, instance.profile.version);
-    if (!profile) {
-        throw new Error(`Unsupported Provider instance profile: ${instance.profile.id}@${instance.profile.version}`);
-    }
     return {
         replaceSelections: async (input) => {
             const state = await management.list();
