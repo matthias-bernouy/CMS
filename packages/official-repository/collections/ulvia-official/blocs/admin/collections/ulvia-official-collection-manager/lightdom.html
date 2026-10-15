@@ -1,14 +1,4 @@
 <ulvia-official-stack gap="xl">
-    <ulvia-official-route-tabs slot="items" label="{{ cms.i18n.ulvia-official.ui-collections }}" appearance="pills" size="sm">
-        <ulvia-official-route-tab slot="items"
-            ><a href="#installed-collections">{{ cms.i18n.ulvia-official.ui-installed-collections }}</a></ulvia-official-route-tab
-        >
-        <ulvia-official-route-tab slot="items"
-            ><a href="#repository-releases">{{ cms.i18n.ulvia-official.ui-repository-releases }}</a></ulvia-official-route-tab
-        >
-        <ulvia-official-route-tab slot="items"><a href="#migration-status">{{ cms.i18n.ulvia-official.ui-migration-status }}</a></ulvia-official-route-tab>
-        <ulvia-official-route-tab slot="items"><a href="#collection-activity">{{ cms.i18n.ulvia-official.ui-recent-activity }}</a></ulvia-official-route-tab>
-    </ulvia-official-route-tabs>
     <section
         slot="items"
         cms-query="ulvia.cms.collections:catalogue as catalogue"
