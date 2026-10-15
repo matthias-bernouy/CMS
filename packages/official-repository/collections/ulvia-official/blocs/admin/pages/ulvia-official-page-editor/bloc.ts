@@ -8,6 +8,8 @@ import { EditorStatus } from "./runtime/status";
 import { itemForElement, renderCatalogue, renderOutline, renderSettings } from "./runtime/view";
 import { initializePageEditor } from "./runtime/workspace";
 
+const PAGE_ID_PARAM = "ulvia-official-page-id";
+
 export class Bloc extends Component {
     private pageDocument = new EditablePageDocument("");
     private catalogue: EditorCatalogueItem[] = [];
@@ -33,7 +35,7 @@ export class Bloc extends Component {
 
     private async load(): Promise<void> {
         await this.status.run(async () => {
-            const id = new URL(location.href).searchParams.get("id");
+            const id = new URL(location.href).searchParams.get(PAGE_ID_PARAM);
             if (!id) {
                 throw new Error("The Page identity is missing.");
             }

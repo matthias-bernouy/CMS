@@ -7,11 +7,25 @@ export class CapabilityError extends Error {
     }
 }
 
-export async function callCapability<T>(capabilityId: string, input: unknown): Promise<T> {
-    const response = await fetch(`/.cms/call/ulvia.cms.pages/${encodeURIComponent(capabilityId)}`, {
-        method: "POST",
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify(input),
+type PageEditorCapability = "editor-catalogue" | "get" | "update";
+
+const REQUEST_BY_CAPABILITY = {
+    "editor-catalogue": { route: "query", method: "GET" },
+    get: { route: "query", method: "QUERY" },
+    update: { route: "call", method: "POST" },
+} as const satisfies Readonly<
+    Record<PageEditorCapability, { route: "call" | "query"; method: "GET" | "POST" | "QUERY" }>
+>;
+
+export async function callCapability<T>(capabilityId: PageEditorCapability, input: unknown): Promise<T> {
+    const { method, route } = REQUEST_BY_CAPABILITY[capabilityId];
+    const response = await fetch(`/.cms/${route}/ulvia.cms.pages/${encodeURIComponent(capabilityId)}`, {
+        method,
+        headers: {
+            Accept: "application/json",
+            ...(method === "GET" ? {} : { "Content-Type": "application/json" }),
+        },
+        ...(method === "GET" ? {} : { body: JSON.stringify(input) }),
     });
     const body = await response.json().catch(() => ({ error: `Request failed (${response.status})` }));
     if (!response.ok) {
