@@ -13,5 +13,19 @@
                 { "value": "end", "label": "setting.option.end" }
             ]
         }
+    },
+    {
+        "id": "size",
+        "label": "setting.size.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "default",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "default", "label": "setting.option.default" }
+            ]
+        }
     }
 ]

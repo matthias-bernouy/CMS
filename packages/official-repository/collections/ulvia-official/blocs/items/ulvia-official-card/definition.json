@@ -25,7 +25,7 @@
             "max": 1
         },
         "body": {
-            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }],
             "max": 1
         },
         "actions": {
