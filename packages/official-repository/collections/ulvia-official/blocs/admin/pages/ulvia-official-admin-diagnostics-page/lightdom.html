@@ -15,7 +15,7 @@
             cms-query="ulvia.cms.collections:migration-status as migrations"
             cms-query-input='{"limit":{"from":"literal","value":20}}'
         >
-            <ulvia-official-surface appearance="elevated" padding="lg">
+            <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
                 <h2 slot="content" id="migration-health-title">{{ cms.i18n.ulvia-official.ui-content-maintenance }}</h2>
                 <p slot="content" role="status" cms-condition="migrations.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-migration-state }}</p>
                 <ulvia-official-stack slot="content" cms-match="migrations.outcome.kind" gap="sm">
@@ -60,7 +60,7 @@
             cms-query="ulvia.cms.jobs:list as jobs"
             cms-query-input='{"limit":{"from":"literal","value":50}}'
         >
-            <ulvia-official-surface appearance="outlined" padding="lg">
+            <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
                 <h2 slot="content" id="job-health-title">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</h2>
                 <p slot="content" role="status" cms-condition="jobs.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-durable-jobs }}</p>
                 <ulvia-official-stack slot="content" cms-match="jobs.outcome.kind" gap="sm">
@@ -87,7 +87,7 @@
             </ulvia-official-surface>
         </section>
         <section id="provider-health" slot="items" aria-labelledby="provider-health-title" cms-query="ulvia.cms.providers:list as providers">
-            <ulvia-official-surface appearance="outlined" padding="lg">
+            <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
                 <h2 slot="content" id="provider-health-title">{{ cms.i18n.ulvia-official.ui-provider-installations }}</h2>
                 <p slot="content" role="status" cms-condition="providers.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-provider-state }}</p>
                 <ulvia-official-stack slot="content" cms-match="providers.outcome.kind" gap="sm">

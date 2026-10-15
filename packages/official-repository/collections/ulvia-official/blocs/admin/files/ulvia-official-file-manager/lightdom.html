@@ -7,7 +7,7 @@
         >
         <ulvia-official-dialog slot="items">
             <dialog id="upload-file-dialog" aria-labelledby="upload-file-dialog-title">
-                <ulvia-official-surface appearance="elevated" padding="lg">
+                <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
                     <ulvia-official-stack slot="content" gap="lg">
                         <ulvia-official-cluster slot="items" align="start" justify="between">
                             <h2 id="upload-file-dialog-title" slot="items">{{ cms.i18n.ulvia-official.ui-upload-a-file }}</h2>
@@ -111,7 +111,14 @@
                     </p>
                 </ulvia-official-cluster>
                 <ulvia-official-grid slot="items" cms-condition="workspace.data.items.length" columns="1" gap="md" role="list">
-                    <ulvia-official-surface slot="items" cms-repeat="workspace.data.items as file" appearance="outlined" padding="lg" role="listitem">
+                    <ulvia-official-surface
+                        slot="items"
+                        cms-repeat="workspace.data.items as file"
+                        appearance="outlined"
+                        padding="md"
+                        radius="sm"
+                        role="listitem"
+                    >
                         <ulvia-official-stack slot="content" gap="md">
                             <header slot="items">
                                 <h3>{{ file.name }}</h3>

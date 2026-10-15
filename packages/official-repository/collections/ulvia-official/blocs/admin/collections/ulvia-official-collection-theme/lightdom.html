@@ -109,7 +109,7 @@
             <p slot="items" cms-condition="collectionTheme.data.sourceFound &amp;&amp; collectionTheme.data.tokens.length === 0">
                 {{ cms.i18n.ulvia-official.ui-no-theme-token-matches-current-search }}
             </p>
-            <ulvia-official-surface slot="items" appearance="elevated" padding="lg" cms-condition="collectionTheme.data.hasToken">
+            <ulvia-official-surface slot="items" appearance="outlined" padding="md" radius="sm" cms-condition="collectionTheme.data.hasToken">
                 <ulvia-official-stack slot="content" gap="md">
                     <header slot="items">
                         <p>{{ collectionTheme.data.token.categoryLabel }}</p>

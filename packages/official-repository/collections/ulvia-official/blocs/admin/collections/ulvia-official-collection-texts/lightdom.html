@@ -87,7 +87,6 @@
                     <div slot="title">
                         <h4>{{ text.label }}</h4>
                         <p>{{ text.description }}</p>
-                        <code>{{ text.id }}</code>
                     </div>
                     <p slot="body">{{ text.sourceValue }}</p>
                     <ulvia-official-stack slot="actions" gap="sm">
@@ -102,7 +101,7 @@
                             <input type="hidden" name="expectedRevision" value="{{ collectionTexts.data.revision }}" cms-form-value-type="number">
                             <input type="hidden" name="locale" value="{{ collectionTexts.data.locale }}">
                             <input type="hidden" name="textId" value="{{ text.id }}">
-                            <ulvia-official-field label-position="top">
+                            <ulvia-official-field label-position="hidden">
                                 <label slot="label" for="collection-text-{{ text.id }}">
                                     {{ cms.i18n.ulvia-official.ui-site-override }}
                                 </label>
@@ -116,7 +115,7 @@
                                     >{{ text.overrideValue }}</textarea>
                                 </ulvia-official-textarea>
                             </ulvia-official-field>
-                            <ulvia-official-form-actions align="end">
+                            <ulvia-official-form-actions align="end" responsive-layout="wrap">
                                 <p slot="actions" role="status" aria-live="polite" cms-condition="savedText.activity === 'submitting'">
                                     {{ cms.i18n.ulvia-official.ui-working }}
                                 </p>
@@ -126,7 +125,7 @@
                                 <p slot="actions" role="alert" cms-condition="(savedText.outcome.kind === 'error' || savedText.outcome.kind === 'failure')">
                                     {{ cms.i18n.ulvia-official.ui-request-failed }}
                                 </p>
-                                <ulvia-official-action slot="actions" variant="filled" tone="primary">
+                                <ulvia-official-action slot="actions" variant="outline" tone="primary" size="sm">
                                     <button type="submit">{{ cms.i18n.ulvia-official.ui-save-translation }}</button>
                                 </ulvia-official-action>
                             </ulvia-official-form-actions>

@@ -42,7 +42,7 @@
                         </div>
                     </div>
                     <ulvia-official-stack cms-case='"success"' gap="lg">
-                        <ulvia-official-surface id="page-general" slot="items" appearance="elevated" padding="lg">
+                        <ulvia-official-surface id="page-general" slot="items" appearance="outlined" padding="md" radius="sm">
                             <form
                                 slot="content"
                                 cms-mutation="ulvia.cms.pages:update as saved"
@@ -112,10 +112,10 @@
                                 </div>
                             </form>
                         </ulvia-official-surface>
-                        <ulvia-official-surface id="page-content" slot="items" appearance="elevated" padding="lg">
+                        <ulvia-official-surface id="page-content" slot="items" appearance="outlined" padding="md" radius="sm">
                             <ulvia-official-page-editor slot="content"></ulvia-official-page-editor>
                         </ulvia-official-surface>
-                        <ulvia-official-surface id="page-routes" slot="items" appearance="outlined" padding="lg">
+                        <ulvia-official-surface id="page-routes" slot="items" appearance="outlined" padding="md" radius="sm">
                             <ulvia-official-stack slot="content" gap="lg">
                                 <header slot="items">
                                     <h2>{{ cms.i18n.ulvia-official.ui-routes }}</h2>
@@ -171,7 +171,7 @@
                                 </form>
                             </ulvia-official-stack>
                         </ulvia-official-surface>
-                        <ulvia-official-surface id="page-search" slot="items" appearance="outlined" padding="lg">
+                        <ulvia-official-surface id="page-search" slot="items" appearance="outlined" padding="md" radius="sm">
                             <ulvia-official-stack slot="content" gap="lg">
                                 <header slot="items">
                                     <h2>{{ cms.i18n.ulvia-official.ui-search-metadata }}</h2>
@@ -237,7 +237,7 @@
                                 </form>
                             </ulvia-official-stack>
                         </ulvia-official-surface>
-                        <ulvia-official-surface id="page-publication" slot="items" appearance="outlined" padding="lg">
+                        <ulvia-official-surface id="page-publication" slot="items" appearance="outlined" padding="md" radius="sm">
                             <ulvia-official-cluster slot="content" align="center" justify="between">
                                 <div slot="items">
                                     <h2>{{ cms.i18n.ulvia-official.ui-publication }}</h2>
@@ -300,7 +300,7 @@
                                 </form>
                             </ulvia-official-cluster>
                         </ulvia-official-surface>
-                        <ulvia-official-surface id="page-danger" slot="items" appearance="outlined" padding="lg">
+                        <ulvia-official-surface id="page-danger" slot="items" appearance="outlined" padding="md" radius="sm">
                             <h2 slot="content">{{ cms.i18n.ulvia-official.ui-danger-zone }}</h2>
                             <p slot="content">{{ cms.i18n.ulvia-official.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit }}</p>
                             <form slot="content" cms-mutation="ulvia.cms.pages:delete as deletion" cms-mutation-redirect="/admin/pages">
