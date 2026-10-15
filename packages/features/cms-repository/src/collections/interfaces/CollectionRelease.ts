@@ -80,7 +80,7 @@ export interface CollectionResourceImport {
     readonly generation: number;
 }
 
-export interface CollectionPageImport extends CollectionResourceImport {
+interface CollectionPageImport extends CollectionResourceImport {
     /** Authored route used by native links and verified against the selected dependency release. */
     readonly defaultPath: string;
 }
