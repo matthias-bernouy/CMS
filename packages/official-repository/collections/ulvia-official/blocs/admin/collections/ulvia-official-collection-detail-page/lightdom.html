@@ -44,32 +44,32 @@
                                 <code>{{ collection.data.digest }}</code>
                             </header>
                             <ulvia-official-grid slot="items" gap="md">
-                                <ulvia-official-surface slot="items" appearance="subtle" padding="md">
-                                    <ulvia-official-stat slot="content">
+                                <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="sm">
+                                    <ulvia-official-stat slot="content" size="sm">
                                         <strong slot="value">{{ collection.data.blocCount }}</strong>
                                         <span slot="label">{{ cms.i18n.ulvia-official.ui-blocks }}</span>
                                     </ulvia-official-stat>
                                 </ulvia-official-surface>
-                                <ulvia-official-surface slot="items" appearance="subtle" padding="md">
-                                    <ulvia-official-stat slot="content">
+                                <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="sm">
+                                    <ulvia-official-stat slot="content" size="sm">
                                         <strong slot="value">{{ collection.data.pageCount }}</strong>
                                         <span slot="label">{{ cms.i18n.ulvia-official.ui-pages-9046da16 }}</span>
                                     </ulvia-official-stat>
                                 </ulvia-official-surface>
-                                <ulvia-official-surface slot="items" appearance="subtle" padding="md">
-                                    <ulvia-official-stat slot="content">
+                                <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="sm">
+                                    <ulvia-official-stat slot="content" size="sm">
                                         <strong slot="value">{{ collection.data.assetCount }}</strong>
                                         <span slot="label">{{ cms.i18n.ulvia-official.ui-assets }}</span>
                                     </ulvia-official-stat>
                                 </ulvia-official-surface>
-                                <ulvia-official-surface slot="items" appearance="subtle" padding="md">
-                                    <ulvia-official-stat slot="content">
+                                <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="sm">
+                                    <ulvia-official-stat slot="content" size="sm">
                                         <strong slot="value">{{ collection.data.textCount }}</strong>
                                         <span slot="label">{{ cms.i18n.ulvia-official.ui-texts }}</span>
                                     </ulvia-official-stat>
                                 </ulvia-official-surface>
-                                <ulvia-official-surface slot="items" appearance="subtle" padding="md">
-                                    <ulvia-official-stat slot="content">
+                                <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="sm">
+                                    <ulvia-official-stat slot="content" size="sm">
                                         <strong slot="value">{{ collection.data.themeTokenCount }}</strong>
                                         <span slot="label">{{ cms.i18n.ulvia-official.ui-theme-tokens }}</span>
                                     </ulvia-official-stat>
@@ -78,7 +78,7 @@
                         </ulvia-official-stack>
                     </div>
 
-                    <ulvia-official-surface id="collection-blocks" slot="items" appearance="outlined" padding="lg">
+                    <ulvia-official-surface id="collection-blocks" slot="items" appearance="outlined" padding="md" radius="sm">
                         <ulvia-official-stack slot="content" gap="md">
                             <h2 slot="items">{{ cms.i18n.ulvia-official.ui-blocks }}</h2>
                             <ulvia-official-grid slot="items" columns="3" gap="md">
@@ -95,7 +95,7 @@
                     </ulvia-official-surface>
 
                     <div id="collection-configuration" slot="items" cms-condition="collection.data.configurable">
-                        <ulvia-official-surface appearance="outlined" padding="lg">
+                        <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
                             <form
                                 slot="content"
                                 cms-mutation="ulvia.cms.collections:update-configuration as mutation"
@@ -149,14 +149,10 @@
                     </div>
 
                     <div id="collection-theme" slot="items" cms-condition="collection.data.themeTokenCount > 0">
-                        <ulvia-official-surface appearance="outlined" padding="lg">
-                            <ulvia-official-collection-theme slot="content"></ulvia-official-collection-theme>
-                        </ulvia-official-surface>
+                        <ulvia-official-collection-theme></ulvia-official-collection-theme>
                     </div>
                     <div id="collection-texts" slot="items" cms-condition="collection.data.textCount > 0">
-                        <ulvia-official-surface appearance="outlined" padding="lg">
-                            <ulvia-official-collection-texts slot="content"></ulvia-official-collection-texts>
-                        </ulvia-official-surface>
+                        <ulvia-official-collection-texts></ulvia-official-collection-texts>
                     </div>
                 </ulvia-official-stack>
             </div>

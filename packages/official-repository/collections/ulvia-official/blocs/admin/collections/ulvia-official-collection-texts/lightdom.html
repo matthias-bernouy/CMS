@@ -21,7 +21,7 @@
                 <h3>{{ cms.i18n.ulvia-official.ui-collection-text-editor }}</h3>
                 <p>{{ cms.i18n.ulvia-official.ui-edit-collection-text-overrides-help }}</p>
             </header>
-            <ulvia-official-surface slot="items" appearance="subtle" padding="lg">
+            <ulvia-official-surface slot="items" appearance="outlined" padding="md" radius="sm">
                 <ulvia-official-grid slot="content" columns="3" align="end" gap="md">
                     <ulvia-official-field slot="items" label-position="top">
                         <label slot="label" for="collection-text-locale">
@@ -77,31 +77,32 @@
             <p slot="items" cms-condition="collectionTexts.data.groups.length > 0 &amp;&amp; collectionTexts.data.items.length === 0">
                 {{ cms.i18n.ulvia-official.ui-no-text-matches-current-filters }}
             </p>
-            <ulvia-official-stack slot="items" gap="md" cms-condition="collectionTexts.data.items.length">
-                <form
-                    slot="items"
-                    cms-repeat="collectionTexts.data.items as text"
-                    cms-mutation="ulvia.cms.localization:save-text as savedText"
-                    cms-sync="@page:ulvia-official-collection-texts-mutation"
-                    cms-sync-select="lastSuccess.requestId"
-                    cms-mutation-reset="false"
-                >
-                    <input type="hidden" name="collectionId" value="{{ collectionTexts.data.collectionId }}">
-                    <input type="hidden" name="expectedRevision" value="{{ collectionTexts.data.revision }}" cms-form-value-type="number">
-                    <input type="hidden" name="locale" value="{{ collectionTexts.data.locale }}">
-                    <input type="hidden" name="textId" value="{{ text.id }}">
-                    <ulvia-official-surface appearance="outlined" padding="lg">
-                        <ulvia-official-stack slot="content" gap="md">
-                            <header slot="items">
-                                <h4>{{ text.label }}</h4>
-                                <p>{{ text.description }}</p>
-                                <code>{{ text.id }}</code>
-                            </header>
-                            <ulvia-official-surface slot="items" appearance="subtle" padding="md">
-                                <p slot="content">{{ cms.i18n.ulvia-official.ui-collection-value }}</p>
-                                <p slot="content">{{ text.sourceValue }}</p>
-                            </ulvia-official-surface>
-                            <ulvia-official-field slot="items" label-position="top">
+            <ulvia-official-list slot="items" cms-condition="collectionTexts.data.items.length">
+                <ulvia-official-grid slot="header" columns="3" gap="md">
+                    <span slot="items">{{ cms.i18n.ulvia-official.ui-texts }}</span>
+                    <span slot="items">{{ cms.i18n.ulvia-official.ui-collection-value }}</span>
+                    <span slot="items">{{ cms.i18n.ulvia-official.ui-site-override }}</span>
+                </ulvia-official-grid>
+                <ulvia-official-list-item slot="items" cms-repeat="collectionTexts.data.items as text" layout="columns">
+                    <div slot="title">
+                        <h4>{{ text.label }}</h4>
+                        <p>{{ text.description }}</p>
+                        <code>{{ text.id }}</code>
+                    </div>
+                    <p slot="body">{{ text.sourceValue }}</p>
+                    <ulvia-official-stack slot="actions" gap="sm">
+                        <form
+                            slot="items"
+                            cms-mutation="ulvia.cms.localization:save-text as savedText"
+                            cms-sync="@page:ulvia-official-collection-texts-mutation"
+                            cms-sync-select="lastSuccess.requestId"
+                            cms-mutation-reset="false"
+                        >
+                            <input type="hidden" name="collectionId" value="{{ collectionTexts.data.collectionId }}">
+                            <input type="hidden" name="expectedRevision" value="{{ collectionTexts.data.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="locale" value="{{ collectionTexts.data.locale }}">
+                            <input type="hidden" name="textId" value="{{ text.id }}">
+                            <ulvia-official-field label-position="top">
                                 <label slot="label" for="collection-text-{{ text.id }}">
                                     {{ cms.i18n.ulvia-official.ui-site-override }}
                                 </label>
@@ -115,7 +116,7 @@
                                     >{{ text.overrideValue }}</textarea>
                                 </ulvia-official-textarea>
                             </ulvia-official-field>
-                            <ulvia-official-form-actions slot="items" align="end">
+                            <ulvia-official-form-actions align="end">
                                 <p slot="actions" role="status" aria-live="polite" cms-condition="savedText.activity === 'submitting'">
                                     {{ cms.i18n.ulvia-official.ui-working }}
                                 </p>
@@ -129,23 +130,22 @@
                                     <button type="submit">{{ cms.i18n.ulvia-official.ui-save-translation }}</button>
                                 </ulvia-official-action>
                             </ulvia-official-form-actions>
-                        </ulvia-official-stack>
-                    </ulvia-official-surface>
-
-                    <div cms-match="savedText.outcome.kind">
-                        <span cms-case='"none"' hidden></span>
-                        <span cms-case='"success"' hidden></span>
-                        <div cms-case='"error"' cms-match="savedText.outcome.code">
-                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                            <p role="alert" cms-case='"MIGRATION_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                        </div>
-                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                    </div>
-                </form>
-            </ulvia-official-stack>
+                            <div cms-match="savedText.outcome.kind">
+                                <span cms-case='"none"' hidden></span>
+                                <span cms-case='"success"' hidden></span>
+                                <div cms-case='"error"' cms-match="savedText.outcome.code">
+                                    <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"MIGRATION_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                </div>
+                                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            </div>
+                        </form>
+                    </ulvia-official-stack>
+                </ulvia-official-list-item>
+            </ulvia-official-list>
         </ulvia-official-stack>
         <p role="alert" cms-case='"failure"'>
             {{ cms.i18n.ulvia-official.ui-request-failed }}

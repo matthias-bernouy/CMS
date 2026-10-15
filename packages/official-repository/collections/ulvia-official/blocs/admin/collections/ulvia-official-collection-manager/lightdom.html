@@ -43,7 +43,7 @@
                             </ulvia-official-action>
                         </ulvia-official-list-item>
                     </ulvia-official-list>
-                    <ulvia-official-surface cms-condition="catalogue.data.installed.length === 0" appearance="subtle" padding="lg">
+                    <ulvia-official-surface cms-condition="catalogue.data.installed.length === 0" appearance="subtle" padding="md" radius="sm">
                         <p slot="content">{{ cms.i18n.ulvia-official.ui-no-collection-is-installed }}</p>
                     </ulvia-official-surface>
                 </div>
@@ -57,10 +57,11 @@
                         </p>
                     </header>
                     <ulvia-official-grid gap="md" role="list">
-                        <ulvia-official-surface slot="items" cms-repeat="catalogue.data.releases as release" appearance="elevated" padding="lg" role="listitem">
-                            <ulvia-official-stack slot="content" gap="md">
-                                <p slot="items">{{ release.publisherId }} {{ release.version }}</p>
-                                <h3 slot="items">{{ release.name }}</h3>
+                        <ulvia-official-card slot="items" cms-repeat="catalogue.data.releases as release" media-tone="primary" padding="md" role="listitem">
+                            <ulvia-official-icon slot="media" name="collections" size="lg" tone="current"></ulvia-official-icon>
+                            <span slot="eyebrow">{{ release.publisherId }} {{ release.version }}</span>
+                            <h3 slot="title">{{ release.name }}</h3>
+                            <ulvia-official-stack slot="body" gap="md">
                                 <div slot="items">
                                     <p>{{ release.description }}</p>
                                     <p>{{ release.blocCount }} {{ cms.i18n.ulvia-official.ui-blocks }}</p>
@@ -153,9 +154,9 @@
                                     </ulvia-official-action>
                                 </ulvia-official-cluster>
                             </ulvia-official-stack>
-                        </ulvia-official-surface>
+                        </ulvia-official-card>
                     </ulvia-official-grid>
-                    <ulvia-official-surface cms-condition="catalogue.data.releases.length === 0" appearance="subtle" padding="lg">
+                    <ulvia-official-surface cms-condition="catalogue.data.releases.length === 0" appearance="subtle" padding="md" radius="sm">
                         <p slot="content">{{ cms.i18n.ulvia-official.ui-no-repository-release-is-available }}</p>
                     </ulvia-official-surface>
                 </div>
@@ -173,7 +174,7 @@
         cms-query-input='{"limit":{"from":"literal","value":20}}'
         cms-query-refresh="interval(5s) focus reconnect"
     >
-        <ulvia-official-surface appearance="outlined" padding="lg">
+        <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
             <h2 slot="content">{{ cms.i18n.ulvia-official.ui-migration-status }}</h2>
             <p slot="content" role="status" cms-condition="migrations.activity === 'fetching'">
                 {{ cms.i18n.ulvia-official.ui-reading-migration-state }}
@@ -207,7 +208,7 @@
         cms-query-input='{"limit":{"from":"literal","value":50}}'
         cms-query-refresh="interval(5s) focus reconnect"
     >
-        <ulvia-official-surface appearance="outlined" padding="lg">
+        <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
             <h2 slot="content">{{ cms.i18n.ulvia-official.ui-recent-activity }}</h2>
             <p slot="content" role="status" cms-condition="jobs.activity === 'fetching'">
                 {{ cms.i18n.ulvia-official.ui-reading-durable-jobs }}

@@ -9,8 +9,10 @@
     "uses": [
         "ulvia-official-action",
         "ulvia-official-badge",
+        "ulvia-official-card",
         "ulvia-official-cluster",
         "ulvia-official-grid",
+        "ulvia-official-icon",
         "ulvia-official-list",
         "ulvia-official-list-item",
         "ulvia-official-stack",
