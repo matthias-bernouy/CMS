@@ -77,6 +77,7 @@
                     <form
                         slot="content" cms-mutation="ulvia.cms.collections:update-configuration as mutation"
                         cms-sync="@page:ulvia-official-collection-configuration-mutation"
+                        cms-sync-select="lastSuccess.requestId"
                         cms-mutation-reset="false"
                     >
                         <input type="hidden" name="collectionId" value="{{ collection.data.collectionId }}">

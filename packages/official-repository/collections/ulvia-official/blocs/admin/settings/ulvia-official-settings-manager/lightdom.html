@@ -25,6 +25,7 @@
                 <form
                     slot="content" cms-mutation="ulvia.cms.access:update-site as savedSite"
                     cms-sync="@page:ulvia-official-settings-mutation"
+                    cms-sync-select="lastSuccess.requestId"
                     cms-mutation-reset="false"
                 >
                     <input
@@ -149,6 +150,7 @@
                 <form
                     slot="content" cms-mutation="ulvia.cms.localization:update-languages as savedLanguages"
                     cms-sync="@page:ulvia-official-settings-mutation"
+                    cms-sync-select="lastSuccess.requestId"
                     cms-mutation-reset="false"
                 >
                     <input

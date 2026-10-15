@@ -80,6 +80,7 @@
                     slot="items"
                     cms-condition="collectionTheme.data.profileActive === false" cms-mutation="ulvia.cms.theme:activate as activatedTheme"
                     cms-sync="@page:ulvia-official-theme-mutation"
+                    cms-sync-select="lastSuccess.requestId"
                 >
                     <input
                         type="hidden"
@@ -148,6 +149,7 @@
                     <form
                         slot="items" cms-mutation="ulvia.cms.theme:save-token as savedThemeToken"
                         cms-sync="@page:ulvia-official-theme-mutation"
+                        cms-sync-select="lastSuccess.requestId"
                         cms-mutation-reset="false"
                     >
                         <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
@@ -199,6 +201,7 @@
                         slot="items"
                         cms-condition="collectionTheme.data.token.overridden" cms-mutation="ulvia.cms.theme:reset-token as resetThemeToken"
                         cms-sync="@page:ulvia-official-theme-mutation"
+                        cms-sync-select="lastSuccess.requestId"
                     >
                         <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
                         <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">

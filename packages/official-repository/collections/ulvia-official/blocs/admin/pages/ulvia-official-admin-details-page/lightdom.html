@@ -21,7 +21,7 @@
                 </div>
                 <div cms-case='"success"'>
                     <ulvia-official-surface appearance="elevated" padding="lg">
-                        <form slot="content" cms-mutation="ulvia.cms.pages:update as saved" cms-sync="@page:ulvia-official-page-detail-mutation" cms-mutation-reset="false">
+                        <form slot="content" cms-mutation="ulvia.cms.pages:update as saved" cms-sync="@page:ulvia-official-page-detail-mutation" cms-sync-select="lastSuccess.requestId" cms-mutation-reset="false">
                             <input type="hidden" name="id" value="{{ selected.data.id }}">
                             <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
                             <ulvia-official-stack gap="lg">
@@ -72,7 +72,7 @@
                                 <h2>{{ cms.i18n.ulvia-official.ui-routes }}</h2>
                                 <p>{{ cms.i18n.ulvia-official.ui-each-language-owns-a-local-path-the-primary-language-determines-the-canonical-page-path }}</p>
                             </header>
-                            <form slot="items" cms-repeat="selected.data.routes as route" cms-mutation="ulvia.cms.pages:update-route as mutation" cms-sync="@page:ulvia-official-page-detail-mutation" cms-mutation-reset="false">
+                            <form slot="items" cms-repeat="selected.data.routes as route" cms-mutation="ulvia.cms.pages:update-route as mutation" cms-sync="@page:ulvia-official-page-detail-mutation" cms-sync-select="lastSuccess.requestId" cms-mutation-reset="false">
                                 <input type="hidden" name="id" value="{{ selected.data.id }}">
                                 <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
                                 <input type="hidden" name="language" value="{{ route.language }}">
@@ -105,7 +105,7 @@
                                 <h2>{{ cms.i18n.ulvia-official.ui-search-metadata }}</h2>
                                 <p>{{ cms.i18n.ulvia-official.ui-empty-values-inherit-the-page-title-and-description }}</p>
                             </header>
-                            <form slot="items" cms-repeat="selected.data.seoEntries as entry" cms-mutation="ulvia.cms.pages:update-seo as mutation" cms-sync="@page:ulvia-official-page-detail-mutation" cms-mutation-reset="false">
+                            <form slot="items" cms-repeat="selected.data.seoEntries as entry" cms-mutation="ulvia.cms.pages:update-seo as mutation" cms-sync="@page:ulvia-official-page-detail-mutation" cms-sync-select="lastSuccess.requestId" cms-mutation-reset="false">
                                 <input type="hidden" name="id" value="{{ selected.data.id }}">
                                 <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
                                 <input type="hidden" name="language" value="{{ entry.language }}">
@@ -143,7 +143,7 @@
                                 <ulvia-official-badge cms-condition="selected.data.visible" tone="success"><span slot="label">{{ cms.i18n.ulvia-official.ui-published }}</span></ulvia-official-badge>
                                 <ulvia-official-badge cms-condition="selected.data.visible === false" tone="neutral"><span slot="label">{{ cms.i18n.ulvia-official.ui-draft }}</span></ulvia-official-badge>
                             </div>
-                            <form slot="items" cms-condition="selected.data.visible === false" cms-mutation="ulvia.cms.pages:publish as publication" cms-sync="@page:ulvia-official-page-detail-mutation">
+                            <form slot="items" cms-condition="selected.data.visible === false" cms-mutation="ulvia.cms.pages:publish as publication" cms-sync="@page:ulvia-official-page-detail-mutation" cms-sync-select="lastSuccess.requestId">
                                 <input type="hidden" name="id" value="{{ selected.data.id }}">
                                 <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
                                 <input type="hidden" name="visible" value="true" cms-form-value-type="boolean">
@@ -160,7 +160,7 @@
 <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
 </div>
 </form>
-                            <form slot="items" cms-condition="selected.data.visible" cms-mutation="ulvia.cms.pages:publish as publication" cms-sync="@page:ulvia-official-page-detail-mutation">
+                            <form slot="items" cms-condition="selected.data.visible" cms-mutation="ulvia.cms.pages:publish as publication" cms-sync="@page:ulvia-official-page-detail-mutation" cms-sync-select="lastSuccess.requestId">
                                 <input type="hidden" name="id" value="{{ selected.data.id }}">
                                 <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
                                 <input type="hidden" name="visible" value="false" cms-form-value-type="boolean">

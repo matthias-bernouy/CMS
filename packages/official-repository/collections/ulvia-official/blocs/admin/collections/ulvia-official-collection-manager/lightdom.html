@@ -87,6 +87,7 @@
                             slot="items"
                             cms-condition="release.action === 'install'" cms-mutation="ulvia.cms.collections:install as mutation"
                             cms-sync="@page:ulvia-official-collection-catalogue-mutation"
+                            cms-sync-select="lastSuccess.requestId"
                         >
                             <input
                                 type="hidden"
@@ -127,6 +128,7 @@
                             <form
                                 slot="items" cms-mutation="ulvia.cms.collections:upgrade as mutation"
                                 cms-sync="@page:ulvia-official-collection-catalogue-mutation"
+                                cms-sync-select="lastSuccess.requestId"
                             >
                                 <input
                                     type="hidden"

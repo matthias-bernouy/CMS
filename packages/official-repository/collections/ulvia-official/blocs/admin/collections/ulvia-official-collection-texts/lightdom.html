@@ -81,6 +81,7 @@
                     slot="items"
                     cms-repeat="collectionTexts.data.items as text" cms-mutation="ulvia.cms.localization:save-text as savedText"
                     cms-sync="@page:ulvia-official-collection-texts-mutation"
+                    cms-sync-select="lastSuccess.requestId"
                     cms-mutation-reset="false"
                 >
                     <input type="hidden" name="collectionId" value="{{ collectionTexts.data.collectionId }}">

@@ -60,6 +60,7 @@
                             slot="items"
                             cms-condition="installation.status === 'enabled'" cms-mutation="ulvia.cms.providers:set-status as mutation"
                             cms-sync="@page:ulvia-official-providers-mutation"
+                            cms-sync-select="lastSuccess.requestId"
                         >
                             <input type="hidden" name="installationId" value="{{ installation.id }}">
                             <input
@@ -95,6 +96,7 @@
                             slot="items"
                             cms-condition="installation.status === 'disabled'" cms-mutation="ulvia.cms.providers:set-status as mutation"
                             cms-sync="@page:ulvia-official-providers-mutation"
+                            cms-sync-select="lastSuccess.requestId"
                         >
                             <input type="hidden" name="installationId" value="{{ installation.id }}">
                             <input
@@ -126,6 +128,7 @@
                             <p>{{ cms.i18n.ulvia-official.ui-revocation-is-terminal-and-deletes-stored-credentials }}</p>
                             <form cms-mutation="ulvia.cms.providers:set-status as mutation"
                                 cms-sync="@page:ulvia-official-providers-mutation"
+                                cms-sync-select="lastSuccess.requestId"
                             >
                                 <input type="hidden" name="installationId" value="{{ installation.id }}">
                                 <input
@@ -174,6 +177,7 @@
                 <form
                     slot="content" cms-mutation="ulvia.cms.providers:replace-selections as mutation"
                     cms-sync="@page:ulvia-official-providers-mutation"
+                    cms-sync-select="lastSuccess.requestId"
                     cms-mutation-reset="false"
                 >
                     <input

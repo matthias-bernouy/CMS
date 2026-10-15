@@ -67,7 +67,7 @@
                                     <small>{{ cms.i18n.ulvia-official.ui-revision }} {{ page.revision }}</small>
                                 </header>
                                 <ulvia-official-action slot="items" variant="filled" tone="secondary" size="sm"><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?ulvia-official-page-id={{ page.id }}">{{ cms.i18n.ulvia-official.ui-open-page }}</a></ulvia-official-action>
-                                <form slot="items" cms-mutation="ulvia.cms.pages:rename as mutation" cms-sync="@page:ulvia-official-pages-mutation">
+                                <form slot="items" cms-mutation="ulvia.cms.pages:rename as mutation" cms-sync="@page:ulvia-official-pages-mutation" cms-sync-select="lastSuccess.requestId">
                                     <input type="hidden" name="id" value="{{ page.id }}">
                                     <input type="hidden" name="expectedRevision" value="{{ page.revision }}" cms-form-value-type="number">
                                     <ulvia-official-field label-position="top">
