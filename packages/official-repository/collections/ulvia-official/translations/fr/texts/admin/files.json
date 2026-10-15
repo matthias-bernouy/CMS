@@ -34,6 +34,8 @@
     "text.ui-file-uploaded.label": "Fichier téléversé.",
     "text.ui-file-content-replaced.label": "Contenu du fichier remplacé.",
     "text.ui-make-private.label": "Rendre privé",
+    "text.ui-no-file-selected.label": "Aucun fichier sélectionné",
+    "text.ui-or-drag-it-here.label": "Ou glissez-le ici",
     "text.ui-files-in-this-batch.label": "Fichiers dans cette liste",
     "text.ui-private-file-could-not-be-opened.label": "Le fichier privé n’a pas pu être ouvert",
     "text.ui-file-could-not-be-opened.label": "Le fichier n’a pas pu être ouvert",

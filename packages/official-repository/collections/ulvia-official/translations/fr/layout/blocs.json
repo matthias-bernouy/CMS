@@ -13,6 +13,8 @@
     "bloc.frame.label": "Cadre",
     "bloc.page-shell.description": "Une composition avec en-tête de Page, navigation locale facultative, contenu et pied de page",
     "bloc.page-shell.label": "Structure de Page",
+    "bloc.dialog.description": "Une surface modale accessible ouverte par un déclencheur explicite",
+    "bloc.dialog.label": "Boîte de dialogue",
     "bloc.panel.description": "Une surface structurée avec des zones d’en-tête, d’actions, de contenu et de pied de page",
     "bloc.panel.label": "Panneau",
     "bloc.reel.description": "Une séquence horizontale de cartes et de médias accessible au clavier",

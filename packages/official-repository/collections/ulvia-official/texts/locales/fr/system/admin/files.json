@@ -34,6 +34,8 @@
     "ui-file-uploaded": "Fichier téléversé.",
     "ui-file-content-replaced": "Contenu du fichier remplacé.",
     "ui-make-private": "Rendre privé",
+    "ui-no-file-selected": "Aucun fichier sélectionné",
+    "ui-or-drag-it-here": "ou glissez-le ici",
     "ui-files-in-this-batch": "fichiers dans cette liste",
     "ui-private-file-could-not-be-opened": "Le fichier privé n’a pas pu être ouvert.",
     "ui-file-could-not-be-opened": "Le fichier n’a pas pu être ouvert.",

@@ -13,6 +13,8 @@
     "bloc.frame.label": "Frame",
     "bloc.page-shell.description": "A page header, optional local navigation, content and footer composition",
     "bloc.page-shell.label": "Page shell",
+    "bloc.dialog.description": "An accessible modal surface opened by an explicit trigger",
+    "bloc.dialog.label": "Dialog",
     "bloc.panel.description": "A structured surface with header, actions, content and footer regions",
     "bloc.panel.label": "Panel",
     "bloc.reel.description": "A keyboard-focusable horizontal sequence for cards and media",

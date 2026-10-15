@@ -34,6 +34,8 @@
     "ui-file-uploaded": "File uploaded.",
     "ui-file-content-replaced": "File content replaced.",
     "ui-make-private": "Make private",
+    "ui-no-file-selected": "No file selected",
+    "ui-or-drag-it-here": "or drag it here",
     "ui-files-in-this-batch": "files in this batch",
     "ui-private-file-could-not-be-opened": "The private file could not be opened.",
     "ui-file-could-not-be-opened": "The file could not be opened.",

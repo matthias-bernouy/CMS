@@ -9,14 +9,14 @@
     "uses": [
         "ulvia-official-action",
         "ulvia-official-cluster",
+        "ulvia-official-dialog",
         "ulvia-official-field",
+        "ulvia-official-file-input",
         "ulvia-official-file-link",
         "ulvia-official-file-upload",
-        "ulvia-official-file-upload-input",
         "ulvia-official-form-actions",
         "ulvia-official-grid",
         "ulvia-official-input",
-        "ulvia-official-sidebar",
         "ulvia-official-stack",
         "ulvia-official-surface"
     ],

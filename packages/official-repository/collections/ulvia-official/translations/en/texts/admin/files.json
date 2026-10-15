@@ -34,6 +34,8 @@
     "text.ui-file-uploaded.label": "File uploaded.",
     "text.ui-file-content-replaced.label": "File content replaced.",
     "text.ui-make-private.label": "Make private",
+    "text.ui-no-file-selected.label": "No file selected",
+    "text.ui-or-drag-it-here.label": "Or drag it here",
     "text.ui-files-in-this-batch.label": "Files in this batch",
     "text.ui-private-file-could-not-be-opened.label": "Private file could not be opened",
     "text.ui-file-could-not-be-opened.label": "File could not be opened",

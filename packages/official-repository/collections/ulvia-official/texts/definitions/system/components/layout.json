@@ -18,6 +18,12 @@
         "group": "text.group.components.layout"
     },
     {
+        "id": "ui-close",
+        "label": "text.ui-close.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
         "id": "ui-close-navigation",
         "label": "text.ui-close-navigation.label",
         "category": "text.category.components",

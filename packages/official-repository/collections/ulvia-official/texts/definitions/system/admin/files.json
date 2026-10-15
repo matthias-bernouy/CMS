@@ -210,6 +210,18 @@
         "group": "text.group.admin.files"
     },
     {
+        "id": "ui-no-file-selected",
+        "label": "text.ui-no-file-selected.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-or-drag-it-here",
+        "label": "text.ui-or-drag-it-here.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
         "id": "ui-files-in-this-batch",
         "label": "text.ui-files-in-this-batch.label",
         "category": "text.category.admin",
