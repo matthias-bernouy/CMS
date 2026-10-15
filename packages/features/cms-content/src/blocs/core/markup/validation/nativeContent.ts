@@ -10,6 +10,7 @@ import {
     assertBlocDomBudget,
     assertBlocMarkupLength,
 } from "cms-content/blocs/core/markup/validation/documents/blocBudgets";
+import { validateNativeDocumentReferences } from "cms-content/blocs/core/markup/validation/documents/nativeReferences";
 
 export type BlocContentMarkupResult = {
     readonly html: string;
@@ -128,6 +129,7 @@ function validateNativeMarkup(
     if (issue) {
         throw new ContentValidationError(field, issue);
     }
+    validateNativeDocumentReferences(document, field);
     return document.body.innerHTML;
 }
 

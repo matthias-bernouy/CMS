@@ -30,6 +30,8 @@ const INPUT_TYPES = new Set([
 ]);
 const ARIA_CURRENT_VALUES = new Set(["page", "step", "location", "date", "time", "true", "false"]);
 const ARIA_LIVE_VALUES = new Set(["off", "polite", "assertive"]);
+const NATIVE_DIALOG_COMMANDS = new Set(["show-modal", "close"]);
+const STATIC_ELEMENT_ID = /^[A-Za-z][A-Za-z0-9_.:-]{0,127}$/u;
 
 const SAME_TAB_REL = new Set(["", "nofollow", "sponsored", "ugc"]);
 const NEW_TAB_REL = new Set([
@@ -92,6 +94,12 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     }
     if (normalizedTag === "button" && normalizedAttribute === "disabled") {
         return value === "" ? null : "native disabled is a boolean attribute";
+    }
+    if (normalizedTag === "button" && normalizedAttribute === "command") {
+        return NATIVE_DIALOG_COMMANDS.has(value) ? null : 'native button command must be "show-modal" or "close"';
+    }
+    if (normalizedTag === "button" && normalizedAttribute === "commandfor") {
+        return STATIC_ELEMENT_ID.test(value) ? null : "native button commandfor must reference one static valid id";
     }
     if (normalizedTag === "input" && normalizedAttribute === "type") {
         return INPUT_TYPES.has(value) ? null : "native input type is not controlled";
@@ -169,6 +177,13 @@ export function nativeAttributeSetIssue(tag: string, attributes: Readonly<Record
         }
         if (target !== "_blank" && !SAME_TAB_REL.has(rel)) {
             return "same-tab native links cannot retain new-tab relationships";
+        }
+    }
+    if (normalizedTag === "button") {
+        const command = normalizedAttributes.command;
+        const commandFor = normalizedAttributes.commandfor;
+        if ((command === undefined) !== (commandFor === undefined)) {
+            return "native button command and commandfor must be declared together";
         }
     }
     if (normalizedTag === "img") {

@@ -178,7 +178,8 @@ export const PLATFORM_NATIVE_RICH_TEXT_TAGS = [
 
 /**
  * Native elements that a custom bloc may own as its single, managed Light DOM
- * child. Containers with content-slot semantics are intentionally excluded.
+ * child. Dialog is the sole managed container because its authored Light DOM
+ * content remains the semantic and accessible source of truth.
  */
 export const PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS = MANAGED_NATIVE_ELEMENT_TAGS;
 

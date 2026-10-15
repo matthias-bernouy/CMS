@@ -27,6 +27,7 @@ export type ManagedNativeElementTag =
     | "p"
     | "a"
     | "button"
+    | "dialog"
     | "input"
     | "textarea"
     | "select"

@@ -26,6 +26,71 @@ describe("Bloc document accessibility", () => {
     });
 });
 
+describe("declarative native dialogs", () => {
+    const action = {
+        id: "fixture-action",
+        kind: "component" as const,
+        slots: {},
+        nativeElement: { accepts: ["button" as const] },
+    };
+    const dialog = {
+        id: "fixture-dialog",
+        kind: "component" as const,
+        slots: {},
+        nativeElement: { accepts: ["dialog" as const] },
+    };
+    const validate = (content: string) =>
+        validateBlocDocument({ id: "fixture-owner", kind: "composition", slots: {}, fixedContent: content }, [
+            action,
+            dialog,
+        ]);
+
+    test("accepts an addressable Light DOM dialog without component JavaScript", () => {
+        expect(() =>
+            validate(`
+                <fixture-action><button type="button" command="show-modal" commandfor="create-dialog">Open</button></fixture-action>
+                <fixture-dialog><dialog id="create-dialog" aria-labelledby="create-title">
+                    <h2 id="create-title">Create</h2>
+                    <fixture-action><button type="button" command="close" commandfor="create-dialog">Close</button></fixture-action>
+                </dialog></fixture-dialog>
+            `),
+        ).not.toThrow();
+    });
+
+    test.each([
+        [
+            '<fixture-action><button type="button" command="show-modal" commandfor="missing">Open</button></fixture-action>',
+            "missing id",
+        ],
+        [
+            '<h2 id="target">Heading</h2><fixture-action><button type="button" command="show-modal" commandfor="target">Open</button></fixture-action>',
+            "must be a <dialog>",
+        ],
+        [
+            '<fixture-dialog><dialog id="same"></dialog></fixture-dialog><p id="same">Duplicate</p>',
+            "duplicate static native id",
+        ],
+        [
+            '<fixture-dialog><dialog id="unnamed"></dialog></fixture-dialog><fixture-action><button type="button" command="show-modal" commandfor="unnamed">Open</button></fixture-action>',
+            "accessible name",
+        ],
+        [
+            '<fixture-dialog><dialog id="labelled" aria-labelledby="missing-title"></dialog></fixture-dialog><fixture-action><button type="button" command="show-modal" commandfor="labelled">Open</button></fixture-action>',
+            "aria-labelledby references missing id",
+        ],
+        [
+            '<fixture-action><button type="button" command="show-modal">Open</button></fixture-action>',
+            "command and commandfor must be declared together",
+        ],
+        [
+            '<fixture-action><button type="button" command="toggle-popover" commandfor="target">Open</button></fixture-action>',
+            "button command",
+        ],
+    ])("rejects invalid native dialog relationships", (content, message) => {
+        expect(() => validate(content)).toThrow(message);
+    });
+});
+
 describe("Bloc document budgets", () => {
     test("bounds authored markup before parsing", () => {
         const markup = `<div>${"x".repeat(BLOC_DOCUMENT_LIMITS.maxMarkupLength)}</div>`;

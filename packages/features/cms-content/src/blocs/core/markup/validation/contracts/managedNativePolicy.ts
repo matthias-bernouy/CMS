@@ -12,6 +12,7 @@ export const MANAGED_NATIVE_ELEMENT_TAGS = [
     "p",
     "a",
     "button",
+    "dialog",
     "input",
     "textarea",
     "select",
