@@ -1,7 +1,7 @@
 import { parseSyncTarget, type CmsSyncTarget } from "cms-content/blocs/core/markup/bindings";
 import { parseJsonValue, serializeJsonValue } from "./jsonValue";
 
-export const CMS_SYNC_CHANGE_EVENT = "cms-sync:change";
+const CMS_SYNC_CHANGE_EVENT = "cms-sync:change";
 
 type StoredValue = { readonly version: 1; readonly value: unknown; readonly expiresAt?: number };
 export type SyncChange = { readonly target: string; readonly source?: Element };

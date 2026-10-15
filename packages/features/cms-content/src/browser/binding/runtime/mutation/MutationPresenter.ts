@@ -13,6 +13,10 @@ export class MutationPresenter {
 
     constructor(private readonly renderer: BindingRenderer) {}
 
+    get current(): MutationState {
+        return this.state;
+    }
+
     initial(alias: string): MutationState {
         this.state = initialMutationState();
         this.render(alias);

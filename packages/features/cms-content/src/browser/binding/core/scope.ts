@@ -10,8 +10,8 @@
  *              `value.title`; the reserved path `value` returns it directly.
  *              Set by a bare `cms-repeat="items"`: the item replaces context.
  *  - `vars`  — named bindings. The path `line.x` reads `vars.line.x`. Set by a
- *              named `cms-repeat="items as line"`, and later by a source id →
- *              its data, or page globals → `{ query, route, user }`.
+ *              named `cms-repeat="items as line"`, and by query or mutation
+ *              aliases exposing their state.
  *
  * `lookup` returns `{ found }` so callers can distinguish "resolved to
  * null/undefined" from "no such path in any frame". The interpolator renders

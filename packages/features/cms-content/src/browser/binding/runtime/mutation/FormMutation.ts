@@ -9,11 +9,8 @@ import { cloneBindingContent } from "../../reactive/renderer/bindingContent";
 import { publishFormSync } from "./formSync";
 import { MutationPresenter } from "./MutationPresenter";
 import { MutationRequest } from "./MutationRequest";
-import { initialMutationState, type MutationState } from "./mutationState";
 import { activateMutationForm } from "./programmaticRequest";
 import { MutationTransaction } from "./transaction/MutationTransaction";
-
-export type { MutationState } from "./mutationState";
 
 type FormMutationOptions = { afterMutationRender?: (mutation: Element) => void };
 
@@ -25,7 +22,6 @@ export class FormMutation {
     private stopActivation: (() => void) | null = null;
     private transaction: MutationTransaction | null = null;
     private syncDirty = false;
-    private status: MutationState = initialMutationState();
 
     constructor(
         private readonly form: HTMLFormElement,
@@ -43,7 +39,7 @@ export class FormMutation {
         this.form.addEventListener("input", this.onFormInput);
         const spec = mutationBinding(this.form);
         if (spec) {
-            this.status = this.presenter.initial(spec.alias);
+            this.presenter.initial(spec.alias);
             this.afterRender();
         }
         this.stopActivation = activateMutationForm(this.form, () => this.run());
@@ -92,13 +88,13 @@ export class FormMutation {
                 message: error instanceof Error ? error.message : String(error),
                 form: this.form,
             };
-            this.status = this.presenter.result(spec.alias, result, this.request.input);
+            this.presenter.result(spec.alias, result, this.request.input);
             this.afterRender();
             this.request.complete(result, spec.alias);
             return result;
         }
 
-        this.status = this.presenter.loading(spec.alias, this.request.input);
+        this.presenter.loading(spec.alias, this.request.input);
         this.afterRender();
         this.abort?.abort();
         const controller = new AbortController();
@@ -107,7 +103,7 @@ export class FormMutation {
             const result = await transaction.send(controller.signal);
             if (!result) {
                 if (!controller.signal.aborted) {
-                    this.status = this.presenter.initial(spec.alias);
+                    this.presenter.initial(spec.alias);
                     this.afterRender();
                 }
                 return null;
@@ -115,7 +111,7 @@ export class FormMutation {
             if (result.ok) {
                 this.syncDirty = false;
             }
-            this.status = this.presenter.result(spec.alias, result, this.request.input);
+            this.presenter.result(spec.alias, result, this.request.input);
             this.afterRender();
             this.request.complete(result, spec.alias);
             return result;
@@ -156,7 +152,7 @@ export class FormMutation {
     }
 
     private publishFormSync(): void {
-        publishFormSync(this.form, this.status, this.request.input, this.syncDirty);
+        publishFormSync(this.form, this.presenter.current, this.request.input, this.syncDirty);
     }
 }
 

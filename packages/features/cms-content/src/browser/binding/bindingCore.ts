@@ -10,7 +10,7 @@
  * (`define("cms-binding-core", BindingCore)`) and the CMS editor can treat it as
  * a bloc, managing its children normally. The directives inside stay attributes
  * on ordinary nodes — this element is only the boundary, and later the home of
- * the page-global scope (query / route / user) shared by every source within.
+ * the page-global scope shared by every binding within.
  */
 
 import { BindingRuntime } from "./runtime/BindingRuntime";
@@ -31,7 +31,6 @@ export {
     SYNC_ATTR,
 } from "./core/attrs";
 export {
-    CMS_SYNC_CHANGE_EVENT,
     readSyncValue,
     subscribeSyncValue,
     writeSyncValue,
@@ -41,7 +40,7 @@ export { mutationFormRequest, MutationFormError } from "./runtime/mutation/progr
 
 const BINDING_FILTERS_KEY = Symbol.for("@bernouy/cms-content.browser.binding.filters");
 
-/** Filter set passed to every source's interpolation. The registry lives on
+/** Filter set passed to every binding's interpolation. The registry lives on
  *  the browser realm so independently bundled public entrypoints still share
  *  the host configuration. */
 function bindingFilters(): FilterMap {

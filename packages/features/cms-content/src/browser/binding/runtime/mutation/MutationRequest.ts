@@ -13,9 +13,6 @@ import { runFetch } from "../query/queryFetch";
 
 type CapturedSubmission = {
     form: HTMLFormElement;
-    method: "POST";
-    formData: FormData;
-    bodyFields: AdditionalFormFields | undefined;
     serialized: SerializedForm;
     automaticIdempotencyKey: string;
 };
@@ -39,22 +36,10 @@ export class MutationRequest {
         if (!form) {
             return null;
         }
-        const method = "POST" as const;
-        const formData = collectFormData(form);
-        const bodyFields = this.resolveBodyFields(true);
-        const serialized = serializeForm(form, {
-            url: this.submitUrl(url),
-            method,
-            formData,
-            bodyFields,
-            serialization: "typed-json",
-        });
+        const serialized = this.serialize(form, url, true);
         this.latestInput = serialized.data;
         return {
             form,
-            method,
-            formData,
-            bodyFields,
             serialized,
             automaticIdempotencyKey: this.idempotency(form, serialized),
         };
@@ -69,16 +54,17 @@ export class MutationRequest {
         if (!form) {
             return;
         }
-        const method = "POST" as const;
-        const formData = collectFormData(form);
-        const bodyFields = this.resolveBodyFields(false);
-        this.latestInput = serializeForm(form, {
+        this.latestInput = this.serialize(form, url, false).data;
+    }
+
+    private serialize(form: HTMLFormElement, url: string, required: boolean): SerializedForm {
+        return serializeForm(form, {
             url: this.submitUrl(url),
-            method,
-            formData,
-            bodyFields,
+            method: "POST",
+            formData: collectFormData(form),
+            bodyFields: this.resolveBodyFields(required),
             serialization: "typed-json",
-        }).data;
+        });
     }
 
     async send(captured: CapturedSubmission, signal: AbortSignal): Promise<FormSubmitResult> {

@@ -113,7 +113,7 @@ function appendValue(form: HTMLFormElement, controls: HTMLElement[], name: strin
         input.name = name;
         const DataTransferConstructor = form.ownerDocument.defaultView?.DataTransfer;
         if (!DataTransferConstructor) {
-            throw new Error("This browser cannot transfer a selected file to the declarative source form.");
+            throw new Error("This browser cannot transfer a selected file to the declarative mutation form.");
         }
         const transfer = new DataTransferConstructor();
         transfer.items.add(value);

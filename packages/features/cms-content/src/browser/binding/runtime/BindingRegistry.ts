@@ -11,10 +11,10 @@ export class BindingRegistry {
     constructor(
         private readonly root: Element,
         private readonly filters: FilterMap,
-        private readonly afterRender: (source: Element) => void,
+        private readonly afterRender: (binding: Element) => void,
     ) {}
 
-    get sourceCount(): number {
+    get bindingCount(): number {
         return this.queries.size + this.mutations.size;
     }
 
@@ -66,17 +66,17 @@ export class BindingRegistry {
         this.queries.delete(element);
     }
 
-    reconcileSource(element: Element): void {
+    reconcileMutation(element: Element): void {
         if (!element.hasAttribute(MUTATION_ATTR) || element.localName !== "form") {
-            this.unregisterSource(element);
+            this.unregisterMutation(element);
             return;
         }
         if (!this.mutations.has(element)) {
-            this.registerSource(element);
+            this.registerMutation(element);
         }
     }
 
-    registerSource(element: Element): void {
+    registerMutation(element: Element): void {
         const Form = element.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
         if (
             !element.isConnected ||
@@ -93,7 +93,7 @@ export class BindingRegistry {
         mutation.start();
     }
 
-    unregisterSource(element: Element): void {
+    unregisterMutation(element: Element): void {
         const mutation = this.mutations.get(element);
         if (!mutation) {
             return;
@@ -131,7 +131,7 @@ export class BindingRegistry {
         }
         for (const mutation of this.mutations.keys()) {
             if (!mutation.isConnected) {
-                this.unregisterSource(mutation);
+                this.unregisterMutation(mutation);
             }
         }
         for (const sync of this.syncControls.keys()) {

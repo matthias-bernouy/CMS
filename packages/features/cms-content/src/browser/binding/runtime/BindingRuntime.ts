@@ -18,7 +18,7 @@ export class BindingRuntime {
         private readonly root: Element,
         filters: FilterMap = {},
     ) {
-        this.registry = new BindingRegistry(root, filters, (source) => this.afterRender(source));
+        this.registry = new BindingRegistry(root, filters, (binding) => this.afterRender(binding));
         this.fixedRanges = new FixedRangeRuntime(root, filters);
     }
 
@@ -35,7 +35,7 @@ export class BindingRuntime {
     }
 
     get size(): number {
-        return this.registry.sourceCount;
+        return this.registry.bindingCount;
     }
 
     private activate(): void {
@@ -77,13 +77,13 @@ export class BindingRuntime {
         this.fixedRanges.restore();
     }
 
-    private afterRender(source: Element): void {
+    private afterRender(binding: Element): void {
         if (this.stopped) {
             return;
         }
         this.registry.pruneDetached();
-        if (source.isConnected) {
-            registerWithin(source, this.root, this.registry);
+        if (binding.isConnected) {
+            registerWithin(binding, this.root, this.registry);
         }
     }
 }
