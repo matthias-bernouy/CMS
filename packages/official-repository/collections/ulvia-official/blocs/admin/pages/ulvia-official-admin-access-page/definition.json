@@ -11,15 +11,13 @@
         "ulvia-official-cluster",
         "ulvia-official-admin-workspace",
         "ulvia-official-field",
-        "ulvia-official-grid",
         "ulvia-official-input",
         "ulvia-official-list",
         "ulvia-official-list-item",
         "ulvia-official-route-tab",
         "ulvia-official-route-tabs",
         "ulvia-official-select",
-        "ulvia-official-stack",
-        "ulvia-official-surface"
+        "ulvia-official-stack"
     ],
     "requires": [
         {

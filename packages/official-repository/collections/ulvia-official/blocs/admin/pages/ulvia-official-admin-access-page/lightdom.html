@@ -140,16 +140,17 @@
                         <h2>{{ cms.i18n.ulvia-official.ui-login-providers }}</h2>
                         <p>{{ cms.i18n.ulvia-official.ui-choose-which-configured-identity-methods-are-available-on-the-administration-sign-in-page }}</p>
                     </header>
-                    <ulvia-official-grid gap="md" role="list">
-                        <ulvia-official-surface
-                            slot="items"
-                            cms-repeat="access.data.loginProviders as provider"
-                            appearance="outlined"
-                            padding="lg"
-                            role="listitem"
-                        >
+                    <ulvia-official-list role="list">
+                        <ulvia-official-list-item slot="items" cms-repeat="access.data.loginProviders as provider" role="listitem">
+                            <strong slot="title">{{ provider.displayName }}</strong>
+                            <ulvia-official-badge slot="meta" cms-condition="provider.enabled" tone="success"
+                                ><span slot="label">{{ cms.i18n.ulvia-official.ui-enabled }}</span></ulvia-official-badge
+                            >
+                            <ulvia-official-badge slot="meta" cms-condition="provider.enabled === false" tone="neutral"
+                                ><span slot="label">{{ cms.i18n.ulvia-official.ui-disabled }}</span></ulvia-official-badge
+                            >
                             <form
-                                slot="content"
+                                slot="body"
                                 cms-mutation="ulvia.cms.access:update-login-provider as mutation"
                                 cms-sync="@page:ulvia-official-access-mutation"
                                 cms-sync-select="lastSuccess.requestId"
@@ -169,9 +170,6 @@
                                         ></ulvia-official-input
                                     ></ulvia-official-field
                                 >
-                                <p cms-condition="provider.kind === 'local'">
-                                    <strong>{{ cms.i18n.ulvia-official.ui-display-name-61cee3ef }}</strong> {{ provider.displayName }}
-                                </p>
                                 <ulvia-official-field label-position="top"
                                     ><span slot="label">{{ cms.i18n.ulvia-official.ui-status }}</span
                                     ><ulvia-official-select slot="control"
@@ -205,8 +203,8 @@
                                     <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                 </div>
                             </form>
-                        </ulvia-official-surface>
-                    </ulvia-official-grid>
+                        </ulvia-official-list-item>
+                    </ulvia-official-list>
                 </div>
             </ulvia-official-stack>
             <div role="alert" cms-case='"failure"'>

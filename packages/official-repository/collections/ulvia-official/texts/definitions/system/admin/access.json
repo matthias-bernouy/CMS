@@ -36,12 +36,6 @@
         "group": "text.group.admin.access"
     },
     {
-        "id": "ui-display-name-61cee3ef",
-        "label": "text.ui-display-name-61cee3ef.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
         "id": "ui-enabled",
         "label": "text.ui-enabled.label",
         "category": "text.category.admin",
