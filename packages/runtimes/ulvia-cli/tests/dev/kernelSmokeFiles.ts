@@ -12,6 +12,16 @@ const REPLACEMENT_IMAGE = Buffer.from(
 export async function mutateFiles(page: Page): Promise<void> {
     await filePageLink(page).click();
     await page.locator("#file-library ulvia-official-cluster").first().waitFor();
+    const uploadDialog = page.locator("#upload-file-dialog");
+    if (await uploadDialog.evaluate((dialog: HTMLDialogElement) => dialog.open)) {
+        throw new Error("The upload dialog must be closed on initial render");
+    }
+    await page.locator('button[command="show-modal"][commandfor="upload-file-dialog"]').click();
+    await uploadDialog.evaluate((dialog: HTMLDialogElement) => {
+        if (!dialog.open) {
+            throw new Error("The upload dialog did not open");
+        }
+    });
     await upload(page, "smoke.png", FIRST_IMAGE);
 
     const card = fileCard(page, "smoke.png");

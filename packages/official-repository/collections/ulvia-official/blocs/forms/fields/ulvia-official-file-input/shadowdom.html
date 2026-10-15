@@ -1,7 +1,8 @@
 <span part="control"
     ><span part="drop-zone"
-        ><span part="card-preview" hidden></span><span part="card-actions" hidden><span part="replace-shell"></span><span part="remove-shell"></span></span
+        ><span part="card-preview" hidden></span><span part="card-actions" hidden><slot name="replace-action"></slot><slot name="remove-action"></slot></span
         ><span part="icon" aria-hidden="true"></span
-        ><span part="copy"><span part="prompt"></span><span part="support"></span><span part="file-name" aria-live="polite"></span></span><slot></slot></span
+        ><span part="copy"><slot name="prompt"></slot><slot name="support"></slot><slot name="empty-state"></slot><slot name="file-name"></slot></span
+        ><slot name="file-control"></slot></span
     ><span part="preview" hidden></span></span
 >

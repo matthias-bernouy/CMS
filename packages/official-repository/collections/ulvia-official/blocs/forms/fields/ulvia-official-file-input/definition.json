@@ -5,11 +5,13 @@
     "description": "bloc.file-input.description",
     "category": "bloc.category.forms",
     "order": 50,
-    "nativeElement": {
-        "accepts": ["input"],
-        "attributes": { "type": { "required": true, "values": ["file"] } }
-    },
-    "uses": [],
+    "uses": ["ulvia-official-file-upload-input"],
     "requires": [],
-    "slots": {}
+    "slots": {
+        "control": {
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-file-upload-input" }],
+            "min": 1,
+            "max": 1
+        }
+    }
 }

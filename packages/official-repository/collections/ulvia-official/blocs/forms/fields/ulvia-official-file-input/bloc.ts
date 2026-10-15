@@ -5,33 +5,27 @@ import css from "./style.css" with { type: "text" };
 export class Bloc extends Component {
     private input: HTMLInputElement | null = null;
     private slotElement: HTMLSlotElement | null;
-    private prompt: HTMLElement | null;
-    private support: HTMLElement | null;
-    private fileName: HTMLElement | null;
+    private emptyState: HTMLElement | null = null;
+    private fileName: HTMLOutputElement | null = null;
     private preview: HTMLElement | null;
     private cardPreview: HTMLElement | null;
     private cardActions: HTMLElement | null;
-    private replaceButton: HTMLButtonElement;
-    private removeButton: HTMLButtonElement;
+    private replaceButton: HTMLButtonElement | null = null;
+    private removeButton: HTMLButtonElement | null = null;
     private root: Document | ShadowRoot | null = null;
     private previewUrls: string[] = [];
     private observer = new MutationObserver(() => this.sync());
 
     static get observedAttributes(): string[] {
-        return ["button-label", "drop-label", "empty-label", "remove-label", "replace-label", "variant"];
+        return ["variant"];
     }
 
     constructor() {
         super({ css, template });
-        this.slotElement = this.shadowRoot?.querySelector("slot") ?? null;
-        this.prompt = this.shadowRoot?.querySelector('[part="prompt"]') ?? null;
-        this.support = this.shadowRoot?.querySelector('[part="support"]') ?? null;
-        this.fileName = this.shadowRoot?.querySelector('[part="file-name"]') ?? null;
+        this.slotElement = this.shadowRoot?.querySelector('slot[name="file-control"]') ?? null;
         this.preview = this.shadowRoot?.querySelector('[part="preview"]') ?? null;
         this.cardPreview = this.shadowRoot?.querySelector('[part="card-preview"]') ?? null;
         this.cardActions = this.shadowRoot?.querySelector('[part="card-actions"]') ?? null;
-        this.replaceButton = this.createAction("replace-shell", "replace");
-        this.removeButton = this.createAction("remove-shell", "remove");
     }
 
     override connectedCallback(): void {
@@ -42,8 +36,12 @@ export class Bloc extends Component {
         this.addEventListener("dragover", this.handleDragOver);
         this.addEventListener("dragleave", this.handleDragLeave);
         this.addEventListener("drop", this.handleDrop);
-        this.replaceButton.addEventListener("click", this.replaceFile);
-        this.removeButton.addEventListener("click", this.removeFile);
+        this.emptyState = this.querySelector<HTMLElement>('[slot="empty-state"]');
+        this.fileName = this.querySelector<HTMLOutputElement>("[data-file-name]");
+        this.replaceButton = this.querySelector<HTMLButtonElement>("[data-file-replace]");
+        this.removeButton = this.querySelector<HTMLButtonElement>("[data-file-remove]");
+        this.replaceButton?.addEventListener("click", this.replaceFile);
+        this.removeButton?.addEventListener("click", this.removeFile);
         this.bindInput();
     }
 
@@ -53,8 +51,8 @@ export class Bloc extends Component {
         this.removeEventListener("dragover", this.handleDragOver);
         this.removeEventListener("dragleave", this.handleDragLeave);
         this.removeEventListener("drop", this.handleDrop);
-        this.replaceButton.removeEventListener("click", this.replaceFile);
-        this.removeButton.removeEventListener("click", this.removeFile);
+        this.replaceButton?.removeEventListener("click", this.replaceFile);
+        this.removeButton?.removeEventListener("click", this.removeFile);
         this.input?.removeEventListener("change", this.sync);
         this.root?.removeEventListener("reset", this.handleReset);
         this.root = null;
@@ -69,7 +67,7 @@ export class Bloc extends Component {
     private bindInput = (): void => {
         this.input?.removeEventListener("change", this.sync);
         this.observer.disconnect();
-        this.input = this.querySelector<HTMLInputElement>(':scope > input[type="file"]');
+        this.input = this.querySelector<HTMLInputElement>('input[type="file"]');
         this.input?.addEventListener("change", this.sync);
         if (this.input) {
             this.observer.observe(this.input, {
@@ -114,19 +112,11 @@ export class Bloc extends Component {
 
     private sync = (): void => {
         const files = this.input?.files ? Array.from(this.input.files) : [];
-        if (this.prompt) {
-            this.prompt.textContent = this.getAttribute("button-label") || "Choose a file";
-        }
-        if (this.support) {
-            this.support.textContent = ` ${this.getAttribute("drop-label") || "or drag it here"}`;
-        }
         if (this.fileName) {
-            this.fileName.textContent = files.length
-                ? files.map((file) => file.name).join(", ")
-                : this.getAttribute("empty-label") || "No file selected";
+            this.fileName.textContent = files.map((file) => file.name).join(", ");
+            this.fileName.toggleAttribute("hidden", files.length === 0);
         }
-        this.replaceButton.textContent = this.getAttribute("replace-label") || "Replace";
-        this.removeButton.textContent = this.getAttribute("remove-label") || "Remove";
+        this.emptyState?.toggleAttribute("hidden", files.length > 0);
         this.renderPreview(files);
         this.toggleAttribute("data-has-files", files.length > 0);
         this.toggleAttribute("data-disabled", this.input?.disabled === true);
@@ -160,14 +150,14 @@ export class Bloc extends Component {
         if (file.type.startsWith("image/")) {
             const image = document.createElement("img");
             image.src = this.createPreviewUrl(file);
-            image.alt = `Preview of ${file.name}`;
+            image.alt = file.name;
             image.setAttribute("part", "preview-media");
             card.append(image);
         } else if (file.type === "application/pdf") {
             const preview = document.createElement("object");
             preview.data = this.createPreviewUrl(file);
             preview.type = file.type;
-            preview.setAttribute("aria-label", `Preview of ${file.name}`);
+            preview.setAttribute("aria-label", file.name);
             preview.setAttribute("part", "preview-media");
             card.append(preview);
         } else {
@@ -206,14 +196,6 @@ export class Bloc extends Component {
         this.sync();
     };
 
-    private createAction(shellPart: string, part: string): HTMLButtonElement {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.setAttribute("part", part);
-        this.shadowRoot?.querySelector(`[part="${shellPart}"]`)?.append(button);
-        return button;
-    }
-
     private createPreviewUrl(file: File): string {
         const url = URL.createObjectURL(file);
         this.previewUrls.push(url);
@@ -227,7 +209,7 @@ export class Bloc extends Component {
 
     private extensionFor(name: string): string {
         const extension = name.split(".").pop()?.trim();
-        return extension && extension !== name ? extension : "File";
+        return extension && extension !== name ? extension : "—";
     }
 
     private formatSize(size: number): string {

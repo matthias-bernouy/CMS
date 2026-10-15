@@ -59,11 +59,15 @@
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
-[part="prompt"] {
+::slotted([slot="prompt"]) {
     color: var(--ulvia-official-primary, #086c55);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
 }
-[part="file-name"] {
+::slotted([slot="support"]) {
+    margin-inline-start: 0.25em;
+}
+::slotted([slot="empty-state"]),
+::slotted([slot="file-name"]) {
     display: block;
     max-width: 28rem;
     margin-block-start: var(--ulvia-official-spacing-2xs, 0.25rem);
@@ -72,15 +76,17 @@
     font-family: var(--ulvia-official-font-family-monospace, monospace);
     overflow-wrap: anywhere;
 }
-::slotted(input) {
+::slotted([slot="file-name"][hidden]),
+::slotted([slot="empty-state"][hidden]) {
+    display: none;
+}
+::slotted([slot="file-control"]) {
     position: absolute;
     z-index: 1;
     inset: 0;
+    display: block;
     width: 100%;
     height: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
 }
 [part="card-preview"] {
     position: absolute;
@@ -101,8 +107,8 @@
     display: flex;
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
 }
-[part="replace"],
-[part="remove"] {
+::slotted([slot="replace-action"]),
+::slotted([slot="remove-action"]) {
     min-height: 2.25rem;
     padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
     border: var(--ulvia-official-border-width, 1px) solid rgb(255 255 255 / 45%);
@@ -116,14 +122,14 @@
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     cursor: pointer;
 }
-[part="replace"]:hover {
+::slotted([slot="replace-action"]:hover) {
     background: var(--ulvia-official-primary-hover, #075642);
 }
-[part="remove"]:hover {
+::slotted([slot="remove-action"]:hover) {
     background: var(--ulvia-official-danger, #b42318);
 }
-[part="replace"]:focus-visible,
-[part="remove"]:focus-visible {
+::slotted([slot="replace-action"]:focus-visible),
+::slotted([slot="remove-action"]:focus-visible) {
     outline: 3px solid white;
     outline-offset: 2px;
 }
@@ -203,9 +209,6 @@
     background: var(--ulvia-official-background-subtle, #f4f5f7);
     opacity: 0.7;
 }
-:host([data-disabled]) ::slotted(input) {
-    cursor: not-allowed;
-}
 :host([variant="compact"]) [part="drop-zone"] {
     min-height: 4.75rem;
     justify-content: flex-start;
@@ -217,10 +220,10 @@
     width: 1.5rem;
     height: 1.5rem;
 }
-:host([variant="compact"]) [part="support"] {
+:host([variant="compact"]) ::slotted([slot="support"]) {
     display: none;
 }
-:host([variant="compact"]) [part="file-name"] {
+:host([variant="compact"]) ::slotted([slot="file-name"]) {
     max-width: min(28rem, 60vw);
 }
 :host([variant="card"]) {
@@ -252,7 +255,7 @@
     border-style: solid;
     background: var(--ulvia-official-background-surface, Canvas);
 }
-:host([data-has-files]) [part="file-name"] {
+:host([data-has-files]) ::slotted([slot="file-name"]) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -269,7 +272,7 @@
 :host([variant="card"][data-has-files]) [part="copy"] {
     display: none;
 }
-:host([variant="card"][data-has-files]) ::slotted(input) {
+:host([variant="card"][data-has-files]) ::slotted([slot="file-control"]) {
     z-index: 2;
 }
 :host([variant="card"]) [part~="card-preview-card"] {

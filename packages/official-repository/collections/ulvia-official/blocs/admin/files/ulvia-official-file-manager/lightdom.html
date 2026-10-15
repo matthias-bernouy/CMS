@@ -21,14 +21,10 @@
                         <ulvia-official-file-upload slot="items" visibility="private">
                             <ulvia-official-field slot="content" label-position="top">
                                 <label slot="label" for="new-file">{{ cms.i18n.ulvia-official.ui-choose-a-file }}</label>
-                                <ulvia-official-file-input
-                                    slot="control"
-                                    button-label="{{ cms.i18n.ulvia-official.ui-choose-a-file }}"
-                                    drop-label="{{ cms.i18n.ulvia-official.ui-or-drag-it-here }}"
-                                    empty-label="{{ cms.i18n.ulvia-official.ui-no-file-selected }}"
-                                    replace-label="{{ cms.i18n.ulvia-official.ui-replace-content }}"
-                                    remove-label="{{ cms.i18n.ulvia-official.ui-delete }}"
-                                    ><input id="new-file" type="file" name="file" required></ulvia-official-file-input
+                                <ulvia-official-file-input slot="control"
+                                    ><ulvia-official-file-upload-input slot="control"
+                                        ><input id="new-file" type="file" name="file" required></ulvia-official-file-upload-input
+                                    ></ulvia-official-file-input
                                 >
                             </ulvia-official-field>
                             <form slot="content" hidden cms-mutation="ulvia.cms.files:workspace.upload.create as fileUploadCreate">
@@ -184,20 +180,15 @@
                             <ulvia-official-file-upload slot="items" file-id="{{ file.fileId }}" visibility="{{ file.visibility }}">
                                 <ulvia-official-field slot="content" label-position="top">
                                     <label slot="label" for="file-replacement-{{ file.fileId }}">{{ cms.i18n.ulvia-official.ui-replace-content }}</label>
-                                    <ulvia-official-file-input
-                                        slot="control"
-                                        variant="compact"
-                                        button-label="{{ cms.i18n.ulvia-official.ui-choose-a-file }}"
-                                        drop-label="{{ cms.i18n.ulvia-official.ui-or-drag-it-here }}"
-                                        empty-label="{{ cms.i18n.ulvia-official.ui-no-file-selected }}"
-                                        replace-label="{{ cms.i18n.ulvia-official.ui-replace-content }}"
-                                        remove-label="{{ cms.i18n.ulvia-official.ui-delete }}"
-                                        ><input
-                                            id="file-replacement-{{ file.fileId }}"
-                                            type="file"
-                                            name="file"
-                                            aria-label="{{ cms.i18n.ulvia-official.ui-replacement-file-for }} {{ file.name }}"
-                                            required
+                                    <ulvia-official-file-input slot="control" variant="compact"
+                                        ><ulvia-official-file-upload-input slot="control"
+                                            ><input
+                                                id="file-replacement-{{ file.fileId }}"
+                                                type="file"
+                                                name="file"
+                                                aria-label="{{ cms.i18n.ulvia-official.ui-replacement-file-for }} {{ file.name }}"
+                                                required
+                                            ></ulvia-official-file-upload-input
                                         ></ulvia-official-file-input
                                     >
                                 </ulvia-official-field>

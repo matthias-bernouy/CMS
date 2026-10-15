@@ -13,50 +13,5 @@
                 { "value": "card", "label": "setting.option.card" }
             ]
         }
-    },
-    {
-        "id": "button-label",
-        "label": "setting.file-button-label.label",
-        "group": "setting.group.content",
-        "type": "string",
-        "default": "Choose a file",
-        "maxLength": 80,
-        "control": { "kind": "text" }
-    },
-    {
-        "id": "drop-label",
-        "label": "setting.file-drop-label.label",
-        "group": "setting.group.content",
-        "type": "string",
-        "default": "or drag it here",
-        "maxLength": 80,
-        "control": { "kind": "text" }
-    },
-    {
-        "id": "empty-label",
-        "label": "setting.file-empty-label.label",
-        "group": "setting.group.content",
-        "type": "string",
-        "default": "No file selected",
-        "maxLength": 120,
-        "control": { "kind": "text" }
-    },
-    {
-        "id": "replace-label",
-        "label": "setting.file-replace-label.label",
-        "group": "setting.group.content",
-        "type": "string",
-        "default": "Replace",
-        "maxLength": 40,
-        "control": { "kind": "text" }
-    },
-    {
-        "id": "remove-label",
-        "label": "setting.file-remove-label.label",
-        "group": "setting.group.content",
-        "type": "string",
-        "default": "Remove",
-        "maxLength": 40,
-        "control": { "kind": "text" }
     }
 ]

@@ -98,6 +98,15 @@ test("the official collection passes its source quality contract", async () => {
             [bloc.defaultContent, bloc.lightdom].some((html) => html?.includes('href="#"')),
         ),
     ).toBeFalse();
+
+    const fileInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-file-input");
+    expect(fileInput?.lightdom).toContain('<span slot="prompt">{{ cms.i18n.ulvia-official.ui-choose-a-file }}</span>');
+    expect(fileInput?.lightdom).toContain(
+        '<button slot="replace-action" type="button" data-file-replace>{{ cms.i18n.ulvia-official.ui-replace-content }}</button>',
+    );
+    expect(fileInput?.settings?.map((setting) => setting.id)).toEqual(["variant"]);
+    expect(fileInput?.runtime?.viewJS).not.toMatch(/(?:button|drop|empty|remove|replace)-label/);
+    expect(fileInput?.runtime?.viewJS).not.toMatch(/Choose a file|No file selected|Replace|Remove/);
 });
 
 test("the generated local bootstrap bundle matches official authored releases", async () => {
