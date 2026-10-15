@@ -63,6 +63,7 @@ describe("binding conditions", () => {
             mutationReset: "cms-mutation-reset",
             repeat: "cms-repeat",
             sync: "cms-sync",
+            syncSelect: "cms-sync-select",
         });
     });
 });
