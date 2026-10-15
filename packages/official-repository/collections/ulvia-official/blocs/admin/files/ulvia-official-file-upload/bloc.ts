@@ -8,7 +8,6 @@ type UploadState = "idle" | "uploading" | "uploaded" | "replaced" | "upload-erro
 
 export class Bloc extends Component {
     private lifecycle = new AbortController();
-    private input: HTMLInputElement | null = null;
 
     constructor() {
         super({ css, template });
@@ -16,29 +15,29 @@ export class Bloc extends Component {
 
     override connectedCallback(): void {
         this.lifecycle = new AbortController();
-        this.input = this.querySelector("input[type='file']");
-        this.input?.addEventListener("change", this.handleChange);
+        this.addEventListener("change", this.handleChange);
         this.show("idle");
     }
 
     disconnectedCallback(): void {
         this.lifecycle.abort();
-        this.input?.removeEventListener("change", this.handleChange);
-        this.input = null;
+        this.removeEventListener("change", this.handleChange);
     }
 
-    private handleChange = (): void => {
-        const file = this.input?.files?.[0];
+    private handleChange = (event: Event): void => {
+        const input = event.target;
+        if (!(input instanceof HTMLInputElement) || input.type !== "file" || !this.contains(input)) {
+            return;
+        }
+        const file = input.files?.[0];
         if (file && file.size > 0) {
-            void this.upload(file);
+            void this.upload(input, file);
         }
     };
 
-    private async upload(file: File): Promise<void> {
+    private async upload(input: HTMLInputElement, file: File): Promise<void> {
         const fileId = this.getAttribute("file-id")?.trim();
-        if (this.input) {
-            this.input.disabled = true;
-        }
+        input.disabled = true;
         this.show("uploading");
         try {
             const ticket = (await mutationFormRequest(this, "fileUploadCreate", {
@@ -50,18 +49,17 @@ export class Bloc extends Component {
             })) as UploadTicket;
             await writeWorkspaceUpload(ticket, file, this.lifecycle.signal);
             await mutationFormRequest(this, "fileUploadComplete", { uploadId: ticket.uploadId });
-            if (this.input) {
-                this.input.value = "";
-            }
+            input.value = "";
             this.show(fileId ? "replaced" : "uploaded");
+            if (!fileId) {
+                this.closest("dialog")?.close();
+            }
         } catch {
             if (!this.lifecycle.signal.aborted) {
                 this.show(fileId ? "replacement-error" : "upload-error");
             }
         } finally {
-            if (this.input) {
-                this.input.disabled = false;
-            }
+            input.disabled = false;
         }
     }
 

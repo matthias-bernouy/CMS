@@ -16,12 +16,6 @@ export async function mutateFiles(page: Page): Promise<void> {
     if (await uploadDialog.evaluate((dialog: HTMLDialogElement) => dialog.open)) {
         throw new Error("The upload dialog must be closed on initial render");
     }
-    await page.locator('button[command="show-modal"][commandfor="upload-file-dialog"]').click();
-    await uploadDialog.evaluate((dialog: HTMLDialogElement) => {
-        if (!dialog.open) {
-            throw new Error("The upload dialog did not open");
-        }
-    });
     await upload(page, "smoke.png", FIRST_IMAGE);
 
     const card = fileCard(page, "smoke.png");
@@ -32,9 +26,12 @@ export async function mutateFiles(page: Page): Promise<void> {
     await renamed.waitFor();
 
     await submit(page, "workspace.files.set-visibility", visibilityButton(renamed, "public"));
-    await replace(page, fileCard(page, "smoke-renamed.png"), "replacement.png", REPLACEMENT_IMAGE);
+    const publicFile = fileCard(page, "smoke-renamed.png");
+    await visibilityButton(publicFile, "private").waitFor();
+    await replace(page, publicFile, "replacement.png", REPLACEMENT_IMAGE);
     const replaced = fileCard(page, "replacement.png");
     await submit(page, "workspace.files.set-visibility", visibilityButton(replaced, "private"));
+    await visibilityButton(fileCard(page, "replacement.png"), "public").waitFor();
     await expectOpenImage(page, fileCard(page, "replacement.png"), 2);
 
     await upload(page, "delete-me.png", FIRST_IMAGE);
@@ -59,6 +56,15 @@ export async function verifyFilesAfterRestart(page: Page): Promise<void> {
 }
 
 async function upload(page: Page, name: string, contents: Buffer): Promise<void> {
+    const uploadDialog = page.locator("#upload-file-dialog");
+    if (!(await uploadDialog.evaluate((dialog: HTMLDialogElement) => dialog.open))) {
+        await page.locator('button[command="show-modal"][commandfor="upload-file-dialog"]').click();
+    }
+    await uploadDialog.evaluate((dialog: HTMLDialogElement) => {
+        if (!dialog.open) {
+            throw new Error("The upload dialog did not open");
+        }
+    });
     const created = page.waitForResponse((candidate) => candidate.url().includes("workspace.upload.create"));
     const written = page.waitForResponse(isRawUploadResponse);
     const completed = page
@@ -74,6 +80,8 @@ async function upload(page: Page, name: string, contents: Buffer): Promise<void>
     await expectOk("upload.write", await written);
     await expectResponse("workspace.upload.complete", await completed);
     await expectOk("workspace.get", await refreshed);
+    await uploadDialog.waitFor({ state: "hidden" });
+    await page.waitForLoadState("networkidle");
     await fileCard(page, name).waitFor();
 }
 
@@ -160,5 +168,8 @@ function isRawUploadResponse(response: Awaited<ReturnType<Page["waitForResponse"
 }
 
 function isWorkspaceResponse(response: Awaited<ReturnType<Page["waitForResponse"]>>): boolean {
-    return response.request().method() === "POST" && response.url().includes("ulvia.cms.files/workspace.get");
+    return (
+        ["GET", "QUERY"].includes(response.request().method()) &&
+        response.url().includes("ulvia.cms.files/workspace.get")
+    );
 }
