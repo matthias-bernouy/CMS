@@ -2,7 +2,7 @@ import { type FilterMap } from "../core/interpolate";
 import { prepareNetworkInertBindings } from "../core/networkBindings";
 import { type Scope } from "../core/scope";
 import { MountedInPlaceRegion, MountedRegion } from "./MountedRegion";
-import { bindingOwnedBySubmitSource, submitBoundary } from "./compiler/submitOwnership";
+import { bindingOwnedByMutation, mutationBoundary } from "./compiler/mutationOwnership";
 import { compileTemplatePlan } from "./compiler/templateCompiler";
 import { instantiateSites } from "./templateInstantiation";
 import type { CompileOptions, CompilePlan } from "./templatePlan";
@@ -39,11 +39,11 @@ export class CompiledTemplate {
             template.appendChild(child.cloneNode(true));
         }
         const plan = compileTemplatePlan(template, filters, {}, CompiledTemplate.fromTemplate);
-        // The parent query keeps its bindings; this in-place submit scope
+        // The parent query keeps its bindings; this in-place mutation scope
         // owns only attributes that explicitly reference its result.
         if (parent.parentElement?.closest("[cms-mutation]")) {
-            const boundary = submitBoundary(parent);
-            plan.attributes = plan.attributes.filter((item) => bindingOwnedBySubmitSource(item.template, boundary));
+            const boundary = mutationBoundary(parent);
+            plan.attributes = plan.attributes.filter((item) => bindingOwnedByMutation(item.template, boundary));
         }
         const region = new MountedInPlaceRegion(instantiateSites(parent, plan, filters));
         region.update(scope);

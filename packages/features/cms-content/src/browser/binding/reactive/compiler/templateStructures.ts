@@ -4,13 +4,13 @@ import type { FilterMap } from "../../core/interpolate";
 import { compileCondition } from "../../render/condition";
 import { compileExpression } from "../../render/expression";
 import { parseRepeat } from "../../render/repeat";
-import { conditionOwnedBySubmitSource, pathOwnedBySubmitSource } from "./submitOwnership";
-import type { CompilePlan, MountableTemplate, NodePath, SubmitSourceBoundary, TemplateFactory } from "../templatePlan";
+import { conditionOwnedByMutation, pathOwnedByMutation } from "./mutationOwnership";
+import type { CompilePlan, MountableTemplate, MutationBoundary, NodePath, TemplateFactory } from "../templatePlan";
 
 export function compileRepeat(
     element: Element,
     path: NodePath,
-    options: { skipRepeat: boolean; submitBoundary: SubmitSourceBoundary | null },
+    options: { skipRepeat: boolean; mutationBoundary: MutationBoundary | null },
     plan: CompilePlan,
     filters: FilterMap,
     createTemplate: TemplateFactory,
@@ -19,19 +19,19 @@ export function compileRepeat(
     if (
         options.skipRepeat ||
         !element.hasAttribute(REPEAT_ATTR) ||
-        pathOwnedBySubmitSource(value, options.submitBoundary)
+        pathOwnedByMutation(value, options.mutationBoundary)
     ) {
         return false;
     }
     const condition = element.getAttribute(CONDITION_ATTR);
-    const conditionOwned = condition ? conditionOwnedBySubmitSource(condition, options.submitBoundary) : false;
+    const conditionOwned = condition ? conditionOwnedByMutation(condition, options.mutationBoundary) : false;
     plan.repeats.push({
         path,
         spec: parseRepeat(value),
         template: compileElementTemplate(element, filters, createTemplate, {
             removeRepeat: true,
-            removeCondition: !!options.submitBoundary && !!condition && !conditionOwned,
-            submitBoundary: options.submitBoundary,
+            removeCondition: !!options.mutationBoundary && !!condition && !conditionOwned,
+            mutationBoundary: options.mutationBoundary,
         }),
         rootCondition: conditionOwned || !condition ? null : compileCondition(condition, filters),
     });
@@ -41,7 +41,7 @@ export function compileRepeat(
 export function compileConditional(
     element: Element,
     path: NodePath,
-    options: { skipCondition: boolean; submitBoundary: SubmitSourceBoundary | null },
+    options: { skipCondition: boolean; mutationBoundary: MutationBoundary | null },
     plan: CompilePlan,
     filters: FilterMap,
     createTemplate: TemplateFactory,
@@ -50,7 +50,7 @@ export function compileConditional(
     if (
         options.skipCondition ||
         !element.hasAttribute(CONDITION_ATTR) ||
-        conditionOwnedBySubmitSource(value, options.submitBoundary)
+        conditionOwnedByMutation(value, options.mutationBoundary)
     ) {
         return false;
     }
@@ -58,8 +58,8 @@ export function compileConditional(
         path,
         condition: compileCondition(value, filters),
         template: compileElementTemplate(element, filters, createTemplate, {
-            removeCondition: !!options.submitBoundary,
-            submitBoundary: options.submitBoundary,
+            removeCondition: !!options.mutationBoundary,
+            mutationBoundary: options.mutationBoundary,
         }),
     });
     return true;
@@ -98,7 +98,7 @@ function compileElementTemplate(
     element: Element,
     filters: FilterMap,
     createTemplate: TemplateFactory,
-    options: { removeRepeat?: boolean; removeCondition?: boolean; submitBoundary?: SubmitSourceBoundary | null },
+    options: { removeRepeat?: boolean; removeCondition?: boolean; mutationBoundary?: MutationBoundary | null },
 ): MountableTemplate {
     const fragment = (element.ownerDocument ?? document).createDocumentFragment();
     const clone = element.cloneNode(true) as Element;
@@ -112,6 +112,6 @@ function compileElementTemplate(
     return createTemplate(fragment, filters, {
         skipRootCondition: true,
         skipRootRepeat: options.removeRepeat === true,
-        submitBoundary: options.submitBoundary ?? null,
+        mutationBoundary: options.mutationBoundary ?? null,
     });
 }

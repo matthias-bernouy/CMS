@@ -50,10 +50,10 @@ export type CompilePlan = {
 export type CompileOptions = {
     skipRootCondition?: boolean;
     skipRootRepeat?: boolean;
-    submitBoundary?: SubmitSourceBoundary | null;
+    mutationBoundary?: MutationBoundary | null;
 };
 
-export type SubmitSourceBoundary = { alias?: string };
+export type MutationBoundary = { alias?: string };
 
 export type TemplateFactory = (
     template: DocumentFragment,

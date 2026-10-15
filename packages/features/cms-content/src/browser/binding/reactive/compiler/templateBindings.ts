@@ -1,5 +1,5 @@
-import { bindingOwnedBySubmitSource } from "./submitOwnership";
-import type { CompilePlan, NodePath, SubmitSourceBoundary } from "../templatePlan";
+import { bindingOwnedByMutation } from "./mutationOwnership";
+import type { CompilePlan, MutationBoundary, NodePath } from "../templatePlan";
 import { parseInterpolation } from "cms-content/blocs/core/markup/bindings";
 import { nativeAttributeBindingKind } from "cms-content/blocs/core/validation/nativeHtml";
 
@@ -7,10 +7,10 @@ export function compileAttributes(
     element: Element,
     path: NodePath,
     plan: CompilePlan,
-    boundary: SubmitSourceBoundary | null,
+    boundary: MutationBoundary | null,
 ): void {
     for (const attribute of Array.from(element.attributes)) {
-        if (attribute.value.includes("{{") && !bindingOwnedBySubmitSource(attribute.value, boundary)) {
+        if (attribute.value.includes("{{") && !bindingOwnedByMutation(attribute.value, boundary)) {
             const expression = parseInterpolation(attribute.value) ?? undefined;
             plan.attributes.push({
                 path,
