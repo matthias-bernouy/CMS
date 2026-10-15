@@ -70,15 +70,15 @@ export function renderContentTexts(
         if (options.skipSubtree?.(element)) {
             return;
         }
-        const blocked =
+        const blocksChildContent =
             inert ||
             /^(template|script|style|textarea|iframe|xmp|plaintext|noembed|noframes|noscript)$/u.test(
                 element.localName,
             );
-        const replace = (value: string, allowed: boolean): string =>
+        const replace = (value: string, allowed: boolean, context: string): string =>
             replaceContentTextExpressions(value, (namespace, id) => {
-                if (!allowed || blocked) {
-                    throw new TypeError("Server texts are unsupported in this HTML context");
+                if (!allowed || inert) {
+                    throw new TypeError(`Server texts are unsupported in ${context}`);
                 }
                 return message(namespace, id);
             });
@@ -87,6 +87,7 @@ export function renderContentTexts(
             const rendered = replace(
                 value,
                 isUserFacingTextAttribute(element.localName, name, element.getAttribute("type") ?? ""),
+                `${element.localName}[${name}]`,
             );
             if (rendered !== value) {
                 element.setAttribute(name, rendered);
@@ -94,9 +95,9 @@ export function renderContentTexts(
         }
         for (const node of Array.from(element.childNodes)) {
             if (node.nodeType === 3) {
-                node.textContent = replace(node.textContent ?? "", true);
+                node.textContent = replace(node.textContent ?? "", !blocksChildContent, `${element.localName} text`);
             } else if (node.nodeType === 1) {
-                walk(node as Element, blocked);
+                walk(node as Element, blocksChildContent);
             }
         }
         if (element.localName === "template") {
