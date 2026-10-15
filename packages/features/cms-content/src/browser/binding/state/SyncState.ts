@@ -1,4 +1,9 @@
-import { parseSyncTarget, type CmsSyncTarget } from "cms-content/blocs/core/markup/bindings";
+import {
+    parseSyncSelection,
+    parseSyncTarget,
+    type CmsSyncSelection,
+    type CmsSyncTarget,
+} from "cms-content/blocs/core/markup/bindings";
 import { parseJsonValue, serializeJsonValue } from "./jsonValue";
 
 const CMS_SYNC_CHANGE_EVENT = "cms-sync:change";
@@ -120,6 +125,18 @@ export function subscribeSyncValue(
 
 export function parseSyncAttribute(element: Element): CmsSyncTarget | null {
     return parseSyncTarget(element.getAttribute("cms-sync"));
+}
+
+export function parseSyncSelectionAttribute(element: Element): CmsSyncSelection | null {
+    const value = element.getAttribute("cms-sync-select");
+    if (value === null) {
+        return null;
+    }
+    const selection = parseSyncSelection(value);
+    if (!selection) {
+        throw new TypeError("Invalid CMS sync selection");
+    }
+    return selection;
 }
 
 function currentParamsFor(doc: Document): URLSearchParams {

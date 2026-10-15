@@ -1,4 +1,5 @@
-import { parseSyncAttribute, writeSyncValue } from "../../state/SyncState";
+import { parseSyncAttribute, parseSyncSelectionAttribute, writeSyncValue } from "../../state/SyncState";
+import { projectSyncValue } from "../../state/selectSyncValue";
 import type { MutationState } from "./mutationState";
 
 export function publishFormSync(form: HTMLFormElement, state: MutationState, input: unknown, dirty: boolean): void {
@@ -7,7 +8,8 @@ export function publishFormSync(form: HTMLFormElement, state: MutationState, inp
         return;
     }
     try {
-        writeSyncValue(target, { ...state, ...(input === undefined ? {} : { input }), dirty }, form.ownerDocument, {
+        const snapshot = { ...state, ...(input === undefined ? {} : { input }), dirty };
+        writeSyncValue(target, projectSyncValue(snapshot, parseSyncSelectionAttribute(form)), form.ownerDocument, {
             source: form,
         });
     } catch (error) {

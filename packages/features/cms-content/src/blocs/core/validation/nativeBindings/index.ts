@@ -15,6 +15,7 @@ import {
     parseQueryListen,
     parseQueryRefresh,
     parseRepeat,
+    parseSyncSelection,
     parseSyncTarget,
 } from "cms-content/blocs/core/markup/bindings";
 
@@ -82,6 +83,9 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     if (name === CMS_BINDING_ATTRIBUTES.sync) {
         return parseSyncTarget(value) ? null : "CMS sync target is invalid";
     }
+    if (name === CMS_BINDING_ATTRIBUTES.syncSelect) {
+        return parseSyncSelection(value) ? null : "CMS sync selection must contain one to sixteen unique paths";
+    }
     return "CMS runtime binding state cannot be persisted";
 }
 
@@ -90,6 +94,7 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     const queries = attributes[CMS_BINDING_ATTRIBUTES.queries];
     const mutation = attributes[CMS_BINDING_ATTRIBUTES.mutation];
     const sync = attributes[CMS_BINDING_ATTRIBUTES.sync];
+    const syncSelect = attributes[CMS_BINDING_ATTRIBUTES.syncSelect];
     const match = attributes[CMS_BINDING_ATTRIBUTES.match];
     if (match !== undefined && isQueryRendererForbiddenTag(tag)) {
         return `CMS matches require an element that can contain rendered cases; native <${tag}> cannot own a match`;
@@ -177,6 +182,12 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     }
     if (sync !== undefined && tag === "select" && attributes.multiple !== undefined) {
         return "multiple selects require an explicit collection value contract and cannot synchronize browser state";
+    }
+    if (syncSelect !== undefined && sync === undefined) {
+        return "CMS sync selection requires cms-sync";
+    }
+    if (syncSelect !== undefined && query === undefined && tag !== "form") {
+        return "CMS sync selection is reserved for structured query and mutation producers";
     }
     for (const name of [
         CMS_BINDING_ATTRIBUTES.queryInput,

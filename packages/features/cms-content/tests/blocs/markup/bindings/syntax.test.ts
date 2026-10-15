@@ -20,6 +20,7 @@ import {
     parseQueryListen,
     parseQueryRefresh,
     parseRepeat,
+    parseSyncSelection,
     parseSyncTarget,
 } from "@bernouy/cms-content/bindings";
 
@@ -121,6 +122,25 @@ describe("binding syntax", () => {
             "@page:ulvia-official-page as saved",
         ]) {
             expect(parseMutation(value)).toBeNull();
+        }
+    });
+
+    test("parses bounded synchronized producer selections", () => {
+        expect(parseSyncSelection("lastSuccess.requestId input.email outcome.kind")).toEqual([
+            ["lastSuccess", "requestId"],
+            ["input", "email"],
+            ["outcome", "kind"],
+        ]);
+        for (const value of [
+            "",
+            "data data",
+            "data data.id",
+            "data.__proto__",
+            "data.constructor.name",
+            "data..id",
+            Array.from({ length: 17 }, (_, index) => `field${index}`).join(" "),
+        ]) {
+            expect(parseSyncSelection(value)).toBeNull();
         }
     });
 

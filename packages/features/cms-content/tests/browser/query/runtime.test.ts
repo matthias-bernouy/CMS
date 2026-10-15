@@ -174,6 +174,31 @@ test("a remote query publishes its lifecycle and resolved input", async () => {
     writeSyncValue(target, undefined);
 });
 
+test("a remote query publishes multiple selected branches", async () => {
+    const target = { scope: "page", key: "ulvia-official-product-selection" } as const;
+    const host = el(`<section
+        cms-query="catalog.items:list as products"
+        cms-query-input='{"limit":{"from":"literal","value":20}}'
+        cms-sync="@page:ulvia-official-product-selection"
+        cms-sync-select="data input.limit outcome.kind"
+    ></section>`);
+    document.body.appendChild(host);
+    const query = new Query(host, {}, { request: async () => ({ kind: "success", data: [{ name: "Racket" }] }) });
+
+    query.start();
+    await waitFor(
+        () => (readSyncValue(target) as { outcome?: { kind?: string } } | undefined)?.outcome?.kind === "success",
+    );
+
+    expect(readSyncValue(target)).toEqual({
+        data: [{ name: "Racket" }],
+        input: { limit: 20 },
+        outcome: { kind: "success" },
+    });
+    query.dispose();
+    writeSyncValue(target, undefined);
+});
+
 test("a remote query refreshes only when one of its synchronized inputs changes", async () => {
     const target = { scope: "page", key: "ulvia-official-filter" } as const;
     const unrelated = { scope: "page", key: "ulvia-official-unrelated" } as const;

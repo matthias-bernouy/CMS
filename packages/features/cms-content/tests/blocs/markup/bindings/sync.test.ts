@@ -21,6 +21,42 @@ describe("cms-sync validation", () => {
         expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.queryListen, "ulvia-official-editor")).toContain(
             "listeners",
         );
+        expect(
+            nativeBindingAttributeIssue(
+                CMS_BINDING_ATTRIBUTES.syncSelect,
+                "lastSuccess.requestId input.email outcome.kind",
+            ),
+        ).toBeNull();
+        expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.syncSelect, "data data.id")).toContain("selection");
+    });
+
+    test("reserves producer selections for synchronized queries and mutations", () => {
+        expect(
+            nativeBindingElementIssue("section", {
+                "cms-query": "catalog.items:list as products",
+                "cms-sync": "@page:ulvia-official-products",
+                "cms-sync-select": "data.items outcome.kind",
+            }),
+        ).toBeNull();
+        expect(
+            nativeBindingElementIssue("form", {
+                "cms-mutation": "catalog.items:create as mutation",
+                "cms-sync": "@page:ulvia-official-mutation",
+                "cms-sync-select": "lastSuccess.requestId",
+            }),
+        ).toBeNull();
+        expect(
+            nativeBindingElementIssue("input", {
+                "cms-sync": "@page:ulvia-official-filter",
+                "cms-sync-select": "value",
+            }),
+        ).toContain("structured query and mutation producers");
+        expect(
+            nativeBindingElementIssue("section", {
+                "cms-query": "catalog.items:list as products",
+                "cms-sync-select": "data",
+            }),
+        ).toContain("requires cms-sync");
     });
 
     test("separates remote producers from local consumers", () => {

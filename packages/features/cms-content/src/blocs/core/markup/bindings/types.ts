@@ -7,6 +7,7 @@ export const CMS_BINDING_ATTRIBUTES = {
     formValueType: "cms-form-value-type",
     formEmpty: "cms-form-empty",
     sync: "cms-sync",
+    syncSelect: "cms-sync-select",
     query: "cms-query",
     queries: "cms-queries",
     queryInput: "cms-query-input",
@@ -63,6 +64,7 @@ export type CmsQueryTarget = {
 export const CMS_SYNC_SCOPES = ["param", "page", "session", "persistent"] as const;
 export type CmsSyncScope = (typeof CMS_SYNC_SCOPES)[number];
 export type CmsSyncTarget = { readonly scope: CmsSyncScope; readonly key: string };
+export type CmsSyncSelection = readonly (readonly string[])[];
 export type CmsRemoteQueryBinding = CmsQueryTarget & { readonly name: string };
 export type CmsSyncQueryBinding = { readonly sync: CmsSyncTarget; readonly name: string };
 export type CmsQueryBinding = CmsRemoteQueryBinding | CmsSyncQueryBinding;

@@ -3,7 +3,14 @@ import { QUERY_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import { BindingRenderer } from "../../reactive/renderer/BindingRenderer";
 import { captureBindingContent } from "../../reactive/renderer/bindingContent";
-import { parseSyncAttribute, readSyncValue, subscribeSyncValue, writeSyncValue } from "../../state/SyncState";
+import {
+    parseSyncAttribute,
+    parseSyncSelectionAttribute,
+    readSyncValue,
+    subscribeSyncValue,
+    writeSyncValue,
+} from "../../state/SyncState";
+import { projectSyncValue } from "../../state/selectSyncValue";
 import { withFormAcknowledgement } from "./formAcknowledgement";
 import { runFetch } from "./queryFetch";
 import { listenQueryRefresh } from "./queryRefresh";
@@ -182,7 +189,11 @@ export class Query {
         const target = parseSyncAttribute(this.element);
         if (target) {
             try {
-                writeSyncValue(target, state, this.element.ownerDocument);
+                writeSyncValue(
+                    target,
+                    projectSyncValue(state, parseSyncSelectionAttribute(this.element)),
+                    this.element.ownerDocument,
+                );
             } catch (error) {
                 console.warn("cms-sync could not publish query state", error);
             }

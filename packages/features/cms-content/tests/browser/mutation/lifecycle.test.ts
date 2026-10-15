@@ -48,4 +48,35 @@ describe("Form mutation lifecycle", () => {
         runtime.stop();
         writeSyncValue(target, undefined);
     });
+
+    test("publishes selected mutation fields while preserving their structure", async () => {
+        const target = { scope: "page", key: "ulvia-official-profile-signal" } as const;
+        globalThis.fetch = (async () => Response.json({ id: "profile-1" }, { status: 201 })) as typeof fetch;
+        const root = el(`
+            <form
+                cms-mutation="profiles:update as profile"
+                cms-sync="@page:ulvia-official-profile-signal"
+                cms-sync-select="lastSuccess.requestId input.displayName"
+            >
+                <input name="displayName" value="Ada">
+            </form>
+        `) as HTMLFormElement;
+        document.body.append(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+
+        expect(readSyncValue(target)).toEqual({ lastSuccess: null });
+        root.requestSubmit();
+        await waitFor(
+            () =>
+                typeof (readSyncValue(target) as { lastSuccess?: { requestId?: unknown } }).lastSuccess?.requestId ===
+                "string",
+        );
+        expect(readSyncValue(target)).toEqual({
+            lastSuccess: { requestId: expect.any(String) },
+            input: { displayName: "Ada" },
+        });
+        runtime.stop();
+        writeSyncValue(target, undefined);
+    });
 });

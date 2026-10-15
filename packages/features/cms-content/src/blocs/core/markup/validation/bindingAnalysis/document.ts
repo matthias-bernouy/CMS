@@ -29,6 +29,8 @@ const IGNORED_ATTRIBUTES = new Set<string>([
     CMS_BINDING_ATTRIBUTES.mutationRedirect,
     CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
     CMS_BINDING_ATTRIBUTES.mutationReset,
+    CMS_BINDING_ATTRIBUTES.sync,
+    CMS_BINDING_ATTRIBUTES.syncSelect,
     CMS_BINDING_ATTRIBUTES.repeat,
     CMS_BINDING_ATTRIBUTES.condition,
     CMS_BINDING_ATTRIBUTES.match,
