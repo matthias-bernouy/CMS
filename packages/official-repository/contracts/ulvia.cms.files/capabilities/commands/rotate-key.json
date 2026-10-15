@@ -25,11 +25,7 @@
                 "sensitive": true
             }
         },
-        "required": [
-            "namespaceId",
-            "keyId",
-            "namespaceKey"
-        ]
+        "required": ["namespaceId", "keyId", "namespaceKey"]
     },
     "output": {
         "type": "object",
@@ -45,10 +41,7 @@
                 "sensitive": true
             }
         },
-        "required": [
-            "keyId",
-            "namespaceKey"
-        ]
+        "required": ["keyId", "namespaceKey"]
     },
     "errors": [
         {
@@ -78,18 +71,12 @@
                 "keyId": "keyId"
             },
             "body": {
-                "properties": [
-                    "namespaceKey"
-                ]
+                "properties": ["namespaceKey"]
             }
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_AUTHORIZED": 403,

@@ -68,10 +68,7 @@
                 }
             }
         },
-        "required": [
-            "providerId",
-            "expectedRevision"
-        ]
+        "required": ["providerId", "expectedRevision"]
     },
     "output": {
         "type": "object",
@@ -87,10 +84,7 @@
             },
             "kind": {
                 "type": "string",
-                "enum": [
-                    "local",
-                    "oidc"
-                ],
+                "enum": ["local", "oidc"],
                 "maxLength": 5
             },
             "displayName": {
@@ -143,15 +137,7 @@
                 "maxLength": 40
             }
         },
-        "required": [
-            "id",
-            "revision",
-            "kind",
-            "displayName",
-            "enabled",
-            "createdAt",
-            "updatedAt"
-        ]
+        "required": ["id", "revision", "kind", "displayName", "enabled", "createdAt", "updatedAt"]
     },
     "errors": [
         {
@@ -183,12 +169,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_FOUND": 404,

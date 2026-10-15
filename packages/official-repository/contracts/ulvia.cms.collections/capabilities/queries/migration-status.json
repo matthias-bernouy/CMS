@@ -39,11 +39,7 @@
                         "maxLength": 40
                     }
                 },
-                "required": [
-                    "id",
-                    "status",
-                    "updatedAt"
-                ]
+                "required": ["id", "status", "updatedAt"]
             },
             "migrations": {
                 "type": "array",
@@ -57,10 +53,7 @@
                         },
                         "status": {
                             "type": "string",
-                            "enum": [
-                                "completed",
-                                "rolled-back"
-                            ],
+                            "enum": ["completed", "rolled-back"],
                             "maxLength": 11
                         },
                         "createdAt": {
@@ -84,21 +77,11 @@
                             "maximum": 9007199254740991
                         }
                     },
-                    "required": [
-                        "id",
-                        "status",
-                        "createdAt",
-                        "updatedAt",
-                        "totalPages",
-                        "operationCount"
-                    ]
+                    "required": ["id", "status", "createdAt", "updatedAt", "totalPages", "operationCount"]
                 }
             }
         },
-        "required": [
-            "maintenance",
-            "migrations"
-        ]
+        "required": ["maintenance", "migrations"]
     },
     "errors": [
         {
@@ -114,12 +97,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "CORE_UNAVAILABLE": 503
             }

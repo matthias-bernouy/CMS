@@ -22,19 +22,11 @@
             },
             "action": {
                 "type": "string",
-                "enum": [
-                    "enable",
-                    "disable",
-                    "revoke"
-                ],
+                "enum": ["enable", "disable", "revoke"],
                 "maxLength": 7
             }
         },
-        "required": [
-            "installationId",
-            "expectedRevision",
-            "action"
-        ]
+        "required": ["installationId", "expectedRevision", "action"]
     },
     "output": {
         "type": "object",
@@ -45,11 +37,7 @@
             },
             "status": {
                 "type": "string",
-                "enum": [
-                    "enabled",
-                    "disabled",
-                    "revoked"
-                ],
+                "enum": ["enabled", "disabled", "revoked"],
                 "maxLength": 8
             },
             "revision": {
@@ -61,12 +49,7 @@
                 "type": "boolean"
             }
         },
-        "required": [
-            "installationId",
-            "status",
-            "revision",
-            "credentialsDeleted"
-        ]
+        "required": ["installationId", "status", "revision", "credentialsDeleted"]
     },
     "errors": [
         {
@@ -98,12 +81,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_FOUND": 404,

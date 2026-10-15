@@ -31,10 +31,7 @@
                 "maxLength": 160
             }
         },
-        "required": [
-            "fileId",
-            "generation"
-        ]
+        "required": ["fileId", "generation"]
     },
     "output": {
         "type": "binary",
@@ -76,10 +73,7 @@
             }
         },
         "response": {
-            "successStatuses": [
-                200,
-                206
-            ],
+            "successStatuses": [200, 206],
             "contentTypes": [],
             "errorStatuses": {
                 "NOT_AUTHORIZED": 403,

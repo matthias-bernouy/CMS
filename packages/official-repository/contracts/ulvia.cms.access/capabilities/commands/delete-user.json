@@ -16,9 +16,7 @@
                 "maxLength": 200
             }
         },
-        "required": [
-            "sub"
-        ]
+        "required": ["sub"]
     },
     "output": {
         "type": "object",
@@ -31,10 +29,7 @@
                 "type": "boolean"
             }
         },
-        "required": [
-            "sub",
-            "deleted"
-        ]
+        "required": ["sub", "deleted"]
     },
     "errors": [
         {
@@ -66,12 +61,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "NOT_FOUND": 404,
                 "CANNOT_REMOVE_SELF": 409,

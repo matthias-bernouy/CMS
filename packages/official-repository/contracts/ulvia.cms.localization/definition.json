@@ -9,9 +9,6 @@
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "language",
-        "categories": [
-            "administration",
-            "localization"
-        ]
+        "categories": ["administration", "localization"]
     }
 }

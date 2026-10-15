@@ -24,7 +24,13 @@
         "response": {
             "successStatuses": [200],
             "contentTypes": ["application/json"],
-            "errorStatuses": { "INVALID_INPUT": 422, "NOT_FOUND": 404, "UPLOAD_NOT_READY": 409, "QUOTA_EXCEEDED": 409, "CORE_UNAVAILABLE": 503 }
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_FOUND": 404,
+                "UPLOAD_NOT_READY": 409,
+                "QUOTA_EXCEEDED": 409,
+                "CORE_UNAVAILABLE": 503
+            }
         }
     }
 }

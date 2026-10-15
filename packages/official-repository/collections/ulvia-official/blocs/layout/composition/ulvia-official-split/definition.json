@@ -9,16 +9,10 @@
     "requires": [],
     "slots": {
         "primary": {
-            "accepts": [
-                { "kind": "any-component" },
-                { "kind": "rich-text", "profile": "prose" }
-            ]
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
         },
         "secondary": {
-            "accepts": [
-                { "kind": "any-component" },
-                { "kind": "rich-text", "profile": "prose" }
-            ]
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
         }
     }
 }

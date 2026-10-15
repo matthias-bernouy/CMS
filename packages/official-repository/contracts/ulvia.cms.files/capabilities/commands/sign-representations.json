@@ -34,13 +34,7 @@
                 "maximum": 86400
             }
         },
-        "required": [
-            "namespaceId",
-            "namespaceKey",
-            "fileId",
-            "generation",
-            "expiresIn"
-        ]
+        "required": ["namespaceId", "namespaceKey", "fileId", "generation", "expiresIn"]
     },
     "output": {
         "type": "object",
@@ -58,10 +52,7 @@
                         "profile": {
                             "type": "string",
                             "maxLength": 10,
-                            "enum": [
-                                "thumbnail",
-                                "responsive"
-                            ]
+                            "enum": ["thumbnail", "responsive"]
                         },
                         "width": {
                             "type": "integer",
@@ -82,20 +73,11 @@
                             "maxLength": 4096
                         }
                     },
-                    "required": [
-                        "profile",
-                        "width",
-                        "height",
-                        "mimeType",
-                        "url"
-                    ]
+                    "required": ["profile", "width", "height", "mimeType", "url"]
                 }
             }
         },
-        "required": [
-            "expiresAt",
-            "representations"
-        ]
+        "required": ["expiresAt", "representations"]
     },
     "errors": [
         {
@@ -125,20 +107,12 @@
                 "generation": "generation"
             },
             "body": {
-                "properties": [
-                    "namespaceId",
-                    "namespaceKey",
-                    "expiresIn"
-                ]
+                "properties": ["namespaceId", "namespaceKey", "expiresIn"]
             }
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_AUTHORIZED": 403,

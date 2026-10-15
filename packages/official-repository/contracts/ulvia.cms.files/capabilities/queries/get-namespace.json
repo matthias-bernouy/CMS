@@ -20,10 +20,7 @@
                 "sensitive": true
             }
         },
-        "required": [
-            "namespaceId",
-            "namespaceKey"
-        ]
+        "required": ["namespaceId", "namespaceKey"]
     },
     "output": {
         "type": "object",
@@ -39,10 +36,7 @@
             "defaultVisibility": {
                 "type": "string",
                 "maxLength": 7,
-                "enum": [
-                    "private",
-                    "public"
-                ]
+                "enum": ["private", "public"]
             },
             "createdAt": {
                 "type": "string",
@@ -60,19 +54,10 @@
                         "minimum": 1
                     }
                 },
-                "required": [
-                    "maxBytes",
-                    "maxFiles"
-                ]
+                "required": ["maxBytes", "maxFiles"]
             }
         },
-        "required": [
-            "id",
-            "name",
-            "defaultVisibility",
-            "createdAt",
-            "quota"
-        ]
+        "required": ["id", "name", "defaultVisibility", "createdAt", "quota"]
     },
     "errors": [
         {
@@ -105,12 +90,8 @@
             }
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_AUTHORIZED": 403,

@@ -14,10 +14,7 @@
     ],
     "slots": {
         "content": {
-            "accepts": [
-                { "kind": "any-component" },
-                { "kind": "rich-text", "profile": "prose" }
-            ],
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }],
             "min": 1
         }
     }

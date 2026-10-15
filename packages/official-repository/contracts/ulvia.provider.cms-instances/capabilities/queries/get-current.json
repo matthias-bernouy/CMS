@@ -24,19 +24,12 @@
             },
             "lifecycleState": {
                 "type": "string",
-                "enum": [
-                    "running",
-                    "maintenance",
-                    "stopped"
-                ],
+                "enum": ["running", "maintenance", "stopped"],
                 "maxLength": 16
             },
             "availability": {
                 "type": "string",
-                "enum": [
-                    "ready",
-                    "unavailable"
-                ],
+                "enum": ["ready", "unavailable"],
                 "maxLength": 16
             },
             "coreVersion": {
@@ -67,22 +60,11 @@
                             "maxLength": 71
                         }
                     },
-                    "required": [
-                        "contractId",
-                        "version",
-                        "digest"
-                    ]
+                    "required": ["contractId", "version", "digest"]
                 }
             }
         },
-        "required": [
-            "id",
-            "label",
-            "lifecycleState",
-            "availability",
-            "coreVersion",
-            "contracts"
-        ]
+        "required": ["id", "label", "lifecycleState", "availability", "coreVersion", "contracts"]
     },
     "errors": [
         {
@@ -96,12 +78,8 @@
         "path": "/v1/cms-instances/current",
         "input": {},
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INSTANCE_UNAVAILABLE": 503
             }

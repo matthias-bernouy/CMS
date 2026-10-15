@@ -11,10 +11,7 @@
     },
     "buildVersionRange": ">=0.1.0 <1.0.0",
     "endpoint": {
-        "allowedOrigins": [
-            "http://127.0.0.1:5103",
-            "http://ulvia-provider:5103"
-        ],
+        "allowedOrigins": ["http://127.0.0.1:5103", "http://ulvia-provider:5103"],
         "defaultOrigin": "http://127.0.0.1:5103"
     },
     "configuration": {

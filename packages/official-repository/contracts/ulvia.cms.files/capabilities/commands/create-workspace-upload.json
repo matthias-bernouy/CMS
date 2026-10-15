@@ -10,7 +10,12 @@
             "contentType": { "type": "string", "maxLength": 255, "nullable": true },
             "size": { "type": "integer", "minimum": 0, "maximum": 10737418240 },
             "visibility": { "type": "string", "maxLength": 7, "enum": ["private", "public"] },
-            "imageProfile": { "type": "string", "maxLength": 10, "nullable": true, "enum": ["thumbnail", "responsive"] },
+            "imageProfile": {
+                "type": "string",
+                "maxLength": 10,
+                "nullable": true,
+                "enum": ["thumbnail", "responsive"]
+            },
             "fileId": { "type": "string", "maxLength": 128, "nullable": true }
         },
         "required": ["filename", "size"]

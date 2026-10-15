@@ -29,10 +29,7 @@
                 "sensitive": true
             }
         },
-        "required": [
-            "fileId",
-            "generation"
-        ]
+        "required": ["fileId", "generation"]
     },
     "output": {
         "type": "object",
@@ -68,10 +65,7 @@
                     "visibility": {
                         "type": "string",
                         "maxLength": 7,
-                        "enum": [
-                            "private",
-                            "public"
-                        ]
+                        "enum": ["private", "public"]
                     },
                     "url": {
                         "type": "string",
@@ -98,10 +92,7 @@
                                 "profile": {
                                     "type": "string",
                                     "maxLength": 10,
-                                    "enum": [
-                                        "thumbnail",
-                                        "responsive"
-                                    ]
+                                    "enum": ["thumbnail", "responsive"]
                                 },
                                 "width": {
                                     "type": "integer",
@@ -122,26 +113,11 @@
                                     "maxLength": 4096
                                 }
                             },
-                            "required": [
-                                "profile",
-                                "width",
-                                "height",
-                                "mimeType",
-                                "url"
-                            ]
+                            "required": ["profile", "width", "height", "mimeType", "url"]
                         }
                     }
                 },
-                "required": [
-                    "namespaceId",
-                    "fileId",
-                    "generation",
-                    "name",
-                    "mimeType",
-                    "size",
-                    "visibility",
-                    "url"
-                ]
+                "required": ["namespaceId", "fileId", "generation", "name", "mimeType", "size", "visibility", "url"]
             },
             "representations": {
                 "type": "array",
@@ -152,10 +128,7 @@
                         "profile": {
                             "type": "string",
                             "maxLength": 10,
-                            "enum": [
-                                "thumbnail",
-                                "responsive"
-                            ]
+                            "enum": ["thumbnail", "responsive"]
                         },
                         "width": {
                             "type": "integer",
@@ -176,20 +149,11 @@
                             "maxLength": 4096
                         }
                     },
-                    "required": [
-                        "profile",
-                        "width",
-                        "height",
-                        "mimeType",
-                        "url"
-                    ]
+                    "required": ["profile", "width", "height", "mimeType", "url"]
                 }
             }
         },
-        "required": [
-            "original",
-            "representations"
-        ]
+        "required": ["original", "representations"]
     },
     "errors": [
         {
@@ -222,12 +186,8 @@
             }
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "NOT_AUTHORIZED": 403,
                 "NOT_FOUND": 404,

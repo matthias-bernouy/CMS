@@ -16,16 +16,10 @@
             "max": 1
         },
         "navigation": {
-            "accepts": [
-                { "kind": "rich-text", "profile": "prose" },
-                { "kind": "any-component" }
-            ]
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }, { "kind": "any-component" }]
         },
         "social": {
-            "accepts": [
-                { "kind": "rich-text", "profile": "inline" },
-                { "kind": "any-component" }
-            ]
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }, { "kind": "any-component" }]
         },
         "legal": {
             "accepts": [{ "kind": "rich-text", "profile": "inline" }],

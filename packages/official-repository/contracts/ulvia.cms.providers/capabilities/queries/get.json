@@ -15,9 +15,7 @@
                 "maxLength": 96
             }
         },
-        "required": [
-            "installationId"
-        ]
+        "required": ["installationId"]
     },
     "output": {
         "type": "object",
@@ -41,11 +39,7 @@
             },
             "status": {
                 "type": "string",
-                "enum": [
-                    "enabled",
-                    "disabled",
-                    "revoked"
-                ],
+                "enum": ["enabled", "disabled", "revoked"],
                 "maxLength": 8
             },
             "manifestVersion": {
@@ -82,20 +76,11 @@
                         },
                         "status": {
                             "type": "string",
-                            "enum": [
-                                "ready",
-                                "setup-required",
-                                "unavailable"
-                            ],
+                            "enum": ["ready", "setup-required", "unavailable"],
                             "maxLength": 14
                         }
                     },
-                    "required": [
-                        "contractId",
-                        "version",
-                        "digest",
-                        "status"
-                    ]
+                    "required": ["contractId", "version", "digest", "status"]
                 }
             },
             "selections": {
@@ -121,12 +106,7 @@
                             "maxLength": 96
                         }
                     },
-                    "required": [
-                        "contractId",
-                        "version",
-                        "digest",
-                        "installationId"
-                    ]
+                    "required": ["contractId", "version", "digest", "installationId"]
                 }
             }
         },
@@ -160,12 +140,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "NOT_FOUND": 404,
                 "CORE_UNAVAILABLE": 503

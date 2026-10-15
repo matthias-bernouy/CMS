@@ -29,10 +29,7 @@
                 "maximum": 100
             }
         },
-        "required": [
-            "namespaceId",
-            "namespaceKey"
-        ]
+        "required": ["namespaceId", "namespaceKey"]
     },
     "output": {
         "type": "object",
@@ -71,10 +68,7 @@
                         "visibility": {
                             "type": "string",
                             "maxLength": 7,
-                            "enum": [
-                                "private",
-                                "public"
-                            ]
+                            "enum": ["private", "public"]
                         },
                         "url": {
                             "type": "string",
@@ -101,10 +95,7 @@
                                     "profile": {
                                         "type": "string",
                                         "maxLength": 10,
-                                        "enum": [
-                                            "thumbnail",
-                                            "responsive"
-                                        ]
+                                        "enum": ["thumbnail", "responsive"]
                                     },
                                     "width": {
                                         "type": "integer",
@@ -125,26 +116,11 @@
                                         "maxLength": 4096
                                     }
                                 },
-                                "required": [
-                                    "profile",
-                                    "width",
-                                    "height",
-                                    "mimeType",
-                                    "url"
-                                ]
+                                "required": ["profile", "width", "height", "mimeType", "url"]
                             }
                         }
                     },
-                    "required": [
-                        "namespaceId",
-                        "fileId",
-                        "generation",
-                        "name",
-                        "mimeType",
-                        "size",
-                        "visibility",
-                        "url"
-                    ]
+                    "required": ["namespaceId", "fileId", "generation", "name", "mimeType", "size", "visibility", "url"]
                 }
             },
             "offset": {
@@ -156,11 +132,7 @@
                 "minimum": 1
             }
         },
-        "required": [
-            "items",
-            "offset",
-            "limit"
-        ]
+        "required": ["items", "offset", "limit"]
     },
     "errors": [
         {
@@ -197,12 +169,8 @@
             }
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_AUTHORIZED": 403,

@@ -20,10 +20,7 @@
             "profile": {
                 "type": "string",
                 "maxLength": 10,
-                "enum": [
-                    "thumbnail",
-                    "responsive"
-                ]
+                "enum": ["thumbnail", "responsive"]
             },
             "width": {
                 "type": "integer",
@@ -44,12 +41,7 @@
                 "maxLength": 160
             }
         },
-        "required": [
-            "fileId",
-            "generation",
-            "profile",
-            "width"
-        ]
+        "required": ["fileId", "generation", "profile", "width"]
     },
     "output": {
         "type": "binary",
@@ -93,10 +85,7 @@
             }
         },
         "response": {
-            "successStatuses": [
-                200,
-                206
-            ],
+            "successStatuses": [200, 206],
             "contentTypes": [],
             "errorStatuses": {
                 "NOT_AUTHORIZED": 403,

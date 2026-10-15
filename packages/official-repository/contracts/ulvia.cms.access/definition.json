@@ -9,9 +9,6 @@
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "users",
-        "categories": [
-            "administration",
-            "access"
-        ]
+        "categories": ["administration", "access"]
     }
 }

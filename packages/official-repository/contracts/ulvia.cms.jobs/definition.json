@@ -9,9 +9,6 @@
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "activity",
-        "categories": [
-            "administration",
-            "jobs"
-        ]
+        "categories": ["administration", "jobs"]
     }
 }

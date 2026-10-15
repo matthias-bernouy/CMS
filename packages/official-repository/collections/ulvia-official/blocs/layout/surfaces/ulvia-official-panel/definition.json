@@ -9,27 +9,16 @@
     "requires": [],
     "slots": {
         "header": {
-            "accepts": [
-                { "kind": "any-component" },
-                { "kind": "rich-text", "profile": "prose" }
-            ]
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
         },
         "actions": {
-            "accepts": [
-                { "kind": "any-component" }
-            ]
+            "accepts": [{ "kind": "any-component" }]
         },
         "content": {
-            "accepts": [
-                { "kind": "any-component" },
-                { "kind": "rich-text", "profile": "prose" }
-            ]
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
         },
         "footer": {
-            "accepts": [
-                { "kind": "any-component" },
-                { "kind": "rich-text", "profile": "prose" }
-            ]
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
         }
     }
 }

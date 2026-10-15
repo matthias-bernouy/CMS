@@ -25,11 +25,7 @@
                 "maxLength": 128
             }
         },
-        "required": [
-            "namespaceId",
-            "namespaceKey",
-            "fileId"
-        ]
+        "required": ["namespaceId", "namespaceKey", "fileId"]
     },
     "output": {
         "type": "null"
@@ -61,16 +57,11 @@
                 "fileId": "fileId"
             },
             "body": {
-                "properties": [
-                    "namespaceId",
-                    "namespaceKey"
-                ]
+                "properties": ["namespaceId", "namespaceKey"]
             }
         },
         "response": {
-            "successStatuses": [
-                204
-            ],
+            "successStatuses": [204],
             "contentTypes": [],
             "errorStatuses": {
                 "INVALID_INPUT": 422,

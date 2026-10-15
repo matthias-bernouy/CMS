@@ -227,14 +227,7 @@
             "stat-two-value",
             "title"
         ],
-        "pages": [
-            "access",
-            "collections",
-            "details",
-            "overview",
-            "providers",
-            "settings"
-        ]
+        "pages": ["access", "collections", "details", "overview", "providers", "settings"]
     },
     "states": [
         {

@@ -17,7 +17,10 @@
     "requires": [],
     "slots": {
         "title": { "accepts": [{ "kind": "rich-text", "profile": "prose" }, { "kind": "any-component" }], "min": 1 },
-        "description": { "accepts": [{ "kind": "rich-text", "profile": "prose" }, { "kind": "any-component" }], "max": 1 },
+        "description": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }, { "kind": "any-component" }],
+            "max": 1
+        },
         "actions": { "accepts": [{ "kind": "any-component" }] },
         "content": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] },
         "footer": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] }

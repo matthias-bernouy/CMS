@@ -34,11 +34,7 @@
                 "maxLength": 200
             }
         },
-        "required": [
-            "id",
-            "expectedRevision",
-            "language"
-        ]
+        "required": ["id", "expectedRevision", "language"]
     },
     "output": {
         "type": "object",
@@ -71,19 +67,11 @@
                             "maxLength": 200
                         }
                     },
-                    "required": [
-                        "language",
-                        "title",
-                        "description"
-                    ]
+                    "required": ["language", "title", "description"]
                 }
             }
         },
-        "required": [
-            "id",
-            "revision",
-            "seoEntries"
-        ]
+        "required": ["id", "revision", "seoEntries"]
     },
     "errors": [
         {
@@ -111,12 +99,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "NOT_FOUND": 404,
                 "REVISION_CONFLICT": 409,

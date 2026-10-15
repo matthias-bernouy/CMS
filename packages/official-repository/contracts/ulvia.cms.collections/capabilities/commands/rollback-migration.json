@@ -15,9 +15,7 @@
                 "maxLength": 36
             }
         },
-        "required": [
-            "migrationId"
-        ]
+        "required": ["migrationId"]
     },
     "output": {
         "type": "object",
@@ -28,9 +26,7 @@
                 "maxLength": 36
             }
         },
-        "required": [
-            "operationId"
-        ]
+        "required": ["operationId"]
     },
     "errors": [
         {
@@ -58,12 +54,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                202
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [202],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "NOT_FOUND": 404,
                 "MIGRATION_IN_PROGRESS": 423,

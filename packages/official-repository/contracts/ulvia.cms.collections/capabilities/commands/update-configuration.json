@@ -24,11 +24,7 @@
                 "maxLength": 1048576
             }
         },
-        "required": [
-            "collectionId",
-            "expectedRevision",
-            "configurationJson"
-        ]
+        "required": ["collectionId", "expectedRevision", "configurationJson"]
     },
     "output": {
         "type": "object",
@@ -114,10 +110,7 @@
                 }
             }
         },
-        "required": [
-            "revision",
-            "items"
-        ]
+        "required": ["revision", "items"]
     },
     "errors": [
         {
@@ -145,12 +138,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_FOUND": 404,

@@ -17,10 +17,7 @@
             "max": 1
         },
         "links": {
-            "accepts": [
-                { "kind": "rich-text", "profile": "inline" },
-                { "kind": "any-component" }
-            ]
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }, { "kind": "any-component" }]
         },
         "actions": {
             "accepts": [{ "kind": "component", "tag": "ulvia-official-action" }],

@@ -67,13 +67,7 @@
                             "maxLength": 40
                         }
                     },
-                    "required": [
-                        "sub",
-                        "administrator",
-                        "administratorRevision",
-                        "createdAt",
-                        "lastSeenAt"
-                    ]
+                    "required": ["sub", "administrator", "administratorRevision", "createdAt", "lastSeenAt"]
                 }
             },
             "total": {
@@ -95,13 +89,7 @@
                 "type": "boolean"
             }
         },
-        "required": [
-            "users",
-            "total",
-            "page",
-            "limit",
-            "hasMore"
-        ]
+        "required": ["users", "total", "page", "limit", "hasMore"]
     },
     "errors": [
         {
@@ -117,12 +105,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "CORE_UNAVAILABLE": 503
             }

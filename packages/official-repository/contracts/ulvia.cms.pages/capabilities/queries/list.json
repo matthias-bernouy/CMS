@@ -52,13 +52,7 @@
                             "type": "boolean"
                         }
                     },
-                    "required": [
-                        "id",
-                        "revision",
-                        "path",
-                        "title",
-                        "visible"
-                    ]
+                    "required": ["id", "revision", "path", "title", "visible"]
                 }
             },
             "nextCursor": {
@@ -66,9 +60,7 @@
                 "maxLength": 256
             }
         },
-        "required": [
-            "items"
-        ]
+        "required": ["items"]
     },
     "errors": [
         {
@@ -84,12 +76,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "CORE_UNAVAILABLE": 503
             }

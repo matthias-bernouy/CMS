@@ -43,11 +43,7 @@
                 "nullable": true
             }
         },
-        "required": [
-            "namespaceId",
-            "namespaceKey",
-            "permissions"
-        ]
+        "required": ["namespaceId", "namespaceKey", "permissions"]
     },
     "output": {
         "type": "object",
@@ -63,10 +59,7 @@
                 "sensitive": true
             }
         },
-        "required": [
-            "keyId",
-            "namespaceKey"
-        ]
+        "required": ["keyId", "namespaceKey"]
     },
     "errors": [
         {
@@ -95,20 +88,12 @@
                 "namespaceId": "namespaceId"
             },
             "body": {
-                "properties": [
-                    "namespaceKey",
-                    "permissions",
-                    "expiresAt"
-                ]
+                "properties": ["namespaceKey", "permissions", "expiresAt"]
             }
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_AUTHORIZED": 403,

@@ -28,9 +28,7 @@
                 "type": "boolean"
             }
         },
-        "required": [
-            "expectedRevision"
-        ]
+        "required": ["expectedRevision"]
     },
     "output": {
         "type": "object",
@@ -56,13 +54,7 @@
                 "type": "boolean"
             }
         },
-        "required": [
-            "revision",
-            "name",
-            "host",
-            "language",
-            "visible"
-        ]
+        "required": ["revision", "name", "host", "language", "visible"]
     },
     "errors": [
         {
@@ -86,12 +78,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "REVISION_CONFLICT": 409,

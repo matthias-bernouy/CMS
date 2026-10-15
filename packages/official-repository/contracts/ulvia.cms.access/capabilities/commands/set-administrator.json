@@ -24,11 +24,7 @@
                 "maximum": 9007199254740991
             }
         },
-        "required": [
-            "sub",
-            "enabled",
-            "expectedRevision"
-        ]
+        "required": ["sub", "enabled", "expectedRevision"]
     },
     "output": {
         "type": "object",
@@ -49,12 +45,7 @@
                 "type": "boolean"
             }
         },
-        "required": [
-            "sub",
-            "administrator",
-            "revision",
-            "bootstrap"
-        ]
+        "required": ["sub", "administrator", "revision", "bootstrap"]
     },
     "errors": [
         {
@@ -90,12 +81,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_FOUND": 404,

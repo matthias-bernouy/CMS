@@ -25,11 +25,7 @@
                 "maxBytes": 10737418240
             }
         },
-        "required": [
-            "uploadId",
-            "uploadToken",
-            "bytes"
-        ]
+        "required": ["uploadId", "uploadToken", "bytes"]
     },
     "output": {
         "type": "null"
@@ -68,9 +64,7 @@
             }
         },
         "response": {
-            "successStatuses": [
-                204
-            ],
+            "successStatuses": [204],
             "contentTypes": [],
             "errorStatuses": {
                 "INVALID_INPUT": 422,

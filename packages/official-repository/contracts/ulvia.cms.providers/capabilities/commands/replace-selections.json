@@ -42,19 +42,11 @@
                             "maxLength": 96
                         }
                     },
-                    "required": [
-                        "contractId",
-                        "version",
-                        "digest",
-                        "installationId"
-                    ]
+                    "required": ["contractId", "version", "digest", "installationId"]
                 }
             }
         },
-        "required": [
-            "expectedRevision",
-            "selections"
-        ]
+        "required": ["expectedRevision", "selections"]
     },
     "output": {
         "type": "object",
@@ -87,19 +79,11 @@
                             "maxLength": 96
                         }
                     },
-                    "required": [
-                        "contractId",
-                        "version",
-                        "digest",
-                        "installationId"
-                    ]
+                    "required": ["contractId", "version", "digest", "installationId"]
                 }
             }
         },
-        "required": [
-            "revision",
-            "selections"
-        ]
+        "required": ["revision", "selections"]
     },
     "errors": [
         {
@@ -127,12 +111,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "INVALID_SELECTION": 422,

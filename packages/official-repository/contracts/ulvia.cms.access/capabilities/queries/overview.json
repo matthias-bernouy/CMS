@@ -44,13 +44,7 @@
                         "type": "boolean"
                     }
                 },
-                "required": [
-                    "revision",
-                    "name",
-                    "host",
-                    "language",
-                    "visible"
-                ]
+                "required": ["revision", "name", "host", "language", "visible"]
             },
             "users": {
                 "type": "array",
@@ -90,13 +84,7 @@
                             "maxLength": 40
                         }
                     },
-                    "required": [
-                        "sub",
-                        "administrator",
-                        "administratorRevision",
-                        "createdAt",
-                        "lastSeenAt"
-                    ]
+                    "required": ["sub", "administrator", "administratorRevision", "createdAt", "lastSeenAt"]
                 }
             },
             "totalUsers": {
@@ -121,10 +109,7 @@
                         },
                         "kind": {
                             "type": "string",
-                            "enum": [
-                                "local",
-                                "oidc"
-                            ],
+                            "enum": ["local", "oidc"],
                             "maxLength": 5
                         },
                         "displayName": {
@@ -177,24 +162,11 @@
                             "maxLength": 40
                         }
                     },
-                    "required": [
-                        "id",
-                        "revision",
-                        "kind",
-                        "displayName",
-                        "enabled",
-                        "createdAt",
-                        "updatedAt"
-                    ]
+                    "required": ["id", "revision", "kind", "displayName", "enabled", "createdAt", "updatedAt"]
                 }
             }
         },
-        "required": [
-            "site",
-            "users",
-            "totalUsers",
-            "loginProviders"
-        ]
+        "required": ["site", "users", "totalUsers", "loginProviders"]
     },
     "errors": [
         {
@@ -210,12 +182,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "CORE_UNAVAILABLE": 503
             }

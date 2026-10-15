@@ -14,9 +14,7 @@
                 "maxLength": 36
             }
         },
-        "required": [
-            "jobId"
-        ]
+        "required": ["jobId"]
     },
     "output": {
         "type": "object",
@@ -36,12 +34,7 @@
             },
             "status": {
                 "type": "string",
-                "enum": [
-                    "queued",
-                    "running",
-                    "succeeded",
-                    "failed"
-                ],
+                "enum": ["queued", "running", "succeeded", "failed"],
                 "maxLength": 9
             },
             "revision": {
@@ -68,15 +61,7 @@
                 "maxLength": 1048576
             }
         },
-        "required": [
-            "id",
-            "contractId",
-            "capabilityId",
-            "status",
-            "revision",
-            "createdAt",
-            "updatedAt"
-        ]
+        "required": ["id", "contractId", "capabilityId", "status", "revision", "createdAt", "updatedAt"]
     },
     "errors": [
         {
@@ -100,12 +85,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "NOT_FOUND": 404,
                 "INVALID_INPUT": 422,

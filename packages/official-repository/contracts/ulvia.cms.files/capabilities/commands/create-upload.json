@@ -38,19 +38,13 @@
             "visibility": {
                 "type": "string",
                 "maxLength": 7,
-                "enum": [
-                    "private",
-                    "public"
-                ]
+                "enum": ["private", "public"]
             },
             "imageProfile": {
                 "type": "string",
                 "maxLength": 10,
                 "nullable": true,
-                "enum": [
-                    "thumbnail",
-                    "responsive"
-                ]
+                "enum": ["thumbnail", "responsive"]
             },
             "fileId": {
                 "type": "string",
@@ -58,12 +52,7 @@
                 "nullable": true
             }
         },
-        "required": [
-            "namespaceId",
-            "namespaceKey",
-            "filename",
-            "size"
-        ]
+        "required": ["namespaceId", "namespaceKey", "filename", "size"]
     },
     "output": {
         "type": "object",
@@ -87,12 +76,7 @@
                 "minimum": 1
             }
         },
-        "required": [
-            "uploadId",
-            "uploadToken",
-            "expiresAt",
-            "maxBytes"
-        ]
+        "required": ["uploadId", "uploadToken", "expiresAt", "maxBytes"]
     },
     "errors": [
         {
@@ -124,12 +108,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_AUTHORIZED": 403,

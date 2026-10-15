@@ -38,18 +38,12 @@
                         },
                         "kind": {
                             "type": "string",
-                            "enum": [
-                                "component",
-                                "composition"
-                            ],
+                            "enum": ["component", "composition"],
                             "maxLength": 11
                         },
                         "ownership": {
                             "type": "string",
-                            "enum": [
-                                "code-managed",
-                                "site-builder"
-                            ],
+                            "enum": ["code-managed", "site-builder"],
                             "maxLength": 12
                         },
                         "order": {
@@ -80,9 +74,7 @@
                 }
             }
         },
-        "required": [
-            "items"
-        ]
+        "required": ["items"]
     },
     "errors": [
         {
@@ -96,12 +88,8 @@
         "path": "/editor-catalogue",
         "input": {},
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "CORE_UNAVAILABLE": 503
             }

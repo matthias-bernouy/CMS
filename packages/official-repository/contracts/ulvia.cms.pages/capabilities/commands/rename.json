@@ -26,11 +26,7 @@
                 "maximum": 9007199254740991
             }
         },
-        "required": [
-            "id",
-            "title",
-            "expectedRevision"
-        ]
+        "required": ["id", "title", "expectedRevision"]
     },
     "output": {
         "type": "object",
@@ -57,13 +53,7 @@
                 "type": "boolean"
             }
         },
-        "required": [
-            "id",
-            "revision",
-            "path",
-            "title",
-            "visible"
-        ]
+        "required": ["id", "revision", "path", "title", "visible"]
     },
     "errors": [
         {
@@ -91,12 +81,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "NOT_FOUND": 404,
                 "REVISION_CONFLICT": 409,

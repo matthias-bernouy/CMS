@@ -40,19 +40,11 @@
                             "maxLength": 71
                         }
                     },
-                    "required": [
-                        "repositoryId",
-                        "publisherId",
-                        "collectionId",
-                        "version",
-                        "digest"
-                    ]
+                    "required": ["repositoryId", "publisherId", "collectionId", "version", "digest"]
                 }
             }
         },
-        "required": [
-            "targets"
-        ]
+        "required": ["targets"]
     },
     "output": {
         "type": "object",
@@ -85,11 +77,7 @@
                             "maxLength": 71
                         }
                     },
-                    "required": [
-                        "collectionId",
-                        "fromDigest",
-                        "toDigest"
-                    ]
+                    "required": ["collectionId", "fromDigest", "toDigest"]
                 }
             },
             "totalPages": {
@@ -142,13 +130,7 @@
                             "maxLength": 71
                         }
                     },
-                    "required": [
-                        "repositoryId",
-                        "publisherId",
-                        "collectionId",
-                        "version",
-                        "digest"
-                    ]
+                    "required": ["repositoryId", "publisherId", "collectionId", "version", "digest"]
                 }
             }
         },
@@ -188,12 +170,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_FOUND": 404,

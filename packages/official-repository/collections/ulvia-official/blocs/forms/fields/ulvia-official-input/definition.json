@@ -10,7 +10,20 @@
         "attributes": {
             "type": {
                 "required": true,
-                "values": ["text", "email", "password", "search", "tel", "url", "number", "date", "time", "datetime-local", "month", "week"]
+                "values": [
+                    "text",
+                    "email",
+                    "password",
+                    "search",
+                    "tel",
+                    "url",
+                    "number",
+                    "date",
+                    "time",
+                    "datetime-local",
+                    "month",
+                    "week"
+                ]
             }
         }
     },

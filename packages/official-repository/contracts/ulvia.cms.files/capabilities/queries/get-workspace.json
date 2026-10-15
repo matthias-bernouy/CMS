@@ -24,7 +24,11 @@
                     "createdBy": {
                         "type": "object",
                         "properties": {
-                            "kind": { "type": "string", "maxLength": 13, "enum": ["administrator", "provider", "system"] },
+                            "kind": {
+                                "type": "string",
+                                "maxLength": 13,
+                                "enum": ["administrator", "provider", "system"]
+                            },
                             "id": { "type": "string", "maxLength": 256 }
                         },
                         "required": ["kind", "id"]
@@ -62,7 +66,11 @@
                             "items": {
                                 "type": "object",
                                 "properties": {
-                                    "profile": { "type": "string", "maxLength": 10, "enum": ["thumbnail", "responsive"] },
+                                    "profile": {
+                                        "type": "string",
+                                        "maxLength": 10,
+                                        "enum": ["thumbnail", "responsive"]
+                                    },
                                     "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
                                     "height": { "type": "integer", "minimum": 1, "maximum": 16384 },
                                     "mimeType": { "type": "string", "maxLength": 64 },
@@ -80,10 +88,7 @@
         },
         "required": ["namespace", "items", "offset", "limit"]
     },
-    "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
-    ],
+    "errors": [{ "code": "INVALID_INPUT", "retryable": false }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
     "binding": {
         "transport": "http",
         "method": "QUERY",

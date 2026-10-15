@@ -44,12 +44,7 @@
                         },
                         "status": {
                             "type": "string",
-                            "enum": [
-                                "queued",
-                                "running",
-                                "succeeded",
-                                "failed"
-                            ],
+                            "enum": ["queued", "running", "succeeded", "failed"],
                             "maxLength": 9
                         },
                         "revision": {
@@ -72,15 +67,7 @@
                             "maxLength": 64
                         }
                     },
-                    "required": [
-                        "id",
-                        "contractId",
-                        "capabilityId",
-                        "status",
-                        "revision",
-                        "createdAt",
-                        "updatedAt"
-                    ]
+                    "required": ["id", "contractId", "capabilityId", "status", "revision", "createdAt", "updatedAt"]
                 }
             },
             "nextCursor": {
@@ -88,9 +75,7 @@
                 "maxLength": 256
             }
         },
-        "required": [
-            "items"
-        ]
+        "required": ["items"]
     },
     "errors": [
         {
@@ -106,12 +91,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                200
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "CORE_UNAVAILABLE": 503
             }

@@ -10,9 +10,7 @@
     "slots": {
         "items": {
             "min": 1,
-            "accepts": [
-                { "kind": "component", "tag": "ulvia-official-route-tab" }
-            ]
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-route-tab" }]
         }
     }
 }

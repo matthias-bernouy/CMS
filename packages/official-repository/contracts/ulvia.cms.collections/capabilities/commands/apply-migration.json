@@ -50,21 +50,11 @@
                             "maxLength": 71
                         }
                     },
-                    "required": [
-                        "repositoryId",
-                        "publisherId",
-                        "collectionId",
-                        "version",
-                        "digest"
-                    ]
+                    "required": ["repositoryId", "publisherId", "collectionId", "version", "digest"]
                 }
             }
         },
-        "required": [
-            "expectedRevision",
-            "planDigest",
-            "targets"
-        ]
+        "required": ["expectedRevision", "planDigest", "targets"]
     },
     "output": {
         "type": "object",
@@ -75,9 +65,7 @@
                 "maxLength": 36
             }
         },
-        "required": [
-            "operationId"
-        ]
+        "required": ["operationId"]
     },
     "errors": [
         {
@@ -117,12 +105,8 @@
             "body": true
         },
         "response": {
-            "successStatuses": [
-                202
-            ],
-            "contentTypes": [
-                "application/json"
-            ],
+            "successStatuses": [202],
+            "contentTypes": ["application/json"],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
                 "NOT_FOUND": 404,

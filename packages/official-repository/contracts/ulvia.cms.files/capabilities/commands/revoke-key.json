@@ -25,11 +25,7 @@
                 "sensitive": true
             }
         },
-        "required": [
-            "namespaceId",
-            "keyId",
-            "namespaceKey"
-        ]
+        "required": ["namespaceId", "keyId", "namespaceKey"]
     },
     "output": {
         "type": "null"
@@ -62,15 +58,11 @@
                 "keyId": "keyId"
             },
             "body": {
-                "properties": [
-                    "namespaceKey"
-                ]
+                "properties": ["namespaceKey"]
             }
         },
         "response": {
-            "successStatuses": [
-                204
-            ],
+            "successStatuses": [204],
             "contentTypes": [],
             "errorStatuses": {
                 "INVALID_INPUT": 422,
