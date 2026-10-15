@@ -26,7 +26,6 @@ const IGNORED_ATTRIBUTES = new Set<string>([
     CMS_BINDING_ATTRIBUTES.queryRefresh,
     CMS_BINDING_ATTRIBUTES.mutation,
     CMS_BINDING_ATTRIBUTES.mutationInput,
-    CMS_BINDING_ATTRIBUTES.mutationRedirect,
     CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
     CMS_BINDING_ATTRIBUTES.mutationReset,
     CMS_BINDING_ATTRIBUTES.sync,
@@ -143,7 +142,7 @@ function validateInterpolations(
             continue;
         }
         const attributeFacts =
-            attribute === "data-cms-page-suffix" && operationName
+            attribute === CMS_BINDING_ATTRIBUTES.mutationRedirect && operationName
                 ? withFact(facts, `${operationName}.outcome.kind`, "success")
                 : facts;
         for (const expression of interpolationExpressions(element.getAttribute(attribute) ?? "") ?? []) {

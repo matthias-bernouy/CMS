@@ -42,14 +42,6 @@ const NEW_TAB_REL = new Set([
 export function nativeAttributeValueIssue(tag: string, attribute: string, value: string): string | null {
     const normalizedTag = tag.toLowerCase();
     const normalizedAttribute = attribute.toLowerCase();
-    if (normalizedAttribute === "data-cms-page-ref" || normalizedAttribute === "data-cms-success-page-ref") {
-        return CONTROL_CHARACTER.test(value) ? `attribute "${attribute}" contains control characters` : null;
-    }
-    if (normalizedAttribute === "data-cms-page-suffix") {
-        return !CONTROL_CHARACTER.test(value) && (value.startsWith("?") || value.startsWith("#"))
-            ? null
-            : "stable Page suffix must be a query or fragment";
-    }
     const contributedAssetUrl =
         isContributedAssetSource(value) &&
         ((normalizedTag === "a" && normalizedAttribute === "href") ||
@@ -119,7 +111,7 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     return null;
 }
 
-function dynamicInternalHrefIssue(value: string): string | null {
+export function dynamicInternalHrefIssue(value: string): string | null {
     if (CONTROL_CHARACTER.test(value) || value.includes("#{") || value.includes("@{")) {
         return "dynamic native links require controlled interpolation";
     }

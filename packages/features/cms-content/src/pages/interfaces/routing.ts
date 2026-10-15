@@ -31,6 +31,7 @@ export interface PageRouteRegistry {
     list(siteId: string): Promise<readonly RegisteredPageRoute[]>;
     get(siteId: string, page: PageReference): Promise<RegisteredPageRoute | null>;
     resolve(siteId: string, path: string): Promise<RegisteredPageRoute | null>;
+    resolveDefault(siteId: string, defaultPath: string): Promise<RegisteredPageRoute | null>;
     updateDefault(
         siteId: string,
         page: PageReference,
@@ -48,6 +49,7 @@ export interface PageRouteRegistry {
 
 export interface PageRouteReader {
     get(page: PageReference): Promise<RegisteredPageRoute | null>;
+    resolvePath(path: string): Promise<RegisteredPageRoute | null>;
 }
 
 export interface ResolvedPageLink {

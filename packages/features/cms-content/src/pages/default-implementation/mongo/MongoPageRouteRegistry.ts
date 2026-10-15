@@ -36,6 +36,7 @@ export class MongoPageRouteRegistry implements PageRouteRegistry {
         this.#ready = Promise.all([
             this.#routes.createIndex({ routeKey: 1 }, { unique: true }),
             this.#routes.createIndex({ siteId: 1 }),
+            this.#routes.createIndex({ siteId: 1, defaultPath: 1 }, { unique: true }),
         ]);
     }
 
@@ -75,6 +76,15 @@ export class MongoPageRouteRegistry implements PageRouteRegistry {
     async resolve(siteId: string, path: string): Promise<RegisteredPageRoute | null> {
         await this.#ready;
         const document = await this.#routes.findOne({ routeKey: scopedPageRouteKey(siteId, path) });
+        return document ? this.#route(document) : null;
+    }
+
+    async resolveDefault(siteId: string, defaultPath: string): Promise<RegisteredPageRoute | null> {
+        await this.#ready;
+        const document = await this.#routes.findOne({
+            siteId: validateSiteId(siteId),
+            defaultPath: validateRegisteredPagePath(defaultPath),
+        });
         return document ? this.#route(document) : null;
     }
 

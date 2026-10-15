@@ -177,6 +177,7 @@ export function withInstalledCollections(
                                 version: release.version,
                                 digest,
                                 generation,
+                                defaultPath: page.defaultPath,
                             },
                             language,
                             requirements: pageRequirements(releases, page),

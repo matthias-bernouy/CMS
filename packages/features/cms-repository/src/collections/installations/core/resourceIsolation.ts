@@ -5,7 +5,7 @@ import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
 import type { CollectionInstallation, CollectionStorage } from "../interfaces/store";
-import { pageReferences, pageReferenceSources } from "../../core/parsing/pages/references";
+import { pageLinks, pageLinkSources } from "../../core/parsing/pages/references";
 import { validatePageDocument } from "@bernouy/cms-content/page-document";
 
 export async function assertInstallableCollectionResources(
@@ -42,7 +42,7 @@ export function assertCollectionResourceIsolation(releases: readonly CollectionR
     }
     assertCollectionDependencies(releases);
     validateInstalledPageDocuments(releases);
-    validateInstalledPageReferences(releases);
+    validateInstalledPageLinks(releases);
     validateMarkup(
         releases.flatMap((release) => release.blocs),
         DEFAULT_COLLECTION_LIMITS,
@@ -63,25 +63,27 @@ function validateInstalledPageDocuments(releases: readonly CollectionRelease[]):
     }
 }
 
-function validateInstalledPageReferences(releases: readonly CollectionRelease[]): void {
+function validateInstalledPageLinks(releases: readonly CollectionRelease[]): void {
     const pages = new Map(
         releases.flatMap((release) =>
-            (release.pages ?? []).map(
-                (page) => [`${release.publisherId}\0${release.collectionId}\0${page.id}`, { release, page }] as const,
-            ),
+            (release.pages ?? []).map((page) => [page.defaultPath, { release, page }] as const),
         ),
     );
     for (const release of releases) {
         for (const page of release.pages ?? []) {
-            const sources = [page.document.html, ...pageReferenceSources(release, page.uses)];
-            for (const reference of sources.flatMap(pageReferences)) {
-                if (reference.kind === "site") {
+            const sources = [page.document.html, ...pageLinkSources(release, page.uses)];
+            for (const path of sources.flatMap(pageLinks)) {
+                const target = pages.get(path);
+                if (!target || target.release.collectionId === release.collectionId) {
                     continue;
                 }
-                const target = pages.get(`${reference.sourceId}\0${reference.contributionId}\0${reference.pageId}`);
-                if (!target) {
+                const dependency = release.dependencies?.find(
+                    ({ publisherId, collectionId }) =>
+                        publisherId === target.release.publisherId && collectionId === target.release.collectionId,
+                );
+                if (!dependency?.imports.pages?.some(({ id }) => id === target.page.id)) {
                     reject(
-                        `Collection Page ${release.collectionId}.${page.id} references unavailable Page ${reference.contributionId}.${reference.pageId}`,
+                        `Collection Page ${release.collectionId}.${page.id} links to Page ${target.release.collectionId}.${target.page.id} without importing it`,
                     );
                 }
             }

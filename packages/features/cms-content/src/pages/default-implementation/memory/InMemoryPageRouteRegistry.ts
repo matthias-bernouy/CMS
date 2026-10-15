@@ -57,6 +57,11 @@ export class InMemoryPageRouteRegistry implements PageRouteRegistry {
         return route ? clonePageRoute(route) : null;
     }
 
+    async resolveDefault(siteId: string, defaultPath: string): Promise<RegisteredPageRoute | null> {
+        const path = validateRegisteredPagePath(defaultPath);
+        return (await this.list(siteId)).find((route) => route.defaultPath === path) ?? null;
+    }
+
     async updateDefault(
         siteId: string,
         page: PageReference,

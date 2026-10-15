@@ -12,7 +12,7 @@ import { parseBlocs } from "./blocs/parseBlocs";
 import { validateBlocs } from "./blocs/validateBlocs";
 import { parseConfiguration } from "./configuration";
 import { parseCollectionPages } from "./pages";
-import { validateDeclaredPageReferences } from "./pages/references";
+import { validateDeclaredPageLinks } from "./pages/references";
 import { validateCollectionTextReferences } from "../validation/markup/texts";
 import { parseCollectionTranslations } from "../texts/translationCatalogue";
 import { validateCollectionTranslationReferences } from "../texts/translationReferences";
@@ -166,7 +166,7 @@ export function parseCollectionRelease(
             ...(pages === undefined ? {} : { pages }),
         };
         validateCollectionStateBindings(release);
-        validateDeclaredPageReferences(release);
+        validateDeclaredPageLinks(release);
         validateCollectionTranslationReferences(release);
         assertSize(release, limits);
         return deepFreeze(release);

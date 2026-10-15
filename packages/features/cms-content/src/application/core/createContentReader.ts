@@ -54,6 +54,18 @@ export function createContentReader(repository: CmsRepository): ContentReader {
                 )?.page.path ?? null
             );
         },
+        resolvePagePaths: async (paths) => {
+            const requested = new Set(paths);
+            const resolved: Record<string, string> = {};
+            for (const renderable of await getRenderablePages()) {
+                const authoredPath =
+                    renderable.source.kind === "contribution" ? renderable.source.defaultPath : renderable.page.path;
+                if (requested.has(authoredPath)) {
+                    resolved[authoredPath] = renderable.page.path;
+                }
+            }
+            return resolved;
+        },
         resolveRenderableRoute: async (path) => {
             const resolved = await resolvePublishedRoute(path, repository);
             if (resolved?.kind === "current") {

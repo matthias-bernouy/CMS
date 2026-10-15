@@ -13,6 +13,7 @@ export const KERNEL_PROVIDER_QUERY_OPERATIONS = [
     "content.renderable-page",
     "content.renderable-pages",
     "content.resolve-page-reference",
+    "content.resolve-page-paths",
     "content.resolve-renderable-route",
     "content.published-page",
     "content.published-page-by-id",

@@ -8,13 +8,12 @@ import {
 } from "@bernouy/cms-content";
 
 describe("Page content reference projection", () => {
-    test("extracts unique Bloc, file, text, and stable Page references", () => {
-        const target = JSON.stringify({ kind: "site", pageId: "target-page" });
+    test("extracts unique Bloc, file, text, and authored Page paths", () => {
         expect(
             pageContentReferenceKeys(
-                `<official-card><a data-cms-page-ref='${target}'><img src="/.cms/call/ulvia.cms.files/files/file%201/generation?v=abc">{{ cms.i18n.ulvia-official.card-title }}</a></official-card>`,
+                '<official-card><a href="/target"><img src="/.cms/call/ulvia.cms.files/files/file%201/generation?v=abc">{{ cms.i18n.ulvia-official.card-title }}</a></official-card>',
             ),
-        ).toEqual(["bloc:official-card", "file:file 1", "site-page:target-page", "text:ulvia-official:card-title"]);
+        ).toEqual(["bloc:official-card", "file:file 1", "page-path:/target", "text:ulvia-official:card-title"]);
     });
 
     test("updates reverse lookups without enumerating Pages", async () => {

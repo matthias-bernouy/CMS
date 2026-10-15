@@ -1,6 +1,7 @@
 import { isTypedBindingInput, isTypedQueryInput } from "cms-content/blocs/core/validation/nativeBindings/bindingInput";
 import { HTML_VOID_ELEMENT_TAGS } from "cms-content/blocs/core/validation/nativeHtml";
 import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
+import { dynamicInternalHrefIssue } from "cms-content/blocs/core/validation/nativeAttributeValues";
 import {
     CMS_BINDING_ATTRIBUTES,
     isCmsQueryParamName,
@@ -249,6 +250,9 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
 }
 
 function isSafeInternalRedirect(value: string): boolean {
+    if (value.includes("{{")) {
+        return dynamicInternalHrefIssue(value) === null;
+    }
     return (
         isSafeNavigationalUrl(value) &&
         value.startsWith("/") &&

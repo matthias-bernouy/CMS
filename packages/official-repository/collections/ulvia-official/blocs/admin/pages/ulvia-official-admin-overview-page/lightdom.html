@@ -7,8 +7,7 @@
         <form
             slot="content"
             cms-mutation="ulvia.cms.pages:create as created"
-            data-cms-success-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}'
-            data-cms-page-suffix="?ulvia-official-page-id={{ created.data.id }}"
+            cms-mutation-redirect="/admin/pages?ulvia-official-page-id={{ created.data.id | urlencode }}"
         >
             <ulvia-official-grid gap="md">
                 <ulvia-official-field slot="items" label-position="top">
@@ -100,13 +99,9 @@
                                 <small>{{ cms.i18n.ulvia-official.ui-revision }} {{ page.revision }}</small>
                             </header>
                             <ulvia-official-action slot="items" variant="filled" tone="secondary" size="sm"
-                                ><a
-                                    data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}'
-                                    data-cms-page-suffix="?ulvia-official-page-id={{ page.id }}"
-                                    >{{
-                                        cms.i18n.ulvia-official.ui-open-page
-                                    }}</a
-                                ></ulvia-official-action
+                                ><a href="/admin/pages?ulvia-official-page-id={{ page.id | urlencode }}">{{
+                                    cms.i18n.ulvia-official.ui-open-page
+                                }}</a></ulvia-official-action
                             >
                             <form
                                 slot="items"

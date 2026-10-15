@@ -13,7 +13,7 @@ test("collection Admin Pages render through site routes while preserving path ov
         uses: [],
         requires: [],
         document: {
-            html: `<section><h1>Collection Pages</h1><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"official","pageId":"details"}' data-cms-page-suffix="?id={{ page.id }}">Details</a></section>`,
+            html: '<section><h1>Collection Pages</h1><a href="/admin/pages?id={{ page.id | urlencode }}">Details</a></section>',
         },
     };
     const details = {
@@ -59,8 +59,7 @@ test("collection Admin Pages render through site routes while preserving path ov
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain("Collection Pages");
-    expect(html).toContain('href="/admin/pages?id={{ page.id }}"');
-    expect(html).not.toContain("data-cms-page-ref");
+    expect(html).toContain('href="/admin/pages?id={{ page.id | urlencode }}"');
     expect(html).toContain("default-src 'self'");
 
     const reference = {
@@ -83,7 +82,7 @@ test("collection Admin Pages render through site routes while preserving path ov
         path: "/admin/custom",
     });
     const overridden = await mounted.get(new Request("http://admin.test/admin/custom"));
-    expect(await overridden.text()).toContain('href="/admin/content?id={{ page.id }}"');
+    expect(await overridden.text()).toContain('href="/admin/content?id={{ page.id | urlencode }}"');
 });
 
 test("site-owned Admin Pages use the same renderer and shared route registry", async () => {

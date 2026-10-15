@@ -83,6 +83,8 @@ async function executeQuery(
             return content.getRenderablePages();
         case "content.resolve-page-reference":
             return content.resolvePageReference(input.reference as never);
+        case "content.resolve-page-paths":
+            return content.resolvePagePaths(textArray(input.paths));
         case "content.resolve-renderable-route":
             return content.resolveRenderableRoute(text(input.path));
         case "content.published-page":
@@ -225,6 +227,13 @@ function text(value: unknown): string {
         throw new TypeError("Kernel query input is invalid");
     }
     return value;
+}
+
+function textArray(value: unknown): string[] {
+    if (!Array.isArray(value) || value.length > 256) {
+        throw new TypeError("Kernel query input is invalid");
+    }
+    return value.map(text);
 }
 
 function isReservedPath(path: string): boolean {

@@ -141,6 +141,7 @@ function remoteContent(client: ProviderKernelClient): ContentReader {
         getRenderablePage: (path) => client.query("content.renderable-page", { path }),
         getRenderablePages: () => client.query("content.renderable-pages"),
         resolvePageReference: (reference) => client.query("content.resolve-page-reference", { reference }),
+        resolvePagePaths: (paths) => client.query("content.resolve-page-paths", { paths }),
         resolveRenderableRoute: (path) => client.query("content.resolve-renderable-route", { path }),
         getPublishedPage: (path) => client.query("content.published-page", { path }),
         getPublishedPageById: (id) => client.query("content.published-page-by-id", { id }),

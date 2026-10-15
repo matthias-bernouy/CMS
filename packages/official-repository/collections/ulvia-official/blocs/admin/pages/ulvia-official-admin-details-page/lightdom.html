@@ -2,9 +2,7 @@
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-page-details }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-update-the-shared-page-document-through-revision-checked-provider-capabilities }}</p>
     <ulvia-official-action slot="actions" variant="outline" tone="secondary"
-        ><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"overview"}'>{{
-            cms.i18n.ulvia-official.ui-back-to-pages
-        }}</a></ulvia-official-action
+        ><a href="/admin">{{ cms.i18n.ulvia-official.ui-back-to-pages }}</a></ulvia-official-action
     >
     <section
         id="page-detail"
@@ -280,11 +278,7 @@
                 <ulvia-official-surface appearance="outlined" padding="lg">
                     <h2 slot="content">{{ cms.i18n.ulvia-official.ui-danger-zone }}</h2>
                     <p slot="content">{{ cms.i18n.ulvia-official.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit }}</p>
-                    <form
-                        slot="content"
-                        cms-mutation="ulvia.cms.pages:delete as deletion"
-                        data-cms-success-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"overview"}'
-                    >
+                    <form slot="content" cms-mutation="ulvia.cms.pages:delete as deletion" cms-mutation-redirect="/admin">
                         <input type="hidden" name="id" value="{{ selected.data.id }}">
                         <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
                         <ulvia-official-action variant="outline" tone="danger"

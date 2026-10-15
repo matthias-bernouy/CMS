@@ -8,10 +8,9 @@ import type {
     PageRouteRegistry,
 } from "cms-content/pages/interfaces/routing";
 import { parseHTML } from "linkedom";
-import { validatePageReference } from "cms-content/pages/core/routing/values";
 
 const MAX_PAGE_LINKS = 256;
-const MAX_PAGE_REFERENCE_LENGTH = 1024;
+const MAX_PAGE_LINK_LENGTH = 4096;
 
 export async function resolvePageLinkTarget(
     routes: PageRouteReader,
@@ -30,37 +29,46 @@ export async function resolvePageLinkTarget(
     return { href: route.path, external: false };
 }
 
-export function createPageRouteReader(routes: Pick<PageRouteRegistry, "get">, siteId: string): PageRouteReader {
+export function createPageRouteReader(
+    routes: Pick<PageRouteRegistry, "get" | "resolve" | "resolveDefault">,
+    siteId: string,
+): PageRouteReader {
     return {
         get: (reference: PageReference) => routes.get(siteId, reference),
+        resolvePath: async (path: string) =>
+            (await routes.resolve(siteId, path)) ?? (await routes.resolveDefault(siteId, path)),
     };
 }
 
 /** Rejects broken references before editable Page content is persisted. */
 export async function assertPageContentLinks(routes: PageRouteReader, content: string): Promise<void> {
-    for (const reference of pageContentReferences(content)) {
-        await resolvePageLinkTarget(routes, { kind: "page", page: reference });
+    for (const path of pageContentPaths(content)) {
+        if (!(await routes.resolvePath(path))) {
+            throw new TypeError(`Page content references an unavailable route: ${path}`);
+        }
     }
 }
 
-export function pageContentReferences(content: string): readonly PageReference[] {
+export function pageContentPaths(content: string): readonly string[] {
     const { document } = parseHTML(`<body>${content}</body>`);
-    const elements = [
-        ...document.querySelectorAll<HTMLElement>("[data-cms-page-ref]"),
-        ...document.querySelectorAll<HTMLElement>("[data-cms-success-page-ref]"),
+    const values = [
+        ...Array.from(document.querySelectorAll<HTMLAnchorElement>("a[href]"), (element) =>
+            element.getAttribute("href"),
+        ),
+        ...Array.from(document.querySelectorAll<HTMLFormElement>("form[cms-mutation-redirect]"), (element) =>
+            element.getAttribute("cms-mutation-redirect"),
+        ),
     ];
-    if (elements.length > MAX_PAGE_LINKS) {
-        throw new TypeError("A Page contains too many stable Page references.");
+    if (values.length > MAX_PAGE_LINKS) {
+        throw new TypeError("A Page contains too many links.");
     }
-    return elements.map((element) => {
-        const raw = element.getAttribute("data-cms-page-ref") ?? element.getAttribute("data-cms-success-page-ref");
-        if (!raw || raw.length > MAX_PAGE_REFERENCE_LENGTH) {
-            throw new TypeError("A stable Page reference is invalid.");
-        }
-        try {
-            return validatePageReference(JSON.parse(raw) as PageReference);
-        } catch {
-            throw new TypeError("A stable Page reference is invalid.");
-        }
-    });
+    return [...new Set(values.flatMap((value) => authoredPagePath(value)))];
+}
+
+function authoredPagePath(value: string | null): string[] {
+    if (!value || value.length > MAX_PAGE_LINK_LENGTH || !value.startsWith("/") || value.startsWith("//")) {
+        return [];
+    }
+    const path = value.split(/[?#]/u, 1)[0]!;
+    return path.startsWith("/.cms/") ? [] : [path];
 }

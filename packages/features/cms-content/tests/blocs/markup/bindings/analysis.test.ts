@@ -116,10 +116,9 @@ describe("typed binding analysis", () => {
         );
     });
 
-    test("validates mutation redirect suffixes in the implicit success branch", () => {
+    test("validates mutation redirects in the implicit success branch", () => {
         const html = `<form cms-mutation="catalog:save as saved"
-            data-cms-success-page-ref='{"kind":"path","path":"/saved"}'
-            data-cms-page-suffix="?id={{ saved.data.items.length }}">
+            cms-mutation-redirect="/saved?id={{ saved.data.items.length | urlencode }}">
             <div cms-match="saved.outcome.kind">
                 <span cms-case='"none"'></span>
                 <p cms-case='"success"'>Saved</p>

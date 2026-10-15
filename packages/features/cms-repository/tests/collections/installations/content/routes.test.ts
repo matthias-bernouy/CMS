@@ -93,9 +93,7 @@ test("the routed collection facade preserves non-mutating class methods", async 
 
 test("collection activation rejects a missing site Page target", async () => {
     const raw = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await raw.importRelease(
-        collectionRelease(`<a data-cms-page-ref='{"kind":"site","pageId":"missing"}'>{{ page.title }}</a>`),
-    );
+    const artifact = await raw.importRelease(collectionRelease('<a href="/missing">{{ page.title }}</a>'));
     const store = withCollectionPageRoutes(raw, new InMemoryPageRouteRegistry(), {
         getSitePages: async () => [],
     });
@@ -110,7 +108,7 @@ test("collection removal cannot orphan an editable Page reference", async () => 
     const sitePage = {
         id: "site-page",
         path: "/admin/site-page",
-        content: `<a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"official","pageId":"overview"}'>Overview</a>`,
+        content: '<a href="/admin">Overview</a>',
     } as never;
     const store = withCollectionPageRoutes(raw, new InMemoryPageRouteRegistry(), {
         getSitePages: async () => [sitePage],

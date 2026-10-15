@@ -28,17 +28,14 @@ administrator access. Calls without a same-origin referring Page and an exact
 active plan fail closed. No second administration transport exists alongside
 the capability model.
 
-Collection Pages link by stable identity rather than by an authored URL:
+Collection Pages use native links whose static pathname names the target Page's
+declared default route:
 
 ```html
-<a
-    data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}'
-    data-cms-page-suffix="?id={{ page.id }}"
->Open Page</a>
+<a href="/admin/pages?id={{ page.id | urlencode }}">Open Page</a>
 ```
 
-Successful capability forms use `data-cms-success-page-ref` with the same
-reference shape. Admission accepts only bounded, exact references and optional
-query/fragment suffixes. The kernel resolves the current site route override,
-writes the final `href` or `cms-mutation-redirect`, and removes the source
-metadata before returning HTML.
+Successful capability forms declare the same kind of URL in
+`cms-mutation-redirect`. Admission keeps the pathname static and permits bounded
+query or fragment interpolation. Before returning HTML, the Kernel resolves
+collection default paths to the current site route override in one batch.

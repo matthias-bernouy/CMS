@@ -1,50 +1,41 @@
-import { validatePageReference, type PageReference } from "@bernouy/cms-content/kernel";
 import type KernelCms from "cms-kernel/KernelCms";
 
 const MAX_PAGE_LINKS = 256;
-const MAX_REFERENCE_LENGTH = 1024;
 
-/** Resolve stable Page references through the shared projected content reader. */
+type LinkAttribute = { readonly element: Element; readonly name: "href" | "cms-mutation-redirect" };
+
+/** Rewrites authored collection default paths to the instance's effective Page routes. */
 export async function resolvePageLinks(root: Element, kernel: KernelCms): Promise<void> {
-    const elements = [
-        ...root.querySelectorAll<HTMLElement>("[data-cms-page-ref]"),
-        ...root.querySelectorAll<HTMLElement>("[data-cms-success-page-ref]"),
+    const attributes: LinkAttribute[] = [
+        ...Array.from(root.querySelectorAll("a[href]"), (element) => ({ element, name: "href" as const })),
+        ...Array.from(root.querySelectorAll("form[cms-mutation-redirect]"), (element) => ({
+            element,
+            name: "cms-mutation-redirect" as const,
+        })),
     ];
-    if (elements.length === 0) {
+    if (attributes.length > MAX_PAGE_LINKS) {
+        throw new Error("A Page contains too many links");
+    }
+    const paths = [...new Set(attributes.flatMap(({ element, name }) => authoredPath(element.getAttribute(name))))];
+    if (paths.length === 0) {
         return;
     }
-    if (elements.length > MAX_PAGE_LINKS) {
-        throw new Error("A Page contains too many stable Page references");
-    }
-    for (const element of elements) {
-        const success = element.hasAttribute("data-cms-success-page-ref");
-        const referenceAttribute = success ? "data-cms-success-page-ref" : "data-cms-page-ref";
-        const targetAttribute = success ? "cms-mutation-redirect" : "href";
-        if ((!success && element.localName !== "a") || (success && element.localName !== "form")) {
-            throw new Error("Stable Page references must target anchors or successful form redirects");
+    const resolved = await kernel.content.resolvePagePaths(paths);
+    for (const { element, name } of attributes) {
+        const value = element.getAttribute(name);
+        const path = authoredPath(value)[0];
+        const target = path ? resolved[path] : undefined;
+        if (!value || !path || !target) {
+            continue;
         }
-        const reference = parseReference(element.getAttribute(referenceAttribute));
-        const resolved = await kernel.content.resolvePageReference(reference);
-        if (!resolved) {
-            throw new Error("Page reference is unavailable");
-        }
-        const suffix = element.getAttribute("data-cms-page-suffix") ?? "";
-        if (suffix && !suffix.startsWith("?") && !suffix.startsWith("#")) {
-            throw new Error("A stable Page link may only declare a query or fragment suffix");
-        }
-        element.setAttribute(targetAttribute, `${kernel.basePath}${resolved}${suffix}`);
-        element.removeAttribute(referenceAttribute);
-        element.removeAttribute("data-cms-page-suffix");
+        element.setAttribute(name, `${kernel.basePath}${target}${value.slice(path.length)}`);
     }
 }
 
-function parseReference(value: string | null): PageReference {
-    if (!value || value.length > MAX_REFERENCE_LENGTH) {
-        throw new Error("Invalid stable Page reference");
+function authoredPath(value: string | null): string[] {
+    if (!value || !value.startsWith("/") || value.startsWith("//")) {
+        return [];
     }
-    try {
-        return validatePageReference(JSON.parse(value) as PageReference);
-    } catch {
-        throw new Error("Invalid stable Page reference");
-    }
+    const path = value.split(/[?#]/u, 1)[0]!;
+    return path.startsWith("/.cms/") ? [] : [path];
 }

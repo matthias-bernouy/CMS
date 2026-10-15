@@ -1,11 +1,11 @@
-import { pageContentReferences } from "cms-content/pages/core/routing/links";
+import { pageContentPaths } from "cms-content/pages/core/routing/links";
 import { replaceContentTextExpressions } from "cms-content/pages/core/rendering/contentTexts";
 import { parseHTML } from "linkedom";
 
 export type PageContentReference =
     | { readonly kind: "bloc"; readonly tag: string }
     | { readonly kind: "file"; readonly fileId: string }
-    | { readonly kind: "site-page"; readonly pageId: string }
+    | { readonly kind: "page-path"; readonly path: string }
     | { readonly kind: "text"; readonly namespace: string; readonly textId: string };
 
 const FILE_REFERENCE = /\/\.cms\/call\/ulvia\.cms\.files\/files\/([^/?#\s"'<>]+)\/[^/?#\s"'<>]+/g;
@@ -17,8 +17,8 @@ export function pageContentReferenceKey(reference: PageContentReference): string
             return `bloc:${reference.tag}`;
         case "file":
             return `file:${reference.fileId}`;
-        case "site-page":
-            return `site-page:${reference.pageId}`;
+        case "page-path":
+            return `page-path:${reference.path}`;
         case "text":
             return `text:${reference.namespace}:${reference.textId}`;
     }
@@ -45,10 +45,8 @@ export function pageContentReferenceKeys(content: string): readonly string[] {
             // Invalid URL escapes cannot name a stable CMS file identity.
         }
     }
-    for (const reference of pageContentReferences(content)) {
-        if (reference.kind === "site") {
-            keys.add(pageContentReferenceKey({ kind: "site-page", pageId: reference.pageId }));
-        }
+    for (const path of pageContentPaths(content)) {
+        keys.add(pageContentReferenceKey({ kind: "page-path", path }));
     }
     return [...keys].sort();
 }

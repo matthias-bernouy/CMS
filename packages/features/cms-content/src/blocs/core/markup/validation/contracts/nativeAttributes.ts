@@ -1,10 +1,10 @@
 const PLATFORM_NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> = {
-    a: new Set(["href", "target", "rel", "aria-current", "aria-label", "data-cms-page-ref", "data-cms-page-suffix"]),
+    a: new Set(["href", "target", "rel", "aria-current", "aria-label"]),
     article: new Set(["aria-label"]),
     aside: new Set(["aria-label"]),
     button: new Set(["type", "disabled", "name", "value", "aria-label", "aria-expanded"]),
     footer: new Set(["aria-label"]),
-    form: new Set(["autocomplete", "data-cms-success-page-ref", "data-cms-page-suffix"]),
+    form: new Set(["autocomplete"]),
     header: new Set(["aria-label"]),
     input: new Set([
         "type",

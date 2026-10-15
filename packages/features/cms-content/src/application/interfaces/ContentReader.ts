@@ -32,6 +32,7 @@ export type RenderablePageSource =
           readonly digest: string;
           readonly pageId: string;
           readonly generation: number;
+          readonly defaultPath: string;
       };
 
 export type RenderablePage = {
@@ -71,6 +72,7 @@ export interface ContentReader {
     getRenderablePage(path: string): Promise<RenderablePage | null>;
     getRenderablePages(): Promise<RenderablePage[]>;
     resolvePageReference(reference: PageReference): Promise<string | null>;
+    resolvePagePaths(paths: readonly string[]): Promise<Readonly<Record<string, string>>>;
     resolveRenderableRoute(path: string): Promise<RenderableRouteResolution | null>;
     // PAGE
     getPublishedPage(path: string): Promise<TPage | null>;

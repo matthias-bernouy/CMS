@@ -1,6 +1,6 @@
 import type { CollectionStore, InstalledCollection } from "@bernouy/cms-repository/collections/installations";
-import { pageReferenceSources } from "@bernouy/cms-repository/collections";
-import { pageContentReferences, type TPage } from "@bernouy/cms-content";
+import { pageLinkSources } from "@bernouy/cms-repository/collections";
+import { pageContentPaths, type TPage } from "@bernouy/cms-content";
 
 type CollectionSnapshot = { readonly revision: number; readonly collections: readonly InstalledCollection[] };
 
@@ -16,21 +16,14 @@ export async function validateCollectionMutationPageLinks(
     const candidate = await candidateSnapshot(store, current, method, args);
     const targets = new Map(
         candidate.collections.flatMap((installation) =>
-            (installation.release.pages ?? []).map(
-                (page) =>
-                    [`${installation.release.publisherId}\0${installation.collectionId}\0${page.id}`, page] as const,
-            ),
+            (installation.release.pages ?? []).map((page) => [page.defaultPath, page] as const),
         ),
     );
     const sitePages = await getSitePages();
-    const siteTargets = new Map(sitePages.map((page) => [page.id, page]));
+    const siteTargets = new Map(sitePages.map((page) => [page.path, page]));
     for (const page of sitePages) {
-        for (const reference of pageContentReferences(page.content)) {
-            if (reference.kind !== "contribution") {
-                continue;
-            }
-            const target = targets.get(`${reference.sourceId}\0${reference.contributionId}\0${reference.pageId}`);
-            if (!target) {
+        for (const path of pageContentPaths(page.content)) {
+            if (!siteTargets.has(path) && !targets.has(path)) {
                 throw Object.assign(new Error("A collection mutation would orphan a site Page reference"), {
                     status: 409,
                 });
@@ -39,13 +32,9 @@ export async function validateCollectionMutationPageLinks(
     }
     for (const installation of candidate.collections) {
         for (const page of installation.release.pages ?? []) {
-            const sources = [page.document.html, ...pageReferenceSources(installation.release, page.uses)];
-            for (const reference of sources.flatMap(pageContentReferences)) {
-                if (reference.kind !== "site") {
-                    continue;
-                }
-                const target = siteTargets.get(reference.pageId);
-                if (!target) {
+            const sources = [page.document.html, ...pageLinkSources(installation.release, page.uses)];
+            for (const path of sources.flatMap(pageContentPaths)) {
+                if (!siteTargets.has(path) && !targets.has(path)) {
                     throw Object.assign(new Error("A collection Page references an unavailable site Page"), {
                         status: 409,
                     });

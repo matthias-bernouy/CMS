@@ -1,11 +1,7 @@
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { PageRouteRegistry } from "cms-content/pages/interfaces/routing";
-import {
-    assertPageContentLinks,
-    createPageRouteReader,
-    pageContentReferences,
-} from "cms-content/pages/core/routing/links";
+import { assertPageContentLinks, createPageRouteReader, pageContentPaths } from "cms-content/pages/core/routing/links";
 import { PageRouteCollisionError } from "cms-content/pages/core/routing/errors";
 import { planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { PageRouteMutationCoordinator } from "cms-content/pages/core/routing/mutationCoordinator";
@@ -90,25 +86,38 @@ async function validateMutationLinks(
     }
     if (method === "deletePage" || method === "deletePageWithAlternative") {
         const pageId = String(args[0]);
-        const sitePages = (await repository.scanPagesByContentReference({ kind: "site-page", pageId }, undefined, 2))
-            .pages;
         const contributions = await repository.getContentContributions?.();
-        const documents = [
-            ...sitePages.filter((page) => page.id !== pageId).map((page) => page.content),
-            ...(contributions?.pages.map(({ page }) => page.content) ?? []),
-        ];
-        if (
-            documents.some((content) =>
-                pageContentReferences(content).some(
-                    (reference) => reference.kind === "site" && reference.pageId === pageId,
-                ),
-            )
-        ) {
-            throw Object.assign(new Error("A Page cannot be deleted while another Page references it"), {
-                status: 409,
-            });
+        const referencesTarget = async (content: string): Promise<boolean> => {
+            for (const path of pageContentPaths(content)) {
+                const route = await repository.getPageRoute(path);
+                if (route?.pageId === pageId) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        let cursor: string | undefined;
+        do {
+            const batch = await repository.scanPages(cursor, 250);
+            for (const page of batch.pages) {
+                if (page.id !== pageId && (await referencesTarget(page.content))) {
+                    throwReferencedPage();
+                }
+            }
+            cursor = batch.nextCursor;
+        } while (cursor);
+        for (const { page } of contributions?.pages ?? []) {
+            if (await referencesTarget(page.content)) {
+                throwReferencedPage();
+            }
         }
     }
+}
+
+function throwReferencedPage(): never {
+    throw Object.assign(new Error("A Page cannot be deleted while another Page references it"), {
+        status: 409,
+    });
 }
 
 async function assertRouteAvailable(
