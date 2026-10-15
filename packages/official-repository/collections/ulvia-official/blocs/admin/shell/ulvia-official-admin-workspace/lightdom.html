@@ -59,6 +59,8 @@
             >
         </ulvia-official-navigation-section>
     </ulvia-official-navigation-menu>
+    <span slot="secondary-mobile-label"><slot name="contextual-label"></slot></span>
+    <slot name="contextual-navigation" slot="secondary-sidebar"></slot>
     <ulvia-official-page-shell slot="content" width="xl">
         <div slot="title"><slot name="title"></slot></div>
         <div slot="description"><slot name="description"></slot></div>

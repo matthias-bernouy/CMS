@@ -15,6 +15,7 @@ export class Bloc extends Component {
     private readonly navigationPanel: HTMLElement | null;
     private readonly navigationSlot: HTMLSlotElement | null;
     private navigationToggle: HTMLButtonElement | null = null;
+    private promotedContextualLayout = false;
     private readonly resizeObserver: ResizeObserver;
 
     constructor() {
@@ -97,12 +98,18 @@ export class Bloc extends Component {
     }
 
     private hasContent(slot: HTMLSlotElement | null): boolean {
-        return (
-            slot
-                ?.assignedNodes({ flatten: true })
-                .some((node) => node instanceof Element || node.textContent?.trim()) ?? false
-        );
+        return slot?.assignedNodes({ flatten: true }).some(this.isMeaningfulNode) ?? false;
     }
+
+    private isMeaningfulNode = (node: Node): boolean => {
+        if (node instanceof HTMLSlotElement) {
+            return node.assignedNodes({ flatten: true }).some(this.isMeaningfulNode);
+        }
+        if (node instanceof HTMLElement && node.hidden) {
+            return false;
+        }
+        return node instanceof Element || Boolean(node.textContent?.trim());
+    };
 
     private syncCompactMode = (): void => {
         const rootSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
@@ -123,6 +130,13 @@ export class Bloc extends Component {
     private syncNavigationAvailability = (): void => {
         const hasNavigation = this.hasContent(this.navigationSlot);
         const hasContextual = this.hasContent(this.contextualSlot);
+        if (hasContextual && this.getAttribute("layout") === "sidebar") {
+            this.setAttribute("layout", "dual-sidebar");
+            this.promotedContextualLayout = true;
+        } else if (!hasContextual && this.promotedContextualLayout) {
+            this.setAttribute("layout", "sidebar");
+            this.promotedContextualLayout = false;
+        }
         if (this.navigationToggle) {
             this.navigationToggle.hidden = !hasNavigation;
         }

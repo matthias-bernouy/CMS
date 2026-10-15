@@ -22,6 +22,8 @@
             "max": 1
         },
         "actions": { "accepts": [{ "kind": "any-component" }] },
+        "contextual-label": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 },
+        "contextual-navigation": { "accepts": [{ "kind": "any-component" }] },
         "content": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] },
         "footer": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] }
     }

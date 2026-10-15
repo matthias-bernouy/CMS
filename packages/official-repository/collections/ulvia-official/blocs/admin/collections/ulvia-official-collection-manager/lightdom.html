@@ -29,107 +29,79 @@
                 </p>
             </div>
             <ulvia-official-stack cms-case='"success"' gap="xl">
-                <header id="installed-collections" slot="items">
-                    <h2>{{ cms.i18n.ulvia-official.ui-installed-collections }}</h2>
-                    <p>
-                        {{ catalogue.data.installed.length }}
-                        {{ cms.i18n.ulvia-official.ui-installed-collections-count }}
-                    </p>
-                </header>
-                <ulvia-official-grid slot="items" gap="md" role="list">
-                    <ulvia-official-card slot="items" cms-repeat="catalogue.data.installed as installed" surface="raised" role="listitem">
-                        <p slot="eyebrow">{{ installed.publisherId }} {{ installed.version }}</p>
-                        <h3 slot="title">{{ installed.collectionId }}</h3>
-                        <div slot="body">
-                            <code>{{ installed.digest }}</code>
-                        </div>
-                        <ulvia-official-action slot="actions" variant="filled" tone="primary" size="sm">
-                            <a href="/admin/collections/detail?ulvia-official-collection={{ installed.collectionId | urlencode }}">
-                                {{ cms.i18n.ulvia-official.ui-manage }}
-                            </a>
-                        </ulvia-official-action>
-                    </ulvia-official-card>
-                </ulvia-official-grid>
-                <ulvia-official-surface slot="items" cms-condition="catalogue.data.installed.length === 0" appearance="subtle" padding="lg">
-                    <p slot="content">{{ cms.i18n.ulvia-official.ui-no-collection-is-installed }}</p>
-                </ulvia-official-surface>
-
-                <header id="repository-releases" slot="items">
-                    <h2>{{ cms.i18n.ulvia-official.ui-repository-releases }}</h2>
-                    <p>
-                        {{ catalogue.data.releases.length }}
-                        {{ cms.i18n.ulvia-official.ui-available-releases }}
-                    </p>
-                </header>
-                <ulvia-official-grid slot="items" gap="md" role="list">
-                    <ulvia-official-surface slot="items" cms-repeat="catalogue.data.releases as release" appearance="elevated" padding="lg" role="listitem">
-                        <ulvia-official-stack slot="content" gap="md">
-                            <p slot="items">{{ release.publisherId }} {{ release.version }}</p>
-                            <h3 slot="items">{{ release.name }}</h3>
-                            <div slot="items">
-                                <p>{{ release.description }}</p>
-                                <p>{{ release.blocCount }} {{ cms.i18n.ulvia-official.ui-blocks }}</p>
-                                <code>{{ release.digest }}</code>
-                                <ulvia-official-badge cms-condition="release.action === 'current'" tone="success">
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-installed }}</span>
-                                </ulvia-official-badge>
-                                <ulvia-official-badge cms-condition="release.action === 'older'" tone="neutral">
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-historical-release }}</span>
-                                </ulvia-official-badge>
+                <div id="installed-collections" slot="items">
+                    <header>
+                        <h2>{{ cms.i18n.ulvia-official.ui-installed-collections }}</h2>
+                        <p>
+                            {{ catalogue.data.installed.length }}
+                            {{ cms.i18n.ulvia-official.ui-installed-collections-count }}
+                        </p>
+                    </header>
+                    <ulvia-official-grid gap="md" role="list">
+                        <ulvia-official-card slot="items" cms-repeat="catalogue.data.installed as installed" surface="raised" role="listitem">
+                            <p slot="eyebrow">{{ installed.publisherId }} {{ installed.version }}</p>
+                            <h3 slot="title">{{ installed.collectionId }}</h3>
+                            <div slot="body">
+                                <code>{{ installed.digest }}</code>
                             </div>
-                            <form
-                                slot="items"
-                                cms-condition="release.action === 'install'"
-                                cms-mutation="ulvia.cms.collections:install as mutation"
-                                cms-sync="@page:ulvia-official-collection-catalogue-mutation"
-                                cms-sync-select="lastSuccess.requestId"
-                            >
-                                <input type="hidden" name="expectedRevision" value="{{ catalogue.data.revision }}" cms-form-value-type="number">
-                                <input type="hidden" name="targets[0][repositoryId]" value="{{ release.repositoryId }}">
-                                <input type="hidden" name="targets[0][publisherId]" value="{{ release.publisherId }}">
-                                <input type="hidden" name="targets[0][collectionId]" value="{{ release.collectionId }}">
-                                <input type="hidden" name="targets[0][version]" value="{{ release.version }}">
-                                <input type="hidden" name="targets[0][digest]" value="{{ release.digest }}">
-                                <ulvia-official-action variant="filled" tone="primary" size="sm">
-                                    <button type="submit">{{ cms.i18n.ulvia-official.ui-install }}</button>
-                                </ulvia-official-action>
-                                <p role="status" cms-condition="mutation.activity === 'submitting'">
-                                    {{ cms.i18n.ulvia-official.ui-installing }}
-                                </p>
-                                <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
-                                    {{ cms.i18n.ulvia-official.ui-request-failed }}
-                                </p>
+                            <ulvia-official-action slot="actions" variant="filled" tone="primary" size="sm">
+                                <a href="/admin/collections/detail?ulvia-official-collection={{ installed.collectionId | urlencode }}">
+                                    {{ cms.i18n.ulvia-official.ui-manage }}
+                                </a>
+                            </ulvia-official-action>
+                        </ulvia-official-card>
+                    </ulvia-official-grid>
+                    <ulvia-official-surface cms-condition="catalogue.data.installed.length === 0" appearance="subtle" padding="lg">
+                        <p slot="content">{{ cms.i18n.ulvia-official.ui-no-collection-is-installed }}</p>
+                    </ulvia-official-surface>
+                </div>
 
-                                <div cms-match="mutation.outcome.kind">
-                                    <span cms-case='"none"' hidden></span>
-                                    <span cms-case='"success"' hidden></span>
-                                    <div cms-case='"error"' cms-match="mutation.outcome.code">
-                                        <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                    </div>
-                                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                <div id="repository-releases" slot="items">
+                    <header>
+                        <h2>{{ cms.i18n.ulvia-official.ui-repository-releases }}</h2>
+                        <p>
+                            {{ catalogue.data.releases.length }}
+                            {{ cms.i18n.ulvia-official.ui-available-releases }}
+                        </p>
+                    </header>
+                    <ulvia-official-grid gap="md" role="list">
+                        <ulvia-official-surface slot="items" cms-repeat="catalogue.data.releases as release" appearance="elevated" padding="lg" role="listitem">
+                            <ulvia-official-stack slot="content" gap="md">
+                                <p slot="items">{{ release.publisherId }} {{ release.version }}</p>
+                                <h3 slot="items">{{ release.name }}</h3>
+                                <div slot="items">
+                                    <p>{{ release.description }}</p>
+                                    <p>{{ release.blocCount }} {{ cms.i18n.ulvia-official.ui-blocks }}</p>
+                                    <code>{{ release.digest }}</code>
+                                    <ulvia-official-badge cms-condition="release.action === 'current'" tone="success">
+                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-installed }}</span>
+                                    </ulvia-official-badge>
+                                    <ulvia-official-badge cms-condition="release.action === 'older'" tone="neutral">
+                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-historical-release }}</span>
+                                    </ulvia-official-badge>
                                 </div>
-                            </form>
-                            <ulvia-official-cluster slot="items" cms-condition="release.action === 'upgrade'" gap="sm">
                                 <form
                                     slot="items"
-                                    cms-mutation="ulvia.cms.collections:upgrade as mutation"
+                                    cms-condition="release.action === 'install'"
+                                    cms-mutation="ulvia.cms.collections:install as mutation"
                                     cms-sync="@page:ulvia-official-collection-catalogue-mutation"
                                     cms-sync-select="lastSuccess.requestId"
                                 >
                                     <input type="hidden" name="expectedRevision" value="{{ catalogue.data.revision }}" cms-form-value-type="number">
-                                    <input type="hidden" name="target[repositoryId]" value="{{ release.repositoryId }}">
-                                    <input type="hidden" name="target[publisherId]" value="{{ release.publisherId }}">
-                                    <input type="hidden" name="target[collectionId]" value="{{ release.collectionId }}">
-                                    <input type="hidden" name="target[version]" value="{{ release.version }}">
-                                    <input type="hidden" name="target[digest]" value="{{ release.digest }}">
-                                    <ulvia-official-action variant="outline" tone="secondary" size="sm">
-                                        <button type="submit">{{ cms.i18n.ulvia-official.ui-try-compatible-upgrade }}</button>
+                                    <input type="hidden" name="targets[0][repositoryId]" value="{{ release.repositoryId }}">
+                                    <input type="hidden" name="targets[0][publisherId]" value="{{ release.publisherId }}">
+                                    <input type="hidden" name="targets[0][collectionId]" value="{{ release.collectionId }}">
+                                    <input type="hidden" name="targets[0][version]" value="{{ release.version }}">
+                                    <input type="hidden" name="targets[0][digest]" value="{{ release.digest }}">
+                                    <ulvia-official-action variant="filled" tone="primary" size="sm">
+                                        <button type="submit">{{ cms.i18n.ulvia-official.ui-install }}</button>
                                     </ulvia-official-action>
+                                    <p role="status" cms-condition="mutation.activity === 'submitting'">
+                                        {{ cms.i18n.ulvia-official.ui-installing }}
+                                    </p>
+                                    <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
+                                        {{ cms.i18n.ulvia-official.ui-request-failed }}
+                                    </p>
 
                                     <div cms-match="mutation.outcome.kind">
                                         <span cms-case='"none"' hidden></span>
@@ -140,26 +112,58 @@
                                             <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                             <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                             <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                            <p role="alert" cms-case='"MIGRATION_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                             <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         </div>
                                         <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                     </div>
                                 </form>
-                                <ulvia-official-action slot="items" variant="filled" tone="primary" size="sm">
-                                    <a
-                                        href="/admin/collections/migration?ulvia-official-repository={{ release.repositoryId | urlencode }}&amp;ulvia-official-publisher={{ release.publisherId | urlencode }}&amp;ulvia-official-collection={{ release.collectionId | urlencode }}&amp;ulvia-official-version={{ release.version | urlencode }}&amp;ulvia-official-digest={{ release.digest | urlencode }}"
+                                <ulvia-official-cluster slot="items" cms-condition="release.action === 'upgrade'" gap="sm">
+                                    <form
+                                        slot="items"
+                                        cms-mutation="ulvia.cms.collections:upgrade as mutation"
+                                        cms-sync="@page:ulvia-official-collection-catalogue-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
                                     >
-                                        {{ cms.i18n.ulvia-official.ui-plan-migration }}
-                                    </a>
-                                </ulvia-official-action>
-                            </ulvia-official-cluster>
-                        </ulvia-official-stack>
+                                        <input type="hidden" name="expectedRevision" value="{{ catalogue.data.revision }}" cms-form-value-type="number">
+                                        <input type="hidden" name="target[repositoryId]" value="{{ release.repositoryId }}">
+                                        <input type="hidden" name="target[publisherId]" value="{{ release.publisherId }}">
+                                        <input type="hidden" name="target[collectionId]" value="{{ release.collectionId }}">
+                                        <input type="hidden" name="target[version]" value="{{ release.version }}">
+                                        <input type="hidden" name="target[digest]" value="{{ release.digest }}">
+                                        <ulvia-official-action variant="outline" tone="secondary" size="sm">
+                                            <button type="submit">{{ cms.i18n.ulvia-official.ui-try-compatible-upgrade }}</button>
+                                        </ulvia-official-action>
+
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"' hidden></span>
+                                            <span cms-case='"success"' hidden></span>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"MIGRATION_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                    <ulvia-official-action slot="items" variant="filled" tone="primary" size="sm">
+                                        <a
+                                            href="/admin/collections/migration?ulvia-official-repository={{ release.repositoryId | urlencode }}&amp;ulvia-official-publisher={{ release.publisherId | urlencode }}&amp;ulvia-official-collection={{ release.collectionId | urlencode }}&amp;ulvia-official-version={{ release.version | urlencode }}&amp;ulvia-official-digest={{ release.digest | urlencode }}"
+                                        >
+                                            {{ cms.i18n.ulvia-official.ui-plan-migration }}
+                                        </a>
+                                    </ulvia-official-action>
+                                </ulvia-official-cluster>
+                            </ulvia-official-stack>
+                        </ulvia-official-surface>
+                    </ulvia-official-grid>
+                    <ulvia-official-surface cms-condition="catalogue.data.releases.length === 0" appearance="subtle" padding="lg">
+                        <p slot="content">{{ cms.i18n.ulvia-official.ui-no-repository-release-is-available }}</p>
                     </ulvia-official-surface>
-                </ulvia-official-grid>
-                <ulvia-official-surface slot="items" cms-condition="catalogue.data.releases.length === 0" appearance="subtle" padding="lg">
-                    <p slot="content">{{ cms.i18n.ulvia-official.ui-no-repository-release-is-available }}</p>
-                </ulvia-official-surface>
+                </div>
             </ulvia-official-stack>
             <p role="alert" cms-case='"failure"'>
                 {{ cms.i18n.ulvia-official.ui-collection-catalogue-unavailable }}

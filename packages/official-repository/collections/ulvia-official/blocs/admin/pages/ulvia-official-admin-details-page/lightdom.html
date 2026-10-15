@@ -6,6 +6,15 @@
         <ulvia-official-action slot="actions" variant="outline" tone="secondary"
             ><a href="/admin/pages">{{ cms.i18n.ulvia-official.ui-back-to-pages }}</a></ulvia-official-action
         >
+        <span slot="contextual-label">{{ cms.i18n.ulvia-official.ui-page-details }}</span>
+        <ulvia-official-route-tabs slot="contextual-navigation" label="{{ cms.i18n.ulvia-official.ui-page-details }}" appearance="sidebar" size="sm">
+            <ulvia-official-route-tab slot="items"><a href="#page-general">{{ cms.i18n.ulvia-official.ui-page-details }}</a></ulvia-official-route-tab>
+            <ulvia-official-route-tab slot="items"><a href="#page-content">{{ cms.i18n.ulvia-official.ui-page-document }}</a></ulvia-official-route-tab>
+            <ulvia-official-route-tab slot="items"><a href="#page-routes">{{ cms.i18n.ulvia-official.ui-routes }}</a></ulvia-official-route-tab>
+            <ulvia-official-route-tab slot="items"><a href="#page-search">{{ cms.i18n.ulvia-official.ui-search-metadata }}</a></ulvia-official-route-tab>
+            <ulvia-official-route-tab slot="items"><a href="#page-publication">{{ cms.i18n.ulvia-official.ui-publication }}</a></ulvia-official-route-tab>
+            <ulvia-official-route-tab slot="items"><a href="#page-danger">{{ cms.i18n.ulvia-official.ui-danger-zone }}</a></ulvia-official-route-tab>
+        </ulvia-official-route-tabs>
         <section
             id="page-detail"
             slot="content"
@@ -30,24 +39,6 @@
                     </div>
                 </div>
                 <ulvia-official-stack cms-case='"success"' gap="lg">
-                    <ulvia-official-route-tabs slot="items" label="{{ cms.i18n.ulvia-official.ui-page-details }}" appearance="pills" size="sm">
-                        <ulvia-official-route-tab slot="items"
-                            ><a href="#page-general">{{ cms.i18n.ulvia-official.ui-page-details }}</a></ulvia-official-route-tab
-                        >
-                        <ulvia-official-route-tab slot="items"
-                            ><a href="#page-content">{{ cms.i18n.ulvia-official.ui-page-document }}</a></ulvia-official-route-tab
-                        >
-                        <ulvia-official-route-tab slot="items"><a href="#page-routes">{{ cms.i18n.ulvia-official.ui-routes }}</a></ulvia-official-route-tab>
-                        <ulvia-official-route-tab slot="items"
-                            ><a href="#page-search">{{ cms.i18n.ulvia-official.ui-search-metadata }}</a></ulvia-official-route-tab
-                        >
-                        <ulvia-official-route-tab slot="items"
-                            ><a href="#page-publication">{{ cms.i18n.ulvia-official.ui-publication }}</a></ulvia-official-route-tab
-                        >
-                        <ulvia-official-route-tab slot="items"
-                            ><a href="#page-danger">{{ cms.i18n.ulvia-official.ui-danger-zone }}</a></ulvia-official-route-tab
-                        >
-                    </ulvia-official-route-tabs>
                     <ulvia-official-surface id="page-general" slot="items" appearance="elevated" padding="lg">
                         <form
                             slot="content"
