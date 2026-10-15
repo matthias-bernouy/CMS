@@ -14,7 +14,7 @@
         "ulvia-official-select",
         "ulvia-official-stack",
         "ulvia-official-surface",
-        "ulvia-official-textarea"
+        "ulvia-official-tag-input"
     ],
     "requires": [
         { "contractId": "ulvia.cms.access", "capabilityId": "overview", "versionRange": "^1.0.0" },

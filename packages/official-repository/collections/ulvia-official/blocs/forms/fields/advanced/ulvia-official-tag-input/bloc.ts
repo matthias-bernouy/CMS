@@ -18,7 +18,7 @@ export class Bloc extends Component {
     private observer = new MutationObserver(() => this.syncState());
 
     static get observedAttributes(): string[] {
-        return ["placeholder", "hint", "separator", "max-tags", "add-on-blur"];
+        return ["placeholder", "hint", "separator", "serialization", "max-tags", "add-on-blur"];
     }
 
     constructor() {
@@ -140,7 +140,7 @@ export class Bloc extends Component {
 
     private commit(): void {
         if (this.source) {
-            this.source.value = this.tags.join(this.separator());
+            this.source.value = this.serializeTags();
             this.source.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
             this.source.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
         }
@@ -188,10 +188,29 @@ export class Bloc extends Component {
     }
 
     private parseTags(value: string): string[] {
+        if (this.getAttribute("serialization") === "json") {
+            try {
+                const parsed: unknown = JSON.parse(value);
+                return Array.isArray(parsed)
+                    ? parsed
+                          .filter((tag): tag is string => typeof tag === "string")
+                          .map((tag) => tag.trim())
+                          .filter(Boolean)
+                    : [];
+            } catch {
+                return [];
+            }
+        }
         return value
             .split(this.separator())
             .map((tag) => tag.trim())
             .filter(Boolean);
+    }
+
+    private serializeTags(): string {
+        return this.getAttribute("serialization") === "json"
+            ? JSON.stringify(this.tags)
+            : this.tags.join(this.separator());
     }
 
     private announce(message: string): void {

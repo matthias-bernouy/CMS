@@ -42,6 +42,20 @@
         "control": { "kind": "text" }
     },
     {
+        "id": "serialization",
+        "label": "setting.tag-serialization.label",
+        "group": "setting.group.behavior",
+        "type": "string",
+        "default": "separated",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "separated", "label": "setting.option.separated-values" },
+                { "value": "json", "label": "setting.option.json-array" }
+            ]
+        }
+    },
+    {
         "id": "max-tags",
         "label": "setting.max-tags.label",
         "group": "setting.group.behavior",
