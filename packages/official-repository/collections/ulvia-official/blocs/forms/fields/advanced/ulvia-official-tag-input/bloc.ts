@@ -179,12 +179,22 @@ export class Bloc extends Component {
             this.input.setAttribute("aria-label", this.accessibleName());
         }
         if (this.hint) {
-            this.hint.id ||= `ulvia-tag-hint-${++nextHintId}`;
-            this.hint.textContent =
-                this.source?.getAttribute("aria-description") ||
-                this.getAttribute("hint") ||
-                "Press Enter to add. Backspace removes the last tag.";
-            this.input?.setAttribute("aria-describedby", this.hint.id);
+            const hint = this.getAttribute("hint")?.trim() ?? "";
+            this.hint.textContent = hint;
+            this.hint.toggleAttribute("hidden", !hint);
+            if (hint) {
+                this.hint.id ||= `ulvia-tag-hint-${++nextHintId}`;
+                this.input?.setAttribute("aria-describedby", this.hint.id);
+                this.input?.removeAttribute("aria-description");
+            } else {
+                this.input?.removeAttribute("aria-describedby");
+                const description = this.source?.getAttribute("aria-description")?.trim();
+                if (description) {
+                    this.input?.setAttribute("aria-description", description);
+                } else {
+                    this.input?.removeAttribute("aria-description");
+                }
+            }
         }
         this.toggleAttribute("data-disabled", this.source?.disabled === true);
         this.render();
