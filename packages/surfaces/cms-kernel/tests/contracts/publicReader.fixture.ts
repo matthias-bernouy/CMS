@@ -13,6 +13,7 @@ const reader: ContentReader = {
     getRenderablePage: async () => null,
     getRenderablePages: async () => [],
     resolvePageReference: async () => null,
+    resolvePagePaths: async () => ({}),
     resolveRenderableRoute: async () => null,
     getPublishedPage: async () => null,
     getPublishedPageById: async () => null,
