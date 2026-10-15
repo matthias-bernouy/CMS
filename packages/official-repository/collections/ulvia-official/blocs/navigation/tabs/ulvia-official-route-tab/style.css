@@ -11,7 +11,7 @@
 ::slotted(a) {
     position: relative;
     display: flex;
-    min-height: 2.75rem;
+    min-height: 2.25rem;
     align-items: center;
     justify-content: var(--route-tab-justify-content, center);
     box-sizing: border-box;
@@ -20,7 +20,8 @@
     color: var(--ulvia-official-text-secondary, #4f625a);
     background: transparent;
     font: inherit;
-    font-weight: var(--ulvia-official-font-weight-semibold, 600);
+    font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    font-weight: var(--ulvia-official-font-weight-medium, 500);
     line-height: var(--ulvia-official-line-height-tight, 1.15);
     text-decoration: none;
     white-space: var(--route-tab-white-space, nowrap);

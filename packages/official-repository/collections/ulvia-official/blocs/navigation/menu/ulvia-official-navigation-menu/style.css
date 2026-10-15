@@ -1,6 +1,6 @@
 :host {
-    --navigation-menu-padding: var(--ulvia-official-spacing-md, 1rem);
-    --navigation-item-height: 2.5rem;
+    --navigation-menu-padding: var(--ulvia-official-spacing-sm, 0.75rem);
+    --navigation-item-height: 2.25rem;
     --navigation-item-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     display: block;
     min-width: 0;
@@ -18,7 +18,7 @@
 }
 [part="header"] {
     display: var(--navigation-menu-header-display, block);
-    padding: 0.25rem var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
+    padding: 0.125rem var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-sm, 0.75rem);
     color: var(--ulvia-official-text-muted, #6d7e77);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
