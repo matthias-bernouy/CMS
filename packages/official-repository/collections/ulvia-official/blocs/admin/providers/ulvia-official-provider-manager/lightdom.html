@@ -43,13 +43,8 @@
                     >
                         <ulvia-official-stack slot="content" gap="md">
                             <header slot="items">
-                                <p>{{ installation.providerId }} {{ installation.accountId }}</p>
-                                <h3>{{ installation.id }}</h3>
-                                <p>{{ installation.endpoint }}</p>
-                                <p>
-                                    {{ cms.i18n.ulvia-official.ui-manifest }} {{ installation.manifestVersion }}
-                                    {{ installation.selectionCount }} {{ cms.i18n.ulvia-official.ui-selected-contracts }}
-                                </p>
+                                <h3>{{ installation.providerId }}</h3>
+                                <p>{{ installation.accountId }}</p>
                                 <ulvia-official-badge cms-condition="installation.status === 'enabled'" tone="success">
                                     <span slot="label">{{ cms.i18n.ulvia-official.ui-enabled }}</span>
                                 </ulvia-official-badge>
@@ -59,6 +54,19 @@
                                 <ulvia-official-badge cms-condition="installation.status === 'revoked'" tone="danger">
                                     <span slot="label">{{ cms.i18n.ulvia-official.ui-revoke }}</span>
                                 </ulvia-official-badge>
+                                <p>
+                                    {{ installation.selectionCount }} {{ cms.i18n.ulvia-official.ui-selected-contracts }}
+                                </p>
+                                <details>
+                                    <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
+                                    <div>
+                                        <p><strong>{{ cms.i18n.ulvia-official.ui-installation-id }}</strong></p>
+                                        <p><code>{{ installation.id }}</code></p>
+                                        <p><strong>{{ cms.i18n.ulvia-official.ui-endpoint }}</strong></p>
+                                        <p><code>{{ installation.endpoint }}</code></p>
+                                        <p><strong>{{ cms.i18n.ulvia-official.ui-manifest }}</strong> {{ installation.manifestVersion }}</p>
+                                    </div>
+                                </details>
                             </header>
                             <form
                                 slot="items"

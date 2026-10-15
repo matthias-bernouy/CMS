@@ -108,6 +108,24 @@
         "group": "text.group.admin.workspaces"
     },
     {
+        "id": "ui-technical-details",
+        "label": "text.ui-technical-details.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-installation-id",
+        "label": "text.ui-installation-id.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-endpoint",
+        "label": "text.ui-endpoint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
         "id": "ui-available-releases",
         "label": "text.ui-available-releases.label",
         "category": "text.category.admin",
