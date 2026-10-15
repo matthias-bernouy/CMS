@@ -9,6 +9,7 @@
     "uses": [
         "ulvia-official-action",
         "ulvia-official-admin-workspace",
+        "ulvia-official-card",
         "ulvia-official-collection-texts",
         "ulvia-official-collection-theme",
         "ulvia-official-field",
@@ -17,6 +18,7 @@
         "ulvia-official-route-tab",
         "ulvia-official-route-tabs",
         "ulvia-official-stack",
+        "ulvia-official-stat",
         "ulvia-official-surface",
         "ulvia-official-textarea"
     ],

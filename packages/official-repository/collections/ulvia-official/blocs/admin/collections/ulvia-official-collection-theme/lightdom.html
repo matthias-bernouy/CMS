@@ -19,7 +19,7 @@
                 <p>{{ cms.i18n.ulvia-official.ui-edit-collection-theme-help }}</p>
             </header>
             <ulvia-official-surface slot="items" appearance="subtle" padding="lg">
-                <ulvia-official-cluster slot="content" align="end" gap="md">
+                <ulvia-official-grid slot="content" columns="3" align="end" gap="md">
                     <ulvia-official-field slot="items" label-position="top">
                         <label slot="label" for="collection-theme-profile">
                             {{ cms.i18n.ulvia-official.ui-theme-profile }}
@@ -65,7 +65,7 @@
                             >
                         </ulvia-official-input>
                     </ulvia-official-field>
-                </ulvia-official-cluster>
+                </ulvia-official-grid>
             </ulvia-official-surface>
             <ulvia-official-cluster slot="items" align="center" justify="between">
                 <ulvia-official-badge slot="items" tone="success" cms-condition="collectionTheme.data.profileActive">
