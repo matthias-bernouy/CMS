@@ -28,25 +28,20 @@
                         <h2>{{ cms.i18n.ulvia-official.ui-members }}</h2>
                         <p>{{ access.data.totalUsers }} {{ cms.i18n.ulvia-official.ui-total-users }}</p>
                     </header>
-                    <ulvia-official-grid gap="md" role="list">
-                        <ulvia-official-surface slot="items" cms-repeat="access.data.users as user" appearance="outlined" padding="lg" role="listitem">
-                            <ulvia-official-stack slot="content" gap="md">
-                                <header slot="items">
-                                    <ulvia-official-cluster align="center" justify="between">
-                                        <strong slot="items">{{ user.email }}</strong>
-                                        <ulvia-official-badge slot="items" cms-condition="user.administrator" tone="info"
-                                            ><span slot="label">{{ cms.i18n.ulvia-official.ui-administrator }}</span></ulvia-official-badge
-                                        >
-                                        <ulvia-official-badge slot="items" cms-condition="user.administrator === false" tone="neutral"
-                                            ><span slot="label">{{ cms.i18n.ulvia-official.ui-member }}</span></ulvia-official-badge
-                                        >
-                                    </ulvia-official-cluster>
-                                    <p>{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }}</p>
-                                    <small
-                                        >{{ cms.i18n.ulvia-official.ui-last-seen }}
-                                        {{ user.lastSeenAt | dateLong(access.data.site.language) }}</small
-                                    >
-                                </header>
+                    <ulvia-official-list role="list">
+                        <ulvia-official-list-item slot="items" cms-repeat="access.data.users as user" role="listitem">
+                            <strong slot="title">{{ user.email }}</strong>
+                            <ulvia-official-badge slot="meta" cms-condition="user.administrator" tone="info"
+                                ><span slot="label">{{ cms.i18n.ulvia-official.ui-administrator }}</span></ulvia-official-badge
+                            >
+                            <ulvia-official-badge slot="meta" cms-condition="user.administrator === false" tone="neutral"
+                                ><span slot="label">{{ cms.i18n.ulvia-official.ui-member }}</span></ulvia-official-badge
+                            >
+                            <span slot="description"
+                                >{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }} {{ cms.i18n.ulvia-official.ui-last-seen }}
+                                {{ user.lastSeenAt | dateLong(access.data.site.language) }}</span
+                            >
+                            <ulvia-official-cluster slot="actions" align="center" justify="end">
                                 <form
                                     slot="items"
                                     cms-condition="user.administrator === false"
@@ -136,9 +131,9 @@
                                         <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                     </div>
                                 </form>
-                            </ulvia-official-stack>
-                        </ulvia-official-surface>
-                    </ulvia-official-grid>
+                            </ulvia-official-cluster>
+                        </ulvia-official-list-item>
+                    </ulvia-official-list>
                 </div>
                 <div id="access-login-providers" slot="items">
                     <header>

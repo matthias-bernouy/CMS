@@ -25,41 +25,31 @@
                     </p>
                 </header>
 
-                <ulvia-official-grid cms-condition="providers.data.installations.length" gap="md" role="list">
-                    <ulvia-official-surface
-                        slot="items"
-                        cms-repeat="providers.data.installations as installation"
-                        appearance="outlined"
-                        padding="lg"
-                        role="listitem"
-                    >
-                        <ulvia-official-stack slot="content" gap="md">
-                            <header slot="items">
-                                <h3>{{ installation.providerId }}</h3>
-                                <p>{{ installation.accountId }}</p>
-                                <ulvia-official-badge cms-condition="installation.status === 'enabled'" tone="success">
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-enabled }}</span>
-                                </ulvia-official-badge>
-                                <ulvia-official-badge cms-condition="installation.status === 'disabled'" tone="neutral">
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-disabled }}</span>
-                                </ulvia-official-badge>
-                                <ulvia-official-badge cms-condition="installation.status === 'revoked'" tone="danger">
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-revoke }}</span>
-                                </ulvia-official-badge>
-                                <p>
-                                    {{ installation.selectionCount }} {{ cms.i18n.ulvia-official.ui-selected-contracts }}
-                                </p>
-                                <details>
-                                    <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
-                                    <div>
-                                        <p><strong>{{ cms.i18n.ulvia-official.ui-installation-id }}</strong></p>
-                                        <p><code>{{ installation.id }}</code></p>
-                                        <p><strong>{{ cms.i18n.ulvia-official.ui-endpoint }}</strong></p>
-                                        <p><code>{{ installation.endpoint }}</code></p>
-                                        <p><strong>{{ cms.i18n.ulvia-official.ui-manifest }}</strong> {{ installation.manifestVersion }}</p>
-                                    </div>
-                                </details>
-                            </header>
+                <ulvia-official-list cms-condition="providers.data.installations.length" role="list">
+                    <ulvia-official-list-item slot="items" cms-repeat="providers.data.installations as installation" role="listitem">
+                        <h3 slot="title">{{ installation.providerId }}</h3>
+                        <p slot="description">{{ installation.accountId }}</p>
+                        <ulvia-official-badge slot="meta" cms-condition="installation.status === 'enabled'" tone="success">
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-enabled }}</span>
+                        </ulvia-official-badge>
+                        <ulvia-official-badge slot="meta" cms-condition="installation.status === 'disabled'" tone="neutral">
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-disabled }}</span>
+                        </ulvia-official-badge>
+                        <ulvia-official-badge slot="meta" cms-condition="installation.status === 'revoked'" tone="danger">
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-revoke }}</span>
+                        </ulvia-official-badge>
+                        <span slot="meta"> {{ installation.selectionCount }} {{ cms.i18n.ulvia-official.ui-selected-contracts }} </span>
+                        <details slot="body">
+                            <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
+                            <div>
+                                <p><strong>{{ cms.i18n.ulvia-official.ui-installation-id }}</strong></p>
+                                <p><code>{{ installation.id }}</code></p>
+                                <p><strong>{{ cms.i18n.ulvia-official.ui-endpoint }}</strong></p>
+                                <p><code>{{ installation.endpoint }}</code></p>
+                                <p><strong>{{ cms.i18n.ulvia-official.ui-manifest }}</strong> {{ installation.manifestVersion }}</p>
+                            </div>
+                        </details>
+                        <ulvia-official-cluster slot="actions" align="center" justify="end">
                             <form
                                 slot="items"
                                 cms-condition="installation.status === 'enabled'"
@@ -153,9 +143,9 @@
                                     </div>
                                 </form>
                             </details>
-                        </ulvia-official-stack>
-                    </ulvia-official-surface>
-                </ulvia-official-grid>
+                        </ulvia-official-cluster>
+                    </ulvia-official-list-item>
+                </ulvia-official-list>
                 <ulvia-official-surface cms-condition="providers.data.installations.length === 0" appearance="subtle" padding="lg">
                     <p slot="content">{{ cms.i18n.ulvia-official.ui-no-provider-installation-has-been-approved }}</p>
                 </ulvia-official-surface>

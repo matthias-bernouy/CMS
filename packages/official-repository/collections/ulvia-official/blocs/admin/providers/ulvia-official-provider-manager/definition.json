@@ -9,9 +9,11 @@
     "uses": [
         "ulvia-official-action",
         "ulvia-official-badge",
+        "ulvia-official-cluster",
         "ulvia-official-field",
         "ulvia-official-form-actions",
-        "ulvia-official-grid",
+        "ulvia-official-list",
+        "ulvia-official-list-item",
         "ulvia-official-select",
         "ulvia-official-stack",
         "ulvia-official-surface"
