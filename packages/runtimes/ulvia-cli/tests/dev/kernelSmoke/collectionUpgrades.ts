@@ -11,7 +11,7 @@ export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
         throw new Error(`Compatible collection upgrade failed (${upgradeResponse.status()}).`);
     }
     await page.locator('a[href="#installed-collections"]').click();
-    await page.getByText("ulvia.test 1.1.0", { exact: true }).waitFor();
+    await installedCollection(page, "ulvia.test", "1.1.0").waitFor();
 
     await page.locator('a[href="#repository-releases"]').click();
     const migration = collectionReleaseCard(page, "ulvia.test 2.0.0");
@@ -33,9 +33,16 @@ export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
         .waitFor({ timeout: 60_000 });
     await page.locator('a[href="#installed-collections"]').waitFor({ timeout: 15_000 });
     await page.locator('a[href="#installed-collections"]').click();
-    await page.locator("#installed-collections").getByText("ulvia.test 2.0.0", { exact: true }).waitFor();
+    await installedCollection(page, "ulvia.test", "2.0.0").waitFor();
 }
 
 function collectionReleaseCard(page: Page, identity: string) {
     return page.locator('[role="listitem"]').filter({ has: page.getByText(identity, { exact: true }) });
+}
+
+function installedCollection(page: Page, publisherId: string, version: string) {
+    return page
+        .locator('#installed-collections [role="listitem"]')
+        .filter({ has: page.getByText(publisherId, { exact: true }) })
+        .filter({ has: page.getByText(version, { exact: true }) });
 }

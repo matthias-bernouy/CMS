@@ -45,7 +45,10 @@ export class Bloc extends Component {
         this.shadowRoot?.querySelector('[part="control"]')?.addEventListener("click", this.focusInput);
         this.tagsContainer?.addEventListener("click", this.removeTag);
         if (this.source) {
-            this.observer.observe(this.source, { attributes: true, attributeFilter: ["disabled", "value"] });
+            this.observer.observe(this.source, {
+                attributes: true,
+                attributeFilter: ["aria-description", "disabled", "placeholder", "value"],
+            });
         }
         this.syncState();
         this.render();
@@ -170,13 +173,17 @@ export class Bloc extends Component {
 
     private syncState(): void {
         if (this.input) {
-            this.input.placeholder = this.getAttribute("placeholder") || "Type and press Enter";
+            this.input.placeholder =
+                this.source?.placeholder || this.getAttribute("placeholder") || "Type and press Enter";
             this.input.disabled = this.source?.disabled === true;
             this.input.setAttribute("aria-label", this.accessibleName());
         }
         if (this.hint) {
             this.hint.id ||= `ulvia-tag-hint-${++nextHintId}`;
-            this.hint.textContent = this.getAttribute("hint") || "Press Enter to add. Backspace removes the last tag.";
+            this.hint.textContent =
+                this.source?.getAttribute("aria-description") ||
+                this.getAttribute("hint") ||
+                "Press Enter to add. Backspace removes the last tag.";
             this.input?.setAttribute("aria-describedby", this.hint.id);
         }
         this.toggleAttribute("data-disabled", this.source?.disabled === true);

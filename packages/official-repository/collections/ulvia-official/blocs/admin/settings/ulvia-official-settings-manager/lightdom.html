@@ -167,15 +167,7 @@
                                 {{ cms.i18n.ulvia-official.ui-available-languages }}
                             </label>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-available-languages-help }}</span>
-                            <ulvia-official-tag-input
-                                slot="control"
-                                serialization="json"
-                                separator=","
-                                max-tags="100"
-                                add-on-blur
-                                placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
-                                hint="{{ cms.i18n.ulvia-official.ui-available-languages-help }}"
-                            >
+                            <ulvia-official-tag-input slot="control" serialization="json" separator="," max-tags="100" add-on-blur>
                                 <input
                                     id="settings-available-languages"
                                     type="text"
@@ -183,6 +175,8 @@
                                     cms-form-value-type="json"
                                     value="{{ settingsLocalization.data.additionalLanguages | json }}"
                                     autocomplete="off"
+                                    placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
+                                    aria-description="{{ cms.i18n.ulvia-official.ui-available-languages-help }}"
                                 >
                             </ulvia-official-tag-input>
                         </ulvia-official-field>
@@ -191,15 +185,7 @@
                                 {{ cms.i18n.ulvia-official.ui-active-languages }}
                             </label>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-active-languages-help }}</span>
-                            <ulvia-official-tag-input
-                                slot="control"
-                                serialization="json"
-                                separator=","
-                                max-tags="100"
-                                add-on-blur
-                                placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
-                                hint="{{ cms.i18n.ulvia-official.ui-active-languages-help }}"
-                            >
+                            <ulvia-official-tag-input slot="control" serialization="json" separator="," max-tags="100" add-on-blur>
                                 <input
                                     id="settings-active-languages"
                                     type="text"
@@ -207,6 +193,8 @@
                                     cms-form-value-type="json"
                                     value="{{ settingsLocalization.data.activeLanguages | json }}"
                                     autocomplete="off"
+                                    placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
+                                    aria-description="{{ cms.i18n.ulvia-official.ui-active-languages-help }}"
                                 >
                             </ulvia-official-tag-input>
                         </ulvia-official-field>
