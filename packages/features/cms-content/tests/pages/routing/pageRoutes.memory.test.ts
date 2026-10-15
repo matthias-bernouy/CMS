@@ -39,6 +39,41 @@ describe("Page route registry", () => {
         expect(upgraded).toMatchObject({ defaultPath: "/content/all", path: "/my-pages" });
         const restored = await routes.setOverride("site", overview, null, upgraded.revision);
         expect(restored.path).toBe("/content/all");
+        expect((await routes.resolve("site", "/pages"))?.page).toEqual(overview);
+        expect((await routes.resolve("site", "/content/pages"))?.page).toEqual(overview);
+        expect((await routes.resolve("site", "/my-pages"))?.page).toEqual(overview);
+    });
+
+    test("reserves current, default, and historical paths in one namespace", async () => {
+        const routes = new InMemoryPageRouteRegistry();
+        const initial = await routes.register("site", { page: overview, defaultPath: "/blog" });
+        await routes.setOverride("site", overview, "/journal", initial.revision);
+
+        await expect(
+            routes.register("site", {
+                page: { kind: "site", pageId: "site-blog" },
+                defaultPath: "/blog",
+            }),
+        ).rejects.toThrow(PageRouteCollisionError);
+        await expect(
+            routes.register("site", {
+                page: { kind: "site", pageId: "site-journal" },
+                defaultPath: "/journal",
+            }),
+        ).rejects.toThrow(PageRouteCollisionError);
+    });
+
+    test("releases every historical claim when its Page is removed", async () => {
+        const routes = new InMemoryPageRouteRegistry();
+        const initial = await routes.register("site", { page: overview, defaultPath: "/pages" });
+        const moved = await routes.updateDefault("site", overview, "/content", initial.revision);
+        await routes.remove("site", overview, moved.revision);
+
+        const replacement = { kind: "site", pageId: "replacement" } as const;
+        await expect(routes.register("site", { page: replacement, defaultPath: "/pages" })).resolves.toMatchObject({
+            page: replacement,
+        });
+        expect(await routes.resolve("site", "/content")).toBeNull();
     });
 
     test("uses revisions for writes", async () => {
@@ -61,22 +96,24 @@ describe("Page route registry", () => {
         );
     });
 
-    test("reconciles route swaps", async () => {
+    test("rejects route swaps that would reassign stable authored paths", async () => {
         const routes = new InMemoryPageRouteRegistry();
         const first = { kind: "site", pageId: "first" } as const;
         const second = { kind: "site", pageId: "second" } as const;
         await routes.register("site", { page: first, defaultPath: "/first" });
         await routes.register("site", { page: second, defaultPath: "/second" });
-        await synchronizePageRouteRegistrations(
-            routes,
-            "site",
-            [
-                { page: first, defaultPath: "/second" },
-                { page: second, defaultPath: "/first" },
-            ],
-            () => true,
-        );
-        expect((await routes.get("site", first))?.path).toBe("/second");
-        expect((await routes.get("site", second))?.path).toBe("/first");
+        await expect(
+            synchronizePageRouteRegistrations(
+                routes,
+                "site",
+                [
+                    { page: first, defaultPath: "/second" },
+                    { page: second, defaultPath: "/first" },
+                ],
+                () => true,
+            ),
+        ).rejects.toThrow("already belongs");
+        expect((await routes.get("site", first))?.path).toBe("/first");
+        expect((await routes.get("site", second))?.path).toBe("/second");
     });
 });

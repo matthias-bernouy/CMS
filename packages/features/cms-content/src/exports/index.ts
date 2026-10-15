@@ -85,7 +85,7 @@ export {
     pageContentPaths,
     resolvePageLinkTarget,
 } from "cms-content/pages/core/routing/links";
-export { validatePageReference } from "cms-content/pages/core/routing/values";
+export { pageRouteClaims, validatePageReference } from "cms-content/pages/core/routing/values";
 export { PageRouteMutationCoordinator } from "cms-content/pages/core/routing/mutationCoordinator";
 export { synchronizePageRouteRegistrations } from "cms-content/pages/core/routing/synchronizeRoutes";
 export {

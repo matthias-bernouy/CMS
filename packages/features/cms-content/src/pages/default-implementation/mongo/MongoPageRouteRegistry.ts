@@ -8,6 +8,7 @@ import {
 import {
     clonePageRoute,
     nextPageRoute,
+    pageRouteClaims,
     pageScopeKey,
     scopedPageRouteKey,
     validatePageReference,
@@ -25,6 +26,7 @@ interface PageRouteDocument extends RegisteredPageRoute {
     readonly _id: string;
     readonly siteId: string;
     readonly routeKey: string;
+    readonly claimKeys: readonly string[];
 }
 
 export class MongoPageRouteRegistry implements PageRouteRegistry {
@@ -33,11 +35,25 @@ export class MongoPageRouteRegistry implements PageRouteRegistry {
 
     constructor(db: Db, collectionPrefix = "") {
         this.#routes = db.collection(`${collectionPrefix}cms_page_routes`);
-        this.#ready = Promise.all([
+        this.#ready = this.#initialize();
+    }
+
+    async #initialize(): Promise<void> {
+        await Promise.all([
             this.#routes.createIndex({ routeKey: 1 }, { unique: true }),
             this.#routes.createIndex({ siteId: 1 }),
             this.#routes.createIndex({ siteId: 1, defaultPath: 1 }, { unique: true }),
         ]);
+        await this.#routes.updateMany({ claimKeys: { $exists: false } }, [
+            {
+                $set: {
+                    claimKeys: {
+                        $setUnion: [["$defaultPath", "$path"], { $ifNull: ["$aliases", []] }],
+                    },
+                },
+            },
+        ]);
+        await this.#routes.createIndex({ siteId: 1, claimKeys: 1 }, { unique: true });
     }
 
     async register(siteId: string, input: PageRouteRegistration): Promise<RegisteredPageRoute> {
@@ -75,7 +91,10 @@ export class MongoPageRouteRegistry implements PageRouteRegistry {
 
     async resolve(siteId: string, path: string): Promise<RegisteredPageRoute | null> {
         await this.#ready;
-        const document = await this.#routes.findOne({ routeKey: scopedPageRouteKey(siteId, path) });
+        const document = await this.#routes.findOne({
+            siteId: validateSiteId(siteId),
+            claimKeys: validateRegisteredPagePath(path),
+        });
         return document ? this.#route(document) : null;
     }
 
@@ -159,17 +178,21 @@ export class MongoPageRouteRegistry implements PageRouteRegistry {
             _id: pageScopeKey(siteId, route.page),
             siteId: validateSiteId(siteId),
             routeKey: scopedPageRouteKey(siteId, route.path),
+            claimKeys: pageRouteClaims(route),
             ...clonePageRoute(route),
         };
     }
 
     #route(document: PageRouteDocument): RegisteredPageRoute {
-        const { _id, siteId, routeKey, ...route } = document;
+        const { _id, siteId, routeKey, claimKeys, ...route } = document;
         if (_id !== pageScopeKey(siteId, route.page)) {
             throw new Error("Stored Page identity is invalid.");
         }
         if (routeKey !== scopedPageRouteKey(siteId, route.path)) {
             throw new Error("Stored Page route key is invalid.");
+        }
+        if (claimKeys.join("\0") !== pageRouteClaims(route).join("\0")) {
+            throw new Error("Stored Page route claims are invalid.");
         }
         return clonePageRoute(route);
     }

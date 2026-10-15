@@ -18,6 +18,8 @@ export interface RegisteredPageRoute {
     readonly defaultPath: string;
     readonly overridePath?: string;
     readonly path: string;
+    /** Historical/default claims that still resolve to this Page. */
+    readonly aliases?: readonly string[];
     readonly revision: number;
 }
 

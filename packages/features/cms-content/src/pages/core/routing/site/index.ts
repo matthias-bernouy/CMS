@@ -52,11 +52,12 @@ async function validateMutationLinks(
     method: string,
     args: readonly unknown[],
 ): Promise<void> {
-    const reader = createPageRouteReader(routes, siteId);
+    const reader = createPageRouteReader(routes, siteId, repository);
     if (method === "insertPage") {
         const content = typeof args[2] === "string" ? args[2] : "";
-        await assertRouteAvailable(routes, siteId, String(args[0]));
-        await assertPageContentLinks(reader, content);
+        const path = String(args[0]);
+        await assertRouteAvailable(routes, siteId, path);
+        await assertPageContentLinks(reader, content, new Set([path]));
         return;
     }
     if (method === "updatePage") {
@@ -69,7 +70,11 @@ async function validateMutationLinks(
             if (patch.path && patch.path !== current.path) {
                 await assertRouteAvailable(routes, siteId, patch.path, current.id);
             }
-            await assertPageContentLinks(reader, patch.content ?? current.content);
+            await assertPageContentLinks(
+                reader,
+                patch.content ?? current.content,
+                new Set(patch.path ? [patch.path] : []),
+            );
         }
         return;
     }
@@ -150,7 +155,7 @@ export async function validatePageLinks(
     routes: PageRouteRegistry,
     siteId: string,
 ): Promise<void> {
-    const reader = createPageRouteReader(routes, siteId);
+    const reader = createPageRouteReader(routes, siteId, repository);
     for (const page of await repository.getAllPages()) {
         await assertPageContentLinks(reader, page.content);
     }

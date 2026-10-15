@@ -48,13 +48,22 @@ export function nextPageRoute(
     if (overridePath !== undefined) {
         validateRegisteredPagePath(overridePath);
     }
+    const path = overridePath ?? defaultPath;
+    const aliases = [...new Set([...(route.aliases ?? []), route.defaultPath, route.path])]
+        .filter((candidate) => candidate !== defaultPath && candidate !== path)
+        .sort();
     return {
         ...route,
         defaultPath,
         ...(overridePath ? { overridePath } : { overridePath: undefined }),
-        path: overridePath ?? defaultPath,
+        path,
+        ...(aliases.length > 0 ? { aliases } : { aliases: undefined }),
         revision: route.revision + 1,
     };
+}
+
+export function pageRouteClaims(route: Pick<RegisteredPageRoute, "defaultPath" | "path" | "aliases">): string[] {
+    return [...new Set([route.defaultPath, route.path, ...(route.aliases ?? [])])].sort();
 }
 
 export function validateRegisteredPagePath(value: string): string {

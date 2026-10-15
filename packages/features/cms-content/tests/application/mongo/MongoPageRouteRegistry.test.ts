@@ -17,7 +17,11 @@ describe("MongoPageRouteRegistry", () => {
             keys: { routeKey: 1 },
             options: { unique: true },
         });
-        expect(await routes.resolve("site-a", "/")).toBeNull();
+        expect(db.get("test_cms_page_routes").indexes).toContainEqual({
+            keys: { siteId: 1, claimKeys: 1 },
+            options: { unique: true },
+        });
+        expect(await routes.resolve("site-a", "/")).toMatchObject({ page, path: "/welcome" });
         expect(await routes.resolve("site-a", "/welcome")).toMatchObject({ page, revision: 2 });
         await expect(routes.updateDefault("site-a", page, "/home", 1)).rejects.toThrow(PageRouteRevisionConflictError);
         expect(customized.overridePath).toBe("/welcome");

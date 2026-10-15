@@ -15,7 +15,9 @@ export async function createInstanceKernelApi(
     composition: Pick<InstanceComposition, "stores" | "gateway">,
 ): Promise<KernelInstanceApi> {
     const { stores, gateway } = composition;
-    const content = createContentReader(stores.repo);
+    const content = createContentReader(stores.repo, {
+        resolvePageRoute: (path) => stores.pageRoutes.resolve(gateway.siteId, path),
+    });
     let authentication: Awaited<ReturnType<typeof createInstanceAuth>> | undefined;
     const getAuthentication = async () => (authentication ??= await createInstanceAuth(stores, instance.kernelUrl));
     const pageExecution = new PageExecutionService({

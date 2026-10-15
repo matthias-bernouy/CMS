@@ -7,6 +7,7 @@ import {
 import {
     clonePageRoute,
     nextPageRoute,
+    pageRouteClaims,
     pageScopeKey,
     scopedPageRouteKey,
     validatePageReference,
@@ -22,7 +23,7 @@ import type {
 
 export class InMemoryPageRouteRegistry implements PageRouteRegistry {
     readonly #byPage = new Map<string, RegisteredPageRoute>();
-    readonly #byRoute = new Map<string, string>();
+    readonly #byClaim = new Map<string, string>();
 
     async register(siteId: string, input: PageRouteRegistration): Promise<RegisteredPageRoute> {
         validateSiteId(siteId);
@@ -32,10 +33,10 @@ export class InMemoryPageRouteRegistry implements PageRouteRegistry {
             throw new PageRouteAlreadyRegisteredError();
         }
         const path = validateRegisteredPagePath(input.defaultPath);
-        this.#assertAvailable(siteId, path);
+        this.#assertClaimsAvailable(siteId, [path]);
         const route = { page, defaultPath: path, path, revision: 1 } as const;
         this.#byPage.set(pageKey, route);
-        this.#byRoute.set(scopedPageRouteKey(siteId, path), pageKey);
+        this.#setClaims(siteId, pageKey, route);
         return clonePageRoute(route);
     }
 
@@ -52,7 +53,7 @@ export class InMemoryPageRouteRegistry implements PageRouteRegistry {
     }
 
     async resolve(siteId: string, path: string): Promise<RegisteredPageRoute | null> {
-        const pageKey = this.#byRoute.get(scopedPageRouteKey(siteId, path));
+        const pageKey = this.#byClaim.get(scopedPageRouteKey(siteId, path));
         const route = pageKey ? this.#byPage.get(pageKey) : undefined;
         return route ? clonePageRoute(route) : null;
     }
@@ -84,7 +85,7 @@ export class InMemoryPageRouteRegistry implements PageRouteRegistry {
         const current = this.#current(siteId, page, expectedRevision);
         const pageKey = pageScopeKey(siteId, page);
         this.#byPage.delete(pageKey);
-        this.#byRoute.delete(scopedPageRouteKey(siteId, current.path));
+        this.#deleteClaims(siteId, current);
     }
 
     #replace(
@@ -96,11 +97,9 @@ export class InMemoryPageRouteRegistry implements PageRouteRegistry {
         const current = this.#current(siteId, page, expectedRevision);
         const next = nextPageRoute(current, change);
         const pageKey = pageScopeKey(siteId, page);
-        if (next.path !== current.path) {
-            this.#assertAvailable(siteId, next.path, pageKey);
-            this.#byRoute.delete(scopedPageRouteKey(siteId, current.path));
-            this.#byRoute.set(scopedPageRouteKey(siteId, next.path), pageKey);
-        }
+        this.#assertClaimsAvailable(siteId, pageRouteClaims(next), pageKey);
+        this.#deleteClaims(siteId, current);
+        this.#setClaims(siteId, pageKey, next);
         this.#byPage.set(pageKey, next);
         return clonePageRoute(next);
     }
@@ -116,10 +115,24 @@ export class InMemoryPageRouteRegistry implements PageRouteRegistry {
         return current;
     }
 
-    #assertAvailable(siteId: string, path: string, owner?: string): void {
-        const existing = this.#byRoute.get(scopedPageRouteKey(siteId, path));
-        if (existing && existing !== owner) {
-            throw new PageRouteCollisionError(path);
+    #assertClaimsAvailable(siteId: string, paths: readonly string[], owner?: string): void {
+        for (const path of paths) {
+            const existing = this.#byClaim.get(scopedPageRouteKey(siteId, path));
+            if (existing && existing !== owner) {
+                throw new PageRouteCollisionError(path);
+            }
+        }
+    }
+
+    #deleteClaims(siteId: string, route: RegisteredPageRoute): void {
+        for (const path of pageRouteClaims(route)) {
+            this.#byClaim.delete(scopedPageRouteKey(siteId, path));
+        }
+    }
+
+    #setClaims(siteId: string, pageKey: string, route: RegisteredPageRoute): void {
+        for (const path of pageRouteClaims(route)) {
+            this.#byClaim.set(scopedPageRouteKey(siteId, path), pageKey);
         }
     }
 }

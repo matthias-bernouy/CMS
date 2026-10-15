@@ -7,6 +7,7 @@ import type {
     ResolvedPageLink,
     PageRouteRegistry,
 } from "cms-content/pages/interfaces/routing";
+import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import { parseHTML } from "linkedom";
 
 const MAX_PAGE_LINKS = 256;
@@ -32,18 +33,40 @@ export async function resolvePageLinkTarget(
 export function createPageRouteReader(
     routes: Pick<PageRouteRegistry, "get" | "resolve" | "resolveDefault">,
     siteId: string,
+    siteRoutes?: {
+        getPageRoute(path: string): Promise<PageRoute | null>;
+        getPageById(id: string): Promise<TPage | null>;
+    },
 ): PageRouteReader {
     return {
         get: (reference: PageReference) => routes.get(siteId, reference),
-        resolvePath: async (path: string) =>
-            (await routes.resolve(siteId, path)) ?? (await routes.resolveDefault(siteId, path)),
+        resolvePath: async (path: string) => {
+            const siteRoute = await siteRoutes?.getPageRoute(path);
+            if (siteRoute?.state !== "gone") {
+                const page = siteRoute ? await siteRoutes?.getPageById(siteRoute.pageId) : null;
+                if (page) {
+                    return {
+                        page: { kind: "site", pageId: page.id },
+                        defaultPath: page.path,
+                        path: page.path,
+                        ...(path === page.path ? {} : { aliases: [path] }),
+                        revision: page.revision,
+                    };
+                }
+            }
+            return (await routes.resolve(siteId, path)) ?? (await routes.resolveDefault(siteId, path));
+        },
     };
 }
 
 /** Rejects broken references before editable Page content is persisted. */
-export async function assertPageContentLinks(routes: PageRouteReader, content: string): Promise<void> {
+export async function assertPageContentLinks(
+    routes: PageRouteReader,
+    content: string,
+    availablePaths: ReadonlySet<string> = new Set(),
+): Promise<void> {
     for (const path of pageContentPaths(content)) {
-        if (!(await routes.resolvePath(path))) {
+        if (!availablePaths.has(path) && !(await routes.resolvePath(path))) {
             throw new TypeError(`Page content references an unavailable route: ${path}`);
         }
     }

@@ -3,6 +3,11 @@ import { projectRenderingSettings } from "cms-content/settings/core/renderingSet
 import { projectPublishedPage } from "cms-content/pages/core/queries/publishedPage";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { ContentReader, RenderablePage } from "cms-content/application/interfaces/ContentReader";
+import type { RegisteredPageRoute } from "cms-content/pages/interfaces/routing";
+
+export type ContentReaderOptions = {
+    readonly resolvePageRoute?: (path: string) => Promise<RegisteredPageRoute | null>;
+};
 
 /**
  * Creates a public-rendering facade over an authoring repository.
@@ -10,7 +15,7 @@ import type { ContentReader, RenderablePage } from "cms-content/application/inte
  * The returned object deliberately has no repository back-reference and does
  * not expose editorial page operations.
  */
-export function createContentReader(repository: CmsRepository): ContentReader {
+export function createContentReader(repository: CmsRepository, options: ContentReaderOptions = {}): ContentReader {
     const contributedPages = async (): Promise<readonly RenderablePage[]> =>
         (await repository.getContentContributions?.())?.pages ?? [];
     const sitePage = async (page: NonNullable<ReturnType<typeof projectPublishedPage>>): Promise<RenderablePage> => ({
@@ -35,6 +40,22 @@ export function createContentReader(repository: CmsRepository): ContentReader {
         );
         return [...local, ...(await contributedPages()).filter(({ page }) => page.visible)];
     };
+    const registeredPage = async (route: RegisteredPageRoute): Promise<RenderablePage | null> => {
+        if (route.page.kind === "site") {
+            const page = projectPublishedPage(await repository.getPublishedPageById(route.page.pageId));
+            return page ? sitePage(page) : null;
+        }
+        const contribution = route.page;
+        return (
+            (await contributedPages()).find(
+                ({ reference }) =>
+                    reference.kind === "contribution" &&
+                    reference.sourceId === contribution.sourceId &&
+                    reference.contributionId === contribution.contributionId &&
+                    reference.pageId === contribution.pageId,
+            ) ?? null
+        );
+    };
     return {
         getContentRevision: async () => (await repository.getContentContributions?.())?.revision ?? 0,
         getContentTexts: async () => [...((await repository.getContentContributions?.())?.texts ?? [])],
@@ -57,10 +78,31 @@ export function createContentReader(repository: CmsRepository): ContentReader {
         resolvePagePaths: async (paths) => {
             const requested = new Set(paths);
             const resolved: Record<string, string> = {};
-            for (const renderable of await getRenderablePages()) {
-                const authoredPath =
-                    renderable.source.kind === "contribution" ? renderable.source.defaultPath : renderable.page.path;
-                if (requested.has(authoredPath)) {
+            await Promise.all(
+                [...requested].map(async (path) => {
+                    const route = await repository.getPageRoute(path);
+                    if (route?.state === "gone") {
+                        return;
+                    }
+                    const page = route
+                        ? projectPublishedPage(await repository.getPublishedPageById(route.pageId))
+                        : null;
+                    if (page) {
+                        resolved[path] = page.path;
+                        return;
+                    }
+                    const registered = await options.resolvePageRoute?.(path);
+                    if (registered) {
+                        resolved[path] = registered.path;
+                    }
+                }),
+            );
+            for (const renderable of await contributedPages()) {
+                if (renderable.source.kind !== "contribution") {
+                    continue;
+                }
+                const authoredPath = renderable.source.defaultPath;
+                if (requested.has(authoredPath) && resolved[authoredPath] === undefined) {
                     resolved[authoredPath] = renderable.page.path;
                 }
             }
@@ -74,6 +116,16 @@ export function createContentReader(repository: CmsRepository): ContentReader {
             }
             if (resolved) {
                 return resolved;
+            }
+            const registered = await options.resolvePageRoute?.(path);
+            if (registered) {
+                if (registered.path !== path) {
+                    return { kind: "redirect", path: registered.path };
+                }
+                const page = await registeredPage(registered);
+                return page?.page.visible
+                    ? { kind: "current", page, language: page.language ?? "en" }
+                    : { kind: "unavailable" as const };
             }
             const contributed = await getRenderablePage(path);
             return contributed ? { kind: "current", page: contributed, language: contributed.language ?? "en" } : null;

@@ -184,7 +184,9 @@ export class ProviderInstanceHost {
             operationRecovery = new RecoverySupervisor((limit) => operations.recover(limit));
             await operationRecovery.start(false);
             const activeRecovery = operationRecovery;
-            const content = createContentReader(stores.repo);
+            const content = createContentReader(stores.repo, {
+                resolvePageRoute: (path) => stores.pageRoutes.resolve(gateway.siteId, path),
+            });
             const kernel = await createInstanceKernelApi(instance, { stores, gateway });
             return {
                 stores,
