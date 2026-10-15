@@ -1,6 +1,11 @@
 <ulvia-official-admin-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-users }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-manage-cms-members-administrator-access-and-sign-in-methods }}</p>
+    <span slot="contextual-label">{{ cms.i18n.ulvia-official.ui-users }}</span>
+    <ulvia-official-route-tabs slot="contextual-navigation" label="{{ cms.i18n.ulvia-official.ui-users }}" appearance="sidebar" size="sm">
+        <ulvia-official-route-tab slot="items"><a href="#access-members">{{ cms.i18n.ulvia-official.ui-members }}</a></ulvia-official-route-tab>
+        <ulvia-official-route-tab slot="items"><a href="#access-login-providers">{{ cms.i18n.ulvia-official.ui-login-providers }}</a></ulvia-official-route-tab>
+    </ulvia-official-route-tabs>
     <section
         id="access-overview"
         slot="content"
@@ -18,12 +23,6 @@
                 </div>
             </div>
             <ulvia-official-stack cms-case='"success"' gap="xl">
-                <ulvia-official-route-tabs slot="items" label="{{ cms.i18n.ulvia-official.ui-users }}" appearance="pills" size="sm">
-                    <ulvia-official-route-tab slot="items"><a href="#access-members">{{ cms.i18n.ulvia-official.ui-members }}</a></ulvia-official-route-tab>
-                    <ulvia-official-route-tab slot="items"
-                        ><a href="#access-login-providers">{{ cms.i18n.ulvia-official.ui-login-providers }}</a></ulvia-official-route-tab
-                    >
-                </ulvia-official-route-tabs>
                 <div id="access-members" slot="items">
                     <header>
                         <h2>{{ cms.i18n.ulvia-official.ui-members }}</h2>

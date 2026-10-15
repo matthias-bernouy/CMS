@@ -65,8 +65,10 @@
     display: none;
     grid-area: contextual;
     min-height: 0;
+    box-sizing: border-box;
+    padding: var(--ulvia-official-spacing-md, 1rem) var(--ulvia-official-spacing-sm, 0.75rem);
     overflow: auto;
-    background: var(--ulvia-official-background-base, #fff);
+    background: color-mix(in srgb, var(--ulvia-official-background-subtle, #f3f7f5) 72%, white);
 }
 [part="content"] {
     grid-area: content;
@@ -337,6 +339,7 @@
         background: var(--ulvia-official-background-base, #fff);
     }
     [part="secondary-sidebar"] {
+        padding: var(--ulvia-official-spacing-md, 1rem) var(--ulvia-official-spacing-sm, 0.75rem);
         background: var(--ulvia-official-background-subtle, #f3f7f5);
     }
     :host([mobile-panel="navigation"]) [part="secondary-navigation"],
