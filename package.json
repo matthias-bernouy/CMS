@@ -16,7 +16,7 @@
         "ulvia": "bun run packages/runtimes/ulvia-cli/src/index.ts",
         "build": "bun run build.ts",
         "check:all": "bun run quality/ci/check-all.ts",
-        "verify": "bun run check:all && bun test",
+        "verify": "bun run check:all && bun run generate:official-bootstrap && bun test",
         "verify:full": "bun run verify && bun run test:kernel-smoke",
         "check:architecture": "bun run quality/architecture/check.ts",
         "check:dead-code": "bun run quality/dead-code/check.ts",
@@ -28,8 +28,9 @@
         "typecheck": "tsc --build",
         "clean": "tsc --build --clean",
         "test": "bun test",
-        "test:performance": "bun x tsc --project quality/performance/tsconfig.json && bun run quality/performance/run.ts",
-        "test:kernel-smoke": "ULVIA_RUN_KERNEL_SMOKE=1 bun test packages/runtimes/ulvia-cli/tests/dev/kernel-smoke.browser.test.ts",
+        "test:performance": "bun run generate:official-bootstrap && bun x tsc --project quality/performance/tsconfig.json && bun run quality/performance/run.ts",
+        "test:kernel-smoke": "bun run generate:official-bootstrap && ULVIA_RUN_KERNEL_SMOKE=1 bun test packages/runtimes/ulvia-cli/tests/dev/kernel-smoke.browser.test.ts",
+        "generate:official-bootstrap": "bun run --cwd packages/runtimes/ulvia-cli generate:bootstrap",
         "check:ui-contracts": "bun run quality/ui-contracts/check.ts"
     },
     "devDependencies": {

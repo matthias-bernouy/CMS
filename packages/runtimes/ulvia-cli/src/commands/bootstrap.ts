@@ -16,8 +16,10 @@ type BootstrapIndex = Readonly<{
 }>;
 
 /** Admits pre-built official releases without reading authored source folders at runtime. */
-export async function bootstrapOfficialRepository(repositoryRoot: string): Promise<void> {
-    const root = resolve(import.meta.dir, "../bootstrap/resources");
+export async function bootstrapOfficialRepository(
+    repositoryRoot: string,
+    root = resolve(import.meta.dir, "../../dist/bootstrap"),
+): Promise<void> {
     const index = parseBootstrapIndex(JSON.parse(await readFile(join(root, "index.json"), "utf8")));
     await withRepositoryWriteLock(repositoryRoot, async () => {
         const files = new LocalArtifactFiles(repositoryRoot);

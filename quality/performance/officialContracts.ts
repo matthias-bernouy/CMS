@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { admitContractReleaseJson, type AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 
-const CONTRACT_ROOT = join(import.meta.dir, "../../packages/runtimes/ulvia-cli/src/bootstrap/resources/contracts/cms");
+const CONTRACT_ROOT = join(import.meta.dir, "../../packages/runtimes/ulvia-cli/dist/bootstrap/contracts/cms");
 
 export async function officialContractDocuments(): Promise<Array<{ name: string; json: string }>> {
     const directories = (await readdir(CONTRACT_ROOT, { withFileTypes: true }))

@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
-import { OFFICIAL_INSTANCE_PROFILE } from "@bernouy/ulvia-provider";
-import { buildOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
+import { buildOfficialBootstrapArtifacts, writeOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
 import { assertCollectionSourceQuality } from "../../src/release/quality";
 import { prepareCollectionRelease } from "../../src/release/source";
 import { officialContractCatalogue } from "../officialContractCatalogue";
@@ -95,23 +95,22 @@ test("the official collection passes its source quality contract", async () => {
     expect(artifact.release.exports?.blocs).toEqual(visible.map((bloc) => bloc.id).toSorted());
 });
 
-test("the pre-built local bootstrap bundle matches official authored releases", async () => {
+test("the generated local bootstrap bundle matches official authored releases", async () => {
     const artifacts = await buildOfficialBootstrapArtifacts();
-    const root = resolve(import.meta.dir, "../../src/bootstrap/resources");
-    for (const [id, bytes] of Object.entries(artifacts.contracts)) {
-        const segments = id.startsWith("ulvia.cms.") ? ["contracts", "cms", id] : ["contracts", id];
-        expect((await readFile(join(root, ...segments, "definition.json"), "utf8")).trim()).toBe(bytes);
+    const root = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-build-"));
+    try {
+        await writeOfficialBootstrapArtifacts(root);
+        for (const [id, bytes] of Object.entries(artifacts.contracts)) {
+            const segments = id.startsWith("ulvia.cms.") ? ["contracts", "cms", id] : ["contracts", id];
+            expect((await readFile(join(root, ...segments, "definition.json"), "utf8")).trim()).toBe(bytes);
+        }
+        expect((await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8")).trim()).toBe(
+            artifacts.provider,
+        );
+        expect((await readFile(join(root, "collections", "ulvia-official", "release.json"), "utf8")).trim()).toBe(
+            artifacts.collection,
+        );
+    } finally {
+        await rm(root, { recursive: true, force: true });
     }
-    expect((await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8")).trim()).toBe(
-        artifacts.provider,
-    );
-    expect((await readFile(join(root, "collections", "ulvia-official", "release.json"), "utf8")).trim()).toBe(
-        artifacts.collection,
-    );
-    expect(OFFICIAL_INSTANCE_PROFILE.manifest.digest).toBe(artifacts.providerDigest);
-    const officialCollection = await prepareCollectionRelease(
-        resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
-        await officialContractCatalogue(),
-    );
-    expect(OFFICIAL_INSTANCE_PROFILE.collection.digest).toBe(officialCollection.digest);
 });

@@ -143,7 +143,7 @@ test("all eight administration domains dispatch outputs matching their official 
 async function load(contractId: string) {
     const root = resolve(
         import.meta.dir,
-        `../../../ulvia-cli/src/bootstrap/resources/contracts/cms/${contractId}/definition.json`,
+        `../../../ulvia-cli/dist/bootstrap/contracts/cms/${contractId}/definition.json`,
     );
     return (await admitContractReleaseJson(await readFile(root))).release;
 }

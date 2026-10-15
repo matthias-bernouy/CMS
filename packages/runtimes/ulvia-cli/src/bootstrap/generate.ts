@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
@@ -56,9 +56,11 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
     };
 }
 
-async function writeBootstrapArtifacts(): Promise<void> {
+export async function writeOfficialBootstrapArtifacts(
+    root = resolve(import.meta.dir, "../../dist/bootstrap"),
+): Promise<void> {
     const artifacts = await buildOfficialBootstrapArtifacts();
-    const root = resolve(import.meta.dir, "resources");
+    await rm(root, { recursive: true, force: true });
     const contractPaths: string[] = [];
     for (const [id, bytes] of Object.entries(artifacts.contracts).sort(([left], [right]) =>
         left.localeCompare(right),
@@ -93,5 +95,5 @@ async function directories(root: string): Promise<string[]> {
 }
 
 if (import.meta.main) {
-    await writeBootstrapArtifacts();
+    await writeOfficialBootstrapArtifacts();
 }

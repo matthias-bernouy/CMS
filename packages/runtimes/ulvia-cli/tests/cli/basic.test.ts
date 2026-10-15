@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
+import { writeOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
 import { runCli } from "../../src/cli";
 import { bootstrapOfficialRepository } from "../../src/commands/bootstrap";
 import { resolveDevPorts } from "../../src/runtime/dev/ports";
@@ -72,17 +73,20 @@ describe("Ulvia CLI", () => {
 
     test("admits all bundled resources needed by a fresh local stack", async () => {
         const root = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-"));
+        const bundle = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-bundle-"));
         try {
-            await bootstrapOfficialRepository(root);
+            await writeOfficialBootstrapArtifacts(bundle);
+            await bootstrapOfficialRepository(root, bundle);
             const artifacts = new LocalArtifactFiles(root);
             expect((await artifacts.list("contracts")).map(({ id }) => id)).toContain("ulvia.cms.pages");
             expect((await artifacts.list("providers")).map(({ id }) => id)).toEqual(["ulvia.official"]);
             expect(
                 (await new LocalCollectionRepository(root).list()).map(({ release }) => release.collectionId),
             ).toEqual(["ulvia-official"]);
-            await bootstrapOfficialRepository(root);
+            await bootstrapOfficialRepository(root, bundle);
         } finally {
             await rm(root, { recursive: true, force: true });
+            await rm(bundle, { recursive: true, force: true });
         }
     });
 

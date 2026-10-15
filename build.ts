@@ -14,5 +14,6 @@ async function run(cmd: string[], cwd?: string): Promise<void> {
 
 await run(["bunx", "tsc", "--build"]);
 await run(["bun", "run", "build:browser"], "packages/features/cms-content");
+await run(["bun", "run", "generate:bootstrap"], "packages/runtimes/ulvia-cli");
 
 console.log("✅ workspace build done");

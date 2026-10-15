@@ -48,7 +48,7 @@ test("the managed file workspace persists its namespace authority without exposi
 async function officialFilesContract() {
     const path = resolve(
         import.meta.dir,
-        "../../../ulvia-cli/src/bootstrap/resources/contracts/cms/ulvia.cms.files/definition.json",
+        "../../../ulvia-cli/dist/bootstrap/contracts/cms/ulvia.cms.files/definition.json",
     );
     return (await admitContractReleaseJson(await readFile(path))).release;
 }

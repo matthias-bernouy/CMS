@@ -19,7 +19,7 @@ import { officialContractCatalogue } from "../officialContracts";
 
 const OFFICIAL_RELEASE = join(
     import.meta.dir,
-    "../../../packages/runtimes/ulvia-cli/src/bootstrap/resources/collections/ulvia-official/release.json",
+    "../../../packages/runtimes/ulvia-cli/dist/bootstrap/collections/ulvia-official/release.json",
 );
 
 export async function runCollectionValidationBenchmarks(): Promise<void> {

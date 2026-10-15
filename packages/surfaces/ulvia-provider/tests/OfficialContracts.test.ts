@@ -134,7 +134,7 @@ function report(contracts: Awaited<ReturnType<typeof loadOfficialContract>>[]) {
 async function loadOfficialContract(contractId: string) {
     const path = resolve(
         import.meta.dir,
-        `../../../runtimes/ulvia-cli/src/bootstrap/resources/contracts/cms/${contractId}/definition.json`,
+        `../../../runtimes/ulvia-cli/dist/bootstrap/contracts/cms/${contractId}/definition.json`,
     );
     return admitContractReleaseJson(await readFile(path));
 }
