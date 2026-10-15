@@ -42,7 +42,10 @@
                             <p slot="eyebrow">{{ installed.publisherId }} {{ installed.version }}</p>
                             <h3 slot="title">{{ installed.collectionId }}</h3>
                             <div slot="body">
-                                <code>{{ installed.digest }}</code>
+                                <details>
+                                    <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
+                                    <p><code>{{ installed.digest }}</code></p>
+                                </details>
                             </div>
                             <ulvia-official-action slot="actions" variant="filled" tone="primary" size="sm">
                                 <a href="/admin/collections/detail?ulvia-official-collection={{ installed.collectionId | urlencode }}">
@@ -72,7 +75,10 @@
                                 <div slot="items">
                                     <p>{{ release.description }}</p>
                                     <p>{{ release.blocCount }} {{ cms.i18n.ulvia-official.ui-blocks }}</p>
-                                    <code>{{ release.digest }}</code>
+                                    <details>
+                                        <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
+                                        <p><code>{{ release.digest }}</code></p>
+                                    </details>
                                     <ulvia-official-badge cms-condition="release.action === 'current'" tone="success">
                                         <span slot="label">{{ cms.i18n.ulvia-official.ui-installed }}</span>
                                     </ulvia-official-badge>
