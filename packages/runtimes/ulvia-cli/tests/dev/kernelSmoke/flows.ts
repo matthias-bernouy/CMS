@@ -1,5 +1,6 @@
 import type { Page } from "playwright";
 import { inspectDiagnostics, mutateSettings, verifyAdministrationAfterRestart } from "./administration";
+import { exerciseCollectionUpgrades } from "./collectionUpgrades";
 import { mutateFiles, verifyFilesAfterRestart } from "./files";
 import { deleteSmokePage, verifyPublishedPage } from "./pageLifecycle";
 import { mutatePages } from "./pages";
@@ -97,11 +98,12 @@ async function mutateCollections(page: Page): Promise<void> {
     await page.locator("#installed-collections").waitFor();
     await page.locator('a[href="#repository-releases"]').click();
     await page.waitForURL(/#repository-releases$/u);
-    await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
+    const initialRelease = collectionReleaseCard(page, "ulvia.test 1.0.0");
+    await initialRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
     const installResponse = page.waitForResponse((candidate) =>
         candidate.url().includes("ulvia.cms.collections/install"),
     );
-    await page.getByRole("button", { name: /^(Install|Installer)$/u }).click();
+    await initialRelease.getByRole("button", { name: /^(Install|Installer)$/u }).click();
     if (!(await installResponse).ok()) {
         throw new Error("Collection installation failed.");
     }
@@ -114,6 +116,7 @@ async function mutateCollections(page: Page): Promise<void> {
     await page.waitForURL(/#collection-blocks$/u);
     await page.getByText("smoke-kit-card", { exact: true }).waitFor();
     await page.getByRole("link", { name: /^(Back to Collections|Retour aux Collections)$/u }).click();
+    await exerciseCollectionUpgrades(page);
     const officialCard = page.getByRole("heading", { name: "ulvia-official", exact: true }).locator("..");
     await officialCard.getByRole("link", { name: /^(Manage|Gérer)$/u }).click();
     await page.getByRole("heading", { name: "Ulvia Official", exact: true }).waitFor();
@@ -155,6 +158,10 @@ async function mutateCollections(page: Page): Promise<void> {
         throw new Error(`Collection text flow failed (${textResponse.status()}).`);
     }
     await page.getByRole("link", { name: /^(Back to Collections|Retour aux Collections)$/u }).click();
+}
+
+function collectionReleaseCard(page: Page, identity: string) {
+    return page.locator('[role="listitem"]').filter({ has: page.getByText(identity, { exact: true }) });
 }
 
 async function verifyCollectionAfterRestart(page: Page): Promise<void> {

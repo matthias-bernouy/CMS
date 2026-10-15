@@ -51,8 +51,11 @@ export async function inspectDiagnostics(page: Page): Promise<void> {
     await page.locator("#migration-health").waitFor();
     await page.locator('a[href="#job-health"]').click();
     await page.waitForURL(/#job-health$/u);
-    await page
-        .locator('section[cms-query*="ulvia.cms.jobs:list"] p[cms-condition*="jobs.data.items.length"]')
+    const jobs = page.locator('section[cms-query*="ulvia.cms.jobs:list"]');
+    await jobs
+        .locator('p[cms-condition*="jobs.data.items.length"]')
+        .or(jobs.locator('article[role="listitem"]'))
+        .first()
         .waitFor();
     await page.locator('a[href="#provider-health"]').click();
     await page.waitForURL(/#provider-health$/u);
