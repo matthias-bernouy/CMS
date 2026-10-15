@@ -72,3 +72,18 @@
     --route-tab-block-padding: var(--ulvia-official-spacing-md, 1rem);
     --route-tab-inline-padding: var(--ulvia-official-spacing-lg, 1.5rem);
 }
+
+@media (max-width: 40rem) {
+    :host([appearance="pills"]) [part="navigation"] {
+        overflow-x: visible;
+    }
+
+    :host([appearance="pills"]) [part="tabs"] {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    :host([appearance="pills"]) ::slotted(ulvia-official-route-tab) {
+        flex: 1 1 auto;
+    }
+}
