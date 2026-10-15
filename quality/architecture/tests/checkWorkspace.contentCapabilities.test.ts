@@ -54,7 +54,9 @@ test("official collection scripts use only the common capability transport", asy
         const source = await readFile(path, "utf8");
         for (const match of source.matchAll(/\bfetch\s*\(\s*([^,\n)]+)/gu)) {
             const expression = match[1]!.trim();
-            expect(expression, `${path}: dynamic or non-CMS fetch`).toMatch(/^[`'"]\/\.cms\/call\//u);
+            expect(expression, `${path}: dynamic or non-CMS fetch`).toMatch(
+                /^[`'"]\/\.cms\/(?:call|query|\$\{route\})\//u,
+            );
         }
     }
 
