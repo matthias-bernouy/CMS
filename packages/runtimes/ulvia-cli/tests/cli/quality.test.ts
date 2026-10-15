@@ -93,6 +93,11 @@ test("the official collection passes its source quality contract", async () => {
         ),
     ).toBeTrue();
     expect(artifact.release.exports?.blocs).toEqual(visible.map((bloc) => bloc.id).toSorted());
+    expect(
+        artifact.release.blocs.some((bloc) =>
+            [bloc.defaultContent, bloc.lightdom].some((html) => html?.includes('href="#"')),
+        ),
+    ).toBeFalse();
 });
 
 test("the generated local bootstrap bundle matches official authored releases", async () => {
