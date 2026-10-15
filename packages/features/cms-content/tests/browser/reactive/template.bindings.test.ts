@@ -93,6 +93,17 @@ test("exact expressions preserve booleans while string destinations serialize th
     expect(control.getAttribute("state")).toBe("true");
 });
 
+test("repeated native controls resolve boolean attributes from each item scope", () => {
+    const { host, region } = mount(
+        '<button cms-repeat="items as item" disabled="{{ item.count > 0 }}">{{ item.label }}</button>',
+        { items: [{ count: 8, label: "Disable" }] },
+    );
+    expect(host.querySelector("button")!.disabled).toBe(true);
+
+    region.update({ value: { items: [{ count: 0, label: "Enable" }] } });
+    expect(host.querySelector("button")!.disabled).toBe(false);
+});
+
 test("disposing an ordinary attribute binding cancels its queued control update", async () => {
     const { region } = mount('<test-late-control value="{{ name }}"></test-late-control>', { name: "Initial" });
     region.unmount();

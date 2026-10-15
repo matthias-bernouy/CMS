@@ -1,4 +1,5 @@
 import { type FilterMap } from "../core/interpolate";
+import { MUTATION_ATTR } from "../core/attrs";
 import { prepareNetworkInertBindings } from "../core/networkBindings";
 import { type Scope } from "../core/scope";
 import { MountedInPlaceRegion, MountedRegion } from "./MountedRegion";
@@ -41,7 +42,7 @@ export class CompiledTemplate {
         const plan = compileTemplatePlan(template, filters, {}, CompiledTemplate.fromTemplate);
         // The parent query keeps its bindings; this in-place mutation scope
         // owns only attributes that explicitly reference its result.
-        if (parent.parentElement?.closest("[cms-mutation]")) {
+        if (parent.hasAttribute(MUTATION_ATTR)) {
             const boundary = mutationBoundary(parent);
             plan.attributes = plan.attributes.filter((item) => bindingOwnedByMutation(item.template, boundary));
         }

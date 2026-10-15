@@ -1,4 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
+import { BindingRuntime } from "../../../src/browser/binding/runtime/BindingRuntime";
 import { Query } from "../../../src/browser/binding/runtime/query/Query";
 import { queryRequest } from "../../../src/browser/binding/runtime/query/queryRequest";
 import { readSyncValue, writeSyncValue } from "../../../src/browser/binding/state/SyncState";
@@ -148,6 +149,25 @@ test("the alias owns the complete query state and data", async () => {
     await waitFor(() => host.textContent?.includes("Racket") === true);
     expect(host.querySelector("[cms-condition=\"products.activity === 'fetching'\"]")).toBeNull();
     query.dispose();
+});
+
+test("a nested mutation preserves parent query boolean attributes", async () => {
+    globalThis.fetch = (async () =>
+        Response.json({ installations: [{ id: "provider-1", selectionCount: 8 }] })) as typeof fetch;
+    const host = el(`<section cms-query="providers:list as providers">
+        <article cms-repeat="providers.data.installations as installation">
+            <form cms-mutation="providers:set-status as mutation">
+                <button disabled="{{ installation.selectionCount > 0 }}">Disable</button>
+            </form>
+        </article>
+    </section>`);
+    document.body.appendChild(host);
+    const runtime = new BindingRuntime(host);
+    runtime.start();
+
+    await waitFor(() => host.querySelector("button") !== null);
+    expect(host.querySelector<HTMLButtonElement>("button")!.disabled).toBe(true);
+    runtime.stop();
 });
 
 test("a remote query publishes its lifecycle and resolved input", async () => {
