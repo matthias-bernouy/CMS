@@ -1,6 +1,6 @@
 import type { CollectionStore, InstalledCollection } from "@bernouy/cms-repository/collections/installations";
 import { pageLinkSources } from "@bernouy/cms-repository/collections";
-import { pageContentPaths, type TPage } from "@bernouy/cms-content";
+import { pageContentPaths, pageRouteClaims, type PageRouteRegistry, type TPage } from "@bernouy/cms-content";
 
 type CollectionSnapshot = { readonly revision: number; readonly collections: readonly InstalledCollection[] };
 
@@ -11,19 +11,49 @@ export async function validateCollectionMutationPageLinks(
     method: string,
     args: readonly unknown[],
     getSitePages: () => Promise<readonly TPage[]>,
+    resolveSitePath?: (path: string) => Promise<boolean>,
+    routes?: PageRouteRegistry,
 ): Promise<void> {
     const current = await store.snapshot(siteId);
     const candidate = await candidateSnapshot(store, current, method, args);
-    const targets = new Map(
-        candidate.collections.flatMap((installation) =>
-            (installation.release.pages ?? []).map((page) => [page.defaultPath, page] as const),
+    const targetEntries = candidate.collections.flatMap((installation) =>
+        (installation.release.pages ?? []).map(
+            (page) =>
+                [
+                    `${installation.release.publisherId}\0${installation.collectionId}\0${page.id}`,
+                    page.defaultPath,
+                ] as const,
         ),
     );
+    const candidatePages = new Map<string, string>(targetEntries);
+    const targets = new Set(
+        candidate.collections.flatMap((installation) =>
+            (installation.release.pages ?? []).map((page) => page.defaultPath),
+        ),
+    );
+    for (const route of (await routes?.list(siteId)) ?? []) {
+        if (route.page.kind !== "contribution") {
+            continue;
+        }
+        const key = `${route.page.sourceId}\0${route.page.contributionId}\0${route.page.pageId}`;
+        if (candidatePages.has(key)) {
+            for (const path of pageRouteClaims(route)) {
+                targets.add(path);
+            }
+        }
+    }
     const sitePages = await getSitePages();
     const siteTargets = new Map(sitePages.map((page) => [page.path, page]));
+    for (const path of new Set(targetEntries.map(([, defaultPath]) => defaultPath))) {
+        if (await resolveSitePath?.(path)) {
+            throw Object.assign(new Error(`A collection Page route conflicts with a site Page route: ${path}`), {
+                status: 409,
+            });
+        }
+    }
     for (const page of sitePages) {
         for (const path of pageContentPaths(page.content)) {
-            if (!siteTargets.has(path) && !targets.has(path)) {
+            if (!siteTargets.has(path) && !targets.has(path) && !(await resolveSitePath?.(path))) {
                 throw Object.assign(new Error("A collection mutation would orphan a site Page reference"), {
                     status: 409,
                 });
@@ -34,7 +64,7 @@ export async function validateCollectionMutationPageLinks(
         for (const page of installation.release.pages ?? []) {
             const sources = [page.document.html, ...pageLinkSources(installation.release, page.uses)];
             for (const path of sources.flatMap(pageContentPaths)) {
-                if (!siteTargets.has(path) && !targets.has(path)) {
+                if (!siteTargets.has(path) && !targets.has(path) && !(await resolveSitePath?.(path))) {
                     throw Object.assign(new Error("A collection Page references an unavailable site Page"), {
                         status: 409,
                     });

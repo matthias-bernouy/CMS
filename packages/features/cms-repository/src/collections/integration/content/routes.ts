@@ -42,6 +42,7 @@ export function withCollectionPageRoutes(
     options: {
         readonly coordinator?: PageRouteMutationCoordinator;
         readonly getSitePages?: () => Promise<readonly TPage[]>;
+        readonly resolveSitePath?: (path: string) => Promise<boolean>;
     } = {},
 ): CollectionStore {
     const coordinator = options.coordinator ?? new PageRouteMutationCoordinator();
@@ -68,6 +69,8 @@ export function withCollectionPageRoutes(
                             property,
                             args,
                             async () => sitePages!,
+                            options.resolveSitePath,
+                            routes,
                         );
                     }
                     const result = (await Reflect.apply(value, target, args)) as CollectionSnapshot;

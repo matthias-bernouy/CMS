@@ -91,14 +91,11 @@ test("the routed collection facade preserves non-mutating class methods", async 
     expect(await store.snapshot("site-a")).toEqual({ revision: 0, collections: [] });
 });
 
-test("collection activation rejects a missing site Page target", async () => {
+test("collection admission rejects an undeclared Page target before activation", async () => {
     const raw = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await raw.importRelease(collectionRelease('<a href="/missing">{{ page.title }}</a>'));
-    const store = withCollectionPageRoutes(raw, new InMemoryPageRouteRegistry(), {
-        getSitePages: async () => [],
-    });
-
-    await expect(store.install("site-a", artifact.digest, 0)).rejects.toThrow("unavailable site Page");
+    await expect(raw.importRelease(collectionRelease('<a href="/missing">{{ page.title }}</a>'))).rejects.toThrow(
+        "undeclared Page route",
+    );
     expect(await raw.snapshot("site-a")).toEqual({ revision: 0, collections: [] });
 });
 
@@ -117,6 +114,39 @@ test("collection removal cannot orphan an editable Page reference", async () => 
 
     await expect(store.uninstall("site-a", "official", 1)).rejects.toThrow("orphan");
     expect((await raw.snapshot("site-a")).collections).toHaveLength(1);
+});
+
+test("collection mutations accept a site Page historical redirect", async () => {
+    const raw = new CollectionStore(new MemoryCollectionStorage());
+    const artifact = await raw.importRelease(collectionRelease("<main>{{ page.title }}</main>"));
+    const sitePage = {
+        id: "site-page",
+        path: "/renamed",
+        content: '<a href="/previous">Previous route</a>',
+    } as never;
+    const store = withCollectionPageRoutes(raw, new InMemoryPageRouteRegistry(), {
+        getSitePages: async () => [sitePage],
+        resolveSitePath: async (path) => path === "/previous",
+    });
+
+    await expect(store.install("site-a", artifact.digest, 0)).resolves.toMatchObject({ revision: 1 });
+});
+
+test("collection route collisions with site Page aliases fail before persistence", async () => {
+    const raw = new CollectionStore(new MemoryCollectionStorage());
+    const artifact = await raw.importRelease(collectionRelease("<main>{{ page.title }}</main>"));
+    const sitePage = {
+        id: "site-page",
+        path: "/renamed",
+        content: "<main>Site Page</main>",
+    } as never;
+    const store = withCollectionPageRoutes(raw, new InMemoryPageRouteRegistry(), {
+        getSitePages: async () => [sitePage],
+        resolveSitePath: async (path) => path === "/admin",
+    });
+
+    await expect(store.install("site-a", artifact.digest, 0)).rejects.toThrow("conflicts with a site Page route");
+    expect(await raw.snapshot("site-a")).toEqual({ revision: 0, collections: [] });
 });
 
 function collectionRelease(html: string) {

@@ -1,8 +1,12 @@
 import { expect, test } from "bun:test";
-import { renderCollectionTexts, withInstalledCollections } from "@bernouy/cms-repository/collections/content";
+import {
+    renderCollectionTexts,
+    synchronizeCollectionPageRoutes,
+    withInstalledCollections,
+} from "@bernouy/cms-repository/collections/content";
 import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { InMemoryCmsRepository, ValidatingCmsRepository } from "@bernouy/cms-content";
+import { InMemoryCmsRepository, InMemoryPageRouteRegistry, ValidatingCmsRepository } from "@bernouy/cms-content";
 import { createContentReader, expandCompositions, generateStyleEntry } from "@bernouy/cms-content/rendering";
 import { parseHTML } from "linkedom";
 
@@ -85,6 +89,52 @@ test("installed resources participate in authoring validation and public read mo
     await expect(
         repository.replaceBloc({ ...(await repository.getBlocRecord("test-welcome"))!.artifact! }),
     ).rejects.toThrow("immutable");
+});
+
+test("installed Page aliases redirect to their effective collection route", async () => {
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const artifact = await store.importRelease({
+        ...release,
+        translations: {
+            en: {
+                ...release.translations.en,
+                "page.overview.name": "Overview",
+            },
+        },
+        pages: [
+            {
+                id: "overview",
+                generation: 1,
+                defaultPath: "/admin",
+                name: "page.overview.name",
+                uses: ["test-welcome"],
+                requires: [],
+                document: { html: "<test-welcome></test-welcome>" },
+            },
+        ],
+    });
+    const snapshot = await store.install("site", artifact.digest, 0);
+    const routes = new InMemoryPageRouteRegistry();
+    await synchronizeCollectionPageRoutes(routes, "site", snapshot);
+    const reference = {
+        kind: "contribution" as const,
+        sourceId: "example",
+        contributionId: "test",
+        pageId: "overview",
+    };
+    const initial = (await routes.get("site", reference))!;
+    await routes.setOverride("site", reference, "/custom-admin", initial.revision);
+    const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site", routes);
+    const reader = createContentReader(repository, {
+        resolvePageRoute: (path) => routes.resolve("site", path),
+    });
+
+    expect(await reader.resolvePagePaths(["/admin"])).toEqual({ "/admin": "/custom-admin" });
+    expect(await reader.resolveRenderableRoute("/admin")).toEqual({ kind: "redirect", path: "/custom-admin" });
+    expect(await reader.resolveRenderableRoute("/custom-admin")).toMatchObject({
+        kind: "current",
+        page: { reference },
+    });
 });
 
 test("installed internal blocs stay out of the authoring catalogue but remain available to rendering", async () => {

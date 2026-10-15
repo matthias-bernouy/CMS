@@ -89,6 +89,10 @@ export async function createProviderStores(env: ProviderStoreConfig) {
     const migrationCollections = withCollectionPageRoutes(rawCollections, pageRoutes, {
         coordinator: pageRouteMutations,
         getSitePages: () => innerRepo.getAllPages(),
+        resolveSitePath: async (path) => {
+            const route = await innerRepo.getPageRoute(path);
+            return route !== null && route.state !== "gone";
+        },
     });
     const validatedRepo = new ValidatingCmsRepository(
         withInstalledCollections(innerRepo, migrationCollections, SCOPE_ID, pageRoutes),
