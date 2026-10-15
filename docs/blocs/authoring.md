@@ -78,7 +78,7 @@ browser-safe public entries such as
 secrets, runtimes or Kernel internals.
 
 Keep element lifecycle explicit and release listeners when disconnected.
-Prefer semantic HTML and Page references over direct browser navigation. The
+Prefer native same-site `<a href>` navigation over direct browser navigation. The
 quality checks reject arbitrary browser HTTP calls in official collection code;
 CMS data access uses literal same-origin `/.cms/call/...` bindings backed by
 declared capability requirements.
@@ -101,7 +101,8 @@ A component can own one editable native Light DOM child through:
 Such a component has exactly one unnamed Shadow DOM slot, no fixed
 `lightdom.html`, and one direct accepted native child in `default.html`. The
 real child tag remains the source of truth. Wrapper settings and native-child
-attributes are separate targets even when their names coincide.
+attributes are separate targets even when their names coincide. Managed anchors
+require `href` and reject nested interactive descendants.
 
 The admitted vocabulary is deliberately bounded. Links, buttons, headings,
 paragraphs, images and SVGs use typed platform policies; arbitrary `class`,

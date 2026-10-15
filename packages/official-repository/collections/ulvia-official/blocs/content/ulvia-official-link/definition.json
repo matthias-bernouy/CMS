@@ -1,0 +1,14 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-link",
+    "label": "bloc.link.label",
+    "description": "bloc.link.description",
+    "category": "bloc.category.actions",
+    "order": 20,
+    "nativeElement": {
+        "accepts": ["a"]
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

@@ -92,6 +92,29 @@ describe("assertContentRefsExist", () => {
         ).rejects.toThrow(/requires exactly one direct/);
     });
 
+    test("requires real link semantics and rejects nested interactive content", async () => {
+        const cms = makeSystem({
+            blocs: ["fixture-card"],
+            managed: { "fixture-link": ["a"] },
+        });
+        await assertContentRefsExist(
+            cms,
+            '<fixture-link><a href="/about" aria-label="About"><fixture-card></fixture-card></a></fixture-link>',
+        );
+        await expect(
+            assertContentRefsExist(
+                cms,
+                '<fixture-link><a aria-label="About"><fixture-card></fixture-card></a></fixture-link>',
+            ),
+        ).rejects.toThrow("declare href");
+        for (const content of [
+            '<fixture-link><a href="/about" aria-label="About"><button type="button">Open</button></a></fixture-link>',
+            '<fixture-link><a href="/about" aria-label="About"><fixture-card><a href="/other">Other</a></fixture-card></a></fixture-link>',
+        ]) {
+            await expect(assertContentRefsExist(cms, content)).rejects.toThrow("cannot nest interactive content");
+        }
+    });
+
     test("aggregates multiple missing refs in one error", async () => {
         const cms = makeSystem();
         await expect(

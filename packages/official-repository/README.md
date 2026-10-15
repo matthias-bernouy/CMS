@@ -48,5 +48,7 @@ slots instead of being embedded in collection settings.
 Managed native components declare an accepted tag set in `nativeElement`, expose
 one unnamed Shadow DOM slot, and supply one concrete native root in
 `default.html`; they never add fixed `lightdom.html`. The official action accepts
-`button` and `a`, while the official heading accepts `h1` through `h6`. Wrapper
-settings remain separate from native child attributes.
+`button` and `a`, the neutral official link accepts `a`, and the official heading
+accepts `h1` through `h6`. The link can wrap a non-interactive card without
+JavaScript while preserving native navigation. Wrapper settings remain separate
+from native child attributes.

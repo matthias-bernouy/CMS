@@ -49,6 +49,8 @@
     "bloc.media-figure.label": "Media figure",
     "bloc.image.description": "An accessible responsive image backed by an immutable file reference",
     "bloc.image.label": "Image",
+    "bloc.link.description": "A neutral wrapper that makes a native navigation link fill its content",
+    "bloc.link.label": "Link",
     "bloc.prose.description": "A readable region for formatted editorial content",
     "bloc.prose.label": "Prose",
     "bloc.provider-manager.description": "Manage provider installation status and exact contract routing",

@@ -49,6 +49,8 @@
     "bloc.media-figure.label": "Illustration média",
     "bloc.image.description": "Une image responsive et accessible liée à une référence de fichier immuable",
     "bloc.image.label": "Image",
+    "bloc.link.description": "Un conteneur neutre qui étend un lien de navigation natif à tout son contenu",
+    "bloc.link.label": "Lien",
     "bloc.prose.description": "Une zone lisible pour du contenu éditorial mis en forme",
     "bloc.prose.label": "Texte éditorial",
     "bloc.provider-manager.description": "Gérez l’état d’installation des providers et le routage exact des contrats",

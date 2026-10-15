@@ -48,8 +48,39 @@ export function managedNativeElementIssue(
                 const accepted = contract.nativeElement.accepts.map((tag) => `<${tag}>`).join(", ");
                 return `bloc "${contract.tag}" requires exactly one direct, un-slotted accepted native child (${accepted})`;
             }
+            if (child.localName.toLowerCase() === "a") {
+                if (!child.hasAttribute("href")) {
+                    return `bloc "${contract.tag}" requires its native <a> child to declare href`;
+                }
+                if (hasInteractiveDescendant(child)) {
+                    return `bloc "${contract.tag}" cannot nest interactive content inside its native <a> child`;
+                }
+            }
         }
     }
 
     return null;
+}
+
+function hasInteractiveDescendant(anchor: Element): boolean {
+    return Boolean(
+        anchor.querySelector(
+            [
+                "a[href]",
+                "audio[controls]",
+                "button",
+                "details",
+                "embed",
+                "iframe",
+                "img[usemap]",
+                'input:not([type="hidden"])',
+                "label",
+                "select",
+                "textarea",
+                "video[controls]",
+                "[tabindex]",
+                '[contenteditable]:not([contenteditable="false"])',
+            ].join(","),
+        ),
+    );
 }

@@ -168,6 +168,22 @@ exactly one unnamed `<slot>`, `default.html` must contain exactly one direct,
 un-slotted accepted native root, and `slots` must remain empty. The native child
 is the structural source of truth: `<button>` and `<a>` are two valid instances
 of the example contract, without a duplicate `as` attribute on the wrapper.
+An accepted `<a>` must declare a real `href`. It cannot contain another link,
+form control or other interactive descendant. A link wrapper may therefore
+contain a non-interactive component such as a card while preserving native
+navigation, focus, context-menu and browser history behavior.
+
+```html
+<example-link>
+    <a href="/products/example">
+        <example-card>
+            <h2 slot="title">Example product</h2>
+            <p slot="body">Product description</p>
+        </example-card>
+    </a>
+</example-link>
+```
+
 The accepted list is also sufficient for a future editor to offer a structural
 element selector. Changing that selector replaces the real native child rather
 than changing only presentation metadata.
