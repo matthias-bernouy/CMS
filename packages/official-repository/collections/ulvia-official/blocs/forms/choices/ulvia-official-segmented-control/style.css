@@ -3,9 +3,9 @@
     --option-list-rows: auto;
     --option-list-flow: column;
     --option-list-auto-columns: minmax(7rem, auto);
-    --option-list-gap: var(--ulvia-official-spacing-3xs, .25rem);
-    --option-list-padding: var(--ulvia-official-spacing-3xs, .25rem);
-    --option-list-radius: var(--ulvia-official-radius-lg, .75rem);
+    --option-list-gap: var(--ulvia-official-spacing-3xs, 0.25rem);
+    --option-list-padding: var(--ulvia-official-spacing-3xs, 0.25rem);
+    --option-list-radius: var(--ulvia-official-radius-lg, 0.75rem);
     --option-list-background: var(--ulvia-official-background-subtle, #eef1f0);
     --segment-min-height: var(--ulvia-official-control-height-md, 2.875rem);
     --segment-padding-inline: var(--ulvia-official-spacing-md, 1rem);
@@ -29,7 +29,7 @@
     margin: 0;
     padding: 0;
     border: 0;
-    gap: var(--ulvia-official-spacing-xs, .5rem);
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
     color: inherit;
     font: inherit;
 }
@@ -51,8 +51,8 @@
 
 :host([size="sm"]) {
     --segment-min-height: var(--ulvia-official-control-height-sm, 2.25rem);
-    --segment-padding-inline: var(--ulvia-official-spacing-sm, .75rem);
-    --segment-font-size: var(--ulvia-official-font-size-sm, .875rem);
+    --segment-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
+    --segment-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
 
 :host([size="lg"]) {

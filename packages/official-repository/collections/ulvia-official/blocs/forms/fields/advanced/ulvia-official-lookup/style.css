@@ -3,13 +3,13 @@
     --lookup-font-size: var(--ulvia-official-font-size-md, 1rem);
     --lookup-input-height: 2rem;
     --lookup-chip-height: 1.875rem;
-    --lookup-chip-font-size: var(--ulvia-official-font-size-sm, .875rem);
+    --lookup-chip-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     --lookup-chip-action-size: 1.5rem;
     --lookup-option-height: 2.75rem;
     position: relative;
     display: grid;
     min-width: 0;
-    gap: var(--ulvia-official-spacing-xs, .5rem);
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
@@ -20,10 +20,10 @@
     height: var(--lookup-control-height);
     align-items: center;
     box-sizing: border-box;
-    padding: .375rem 2.75rem .375rem 2.625rem;
+    padding: 0.375rem 2.75rem 0.375rem 2.625rem;
     border: var(--ulvia-official-border-width, 1px) solid
         var(--form-control-border-color, var(--ulvia-official-border-default, #c8d1cd));
-    border-radius: var(--ulvia-official-radius-md, .5rem);
+    border-radius: var(--ulvia-official-radius-md, 0.5rem);
     background: var(--ulvia-official-background-surface, Canvas);
     box-shadow: 0 1px 2px rgb(23 33 30 / 5%);
 }
@@ -59,7 +59,7 @@
 [part="chips"] {
     display: flex;
     min-width: 0;
-    gap: var(--ulvia-official-spacing-2xs, .375rem);
+    gap: var(--ulvia-official-spacing-2xs, 0.375rem);
     flex-wrap: wrap;
 }
 
@@ -73,11 +73,11 @@
     min-height: var(--lookup-chip-height);
     align-items: center;
     box-sizing: border-box;
-    padding: 0 var(--ulvia-official-spacing-3xs, .25rem) 0 var(--ulvia-official-spacing-sm, .75rem);
+    padding: 0 var(--ulvia-official-spacing-3xs, 0.25rem) 0 var(--ulvia-official-spacing-sm, 0.75rem);
     border: var(--ulvia-official-border-width, 1px) solid
         color-mix(in srgb, var(--ulvia-official-primary, #086c55) 30%, transparent);
     border-radius: var(--ulvia-official-radius-full, 999px);
-    gap: var(--ulvia-official-spacing-3xs, .25rem);
+    gap: var(--ulvia-official-spacing-3xs, 0.25rem);
     color: var(--ulvia-official-on-primary-subtle, #075642);
     background: var(--ulvia-official-primary-subtle, #dff3ed);
     font-size: var(--lookup-chip-font-size);
@@ -106,10 +106,10 @@
 [part="chip-remove"]::before,
 [part="chip-remove"]::after {
     position: absolute;
-    inset-block-start: calc(50% - .0625rem);
-    inset-inline-start: calc(50% - .3125rem);
-    width: .625rem;
-    height: .125rem;
+    inset-block-start: calc(50% - 0.0625rem);
+    inset-inline-start: calc(50% - 0.3125rem);
+    width: 0.625rem;
+    height: 0.125rem;
     content: "";
     background: currentColor;
 }
@@ -136,7 +136,7 @@
     position: absolute;
     z-index: 1;
     inset-block-start: 50%;
-    inset-inline-start: .875rem;
+    inset-inline-start: 0.875rem;
     display: grid;
     width: 1.25rem;
     height: 1.25rem;
@@ -146,7 +146,18 @@
     pointer-events: none;
 }
 
-[part="search"]::before { width: 1.125rem; height: 1.125rem; content: ""; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='8.5' cy='8.5' r='5.25'/%3E%3Cpath d='m12.5 12.5 4 4'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='8.5' cy='8.5' r='5.25'/%3E%3Cpath d='m12.5 12.5 4 4'/%3E%3C/svg%3E") center / contain no-repeat; }
+[part="search"]::before {
+    width: 1.125rem;
+    height: 1.125rem;
+    content: "";
+    background: currentColor;
+    -webkit-mask:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='8.5' cy='8.5' r='5.25'/%3E%3Cpath d='m12.5 12.5 4 4'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+    mask:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='8.5' cy='8.5' r='5.25'/%3E%3Cpath d='m12.5 12.5 4 4'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+}
 
 :host(:focus-within) [part="search"] {
     color: var(--ulvia-official-primary, #086c55);
@@ -156,7 +167,7 @@
     position: absolute;
     z-index: 2;
     inset-block-start: 50%;
-    inset-inline-end: .5rem;
+    inset-inline-end: 0.5rem;
     width: 2rem;
     height: 2rem;
     transform: translateY(-50%);
@@ -171,10 +182,10 @@
 [part="clear"]::before,
 [part="clear"]::after {
     position: absolute;
-    inset-block-start: calc(50% - .0625rem);
-    inset-inline-start: calc(50% - .375rem);
-    width: .75rem;
-    height: .125rem;
+    inset-block-start: calc(50% - 0.0625rem);
+    inset-inline-start: calc(50% - 0.375rem);
+    width: 0.75rem;
+    height: 0.125rem;
     content: "";
     background: currentColor;
 }
@@ -213,14 +224,14 @@
 [part="popover"] {
     position: absolute;
     z-index: 30;
-    inset-block-start: calc(var(--lookup-control-height) + var(--ulvia-official-spacing-xs, .5rem));
+    inset-block-start: calc(var(--lookup-control-height) + var(--ulvia-official-spacing-xs, 0.5rem));
     inset-inline: 0;
     display: block;
     max-height: 18rem;
     box-sizing: border-box;
-    padding: var(--ulvia-official-spacing-xs, .5rem);
+    padding: var(--ulvia-official-spacing-xs, 0.5rem);
     border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
-    border-radius: var(--ulvia-official-radius-lg, .75rem);
+    border-radius: var(--ulvia-official-radius-lg, 0.75rem);
     background: var(--ulvia-official-background-raised, Canvas);
     box-shadow: var(--ulvia-official-shadow-lg, 0 1rem 2.5rem rgb(23 33 30 / 16%));
     overflow-y: auto;
@@ -228,7 +239,7 @@
 
 [part="listbox"] {
     display: grid;
-    gap: var(--ulvia-official-spacing-3xs, .25rem);
+    gap: var(--ulvia-official-spacing-3xs, 0.25rem);
 }
 
 [part~="option"] {
@@ -237,9 +248,9 @@
     min-height: var(--lookup-option-height);
     align-items: center;
     box-sizing: border-box;
-    padding: var(--ulvia-official-spacing-xs, .5rem) var(--ulvia-official-spacing-sm, .75rem);
+    padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem);
     border: 0;
-    border-radius: var(--ulvia-official-radius-md, .5rem);
+    border-radius: var(--ulvia-official-radius-md, 0.5rem);
     color: var(--ulvia-official-text-primary, CanvasText);
     background: transparent;
     font: inherit;
@@ -265,7 +276,7 @@
     display: block;
     padding: var(--ulvia-official-spacing-md, 1rem);
     color: var(--ulvia-official-text-muted, #68766f);
-    font-size: var(--ulvia-official-font-size-sm, .875rem);
+    font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     text-align: center;
 }
 
@@ -280,10 +291,10 @@
 
 :host([size="sm"]) {
     --lookup-control-height: var(--ulvia-official-control-height-sm, 2.25rem);
-    --lookup-font-size: var(--ulvia-official-font-size-sm, .875rem);
+    --lookup-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     --lookup-input-height: 1.75rem;
     --lookup-chip-height: 1.625rem;
-    --lookup-chip-font-size: var(--ulvia-official-font-size-xs, .75rem);
+    --lookup-chip-font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     --lookup-chip-action-size: 1.5rem;
     --lookup-option-height: 2.25rem;
 }

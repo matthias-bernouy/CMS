@@ -4,20 +4,59 @@
     container-type: inline-size;
 }
 
-[part="grid"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--ulvia-official-grid-gap); align-items: stretch; }
-:host([columns="1"]) [part="grid"] { grid-template-columns: minmax(0, 1fr); }
-:host([columns="2"]) [part="grid"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-:host([columns="3"]) [part="grid"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-:host([columns="4"]) [part="grid"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-:host([columns="5"]) [part="grid"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-:host([columns="6"]) [part="grid"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-:host([align="start"]) [part="grid"] { align-items: start; }
-:host([align="center"]) [part="grid"] { align-items: center; }
-:host([align="end"]) [part="grid"] { align-items: end; }
-:host([gap="none"]) { --ulvia-official-grid-gap: 0rem; }
-:host([gap="sm"]) { --ulvia-official-grid-gap: var(--ulvia-official-spacing-sm, .75rem); }
-:host([gap="md"]) { --ulvia-official-grid-gap: var(--ulvia-official-spacing-md, 1rem); }
-:host([gap="xl"]) { --ulvia-official-grid-gap: var(--ulvia-official-spacing-xl, 2rem); }
+[part="grid"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: var(--ulvia-official-grid-gap);
+    align-items: stretch;
+}
+:host([columns="1"]) [part="grid"] {
+    grid-template-columns: minmax(0, 1fr);
+}
+:host([columns="2"]) [part="grid"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+:host([columns="3"]) [part="grid"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+:host([columns="4"]) [part="grid"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+:host([columns="5"]) [part="grid"] {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+:host([columns="6"]) [part="grid"] {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+:host([align="start"]) [part="grid"] {
+    align-items: start;
+}
+:host([align="center"]) [part="grid"] {
+    align-items: center;
+}
+:host([align="end"]) [part="grid"] {
+    align-items: end;
+}
+:host([gap="none"]) {
+    --ulvia-official-grid-gap: 0rem;
+}
+:host([gap="sm"]) {
+    --ulvia-official-grid-gap: var(--ulvia-official-spacing-sm, 0.75rem);
+}
+:host([gap="md"]) {
+    --ulvia-official-grid-gap: var(--ulvia-official-spacing-md, 1rem);
+}
+:host([gap="xl"]) {
+    --ulvia-official-grid-gap: var(--ulvia-official-spacing-xl, 2rem);
+}
 
-@container (max-width: 48rem) { :host([columns]:not([columns="1"])) [part="grid"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@container (max-width: 30rem) { :host([columns]) [part="grid"] { grid-template-columns: minmax(0, 1fr); } }
+@container (max-width: 48rem) {
+    :host([columns]:not([columns="1"])) [part="grid"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@container (max-width: 30rem) {
+    :host([columns]) [part="grid"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

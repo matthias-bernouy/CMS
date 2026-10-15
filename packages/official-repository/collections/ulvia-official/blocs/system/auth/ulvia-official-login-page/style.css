@@ -4,11 +4,30 @@
     min-height: 100svh;
     color: var(--ulvia-official-text-primary, #17211d);
     background:
-        radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--ulvia-official-primary-subtle, #e4f4ee) 82%, transparent) 0, transparent 32rem),
-        radial-gradient(circle at 88% 92%, color-mix(in srgb, var(--ulvia-official-info-subtle, #eef7ff) 78%, transparent) 0, transparent 28rem),
+        radial-gradient(
+            circle at 12% 8%,
+            color-mix(in srgb, var(--ulvia-official-primary-subtle, #e4f4ee) 82%, transparent) 0,
+            transparent 32rem
+        ),
+        radial-gradient(
+            circle at 88% 92%,
+            color-mix(in srgb, var(--ulvia-official-info-subtle, #eef7ff) 78%, transparent) 0,
+            transparent 28rem
+        ),
         var(--ulvia-official-background-subtle, #f3f7f5);
-    font-family: var(--ulvia-official-font-family-main, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    font-family: var(
+        --ulvia-official-font-family-main,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif
+    );
 }
 
-[part="page"] { min-height: 100svh; }
-::slotted(ulvia-official-cover) { min-height: 100svh; }
+[part="page"] {
+    min-height: 100svh;
+}
+::slotted(ulvia-official-cover) {
+    min-height: 100svh;
+}

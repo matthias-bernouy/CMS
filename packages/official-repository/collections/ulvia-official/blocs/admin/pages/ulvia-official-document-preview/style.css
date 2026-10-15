@@ -7,7 +7,7 @@
 [part="preview"] {
     overflow: clip;
     border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c9d5d0);
-    border-radius: var(--ulvia-official-radius-lg, .75rem);
+    border-radius: var(--ulvia-official-radius-lg, 0.75rem);
     background: var(--ulvia-official-background-base, #fff);
 }
 
@@ -20,5 +20,7 @@
 }
 
 @container (max-width: 36rem) {
-    [part="frame"] { min-height: 20rem; }
+    [part="frame"] {
+        min-height: 20rem;
+    }
 }

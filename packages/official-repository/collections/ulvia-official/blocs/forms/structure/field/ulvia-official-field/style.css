@@ -10,7 +10,7 @@
 [part="field"] {
     display: grid;
     min-width: 0;
-    gap: var(--ulvia-official-spacing-xs, .5rem);
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
 }
 
 [part="heading"] {
@@ -18,20 +18,20 @@
     min-width: 0;
     align-items: center;
     justify-content: space-between;
-    gap: var(--ulvia-official-spacing-sm, .75rem);
+    gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 
 [part="heading-actions"] {
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: var(--ulvia-official-spacing-xs, .5rem);
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
 }
 
 ::slotted(label[slot="field-label"]) {
     min-width: 0;
     cursor: pointer;
-    font-size: var(--ulvia-official-font-size-sm, .875rem);
+    font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     line-height: var(--ulvia-official-line-height-snug, 1.35);
 }
@@ -43,7 +43,7 @@
 
 ::slotted([slot="field-description"]),
 ::slotted([slot="field-error"]) {
-    font-size: var(--ulvia-official-font-size-sm, .875rem);
+    font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
 
@@ -66,12 +66,12 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    padding-inline: var(--ulvia-official-spacing-sm, .75rem);
+    padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
     border: 1px solid color-mix(in srgb, var(--ulvia-official-primary, #086c55) 30%, transparent);
     border-radius: var(--ulvia-official-radius-full, 999px);
     color: var(--ulvia-official-on-primary-subtle, #075642);
     background: var(--ulvia-official-primary-subtle, #dff3ed);
-    font-size: var(--ulvia-official-font-size-xs, .75rem);
+    font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
     white-space: nowrap;
 }
@@ -89,9 +89,9 @@
     min-height: 2.25rem;
     align-items: center;
     box-sizing: border-box;
-    padding: var(--ulvia-official-spacing-xs, .5rem) var(--ulvia-official-spacing-sm, .75rem);
-    border-inline-start: .25rem solid var(--ulvia-official-danger-border, #b42318);
-    border-radius: var(--ulvia-official-radius-sm, .375rem);
+    padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem);
+    border-inline-start: 0.25rem solid var(--ulvia-official-danger-border, #b42318);
+    border-radius: var(--ulvia-official-radius-sm, 0.375rem);
     color: var(--ulvia-official-danger, #b42318);
     background: color-mix(in srgb, var(--ulvia-official-danger-subtle, #fef3f2) 82%, transparent);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
@@ -104,7 +104,8 @@
 :host([invalid]) {
     --form-control-border-color: var(--ulvia-official-danger-border, #b42318);
     --form-control-border-width: var(--ulvia-official-border-width-strong, 2px);
-    --form-control-invalid-shadow: 0 0 0 3px color-mix(in srgb, var(--ulvia-official-danger-border, #b42318) 22%, transparent);
+    --form-control-invalid-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--ulvia-official-danger-border, #b42318) 22%, transparent);
 }
 
 :host([invalid]) ::slotted(label[slot="field-label"]) {

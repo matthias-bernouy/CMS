@@ -23,7 +23,15 @@
     object-position: var(--ulvia-official-image-position);
 }
 
-:host([ratio="square"]) { --ulvia-official-image-ratio: 1; }
-:host([ratio="landscape"]) { --ulvia-official-image-ratio: 16 / 9; }
-:host([ratio="portrait"]) { --ulvia-official-image-ratio: 4 / 5; }
-:host([fit="contain"]) { --ulvia-official-image-fit: contain; }
+:host([ratio="square"]) {
+    --ulvia-official-image-ratio: 1;
+}
+:host([ratio="landscape"]) {
+    --ulvia-official-image-ratio: 16 / 9;
+}
+:host([ratio="portrait"]) {
+    --ulvia-official-image-ratio: 4 / 5;
+}
+:host([fit="contain"]) {
+    --ulvia-official-image-fit: contain;
+}

@@ -9,8 +9,18 @@
     line-height: var(--ulvia-official-line-height-relaxed, 1.7);
 }
 
-[part="prose"] { max-width: var(--ulvia-official-prose-measure); }
-:host([measure="narrow"]) { --ulvia-official-prose-measure: 48ch; }
-:host([measure="wide"]) { --ulvia-official-prose-measure: 78ch; }
-:host([size="sm"]) { --ulvia-official-prose-size: var(--ulvia-official-font-size-sm, .875rem); }
-:host([size="lg"]) { --ulvia-official-prose-size: var(--ulvia-official-font-size-lg, 1.125rem); }
+[part="prose"] {
+    max-width: var(--ulvia-official-prose-measure);
+}
+:host([measure="narrow"]) {
+    --ulvia-official-prose-measure: 48ch;
+}
+:host([measure="wide"]) {
+    --ulvia-official-prose-measure: 78ch;
+}
+:host([size="sm"]) {
+    --ulvia-official-prose-size: var(--ulvia-official-font-size-sm, 0.875rem);
+}
+:host([size="lg"]) {
+    --ulvia-official-prose-size: var(--ulvia-official-font-size-lg, 1.125rem);
+}

@@ -13,10 +13,26 @@
     padding: var(--cover-spacing);
 }
 
-[part="content"] { display: grid; flex: 1; align-items: center; }
-:host([height="content"]) { --cover-height: auto; }
-:host([height="viewport"]) { --cover-height: 100svh; }
-:host([align="start"]) [part="content"] { align-items: start; }
-:host([align="end"]) [part="content"] { align-items: end; }
-:host([spacing="sm"]) { --cover-spacing: var(--ulvia-official-spacing-sm, .75rem); }
-:host([spacing="md"]) { --cover-spacing: var(--ulvia-official-spacing-md, 1rem); }
+[part="content"] {
+    display: grid;
+    flex: 1;
+    align-items: center;
+}
+:host([height="content"]) {
+    --cover-height: auto;
+}
+:host([height="viewport"]) {
+    --cover-height: 100svh;
+}
+:host([align="start"]) [part="content"] {
+    align-items: start;
+}
+:host([align="end"]) [part="content"] {
+    align-items: end;
+}
+:host([spacing="sm"]) {
+    --cover-spacing: var(--ulvia-official-spacing-sm, 0.75rem);
+}
+:host([spacing="md"]) {
+    --cover-spacing: var(--ulvia-official-spacing-md, 1rem);
+}

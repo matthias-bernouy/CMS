@@ -16,6 +16,7 @@
             "**/*.mts",
             "**/*.cts",
             "packages/official-repository/**/*.json",
+            "packages/official-repository/**/*.css",
             "!!packages/features/cms-content/src/runtime-assets/generated/*.js"
         ]
     },
