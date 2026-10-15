@@ -1,7 +1,7 @@
 <section
     cms-query="ulvia.cms.theme:get as collectionTheme"
     cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia-official-collection"},"profileId":{"from":"state","key":"@param:ulvia-official-theme-profile","optional":true},"mode":{"from":"state","key":"@param:ulvia-official-theme-mode","optional":true},"tokenId":{"from":"state","key":"@param:ulvia-official-theme-token","optional":true},"search":{"from":"state","key":"@param:ulvia-official-theme-search","optional":true}}'
-    cms-query-listen="@param:ulvia-official-collection @param:ulvia-official-theme-profile @param:ulvia-official-theme-mode @param:ulvia-official-theme-token @param:ulvia-official-theme-search"
+    cms-query-listen="@param:ulvia-official-collection @param:ulvia-official-theme-profile @param:ulvia-official-theme-mode @param:ulvia-official-theme-token @param:ulvia-official-theme-search @page:ulvia-official-theme-mutation/lastSuccess/requestId"
 >
     <p role="status" aria-live="polite" cms-condition="collectionTheme.activity === 'fetching'">
         {{ cms.i18n.ulvia-official.ui-working }}
@@ -79,7 +79,7 @@
                 <form
                     slot="items"
                     cms-condition="collectionTheme.data.profileActive === false" cms-mutation="ulvia.cms.theme:activate as activatedTheme"
-                    cms-mutation-invalidates="collectionTheme"
+                    cms-sync="@page:ulvia-official-theme-mutation"
                 >
                     <input
                         type="hidden"
@@ -147,7 +147,7 @@
                     </header>
                     <form
                         slot="items" cms-mutation="ulvia.cms.theme:save-token as savedThemeToken"
-                        cms-mutation-invalidates="collectionTheme"
+                        cms-sync="@page:ulvia-official-theme-mutation"
                         cms-mutation-reset="false"
                     >
                         <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
@@ -198,7 +198,7 @@
                     <form
                         slot="items"
                         cms-condition="collectionTheme.data.token.overridden" cms-mutation="ulvia.cms.theme:reset-token as resetThemeToken"
-                        cms-mutation-invalidates="collectionTheme"
+                        cms-sync="@page:ulvia-official-theme-mutation"
                     >
                         <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
                         <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">

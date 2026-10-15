@@ -1,7 +1,7 @@
 <ulvia-official-admin-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-users }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-manage-cms-members-administrator-access-and-sign-in-methods }}</p>
-        <section id="access-overview" slot="content" cms-query="ulvia.cms.access:overview as access" cms-query-input='{"limit":{"from":"literal","value":100}}'>
+        <section id="access-overview" slot="content" cms-query="ulvia.cms.access:overview as access" cms-query-input='{"limit":{"from":"literal","value":100}}' cms-query-listen="@page:ulvia-official-access-mutation/lastSuccess/requestId">
             <p role="status" aria-live="polite" cms-condition="access.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-loading-access-configuration }}</p>
             <div cms-match="access.outcome.kind">
                 <span cms-case='"none"' hidden></span>
@@ -21,7 +21,7 @@
                                     </ulvia-official-cluster>
                                     <p>{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }}</p><small>{{ cms.i18n.ulvia-official.ui-last-seen }} {{ user.lastSeenAt }}</small>
                                 </header>
-                                <form slot="items" cms-condition="user.administrator === false" cms-mutation="ulvia.cms.access:set-administrator as mutation" cms-mutation-invalidates="access">
+                                <form slot="items" cms-condition="user.administrator === false" cms-mutation="ulvia.cms.access:set-administrator as mutation" cms-sync="@page:ulvia-official-access-mutation">
                                     <input type="hidden" name="sub" value="{{ user.sub }}"><input type="hidden" name="enabled" value="true" cms-form-value-type="boolean"><input type="hidden" name="expectedRevision" value="{{ user.administratorRevision }}" cms-form-value-type="number">
                                     <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-make-administrator }}</button></ulvia-official-action><p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">{{ cms.i18n.ulvia-official.ui-the-administrator-grant-changed-reload-and-retry }}</p>
 
@@ -39,7 +39,7 @@
 <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
 </div>
 </form>
-                                <form slot="items" cms-condition="user.administrator" cms-mutation="ulvia.cms.access:set-administrator as mutation" cms-mutation-invalidates="access">
+                                <form slot="items" cms-condition="user.administrator" cms-mutation="ulvia.cms.access:set-administrator as mutation" cms-sync="@page:ulvia-official-access-mutation">
                                     <input type="hidden" name="sub" value="{{ user.sub }}"><input type="hidden" name="enabled" value="false" cms-form-value-type="boolean"><input type="hidden" name="expectedRevision" value="{{ user.administratorRevision }}" cms-form-value-type="number">
                                     <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-remove-administrator }}</button></ulvia-official-action><p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">{{ cms.i18n.ulvia-official.ui-your-own-or-protected-grant-cannot-be-removed }}</p>
 
@@ -57,7 +57,7 @@
 <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
 </div>
 </form>
-                                <form slot="items" cms-mutation="ulvia.cms.access:delete-user as mutation" cms-mutation-invalidates="access">
+                                <form slot="items" cms-mutation="ulvia.cms.access:delete-user as mutation" cms-sync="@page:ulvia-official-access-mutation">
                                     <input type="hidden" name="sub" value="{{ user.sub }}"><ulvia-official-action variant="ghost" tone="danger" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-delete-member }}</button></ulvia-official-action><p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">{{ cms.i18n.ulvia-official.ui-protected-members-and-the-current-account-cannot-be-deleted }}</p>
 
 <div cms-match="mutation.outcome.kind">
@@ -79,7 +79,7 @@
                     <header><h2>{{ cms.i18n.ulvia-official.ui-login-providers }}</h2><p>{{ cms.i18n.ulvia-official.ui-choose-which-configured-identity-methods-are-available-on-the-administration-sign-in-page }}</p></header>
                     <ulvia-official-grid gap="md" role="list">
                         <ulvia-official-surface slot="items" cms-repeat="access.data.loginProviders as provider" appearance="outlined" padding="lg" role="listitem">
-                            <form slot="content" cms-mutation="ulvia.cms.access:update-login-provider as mutation" cms-mutation-invalidates="access">
+                            <form slot="content" cms-mutation="ulvia.cms.access:update-login-provider as mutation" cms-sync="@page:ulvia-official-access-mutation">
                                 <input type="hidden" name="providerId" value="{{ provider.id }}"><input type="hidden" name="expectedRevision" value="{{ provider.revision }}" cms-form-value-type="number">
                                 <ulvia-official-field label-position="top" cms-condition="provider.kind === 'oidc'"><span slot="label">{{ cms.i18n.ulvia-official.ui-display-name }}</span><ulvia-official-input slot="control"><input type="text" name="displayName" value="{{ provider.displayName }}" maxlength="160" aria-label="{{ cms.i18n.ulvia-official.ui-provider-display-name }}" required></ulvia-official-input></ulvia-official-field>
                                 <p cms-condition="provider.kind === 'local'"><strong>{{ cms.i18n.ulvia-official.ui-display-name-61cee3ef }}</strong> {{ provider.displayName }}</p>

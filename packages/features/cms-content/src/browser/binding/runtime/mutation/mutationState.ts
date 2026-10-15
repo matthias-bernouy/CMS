@@ -1,7 +1,7 @@
 import type { Scope } from "../../core/scope";
 import type { QueryOutcome } from "../query/queryState";
 
-export type MutationSuccess = {
+type MutationSuccess = {
     readonly requestId: string;
     readonly status: number;
     readonly data: unknown;

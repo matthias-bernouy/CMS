@@ -8,7 +8,7 @@
         slot="content"
         cms-query="ulvia.cms.collections:get as collection"
         cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia-official-collection"}}'
-        cms-query-listen="@param:ulvia-official-collection"
+        cms-query-listen="@param:ulvia-official-collection @page:ulvia-official-collection-configuration-mutation/lastSuccess/requestId"
     >
         <div cms-condition="collection.activity === 'fetching'">
             {{ cms.i18n.ulvia-official.ui-reading-collection-details }}
@@ -76,7 +76,7 @@
                 >
                     <form
                         slot="content" cms-mutation="ulvia.cms.collections:update-configuration as mutation"
-                        cms-mutation-invalidates="collection"
+                        cms-sync="@page:ulvia-official-collection-configuration-mutation"
                         cms-mutation-reset="false"
                     >
                         <input type="hidden" name="collectionId" value="{{ collection.data.collectionId }}">

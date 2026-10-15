@@ -20,7 +20,7 @@
 <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
 </div>
 </form>
-            <form slot="content" hidden cms-mutation="ulvia.cms.files:workspace.upload.complete as fileUploadComplete" cms-mutation-invalidates="workspace">
+            <form slot="content" hidden cms-mutation="ulvia.cms.files:workspace.upload.complete as fileUploadComplete" cms-sync="@page:ulvia-official-files-mutation">
 <div cms-match="fileUploadComplete.outcome.kind">
 <span cms-case='"none"' hidden></span>
 <span cms-case='"success"' hidden></span>
@@ -43,7 +43,7 @@
         </ulvia-official-file-upload>
     </ulvia-official-surface>
 
-    <section id="file-library" slot="items" cms-query="ulvia.cms.files:workspace.get as workspace" cms-query-input='{"offset":{"from":"literal","value":0},"limit":{"from":"literal","value":100}}'>
+    <section id="file-library" slot="items" cms-query="ulvia.cms.files:workspace.get as workspace" cms-query-input='{"offset":{"from":"literal","value":0},"limit":{"from":"literal","value":100}}' cms-query-listen="@page:ulvia-official-files-mutation/lastSuccess/requestId">
         <div role="status" aria-live="polite" cms-condition="workspace.activity === 'fetching'">
             <h2>{{ cms.i18n.ulvia-official.ui-loading-files }}</h2>
         </div>
@@ -73,7 +73,7 @@
                                 <p cms-condition="file.visibility === 'private'">{{ cms.i18n.ulvia-official.ui-private }}</p>
                                 <p cms-condition="file.visibility === 'public'">{{ cms.i18n.ulvia-official.ui-public }}</p>
                             </header>
-                            <form slot="items" cms-mutation="ulvia.cms.files:workspace.files.update as mutation" cms-mutation-invalidates="workspace" cms-mutation-reset="false">
+                            <form slot="items" cms-mutation="ulvia.cms.files:workspace.files.update as mutation" cms-sync="@page:ulvia-official-files-mutation" cms-mutation-reset="false">
                                 <input type="hidden" name="fileId" value="{{ file.fileId }}">
                                 <ulvia-official-field label-position="top">
                                     <label slot="label" for="file-name-{{ file.fileId }}">{{ cms.i18n.ulvia-official.ui-save-name }}</label>
@@ -114,7 +114,7 @@
 <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
 </div>
 </form>
-                                <form slot="content" hidden cms-mutation="ulvia.cms.files:workspace.upload.complete as fileUploadComplete" cms-mutation-invalidates="workspace">
+                                <form slot="content" hidden cms-mutation="ulvia.cms.files:workspace.upload.complete as fileUploadComplete" cms-sync="@page:ulvia-official-files-mutation">
 <div cms-match="fileUploadComplete.outcome.kind">
 <span cms-case='"none"' hidden></span>
 <span cms-case='"success"' hidden></span>
@@ -158,7 +158,7 @@
                                     <output slot="content" name="file-link-error-label" hidden>{{ cms.i18n.ulvia-official.ui-private-file-could-not-be-opened }}</output>
                                     <output slot="content" name="file-link-error" role="alert"></output>
                                 </ulvia-official-file-link>
-                                <form slot="items" cms-condition="file.visibility === 'private'" cms-mutation="ulvia.cms.files:workspace.files.set-visibility as mutation" cms-mutation-invalidates="workspace">
+                                <form slot="items" cms-condition="file.visibility === 'private'" cms-mutation="ulvia.cms.files:workspace.files.set-visibility as mutation" cms-sync="@page:ulvia-official-files-mutation">
                                     <input type="hidden" name="fileId" value="{{ file.fileId }}">
                                     <input type="hidden" name="visibility" value="public">
                                     <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-publish }}</button></ulvia-official-action>
@@ -174,7 +174,7 @@
 <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
 </div>
 </form>
-                                <form slot="items" cms-condition="file.visibility === 'public'" cms-mutation="ulvia.cms.files:workspace.files.set-visibility as mutation" cms-mutation-invalidates="workspace">
+                                <form slot="items" cms-condition="file.visibility === 'public'" cms-mutation="ulvia.cms.files:workspace.files.set-visibility as mutation" cms-sync="@page:ulvia-official-files-mutation">
                                     <input type="hidden" name="fileId" value="{{ file.fileId }}">
                                     <input type="hidden" name="visibility" value="private">
                                     <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-make-private }}</button></ulvia-official-action>
@@ -194,7 +194,7 @@
                             <details slot="items">
                                 <summary>{{ cms.i18n.ulvia-official.ui-delete }}</summary>
                                 <p>{{ cms.i18n.ulvia-official.ui-deleting-a-file-removes-all-of-its-generations }}</p>
-                                <form cms-mutation="ulvia.cms.files:workspace.files.delete as mutation" cms-mutation-invalidates="workspace">
+                                <form cms-mutation="ulvia.cms.files:workspace.files.delete as mutation" cms-sync="@page:ulvia-official-files-mutation">
                                     <input type="hidden" name="fileId" value="{{ file.fileId }}">
                                     <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">{{ cms.i18n.ulvia-official.ui-reload-this-folder-before-retrying }}</p>
                                     <ulvia-official-action variant="filled" tone="danger" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-permanently-delete }}</button></ulvia-official-action>

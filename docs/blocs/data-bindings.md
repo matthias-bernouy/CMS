@@ -103,14 +103,17 @@ whose changes invalidate and rerun the query:
 <section
   cms-query="catalog:products.list as products"
   cms-query-input='{"category":{"from":"state","key":"@param:shop-category"}}'
-  cms-query-listen="@param:shop-category @page:shop-products-revision"
+  cms-query-listen="@param:shop-category @page:shop-product-mutation/lastSuccess/requestId"
 >…</section>
 ```
 
 A listener does not have to be an input. This permits an explicit revision or
 invalidation state to refresh a query without changing its logical input.
+Appending a slash-delimited path listens only to that JSON projection. Changes
+elsewhere in the state do not rerun the query. Projected paths are validated
+against the collection's declared state schema.
 Conversely, a required input that is initially absent stays in `waiting` until
-an explicit listener, refresh policy, or targeted reload triggers the query.
+an explicit listener or refresh policy triggers the query.
 `cms-query-refresh` may additionally contain `focus`, `reconnect`, and one
 bounded interval such as `interval(5s)`. These policies do not change the
 capability or its input.
@@ -171,9 +174,8 @@ starting additional requests:
 `cms-queries` accepts one to sixteen unique `@scope:key as alias` imports. It
 may coexist with one primary `cms-query`; the primary query and every imported
 alias then share one renderer. Query input, listeners, refresh policies,
-publication through `cms-sync`, and targeted mutation reloads still belong only
-to the primary query. An imports-only boundary never performs HTTP or publishes
-a composite state.
+publication through `cms-sync` still belongs only to the primary query. An
+imports-only boundary never performs HTTP or publishes a composite state.
 
 Both query attributes define a rendering boundary. They are therefore invalid
 on HTML void elements and on the CMS-managed atomic `svg` element. Put the
@@ -198,10 +200,13 @@ activation. Named controls and optional `cms-mutation-input` descriptors form
 the logical input.
 
 ```html
+<section
+  cms-query="newsletter:subscriptions.list as subscriptions"
+  cms-query-listen="@page:newsletter-form/lastSuccess/requestId"
+>…</section>
+
 <form
   cms-mutation="newsletter:subscriptions.create as result"
-  cms-mutation-invalidates="subscriptions"
-  cms-mutation-idempotency="auto"
   cms-mutation-reset="true"
   cms-sync="@page:newsletter-form"
 >
@@ -230,20 +235,25 @@ cannot submit while a required state input is absent. Binary values come from
 native file controls and switch the request to `FormData`; the selected
 capability must admit that transport.
 
-`cms-mutation-invalidates` contains one to eight query aliases. After a
-successful mutation, only those live queries are refreshed. The mutation result
-is never silently merged into query data. `cms-mutation-reset` controls native
-form reset, `cms-mutation-redirect` and `cms-mutation-redirect-param` permit
-same-origin success navigation, and `cms-mutation-idempotency="auto"` reuses one
-key while retrying an unchanged submission.
+Query refreshes use synchronized state rather than query aliases. A form
+publishes a new `lastSuccess` containing `requestId`, `status`, and `data` only
+after a successful command. Listening to `lastSuccess/requestId` therefore
+ignores input edits, submission activity, and failed attempts. The mutation
+result is never silently merged into query data.
+
+`cms-mutation-reset` controls native form reset. `cms-mutation-redirect` and
+`cms-mutation-redirect-param` permit same-origin success navigation. The browser
+automatically reuses one opaque attempt key while retrying an unchanged
+submission. The Gateway forwards it only when the admitted command declares
+keyed idempotency; natural and non-idempotent commands ignore it.
 
 Like queries, mutations expose `activity`, retained `data`, resolved `input`,
 and the exhaustive `outcome` union. Provider errors remain distinct from
 transport/protocol failures and are checked against the selected contract.
 
 When a form also declares `cms-sync`, it publishes its lifecycle, current
-serialized `input`, successful result `data`, and `dirty` flag. URL parameter
-state is forbidden because this is structured state.
+serialized `input`, successful result `data`, `lastSuccess`, and `dirty` flag.
+URL parameter state is forbidden because this is structured state.
 
 ## Rendering
 

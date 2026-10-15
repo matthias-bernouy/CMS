@@ -38,7 +38,7 @@
 </div>
 </form>
         </ulvia-official-surface>
-        <section id="pages-list" slot="content" cms-query="ulvia.cms.pages:list as pages" cms-query-input="{&quot;limit&quot;:{&quot;from&quot;:&quot;literal&quot;,&quot;value&quot;:100}}">
+        <section id="pages-list" slot="content" cms-query="ulvia.cms.pages:list as pages" cms-query-input="{&quot;limit&quot;:{&quot;from&quot;:&quot;literal&quot;,&quot;value&quot;:100}}" cms-query-listen="@page:ulvia-official-pages-mutation/lastSuccess/requestId">
             <div role="status" aria-live="polite" cms-condition="pages.activity === 'fetching'">
                 <h2>{{ cms.i18n.ulvia-official.ui-loading-pages }}</h2>
                 <p>{{ cms.i18n.ulvia-official.ui-the-latest-page-catalogue-is-being-read-from-the-provider }}</p>
@@ -67,7 +67,7 @@
                                     <small>{{ cms.i18n.ulvia-official.ui-revision }} {{ page.revision }}</small>
                                 </header>
                                 <ulvia-official-action slot="items" variant="filled" tone="secondary" size="sm"><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?ulvia-official-page-id={{ page.id }}">{{ cms.i18n.ulvia-official.ui-open-page }}</a></ulvia-official-action>
-                                <form slot="items" cms-mutation="ulvia.cms.pages:rename as mutation" cms-mutation-invalidates="pages">
+                                <form slot="items" cms-mutation="ulvia.cms.pages:rename as mutation" cms-sync="@page:ulvia-official-pages-mutation">
                                     <input type="hidden" name="id" value="{{ page.id }}">
                                     <input type="hidden" name="expectedRevision" value="{{ page.revision }}" cms-form-value-type="number">
                                     <ulvia-official-field label-position="top">

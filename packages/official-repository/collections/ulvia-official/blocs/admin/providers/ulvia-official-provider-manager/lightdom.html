@@ -1,4 +1,4 @@
-<section cms-query="ulvia.cms.providers:list as providers">
+<section cms-query="ulvia.cms.providers:list as providers" cms-query-listen="@page:ulvia-official-providers-mutation/lastSuccess/requestId">
     <div role="status" aria-live="polite" cms-condition="providers.activity === 'fetching'">
         <h2>{{ cms.i18n.ulvia-official.ui-reading-provider-configuration }}</h2>
     </div>
@@ -59,7 +59,7 @@
                         <form
                             slot="items"
                             cms-condition="installation.status === 'enabled'" cms-mutation="ulvia.cms.providers:set-status as mutation"
-                            cms-mutation-invalidates="providers"
+                            cms-sync="@page:ulvia-official-providers-mutation"
                         >
                             <input type="hidden" name="installationId" value="{{ installation.id }}">
                             <input
@@ -94,7 +94,7 @@
                         <form
                             slot="items"
                             cms-condition="installation.status === 'disabled'" cms-mutation="ulvia.cms.providers:set-status as mutation"
-                            cms-mutation-invalidates="providers"
+                            cms-sync="@page:ulvia-official-providers-mutation"
                         >
                             <input type="hidden" name="installationId" value="{{ installation.id }}">
                             <input
@@ -125,7 +125,7 @@
                             <summary>{{ cms.i18n.ulvia-official.ui-revoke }}</summary>
                             <p>{{ cms.i18n.ulvia-official.ui-revocation-is-terminal-and-deletes-stored-credentials }}</p>
                             <form cms-mutation="ulvia.cms.providers:set-status as mutation"
-                                cms-mutation-invalidates="providers"
+                                cms-sync="@page:ulvia-official-providers-mutation"
                             >
                                 <input type="hidden" name="installationId" value="{{ installation.id }}">
                                 <input
@@ -173,7 +173,7 @@
             <ulvia-official-surface slot="items" appearance="elevated" padding="lg">
                 <form
                     slot="content" cms-mutation="ulvia.cms.providers:replace-selections as mutation"
-                    cms-mutation-invalidates="providers"
+                    cms-sync="@page:ulvia-official-providers-mutation"
                     cms-mutation-reset="false"
                 >
                     <input

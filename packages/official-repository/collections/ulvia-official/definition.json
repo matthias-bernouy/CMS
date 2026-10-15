@@ -237,14 +237,194 @@
         ]
     },
     "states": [
+        {
+            "id": "access-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
         { "id": "collection", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
+        {
+            "id": "collection-catalogue-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "collection-configuration-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "collection-texts-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
         { "id": "digest", "scope": "param", "schema": { "type": "string", "maxLength": 80 } },
+        {
+            "id": "files-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
         { "id": "group", "scope": "param", "schema": { "type": "string", "maxLength": 128 } },
         { "id": "locale", "scope": "param", "schema": { "type": "string", "maxLength": 64 } },
+        {
+            "id": "page-detail-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
         { "id": "page-id", "scope": "param", "schema": { "type": "string", "maxLength": 128 } },
+        {
+            "id": "pages-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "providers-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
         { "id": "publisher", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
         { "id": "repository", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
         { "id": "search", "scope": "param", "schema": { "type": "string", "maxLength": 512 } },
+        {
+            "id": "settings-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "theme-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
         { "id": "theme-mode", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
         { "id": "theme-profile", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
         { "id": "theme-search", "scope": "param", "schema": { "type": "string", "maxLength": 512 } },

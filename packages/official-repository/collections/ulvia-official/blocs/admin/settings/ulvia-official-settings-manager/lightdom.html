@@ -8,6 +8,7 @@
         id="settings-general"
         slot="items"
         cms-query="ulvia.cms.access:overview as settingsAccess"
+        cms-query-listen="@page:ulvia-official-settings-mutation/lastSuccess/requestId"
         cms-query-input='{"limit":{"from":"literal","value":1}}'
     >
         <p role="status" aria-live="polite" cms-condition="settingsAccess.activity === 'fetching'">
@@ -23,7 +24,7 @@
             <ulvia-official-surface cms-case='"success"' appearance="elevated" padding="lg">
                 <form
                     slot="content" cms-mutation="ulvia.cms.access:update-site as savedSite"
-                    cms-mutation-invalidates="settingsAccess settingsLocalization"
+                    cms-sync="@page:ulvia-official-settings-mutation"
                     cms-mutation-reset="false"
                 >
                     <input
@@ -132,6 +133,7 @@
         id="settings-languages"
         slot="items"
         cms-query="ulvia.cms.localization:overview as settingsLocalization"
+        cms-query-listen="@page:ulvia-official-settings-mutation/lastSuccess/requestId"
     >
         <p role="status" aria-live="polite" cms-condition="settingsLocalization.activity === 'fetching'">
             {{ cms.i18n.ulvia-official.ui-working }}
@@ -146,7 +148,7 @@
             <ulvia-official-surface cms-case='"success"' appearance="elevated" padding="lg">
                 <form
                     slot="content" cms-mutation="ulvia.cms.localization:update-languages as savedLanguages"
-                    cms-mutation-invalidates="settingsLocalization settingsAccess"
+                    cms-sync="@page:ulvia-official-settings-mutation"
                     cms-mutation-reset="false"
                 >
                     <input

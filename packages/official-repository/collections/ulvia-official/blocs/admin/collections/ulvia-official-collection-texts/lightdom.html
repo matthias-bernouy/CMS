@@ -1,7 +1,7 @@
 <section
     cms-query="ulvia.cms.localization:get-texts as collectionTexts"
     cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia-official-collection"},"locale":{"from":"state","key":"@param:ulvia-official-locale","optional":true},"group":{"from":"state","key":"@param:ulvia-official-group","optional":true},"search":{"from":"state","key":"@param:ulvia-official-search","optional":true}}'
-    cms-query-listen="@param:ulvia-official-collection @param:ulvia-official-locale @param:ulvia-official-group @param:ulvia-official-search"
+    cms-query-listen="@param:ulvia-official-collection @param:ulvia-official-locale @param:ulvia-official-group @param:ulvia-official-search @page:ulvia-official-collection-texts-mutation/lastSuccess/requestId"
 >
     <p role="status" aria-live="polite" cms-condition="collectionTexts.activity === 'fetching'">
         {{ cms.i18n.ulvia-official.ui-working }}
@@ -80,7 +80,7 @@
                 <form
                     slot="items"
                     cms-repeat="collectionTexts.data.items as text" cms-mutation="ulvia.cms.localization:save-text as savedText"
-                    cms-mutation-invalidates="collectionTexts"
+                    cms-sync="@page:ulvia-official-collection-texts-mutation"
                     cms-mutation-reset="false"
                 >
                     <input type="hidden" name="collectionId" value="{{ collectionTexts.data.collectionId }}">

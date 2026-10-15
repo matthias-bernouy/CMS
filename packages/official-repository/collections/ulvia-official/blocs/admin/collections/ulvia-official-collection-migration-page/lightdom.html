@@ -33,7 +33,6 @@
                         <form
                             slot="items"
                             cms-condition="plan.data.blockedReasons.length === 0" cms-mutation="ulvia.cms.collections:apply-migration as mutation"
-                            cms-mutation-idempotency="auto"
                             cms-mutation-redirect="/admin/collections"
                         >
                             <input
