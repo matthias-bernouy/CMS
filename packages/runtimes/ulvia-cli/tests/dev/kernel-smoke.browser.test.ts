@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 import { runCli } from "../../src/cli";
-import { runKernelSmoke, verifyKernelStateAfterRestart } from "./kernelSmokeFlows";
+import { runKernelSmoke, verifyKernelStateAfterRestart } from "./kernelSmoke/flows";
 
 const smoke = process.env.ULVIA_RUN_KERNEL_SMOKE === "1" ? test : test.skip;
 const PORTS = { kernel: 15_100, mongo: 27_029, repository: 15_102, provider: 5_103 } as const;

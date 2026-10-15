@@ -45,37 +45,6 @@ export async function mutateSettings(page: Page): Promise<void> {
         .waitFor();
 }
 
-export async function mutateProviders(page: Page): Promise<void> {
-    await adminPageLink(page, "providers").click();
-    await page.locator("#provider-installations").waitFor();
-    await page.locator('a[href="#contract-routing"]').click();
-    await page.waitForURL(/#contract-routing$/u);
-    await page.locator("#contract-routing").waitFor();
-    const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.providers/replace-selections")),
-        page.locator('form[cms-mutation^="ulvia.cms.providers:replace-selections "] button[type="submit"]').click(),
-    ]);
-    if (!response.ok()) {
-        throw new Error(`Contract routing flow failed (${response.status()}).`);
-    }
-}
-
-export async function mutateAccess(page: Page): Promise<void> {
-    await adminPageLink(page, "access").click();
-    await page.locator('a[href="#access-login-providers"]').click();
-    await page.waitForURL(/#access-login-providers$/u);
-    const providerForm = page.locator('form[cms-mutation^="ulvia.cms.access:update-login-provider "]').first();
-    await providerForm.getByText("Email & password").waitFor();
-    await providerForm.locator('select[name="enabled"]').selectOption("true");
-    const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.access/update-login-provider")),
-        providerForm.locator('button[type="submit"]').click(),
-    ]);
-    if (!response.ok()) {
-        throw new Error(`Login provider flow failed (${response.status()}).`);
-    }
-}
-
 export async function inspectDiagnostics(page: Page): Promise<void> {
     await adminPageLink(page, "diagnostics").click();
     await page.getByRole("heading", { name: "Diagnostics", exact: true }).waitFor();

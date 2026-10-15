@@ -1,13 +1,9 @@
 import type { Page } from "playwright";
-import {
-    inspectDiagnostics,
-    mutateAccess,
-    mutateProviders,
-    mutateSettings,
-    verifyAdministrationAfterRestart,
-} from "./kernelSmokeAdministration";
-import { mutateFiles, verifyFilesAfterRestart } from "./kernelSmokeFiles";
-import { mutatePages, verifyPublishedPage } from "./kernelSmokePages";
+import { inspectDiagnostics, mutateSettings, verifyAdministrationAfterRestart } from "./administration";
+import { mutateFiles, verifyFilesAfterRestart } from "./files";
+import { deleteSmokePage, verifyPublishedPage } from "./pageLifecycle";
+import { mutatePages } from "./pages";
+import { mutateAccess, mutateProviders } from "./providerAccess";
 
 export async function runKernelSmoke(
     page: Page,
@@ -21,7 +17,7 @@ export async function runKernelSmoke(
     await stage("collections and theme", () => mutateCollections(page));
     await stage("settings", () => mutateSettings(page));
     await stage("provider routing", () => mutateProviders(page));
-    await stage("access", () => mutateAccess(page));
+    await stage("access", () => mutateAccess(page, credentials.adminEmail));
     await stage("diagnostics", () => inspectDiagnostics(page));
 }
 
@@ -36,6 +32,7 @@ export async function verifyKernelStateAfterRestart(
     await stage("persisted collection", () => verifyCollectionAfterRestart(page));
     await stage("persisted administration", () => verifyAdministrationAfterRestart(page, credentials));
     await verifyPublishedPage(page, kernelOrigin);
+    await stage("Page deletion", () => deleteSmokePage(page, kernelOrigin));
 }
 
 async function stage(name: string, operation: () => Promise<void>): Promise<void> {
@@ -135,6 +132,28 @@ async function mutateCollections(page: Page): Promise<void> {
             'form[cms-mutation^="ulvia.cms.theme:save-token "] p[cms-condition*="savedThemeToken.outcome.kind === \'success\'"]',
         )
         .waitFor();
+    const resetTheme = page.locator('form[cms-mutation^="ulvia.cms.theme:reset-token "]');
+    await resetTheme.waitFor();
+    const [resetResponse] = await Promise.all([
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.theme/reset-token")),
+        resetTheme.locator('button[type="submit"]').click(),
+    ]);
+    if (!resetResponse.ok()) {
+        throw new Error(`Theme reset flow failed (${resetResponse.status()}).`);
+    }
+    await page.locator('a[href="#collection-texts"]').click();
+    await page.waitForURL(/#collection-texts$/u);
+    const textForm = page.locator('form[cms-mutation^="ulvia.cms.localization:save-text "]').first();
+    await textForm.waitFor();
+    const textValue = textForm.locator('textarea[name="value"]');
+    await textValue.fill(await textValue.inputValue());
+    const [textResponse] = await Promise.all([
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.localization/save-text")),
+        textForm.locator('button[type="submit"]').click(),
+    ]);
+    if (!textResponse.ok()) {
+        throw new Error(`Collection text flow failed (${textResponse.status()}).`);
+    }
     await page.getByRole("link", { name: /^(Back to Collections|Retour aux Collections)$/u }).click();
 }
 
