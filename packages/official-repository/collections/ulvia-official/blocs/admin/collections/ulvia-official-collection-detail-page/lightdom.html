@@ -25,12 +25,29 @@
             </div>
             <div cms-case='"success"'>
                 <ulvia-official-stack gap="xl">
-                    <header slot="items">
+                    <header id="collection-overview" slot="items">
                         <p>{{ collection.data.publisherId }} {{ collection.data.version }}</p>
                         <h2>{{ collection.data.name }}</h2>
                         <p>{{ collection.data.description }}</p>
                         <code>{{ collection.data.digest }}</code>
                     </header>
+                    <ulvia-official-route-tabs slot="items" label="{{ cms.i18n.ulvia-official.ui-collection-details }}" appearance="pills" size="sm">
+                        <ulvia-official-route-tab slot="items"
+                            ><a href="#collection-overview">{{ cms.i18n.ulvia-official.ui-collection-details }}</a></ulvia-official-route-tab
+                        >
+                        <ulvia-official-route-tab slot="items"
+                            ><a href="#collection-blocks">{{ cms.i18n.ulvia-official.ui-blocks }}</a></ulvia-official-route-tab
+                        >
+                        <ulvia-official-route-tab slot="items" cms-condition="collection.data.configurable"
+                            ><a href="#collection-configuration">{{ cms.i18n.ulvia-official.ui-collection-configuration }}</a></ulvia-official-route-tab
+                        >
+                        <ulvia-official-route-tab slot="items" cms-condition="collection.data.themeTokenCount > 0"
+                            ><a href="#collection-theme">{{ cms.i18n.ulvia-official.ui-theme-tokens }}</a></ulvia-official-route-tab
+                        >
+                        <ulvia-official-route-tab slot="items" cms-condition="collection.data.textCount > 0"
+                            ><a href="#collection-texts">{{ cms.i18n.ulvia-official.ui-texts }}</a></ulvia-official-route-tab
+                        >
+                    </ulvia-official-route-tabs>
                     <ulvia-official-grid slot="items" gap="md">
                         <ulvia-official-surface slot="items" appearance="subtle" padding="md">
                             <strong slot="content">{{ collection.data.blocCount }}</strong>
@@ -54,7 +71,7 @@
                         </ulvia-official-surface>
                     </ulvia-official-grid>
 
-                    <ulvia-official-surface slot="items" appearance="outlined" padding="lg">
+                    <ulvia-official-surface id="collection-blocks" slot="items" appearance="outlined" padding="lg">
                         <ulvia-official-stack slot="content" gap="md">
                             <h2 slot="items">{{ cms.i18n.ulvia-official.ui-blocks }}</h2>
                             <article slot="items" cms-repeat="collection.data.blocs as bloc">
@@ -69,7 +86,7 @@
                         </ulvia-official-stack>
                     </ulvia-official-surface>
 
-                    <div slot="items" cms-condition="collection.data.configurable">
+                    <div id="collection-configuration" slot="items" cms-condition="collection.data.configurable">
                         <ulvia-official-surface appearance="outlined" padding="lg">
                             <form
                                 slot="content"
@@ -123,12 +140,12 @@
                         </ulvia-official-surface>
                     </div>
 
-                    <div slot="items" cms-condition="collection.data.themeTokenCount > 0">
+                    <div id="collection-theme" slot="items" cms-condition="collection.data.themeTokenCount > 0">
                         <ulvia-official-surface appearance="outlined" padding="lg">
                             <ulvia-official-collection-theme slot="content"></ulvia-official-collection-theme>
                         </ulvia-official-surface>
                     </div>
-                    <div slot="items" cms-condition="collection.data.textCount > 0">
+                    <div id="collection-texts" slot="items" cms-condition="collection.data.textCount > 0">
                         <ulvia-official-surface appearance="outlined" padding="lg">
                             <ulvia-official-collection-texts slot="content"></ulvia-official-collection-texts>
                         </ulvia-official-surface>

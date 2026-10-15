@@ -11,7 +11,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
         });
     await page.locator("#new-page-path").fill("/smoke-page");
     await Promise.all([
-        page.waitForURL(/\/admin\/pages\?id=/u),
+        page.waitForURL(/\/admin\/pages\?ulvia-official-page-id=/u),
         page.locator('form[cms-mutation^="ulvia.cms.pages:create "] button[type="submit"]').click(),
     ]);
     await page
@@ -42,7 +42,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
         throw new Error(`Page publication failed (${publishResponse.status()}).`);
     }
     await verifyPublishedPage(page, kernelOrigin);
-    await page.goto(`${kernelOrigin}/admin`);
+    await page.goto(`${kernelOrigin}/admin/pages`);
     await page.locator("#pages-list").waitFor();
 }
 

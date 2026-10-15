@@ -42,13 +42,11 @@ export async function verifyKernelStateAfterRestart(
     await adminPageLink(page, "settings").click();
     await waitUntilEnabled(page, "Save general settings");
     await expectAdminValue(page, "Site name", "Smoke CMS");
-    await page.getByRole("button", { name: "Languages", exact: true }).click();
     await expectAdminValue(page, "Default language", "fr-FR");
 
     await adminPageLink(page, "providers").click();
-    await page.getByRole("heading", { name: "Installations and contract routing" }).waitFor();
-    await page.getByRole("button", { name: "Contract routing" }).click();
-    await page.getByText("Contract implementations loaded.", { exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Providers & contracts", exact: true }).first().waitFor();
+    await page.getByRole("heading", { name: "Contract routing", exact: true }).waitFor();
 
     await adminPageLink(page, "access").click();
     await page.getByText(credentials.adminEmail, { exact: true }).waitFor();
@@ -71,39 +69,42 @@ async function signIn(
         page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click(),
     ]);
     await page
-        .getByRole("heading", { name: "Pages", exact: true })
+        .getByRole("heading", { name: "Dashboard", exact: true })
         .waitFor()
         .catch(async (error) => {
             throw new Error(
                 `${error instanceof Error ? error.message : String(error)}\nURL: ${page.url()}\nPage: ${await page.locator("body").innerText()}`,
             );
         });
+    await adminPageLink(page, "pages").click();
+    await page.getByRole("heading", { name: "Pages", exact: true }).waitFor();
 }
 
 async function mutateCollections(page: Page): Promise<void> {
     await adminPageLink(page, "collections").click();
-    await page.getByRole("heading", { name: "Installed foundations and releases" }).waitFor();
-    await page.getByRole("button", { name: "Repository", exact: true }).click();
+    await page.getByRole("heading", { name: "Installed collections", exact: true }).waitFor();
     await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
+    const installResponse = page.waitForResponse((candidate) =>
+        candidate.url().includes("ulvia.cms.collections/install"),
+    );
     await page.getByRole("button", { name: "Install", exact: true }).click();
-    await page.getByText("Collection installed.", { exact: true }).waitFor();
-    await page.getByRole("button", { name: "Installed", exact: true }).click();
+    if (!(await installResponse).ok()) {
+        throw new Error("Collection installation failed.");
+    }
     const smokeCard = page.getByRole("heading", { name: "smoke-kit", exact: true }).locator("..");
     await smokeCard.getByRole("button", { name: "Manage" }).click();
     await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
-    await page.getByRole("button", { name: /Blocs/u }).click();
     await page.getByText("smoke-kit-card", { exact: true }).waitFor();
-    await page.getByRole("button", { name: /Collections/u }).click();
+    await page.getByRole("link", { name: "Back to Collections", exact: true }).click();
     const officialCard = page.getByRole("heading", { name: "ulvia-official", exact: true }).locator("..");
     await officialCard.getByRole("button", { name: "Manage" }).click();
     await page.getByRole("heading", { name: "Ulvia Official", exact: true }).waitFor();
-    await page.getByRole("button", { name: /Theme/u }).click();
     await page.getByLabel("Search tokens").waitFor();
     const themeValue = page.getByLabel("Light value");
     await themeValue.fill(await themeValue.inputValue());
     await page.getByRole("button", { name: "Save value", exact: true }).click();
     await page.getByText("Theme value saved.", { exact: true }).waitFor();
-    await page.getByRole("button", { name: /Collections/u }).click();
+    await page.getByRole("link", { name: "Back to Collections", exact: true }).click();
 }
 
 async function mutateSettings(page: Page): Promise<void> {
@@ -119,7 +120,6 @@ async function mutateSettings(page: Page): Promise<void> {
         throw new Error(`General settings flow failed (${generalResponse.status()}): ${await generalResponse.text()}`);
     }
     await page.getByText("General settings saved.", { exact: true }).waitFor();
-    await page.getByRole("button", { name: "Languages", exact: true }).click();
     await page.getByLabel("Default language").fill("fr-FR");
     const [languagesResponse] = await Promise.all([
         page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.localization/update-languages")),
@@ -135,11 +135,15 @@ async function mutateSettings(page: Page): Promise<void> {
 
 async function mutateProviders(page: Page): Promise<void> {
     await adminPageLink(page, "providers").click();
-    await page.getByRole("heading", { name: "Installations and contract routing" }).waitFor();
-    await page.getByRole("button", { name: "Contract routing" }).click();
-    await page.getByText("Contract implementations loaded.", { exact: true }).waitFor();
-    await page.getByRole("button", { name: "Save contract routing" }).click();
-    await page.getByText("Contract routing saved.", { exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Providers & contracts", exact: true }).first().waitFor();
+    await page.getByRole("heading", { name: "Contract routing", exact: true }).waitFor();
+    const [response] = await Promise.all([
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.providers/replace-selections")),
+        page.getByRole("button", { name: "Save contract routing" }).click(),
+    ]);
+    if (!response.ok()) {
+        throw new Error(`Contract routing flow failed (${response.status()}).`);
+    }
 }
 
 async function mutateAccess(page: Page): Promise<void> {
