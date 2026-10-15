@@ -11,6 +11,7 @@ import {
     writeSyncValue,
 } from "../../state/SyncState";
 import { projectSyncValue } from "../../state/selectSyncValue";
+import { reportSyncPublicationError } from "../../state/syncDiagnostics";
 import { withFormAcknowledgement } from "./formAcknowledgement";
 import { runFetch } from "./queryFetch";
 import { listenQueryRefresh } from "./queryRefresh";
@@ -195,7 +196,7 @@ export class Query {
                     this.element.ownerDocument,
                 );
             } catch (error) {
-                console.warn("cms-sync could not publish query state", error);
+                reportSyncPublicationError("query", this.element, error);
             }
         }
         this.render();

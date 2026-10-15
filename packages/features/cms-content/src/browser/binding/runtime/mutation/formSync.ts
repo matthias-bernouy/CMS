@@ -1,5 +1,6 @@
 import { parseSyncAttribute, parseSyncSelectionAttribute, writeSyncValue } from "../../state/SyncState";
 import { projectSyncValue } from "../../state/selectSyncValue";
+import { reportSyncPublicationError } from "../../state/syncDiagnostics";
 import type { MutationState } from "./mutationState";
 
 export function publishFormSync(form: HTMLFormElement, state: MutationState, input: unknown, dirty: boolean): void {
@@ -13,6 +14,6 @@ export function publishFormSync(form: HTMLFormElement, state: MutationState, inp
             source: form,
         });
     } catch (error) {
-        console.warn("cms-sync could not publish form state", error);
+        reportSyncPublicationError("mutation", form, error);
     }
 }
