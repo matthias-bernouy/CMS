@@ -43,7 +43,10 @@
                                         >
                                     </ulvia-official-cluster>
                                     <p>{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }}</p>
-                                    <small>{{ cms.i18n.ulvia-official.ui-last-seen }} {{ user.lastSeenAt | dateLong }}</small>
+                                    <small
+                                        >{{ cms.i18n.ulvia-official.ui-last-seen }}
+                                        {{ user.lastSeenAt | dateLong(access.data.site.language) }}</small
+                                    >
                                 </header>
                                 <form
                                     slot="items"
