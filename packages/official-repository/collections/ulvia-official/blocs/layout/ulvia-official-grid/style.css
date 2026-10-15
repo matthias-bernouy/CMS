@@ -60,3 +60,9 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+@media (max-width: 40rem) {
+    :host([columns]) [part="grid"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
