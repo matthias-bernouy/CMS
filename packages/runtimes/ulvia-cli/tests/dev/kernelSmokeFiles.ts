@@ -1,3 +1,4 @@
+import { expect } from "bun:test";
 import type { Locator, Page } from "playwright";
 
 const FIRST_IMAGE = Buffer.from(

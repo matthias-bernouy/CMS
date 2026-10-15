@@ -1,6 +1,16 @@
 import type { Page } from "playwright";
 
 export async function mutatePages(page: Page, kernelOrigin: string): Promise<void> {
+    const createDialog = page.locator("#create-page-dialog");
+    if (await createDialog.evaluate((dialog: HTMLDialogElement) => dialog.open)) {
+        throw new Error("The create Page dialog must be closed on initial render");
+    }
+    await page.locator('button[command="show-modal"][commandfor="create-page-dialog"]').click();
+    await createDialog.evaluate((dialog: HTMLDialogElement) => {
+        if (!dialog.open) {
+            throw new Error("The create Page dialog did not open");
+        }
+    });
     await page
         .locator("#new-page-title")
         .fill("Smoke Page")
@@ -15,7 +25,8 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
         page.locator('form[cms-mutation^="ulvia.cms.pages:create "] button[type="submit"]').click(),
     ]);
     await page
-        .getByRole("heading", { name: "Smoke Page" })
+        .locator("#page-general")
+        .getByRole("heading", { name: "Smoke Page", exact: true })
         .waitFor()
         .catch(async (error) => {
             throw new Error(
@@ -27,7 +38,16 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     if (!detailsResponse.ok()) {
         throw new Error(`Page details update failed (${detailsResponse.status()}).`);
     }
-    await page.getByRole("button", { name: "Add Heading", exact: true }).click();
+    await page.locator('a[href="#page-content"]').click();
+    await page.waitForURL(/#page-content$/u);
+    const addHeading = page.getByRole("button", { name: "Add Heading", exact: true });
+    await addHeading.waitFor();
+    await waitUntilEnabled(addHeading, "Page editor did not become ready");
+    const editorError = page.locator("ulvia-official-page-editor [data-notice][data-error]");
+    if (await editorError.isVisible().catch(() => false)) {
+        throw new Error(`Page editor failed to load at ${page.url()}: ${await editorError.textContent()}`);
+    }
+    await addHeading.click();
     await fillLatestVisibleElementContent(page, "Smoke Page");
     await page.getByRole("button", { name: "Add Heading", exact: true }).click();
     await fillLatestVisibleElementContent(page, "Published through the Kernel.");
@@ -37,6 +57,8 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     if (!saveResponse.ok()) {
         throw new Error(`Page update failed (${saveResponse.status()}).`);
     }
+    await page.locator('a[href="#page-publication"]').click();
+    await page.waitForURL(/#page-publication$/u);
     const publishResponse = await submitPageMutation(page, "publish");
     if (!publishResponse.ok()) {
         throw new Error(`Page publication failed (${publishResponse.status()}).`);
@@ -74,17 +96,18 @@ async function submitPageDetails(page: Page) {
     if (response.ok()) {
         await reload;
         await waitForRevisionChange(revision, initialRevision);
-        const addHeading = page.getByRole("button", { name: "Add Heading", exact: true });
-        await addHeading.waitFor();
-        const deadline = Date.now() + 15_000;
-        while (!(await addHeading.isEnabled()) && Date.now() < deadline) {
-            await page.waitForTimeout(25);
-        }
-        if (!(await addHeading.isEnabled())) {
-            throw new Error("Page editor did not become ready after the details reload");
-        }
     }
     return response;
+}
+
+async function waitUntilEnabled(locator: ReturnType<Page["locator"]>, message: string): Promise<void> {
+    const deadline = Date.now() + 15_000;
+    while (!(await locator.isEnabled().catch(() => false)) && Date.now() < deadline) {
+        await locator.page().waitForTimeout(25);
+    }
+    if (!(await locator.isEnabled().catch(() => false))) {
+        throw new Error(message);
+    }
 }
 
 async function waitForRevisionChange(revision: ReturnType<Page["locator"]>, initialRevision: string): Promise<void> {

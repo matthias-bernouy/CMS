@@ -1,6 +1,13 @@
 import type { Page } from "playwright";
-import { mutatePages, verifyPublishedPage } from "./kernelSmokePages";
+import {
+    inspectDiagnostics,
+    mutateAccess,
+    mutateProviders,
+    mutateSettings,
+    verifyAdministrationAfterRestart,
+} from "./kernelSmokeAdministration";
 import { mutateFiles, verifyFilesAfterRestart } from "./kernelSmokeFiles";
+import { mutatePages, verifyPublishedPage } from "./kernelSmokePages";
 
 export async function runKernelSmoke(
     page: Page,
@@ -8,6 +15,7 @@ export async function runKernelSmoke(
     kernelOrigin: string,
 ): Promise<void> {
     await stage("sign in", () => signIn(page, credentials, kernelOrigin));
+    await stage("admin routes", () => inspectAdminRoutes(page, kernelOrigin));
     await stage("Pages", () => mutatePages(page, kernelOrigin));
     await stage("files", () => mutateFiles(page));
     await stage("collections and theme", () => mutateCollections(page));
@@ -15,16 +23,6 @@ export async function runKernelSmoke(
     await stage("provider routing", () => mutateProviders(page));
     await stage("access", () => mutateAccess(page));
     await stage("diagnostics", () => inspectDiagnostics(page));
-}
-
-async function stage(name: string, operation: () => Promise<void>): Promise<void> {
-    try {
-        await operation();
-    } catch (error) {
-        throw new Error(
-            `Kernel smoke failed during ${name}: ${error instanceof Error ? error.message : String(error)}`,
-        );
-    }
 }
 
 export async function verifyKernelStateAfterRestart(
@@ -35,24 +33,19 @@ export async function verifyKernelStateAfterRestart(
     await signIn(page, credentials, kernelOrigin);
     await page.getByText("Smoke Page", { exact: true }).waitFor();
     await stage("persisted files", () => verifyFilesAfterRestart(page));
-
-    await adminPageLink(page, "collections").click();
-    await page.getByRole("heading", { name: "smoke-kit", exact: true }).waitFor();
-
-    await adminPageLink(page, "settings").click();
-    await waitUntilEnabled(page, "Save general settings");
-    await expectAdminValue(page, "Site name", "Smoke CMS");
-    await expectAdminValue(page, "Default language", "fr-FR");
-
-    await adminPageLink(page, "providers").click();
-    await page.getByRole("heading", { name: "Providers & contracts", exact: true }).first().waitFor();
-    await page.getByRole("heading", { name: "Contract routing", exact: true }).waitFor();
-
-    await adminPageLink(page, "access").click();
-    await page.getByText(credentials.adminEmail, { exact: true }).waitFor();
-
-    await inspectDiagnostics(page);
+    await stage("persisted collection", () => verifyCollectionAfterRestart(page));
+    await stage("persisted administration", () => verifyAdministrationAfterRestart(page, credentials));
     await verifyPublishedPage(page, kernelOrigin);
+}
+
+async function stage(name: string, operation: () => Promise<void>): Promise<void> {
+    try {
+        await operation();
+    } catch (error) {
+        throw new Error(
+            `Kernel smoke failed during ${name}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+    }
 }
 
 async function signIn(
@@ -68,124 +61,86 @@ async function signIn(
         page.waitForURL(/\/admin$/u),
         page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click(),
     ]);
-    await page
-        .getByRole("heading", { name: "Dashboard", exact: true })
-        .waitFor()
-        .catch(async (error) => {
-            throw new Error(
-                `${error instanceof Error ? error.message : String(error)}\nURL: ${page.url()}\nPage: ${await page.locator("body").innerText()}`,
-            );
-        });
+    await page.getByRole("heading", { name: /^(Dashboard|Tableau de bord)$/u }).waitFor();
     await adminPageLink(page, "pages").click();
     await page.getByRole("heading", { name: "Pages", exact: true }).waitFor();
 }
 
+async function inspectAdminRoutes(page: Page, kernelOrigin: string): Promise<void> {
+    for (const path of [
+        "/admin",
+        "/admin/pages",
+        "/admin/files",
+        "/admin/collections",
+        "/admin/providers",
+        "/admin/access",
+        "/admin/settings",
+        "/admin/diagnostics",
+    ]) {
+        const response = await page.goto(`${kernelOrigin}${path}`, { waitUntil: "domcontentloaded" });
+        if (!response?.ok()) {
+            throw new Error(`${path} returned ${response?.status() ?? "no response"}`);
+        }
+        await page.locator("h1").first().waitFor();
+        if (
+            await page
+                .getByText("Internal server error", { exact: true })
+                .isVisible()
+                .catch(() => false)
+        ) {
+            throw new Error(`${path} rendered an internal server error`);
+        }
+    }
+    await page.goto(`${kernelOrigin}/admin/pages`);
+    await page.locator("#pages-list").waitFor();
+}
+
 async function mutateCollections(page: Page): Promise<void> {
     await adminPageLink(page, "collections").click();
-    await page.getByRole("heading", { name: "Installed collections", exact: true }).waitFor();
+    await page.locator("#installed-collections").waitFor();
+    await page.locator('a[href="#repository-releases"]').click();
+    await page.waitForURL(/#repository-releases$/u);
     await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
     const installResponse = page.waitForResponse((candidate) =>
         candidate.url().includes("ulvia.cms.collections/install"),
     );
-    await page.getByRole("button", { name: "Install", exact: true }).click();
+    await page.getByRole("button", { name: /^(Install|Installer)$/u }).click();
     if (!(await installResponse).ok()) {
         throw new Error("Collection installation failed.");
     }
+    await page.locator('a[href="#installed-collections"]').click();
+    await page.waitForURL(/#installed-collections$/u);
     const smokeCard = page.getByRole("heading", { name: "smoke-kit", exact: true }).locator("..");
-    await smokeCard.getByRole("button", { name: "Manage" }).click();
+    await smokeCard.getByRole("link", { name: /^(Manage|Gérer)$/u }).click();
     await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
+    await page.locator('a[href="#collection-blocks"]').click();
+    await page.waitForURL(/#collection-blocks$/u);
     await page.getByText("smoke-kit-card", { exact: true }).waitFor();
-    await page.getByRole("link", { name: "Back to Collections", exact: true }).click();
+    await page.getByRole("link", { name: /^(Back to Collections|Retour aux Collections)$/u }).click();
     const officialCard = page.getByRole("heading", { name: "ulvia-official", exact: true }).locator("..");
-    await officialCard.getByRole("button", { name: "Manage" }).click();
+    await officialCard.getByRole("link", { name: /^(Manage|Gérer)$/u }).click();
     await page.getByRole("heading", { name: "Ulvia Official", exact: true }).waitFor();
-    await page.getByLabel("Search tokens").waitFor();
-    const themeValue = page.getByLabel("Light value");
-    await themeValue.fill(await themeValue.inputValue());
-    await page.getByRole("button", { name: "Save value", exact: true }).click();
-    await page.getByText("Theme value saved.", { exact: true }).waitFor();
-    await page.getByRole("link", { name: "Back to Collections", exact: true }).click();
-}
-
-async function mutateSettings(page: Page): Promise<void> {
-    await adminPageLink(page, "settings").click();
-    await waitUntilEnabled(page, "Save general settings");
-    await page.getByRole("heading", { name: "General", exact: true }).waitFor();
-    await page.getByLabel("Site name").fill("Smoke CMS");
-    const [generalResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.access/update-site")),
-        page.getByRole("button", { name: "Save general settings" }).click(),
-    ]);
-    if (!generalResponse.ok()) {
-        throw new Error(`General settings flow failed (${generalResponse.status()}): ${await generalResponse.text()}`);
-    }
-    await page.getByText("General settings saved.", { exact: true }).waitFor();
-    await page.getByLabel("Default language").fill("fr-FR");
-    const [languagesResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.localization/update-languages")),
-        page.getByRole("button", { name: "Save languages" }).click(),
-    ]);
-    if (!languagesResponse.ok()) {
-        throw new Error(
-            `Language settings flow failed (${languagesResponse.status()}): ${await languagesResponse.text()}`,
-        );
-    }
-    await page.getByText("Languages saved.", { exact: true }).waitFor();
-}
-
-async function mutateProviders(page: Page): Promise<void> {
-    await adminPageLink(page, "providers").click();
-    await page.getByRole("heading", { name: "Providers & contracts", exact: true }).first().waitFor();
-    await page.getByRole("heading", { name: "Contract routing", exact: true }).waitFor();
-    const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.providers/replace-selections")),
-        page.getByRole("button", { name: "Save contract routing" }).click(),
-    ]);
-    if (!response.ok()) {
-        throw new Error(`Contract routing flow failed (${response.status()}).`);
-    }
-}
-
-async function mutateAccess(page: Page): Promise<void> {
-    await adminPageLink(page, "access").click();
-    const providerForm = page.locator('form[cms-mutation^="ulvia.cms.access:update-login-provider "]').first();
-    await providerForm.getByText("Email & password").waitFor();
-    await providerForm.locator('select[name="enabled"]').selectOption("true");
-    const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.access/update-login-provider")),
-        providerForm.locator('button[type="submit"]').click(),
-    ]);
-    if (!response.ok()) {
-        throw new Error(`Login provider flow failed (${response.status()}).`);
-    }
-}
-
-async function inspectDiagnostics(page: Page): Promise<void> {
-    await adminPageLink(page, "diagnostics").click();
-    await page.getByRole("heading", { name: "Diagnostics", exact: true }).waitFor();
-    await page.locator("#migration-health").waitFor();
+    await page.locator('a[href="#collection-theme"]').click();
+    await page.locator("#collection-theme-search").waitFor();
     await page
-        .locator('section[cms-query*="ulvia.cms.jobs:list"] p[cms-condition*="jobs.data.items.length"]')
+        .getByRole("link", { name: /^(Edit token|Modifier le token)$/u })
+        .first()
+        .click();
+    const themeValue = page.locator("#collection-theme-token-value");
+    await themeValue.waitFor();
+    await themeValue.fill(await themeValue.inputValue());
+    await page.locator('form[cms-mutation^="ulvia.cms.theme:save-token "] button[type="submit"]').click();
+    await page
+        .locator(
+            'form[cms-mutation^="ulvia.cms.theme:save-token "] p[cms-condition*="savedThemeToken.outcome.kind === \'success\'"]',
+        )
         .waitFor();
+    await page.getByRole("link", { name: /^(Back to Collections|Retour aux Collections)$/u }).click();
 }
 
-async function expectAdminValue(page: Page, label: string, expected: string): Promise<void> {
-    const actual = await page.getByLabel(label).inputValue();
-    if (actual !== expected) {
-        throw new Error(`${label} did not survive restart (expected ${expected}, received ${actual}).`);
-    }
-}
-
-async function waitUntilEnabled(page: Page, buttonName: string): Promise<void> {
-    const button = page.getByRole("button", { name: buttonName, exact: true });
-    const deadline = Date.now() + 15_000;
-    while (Date.now() < deadline) {
-        if (await button.isEnabled().catch(() => false)) {
-            return;
-        }
-        await page.waitForTimeout(100);
-    }
-    throw new Error(`${buttonName} did not become enabled.`);
+async function verifyCollectionAfterRestart(page: Page): Promise<void> {
+    await adminPageLink(page, "collections").click();
+    await page.getByRole("heading", { name: "smoke-kit", exact: true }).waitFor();
 }
 
 function adminPageLink(page: Page, pageId: string) {
