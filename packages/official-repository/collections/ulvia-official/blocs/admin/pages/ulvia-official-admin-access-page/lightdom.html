@@ -37,10 +37,13 @@
                             <ulvia-official-badge slot="meta" cms-condition="user.administrator === false" tone="neutral"
                                 ><span slot="label">{{ cms.i18n.ulvia-official.ui-member }}</span></ulvia-official-badge
                             >
-                            <span slot="description"
-                                >{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }} {{ cms.i18n.ulvia-official.ui-last-seen }}
-                                {{ user.lastSeenAt | dateLong(access.data.site.language) }}</span
-                            >
+                            <ulvia-official-cluster slot="description" gap="sm">
+                                <span slot="items">{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }}</span>
+                                <small slot="items"
+                                    >{{ cms.i18n.ulvia-official.ui-last-seen }}
+                                    {{ user.lastSeenAt | dateLong(access.data.site.language) }}</small
+                                >
+                            </ulvia-official-cluster>
                             <ulvia-official-cluster slot="actions" align="center" justify="end">
                                 <form
                                     slot="items"
