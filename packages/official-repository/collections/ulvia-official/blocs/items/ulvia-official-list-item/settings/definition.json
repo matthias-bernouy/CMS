@@ -1,0 +1,16 @@
+[
+    {
+        "id": "layout",
+        "label": "setting.layout.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "row",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "row", "label": "setting.option.row" },
+                { "value": "columns", "label": "setting.option.columns" }
+            ]
+        }
+    }
+]

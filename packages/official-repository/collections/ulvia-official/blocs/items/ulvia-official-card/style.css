@@ -41,6 +41,10 @@
     display: block;
     width: 100%;
 }
+::slotted(ulvia-official-icon[slot="media"]) {
+    width: 3rem;
+    margin: auto;
+}
 ::slotted([slot="eyebrow"]) {
     color: var(--ulvia-official-primary, #3157d5);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
@@ -62,4 +66,26 @@
 }
 :host([padding="lg"]) {
     --ulvia-official-card-padding: var(--ulvia-official-spacing-xl, 2rem);
+}
+:host([media-tone]:not([media-tone="none"])) [part="media"] {
+    display: grid;
+    min-height: 10rem;
+    place-items: center;
+    overflow: hidden;
+    color: var(--ulvia-official-on-primary-subtle, #075642);
+    background:
+        linear-gradient(135deg, transparent 56%, rgb(255 255 255 / 28%) 56%),
+        var(--ulvia-official-primary-subtle, #dff3ed);
+}
+:host([media-tone="secondary"]) [part="media"] {
+    color: var(--ulvia-official-on-secondary-subtle, #34357d);
+    background:
+        linear-gradient(135deg, transparent 56%, rgb(255 255 255 / 32%) 56%),
+        var(--ulvia-official-secondary-subtle, #e8e8ff);
+}
+:host([media-tone="neutral"]) [part="media"] {
+    color: var(--ulvia-official-text-secondary, #42504a);
+    background:
+        linear-gradient(135deg, transparent 56%, rgb(255 255 255 / 42%) 56%),
+        var(--ulvia-official-background-subtle, #eef1f0);
 }

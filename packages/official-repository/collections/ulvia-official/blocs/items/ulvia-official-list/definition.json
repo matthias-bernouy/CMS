@@ -8,6 +8,10 @@
     "uses": ["ulvia-official-list-item"],
     "requires": [],
     "slots": {
+        "header": {
+            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }],
+            "max": 1
+        },
         "items": {
             "accepts": [{ "kind": "component", "tag": "ulvia-official-list-item" }]
         }

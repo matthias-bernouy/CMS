@@ -14,6 +14,18 @@
     background: var(--ulvia-official-background-base, #fff);
     box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(20 40 32 / 5%));
 }
+[part="header"] {
+    padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
+    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--list-border);
+    color: var(--ulvia-official-text-muted, #68766f);
+    font-size: 0.6875rem;
+    font-weight: var(--ulvia-official-font-weight-bold, 700);
+    letter-spacing: var(--ulvia-official-letter-spacing-wide, 0.025em);
+    text-transform: uppercase;
+}
+[part="header"]:has(slot:not(:has-slotted)) {
+    display: none;
+}
 
 ::slotted(ulvia-official-list-item:not(:last-child)) {
     border-bottom: var(--ulvia-official-border-width, 1px) solid var(--list-border);
@@ -25,6 +37,9 @@
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+}
+:host([appearance="plain"]) [part="header"] {
+    display: none;
 }
 
 :host([appearance="plain"]) ::slotted(ulvia-official-list-item) {

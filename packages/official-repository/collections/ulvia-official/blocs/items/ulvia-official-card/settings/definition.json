@@ -28,5 +28,21 @@
                 { "value": "lg", "label": "setting.option.large" }
             ]
         }
+    },
+    {
+        "id": "media-tone",
+        "label": "setting.tone.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "none",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "none", "label": "setting.option.none" },
+                { "value": "primary", "label": "setting.option.primary" },
+                { "value": "secondary", "label": "setting.option.secondary" },
+                { "value": "neutral", "label": "setting.option.neutral" }
+            ]
+        }
     }
 ]
