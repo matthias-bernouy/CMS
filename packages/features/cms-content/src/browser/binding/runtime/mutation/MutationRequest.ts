@@ -106,7 +106,7 @@ export class MutationRequest {
                 outcome: {
                     kind: "success",
                     status: outcome.status ?? 200,
-                    ...(outcome.requestId ? { requestId: outcome.requestId } : {}),
+                    requestId: outcome.requestId ?? crypto.randomUUID(),
                 },
             };
         }
@@ -136,7 +136,7 @@ export class MutationRequest {
     }
 
     complete(result: FormSubmitResult, alias: string): void {
-        if (result.ok && result.refresh?.ok !== false) {
+        if (result.ok) {
             idempotencyAttempts.delete(result.form);
         }
         this.result.complete(result, alias);

@@ -5,7 +5,6 @@ import {
     CMS_FORM_VALUE_TYPES,
     isCmsFormEmptyBehavior,
     isCmsFormValueType,
-    isMutationInvalidations,
 } from "@bernouy/cms-content/bindings";
 import { nativeBindingAttributeIssue, ValidatingCmsRepository, type CmsRepository } from "@bernouy/cms-content";
 
@@ -33,11 +32,10 @@ describe("declarative form contracts", () => {
                 '{"id":{"from":"literal","value":"page"}}',
             ),
         ).toBeNull();
-        expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutationInvalidates, "page pages")).toBeNull();
         expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutationReset, "false")).toBeNull();
     });
 
-    test("exposes controlled invalidation and control-value helpers", () => {
+    test("exposes control-value helpers", () => {
         expect(CMS_FORM_VALUE_TYPES).toEqual(["string", "number", "boolean", "json"]);
         expect(CMS_FORM_EMPTY_BEHAVIORS).toEqual(["null", "omit"]);
         for (const value of CMS_FORM_VALUE_TYPES) {
@@ -48,11 +46,6 @@ describe("declarative form contracts", () => {
         }
         expect(isCmsFormValueType("object")).toBe(false);
         expect(isCmsFormEmptyBehavior("undefined")).toBe(false);
-        expect(isMutationInvalidations("orderDetail")).toBe(true);
-        expect(isMutationInvalidations("orderDetail orderList")).toBe(true);
-        for (const value of [null, "", "order-detail", "#detail", "detail detail", "#{target}", "{{ target }}"]) {
-            expect(isMutationInvalidations(value)).toBe(false);
-        }
     });
 
     test("rejects typed forms that are not owned by a Bloc contract", async () => {

@@ -7,6 +7,4 @@ export * from "cms-content/blocs/core/markup/bindings/sync";
 export {
     isCmsFormValueType,
     isCmsFormEmptyBehavior,
-    isMutationInvalidations,
-    parseMutationInvalidations,
 } from "cms-content/blocs/core/validation/nativeBindings/formValues";

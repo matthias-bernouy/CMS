@@ -26,7 +26,6 @@ export {
     MUTATION_ATTR,
     MUTATION_IDEMPOTENCY_ATTR,
     MUTATION_INPUT_ATTR,
-    MUTATION_INVALIDATES_ATTR,
     MUTATION_REDIRECT_ATTR,
     MUTATION_REDIRECT_PARAM_ATTR,
     MUTATION_RESET_ATTR,
@@ -40,7 +39,6 @@ export {
 } from "./state/SyncState";
 export {
     CMS_MUTATION_FAILED_EVENT,
-    CMS_MUTATION_REFRESH_FAILED_EVENT,
     CMS_MUTATION_SUCCESS_EVENT,
     type CmsMutationResultEvent,
     type CmsMutationResultEventMap,

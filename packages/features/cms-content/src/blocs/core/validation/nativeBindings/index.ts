@@ -4,7 +4,6 @@ import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/sa
 import {
     CMS_BINDING_ATTRIBUTES,
     isCmsQueryParamName,
-    isMutationInvalidations,
     isCmsFormValueType,
     isCmsFormEmptyBehavior,
     parseCondition,
@@ -64,11 +63,6 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     }
     if (name === CMS_BINDING_ATTRIBUTES.mutationInput) {
         return isTypedBindingInput(value) ? null : "CMS mutation input must be a typed parameter map";
-    }
-    if (name === CMS_BINDING_ATTRIBUTES.mutationInvalidates) {
-        return isMutationInvalidations(value)
-            ? null
-            : "CMS mutation invalidation must identify one to eight unique queries by name";
     }
     if (name === CMS_BINDING_ATTRIBUTES.mutationIdempotency) {
         return value === "auto" ? null : "CMS mutation idempotency must be auto";
@@ -199,7 +193,6 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     for (const name of [
         CMS_BINDING_ATTRIBUTES.mutationInput,
         CMS_BINDING_ATTRIBUTES.mutationIdempotency,
-        CMS_BINDING_ATTRIBUTES.mutationInvalidates,
         CMS_BINDING_ATTRIBUTES.mutationRedirect,
         CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
         CMS_BINDING_ATTRIBUTES.mutationReset,
@@ -234,7 +227,6 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
         for (const name of [
             CMS_BINDING_ATTRIBUTES.mutationInput,
             CMS_BINDING_ATTRIBUTES.mutationIdempotency,
-            CMS_BINDING_ATTRIBUTES.mutationInvalidates,
             CMS_BINDING_ATTRIBUTES.mutationRedirect,
             CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
             CMS_BINDING_ATTRIBUTES.mutationReset,

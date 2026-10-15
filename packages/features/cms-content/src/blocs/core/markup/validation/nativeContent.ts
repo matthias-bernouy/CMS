@@ -5,7 +5,6 @@ import { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenS
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { storedMarkupSecurityIssue } from "cms-content/blocs/core/markup/security/storedMarkupIssue";
 import { parseMutation, parseQuery } from "cms-content/blocs/core/markup/bindings";
-import { parseMutationInvalidations } from "cms-content/blocs/core/validation/nativeBindings/formValues";
 import {
     assertBlocOperationBudget,
     assertBlocDomBudget,
@@ -92,17 +91,6 @@ export function extractQueries(document: Document): readonly ContentQuery[] {
         names.add(query.name);
     }
     const queries = bindings.filter((query): query is ContentQuery => "contractId" in query);
-    for (const form of Array.from(document.querySelectorAll("form[cms-mutation-invalidates]"))) {
-        const targets = parseMutationInvalidations(form.getAttribute("cms-mutation-invalidates"));
-        for (const target of targets ?? []) {
-            if (!names.has(target)) {
-                throw new ContentValidationError(
-                    "content",
-                    `CMS mutation invalidation references unknown query ${JSON.stringify(target)}`,
-                );
-            }
-        }
-    }
     return queries;
 }
 

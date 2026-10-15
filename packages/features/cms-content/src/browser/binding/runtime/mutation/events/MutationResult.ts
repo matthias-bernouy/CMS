@@ -1,17 +1,8 @@
-import {
-    MUTATION_INVALIDATES_ATTR,
-    MUTATION_REDIRECT_ATTR,
-    MUTATION_REDIRECT_PARAM_ATTR,
-    MUTATION_RESET_ATTR,
-} from "../../../core/attrs";
+import { MUTATION_REDIRECT_ATTR, MUTATION_REDIRECT_PARAM_ATTR, MUTATION_RESET_ATTR } from "../../../core/attrs";
 import { interpolateString, type FilterMap } from "../../../core/interpolate";
 import type { Scope } from "../../../core/scope";
 import type { FormSubmitResult } from "../../../form/formSubmit";
-import {
-    CMS_MUTATION_FAILED_EVENT,
-    CMS_MUTATION_REFRESH_FAILED_EVENT,
-    CMS_MUTATION_SUCCESS_EVENT,
-} from "./resultEvents";
+import { CMS_MUTATION_FAILED_EVENT, CMS_MUTATION_SUCCESS_EVENT } from "./resultEvents";
 
 export class MutationResult {
     constructor(
@@ -20,12 +11,6 @@ export class MutationResult {
     ) {}
 
     complete(result: FormSubmitResult, alias: string): void {
-        if (result.ok && result.refresh?.ok === false) {
-            this.element.dispatchEvent(
-                new CustomEvent(CMS_MUTATION_REFRESH_FAILED_EVENT, { bubbles: true, composed: true, detail: result }),
-            );
-            return;
-        }
         this.dispatch(result);
         if (!result.ok) {
             return;
@@ -53,7 +38,7 @@ export class MutationResult {
         if (value === "true" || value === "1" || value === "yes" || value === "") {
             return true;
         }
-        return !this.element.hasAttribute(MUTATION_INVALIDATES_ATTR);
+        return true;
     }
 
     private successRedirect(result: FormSubmitResult, alias: string): string {

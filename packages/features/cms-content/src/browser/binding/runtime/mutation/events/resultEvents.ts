@@ -11,9 +11,6 @@ export const CMS_MUTATION_SUCCESS_EVENT = "cms-mutation:success" as const;
  */
 export const CMS_MUTATION_FAILED_EVENT = "cms-mutation:failed" as const;
 
-/** The mutation succeeded, but its requested read failed; do not replay the mutation. */
-export const CMS_MUTATION_REFRESH_FAILED_EVENT = "cms-mutation:refresh-failed" as const;
-
 /** Public event payload shared by successful and failed mutation submissions. */
 export type CmsMutationResultEvent = CustomEvent<FormSubmitResult>;
 
@@ -21,7 +18,6 @@ export type CmsMutationResultEvent = CustomEvent<FormSubmitResult>;
 export interface CmsMutationResultEventMap {
     [CMS_MUTATION_SUCCESS_EVENT]: CmsMutationResultEvent;
     [CMS_MUTATION_FAILED_EVENT]: CmsMutationResultEvent;
-    [CMS_MUTATION_REFRESH_FAILED_EVENT]: CmsMutationResultEvent;
 }
 
 declare global {

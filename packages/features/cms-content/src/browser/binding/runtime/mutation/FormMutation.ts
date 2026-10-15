@@ -122,7 +122,7 @@ export class FormMutation {
             this.status = this.presenter.result(spec.alias, result, this.request.input);
             this.afterRender();
             this.request.complete(result, spec.alias);
-            return result.ok && result.refresh?.ok !== false;
+            return result.ok;
         } finally {
             if (this.abort === controller) {
                 this.abort = null;

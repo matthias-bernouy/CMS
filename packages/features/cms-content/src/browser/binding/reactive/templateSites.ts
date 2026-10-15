@@ -5,7 +5,7 @@ import type { CompiledCondition } from "../render/condition";
 import type { RepeatSpec } from "../render/repeat";
 import { clearBetween, type LiveBindingSite, type MountedRegion } from "./MountedRegion";
 import type { MountableTemplate } from "./templatePlan";
-import { acknowledgesControl } from "../runtime/query/mutationRefresh";
+import { acknowledgesControl } from "../runtime/query/formAcknowledgement";
 import { applyControlAttribute } from "./controls/value";
 import { compileExpression, type CompiledExpression } from "../render/expression";
 import type { AttributeBindingKind } from "./templatePlan";

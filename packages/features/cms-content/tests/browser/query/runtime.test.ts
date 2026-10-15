@@ -476,13 +476,27 @@ test("a reload queued during an active query waits for a fresh result", async ()
 });
 
 test("an acknowledged query refresh reapplies unchanged server values to that form", async () => {
-    const host = el(`<section cms-query="profile:get as profile">
+    const target = { scope: "page", key: "test-profile-mutation" } as const;
+    const host = el(`<section
+        cms-query="profile:get as profile"
+        cms-query-listen="@page:test-profile-mutation/lastSuccess/requestId"
+    >
         <form>
             <input name="name" value="{{ profile.data.name }}">
         </form>
     </section>`);
     document.body.appendChild(host);
-    const query = new Query(host, {}, { request: async () => ({ kind: "success", data: { name: "Server" } }) });
+    let calls = 0;
+    const query = new Query(
+        host,
+        {},
+        {
+            request: async () => {
+                calls += 1;
+                return { kind: "success", data: { name: "Server" } };
+            },
+        },
+    );
 
     query.start();
     await waitFor(() => host.querySelector<HTMLInputElement>("input")?.value === "Server");
@@ -490,8 +504,10 @@ test("an acknowledged query refresh reapplies unchanged server values to that fo
     const input = form.querySelector("input")!;
     input.value = "Local draft";
 
-    await query.run({ acknowledge: form });
+    writeSyncValue(target, { lastSuccess: { requestId: "request-1" } }, document, { source: form });
+    await waitFor(() => calls === 2);
 
     expect(input.value).toBe("Server");
     query.dispose();
+    writeSyncValue(target, undefined);
 });

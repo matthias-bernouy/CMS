@@ -39,6 +39,11 @@ describe("Form mutation lifecycle", () => {
             input: { displayName: "Grace" },
             data: { id: "profile-1" },
             outcome: { kind: "success", status: 201 },
+            lastSuccess: {
+                status: 201,
+                data: { id: "profile-1" },
+                requestId: expect.any(String),
+            },
         });
         runtime.stop();
         writeSyncValue(target, undefined);

@@ -59,7 +59,6 @@ describe("binding conditions", () => {
             mutation: "cms-mutation",
             mutationInput: "cms-mutation-input",
             mutationIdempotency: "cms-mutation-idempotency",
-            mutationInvalidates: "cms-mutation-invalidates",
             mutationRedirect: "cms-mutation-redirect",
             mutationRedirectParam: "cms-mutation-redirect-param",
             mutationReset: "cms-mutation-reset",

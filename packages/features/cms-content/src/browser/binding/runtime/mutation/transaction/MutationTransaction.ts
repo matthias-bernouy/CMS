@@ -1,30 +1,27 @@
 import type { FormSubmitResult } from "../../../form/types";
-import { formMutationReload } from "../../query/mutationRefresh";
 import type { MutationRequest } from "../MutationRequest";
 import { lockEditing } from "./editingLock";
 
 type Captured = NonNullable<ReturnType<MutationRequest["capture"]>>;
 
-/** One captured submission, its optional edit lock and its awaited read. */
+/** One captured submission and its edit lock. */
 export class MutationTransaction {
     private constructor(
         private readonly request: MutationRequest,
         private readonly captured: Captured,
-        private readonly reload: ReturnType<typeof formMutationReload>,
         private unlock: (() => void) | null,
     ) {}
 
     static prepare(element: Element, request: MutationRequest, url: string): MutationTransaction | null {
-        const reload = formMutationReload(element as HTMLFormElement);
         const captured = request.capture(url);
         if (!captured) {
             return null;
         }
-        const unlock = lockEditing(reload?.source ?? element, captured.form);
+        const unlock = lockEditing(element, captured.form);
         if (!unlock) {
             return null;
         }
-        return new MutationTransaction(request, captured, reload, unlock);
+        return new MutationTransaction(request, captured, unlock);
     }
 
     get locked(): boolean {
@@ -33,20 +30,7 @@ export class MutationTransaction {
 
     async send(signal: AbortSignal): Promise<FormSubmitResult | null> {
         const result = await this.request.send(this.captured, signal);
-        if (signal.aborted || (this.reload && !this.reload.current())) {
-            return null;
-        }
-        if (result.ok && this.reload) {
-            const ok = await this.reload.reload();
-            if (signal.aborted || !this.reload.current()) {
-                return null;
-            }
-            result.refresh = {
-                ok,
-                message: ok ? "" : "Saved, but refreshing the data failed. Reload the source without submitting again.",
-            };
-        }
-        return result;
+        return signal.aborted ? null : result;
     }
 
     release(): void {

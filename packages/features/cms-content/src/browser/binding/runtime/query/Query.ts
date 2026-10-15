@@ -4,7 +4,7 @@ import type { FilterMap } from "../../core/interpolate";
 import { BindingRenderer } from "../../reactive/renderer/BindingRenderer";
 import { captureBindingContent } from "../../reactive/renderer/bindingContent";
 import { parseSyncAttribute, readSyncValue, subscribeSyncValue, writeSyncValue } from "../../state/SyncState";
-import { withFormAcknowledgement, connectQueryReload } from "./mutationRefresh";
+import { withFormAcknowledgement } from "./formAcknowledgement";
 import { runFetch } from "./queryFetch";
 import { listenQueryRefresh } from "./queryRefresh";
 import { queryRequest } from "./queryRequest";
@@ -31,7 +31,6 @@ export class Query {
     private state = initialQueryState();
     private abort: AbortController | null = null;
     private stopRefresh: (() => void) | null = null;
-    private stopReload: (() => void) | null = null;
     private stopSync: (() => void) | null = null;
     private input: unknown;
     private pending: Promise<boolean> | null = null;
@@ -61,11 +60,6 @@ export class Query {
             this.startSynchronizedQuery(binding.sync);
             return;
         }
-        this.stopReload = connectQueryReload(
-            this.element,
-            () => this.requestIdentity(),
-            (acknowledge) => this.run({ acknowledge }),
-        );
         this.stopRefresh = listenQueryRefresh(this.element, (acknowledge) => void this.run({ acknowledge }));
         void this.run();
     }
@@ -75,8 +69,6 @@ export class Query {
         this.abort = null;
         this.stopRefresh?.();
         this.stopRefresh = null;
-        this.stopReload?.();
-        this.stopReload = null;
         this.stopSync?.();
         this.stopSync = null;
         this.imports.dispose();
