@@ -8,15 +8,7 @@ import type { CollectionLimits } from "../../limits";
 import { array, keys, record, string, unique } from "../../values";
 import { invalid } from "../../errors";
 
-const STRING_CONTROL_KINDS = [
-    "text",
-    "select",
-    "segmented",
-    "color",
-    "page-link",
-    "media-picker",
-    "theme-token-picker",
-];
+const STRING_CONTROL_KINDS = ["text", "select", "segmented", "color", "media-picker", "theme-token-picker"];
 const MEDIA_ACCEPTS: CollectionMediaAccept[] = ["image", "bitmap", "svg", "video", "audio", "document"];
 const THEME_TOKEN_TYPES: CollectionThemeTokenType[] = ["color", "font-family", "length", "number", "shadow", "value"];
 
@@ -76,16 +68,6 @@ export function parseSettingControl(
             kind,
             ...(source.tokens === undefined ? {} : { tokens: parseOptions(source.tokens, `${path}.tokens`, limits) }),
             ...(source.allowCustom === undefined ? {} : { allowCustom: source.allowCustom as boolean }),
-        };
-    }
-    if (kind === "page-link") {
-        keys(source, ["kind", "allowPage", "allowExternal", "allowMedia", "mediaAccept"], path);
-        return {
-            kind,
-            ...optionalBooleans(source, path, ["allowPage", "allowExternal", "allowMedia"]),
-            ...(source.mediaAccept === undefined
-                ? {}
-                : { mediaAccept: finiteList(source.mediaAccept, MEDIA_ACCEPTS, `${path}.mediaAccept`) }),
         };
     }
     if (kind === "media-picker") {
@@ -154,23 +136,4 @@ function positiveNumber(value: unknown, path: string): number {
         invalid("must be a positive finite number", path);
     }
     return value;
-}
-
-function optionalBooleans(
-    source: Record<string, unknown>,
-    path: string,
-    names: readonly string[],
-): Record<string, boolean> {
-    return Object.fromEntries(
-        names.flatMap((name) => {
-            const value = source[name];
-            if (value === undefined) {
-                return [];
-            }
-            if (typeof value !== "boolean") {
-                invalid("must be a boolean", `${path}.${name}`);
-            }
-            return [[name, value]];
-        }),
-    );
 }

@@ -303,14 +303,6 @@ describe("collection bloc admission", () => {
                         control: { kind: "text", placeholder: "Short summary" },
                     },
                     {
-                        id: "destination",
-                        label: "Destination",
-                        type: "string",
-                        default: "/",
-                        maxLength: 512,
-                        control: { kind: "page-link", allowPage: true, allowExternal: true },
-                    },
-                    {
                         id: "image",
                         label: "Image",
                         type: "string",
@@ -337,7 +329,6 @@ describe("collection bloc admission", () => {
         ).toThrow("slot acceptance kind must be component, any-component, plain-text or rich-text");
         expect(parsed?.kind === "component" ? parsed.settings?.map(({ control }) => control.kind) : undefined).toEqual([
             "text",
-            "page-link",
             "media-picker",
             "theme-token-picker",
         ]);
@@ -348,7 +339,7 @@ describe("collection bloc admission", () => {
                 }),
             ]),
         ).toThrow("inline, prose");
-        for (const kind of ["textarea", "endpoint-picker"]) {
+        for (const kind of ["textarea", "endpoint-picker", "page-link"]) {
             expect(() =>
                 check([
                     component({

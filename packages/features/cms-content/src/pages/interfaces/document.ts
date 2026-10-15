@@ -57,13 +57,6 @@ export type BlocSettingControl =
     | { readonly kind: "text"; readonly placeholder?: string }
     | { readonly kind: "select" | "segmented"; readonly options: readonly BlocSettingOption[] }
     | { readonly kind: "color"; readonly tokens?: readonly BlocSettingOption[]; readonly allowCustom?: boolean }
-    | {
-          readonly kind: "page-link";
-          readonly allowPage?: boolean;
-          readonly allowExternal?: boolean;
-          readonly allowMedia?: boolean;
-          readonly mediaAccept?: readonly MediaAccept[];
-      }
     | { readonly kind: "media-picker"; readonly accept?: readonly MediaAccept[] }
     | { readonly kind: "theme-token-picker"; readonly accept?: readonly string[] }
     | { readonly kind: "number" | "range"; readonly step?: number; readonly suffix?: string }

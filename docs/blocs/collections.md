@@ -203,7 +203,7 @@ each item has an `id`, `label`, `type` and `default`, plus an optional `group`.
 String items may set `minLength` and `maxLength`; an omitted `maxLength`
 defaults to 256. Finite numbers and safe integers may set `minimum` and
 `maximum`. Every item has a declarative `control`. String controls are `text`,
-`select`, `segmented`, `color`, `page-link`, `media-picker` and
+`select`, `segmented`, `color`, `media-picker` and
 `theme-token-picker`; booleans use `toggle`; numeric settings use `number` or a
 bounded `range`. Select and segmented options carry stable string values and
 author-facing labels. The same items supply insertion defaults and the

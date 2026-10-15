@@ -91,7 +91,7 @@ real child tag is authoritative; wrapper settings and native child attributes
 remain separate targets even when they use the same attribute name. Changing
 the accepted set is an incompatible installed component-contract change.
 
-String controls are `text`, `select`, `segmented`, `color`, `page-link`,
+String controls are `text`, `select`, `segmented`, `color`,
 `media-picker` and `theme-token-picker`. Booleans use `toggle`; numbers and
 integers use `number` or a bounded `range`. Media content normally belongs in a
 media slot; the setting control is for component configuration such as a poster
