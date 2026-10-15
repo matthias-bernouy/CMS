@@ -101,19 +101,26 @@ Editable site Pages and immutable collection Pages use one site-scoped Page
 route registry. A route is unique by `(siteId, path)`, so two sites may use the
 same path but two Pages in the same site cannot.
 Collection Pages contribute a default path and may retain a site override;
-editable Pages use their own current path. Runtime startup reconciles both
-route sources as one desired graph from canonical Page and collection state.
-Stale ownership is removed before a path is reassigned, path swaps are safe,
-and reconciliation is idempotent after an interrupted partial write. The same
-combined reconciliation runs before and after production Page and collection
-mutations, under one per-site in-process coordinator.
+editable Pages use their own current path. Current paths, collection defaults
+and historical paths are claims in that same namespace. Changing a path keeps
+the previous claim as an alias owned by the same Page; a direct request receives
+a permanent redirect to the current path. Claims are released only when their
+owner is removed. A path swap or reassignment is therefore rejected rather than
+silently changing the destination of existing native links.
+
+Runtime startup reconciles both route sources as one desired graph from
+canonical Page and collection state. Reconciliation is idempotent after an
+interrupted partial write. The same combined reconciliation runs before and
+after production Page and collection mutations, under one per-site in-process
+coordinator.
 
 The Kernel mounts collection-owned and site-owned Pages through the same
-document renderer. Stable Page links use Page identities rather than stored
-route strings. Collection admission and installation reject missing imported
-targets; editable Page writes and runtime activation resolve every current
-target. A Page or collection mutation that would orphan an existing reference
-is rejected.
+document renderer. Authored links remain native `<a href>` paths. Collection
+admission requires every static internal path to name a Page declared by the
+release or an exact imported Page default path. Rendering rewrites that claim
+to its current route, while historical claims remain valid aliases. Editable
+Page writes and runtime activation resolve every target. A Page or collection
+mutation that would orphan an existing reference is rejected.
 
 Canonical Page/collection state and its derived route projection are still two
 durable writes. Current single-runtime recovery is deterministic, but a future

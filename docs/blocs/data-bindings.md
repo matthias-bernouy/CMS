@@ -25,7 +25,7 @@ unique local alias:
     <div cms-case="'none'"></div>
     <ul cms-case="'success'">
       <li cms-repeat="products.data.items as product">
-        <a href="/products/{{ product.slug }}">{{ product.name }}</a>
+        <span>{{ product.name }}</span>
       </li>
     </ul>
     <div cms-case="'error'" cms-match="products.outcome.code">

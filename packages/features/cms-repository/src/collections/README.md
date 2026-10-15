@@ -201,11 +201,14 @@ text, a small semantic HTML set and declared local or explicitly imported Bloc
 tags. It derives the exact `uses` set from the HTML. Canonical
 `/.cms/call/<contract>/<capability>` sources require a matching versioned
 capability requirement; admission verifies those witnesses alongside transitive
-local Bloc requirements. Scripts, links, inline handlers and inline styles reject.
-Page exports and imports pin exact resource generations. The repository
-projects installed Pages into the generic content read model and the Kernel
-renders them through the shared Page document pipeline. Stable Page references
-resolve independently from route overrides.
+local Bloc requirements. Scripts, executable links, dynamic internal paths,
+inline handlers and inline styles reject. Native anchors may use static internal
+paths declared by the release. Page imports pin the exact resource generation
+and default path, so admission can reject typos before publication. The
+repository projects installed Pages into the generic content read model and the
+Kernel renders them through the shared Page document pipeline. Current,
+default and historical paths remain claims of one Page identity and resolve to
+its effective route.
 
 ## Publication and installation
 
