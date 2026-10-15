@@ -14,6 +14,8 @@
         "ulvia-official-form-actions",
         "ulvia-official-grid",
         "ulvia-official-input",
+        "ulvia-official-list",
+        "ulvia-official-list-item",
         "ulvia-official-select",
         "ulvia-official-stack",
         "ulvia-official-surface"

@@ -12,5 +12,19 @@
                 { "value": "columns", "label": "setting.option.columns" }
             ]
         }
+    },
+    {
+        "id": "density",
+        "label": "setting.density.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "default",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "default", "label": "setting.option.default" },
+                { "value": "compact", "label": "setting.option.compact" }
+            ]
+        }
     }
 ]

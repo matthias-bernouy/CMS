@@ -205,26 +205,27 @@
                     </form>
                 </ulvia-official-stack>
             </ulvia-official-surface>
-            <ulvia-official-grid slot="items" gap="md" cms-condition="collectionTheme.data.tokens.length">
-                <ulvia-official-surface slot="items" cms-repeat="collectionTheme.data.tokens as token" appearance="outlined" padding="md">
-                    <ulvia-official-stack slot="content" gap="sm">
-                        <span slot="items">{{ token.categoryLabel }}</span>
-                        <strong slot="items">{{ token.label }}</strong>
+            <ulvia-official-list slot="items" cms-condition="collectionTheme.data.tokens.length">
+                <ulvia-official-list-item slot="items" cms-repeat="collectionTheme.data.tokens as token" density="compact">
+                    <strong slot="title">{{ token.label }}</strong>
+                    <span slot="meta">{{ token.categoryLabel }}</span>
+                    <code slot="description">{{ token.variable }}</code>
+                    <ulvia-official-cluster slot="body" align="center" gap="sm">
                         <code slot="items">{{ token.value }}</code>
                         <ulvia-official-badge slot="items" tone="info" cms-condition="token.overridden">
                             <span slot="label">{{ cms.i18n.ulvia-official.ui-overridden }}</span>
                         </ulvia-official-badge>
-                        <ulvia-official-action slot="items" variant="ghost" tone="secondary" size="sm">
-                            <a
-                                href="/admin/collections/detail?ulvia-official-collection={{ collectionTheme.data.collectionId | urlencode }}&amp;ulvia-official-theme-profile={{ collectionTheme.data.profileId | urlencode }}&amp;ulvia-official-theme-mode={{ collectionTheme.data.mode | urlencode }}&amp;ulvia-official-theme-token={{ token.id | urlencode }}#collection-theme"
-                                >{{
-                                    cms.i18n.ulvia-official.ui-edit-token
-                                }}</a
-                            >
-                        </ulvia-official-action>
-                    </ulvia-official-stack>
-                </ulvia-official-surface>
-            </ulvia-official-grid>
+                    </ulvia-official-cluster>
+                    <ulvia-official-action slot="actions" variant="ghost" tone="secondary" size="sm">
+                        <a
+                            href="/admin/collections/detail?ulvia-official-collection={{ collectionTheme.data.collectionId | urlencode }}&amp;ulvia-official-theme-profile={{ collectionTheme.data.profileId | urlencode }}&amp;ulvia-official-theme-mode={{ collectionTheme.data.mode | urlencode }}&amp;ulvia-official-theme-token={{ token.id | urlencode }}#collection-theme"
+                            >{{
+                                cms.i18n.ulvia-official.ui-edit-token
+                            }}</a
+                        >
+                    </ulvia-official-action>
+                </ulvia-official-list-item>
+            </ulvia-official-list>
         </ulvia-official-stack>
         <p role="alert" cms-case='"failure"'>
             {{ cms.i18n.ulvia-official.ui-request-failed }}
