@@ -28,6 +28,7 @@
         "typecheck": "tsc --build",
         "clean": "tsc --build --clean",
         "test": "bun test",
+        "test:performance": "bun x tsc --project quality/performance/tsconfig.json && bun run quality/performance/run.ts",
         "test:kernel-smoke": "ULVIA_RUN_KERNEL_SMOKE=1 bun test packages/runtimes/ulvia-cli/tests/dev/kernel-smoke.browser.test.ts",
         "check:ui-contracts": "bun run quality/ui-contracts/check.ts"
     },

@@ -1,0 +1,24 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "composite": false,
+        "declaration": false,
+        "emitDeclarationOnly": false,
+        "noEmit": true,
+        "sourceMap": false,
+        "paths": {
+            "binary-media/*": ["../../packages/foundation/binary-media/src/*"],
+            "blob-store/*": ["../../packages/foundation/blob-store/src/*"],
+            "cms-auth/*": ["../../packages/features/cms-auth/src/*"],
+            "cms-content/*": ["../../packages/features/cms-content/src/*"],
+            "cms-files/*": ["../../packages/features/cms-files/src/*"],
+            "cms-gateway/*": ["../../packages/features/cms-gateway/src/*"],
+            "cms-repository/*": ["../../packages/features/cms-repository/src/*"],
+            "http-runner/*": ["../../packages/foundation/http-runner/src/*"]
+            ,"image-processing/*": ["../../packages/foundation/image-processing/src/*"]
+            ,"rate-limiter/*": ["../../packages/foundation/rate-limiter/src/*"]
+            ,"secret-store/*": ["../../packages/foundation/secret-store/src/*"]
+        }
+    },
+    "include": ["./**/*.ts"]
+}
