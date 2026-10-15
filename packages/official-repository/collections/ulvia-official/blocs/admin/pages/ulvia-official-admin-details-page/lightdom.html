@@ -29,8 +29,26 @@
                         <p>{{ cms.i18n.ulvia-official.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable }}</p>
                     </div>
                 </div>
-                <div cms-case='"success"'>
-                    <ulvia-official-surface appearance="elevated" padding="lg">
+                <ulvia-official-stack cms-case='"success"' gap="lg">
+                    <ulvia-official-route-tabs slot="items" label="{{ cms.i18n.ulvia-official.ui-page-details }}" appearance="pills" size="sm">
+                        <ulvia-official-route-tab slot="items"
+                            ><a href="#page-general">{{ cms.i18n.ulvia-official.ui-page-details }}</a></ulvia-official-route-tab
+                        >
+                        <ulvia-official-route-tab slot="items"
+                            ><a href="#page-content">{{ cms.i18n.ulvia-official.ui-page-document }}</a></ulvia-official-route-tab
+                        >
+                        <ulvia-official-route-tab slot="items"><a href="#page-routes">{{ cms.i18n.ulvia-official.ui-routes }}</a></ulvia-official-route-tab>
+                        <ulvia-official-route-tab slot="items"
+                            ><a href="#page-search">{{ cms.i18n.ulvia-official.ui-search-metadata }}</a></ulvia-official-route-tab
+                        >
+                        <ulvia-official-route-tab slot="items"
+                            ><a href="#page-publication">{{ cms.i18n.ulvia-official.ui-publication }}</a></ulvia-official-route-tab
+                        >
+                        <ulvia-official-route-tab slot="items"
+                            ><a href="#page-danger">{{ cms.i18n.ulvia-official.ui-danger-zone }}</a></ulvia-official-route-tab
+                        >
+                    </ulvia-official-route-tabs>
+                    <ulvia-official-surface id="page-general" slot="items" appearance="elevated" padding="lg">
                         <form
                             slot="content"
                             cms-mutation="ulvia.cms.pages:update as saved"
@@ -95,10 +113,10 @@
                             </div>
                         </form>
                     </ulvia-official-surface>
-                    <ulvia-official-surface appearance="elevated" padding="lg">
+                    <ulvia-official-surface id="page-content" slot="items" appearance="elevated" padding="lg">
                         <ulvia-official-page-editor slot="content"></ulvia-official-page-editor>
                     </ulvia-official-surface>
-                    <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-surface id="page-routes" slot="items" appearance="outlined" padding="lg">
                         <ulvia-official-stack slot="content" gap="lg">
                             <header slot="items">
                                 <h2>{{ cms.i18n.ulvia-official.ui-routes }}</h2>
@@ -150,7 +168,7 @@
                             </form>
                         </ulvia-official-stack>
                     </ulvia-official-surface>
-                    <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-surface id="page-search" slot="items" appearance="outlined" padding="lg">
                         <ulvia-official-stack slot="content" gap="lg">
                             <header slot="items">
                                 <h2>{{ cms.i18n.ulvia-official.ui-search-metadata }}</h2>
@@ -216,7 +234,7 @@
                             </form>
                         </ulvia-official-stack>
                     </ulvia-official-surface>
-                    <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-surface id="page-publication" slot="items" appearance="outlined" padding="lg">
                         <ulvia-official-cluster slot="content" align="center" justify="between">
                             <div slot="items">
                                 <h2>{{ cms.i18n.ulvia-official.ui-publication }}</h2>
@@ -279,7 +297,7 @@
                             </form>
                         </ulvia-official-cluster>
                     </ulvia-official-surface>
-                    <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-surface id="page-danger" slot="items" appearance="outlined" padding="lg">
                         <h2 slot="content">{{ cms.i18n.ulvia-official.ui-danger-zone }}</h2>
                         <p slot="content">{{ cms.i18n.ulvia-official.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit }}</p>
                         <form slot="content" cms-mutation="ulvia.cms.pages:delete as deletion" cms-mutation-redirect="/admin/pages">
@@ -301,7 +319,7 @@
                             </div>
                         </form>
                     </ulvia-official-surface>
-                </div>
+                </ulvia-official-stack>
                 <div role="alert" cms-case='"failure"'>
                     <h2>{{ cms.i18n.ulvia-official.ui-page-unavailable }}</h2>
                     <p>{{ cms.i18n.ulvia-official.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable }}</p>

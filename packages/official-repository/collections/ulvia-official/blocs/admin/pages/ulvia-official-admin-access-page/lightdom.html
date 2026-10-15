@@ -17,12 +17,18 @@
                     <p>{{ cms.i18n.ulvia-official.ui-users-and-settings-could-not-be-read }}</p>
                 </div>
             </div>
-            <div cms-case='"success"'>
-                <header>
+            <ulvia-official-stack cms-case='"success"' gap="xl">
+                <ulvia-official-route-tabs slot="items" label="{{ cms.i18n.ulvia-official.ui-users }}" appearance="pills" size="sm">
+                    <ulvia-official-route-tab slot="items"><a href="#access-members">{{ cms.i18n.ulvia-official.ui-members }}</a></ulvia-official-route-tab>
+                    <ulvia-official-route-tab slot="items"
+                        ><a href="#access-login-providers">{{ cms.i18n.ulvia-official.ui-login-providers }}</a></ulvia-official-route-tab
+                    >
+                </ulvia-official-route-tabs>
+                <header id="access-members" slot="items">
                     <h2>{{ cms.i18n.ulvia-official.ui-members }}</h2>
                     <p>{{ access.data.totalUsers }} {{ cms.i18n.ulvia-official.ui-total-users }}</p>
                 </header>
-                <ulvia-official-grid gap="md" role="list">
+                <ulvia-official-grid slot="items" gap="md" role="list">
                     <ulvia-official-surface slot="items" cms-repeat="access.data.users as user" appearance="outlined" padding="lg" role="listitem">
                         <ulvia-official-stack slot="content" gap="md">
                             <header slot="items">
@@ -36,7 +42,7 @@
                                     >
                                 </ulvia-official-cluster>
                                 <p>{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }}</p>
-                                <small>{{ cms.i18n.ulvia-official.ui-last-seen }} {{ user.lastSeenAt }}</small>
+                                <small>{{ cms.i18n.ulvia-official.ui-last-seen }} {{ user.lastSeenAt | dateLong }}</small>
                             </header>
                             <form
                                 slot="items"
@@ -130,11 +136,11 @@
                         </ulvia-official-stack>
                     </ulvia-official-surface>
                 </ulvia-official-grid>
-                <header>
+                <header id="access-login-providers" slot="items">
                     <h2>{{ cms.i18n.ulvia-official.ui-login-providers }}</h2>
                     <p>{{ cms.i18n.ulvia-official.ui-choose-which-configured-identity-methods-are-available-on-the-administration-sign-in-page }}</p>
                 </header>
-                <ulvia-official-grid gap="md" role="list">
+                <ulvia-official-grid slot="items" gap="md" role="list">
                     <ulvia-official-surface slot="items" cms-repeat="access.data.loginProviders as provider" appearance="outlined" padding="lg" role="listitem">
                         <form
                             slot="content"
@@ -195,7 +201,7 @@
                         </form>
                     </ulvia-official-surface>
                 </ulvia-official-grid>
-            </div>
+            </ulvia-official-stack>
             <div role="alert" cms-case='"failure"'>
                 <h2>{{ cms.i18n.ulvia-official.ui-access-unavailable }}</h2>
                 <p>{{ cms.i18n.ulvia-official.ui-users-and-settings-could-not-be-read }}</p>

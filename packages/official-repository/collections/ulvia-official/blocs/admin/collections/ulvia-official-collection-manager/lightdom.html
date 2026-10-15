@@ -1,4 +1,14 @@
 <ulvia-official-stack gap="xl">
+    <ulvia-official-route-tabs slot="items" label="{{ cms.i18n.ulvia-official.ui-collections }}" appearance="pills" size="sm">
+        <ulvia-official-route-tab slot="items"
+            ><a href="#installed-collections">{{ cms.i18n.ulvia-official.ui-installed-collections }}</a></ulvia-official-route-tab
+        >
+        <ulvia-official-route-tab slot="items"
+            ><a href="#repository-releases">{{ cms.i18n.ulvia-official.ui-repository-releases }}</a></ulvia-official-route-tab
+        >
+        <ulvia-official-route-tab slot="items"><a href="#migration-status">{{ cms.i18n.ulvia-official.ui-migration-status }}</a></ulvia-official-route-tab>
+        <ulvia-official-route-tab slot="items"><a href="#collection-activity">{{ cms.i18n.ulvia-official.ui-recent-activity }}</a></ulvia-official-route-tab>
+    </ulvia-official-route-tabs>
     <section
         slot="items"
         cms-query="ulvia.cms.collections:catalogue as catalogue"
@@ -19,7 +29,7 @@
                 </p>
             </div>
             <ulvia-official-stack cms-case='"success"' gap="xl">
-                <header slot="items">
+                <header id="installed-collections" slot="items">
                     <h2>{{ cms.i18n.ulvia-official.ui-installed-collections }}</h2>
                     <p>
                         {{ catalogue.data.installed.length }}
@@ -44,7 +54,7 @@
                     <p slot="content">{{ cms.i18n.ulvia-official.ui-no-collection-is-installed }}</p>
                 </ulvia-official-surface>
 
-                <header slot="items">
+                <header id="repository-releases" slot="items">
                     <h2>{{ cms.i18n.ulvia-official.ui-repository-releases }}</h2>
                     <p>
                         {{ catalogue.data.releases.length }}
@@ -158,6 +168,7 @@
     </section>
 
     <section
+        id="migration-status"
         slot="items"
         cms-query="ulvia.cms.collections:migration-status as migrations"
         cms-query-input='{"limit":{"from":"literal","value":20}}'
@@ -191,6 +202,7 @@
     </section>
 
     <section
+        id="collection-activity"
         slot="items"
         cms-query="ulvia.cms.jobs:list as jobs"
         cms-query-input='{"limit":{"from":"literal","value":50}}'

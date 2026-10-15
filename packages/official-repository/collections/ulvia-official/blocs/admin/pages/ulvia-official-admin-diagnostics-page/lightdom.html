@@ -2,6 +2,15 @@
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-diagnostics }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-live-operational-signals-from-the-selected-cms-contracts }}</p>
     <ulvia-official-stack slot="content" gap="lg">
+        <ulvia-official-route-tabs slot="items" label="{{ cms.i18n.ulvia-official.ui-diagnostics }}" appearance="pills" size="sm">
+            <ulvia-official-route-tab slot="items"
+                ><a href="#migration-health">{{ cms.i18n.ulvia-official.ui-content-maintenance }}</a></ulvia-official-route-tab
+            >
+            <ulvia-official-route-tab slot="items"><a href="#job-health">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</a></ulvia-official-route-tab>
+            <ulvia-official-route-tab slot="items"
+                ><a href="#provider-health">{{ cms.i18n.ulvia-official.ui-provider-installations }}</a></ulvia-official-route-tab
+            >
+        </ulvia-official-route-tabs>
         <section
             slot="items"
             aria-labelledby="migration-health"
@@ -37,7 +46,7 @@
                                 <strong>{{ migration.status }} {{ cms.i18n.ulvia-official.ui-copy-a137f17a }} {{ migration.id }}</strong>
                                 <p>
                                     {{ migration.totalPages }} {{ cms.i18n.ulvia-official.ui-pages }} {{ migration.operationCount }}
-                                    {{ cms.i18n.ulvia-official.ui-operations-9b1b6f78 }} {{ migration.updatedAt }}
+                                    {{ cms.i18n.ulvia-official.ui-operations-9b1b6f78 }} {{ migration.updatedAt | dateLong }}
                                 </p>
                             </article>
                         </ulvia-official-stack>
@@ -62,7 +71,7 @@
                                 <ulvia-official-cluster align="center" justify="between">
                                     <div slot="items">
                                         <strong>{{ job.contractId }} {{ cms.i18n.ulvia-official.ui-copy }} {{ job.capabilityId }}</strong>
-                                        <p>{{ job.updatedAt }}</p>
+                                        <p>{{ job.updatedAt | dateLong }}</p>
                                     </div>
                                     <ulvia-official-badge slot="items" tone="neutral"><span slot="label">{{ job.status }}</span></ulvia-official-badge>
                                 </ulvia-official-cluster>

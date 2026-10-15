@@ -1,5 +1,5 @@
-<ulvia-official-stack slot="content" gap="lg">
-    <ulvia-official-surface slot="items" appearance="elevated" padding="lg">
+<ulvia-official-sidebar slot="content" side="end" sidebar-width="lg" gap="xl">
+    <ulvia-official-surface id="upload-file" slot="sidebar" appearance="elevated" padding="lg">
         <h2 slot="content">{{ cms.i18n.ulvia-official.ui-upload-a-file }}</h2>
         <p slot="content">
             {{ cms.i18n.ulvia-official.ui-files-are-validated-and-limited-by-the-server-upload-policy }}
@@ -59,7 +59,7 @@
 
     <section
         id="file-library"
-        slot="items"
+        slot="content"
         cms-query="ulvia.cms.files:workspace.get as workspace"
         cms-query-input='{"offset":{"from":"literal","value":0},"limit":{"from":"literal","value":100}}'
         cms-query-listen="@page:ulvia-official-files-mutation/lastSuccess/requestId"
@@ -86,7 +86,7 @@
                         {{ workspace.data.items.length }} {{ cms.i18n.ulvia-official.ui-files-in-this-batch }}
                     </p>
                 </ulvia-official-cluster>
-                <ulvia-official-grid slot="items" cms-condition="workspace.data.items.length" gap="md" role="list">
+                <ulvia-official-grid slot="items" cms-condition="workspace.data.items.length" columns="1" gap="md" role="list">
                     <ulvia-official-surface slot="items" cms-repeat="workspace.data.items as file" appearance="outlined" padding="lg" role="listitem">
                         <ulvia-official-stack slot="content" gap="md">
                             <header slot="items">
@@ -394,4 +394,4 @@
             </div>
         </div>
     </section>
-</ulvia-official-stack>
+</ulvia-official-sidebar>
