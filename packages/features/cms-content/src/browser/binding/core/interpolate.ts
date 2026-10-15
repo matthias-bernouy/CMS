@@ -43,12 +43,16 @@ export function bindingFilter(name: string, filters: FilterMap): Filter | undefi
 export function createBuiltinFilters(locale?: string): FilterMap {
     const normalizedLocale = locale?.trim() || undefined;
     return {
-        dateLong: (value) => formatLongDate(value, normalizedLocale),
+        dateLong: (value, localeOverride) => formatLongDate(value, explicitLocale(localeOverride) ?? normalizedLocale),
         json: (value) => stringifyJson(value),
         minorCurrency: (value, currency) => formatMinorCurrency(value, currency, normalizedLocale),
         string: (value) => stringifyScalar(value),
         urlencode: (value) => encodeURIComponent(value == null ? "" : String(value)),
     };
+}
+
+function explicitLocale(value: unknown): string | undefined {
+    return typeof value === "string" ? value.trim() || undefined : undefined;
 }
 
 function stringifyJson(value: unknown): string | undefined {

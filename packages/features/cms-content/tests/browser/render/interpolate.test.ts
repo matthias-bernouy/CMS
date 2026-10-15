@@ -119,10 +119,16 @@ describe("interpolateString — filters (injected)", () => {
     });
 
     test("formats dates and currencies with an explicit page locale", () => {
-        const value = { amount: 12_990, currency: "EUR", date: "2026-08-26T10:30:00.000Z" };
+        const value = {
+            amount: 12_990,
+            currency: "EUR",
+            date: "2026-08-26T10:30:00.000Z",
+            requestedLocale: "en-US",
+        };
         const filters = createBuiltinFilters("fr-FR");
         expect(interpolateString("{{ amount | minorCurrency(currency) }}", s(value), filters)).toBe("129,90 €");
         expect(interpolateString("{{ date | dateLong }}", s(value), filters)).toBe("26 août 2026");
+        expect(interpolateString("{{ date | dateLong(requestedLocale) }}", s(value), filters)).toBe("August 26, 2026");
     });
 });
 
