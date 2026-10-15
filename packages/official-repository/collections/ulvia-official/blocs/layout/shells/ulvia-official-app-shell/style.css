@@ -37,6 +37,12 @@
     align-items: center;
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
+::slotted([slot="brand"]) {
+    color: var(--ulvia-official-text-primary, #17211d);
+    font-size: var(--ulvia-official-font-size-xl, 1.25rem);
+    font-weight: var(--ulvia-official-font-weight-bold, 700);
+    letter-spacing: var(--ulvia-official-letter-spacing-tight, -0.02em);
+}
 [part="primary-navigation"] {
     min-width: 0;
 }
