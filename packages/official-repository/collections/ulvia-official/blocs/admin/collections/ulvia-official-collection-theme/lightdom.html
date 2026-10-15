@@ -109,26 +109,6 @@
             <p slot="items" cms-condition="collectionTheme.data.sourceFound &amp;&amp; collectionTheme.data.tokens.length === 0">
                 {{ cms.i18n.ulvia-official.ui-no-theme-token-matches-current-search }}
             </p>
-            <ulvia-official-grid slot="items" gap="md" cms-condition="collectionTheme.data.tokens.length">
-                <ulvia-official-surface slot="items" cms-repeat="collectionTheme.data.tokens as token" appearance="outlined" padding="md">
-                    <ulvia-official-stack slot="content" gap="sm">
-                        <span slot="items">{{ token.categoryLabel }}</span>
-                        <strong slot="items">{{ token.label }}</strong>
-                        <code slot="items">{{ token.value }}</code>
-                        <ulvia-official-badge slot="items" tone="info" cms-condition="token.overridden">
-                            <span slot="label">{{ cms.i18n.ulvia-official.ui-overridden }}</span>
-                        </ulvia-official-badge>
-                        <ulvia-official-action slot="items" variant="ghost" tone="secondary" size="sm">
-                            <a
-                                href="/admin/collections/detail?ulvia-official-collection={{ collectionTheme.data.collectionId | urlencode }}&amp;ulvia-official-theme-profile={{ collectionTheme.data.profileId | urlencode }}&amp;ulvia-official-theme-mode={{ collectionTheme.data.mode | urlencode }}&amp;ulvia-official-theme-token={{ token.id | urlencode }}#collection-theme"
-                                >{{
-                                    cms.i18n.ulvia-official.ui-edit-token
-                                }}</a
-                            >
-                        </ulvia-official-action>
-                    </ulvia-official-stack>
-                </ulvia-official-surface>
-            </ulvia-official-grid>
             <ulvia-official-surface slot="items" appearance="elevated" padding="lg" cms-condition="collectionTheme.data.hasToken">
                 <ulvia-official-stack slot="content" gap="md">
                     <header slot="items">
@@ -225,6 +205,26 @@
                     </form>
                 </ulvia-official-stack>
             </ulvia-official-surface>
+            <ulvia-official-grid slot="items" gap="md" cms-condition="collectionTheme.data.tokens.length">
+                <ulvia-official-surface slot="items" cms-repeat="collectionTheme.data.tokens as token" appearance="outlined" padding="md">
+                    <ulvia-official-stack slot="content" gap="sm">
+                        <span slot="items">{{ token.categoryLabel }}</span>
+                        <strong slot="items">{{ token.label }}</strong>
+                        <code slot="items">{{ token.value }}</code>
+                        <ulvia-official-badge slot="items" tone="info" cms-condition="token.overridden">
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-overridden }}</span>
+                        </ulvia-official-badge>
+                        <ulvia-official-action slot="items" variant="ghost" tone="secondary" size="sm">
+                            <a
+                                href="/admin/collections/detail?ulvia-official-collection={{ collectionTheme.data.collectionId | urlencode }}&amp;ulvia-official-theme-profile={{ collectionTheme.data.profileId | urlencode }}&amp;ulvia-official-theme-mode={{ collectionTheme.data.mode | urlencode }}&amp;ulvia-official-theme-token={{ token.id | urlencode }}#collection-theme"
+                                >{{
+                                    cms.i18n.ulvia-official.ui-edit-token
+                                }}</a
+                            >
+                        </ulvia-official-action>
+                    </ulvia-official-stack>
+                </ulvia-official-surface>
+            </ulvia-official-grid>
         </ulvia-official-stack>
         <p role="alert" cms-case='"failure"'>
             {{ cms.i18n.ulvia-official.ui-request-failed }}
