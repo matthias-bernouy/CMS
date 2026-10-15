@@ -105,7 +105,7 @@ export function renderContentTexts(
                 if (node.nodeType === 1) {
                     walk(node as Element, true);
                 } else if (node.nodeType === 3) {
-                    replace(node.textContent ?? "", false);
+                    replace(node.textContent ?? "", false, "template text");
                 }
             }
         }
