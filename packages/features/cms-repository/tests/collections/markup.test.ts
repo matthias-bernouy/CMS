@@ -51,7 +51,7 @@ describe("collection markup admission", () => {
             slots: {},
         });
         expect(() => check([action, page])).not.toThrow();
-        expect(() => check([{ ...action, defaultContent: "<a>Link</a>" }, page])).not.toThrow();
+        expect(() => check([{ ...action, defaultContent: '<a href="#">Link</a>' }, page])).not.toThrow();
         expect(() => check([{ ...action, shadowdom: '<slot name="content"></slot>' }])).toThrow(
             "one default shadow slot",
         );
