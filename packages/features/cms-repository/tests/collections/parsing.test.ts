@@ -513,6 +513,41 @@ describe("collection release parsing", () => {
         expect(() => parseCollectionRelease(source)).toThrow("declared locally or explicitly imported");
     });
 
+    test("validates projected query listeners against the declared state schema", () => {
+        const source = collectionDocument();
+        source.states = [
+            {
+                id: "save",
+                scope: "page",
+                schema: {
+                    type: "object",
+                    properties: {
+                        lastSuccess: {
+                            type: "object",
+                            nullable: true,
+                            properties: { requestId: { type: "string", maxLength: 128 } },
+                            required: ["requestId"],
+                        },
+                    },
+                    required: ["lastSuccess"],
+                },
+            },
+        ];
+        const consumer = (source.blocs as Record<string, unknown>[])[1]!;
+        consumer.requires = [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
+        consumer.lightdom = `<atlas-panel
+            cms-query="catalog:items.list as items"
+            cms-query-listen="@page:atlas-save/lastSuccess/requestId"
+        ><slot name="main" slot="body"></slot></atlas-panel>`;
+        expect(() => parseCollectionRelease(source)).not.toThrow();
+
+        consumer.lightdom = `<atlas-panel
+            cms-query="catalog:items.list as items"
+            cms-query-listen="@page:atlas-save/lastSuccess/missing"
+        ><slot name="main" slot="body"></slot></atlas-panel>`;
+        expect(() => parseCollectionRelease(source)).toThrow("unknown state property");
+    });
+
     test("validates known cms-sync producer types against declared state contracts", () => {
         const state = (schema: Record<string, unknown>, markup: string) => {
             const source = collectionDocument();

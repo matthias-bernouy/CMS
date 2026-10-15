@@ -7,7 +7,9 @@ export function publishFormSync(form: HTMLFormElement, state: MutationState, inp
         return;
     }
     try {
-        writeSyncValue(target, { ...state, ...(input === undefined ? {} : { input }), dirty }, form.ownerDocument);
+        writeSyncValue(target, { ...state, ...(input === undefined ? {} : { input }), dirty }, form.ownerDocument, {
+            source: form,
+        });
     } catch (error) {
         console.warn("cms-sync could not publish form state", error);
     }

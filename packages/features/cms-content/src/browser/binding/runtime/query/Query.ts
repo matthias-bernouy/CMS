@@ -66,7 +66,7 @@ export class Query {
             () => this.requestIdentity(),
             (acknowledge) => this.run({ acknowledge }),
         );
-        this.stopRefresh = listenQueryRefresh(this.element, () => void this.run());
+        this.stopRefresh = listenQueryRefresh(this.element, (acknowledge) => void this.run({ acknowledge }));
         void this.run();
     }
 

@@ -30,8 +30,8 @@ function queryInputs(element: Element, query: ReturnType<typeof parseQuery>): Re
     if (query && "sync" in query) {
         inputs.add(stateId(query.sync.scope, query.sync.key));
     }
-    for (const target of parseQueryListen(element.getAttribute("cms-query-listen")) ?? []) {
-        inputs.add(stateId(target.scope, target.key));
+    for (const listener of parseQueryListen(element.getAttribute("cms-query-listen")) ?? []) {
+        inputs.add(stateId(listener.sync.scope, listener.sync.key));
     }
     return inputs;
 }

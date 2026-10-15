@@ -242,6 +242,44 @@ test("an explicit listener invalidates a remote query even when its selected inp
     writeSyncValue(target, undefined);
 });
 
+test("a projected listener reloads only when its selected JSON branch changes", async () => {
+    const target = { scope: "page", key: "ulvia-official-save" } as const;
+    writeSyncValue(target, { activity: "idle", lastSuccess: null });
+    const host = el(`<section
+        cms-query="catalog.items:list as products"
+        cms-query-listen="@page:ulvia-official-save/lastSuccess"
+    ></section>`);
+    document.body.appendChild(host);
+    let requests = 0;
+    const query = new Query(host, {}, { request: async () => ({ kind: "success", data: ++requests }) });
+
+    query.start();
+    await waitFor(() => requests === 1);
+    writeSyncValue(target, { activity: "submitting", lastSuccess: null });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(requests).toBe(1);
+
+    writeSyncValue(target, {
+        activity: "idle",
+        lastSuccess: { requestId: "request-1", data: { saved: true } },
+    });
+    await waitFor(() => requests === 2);
+    writeSyncValue(target, {
+        activity: "idle",
+        lastSuccess: { data: { saved: true }, requestId: "request-1" },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(requests).toBe(2);
+
+    writeSyncValue(target, {
+        activity: "idle",
+        lastSuccess: { requestId: "request-2", data: { saved: true } },
+    });
+    await waitFor(() => requests === 3);
+    query.dispose();
+    writeSyncValue(target, undefined);
+});
+
 test("a remote query restarts after its input changes away and back while in flight", async () => {
     const target = { scope: "page", key: "ulvia-official-fast-filter" } as const;
     writeSyncValue(target, "draft");

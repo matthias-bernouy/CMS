@@ -4,7 +4,7 @@ import { parseJsonValue, serializeJsonValue } from "./jsonValue";
 export const CMS_SYNC_CHANGE_EVENT = "cms-sync:change";
 
 type StoredValue = { readonly version: 1; readonly value: unknown; readonly expiresAt?: number };
-type SyncChange = { readonly target: string };
+export type SyncChange = { readonly target: string; readonly source?: Element };
 
 const PAGE_VALUES = new WeakMap<Document, Map<string, string>>();
 const STORAGE_PREFIX = "cms-sync:v1:";
@@ -40,7 +40,7 @@ export function writeSyncValue(
     target: CmsSyncTarget,
     value: unknown,
     doc: Document = document,
-    options: { readonly expiresAt?: number } = {},
+    options: { readonly expiresAt?: number; readonly source?: Element } = {},
 ): void {
     if (target.scope === "param") {
         const next = paramValue(value);
@@ -48,7 +48,7 @@ export function writeSyncValue(
             return;
         }
         writeParam(target.key, next, doc);
-        dispatchChange(target, doc);
+        dispatchChange(target, doc, options.source);
         return;
     }
     if (target.scope === "page") {
@@ -63,7 +63,7 @@ export function writeSyncValue(
         } else {
             values.set(target.key, serialized);
         }
-        dispatchChange(target, doc);
+        dispatchChange(target, doc, options.source);
         return;
     }
     const storage = browserStorage(target.scope, doc);
@@ -81,28 +81,28 @@ export function writeSyncValue(
     } else {
         storage.setItem(key, serialized);
     }
-    dispatchChange(target, doc);
+    dispatchChange(target, doc, options.source);
 }
 
 export function subscribeSyncValue(
     target: CmsSyncTarget,
-    listener: (value: unknown) => void,
+    listener: (value: unknown, change: SyncChange) => void,
     doc: Document = document,
 ): () => void {
     const serializedTarget = `@${target.scope}:${target.key}`;
     const onChange = (event: Event) => {
         if ((event as CustomEvent<SyncChange>).detail?.target === serializedTarget) {
-            listener(readSyncValue(target, doc));
+            listener(readSyncValue(target, doc), (event as CustomEvent<SyncChange>).detail);
         }
     };
     const onNavigation = () => {
         if (target.scope === "param") {
-            listener(readSyncValue(target, doc));
+            listener(readSyncValue(target, doc), { target: serializedTarget });
         }
     };
     const onStorage = (event: StorageEvent) => {
         if (event.key === storageKey(target)) {
-            listener(readSyncValue(target, doc));
+            listener(readSyncValue(target, doc), { target: serializedTarget });
         }
     };
     doc.addEventListener(CMS_SYNC_CHANGE_EVENT, onChange);
@@ -220,11 +220,11 @@ function parseStoredValue(value: string | null): StoredValue | null {
     }
 }
 
-function dispatchChange(target: CmsSyncTarget, doc: Document): void {
+function dispatchChange(target: CmsSyncTarget, doc: Document, source?: Element): void {
     const EventConstructor = doc.defaultView?.CustomEvent ?? CustomEvent;
     doc.dispatchEvent(
         new EventConstructor(CMS_SYNC_CHANGE_EVENT, {
-            detail: { target: `@${target.scope}:${target.key}` } satisfies SyncChange,
+            detail: { target: `@${target.scope}:${target.key}`, ...(source ? { source } : {}) } satisfies SyncChange,
         }),
     );
 }

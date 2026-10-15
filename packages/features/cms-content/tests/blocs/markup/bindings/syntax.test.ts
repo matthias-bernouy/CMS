@@ -184,17 +184,28 @@ describe("binding syntax", () => {
     test("formats and parses bounded explicit query listeners", () => {
         expect(
             asQueryListen([
-                { scope: "param", key: "ulvia-official-search" },
-                { scope: "page", key: "ulvia-official-revision" },
+                { sync: { scope: "param", key: "ulvia-official-search" }, path: [] },
+                {
+                    sync: { scope: "page", key: "ulvia-official-revision" },
+                    path: ["lastSuccess", "requestId"],
+                },
             ]),
-        ).toBe("@param:ulvia-official-search @page:ulvia-official-revision");
-        expect(parseQueryListen(" @param:ulvia-official-search @page:ulvia-official-revision ")).toEqual([
-            { scope: "param", key: "ulvia-official-search" },
-            { scope: "page", key: "ulvia-official-revision" },
+        ).toBe("@param:ulvia-official-search @page:ulvia-official-revision/lastSuccess/requestId");
+        expect(
+            parseQueryListen(" @param:ulvia-official-search @page:ulvia-official-revision/lastSuccess/requestId "),
+        ).toEqual([
+            { sync: { scope: "param", key: "ulvia-official-search" }, path: [] },
+            {
+                sync: { scope: "page", key: "ulvia-official-revision" },
+                path: ["lastSuccess", "requestId"],
+            },
         ]);
         expect(parseQueryListen("")).toBeNull();
         expect(parseQueryListen("@page:ulvia-official-revision @page:ulvia-official-revision")).toBeNull();
         expect(parseQueryListen("@unknown:ulvia-official-revision")).toBeNull();
+        expect(parseQueryListen("@param:ulvia-official-search/value")).toBeNull();
+        expect(parseQueryListen("@page:ulvia-official-revision/__proto__")).toBeNull();
+        expect(parseQueryListen("@page:ulvia-official-revision/bad~2pointer")).toBeNull();
         expect(
             parseQueryListen(Array.from({ length: 17 }, (_, index) => `@page:site-key-${index}`).join(" ")),
         ).toBeNull();

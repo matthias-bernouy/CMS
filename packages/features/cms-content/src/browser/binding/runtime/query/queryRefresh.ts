@@ -1,8 +1,9 @@
 import { parseQueryListen, parseQueryRefresh } from "cms-content/blocs/core/markup/bindings";
 import { QUERY_LISTEN_ATTR, QUERY_REFRESH_ATTR } from "../../core/attrs";
-import { subscribeSyncValue } from "../../state/SyncState";
+import { readSyncValue, subscribeSyncValue } from "../../state/SyncState";
+import { selectSyncValue, shareProjectedValue } from "../../state/selectSyncValue";
 
-export function listenQueryRefresh(element: Element, refresh: () => void): () => void {
+export function listenQueryRefresh(element: Element, refresh: (acknowledge?: HTMLFormElement) => void): () => void {
     const doc = element.ownerDocument;
     const win = doc.defaultView;
     const policy = parseQueryRefresh(element.getAttribute(QUERY_REFRESH_ATTR));
@@ -13,8 +14,22 @@ export function listenQueryRefresh(element: Element, refresh: () => void): () =>
     };
     const onRefresh = () => refresh();
 
-    for (const target of parseQueryListen(element.getAttribute(QUERY_LISTEN_ATTR)) ?? []) {
-        stops.push(subscribeSyncValue(target, refresh, doc));
+    for (const listener of parseQueryListen(element.getAttribute(QUERY_LISTEN_ATTR)) ?? []) {
+        let selected = selectSyncValue(readSyncValue(listener.sync, doc), listener.path);
+        stops.push(
+            subscribeSyncValue(
+                listener.sync,
+                (value, change) => {
+                    const next = shareProjectedValue(selected, selectSyncValue(value, listener.path));
+                    if (Object.is(selected, next)) {
+                        return;
+                    }
+                    selected = next;
+                    refresh(ownerForm(change.source, doc));
+                },
+                doc,
+            ),
+        );
     }
     if (policy?.focus) {
         listen(doc, "visibilitychange", () => {
@@ -34,4 +49,9 @@ export function listenQueryRefresh(element: Element, refresh: () => void): () =>
             win?.clearInterval(timer);
         }
     };
+}
+
+function ownerForm(source: Element | undefined, doc: Document): HTMLFormElement | undefined {
+    const Form = doc.defaultView?.HTMLFormElement;
+    return Form && source instanceof Form ? source : undefined;
 }

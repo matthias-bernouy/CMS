@@ -70,7 +70,11 @@ export type CmsSyncQueryBinding = { readonly sync: CmsSyncTarget; readonly name:
 export type CmsQueryBinding = CmsRemoteQueryBinding | CmsSyncQueryBinding;
 export type CmsQueriesBinding = readonly CmsSyncQueryBinding[];
 export type CmsQueryInput = CmsBindingInputMap;
-export type CmsQueryListen = readonly CmsSyncTarget[];
+export type CmsQueryListener = {
+    readonly sync: CmsSyncTarget;
+    readonly path: readonly string[];
+};
+export type CmsQueryListen = readonly CmsQueryListener[];
 export type CmsQueryRefreshPolicy = {
     readonly intervalMs?: number;
     readonly focus: boolean;

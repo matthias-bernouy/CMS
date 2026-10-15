@@ -60,8 +60,11 @@ export function validateCollectionStateBindings(
                 installed,
                 path,
             );
-            for (const target of parseQueryListen(element.getAttribute("cms-query-listen")) ?? []) {
-                assertReadable(target, own, imported, installed, path);
+            for (const listener of parseQueryListen(element.getAttribute("cms-query-listen")) ?? []) {
+                const state = assertReadable(listener.sync, own, imported, installed, path);
+                if (state) {
+                    validateStateSelection(listener.path, state, path);
+                }
             }
             for (const binding of parseQueries(element.getAttribute("cms-queries")) ?? []) {
                 assertReadable(binding.sync, own, imported, installed, path);
@@ -77,6 +80,29 @@ export function validateCollectionStateBindings(
             );
         }
         validateDocumentStateCycles(document, path);
+    }
+}
+
+function validateStateSelection(selection: readonly string[], state: CollectionState, path: string): void {
+    let schema = state.schema;
+    for (const segment of selection) {
+        if (schema.type === "object") {
+            const property = schema.properties[segment];
+            if (!property) {
+                invalid(`cms-query-listen references unknown state property ${JSON.stringify(segment)}`, path);
+            }
+            schema = property;
+            continue;
+        }
+        if (schema.type === "map") {
+            schema = schema.values;
+            continue;
+        }
+        if (schema.type === "array" && /^(?:0|[1-9]\d*)$/u.test(segment)) {
+            schema = schema.items;
+            continue;
+        }
+        invalid(`cms-query-listen path segment ${JSON.stringify(segment)} cannot select from ${schema.type}`, path);
     }
 }
 

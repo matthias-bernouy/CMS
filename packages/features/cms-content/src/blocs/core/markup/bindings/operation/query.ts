@@ -16,6 +16,8 @@ const QUERY_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/u;
 const QUERY_REFRESH_INTERVAL = /^interval\((\d+)(ms|s|m)\)$/u;
 const MAX_QUERY_IMPORTS = 16;
 const MAX_QUERY_LISTEN_TARGETS = 16;
+const MAX_QUERY_LISTEN_DEPTH = 24;
+const FORBIDDEN_PATH_SEGMENTS = new Set(["__proto__", "constructor", "prototype"]);
 const MIN_QUERY_REFRESH_INTERVAL_MS = 1_000;
 const MAX_QUERY_REFRESH_INTERVAL_MS = 60 * 60 * 1_000;
 const RESERVED_QUERY_NAMES = new Set(["cms"]);
@@ -106,7 +108,12 @@ export function parseQueryInput(value: string | null | undefined): CmsQueryInput
 }
 
 export function asQueryListen(listeners: CmsQueryListen): string {
-    const value = listeners.map(asSyncTarget).join(" ");
+    const value = listeners
+        .map(
+            ({ sync, path }) =>
+                `${asSyncTarget(sync)}${path.map((segment) => `/${encodePointerSegment(segment)}`).join("")}`,
+        )
+        .join(" ");
     if (!parseQueryListen(value)) {
         throw new TypeError("Invalid CMS query listeners");
     }
@@ -118,8 +125,42 @@ export function parseQueryListen(value: string | null | undefined): CmsQueryList
     if (tokens.length === 0 || tokens.length > MAX_QUERY_LISTEN_TARGETS || new Set(tokens).size !== tokens.length) {
         return null;
     }
-    const listeners = tokens.map(parseSyncTarget);
+    const listeners = tokens.map(parseQueryListener);
     return listeners.every((listener) => listener !== null) ? listeners : null;
+}
+
+function parseQueryListener(value: string): CmsQueryListen[number] | null {
+    const separator = value.indexOf("/");
+    const sync = parseSyncTarget(separator < 0 ? value : value.slice(0, separator));
+    if (!sync) {
+        return null;
+    }
+    if (separator < 0) {
+        return { sync, path: [] };
+    }
+    if (sync.scope === "param") {
+        return null;
+    }
+    const encoded = value.slice(separator + 1).split("/");
+    if (encoded.length > MAX_QUERY_LISTEN_DEPTH || encoded.some((segment) => segment.length === 0)) {
+        return null;
+    }
+    const path = encoded.map(decodePointerSegment);
+    if (path.some((segment) => segment === null || FORBIDDEN_PATH_SEGMENTS.has(segment))) {
+        return null;
+    }
+    return { sync, path: path as string[] };
+}
+
+function encodePointerSegment(value: string): string {
+    return value.replaceAll("~", "~0").replaceAll("/", "~1");
+}
+
+function decodePointerSegment(value: string): string | null {
+    if (/~(?:[^01]|$)/u.test(value)) {
+        return null;
+    }
+    return value.replaceAll("~1", "/").replaceAll("~0", "~");
 }
 
 export function parseQueryRefresh(value: string | null | undefined): CmsQueryRefreshPolicy | null {
