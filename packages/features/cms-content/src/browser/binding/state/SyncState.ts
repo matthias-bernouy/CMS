@@ -13,6 +13,7 @@ export type SyncChange = { readonly target: string; readonly source?: Element };
 
 const PAGE_VALUES = new WeakMap<Document, Map<string, string>>();
 const STORAGE_PREFIX = "cms-sync:v1:";
+const MAX_PAGE_BYTES = 256 * 1024;
 const MAX_SESSION_BYTES = 128 * 1024;
 const MAX_PERSISTENT_BYTES = 256 * 1024;
 
@@ -59,6 +60,9 @@ export function writeSyncValue(
     if (target.scope === "page") {
         const values = pageValues(doc);
         const serialized = value === undefined ? undefined : serializeJsonValue(value);
+        if (serialized !== undefined) {
+            assertSerializedSize(serialized, "page", MAX_PAGE_BYTES);
+        }
         const previous = values.get(target.key);
         if (previous === serialized) {
             return;
@@ -199,12 +203,15 @@ function serializeStoredValue(value: unknown, scope: "session" | "persistent", e
     const normalized = parseJsonValue(serializeJsonValue(value));
     const payload: StoredValue = { version: 1, value: normalized, ...(expiresAt === undefined ? {} : { expiresAt }) };
     const serialized = JSON.stringify(payload);
-    const bytes = new TextEncoder().encode(serialized).byteLength;
     const limit = scope === "session" ? MAX_SESSION_BYTES : MAX_PERSISTENT_BYTES;
-    if (bytes > limit) {
+    assertSerializedSize(serialized, scope, limit);
+    return serialized;
+}
+
+function assertSerializedSize(serialized: string, scope: "page" | "session" | "persistent", limit: number): void {
+    if (new TextEncoder().encode(serialized).byteLength > limit) {
         throw new RangeError(`${scope} synchronized state exceeds ${limit} bytes`);
     }
-    return serialized;
 }
 
 function parseStoredValue(value: string | null): StoredValue | null {

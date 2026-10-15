@@ -53,6 +53,13 @@ describe("synchronized state", () => {
         expect(() => writeSyncValue(session, cyclic)).toThrow("finite, acyclic JSON value");
     });
 
+    test("rejects page values larger than the bounded in-memory budget", () => {
+        expect(() => writeSyncValue(page, "x".repeat(256 * 1024))).toThrow(
+            "page synchronized state exceeds 262144 bytes",
+        );
+        expect(readSyncValue(page)).toBeUndefined();
+    });
+
     test("discards invalid values injected directly into browser storage", () => {
         localStorage.setItem(
             "cms-sync:v1:persistent:ulvia-official-preferences",
