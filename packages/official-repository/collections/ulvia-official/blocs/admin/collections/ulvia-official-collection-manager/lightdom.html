@@ -27,23 +27,22 @@
                             {{ cms.i18n.ulvia-official.ui-installed-collections-count }}
                         </p>
                     </header>
-                    <ulvia-official-grid gap="md" role="list">
-                        <ulvia-official-card slot="items" cms-repeat="catalogue.data.installed as installed" surface="raised" role="listitem">
-                            <p slot="eyebrow">{{ installed.publisherId }} {{ installed.version }}</p>
+                    <ulvia-official-list role="list">
+                        <ulvia-official-list-item slot="items" cms-repeat="catalogue.data.installed as installed" role="listitem">
                             <h3 slot="title">{{ installed.collectionId }}</h3>
-                            <div slot="body">
-                                <details>
-                                    <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
-                                    <p><code>{{ installed.digest }}</code></p>
-                                </details>
-                            </div>
-                            <ulvia-official-action slot="actions" variant="filled" tone="primary" size="sm">
+                            <span slot="meta">{{ installed.publisherId }}</span>
+                            <ulvia-official-badge slot="meta" tone="success"><span slot="label">{{ installed.version }}</span></ulvia-official-badge>
+                            <details slot="body">
+                                <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
+                                <p><code>{{ installed.digest }}</code></p>
+                            </details>
+                            <ulvia-official-action slot="actions" variant="outline" tone="secondary" size="sm">
                                 <a href="/admin/collections/detail?ulvia-official-collection={{ installed.collectionId | urlencode }}">
                                     {{ cms.i18n.ulvia-official.ui-manage }}
                                 </a>
                             </ulvia-official-action>
-                        </ulvia-official-card>
-                    </ulvia-official-grid>
+                        </ulvia-official-list-item>
+                    </ulvia-official-list>
                     <ulvia-official-surface cms-condition="catalogue.data.installed.length === 0" appearance="subtle" padding="lg">
                         <p slot="content">{{ cms.i18n.ulvia-official.ui-no-collection-is-installed }}</p>
                     </ulvia-official-surface>
