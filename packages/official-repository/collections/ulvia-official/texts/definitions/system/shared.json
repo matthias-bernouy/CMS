@@ -24,6 +24,12 @@
         "group": "text.group.shared"
     },
     {
+        "id": "ui-dashboard",
+        "label": "text.ui-dashboard.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
         "id": "ui-files",
         "label": "text.ui-files.label",
         "category": "text.category.shared",

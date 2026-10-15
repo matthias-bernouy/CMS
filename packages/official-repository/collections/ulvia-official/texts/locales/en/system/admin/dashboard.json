@@ -1,0 +1,7 @@
+{
+    "ui-dashboard-introduction": "See the essential content, repository and provider state before choosing a workspace.",
+    "ui-open-workspace": "Open workspace",
+    "ui-quick-actions": "Quick actions",
+    "ui-system-snapshot": "System snapshot",
+    "ui-system-snapshot-description": "Live, provider-backed counts for the current CMS instance."
+}

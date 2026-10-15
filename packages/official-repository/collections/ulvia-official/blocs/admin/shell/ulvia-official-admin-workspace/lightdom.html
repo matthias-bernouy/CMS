@@ -2,11 +2,20 @@
     <strong slot="brand">{{ cms.i18n.ulvia-official.ui-ulvia }}</strong>
     <span slot="primary-mobile-label">{{ cms.i18n.ulvia-official.ui-workspace }}</span>
     <ulvia-official-navigation-menu slot="secondary-navigation" label="{{ cms.i18n.ulvia-official.ui-administration }}">
-        <span slot="header">{{ cms.i18n.ulvia-official.ui-administration }}</span>
+        <span slot="header">{{ cms.i18n.ulvia-official.ui-site-administration }}</span>
+        <ulvia-official-navigation-section slot="sections">
+            <span slot="label">{{ cms.i18n.ulvia-official.ui-workspace }}</span>
+            <ulvia-official-navigation-item slot="items"
+                ><a href="/admin"
+                    ><ulvia-official-icon name="dashboard" size="sm" tone="current"></ulvia-official-icon
+                    ><span>{{ cms.i18n.ulvia-official.ui-dashboard }}</span></a
+                ></ulvia-official-navigation-item
+            >
+        </ulvia-official-navigation-section>
         <ulvia-official-navigation-section slot="sections">
             <span slot="label">{{ cms.i18n.ulvia-official.ui-content }}</span>
             <ulvia-official-navigation-item slot="items"
-                ><a href="/admin"
+                ><a href="/admin/pages"
                     ><ulvia-official-icon name="pages" size="sm" tone="current"></ulvia-official-icon
                     ><span>{{ cms.i18n.ulvia-official.ui-pages-9046da16 }}</span></a
                 ></ulvia-official-navigation-item
@@ -24,20 +33,11 @@
             >
         </ulvia-official-navigation-section>
         <ulvia-official-navigation-section slot="sections">
-            <span slot="label">{{ cms.i18n.ulvia-official.ui-workspace }}</span>
+            <span slot="label">{{ cms.i18n.ulvia-official.ui-administration }}</span>
             <ulvia-official-navigation-item slot="items"
                 ><a href="/admin/providers"
                     ><ulvia-official-icon name="sources" size="sm" tone="current"></ulvia-official-icon
                     ><span>{{ cms.i18n.ulvia-official.ui-providers }}</span></a
-                ></ulvia-official-navigation-item
-            >
-        </ulvia-official-navigation-section>
-        <ulvia-official-navigation-section slot="sections">
-            <span slot="label">{{ cms.i18n.ulvia-official.ui-administration }}</span>
-            <ulvia-official-navigation-item slot="items"
-                ><a href="/admin/diagnostics"
-                    ><ulvia-official-icon name="health" size="sm" tone="current"></ulvia-official-icon
-                    ><span>{{ cms.i18n.ulvia-official.ui-diagnostics }}</span></a
                 ></ulvia-official-navigation-item
             >
             <ulvia-official-navigation-item slot="items"
@@ -49,6 +49,12 @@
                 ><a href="/admin/settings"
                     ><ulvia-official-icon name="settings" size="sm" tone="current"></ulvia-official-icon
                     ><span>{{ cms.i18n.ulvia-official.ui-settings }}</span></a
+                ></ulvia-official-navigation-item
+            >
+            <ulvia-official-navigation-item slot="items"
+                ><a href="/admin/diagnostics"
+                    ><ulvia-official-icon name="health" size="sm" tone="current"></ulvia-official-icon
+                    ><span>{{ cms.i18n.ulvia-official.ui-diagnostics }}</span></a
                 ></ulvia-official-navigation-item
             >
         </ulvia-official-navigation-section>

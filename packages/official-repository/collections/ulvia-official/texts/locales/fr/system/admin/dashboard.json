@@ -1,0 +1,7 @@
+{
+    "ui-dashboard-introduction": "Consultez l’état essentiel du contenu, du repository et des providers avant de choisir un espace de travail.",
+    "ui-open-workspace": "Ouvrir l’espace",
+    "ui-quick-actions": "Accès rapides",
+    "ui-system-snapshot": "État du système",
+    "ui-system-snapshot-description": "Compteurs en direct fournis par les contrats sélectionnés pour cette instance CMS."
+}

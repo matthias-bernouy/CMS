@@ -7,32 +7,18 @@
     "internal": true,
     "uses": [
         "ulvia-official-action",
-        "ulvia-official-badge",
-        "ulvia-official-cluster",
         "ulvia-official-admin-workspace",
-        "ulvia-official-field",
-        "ulvia-official-form-actions",
+        "ulvia-official-card",
         "ulvia-official-grid",
-        "ulvia-official-input",
         "ulvia-official-stack",
+        "ulvia-official-stat",
         "ulvia-official-surface"
     ],
     "requires": [
-        {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "list",
-            "versionRange": "^1.0.0"
-        },
-        {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "create",
-            "versionRange": "^1.0.0"
-        },
-        {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "rename",
-            "versionRange": "^1.0.0"
-        }
+        { "contractId": "ulvia.cms.pages", "capabilityId": "list", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.collections", "capabilityId": "catalogue", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.providers", "capabilityId": "list", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.jobs", "capabilityId": "list", "versionRange": "^1.0.0" }
     ],
     "slots": {}
 }

@@ -1,0 +1,32 @@
+[
+    {
+        "id": "ui-dashboard-introduction",
+        "label": "text.ui-dashboard-introduction.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-quick-actions",
+        "label": "text.ui-quick-actions.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-open-workspace",
+        "label": "text.ui-open-workspace.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-system-snapshot",
+        "label": "text.ui-system-snapshot.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-system-snapshot-description",
+        "label": "text.ui-system-snapshot-description.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    }
+]

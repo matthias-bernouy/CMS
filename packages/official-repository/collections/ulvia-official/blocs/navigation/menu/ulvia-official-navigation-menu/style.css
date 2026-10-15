@@ -1,6 +1,6 @@
 :host {
-    --navigation-menu-padding: var(--ulvia-official-spacing-sm, 0.75rem);
-    --navigation-item-height: 2.25rem;
+    --navigation-menu-padding: var(--ulvia-official-spacing-md, 1rem);
+    --navigation-item-height: 2.5rem;
     --navigation-item-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     display: block;
     min-width: 0;
@@ -18,14 +18,17 @@
 }
 [part="header"] {
     display: var(--navigation-menu-header-display, block);
-    padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem)
-        var(--ulvia-official-spacing-md, 1rem);
-    font-weight: var(--ulvia-official-font-weight-bold, 700);
+    padding: 0.25rem var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
+    color: var(--ulvia-official-text-muted, #6d7e77);
+    font-size: var(--ulvia-official-font-size-xs, 0.75rem);
+    font-weight: var(--ulvia-official-font-weight-semibold, 600);
+    letter-spacing: var(--ulvia-official-letter-spacing-wide, 0.04em);
+    text-transform: uppercase;
 }
 [part="sections"] {
     display: flex;
     flex-flow: var(--navigation-menu-sections-flow, column) var(--navigation-menu-sections-wrap, nowrap);
-    gap: var(--ulvia-official-spacing-sm, 0.75rem);
+    gap: var(--ulvia-official-spacing-md, 1rem);
 }
 ::slotted(ulvia-official-navigation-section) {
     flex: 0 0 auto;

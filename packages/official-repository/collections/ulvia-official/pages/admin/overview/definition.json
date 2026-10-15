@@ -2,7 +2,7 @@
     "id": "overview",
     "defaultPath": "/admin",
     "name": "page.overview.name",
-    "icon": "pages",
+    "icon": "dashboard",
     "description": "page.overview.description",
     "requires": []
 }

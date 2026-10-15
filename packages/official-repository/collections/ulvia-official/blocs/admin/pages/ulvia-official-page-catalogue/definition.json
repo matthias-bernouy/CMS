@@ -1,0 +1,25 @@
+{
+    "kind": "composition",
+    "id": "ulvia-official-page-catalogue",
+    "label": "page.details.name",
+    "description": "page.details.description",
+    "category": "bloc.category.administration",
+    "internal": true,
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-admin-workspace",
+        "ulvia-official-badge",
+        "ulvia-official-cluster",
+        "ulvia-official-field",
+        "ulvia-official-form-actions",
+        "ulvia-official-input",
+        "ulvia-official-sidebar",
+        "ulvia-official-stack",
+        "ulvia-official-surface"
+    ],
+    "requires": [
+        { "contractId": "ulvia.cms.pages", "capabilityId": "list", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.pages", "capabilityId": "create", "versionRange": "^1.0.0" }
+    ],
+    "slots": {}
+}

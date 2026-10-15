@@ -1,6 +1,6 @@
 :host {
     --page-width: var(--ulvia-official-content-width-lg, 72rem);
-    --page-spacing: var(--ulvia-official-spacing-lg, 1.5rem);
+    --page-spacing: var(--ulvia-official-spacing-xl, 2rem);
     display: block;
     container-type: inline-size;
 }
@@ -14,7 +14,9 @@
 }
 [part="header"] {
     display: grid;
-    gap: var(--ulvia-official-spacing-sm, 0.75rem);
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
+    padding-block-end: var(--ulvia-official-spacing-md, 1rem);
+    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
 }
 [part="heading"] {
     display: flex;
@@ -29,6 +31,8 @@
 }
 [part="description"] {
     color: var(--ulvia-official-text-secondary, #4f625a);
+    max-width: 72ch;
+    line-height: var(--ulvia-official-line-height-relaxed, 1.65);
 }
 [part="navigation"] {
     min-width: 0;
