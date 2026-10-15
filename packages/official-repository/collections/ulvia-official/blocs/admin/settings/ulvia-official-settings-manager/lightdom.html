@@ -23,17 +23,13 @@
             </div>
             <ulvia-official-surface cms-case='"success"' appearance="elevated" padding="lg">
                 <form
-                    slot="content" cms-mutation="ulvia.cms.access:update-site as savedSite"
+                    slot="content"
+                    cms-mutation="ulvia.cms.access:update-site as savedSite"
                     cms-sync="@page:ulvia-official-settings-mutation"
                     cms-sync-select="lastSuccess.requestId"
                     cms-mutation-reset="false"
                 >
-                    <input
-                        type="hidden"
-                        name="expectedRevision"
-                        value="{{ settingsAccess.data.site.revision }}"
-                        cms-form-value-type="number"
-                    >
+                    <input type="hidden" name="expectedRevision" value="{{ settingsAccess.data.site.revision }}" cms-form-value-type="number">
                     <ulvia-official-stack gap="lg">
                         <header slot="items">
                             <p>{{ cms.i18n.ulvia-official.ui-site }}</p>
@@ -79,18 +75,11 @@
                             </label>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-site-availability-help }}</span>
                             <ulvia-official-select slot="control">
-                                <select
-                                    id="settings-site-visibility"
-                                    name="visible"
-                                    cms-form-value-type="boolean"
-                                >
+                                <select id="settings-site-visibility" name="visible" cms-form-value-type="boolean">
                                     <option value="true" selected="{{ settingsAccess.data.site.visible }}">
                                         {{ cms.i18n.ulvia-official.ui-public }}
                                     </option>
-                                    <option
-                                        value="false"
-                                        selected="{{ settingsAccess.data.site.visible === false }}"
-                                    >
+                                    <option value="false" selected="{{ settingsAccess.data.site.visible === false }}">
                                         {{ cms.i18n.ulvia-official.ui-private }}
                                     </option>
                                 </select>
@@ -112,17 +101,17 @@
                         </ulvia-official-form-actions>
                     </ulvia-official-stack>
 
-<div cms-match="savedSite.outcome.kind">
-<span cms-case='"none"' hidden></span>
-<span cms-case='"success"' hidden></span>
-<div cms-case='"error"' cms-match="savedSite.outcome.code">
-<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-</div>
-<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-</div>
-</form>
+                    <div cms-match="savedSite.outcome.kind">
+                        <span cms-case='"none"' hidden></span>
+                        <span cms-case='"success"' hidden></span>
+                        <div cms-case='"error"' cms-match="savedSite.outcome.code">
+                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        </div>
+                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                    </div>
+                </form>
             </ulvia-official-surface>
             <p role="alert" cms-case='"failure"'>
                 {{ cms.i18n.ulvia-official.ui-request-failed }}
@@ -148,17 +137,13 @@
             </div>
             <ulvia-official-surface cms-case='"success"' appearance="elevated" padding="lg">
                 <form
-                    slot="content" cms-mutation="ulvia.cms.localization:update-languages as savedLanguages"
+                    slot="content"
+                    cms-mutation="ulvia.cms.localization:update-languages as savedLanguages"
                     cms-sync="@page:ulvia-official-settings-mutation"
                     cms-sync-select="lastSuccess.requestId"
                     cms-mutation-reset="false"
                 >
-                    <input
-                        type="hidden"
-                        name="expectedRevision"
-                        value="{{ settingsLocalization.data.revision }}"
-                        cms-form-value-type="number"
-                    >
+                    <input type="hidden" name="expectedRevision" value="{{ settingsLocalization.data.revision }}" cms-form-value-type="number">
                     <ulvia-official-stack gap="lg">
                         <header slot="items">
                             <p>{{ cms.i18n.ulvia-official.ui-localization }}</p>
@@ -219,7 +204,11 @@
                             <p slot="actions" role="status" aria-live="polite" cms-condition="savedLanguages.outcome.kind === 'success'">
                                 {{ cms.i18n.ulvia-official.ui-languages-saved }}
                             </p>
-                            <p slot="actions" role="alert" cms-condition="(savedLanguages.outcome.kind === 'error' || savedLanguages.outcome.kind === 'failure')">
+                            <p
+                                slot="actions"
+                                role="alert"
+                                cms-condition="(savedLanguages.outcome.kind === 'error' || savedLanguages.outcome.kind === 'failure')"
+                            >
                                 {{ cms.i18n.ulvia-official.ui-request-failed }}
                             </p>
                             <ulvia-official-action slot="actions" variant="filled" tone="primary">
@@ -228,18 +217,18 @@
                         </ulvia-official-form-actions>
                     </ulvia-official-stack>
 
-<div cms-match="savedLanguages.outcome.kind">
-<span cms-case='"none"' hidden></span>
-<span cms-case='"success"' hidden></span>
-<div cms-case='"error"' cms-match="savedLanguages.outcome.code">
-<p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-<p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-<p role="alert" cms-case='"MIGRATION_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-<p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-</div>
-<p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-</div>
-</form>
+                    <div cms-match="savedLanguages.outcome.kind">
+                        <span cms-case='"none"' hidden></span>
+                        <span cms-case='"success"' hidden></span>
+                        <div cms-case='"error"' cms-match="savedLanguages.outcome.code">
+                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"MIGRATION_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        </div>
+                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                    </div>
+                </form>
             </ulvia-official-surface>
             <p role="alert" cms-case='"failure"'>
                 {{ cms.i18n.ulvia-official.ui-request-failed }}

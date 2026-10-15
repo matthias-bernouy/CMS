@@ -17,6 +17,7 @@
             "**/*.cts",
             "packages/official-repository/**/*.json",
             "packages/official-repository/**/*.css",
+            "packages/official-repository/**/*.html",
             "!!packages/features/cms-content/src/runtime-assets/generated/*.js"
         ]
     },
@@ -47,6 +48,18 @@
             "quoteStyle": "double",
             "semicolons": "always",
             "trailingCommas": "all"
+        }
+    },
+    "html": {
+        "experimentalFullSupportEnabled": true,
+        "parser": {
+            "interpolation": true
+        },
+        "formatter": {
+            "enabled": true,
+            "attributePosition": "auto",
+            "lineWidth": 160,
+            "whitespaceSensitivity": "css"
         }
     }
 }
