@@ -367,7 +367,7 @@ describe("collection release parsing", () => {
                 imports: {
                     blocs: [{ id: "ulvia-official-button", generation: 1 }],
                     themeTokens: [{ id: "primary", generation: 1 }],
-                    pages: [{ id: "home", generation: 2 }],
+                    pages: [{ id: "home", generation: 2, defaultPath: "/" }],
                     states: [{ id: "selection", generation: 1 }],
                 },
             },
@@ -406,7 +406,7 @@ describe("collection release parsing", () => {
             imports: {
                 blocs: [{ id: "ulvia-official-button", generation: 1 }],
                 themeTokens: [{ id: "primary", generation: 1 }],
-                pages: [{ id: "home", generation: 2 }],
+                pages: [{ id: "home", generation: 2, defaultPath: "/" }],
                 states: [{ id: "selection", generation: 1 }],
             },
         });

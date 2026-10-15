@@ -159,9 +159,14 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
         const exportedPages = new Set(target.exports?.pages ?? []);
         const targetPages = new Map((target.pages ?? []).map((page) => [page.id, page.generation ?? 1]));
         for (const page of dependency.imports.pages ?? []) {
-            if (!exportedPages.has(page.id) || targetPages.get(page.id) !== page.generation) {
+            const targetPage = target.pages?.find(({ id }) => id === page.id);
+            if (
+                !exportedPages.has(page.id) ||
+                targetPages.get(page.id) !== page.generation ||
+                targetPage?.defaultPath !== page.defaultPath
+            ) {
                 reject(
-                    `Collection ${release.collectionId} imports unavailable page ${target.collectionId}.${page.id} generation ${page.generation}`,
+                    `Collection ${release.collectionId} imports unavailable page ${target.collectionId}.${page.id} generation ${page.generation} at ${page.defaultPath}`,
                 );
             }
         }

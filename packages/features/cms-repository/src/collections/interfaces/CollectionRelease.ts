@@ -80,12 +80,17 @@ export interface CollectionResourceImport {
     readonly generation: number;
 }
 
+export interface CollectionPageImport extends CollectionResourceImport {
+    /** Authored route used by native links and verified against the selected dependency release. */
+    readonly defaultPath: string;
+}
+
 export interface CollectionResourceImportSelection {
     readonly blocs: readonly CollectionResourceImport[];
     readonly themeTokens: readonly CollectionResourceImport[];
     readonly texts?: readonly CollectionResourceImport[];
     readonly assets?: readonly CollectionResourceImport[];
-    readonly pages?: readonly CollectionResourceImport[];
+    readonly pages?: readonly CollectionPageImport[];
     readonly states?: readonly CollectionResourceImport[];
 }
 

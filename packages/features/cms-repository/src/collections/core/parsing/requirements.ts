@@ -11,6 +11,7 @@ import type { CollectionLimits } from "../limits";
 import { array, identifier, integer, keys, ordinal, record, string, unique } from "../values";
 import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
 import { textIdentifier } from "../texts/validation";
+import { parseDefaultPath } from "./pages/document";
 
 const SYSTEM_QUERIES = new Set(["kernel.auth:methods"]);
 
@@ -122,9 +123,31 @@ function parseResourceImports(
         ),
         ...optionalImports(source.texts, limits.maxTexts, `${path}.texts`, (entry) => textIdentifier(entry)),
         ...optionalImports(source.assets, limits.maxAssets, `${path}.assets`, assetIdentifier),
-        ...optionalImports(source.pages, limits.maxPages, `${path}.pages`, (entry, at) => identifier(entry, at)),
+        ...(source.pages === undefined
+            ? {}
+            : {
+                  pages: importedPages(source.pages, limits.maxPages, `${path}.pages`),
+              }),
         ...optionalImports(source.states, limits.maxStates, `${path}.states`, (entry, at) => identifier(entry, at)),
     };
+}
+
+function importedPages(value: unknown, maximum: number, path: string) {
+    const pages = array(value, maximum, path).map((entry, index) => {
+        const at = `${path}[${index}]`;
+        const source = record(entry, at);
+        keys(source, ["id", "generation", "defaultPath"], at);
+        return {
+            id: identifier(source.id, `${at}.id`),
+            generation: integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${at}.generation`),
+            defaultPath: parseDefaultPath(source.defaultPath, `${at}.defaultPath`),
+        };
+    });
+    unique(
+        pages.flatMap(({ id, defaultPath }) => [id, `path:${defaultPath}`]),
+        path,
+    );
+    return pages.sort((left, right) => ordinal(left.id, right.id));
 }
 
 function optionalImports(
@@ -132,15 +155,9 @@ function optionalImports(
     maximum: number,
     path: string,
     parseId: (value: unknown, path: string) => string,
-): Partial<Record<"texts" | "assets" | "pages" | "states", readonly CollectionResourceImport[]>> {
+): Partial<Record<"texts" | "assets" | "states", readonly CollectionResourceImport[]>> {
     const resources = importedResources(value, maximum, path, parseId);
-    const property = path.endsWith(".texts")
-        ? "texts"
-        : path.endsWith(".assets")
-          ? "assets"
-          : path.endsWith(".pages")
-            ? "pages"
-            : "states";
+    const property = path.endsWith(".texts") ? "texts" : path.endsWith(".assets") ? "assets" : "states";
     return resources.length ? { [property]: resources } : {};
 }
 

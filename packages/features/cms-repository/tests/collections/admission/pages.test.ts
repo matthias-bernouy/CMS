@@ -165,6 +165,7 @@ test("collection Pages use native links with statically identifiable paths", () 
     ).not.toThrow();
     for (const invalidHtml of [
         '<atlas-panel><a slot="body" href="/{{ page.path }}">{{ copy }}</a></atlas-panel>',
+        '<atlas-panel><a slot="body" href="/admin/pagez">{{ copy }}</a></atlas-panel>',
         '<atlas-panel><a slot="body" data-cms-page-ref="details">{{ copy }}</a></atlas-panel>',
         '<atlas-panel><div slot="body" href="/admin/details">{{ copy }}</div></atlas-panel>',
     ]) {
@@ -172,6 +173,25 @@ test("collection Pages use native links with statically identifiable paths", () 
             parseCollectionRelease({ ...source, pages: [{ ...page, document: { html: invalidHtml } }] }),
         ).toThrow();
     }
+});
+
+test("collection admission validates links from every Bloc template", () => {
+    const source = collectionDocument({
+        "page.overview.name": "Overview",
+        "page.details.name": "Details",
+        "text.label.details": "Details",
+    });
+    source.texts = [textDefinition("details", { en: "Details", "en-US": "Details" })];
+    const details = { ...page, id: "details", defaultPath: "/admin/details", name: "page.details.name" };
+    const blocs = structuredClone(source.blocs) as Record<string, unknown>[];
+    const composition = blocs.find(({ id }) => id === "atlas-page")!;
+    composition.defaultContent = '<a slot="main" href="/admin/details">{{ cms.i18n.atlas.details }}</a>';
+    expect(() => parseCollectionRelease({ ...source, blocs, pages: [page, details] })).not.toThrow();
+
+    composition.defaultContent = '<a slot="main" href="/admin/pagez">{{ cms.i18n.atlas.details }}</a>';
+    expect(() => parseCollectionRelease({ ...source, blocs, pages: [page, details] })).toThrow(
+        "Collection Bloc atlas-page references an undeclared Page route",
+    );
 });
 
 test("collection Pages use the closed content grammar", () => {

@@ -171,7 +171,7 @@ test("installs only declared public resources from compatible collection depende
                     themeTokens: [{ id: "primary", generation: 1 }],
                     texts: [{ id: "submit", generation: 1 }],
                     assets: [{ id: "empty.svg", generation: 1 }],
-                    pages: [{ id: "home", generation: 1 }],
+                    pages: [{ id: "home", generation: 1, defaultPath: "/" }],
                 },
             },
         ],
