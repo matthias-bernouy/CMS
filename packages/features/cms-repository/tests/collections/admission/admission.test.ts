@@ -126,6 +126,73 @@ describe("collection authored bundle admission", () => {
         ).rejects.toMatchObject({ code: "resolution_failed" });
     });
 
+    test("proves synchronized query projections against their declared state schemas", async () => {
+        const query = contractDocument("catalog.items", "item.list");
+        const capability = (query.capabilities as Record<string, unknown>[])[0]!;
+        capability.behavior = { effect: "query", execution: "sync" };
+        (capability.binding as Record<string, unknown>).method = "QUERY";
+        const source = collectionDocument();
+        source.states = [
+            {
+                id: "selection",
+                scope: "page",
+                schema: {
+                    type: "object",
+                    properties: {
+                        data: {
+                            type: "object",
+                            nullable: true,
+                            properties: { id: { type: "string", maxLength: 128 } },
+                            required: ["id"],
+                        },
+                    },
+                    required: ["data"],
+                },
+            },
+        ];
+        (source.blocs as Record<string, unknown>[]).push({
+            kind: "composition",
+            id: "atlas-catalog",
+            label: "bloc.page.label",
+            lightdom: `<section
+                cms-query="catalog.items:item.list as items"
+                cms-sync="@page:atlas-selection"
+                cms-sync-select="data.id"
+            >
+                <div cms-match="items.outcome.kind">
+                    <div cms-case='"none"'></div>
+                    <p cms-case='"success"'>{{ items.data.id }}</p>
+                    <p cms-case='"failure"'>{{ items.outcome.code }}</p>
+                </div>
+            </section>`,
+            slots: {},
+            uses: [],
+            requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+        });
+        const contracts = await releaseCatalogue(query);
+
+        await expect(admitCollectionRelease(source, [], { contracts })).resolves.toMatchObject({
+            release: { collectionId: "atlas" },
+        });
+
+        const incompatible = structuredClone(source);
+        const state = (incompatible.states as Record<string, unknown>[])[0]!;
+        const schema = state.schema as Record<string, unknown>;
+        const data = (schema.properties as Record<string, Record<string, unknown>>).data!;
+        const id = (data.properties as Record<string, Record<string, unknown>>).id!;
+        id.maxLength = 64;
+        await expect(admitCollectionRelease(incompatible, [], { contracts })).rejects.toThrow(
+            "cms-sync producer is incompatible",
+        );
+
+        const implicitFullSnapshot = structuredClone(source);
+        const bloc = (implicitFullSnapshot.blocs as Record<string, unknown>[]).at(-1)!;
+        bloc.lightdom = String(bloc.lightdom).replace(' cms-sync-select="data.id"', "");
+        await expect(admitCollectionRelease(implicitFullSnapshot, [], { contracts })).rejects.toThrow(
+            "cms-sync producer is incompatible",
+        );
+    });
+
     test("snapshots release and all asset bytes before any asynchronous work", async () => {
         const first = new Uint8Array([1, 2]);
         const second = new Uint8Array([3, 4]);

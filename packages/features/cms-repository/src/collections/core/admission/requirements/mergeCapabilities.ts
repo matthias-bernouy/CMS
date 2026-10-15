@@ -41,12 +41,22 @@ function mergeCapabilities(
     return {
         contractId,
         capabilityId,
+        input: intersectSchemas(
+            present.map((capability) => capability.input),
+            `${contractId}:${capabilityId}.input`,
+            path,
+        ),
         output: intersectSchemas(
             present.map((capability) => capability.output),
             `${contractId}:${capabilityId}.output`,
             path,
         ),
         errors: mergeErrors(present, `${contractId}:${capabilityId}`, path),
+        variants: present.map((capability) => ({
+            input: capability.input,
+            output: capability.output,
+            errors: capability.errors,
+        })),
     };
 }
 

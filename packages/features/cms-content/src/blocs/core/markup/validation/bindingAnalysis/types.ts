@@ -1,22 +1,44 @@
 export type BindingValueSchema =
-    | { readonly type: "string"; readonly enum?: readonly string[]; readonly nullable?: true }
-    | { readonly type: "number" | "integer"; readonly nullable?: true }
+    | {
+          readonly type: "string";
+          readonly enum?: readonly string[];
+          readonly format?: "date" | "date-time" | "email" | "uri" | "uuid";
+          readonly maxLength?: number;
+          readonly minLength?: number;
+          readonly nullable?: true;
+      }
+    | {
+          readonly type: "number" | "integer";
+          readonly maximum?: number;
+          readonly minimum?: number;
+          readonly nullable?: true;
+      }
     | { readonly type: "boolean"; readonly nullable?: true }
     | { readonly type: "null" }
     | {
           readonly type: "object";
           readonly properties: Readonly<Record<string, BindingValueSchema>>;
           readonly required: readonly string[];
+          readonly maxProperties?: number;
+          readonly minProperties?: number;
           readonly nullable?: true;
       }
-    | { readonly type: "map"; readonly values: BindingValueSchema; readonly nullable?: true }
+    | {
+          readonly type: "map";
+          readonly values: BindingValueSchema;
+          readonly maxKeyLength?: number;
+          readonly maxProperties?: number;
+          readonly minProperties?: number;
+          readonly nullable?: true;
+      }
     | {
           readonly type: "array";
           readonly items: BindingValueSchema;
+          readonly maxItems?: number;
           readonly minItems?: number;
           readonly nullable?: true;
       }
-    | { readonly type: "binary"; readonly nullable?: true };
+    | { readonly type: "binary"; readonly maxBytes?: number; readonly nullable?: true };
 
 export interface BindingCapabilityError {
     readonly code: string;
@@ -27,6 +49,14 @@ export interface BindingCapabilityError {
 export interface BindingCapability {
     readonly contractId: string;
     readonly capabilityId: string;
+    readonly input?: BindingValueSchema;
+    readonly output: BindingValueSchema;
+    readonly errors: readonly BindingCapabilityError[];
+    readonly variants?: readonly BindingCapabilityVariant[];
+}
+
+export interface BindingCapabilityVariant {
+    readonly input: BindingValueSchema;
     readonly output: BindingValueSchema;
     readonly errors: readonly BindingCapabilityError[];
 }

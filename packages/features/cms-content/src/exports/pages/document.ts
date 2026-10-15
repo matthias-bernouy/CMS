@@ -35,9 +35,11 @@ export {
 } from "cms-content/blocs/core/markup/validation/documents/blocDocument";
 export { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 export {
+    resolveSyncProducerSchemas,
     validateDocumentBindings,
     type BindingAnalysisOptions,
     type BindingCapability,
+    type BindingCapabilityVariant,
     type BindingCapabilityResolver,
     type BindingCapabilityTarget,
     type BindingCapabilityError,

@@ -8,6 +8,7 @@ import type { CollectionCapabilityRequirement, CollectionRelease } from "../../.
 import { CollectionValidationError } from "../../errors";
 import { parseHTML } from "linkedom";
 import { mergeMutationCapabilities, mergeQueryCapabilities } from "./mergeCapabilities";
+import { validateSynchronizedProducerSchemas } from "./syncProducers";
 
 type BindingTarget = {
     readonly contractId: string;
@@ -31,7 +32,7 @@ export async function verifyCollectionRequirements(
             "this bloc and its used blocs",
             catalogue,
         );
-        validateBindings(bloc.lightdom ?? "", capabilities, `$.blocs.${bloc.id}.lightdom`);
+        validateBindings(release, bloc.lightdom ?? "", capabilities, `$.blocs.${bloc.id}.lightdom`);
     }
     for (const page of release.pages ?? []) {
         const used = page.uses.flatMap((id) => {
@@ -46,7 +47,7 @@ export async function verifyCollectionRequirements(
             "this page and its used blocs",
             catalogue,
         );
-        validateBindings(page.document.html, capabilities, `$.pages.${page.id}.document.html`);
+        validateBindings(release, page.document.html, capabilities, `$.pages.${page.id}.document.html`);
     }
 }
 
@@ -116,11 +117,17 @@ async function verifyRequirements(
     return result;
 }
 
-function validateBindings(html: string, capabilities: readonly BindingQueryCapability[], path: string): void {
+function validateBindings(
+    release: CollectionRelease,
+    html: string,
+    capabilities: readonly BindingQueryCapability[],
+    path: string,
+): void {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = html;
     try {
         validateDocumentBindings(document, { capabilities, requireCapabilityResolution: true });
+        validateSynchronizedProducerSchemas(release, document, capabilities, path);
     } catch (error) {
         throw new CollectionValidationError(
             "invalid_collection",
