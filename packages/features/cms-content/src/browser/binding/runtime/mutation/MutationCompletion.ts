@@ -1,17 +1,15 @@
-import { MUTATION_REDIRECT_ATTR, MUTATION_REDIRECT_PARAM_ATTR, MUTATION_RESET_ATTR } from "../../../core/attrs";
-import { interpolateString, type FilterMap } from "../../../core/interpolate";
-import type { Scope } from "../../../core/scope";
-import type { FormSubmitResult } from "../../../form/formSubmit";
-import { CMS_MUTATION_FAILED_EVENT, CMS_MUTATION_SUCCESS_EVENT } from "./resultEvents";
+import { MUTATION_REDIRECT_ATTR, MUTATION_REDIRECT_PARAM_ATTR, MUTATION_RESET_ATTR } from "../../core/attrs";
+import { interpolateString, type FilterMap } from "../../core/interpolate";
+import type { Scope } from "../../core/scope";
+import type { FormSubmitResult } from "../../form/formSubmit";
 
-export class MutationResult {
+export class MutationCompletion {
     constructor(
         private readonly element: Element,
         private readonly filters: FilterMap,
     ) {}
 
     complete(result: FormSubmitResult, alias: string): void {
-        this.dispatch(result);
         if (!result.ok) {
             return;
         }
@@ -24,21 +22,9 @@ export class MutationResult {
         }
     }
 
-    private dispatch(result: FormSubmitResult): void {
-        const type = result.ok ? CMS_MUTATION_SUCCESS_EVENT : CMS_MUTATION_FAILED_EVENT;
-        const init: CustomEventInit<FormSubmitResult> = { bubbles: true, composed: true, detail: result };
-        this.element.dispatchEvent(new CustomEvent(type, init));
-    }
-
     private shouldReset(): boolean {
         const value = this.element.getAttribute(MUTATION_RESET_ATTR)?.trim().toLowerCase();
-        if (value === "false" || value === "0" || value === "no") {
-            return false;
-        }
-        if (value === "true" || value === "1" || value === "yes" || value === "") {
-            return true;
-        }
-        return true;
+        return value !== "false";
     }
 
     private successRedirect(result: FormSubmitResult, alias: string): string {

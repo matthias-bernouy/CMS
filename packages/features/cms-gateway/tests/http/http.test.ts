@@ -49,6 +49,56 @@ test("commands map JSON bodies through their admitted binding", async () => {
     });
 });
 
+test("page commands derive keyed idempotency from the browser candidate", async () => {
+    const route = await gatewayRoute({
+        behavior: { effect: "command", execution: "sync", idempotency: "keyed" },
+    });
+    const exchanges: GatewayHttpExchange[] = [];
+    const gateway = gatewayFor(route, async (request) => {
+        exchanges.push(request);
+        return Response.json({ items: ["saved"] });
+    });
+    const response = await handleGatewayHttpCall(
+        new Request("https://site.example/.cms/call/catalog/v1/items", {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "x-ulvia-automatic-idempotency-key": "browser-attempt-1",
+            },
+            body: '{"term":"saved"}',
+        }),
+        pageOptions(route, gateway),
+    );
+
+    expect(response.status).toBe(200);
+    expect(exchanges[0]?.idempotencyKey).toBe("browser-attempt-1");
+});
+
+test("automatic idempotency candidates are ignored outside keyed page commands", async () => {
+    const route = await gatewayRoute({
+        behavior: { effect: "command", execution: "sync", idempotency: "natural" },
+    });
+    const exchanges: GatewayHttpExchange[] = [];
+    const gateway = gatewayFor(route, async (request) => {
+        exchanges.push(request);
+        return Response.json({ items: ["saved"] });
+    });
+    const response = await handleGatewayHttpCall(
+        new Request("https://site.example/.cms/call/catalog/v1/items", {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "x-ulvia-automatic-idempotency-key": "not valid!",
+            },
+            body: '{"term":"saved"}',
+        }),
+        pageOptions(route, gateway),
+    );
+
+    expect(response.status).toBe(200);
+    expect(exchanges[0]?.idempotencyKey).toBeUndefined();
+});
+
 test("binary provider responses stay streamed and retain safe resource headers", async () => {
     const route = await gatewayRoute({ binary: true });
     let pulls = 0;
@@ -180,5 +230,21 @@ function options(invoker: CapabilityGateway) {
         actor: { kind: "system" as const, serviceId: "http-test" },
         prefix: "/.cms/call",
         invoker,
+    };
+}
+
+function pageOptions(route: Awaited<ReturnType<typeof gatewayRoute>>, invoker: CapabilityGateway) {
+    return {
+        siteId: "site-a",
+        origin: "page" as const,
+        actor: { kind: "anonymous" as const },
+        prefix: "/.cms/call",
+        invoker,
+        execution: {
+            planDigest: `sha256:${"0".repeat(64)}` as const,
+            version: route.selection.version,
+            digest: route.selection.digest,
+            installationId: route.selection.installationId,
+        },
     };
 }

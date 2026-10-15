@@ -64,9 +64,6 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     if (name === CMS_BINDING_ATTRIBUTES.mutationInput) {
         return isTypedBindingInput(value) ? null : "CMS mutation input must be a typed parameter map";
     }
-    if (name === CMS_BINDING_ATTRIBUTES.mutationIdempotency) {
-        return value === "auto" ? null : "CMS mutation idempotency must be auto";
-    }
     if (name === CMS_BINDING_ATTRIBUTES.mutationReset) {
         return value === "true" || value === "false" ? null : "CMS mutation reset behavior must be true or false";
     }
@@ -192,7 +189,6 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
     }
     for (const name of [
         CMS_BINDING_ATTRIBUTES.mutationInput,
-        CMS_BINDING_ATTRIBUTES.mutationIdempotency,
         CMS_BINDING_ATTRIBUTES.mutationRedirect,
         CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
         CMS_BINDING_ATTRIBUTES.mutationReset,
@@ -226,7 +222,6 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
         }
         for (const name of [
             CMS_BINDING_ATTRIBUTES.mutationInput,
-            CMS_BINDING_ATTRIBUTES.mutationIdempotency,
             CMS_BINDING_ATTRIBUTES.mutationRedirect,
             CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
             CMS_BINDING_ATTRIBUTES.mutationReset,

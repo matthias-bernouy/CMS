@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import {
-    CMS_MUTATION_SUCCESS_EVENT,
-    mutationFormRequest,
-    MutationFormError,
-    type FormSubmitResult,
-} from "../../../src/browser/index";
+import { mutationFormRequest, MutationFormError } from "../../../src/browser/index";
 import { BindingRuntime } from "../../../src/browser/binding/runtime/BindingRuntime";
 import { el, resetDom, settle, text, waitFor } from "../support/testUtils";
 
@@ -44,7 +39,6 @@ describe("Form mutation — submit request", () => {
 
     test("form-owned mutation sends JSON without replacing form controls", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
-        let result: FormSubmitResult | undefined;
         location.href = "http://localhost/";
         globalThis.fetch = (async (url: string, init?: RequestInit) => {
             request = { url, init };
@@ -63,13 +57,6 @@ describe("Form mutation — submit request", () => {
             </form>
         `) as HTMLFormElement;
         document.body.append(root);
-        document.body.addEventListener(
-            CMS_MUTATION_SUCCESS_EVENT,
-            (event) => {
-                result = event.detail;
-            },
-            { once: true },
-        );
         const input = root.querySelector("input")!;
         input.value = "ada@example.com";
         input.focus();
@@ -87,7 +74,6 @@ describe("Form mutation — submit request", () => {
         expect(captured.url).toBe("http://localhost/.cms/call/test.users/create");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.body).toBe(JSON.stringify({ email: "ada@example.com" }));
-        expect(result?.status).toBe(201);
         expect(root.querySelector("input")).toBe(input);
         expect(input.value).toBe("");
         runtime.stop();
@@ -129,20 +115,21 @@ describe("Form mutation — submit request", () => {
         runtime.stop();
     });
 
-    test("automatic idempotency reuses a key after failure and rotates it after success", async () => {
+    test("automatic idempotency candidates are reused after failure and rotate after success", async () => {
         const keys: string[] = [];
         let status = 503;
         globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
-            keys.push(new Headers(init?.headers).get("Idempotency-Key") ?? "");
+            keys.push(new Headers(init?.headers).get("X-Ulvia-Automatic-Idempotency-Key") ?? "");
             return new Response(JSON.stringify({ ok: status === 200 }), {
                 status,
                 headers: { "content-type": "application/json" },
             });
         }) as typeof fetch;
         const root = el(`
-            <form cms-mutation="test.jobs:run as result" cms-mutation-idempotency="auto">
+            <form cms-mutation="test.jobs:run as result">
                 <input name="name" value="migration">
                 <button type="submit">Run</button>
+                <p class="success" cms-condition="result.outcome.kind === 'success'">Done</p>
             </form>
         `) as HTMLFormElement;
         document.body.append(root);
@@ -160,20 +147,17 @@ describe("Form mutation — submit request", () => {
         expect(keys[1]).toBe(keys[0]);
 
         status = 200;
-        const succeeded = new Promise<void>((resolve) => {
-            root.addEventListener(CMS_MUTATION_SUCCESS_EVENT, () => resolve(), { once: true });
-        });
         root.requestSubmit();
         await waitFor(() => keys.length === 3);
         expect(keys[2]).toBe(keys[0]);
-        await succeeded;
+        await waitFor(() => root.querySelector(".success") !== null);
         root.requestSubmit();
         await waitFor(() => keys.length === 4);
         expect(keys[3]).not.toBe(keys[2]);
         runtime.stop();
     });
 
-    test("programmatic requests submit the declarative mutation through binding events", async () => {
+    test("programmatic requests submit through the active declarative mutation runtime", async () => {
         let payload: unknown;
         globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
             payload = JSON.parse(String(init?.body));

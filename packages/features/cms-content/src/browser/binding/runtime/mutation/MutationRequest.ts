@@ -1,4 +1,4 @@
-import { MUTATION_IDEMPOTENCY_ATTR, MUTATION_INPUT_ATTR } from "../../core/attrs";
+import { MUTATION_INPUT_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import { resolveBindingInput } from "../../state/bindingInput";
 import {
@@ -8,7 +8,7 @@ import {
     type FormSubmitResult,
     type SerializedForm,
 } from "../../form/formSubmit";
-import { MutationResult } from "./events/MutationResult";
+import { MutationCompletion } from "./MutationCompletion";
 import { runFetch } from "../query/queryFetch";
 
 type CapturedSubmission = {
@@ -17,7 +17,7 @@ type CapturedSubmission = {
     formData: FormData;
     bodyFields: AdditionalFormFields | undefined;
     serialized: SerializedForm;
-    idempotencyKey?: string;
+    automaticIdempotencyKey: string;
 };
 
 type IdempotencyAttempt = { fingerprint: string; key: string };
@@ -25,13 +25,13 @@ const idempotencyAttempts = new WeakMap<HTMLFormElement, IdempotencyAttempt>();
 
 export class MutationRequest {
     private latestInput: SerializedForm["data"] | undefined;
-    private readonly result: MutationResult;
+    private readonly completion: MutationCompletion;
 
     constructor(
         private readonly element: Element,
         filters: FilterMap,
     ) {
-        this.result = new MutationResult(element, filters);
+        this.completion = new MutationCompletion(element, filters);
     }
 
     capture(url: string): CapturedSubmission | null {
@@ -56,7 +56,7 @@ export class MutationRequest {
             formData,
             bodyFields,
             serialized,
-            ...this.idempotency(form, serialized),
+            automaticIdempotencyKey: this.idempotency(form, serialized),
         };
     }
 
@@ -84,9 +84,7 @@ export class MutationRequest {
     async send(captured: CapturedSubmission, signal: AbortSignal): Promise<FormSubmitResult> {
         const headers = new Headers();
         headers.set("Accept", "application/json");
-        if (captured.idempotencyKey) {
-            headers.set("Idempotency-Key", captured.idempotencyKey);
-        }
+        headers.set("X-Ulvia-Automatic-Idempotency-Key", captured.automaticIdempotencyKey);
         const init: RequestInit = { method: "POST", headers, signal };
         if (captured.serialized.kind === "json") {
             headers.set("Content-Type", "application/json");
@@ -139,25 +137,18 @@ export class MutationRequest {
         if (result.ok) {
             idempotencyAttempts.delete(result.form);
         }
-        this.result.complete(result, alias);
+        this.completion.complete(result, alias);
     }
 
-    private idempotency(form: HTMLFormElement, serialized: SerializedForm): { idempotencyKey?: string } {
-        const mode = this.element.getAttribute(MUTATION_IDEMPOTENCY_ATTR);
-        if (mode === null) {
-            return {};
-        }
-        if (mode.trim().toLowerCase() !== "auto") {
-            throw new Error("cms-mutation-idempotency must be auto when specified.");
-        }
+    private idempotency(form: HTMLFormElement, serialized: SerializedForm): string {
         const fingerprint = submissionFingerprint(serialized);
         const current = idempotencyAttempts.get(form);
         if (current?.fingerprint === fingerprint) {
-            return { idempotencyKey: current.key };
+            return current.key;
         }
         const key = crypto.randomUUID();
         idempotencyAttempts.set(form, { fingerprint, key });
-        return { idempotencyKey: key };
+        return key;
     }
 
     private submitUrl(url: string): string {
@@ -172,7 +163,27 @@ function submissionFingerprint(serialized: SerializedForm): string {
     if (serialized.kind === "query") {
         return `${serialized.kind}\0${serialized.url}`;
     }
-    throw new Error("Automatic idempotency is not available for multipart forms.");
+    const entries = Array.from(serialized.formData.entries(), ([name, value]) => [
+        name,
+        typeof value === "string" ? { kind: "string", value } : fileFingerprint(value),
+    ]);
+    return `${serialized.kind}\0${serialized.url}\0${JSON.stringify(entries)}`;
+}
+
+function fileFingerprint(value: unknown): Record<string, unknown> {
+    const file = value as {
+        readonly name?: unknown;
+        readonly size?: unknown;
+        readonly type?: unknown;
+        readonly lastModified?: unknown;
+    };
+    return {
+        kind: "file",
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+    };
 }
 
 function ownerForm(value: EventTarget | null, document: Document): HTMLFormElement | null {

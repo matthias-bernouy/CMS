@@ -3,9 +3,9 @@
 import { parseMutation } from "cms-content/blocs/core/markup/bindings";
 import { MUTATION_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
+import type { FormSubmitResult } from "../../form/formSubmit";
 import { BindingRenderer } from "../../reactive/renderer/BindingRenderer";
 import { cloneBindingContent } from "../../reactive/renderer/bindingContent";
-import { listenFormMutationEvents } from "./events/formEvents";
 import { publishFormSync } from "./formSync";
 import { MutationPresenter } from "./MutationPresenter";
 import { MutationRequest } from "./MutationRequest";
@@ -23,7 +23,6 @@ export class FormMutation {
     private readonly request: MutationRequest;
     private abort: AbortController | null = null;
     private stopActivation: (() => void) | null = null;
-    private stopListeners: (() => void) | null = null;
     private transaction: MutationTransaction | null = null;
     private syncDirty = false;
     private status: MutationState = initialMutationState();
@@ -40,16 +39,14 @@ export class FormMutation {
     }
 
     start(): void {
-        this.stopListeners = listenFormMutationEvents(this.form, {
-            onSubmit: (event) => this.onSubmit(event),
-        });
+        this.form.addEventListener("submit", this.onSubmit);
         this.form.addEventListener("input", this.onFormInput);
         const spec = mutationBinding(this.form);
         if (spec) {
             this.status = this.presenter.initial(spec.alias);
             this.afterRender();
         }
-        this.stopActivation = activateMutationForm(this.form);
+        this.stopActivation = activateMutationForm(this.form, () => this.run());
     }
 
     dispose(): void {
@@ -59,8 +56,7 @@ export class FormMutation {
         this.transaction = null;
         this.abort?.abort();
         this.abort = null;
-        this.stopListeners?.();
-        this.stopListeners = null;
+        this.form.removeEventListener("submit", this.onSubmit);
         this.form.removeEventListener("input", this.onFormInput);
     }
 
@@ -72,19 +68,19 @@ export class FormMutation {
         this.renderer.template();
     }
 
-    async run(): Promise<boolean> {
+    async run(): Promise<FormSubmitResult | null> {
         if (this.transaction?.locked) {
-            return false;
+            return null;
         }
         const spec = mutationBinding(this.form);
         if (!spec) {
-            return false;
+            return null;
         }
         let transaction: MutationTransaction | null = null;
         try {
             transaction = MutationTransaction.prepare(this.form, this.request, spec.url);
             if (!transaction) {
-                return false;
+                return null;
             }
             this.transaction = transaction;
         } catch (error) {
@@ -99,7 +95,7 @@ export class FormMutation {
             this.status = this.presenter.result(spec.alias, result, this.request.input);
             this.afterRender();
             this.request.complete(result, spec.alias);
-            return false;
+            return result;
         }
 
         this.status = this.presenter.loading(spec.alias, this.request.input);
@@ -114,7 +110,7 @@ export class FormMutation {
                     this.status = this.presenter.initial(spec.alias);
                     this.afterRender();
                 }
-                return false;
+                return null;
             }
             if (result.ok) {
                 this.syncDirty = false;
@@ -122,7 +118,7 @@ export class FormMutation {
             this.status = this.presenter.result(spec.alias, result, this.request.input);
             this.afterRender();
             this.request.complete(result, spec.alias);
-            return result.ok;
+            return result;
         } finally {
             if (this.abort === controller) {
                 this.abort = null;
@@ -134,7 +130,7 @@ export class FormMutation {
         }
     }
 
-    private onSubmit(event: SubmitEvent): void {
+    private readonly onSubmit = (event: SubmitEvent): void => {
         if (!this.form.reportValidity()) {
             event.preventDefault();
             return;
@@ -143,7 +139,7 @@ export class FormMutation {
         if (this.form.isConnected) {
             void this.run();
         }
-    }
+    };
 
     private readonly onFormInput = (): void => {
         this.syncDirty = true;

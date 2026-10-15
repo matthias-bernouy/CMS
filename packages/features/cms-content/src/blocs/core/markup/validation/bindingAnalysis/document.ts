@@ -26,7 +26,6 @@ const IGNORED_ATTRIBUTES = new Set<string>([
     CMS_BINDING_ATTRIBUTES.queryRefresh,
     CMS_BINDING_ATTRIBUTES.mutation,
     CMS_BINDING_ATTRIBUTES.mutationInput,
-    CMS_BINDING_ATTRIBUTES.mutationIdempotency,
     CMS_BINDING_ATTRIBUTES.mutationRedirect,
     CMS_BINDING_ATTRIBUTES.mutationRedirectParam,
     CMS_BINDING_ATTRIBUTES.mutationReset,

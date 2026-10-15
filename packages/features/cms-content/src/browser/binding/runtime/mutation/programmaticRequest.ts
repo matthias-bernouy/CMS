@@ -1,18 +1,22 @@
 import type { FormSubmitResult } from "../../form/formSubmit";
 import { parseMutation } from "cms-content/blocs/core/markup/bindings";
-import { CMS_MUTATION_FAILED_EVENT, CMS_MUTATION_SUCCESS_EVENT } from "./events/resultEvents";
 
 const submittedControls = new WeakMap<HTMLFormElement, HTMLElement[]>();
-const activeForms = new WeakSet<HTMLFormElement>();
-const activationWaiters = new WeakMap<HTMLFormElement, Set<() => void>>();
+type MutationRunner = () => Promise<FormSubmitResult | null>;
+const activeForms = new WeakMap<HTMLFormElement, MutationRunner>();
+const activationWaiters = new WeakMap<HTMLFormElement, Set<(runner: MutationRunner) => void>>();
 
-export function activateMutationForm(form: HTMLFormElement): () => void {
-    activeForms.add(form);
+export function activateMutationForm(form: HTMLFormElement, runner: MutationRunner): () => void {
+    activeForms.set(form, runner);
     for (const resolve of activationWaiters.get(form) ?? []) {
-        resolve();
+        resolve(runner);
     }
     activationWaiters.delete(form);
-    return () => activeForms.delete(form);
+    return () => {
+        if (activeForms.get(form) === runner) {
+            activeForms.delete(form);
+        }
+    };
 }
 
 export class MutationFormError extends Error {
@@ -50,9 +54,12 @@ export async function mutationFormRequest(
 }
 
 async function requestForm(form: HTMLFormElement, values: Record<string, unknown>): Promise<unknown> {
-    await mutationReady(form);
+    const run = await mutationReady(form);
     replaceSubmittedControls(form, values);
-    const result = await submit(form);
+    const result = await run();
+    if (!result) {
+        throw new Error("Declarative mutation is already running or no longer active.");
+    }
     if (!result.ok) {
         throw new MutationFormError(resultMessage(result), result.status || 0, result.body);
     }
@@ -132,25 +139,10 @@ function appendValue(form: HTMLFormElement, controls: HTMLElement[], name: strin
     controls.push(input);
 }
 
-function submit(form: HTMLFormElement): Promise<FormSubmitResult> {
-    return new Promise((resolve) => {
-        const complete = (event: Event): void => {
-            if (event.target !== form) {
-                return;
-            }
-            form.removeEventListener(CMS_MUTATION_SUCCESS_EVENT, complete);
-            form.removeEventListener(CMS_MUTATION_FAILED_EVENT, complete);
-            resolve((event as CustomEvent<FormSubmitResult>).detail);
-        };
-        form.addEventListener(CMS_MUTATION_SUCCESS_EVENT, complete);
-        form.addEventListener(CMS_MUTATION_FAILED_EVENT, complete);
-        form.requestSubmit();
-    });
-}
-
-function mutationReady(form: HTMLFormElement): Promise<void> {
-    if (activeForms.has(form)) {
-        return Promise.resolve();
+function mutationReady(form: HTMLFormElement): Promise<MutationRunner> {
+    const active = activeForms.get(form);
+    if (active) {
+        return Promise.resolve(active);
     }
     return new Promise((resolve) => {
         const waiters = activationWaiters.get(form) ?? new Set();

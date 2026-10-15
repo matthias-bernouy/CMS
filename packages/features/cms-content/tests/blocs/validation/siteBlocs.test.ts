@@ -157,43 +157,6 @@ describe("site bloc validation", () => {
         }
     });
 
-    test("accepts automatic idempotency only on mutation forms", () => {
-        expect(() =>
-            validateSiteBlocSnapshot(
-                siteBlocSnapshot({
-                    structure: [
-                        {
-                            kind: "bloc",
-                            tag: "form",
-                            attributes: {
-                                "cms-mutation": "catalog:apply as applied",
-                                "cms-mutation-idempotency": "auto",
-                            },
-                            children: [],
-                        },
-                    ],
-                }),
-            ),
-        ).not.toThrow();
-        expect(() =>
-            validateSiteBlocSnapshot(
-                siteBlocSnapshot({
-                    structure: [
-                        {
-                            kind: "bloc",
-                            tag: "form",
-                            attributes: {
-                                "cms-mutation": "catalog:apply as applied",
-                                "cms-mutation-idempotency": "manual",
-                            },
-                            children: [],
-                        },
-                    ],
-                }),
-            ),
-        ).toThrow(/idempotency/);
-    });
-
     test("rejects unknown slots, duplicate ids, self references, and invalid public names", () => {
         expect(() =>
             validateSiteBlocSnapshot(siteBlocSnapshot({ structure: [{ kind: "slot", slotId: "missing" }] })),
