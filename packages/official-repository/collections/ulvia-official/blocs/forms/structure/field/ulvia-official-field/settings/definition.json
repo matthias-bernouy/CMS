@@ -9,7 +9,8 @@
             "kind": "segmented",
             "options": [
                 { "value": "top", "label": "setting.option.top" },
-                { "value": "inline", "label": "setting.option.inline" }
+                { "value": "inline", "label": "setting.option.inline" },
+                { "value": "hidden", "label": "setting.option.hidden" }
             ]
         }
     },
