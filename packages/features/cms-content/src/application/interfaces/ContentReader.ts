@@ -7,9 +7,10 @@ import type { RenderingSettings } from "cms-content/settings/interfaces/settings
 export type RenderableBloc = {
     id: string;
     compositionHTML?: string;
-    componentHTML?: string;
+    templateHTML?: string;
     uses?: readonly string[];
-    nativeElement?: TBloc["nativeElement"];
+    root: TBloc["root"];
+    content?: TBloc["content"];
 };
 
 export type PageCapabilityRequirement = {

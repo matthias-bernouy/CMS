@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
-import { componentRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
+import { blocRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
 import { resolvePageAssets } from "@bernouy/cms-content/rendering";
 
 const system = defaultSystem();
@@ -35,7 +35,7 @@ function repositoryWith(options: {
 
 async function resolveAssets(content: ContentReader, tags: string[]) {
     const cache = new InMemoryCache();
-    cache.set(componentRuntimeCacheKey("/.cms/assets/component.js"), compress("component", "text/javascript"));
+    cache.set(blocRuntimeCacheKey("/.cms/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
     return resolvePageAssets(
@@ -60,21 +60,21 @@ describe("resolvePageAssets", () => {
         );
 
         expect(assets.blocUrls).toEqual([]);
-        expect(assets.scriptUrls).toEqual([expect.stringContaining("/.cms/assets/component.js?v=")]);
+        expect(assets.scriptUrls).toEqual([expect.stringContaining("/.cms/assets/bloc-runtime.js?v=")]);
     });
 
     test("keeps a blocset script when at least one referenced bloc has viewJS", async () => {
         const assets = await resolveAssets(
             repositoryWith({
-                pageContent: "<p>Hello</p><site-card></site-card>",
+                pageContent: '<p>Hello</p><div cms-bloc="site-card"></div>',
                 blocTags: ["p", "site-card"],
-                viewJS: { "site-card": "customElements.define('site-card', class extends HTMLElement {});" },
+                viewJS: { "site-card": "export function mount() {}" },
             }),
             ["p", "site-card"],
         );
 
         expect(assets.blocUrls).toHaveLength(1);
-        expect(assets.blocUrls[0]).toContain("tags=p,site-card");
+        expect(assets.blocUrls[0]).toContain("tags=site-card");
         expect(assets.scriptUrls).toHaveLength(2);
     });
 });

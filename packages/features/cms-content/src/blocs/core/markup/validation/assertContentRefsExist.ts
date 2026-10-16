@@ -16,8 +16,9 @@ export type ContentRefsReader = {
         Array<{
             id: string;
             compositionHTML?: TBloc["compositionHTML"];
-            componentHTML?: TBloc["componentHTML"];
-            nativeElement?: TBloc["nativeElement"];
+            templateHTML?: TBloc["templateHTML"];
+            root: TBloc["root"];
+            content?: TBloc["content"];
             slots?: TBloc["slots"];
             settings?: BlocSettings;
         }>
@@ -44,7 +45,8 @@ export async function assertContentRefsExist(
             id: bloc.id,
             kind: bloc.compositionHTML === undefined ? "component" : "composition",
             slots: bloc.slots ?? {},
-            ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
+            root: bloc.root,
+            ...(bloc.content ? { content: bloc.content } : {}),
             ...(bloc.settings ? { settings: bloc.settings } : {}),
         })),
     );
@@ -59,7 +61,8 @@ export async function assertContentRefsExist(
                 id: bloc.id,
                 kind: bloc.compositionHTML === undefined ? "component" : "composition",
                 slots: bloc.slots ?? {},
-                ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
+                root: bloc.root,
+                ...(bloc.content ? { content: bloc.content } : {}),
                 ...(bloc.settings ? { settings: bloc.settings } : {}),
             })),
             await resolveBindingAnalysisOptions(document.queries, document.mutations, bindingOptions),

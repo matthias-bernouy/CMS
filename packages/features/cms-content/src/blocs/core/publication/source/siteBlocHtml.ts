@@ -33,7 +33,7 @@ export function serializeSiteBlocTemplate(snapshot: SiteBlocSnapshot): string {
 export function serializeSiteBlocDefault(tag: string, content: string): string {
     assertTag(tag);
     const validated = validateSiteBlocDefaultContent(normalizeFragment(content), tag);
-    return `<${tag}>${validated}</${tag}>\n`;
+    return `<div cms-bloc="${tag}">${validated}</div>\n`;
 }
 
 function serializeNode(
@@ -82,12 +82,15 @@ function serializeNode(
         .map(([name, value]) => serializeAttribute(node.tag, name, value))
         .join("");
     const controllerAttribute = behaviorController ? ` ${COMPOSITION_CONTROLLER_ATTRIBUTE}` : "";
-    const opening = `<${node.tag}${attributes}${controllerAttribute}>`;
-    if (HTML_VOID_ELEMENT_TAGS.has(node.tag)) {
+    const native = isSiteBlocNativeStructureTag(node.tag);
+    const serializedTag = native ? node.tag : "div";
+    const blocAttribute = native ? "" : ` cms-bloc="${escapeAttribute(node.tag)}"`;
+    const opening = `<${serializedTag}${blocAttribute}${attributes}${controllerAttribute}>`;
+    if (HTML_VOID_ELEMENT_TAGS.has(serializedTag)) {
         return opening;
     }
     const children = node.children.map((child) => serializeNode(child, slots, usedSlots, true, node.tag)).join("");
-    return `${opening}${children}</${node.tag}>`;
+    return `${opening}${children}</${serializedTag}>`;
 }
 
 function serializeAttribute(tag: string, name: string, value: string): string {

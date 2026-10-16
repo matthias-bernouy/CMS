@@ -29,9 +29,9 @@ export async function validateBlocArtifact(
     const validated = validateBlocDocument(
         {
             ...contract,
-            ...(bloc.compositionHTML === undefined && bloc.componentHTML === undefined
+            ...(bloc.compositionHTML === undefined && bloc.templateHTML === undefined
                 ? {}
-                : { fixedContent: bloc.compositionHTML ?? bloc.componentHTML }),
+                : { fixedContent: bloc.compositionHTML ?? bloc.templateHTML }),
             ...(bloc.defaultContent === undefined ? {} : { defaultContent: bloc.defaultContent }),
         },
         catalogue,
@@ -57,7 +57,7 @@ export async function validateBlocArtifact(
         ...(validated.fixedContent === undefined
             ? {}
             : bloc.compositionHTML === undefined
-              ? { componentHTML: validated.fixedContent }
+              ? { templateHTML: validated.fixedContent }
               : { compositionHTML: validated.fixedContent }),
         ...(validated.defaultContent === undefined ? {} : { defaultContent: validated.defaultContent }),
     };
@@ -68,7 +68,8 @@ export async function validateBlocArtifact(
 
 function validateComposedStateQueries(catalogue: readonly CompositionDefinition[], artifact: TBloc): void {
     const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
-    document.body.innerHTML = `<${artifact.id}>${artifact.defaultContent ?? ""}</${artifact.id}>`;
+    const rootTag = artifact.root.accepts[0] ?? "div";
+    document.body.innerHTML = `<${rootTag} cms-bloc="${artifact.id}">${artifact.defaultContent ?? ""}</${rootTag}>`;
     try {
         expandCompositions(document.body, catalogue);
         validateStateQueryGraph(document.body);
@@ -81,13 +82,14 @@ function validateComposedStateQueries(catalogue: readonly CompositionDefinition[
 }
 
 function pageDocumentContract(
-    bloc: Pick<TBloc, "id" | "compositionHTML" | "nativeElement" | "settings" | "slots">,
+    bloc: Pick<TBloc, "id" | "compositionHTML" | "root" | "content" | "settings" | "slots">,
 ): PageDocumentBlocContract {
     return {
         id: bloc.id,
         kind: bloc.compositionHTML === undefined ? "component" : "composition",
         slots: bloc.slots ?? {},
-        ...(bloc.nativeElement === undefined ? {} : { nativeElement: bloc.nativeElement }),
+        root: bloc.root,
+        ...(bloc.content === undefined ? {} : { content: bloc.content }),
         ...(bloc.settings === undefined ? {} : { settings: bloc.settings }),
     };
 }

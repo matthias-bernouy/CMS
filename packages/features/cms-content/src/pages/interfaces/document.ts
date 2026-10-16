@@ -13,11 +13,13 @@ export type PageSlotAccept =
     | { readonly kind: "component"; readonly tag: string }
     | { readonly kind: "any-component" }
     | { readonly kind: "plain-text" }
-    | { readonly kind: "rich-text"; readonly profile: PageRichTextProfile };
+    | { readonly kind: "native-content"; readonly profile: PageNativeContentProfile };
 
-export type PageRichTextProfile = "inline" | "prose";
+export type PageNativeContentProfile = "inline" | "prose";
 
 export type ManagedNativeElementTag =
+    | "article"
+    | "aside"
     | "h1"
     | "h2"
     | "h3"
@@ -25,12 +27,38 @@ export type ManagedNativeElementTag =
     | "h5"
     | "h6"
     | "p"
+    | "div"
+    | "section"
+    | "header"
+    | "footer"
+    | "main"
+    | "nav"
+    | "figure"
+    | "figcaption"
+    | "form"
+    | "fieldset"
+    | "legend"
+    | "label"
+    | "ul"
+    | "ol"
+    | "li"
+    | "table"
+    | "thead"
+    | "tbody"
+    | "tfoot"
+    | "tr"
+    | "th"
+    | "td"
     | "a"
     | "button"
     | "dialog"
     | "input"
     | "textarea"
     | "select"
+    | "optgroup"
+    | "option"
+    | "details"
+    | "summary"
     | "output"
     | "img"
     | "svg"
@@ -44,6 +72,8 @@ export interface ManagedNativeAttributeConstraint {
 export interface ManagedNativeElement {
     readonly accepts: readonly ManagedNativeElementTag[];
     readonly attributes?: Readonly<Record<string, ManagedNativeAttributeConstraint>>;
+    /** Initial native attributes applied when an editor creates the Bloc root. */
+    readonly defaults?: Readonly<Record<string, string>>;
 }
 
 export type MediaAccept = "image" | "bitmap" | "svg" | "video" | "audio" | "document";
@@ -109,6 +139,9 @@ export interface PageBlocContract {
     readonly id: string;
     readonly kind: "component" | "composition";
     readonly slots: Readonly<Record<string, PageSlot>>;
-    readonly nativeElement?: ManagedNativeElement;
+    /** Native element contract for the element carrying `cms-bloc`. */
+    readonly root: ManagedNativeElement;
+    /** Optional single Page-owned native child for wrapper Blocs such as enriched form controls. */
+    readonly content?: ManagedNativeElement;
     readonly settings?: BlocSettings;
 }

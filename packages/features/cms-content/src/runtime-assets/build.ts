@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 const OUTPUT_DIRECTORY = join(import.meta.dir, "generated");
 const ENTRIES = [
-    { source: "../browser/entries/component.entry.ts", output: "component.js" },
+    { source: "../browser/entries/blocRuntime.entry.ts", output: "bloc-runtime.js" },
     { source: "../browser/entries/bindingCore.entry.ts", output: "binding-core.js" },
 ] as const;
 

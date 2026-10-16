@@ -9,12 +9,15 @@ import {
 import { nativeBindingAttributeIssue, ValidatingCmsRepository, type CmsRepository } from "@bernouy/cms-content";
 
 const form = (attributes: string, children = "") =>
-    `<fixture-card><form cms-mutation="orders:update as saved" ${attributes}>${children}</form></fixture-card>`;
+    `<div cms-bloc=\"fixture-card\"><form cms-mutation="orders:update as saved" ${attributes}>${children}</form></div>`;
 
 function repository() {
     const writes: string[] = [];
     const inner = {
-        getBlocsList: async () => [{ id: "fixture-card" }, { id: "fixture-field" }],
+        getBlocsList: async () => [
+            { id: "fixture-card", root: { accepts: ["div"] } },
+            { id: "fixture-field", root: { accepts: ["div"] } },
+        ],
         insertPage: async (_path: string, _title: string, content: string) => writes.push(content),
         updatePage: async (page: { content: string }) => writes.push(page.content),
     } as unknown as CmsRepository;
@@ -52,10 +55,10 @@ describe("declarative form contracts", () => {
         const { repo, writes } = repository();
         const content = form(
             "",
-            '<input name="items[0][price]" cms-form-value-type="number" cms-form-empty="null"><fixture-field name="note" cms-form-value-type="string" cms-form-empty="omit"></fixture-field>',
+            '<input name="items[0][price]" cms-form-value-type="number" cms-form-empty="null"><div cms-bloc=\"fixture-field\" name="note" cms-form-value-type="string" cms-form-empty="omit"></div>',
         );
-        await expect(repo.insertPage("/orders", "Orders", content)).rejects.toThrow("not a declared setting");
-        await expect(repo.updatePage({ id: "page", content })).rejects.toThrow("not a declared setting");
+        await expect(repo.insertPage("/orders", "Orders", content)).rejects.toThrow("requires a control");
+        await expect(repo.updatePage({ id: "page", content })).rejects.toThrow("requires a control");
         expect(writes).toEqual([]);
     });
 

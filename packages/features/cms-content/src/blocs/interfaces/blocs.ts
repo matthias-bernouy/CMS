@@ -22,17 +22,19 @@ export type TBloc = {
     internal?: boolean;
     /** Explicit dependency closure seed for immutable contributed Blocs. */
     uses?: readonly string[];
-    /** Allowed tags for the single required native Light DOM child. */
-    nativeElement?: ManagedNativeElement;
+    /** Allowed native tags for the element carrying `cms-bloc`. */
+    root: ManagedNativeElement;
+    /** Optional single Page-owned native child managed by a wrapper Bloc. */
+    content?: ManagedNativeElement;
     viewJS: string;
     /**
      * Server-rendered light-DOM template. A bloc carrying this field is a
      * composition: its authored host is expanded before delivery and it does
-     * not need a client custom-element definition of its own.
+     * does not need client behavior of its own.
      */
     compositionHTML?: string;
-    /** Fixed Light DOM owned by a component whose custom-element host survives rendering. */
-    componentHTML?: string;
+    /** Fixed Light DOM owned by a retained Bloc whose native root survives rendering. */
+    templateHTML?: string;
     /** Initial page-owned children supplied when this bloc is inserted. */
     defaultContent?: string;
     /** Named Page-owned substitution slots offered by a contributed Bloc. */
@@ -110,7 +112,7 @@ export type SiteBlocDefinition = {
     archivedAt?: Date;
 };
 
-/** One globally unique aggregate per custom-element tag. */
+/** One globally unique aggregate per namespaced Bloc identifier. */
 export type BlocRecord = {
     /** Immutable external contribution provenance, absent for local resources. */
     contributionId?: string;

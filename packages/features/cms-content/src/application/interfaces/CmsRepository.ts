@@ -27,13 +27,14 @@ export type BlocListItemResponse = {
     description: string;
     thumbnail?: TBloc["thumbnail"];
     compositionHTML?: string;
-    componentHTML?: string;
+    templateHTML?: string;
     defaultContent?: string;
     slots?: TBloc["slots"];
     settings?: TBloc["settings"];
     internal?: boolean;
     uses?: TBloc["uses"];
-    nativeElement?: TBloc["nativeElement"];
+    root: TBloc["root"];
+    content?: TBloc["content"];
     ownership: TBloc["ownership"];
 };
 

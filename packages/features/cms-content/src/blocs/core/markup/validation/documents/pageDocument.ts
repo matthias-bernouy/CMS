@@ -1,5 +1,4 @@
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
-import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { extractRefs } from "cms-content/blocs/core/markup/contentRefs";
 import { managedNativeElementIssue } from "cms-content/blocs/core/markup/validation/managedNativeElements";
 import {
@@ -79,8 +78,8 @@ function validateHosts(
     allowUnknown = false,
 ): void {
     for (const element of Array.from(document.body.querySelectorAll("*"))) {
-        const tag = element.localName.toLowerCase();
-        if (!isValidCustomElementTag(tag) || unresolved.has(tag)) {
+        const tag = element.getAttribute("cms-bloc")?.toLowerCase();
+        if (!tag || unresolved.has(tag)) {
             continue;
         }
         const bloc = known.get(tag);
@@ -94,6 +93,9 @@ function validateHosts(
             Object.fromEntries(element.getAttributeNames().map((name) => [name, element.getAttribute(name) ?? ""])),
             bloc,
             element.parentElement !== document.body,
+            true,
+            false,
+            element.localName,
         );
         if (issue) {
             throw new ContentValidationError("content", issue);
@@ -104,7 +106,7 @@ function validateHosts(
 function validateManagedNative(html: string, blocs: readonly PageDocumentBlocContract[]): void {
     const issue = managedNativeElementIssue(
         html,
-        blocs.flatMap((bloc) => (bloc.nativeElement ? [{ tag: bloc.id, nativeElement: bloc.nativeElement }] : [])),
+        blocs.map((bloc) => ({ id: bloc.id, root: bloc.root, content: bloc.content })),
     );
     if (issue) {
         throw new ContentValidationError("content", issue);
@@ -121,12 +123,13 @@ function validateRoots(
             continue;
         }
         const root = node as Element;
-        if (unresolved.has(root.localName)) {
+        const id = root.getAttribute("cms-bloc")?.toLowerCase();
+        if (id && unresolved.has(id)) {
             continue;
         }
-        const bloc = known.get(root.localName);
+        const bloc = id ? known.get(id) : undefined;
         if (!bloc) {
-            throw new ContentValidationError("content", `unavailable Page root Bloc <${root.localName}>`);
+            throw new ContentValidationError("content", `Page roots must declare an available cms-bloc identity`);
         }
         const issue = blocHostContractIssue(root, bloc, known, unresolved);
         if (issue) {

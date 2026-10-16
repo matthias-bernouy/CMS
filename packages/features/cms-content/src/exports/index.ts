@@ -254,7 +254,6 @@ export {
 } from "cms-content/pages/core/queries/contentReferences";
 export { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
 export { findUsedBlocTags } from "cms-content/blocs/core/usage/findUsedBlocTags";
-export { buildBlocFoucShellCss } from "cms-content/blocs/core/composition/buildBlocFoucShellCss";
 export {
     COMPOSITION_CONTROLLER_ATTRIBUTE,
     COMPOSITION_CONTROLLER_RUNTIME_ATTRIBUTE,

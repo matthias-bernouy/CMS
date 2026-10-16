@@ -12,8 +12,8 @@ bindings, validation, and read models.
   rendering settings and renderable bloc artifacts, never editorial queries.
 - `@bernouy/cms-content/bindings` exposes browser-safe declarative binding
   syntax and runtime metadata.
-- `@bernouy/cms-content/browser` exposes the browser-only `Component` base and
-  live declarative binding runtime used by rendered Pages and contributed Blocs.
+- `@bernouy/cms-content/browser` exposes the Light DOM Bloc behavior runtime
+  and live declarative binding runtime used by rendered Pages and contributed Blocs.
 - `@bernouy/cms-content/runtime-assets` exposes the generated system runtime
   entries to server composition; its build subpath owns their generation.
 - `@bernouy/cms-content/browser/dom` exposes inert network-binding preparation

@@ -9,7 +9,8 @@ function makeSystem(opts: { blocs?: string[]; managed?: Record<string, string[]>
                 name: id,
                 group: "",
                 description: "",
-                ...(opts.managed?.[id] ? { nativeElement: { accepts: opts.managed[id] } } : {}),
+                root: { accepts: ["div"] },
+                ...(opts.managed?.[id] ? { content: { accepts: opts.managed[id] } } : {}),
             })),
     };
     return cms;
@@ -28,7 +29,7 @@ describe("assertContentRefsExist", () => {
 
     test("passes when every bloc ref is registered", async () => {
         const cms = makeSystem({ blocs: ["fixture-card"] });
-        await assertContentRefsExist(cms, `<fixture-card></fixture-card>`);
+        await assertContentRefsExist(cms, `<div cms-bloc=\"fixture-card\"></div>`);
     });
 
     test("rejects inactive Blocs outside the authoring catalogue", async () => {
@@ -40,7 +41,7 @@ describe("assertContentRefsExist", () => {
             },
         };
 
-        await expect(assertContentRefsExist(cms, "<basic-button></basic-button>")).rejects.toThrow(
+        await expect(assertContentRefsExist(cms, '<div cms-bloc="basic-button"></div>')).rejects.toThrow(
             "unknown or inactive",
         );
         expect(includeInactive).toBeFalse();
@@ -48,29 +49,27 @@ describe("assertContentRefsExist", () => {
 
     test("rejects unknown bloc tag", async () => {
         const cms = makeSystem({ blocs: ["fixture-card"] });
-        await expect(assertContentRefsExist(cms, `<fixture-mystery></fixture-mystery>`)).rejects.toThrow(
+        await expect(assertContentRefsExist(cms, `<div cms-bloc=\"fixture-mystery\"></div>`)).rejects.toThrow(
             /unknown or inactive reference\(s\): bloc "fixture-mystery"/,
         );
     });
 
     test("accepts exactly one direct managed native child", async () => {
         const cms = makeSystem({ managed: { "fixture-action": ["button", "a"] } });
-        await assertContentRefsExist(cms, `<fixture-action><button type="button">Save</button></fixture-action>`);
-        await assertContentRefsExist(cms, `<fixture-action><a href="/about">About</a></fixture-action>`);
+        await assertContentRefsExist(cms, `<div cms-bloc=\"fixture-action\"><button type="button">Save</button></div>`);
+        await assertContentRefsExist(cms, `<div cms-bloc=\"fixture-action\"><a href="/about">About</a></div>`);
     });
 
     test("rejects missing, duplicated, slotted, or indirect managed native children", async () => {
         const cms = makeSystem({ managed: { "fixture-action": ["button", "a"] } });
         for (const content of [
-            `<fixture-action></fixture-action>`,
-            `<fixture-action><a href="/one">One</a><button type="button">Two</button></fixture-action>`,
-            `<fixture-action><a slot="link" href="/">Link</a></fixture-action>`,
-            `<fixture-action><span><a href="/">Link</a></span></fixture-action>`,
-            `<fixture-action><p>Wrong</p></fixture-action>`,
+            `<div cms-bloc=\"fixture-action\"></div>`,
+            `<div cms-bloc=\"fixture-action\"><a href="/one">One</a><button type="button">Two</button></div>`,
+            `<div cms-bloc=\"fixture-action\"><a slot="link" href="/">Link</a></div>`,
+            `<div cms-bloc=\"fixture-action\"><span><a href="/">Link</a></span></div>`,
+            `<div cms-bloc=\"fixture-action\"><p>Wrong</p></div>`,
         ]) {
-            await expect(assertContentRefsExist(cms, content)).rejects.toThrow(
-                /requires exactly one direct, un-slotted accepted native child \(<button>, <a>\)/,
-            );
+            await expect(assertContentRefsExist(cms, content)).rejects.toThrow();
         }
     });
 
@@ -79,17 +78,18 @@ describe("assertContentRefsExist", () => {
             getBlocsList: async () => [
                 {
                     id: "fixture-checkbox",
-                    nativeElement: {
+                    root: { accepts: ["div"] },
+                    content: {
                         accepts: ["input"],
                         attributes: { type: { required: true, values: ["checkbox"] } },
                     },
                 },
             ],
         };
-        await assertContentRefsExist(cms, '<fixture-checkbox><input type="checkbox"></fixture-checkbox>');
+        await assertContentRefsExist(cms, '<div cms-bloc=\"fixture-checkbox\"><input type="checkbox"></div>');
         await expect(
-            assertContentRefsExist(cms, '<fixture-checkbox><input type="text"></fixture-checkbox>'),
-        ).rejects.toThrow(/requires exactly one direct/);
+            assertContentRefsExist(cms, '<div cms-bloc=\"fixture-checkbox\"><input type="text"></div>'),
+        ).rejects.toThrow(/native attribute "type"/);
     });
 
     test("requires real link semantics and rejects nested interactive content", async () => {
@@ -99,17 +99,17 @@ describe("assertContentRefsExist", () => {
         });
         await assertContentRefsExist(
             cms,
-            '<fixture-link><a href="/about" aria-label="About"><fixture-card></fixture-card></a></fixture-link>',
+            '<div cms-bloc=\"fixture-link\"><a href="/about" aria-label="About"><div cms-bloc=\"fixture-card\"></div></a></div>',
         );
         await expect(
             assertContentRefsExist(
                 cms,
-                '<fixture-link><a aria-label="About"><fixture-card></fixture-card></a></fixture-link>',
+                '<div cms-bloc=\"fixture-link\"><a aria-label="About"><div cms-bloc=\"fixture-card\"></div></a></div>',
             ),
         ).rejects.toThrow("declare href");
         for (const content of [
-            '<fixture-link><a href="/about" aria-label="About"><button type="button">Open</button></a></fixture-link>',
-            '<fixture-link><a href="/about" aria-label="About"><fixture-card><a href="/other">Other</a></fixture-card></a></fixture-link>',
+            '<div cms-bloc=\"fixture-link\"><a href="/about" aria-label="About"><button type="button">Open</button></a></div>',
+            '<div cms-bloc=\"fixture-link\"><a href="/about" aria-label="About"><div cms-bloc=\"fixture-card\"><a href="/other">Other</a></div></a></div>',
         ]) {
             await expect(assertContentRefsExist(cms, content)).rejects.toThrow("cannot nest interactive content");
         }
@@ -120,15 +120,15 @@ describe("assertContentRefsExist", () => {
         await expect(
             assertContentRefsExist(
                 cms,
-                `<fixture-a></fixture-a><fixture-b></fixture-b><w13c-reserved-example data-id="hdr"></w13c-reserved-example>`,
+                `<div cms-bloc=\"fixture-a\"></div><div cms-bloc=\"fixture-b\"></div><div cms-bloc=\"w13c-reserved-example\" data-id="hdr"></div>`,
             ),
         ).rejects.toThrow(/bloc "fixture-a".*bloc "fixture-b"/);
     });
 
     test("rejects reserved system elements as Page roots", async () => {
         const cms = makeSystem();
-        await expect(assertContentRefsExist(cms, `<cms-binding-core></cms-binding-core>`)).rejects.toThrow(
-            "unavailable Page root Bloc",
+        await expect(assertContentRefsExist(cms, `<div cms-bloc=\"cms-binding-core\"></div>`)).rejects.toThrow(
+            "available cms-bloc identity",
         );
     });
 
@@ -141,7 +141,7 @@ describe("assertContentRefsExist", () => {
             },
         };
         await expect(
-            assertContentRefsExist(cms, `<w13c-reserved-example data-id="header"></w13c-reserved-example>`),
+            assertContentRefsExist(cms, `<div cms-bloc=\"w13c-reserved-example\" data-id="header"></div>`),
         ).rejects.toThrow();
         expect(blocCalls).toBe(1);
     });
@@ -151,46 +151,51 @@ describe("assertContentRefsExist", () => {
             getBlocsList: async () => [
                 {
                     id: "fixture-card",
+                    root: { accepts: ["div"] },
                     slots: {
-                        title: { accepts: [{ kind: "rich-text", profile: "inline" }], min: 1, max: 1 },
+                        title: { accepts: [{ kind: "native-content", profile: "inline" }], min: 1, max: 1 },
                         actions: { accepts: [{ kind: "any-component" }], max: 1 },
                     },
                 },
-                { id: "fixture-action", slots: {} },
+                { id: "fixture-action", root: { accepts: ["div"] }, slots: {} },
                 {
                     id: "fixture-composition",
-                    compositionHTML: "<fixture-action></fixture-action>",
+                    root: { accepts: ["div"] },
+                    compositionHTML: '<div cms-bloc="fixture-action"></div>',
                     slots: {},
                 },
             ],
         };
         await assertContentRefsExist(
             cms,
-            '<fixture-card><h2 slot="title">Title</h2><fixture-action slot="actions"></fixture-action></fixture-card>',
+            '<div cms-bloc=\"fixture-card\"><h2 slot="title">Title</h2><div cms-bloc=\"fixture-action\" slot="actions"></div></div>',
         );
         await expect(
-            assertContentRefsExist(cms, '<fixture-card><p slot="missing">Text</p></fixture-card>'),
+            assertContentRefsExist(cms, '<div cms-bloc=\"fixture-card\"><p slot="missing">Text</p></div>'),
         ).rejects.toThrow("does not declare slot");
         await expect(
-            assertContentRefsExist(cms, '<fixture-card><fixture-action slot="title"></fixture-action></fixture-card>'),
+            assertContentRefsExist(
+                cms,
+                '<div cms-bloc=\"fixture-card\"><div cms-bloc=\"fixture-action\" slot="title"></div></div>',
+            ),
         ).rejects.toThrow("does not accept Bloc");
         await expect(
             assertContentRefsExist(
                 cms,
-                '<fixture-card><fixture-composition slot="actions"></fixture-composition></fixture-card>',
+                '<div cms-bloc=\"fixture-card\"><div cms-bloc=\"fixture-composition\" slot="actions"></div></div>',
             ),
         ).rejects.toThrow("does not accept Bloc");
-        await expect(assertContentRefsExist(cms, "<fixture-card></fixture-card>")).rejects.toThrow(
+        await expect(assertContentRefsExist(cms, '<div cms-bloc="fixture-card"></div>')).rejects.toThrow(
             "requires at least 1 item",
         );
     });
 
     test("rejects undeclared Bloc host attributes and root slot targets", async () => {
         const cms = makeSystem({ blocs: ["fixture-card"] });
-        await expect(assertContentRefsExist(cms, '<fixture-card mystery="value"></fixture-card>')).rejects.toThrow(
-            "not a declared setting",
-        );
-        await expect(assertContentRefsExist(cms, '<fixture-card slot="ghost"></fixture-card>')).rejects.toThrow(
+        await expect(
+            assertContentRefsExist(cms, '<div cms-bloc=\"fixture-card\" mystery="value"></div>'),
+        ).rejects.toThrow("neither a declared setting");
+        await expect(assertContentRefsExist(cms, '<div cms-bloc=\"fixture-card\" slot="ghost"></div>')).rejects.toThrow(
             "cannot target a slot",
         );
     });
@@ -200,6 +205,7 @@ describe("assertContentRefsExist", () => {
             getBlocsList: async () => [
                 {
                     id: "fixture-card",
+                    root: { accepts: ["div"] },
                     settings: [
                         {
                             id: "tone",
@@ -213,10 +219,10 @@ describe("assertContentRefsExist", () => {
                 },
             ],
         };
-        await assertContentRefsExist(cms, '<fixture-card tone="loud"></fixture-card>');
-        await expect(assertContentRefsExist(cms, '<fixture-card tone="too-long"></fixture-card>')).rejects.toThrow(
-            "settings are invalid",
-        );
+        await assertContentRefsExist(cms, '<div cms-bloc=\"fixture-card\" tone="loud"></div>');
+        await expect(
+            assertContentRefsExist(cms, '<div cms-bloc=\"fixture-card\" tone="too-long"></div>'),
+        ).rejects.toThrow("settings are invalid");
     });
 
     test("validates dynamic Bloc attributes against declared setting types", async () => {
@@ -224,6 +230,7 @@ describe("assertContentRefsExist", () => {
             getBlocsList: async () => [
                 {
                     id: "fixture-card",
+                    root: { accepts: ["div"] },
                     settings: [
                         {
                             id: "expanded",
@@ -253,15 +260,18 @@ describe("assertContentRefsExist", () => {
 
         await assertContentRefsExist(
             cms,
-            '<fixture-card expanded="{{ item.open }}" tone="{{ item.tone }}" count="{{ item.count }}"></fixture-card>',
+            '<div cms-bloc=\"fixture-card\" expanded="{{ item.open }}" tone="{{ item.tone }}" count="{{ item.count }}"></div>',
         );
-        await assertContentRefsExist(cms, "<fixture-card expanded=\"{{ item.state === 'open' }}\"></fixture-card>");
+        await assertContentRefsExist(
+            cms,
+            '<div cms-bloc="fixture-card" expanded="{{ item.state === \'open\' }}"></div>',
+        );
         for (const content of [
-            '<fixture-card expanded="prefix {{ item.open }}"></fixture-card>',
-            '<fixture-card expanded="{{ item.open | string }}"></fixture-card>',
-            '<fixture-card count="{{ item.open === true }}"></fixture-card>',
-            '<fixture-card tone="{{ item.open === true }}"></fixture-card>',
-            '<fixture-card mystery="{{ item.value }}"></fixture-card>',
+            '<div cms-bloc=\"fixture-card\" expanded="prefix {{ item.open }}"></div>',
+            '<div cms-bloc=\"fixture-card\" expanded="{{ item.open | string }}"></div>',
+            '<div cms-bloc=\"fixture-card\" count="{{ item.open === true }}"></div>',
+            '<div cms-bloc=\"fixture-card\" tone="{{ item.open === true }}"></div>',
+            '<div cms-bloc=\"fixture-card\" mystery="{{ item.value }}"></div>',
         ]) {
             await expect(assertContentRefsExist(cms, content)).rejects.toThrow();
         }

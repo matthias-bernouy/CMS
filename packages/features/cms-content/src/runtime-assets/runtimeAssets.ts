@@ -4,15 +4,15 @@ import { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
 
 const ASSET_DIRECTORY = join(import.meta.dir, "generated");
 
-export async function loadComponentRuntimeEntry(): Promise<CacheEntry> {
-    return loadBrowserRuntimeEntry("component.js");
+export async function loadBlocRuntimeEntry(): Promise<CacheEntry> {
+    return loadBrowserRuntimeEntry("bloc-runtime.js");
 }
 
 export async function loadBindingCoreRuntimeEntry(): Promise<CacheEntry> {
     return loadBrowserRuntimeEntry("binding-core.js");
 }
 
-export function componentRuntimeCacheKey(pathname: string): string {
+export function blocRuntimeCacheKey(pathname: string): string {
     return CMS_CACHE_KEYS.js(pathname);
 }
 

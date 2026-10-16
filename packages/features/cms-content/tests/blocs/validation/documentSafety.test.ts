@@ -2,10 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { validateBlocWrite } from "@bernouy/cms-content";
 import { validateBlocContentMarkup } from "cms-content/blocs/core/markup/validation/nativeContent";
 import { validateBlocDocument } from "cms-content/blocs/core/markup/validation/documents/blocDocument";
+import { validatePageDocument } from "cms-content/blocs/core/markup/validation/documents/pageDocument";
 import { BLOC_DOCUMENT_LIMITS } from "cms-content/blocs/core/markup/validation/documents/blocBudgets";
 import { siteBlocArtifact } from "../siteBlocFixture";
 
-const fixed = (html: string) => validateBlocContentMarkup(html, { field: "componentHTML", kind: "fixed" });
+const fixed = (html: string) => validateBlocContentMarkup(html, { field: "templateHTML", kind: "fixed" });
 
 describe("Bloc document accessibility", () => {
     test("accepts controlled implementation accessibility attributes", () => {
@@ -19,7 +20,7 @@ describe("Bloc document accessibility", () => {
     test.each([
         ['<div role="banana"></div>', "WAI-ARIA roles"],
         ['<div aria-unknown="value"></div>', "not a supported ARIA attribute"],
-        ['<div aria-current="banana"></div>', "uncontrolled ARIA value"],
+        ['<div aria-current="banana"></div>', "aria-current"],
         ['<div aria-controls="1-invalid"></div>', "valid ids"],
     ])("rejects uncontrolled implementation accessibility markup", (html, message) => {
         expect(() => fixed(html)).toThrow(message);
@@ -31,59 +32,61 @@ describe("declarative native dialogs", () => {
         id: "fixture-action",
         kind: "component" as const,
         slots: {},
-        nativeElement: { accepts: ["button" as const] },
+        root: { accepts: ["div" as const] },
+        content: { accepts: ["button" as const] },
     };
     const dialog = {
         id: "fixture-dialog",
         kind: "component" as const,
         slots: {},
-        nativeElement: { accepts: ["dialog" as const] },
+        root: { accepts: ["div" as const] },
+        content: { accepts: ["dialog" as const] },
     };
     const validate = (content: string) =>
-        validateBlocDocument({ id: "fixture-owner", kind: "composition", slots: {}, fixedContent: content }, [
-            action,
-            dialog,
-        ]);
+        validateBlocDocument(
+            { id: "fixture-owner", kind: "composition", slots: {}, root: { accepts: ["div"] }, fixedContent: content },
+            [action, dialog],
+        );
 
     test("accepts an addressable Light DOM dialog without component JavaScript", () => {
         expect(() =>
             validate(`
-                <fixture-action><button type="button" command="show-modal" commandfor="create-dialog">Open</button></fixture-action>
-                <fixture-dialog><dialog id="create-dialog" aria-labelledby="create-title">
+                <div cms-bloc=\"fixture-action\"><button type="button" command="show-modal" commandfor="create-dialog">Open</button></div>
+                <div cms-bloc=\"fixture-dialog\"><dialog id="create-dialog" aria-labelledby="create-title">
                     <h2 id="create-title">Create</h2>
-                    <fixture-action><button type="button" command="close" commandfor="create-dialog">Close</button></fixture-action>
-                </dialog></fixture-dialog>
+                    <div cms-bloc=\"fixture-action\"><button type="button" command="close" commandfor="create-dialog">Close</button></div>
+                </dialog></div>
             `),
         ).not.toThrow();
     });
 
     test.each([
         [
-            '<fixture-action><button type="button" command="show-modal" commandfor="missing">Open</button></fixture-action>',
+            '<div cms-bloc=\"fixture-action\"><button type="button" command="show-modal" commandfor="missing">Open</button></div>',
             "missing id",
         ],
         [
-            '<h2 id="target">Heading</h2><fixture-action><button type="button" command="show-modal" commandfor="target">Open</button></fixture-action>',
+            '<h2 id="target">Heading</h2><div cms-bloc=\"fixture-action\"><button type="button" command="show-modal" commandfor="target">Open</button></div>',
             "must be a <dialog>",
         ],
         [
-            '<fixture-dialog><dialog id="same"></dialog></fixture-dialog><p id="same">Duplicate</p>',
+            '<div cms-bloc=\"fixture-dialog\"><dialog id="same"></dialog></div><p id="same">Duplicate</p>',
             "duplicate static native id",
         ],
         [
-            '<fixture-dialog><dialog id="unnamed"></dialog></fixture-dialog><fixture-action><button type="button" command="show-modal" commandfor="unnamed">Open</button></fixture-action>',
+            '<div cms-bloc=\"fixture-dialog\"><dialog id="unnamed"></dialog></div><div cms-bloc=\"fixture-action\"><button type="button" command="show-modal" commandfor="unnamed">Open</button></div>',
             "accessible name",
         ],
         [
-            '<fixture-dialog><dialog id="labelled" aria-labelledby="missing-title"></dialog></fixture-dialog><fixture-action><button type="button" command="show-modal" commandfor="labelled">Open</button></fixture-action>',
+            '<div cms-bloc=\"fixture-dialog\"><dialog id="labelled" aria-labelledby="missing-title"></dialog></div><div cms-bloc=\"fixture-action\"><button type="button" command="show-modal" commandfor="labelled">Open</button></div>',
             "aria-labelledby references missing id",
         ],
         [
-            '<fixture-action><button type="button" command="show-modal">Open</button></fixture-action>',
+            '<div cms-bloc=\"fixture-action\"><button type="button" command="show-modal">Open</button></div>',
             "command and commandfor must be declared together",
         ],
         [
-            '<fixture-action><button type="button" command="toggle-popover" commandfor="target">Open</button></fixture-action>',
+            '<div cms-bloc=\"fixture-action\"><button type="button" command="toggle-popover" commandfor="target">Open</button></div>',
             "button command",
         ],
     ])("rejects invalid native dialog relationships", (content, message) => {
@@ -142,6 +145,9 @@ describe("Bloc document budgets", () => {
                 </section>`,
             ),
         ).not.toThrow();
+        expect(() =>
+            fixed(`<div cms-bloc="fixture-stack" cms-match="status"><p cms-case="'ready'">Ready</p></div>`),
+        ).toThrow("cms-match cannot share an element with cms-bloc");
     });
 
     test("bounds component runtime and retained source bundles", () => {
@@ -190,7 +196,7 @@ describe("Bloc document cycles", () => {
                     id: "fixture-loop",
                     kind: "composition",
                     slots: {},
-                    fixedContent: "<fixture-loop></fixture-loop>",
+                    fixedContent: '<div cms-bloc="fixture-loop"></div>',
                 },
                 [],
             ),
@@ -202,6 +208,7 @@ describe("Bloc document host attributes", () => {
     const target = {
         id: "fixture-target",
         kind: "component" as const,
+        root: { accepts: ["div" as const] },
         slots: {},
         settings: [
             {
@@ -226,8 +233,9 @@ describe("Bloc document host attributes", () => {
             {
                 id: "fixture-owner",
                 kind: "composition",
+                root: { accepts: ["div"] },
                 slots: {},
-                fixedContent: `<fixture-target ${attributes}></fixture-target>`,
+                fixedContent: `<div cms-bloc=\"fixture-target\" ${attributes}></div>`,
             },
             [target],
         );
@@ -237,6 +245,21 @@ describe("Bloc document host attributes", () => {
         expect(() => validateBinding("expanded=\"{{ item.state === 'open' }}\"")).not.toThrow();
         expect(() => validateBinding('expanded="{{ item.open | string }}"')).toThrow("boolean attribute binding");
         expect(() => validateBinding('label="{{ item.open === true }}"')).toThrow("string setting binding");
-        expect(() => validateBinding('unknown="{{ item.value }}"')).toThrow("not a declared setting");
+        expect(() => validateBinding('unknown="{{ item.value }}"')).toThrow("neither a declared setting");
     });
+});
+
+test("Page Bloc roots retain bindings supported by their native element", () => {
+    const form = {
+        id: "fixture-form",
+        kind: "component" as const,
+        root: { accepts: ["form" as const] },
+        slots: {},
+    };
+    expect(() =>
+        validatePageDocument('<form cms-bloc="fixture-form" cms-mutation="fixture:save as saved"></form>', [form]),
+    ).not.toThrow();
+    expect(() =>
+        validatePageDocument('<div cms-bloc="fixture-form" cms-mutation="fixture:save as saved"></div>', [form]),
+    ).toThrow();
 });

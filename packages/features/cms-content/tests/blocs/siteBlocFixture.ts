@@ -20,7 +20,7 @@ export function siteBlocSnapshot(overrides: Partial<SiteBlocSnapshot> = {}): Sit
                 accepts: [{ kind: "any-component" }],
             },
         ],
-        defaultContent: "<basic-paragraph>Start here</basic-paragraph>",
+        defaultContent: '<div cms-bloc="basic-paragraph">Start here</div>',
         dependencies: ["ignored-input"],
         ...overrides,
     };
@@ -51,6 +51,7 @@ export function siteBlocArtifact(overrides: Partial<TBloc> = {}): TBloc {
         group: "Site",
         description: "A composed site bloc",
         viewJS: "view-artifact",
+        root: { accepts: ["div"] },
         ownership: { kind: "site-builder", definitionId: "definition-1" },
         source: { "builder.json": "e30=" },
         ...overrides,

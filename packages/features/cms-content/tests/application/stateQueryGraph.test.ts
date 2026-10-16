@@ -10,6 +10,7 @@ describe("ValidatingCmsRepository — synchronized query graph", () => {
             group: "",
             description: "",
             viewJS: "",
+            root: { accepts: ["div"] },
             ownership: { kind: "code-managed" as const },
             compositionHTML: `<section cms-query="catalog:items.list as ${id.replaceAll("-", "_")}" cms-query-input='{"dependency":{"from":"state","key":"@page:${input}"}}' cms-query-listen="@page:${input}" cms-sync="@page:${output}"></section>`,
         });
@@ -20,11 +21,11 @@ describe("ValidatingCmsRepository — synchronized query graph", () => {
             repo.insertPage(
                 "/cycle",
                 "Cycle",
-                "<fixture-left-query></fixture-left-query><fixture-right-query></fixture-right-query>",
+                '<div cms-bloc="fixture-left-query"></div><div cms-bloc="fixture-right-query"></div>',
             ),
         ).rejects.toThrow("automatic state query cycle");
 
-        await repo.insertPage("/acyclic", "Acyclic", "<fixture-left-query></fixture-left-query>");
+        await repo.insertPage("/acyclic", "Acyclic", '<div cms-bloc="fixture-left-query"></div>');
         expect((await repo.getPage("/acyclic"))?.content).toContain("fixture-left-query");
 
         await repo.createBloc(composition("fixture-duplicate-query", "fixture-source", "fixture-left"));
@@ -32,7 +33,7 @@ describe("ValidatingCmsRepository — synchronized query graph", () => {
             repo.insertPage(
                 "/duplicate",
                 "Duplicate",
-                "<fixture-left-query></fixture-left-query><fixture-duplicate-query></fixture-duplicate-query>",
+                '<div cms-bloc="fixture-left-query"></div><div cms-bloc="fixture-duplicate-query"></div>',
             ),
         ).rejects.toThrow("multiple automatic query producers");
     });
@@ -47,6 +48,7 @@ describe("ValidatingCmsRepository — synchronized query graph", () => {
                 group: "",
                 description: "",
                 viewJS: "",
+                root: { accepts: ["div"] },
                 ownership: { kind: "code-managed" },
                 compositionHTML: `<section>
                     <div cms-query="catalog:items.list as left" cms-query-input='{"right":{"from":"state","key":"@page:fixture-right"}}' cms-query-listen="@page:fixture-right" cms-sync="@page:fixture-left"></div>

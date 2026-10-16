@@ -10,7 +10,7 @@ describe("bloc catalogue availability", () => {
             group: "Content",
             description: "",
             catalogue: "inactive",
-            viewJS: "customElements.define('collection-card', class extends HTMLElement {});",
+            viewJS: "cmsRuntime.registerBloc('collection-card', { mount() {} });",
             ownership: { kind: "code-managed" },
         });
 
@@ -18,7 +18,7 @@ describe("bloc catalogue availability", () => {
         expect((await repository.getBlocsList({ includeInactive: true })).map(({ id }) => id)).toEqual([
             "collection-card",
         ]);
-        expect(await repository.getBlocViewJS("collection-card")).toContain("customElements.define");
+        expect(await repository.getBlocViewJS("collection-card")).toContain("cmsRuntime.registerBloc");
         expect(await repository.getBlocRecord("collection-card")).not.toBeNull();
     });
 });

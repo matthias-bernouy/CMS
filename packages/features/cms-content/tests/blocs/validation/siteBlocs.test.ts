@@ -21,31 +21,35 @@ describe("site bloc validation", () => {
             ContentValidationError,
         );
         expect(() => validateBlocWrite({ ...artifact, internal: true, viewJS: "" })).toThrow(ContentValidationError);
-        expect(() => validateBlocWrite({ ...artifact, id: "p" })).toThrow(/custom-element tag/);
-        expect(validateBlocWrite({ ...artifact, nativeElement: { accepts: ["button", "a"] } }).nativeElement).toEqual({
+        expect(() => validateBlocWrite({ ...artifact, id: "p" })).toThrow(/namespaced Bloc identifier/);
+        expect(validateBlocWrite({ ...artifact, root: { accepts: ["button", "a"] } }).root).toEqual({
             accepts: ["button", "a"],
         });
-        expect(() => validateBlocWrite({ ...artifact, nativeElement: { accepts: ["div"] as never[] } })).toThrow(
-            /nativeElement/,
-        );
+        expect(() => validateBlocWrite({ ...artifact, root: { accepts: ["video"] as never[] } })).toThrow(/root/);
         expect(
             validateBlocWrite({
                 ...artifact,
-                nativeElement: {
+                content: {
                     accepts: ["input"],
                     attributes: { type: { required: true, values: ["checkbox"] } },
                 },
-            }).nativeElement,
+            }).content,
         ).toMatchObject({ attributes: { type: { required: true, values: ["checkbox"] } } });
-        expect(() => validateBlocWrite({ ...artifact, nativeElement: { accepts: [] } })).toThrow(/nativeElement/);
+        expect(() => validateBlocWrite({ ...artifact, root: { accepts: [] } })).toThrow(/root/);
+        expect(() =>
+            validateBlocWrite({ ...artifact, viewJS: "customElements.define('site-feature-panel', class {})" }),
+        ).toThrow(/customElements\.define/);
+        expect(() => validateBlocWrite({ ...artifact, viewJS: "root.attachShadow({ mode: 'open' })" })).toThrow(
+            /Shadow DOM APIs/,
+        );
         expect(() =>
             validateBlocWrite({
                 ...artifact,
                 viewJS: "",
                 compositionHTML: "<slot></slot>",
-                nativeElement: { accepts: ["a"] },
+                content: { accepts: ["a"] },
             }),
-        ).toThrow(/nativeElement/);
+        ).toThrow(/content/);
         expect(() =>
             validateBlocWrite({
                 ...artifact,
@@ -267,18 +271,18 @@ describe("site bloc validation", () => {
     test("validates default content recursively in its site-bloc parent context", () => {
         for (const [defaultContent, message] of [
             ["<span>Root text</span>", /explicit component text slot/],
-            ["<li>Orphan item</li>", /direct child/],
-            ["<ul><site-card>Not a list item</site-card></ul>", /only direct <li>/],
+            ["<li>Orphan item</li>", /direct child of <ul> or <ol>/],
+            ['<ul><div cms-bloc="site-card">Not a list item</div></ul>', /only direct <li>/],
             ["<ul>Loose text<li>Item</li></ul>", /only direct <li>/],
-            ['<section><span slot="label">Nested slot bypass</span></section>', /direct custom-element child/],
-            ["<form></form>", /declared CMS mutation/],
+            ['<section><span slot="label">Nested slot bypass</span></section>', /direct referenced Bloc child/],
+            ['<form cms-bloc="site-contact-form"></form>', /declared CMS mutation/],
             [
-                `<form cms-mutation="forms:contact as contact"
+                `<form cms-bloc="site-contact-form" cms-mutation="forms:contact as contact"
                     cms-mutation-input='{"safe":{"from":"literal","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
             [
-                `<form cms-mutation="kernel.auth:login as session"
+                `<form cms-bloc="site-login-form" cms-mutation="kernel.auth:login as session"
                     cms-mutation-redirect-param="bad param"></form>`,
                 /redirect parameter is invalid/,
             ],
@@ -290,7 +294,8 @@ describe("site bloc validation", () => {
 
         const valid = validateSiteBlocSnapshot(
             siteBlocSnapshot({
-                defaultContent: `<h2 slot="title">Contact</h2><form
+                defaultContent: `<div cms-bloc="site-contact-title" slot="title">Contact</div><form
+                    cms-bloc="site-contact-form"
                     cms-mutation="forms:contact as contact"
                     cms-mutation-redirect="/thanks" cms-mutation-redirect-param="returnTo"></form>`,
             }),

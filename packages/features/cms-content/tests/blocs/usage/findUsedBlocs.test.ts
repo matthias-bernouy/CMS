@@ -11,28 +11,30 @@ describe("findUsedBlocTags", () => {
     });
 
     test("detects a single used tag", () => {
-        expect(findUsedBlocTags("<my-card></my-card>", [{ id: "my-card" }])).toEqual(["my-card"]);
+        expect(findUsedBlocTags('<div cms-bloc="my-card"></div>', [{ id: "my-card" }])).toEqual(["my-card"]);
     });
 
     test("detects self-closing usage", () => {
-        expect(findUsedBlocTags("<my-card />", [{ id: "my-card" }])).toEqual(["my-card"]);
+        expect(findUsedBlocTags('<div cms-bloc="my-card" />', [{ id: "my-card" }])).toEqual(["my-card"]);
     });
 
     test("detects tags with attributes", () => {
-        expect(findUsedBlocTags(`<my-card foo="bar"></my-card>`, [{ id: "my-card" }])).toEqual(["my-card"]);
+        expect(findUsedBlocTags(`<div cms-bloc=\"my-card\" foo="bar"></div>`, [{ id: "my-card" }])).toEqual([
+            "my-card",
+        ]);
     });
 
     test("is case-insensitive", () => {
-        expect(findUsedBlocTags("<MY-CARD></MY-CARD>", [{ id: "my-card" }])).toEqual(["my-card"]);
+        expect(findUsedBlocTags('<div CMS-BLOC="MY-CARD"></div>', [{ id: "my-card" }])).toEqual(["my-card"]);
     });
 
     test("does NOT match a tag that only appears as a substring of another", () => {
-        // `<my-card-extra>` must not match `my-card`.
-        expect(findUsedBlocTags("<my-card-extra></my-card-extra>", [{ id: "my-card" }])).toEqual([]);
+        // `<div cms-bloc=\"my-card-extra\">` must not match `my-card`.
+        expect(findUsedBlocTags('<div cms-bloc="my-card-extra"></div>', [{ id: "my-card" }])).toEqual([]);
     });
 
     test("returns every registered tag that appears", () => {
-        const used = findUsedBlocTags("<my-card></my-card><other-bloc></other-bloc>", [
+        const used = findUsedBlocTags('<div cms-bloc="my-card"></div><div cms-bloc="other-bloc"></div>', [
             { id: "my-card" },
             { id: "other-bloc" },
             { id: "unused" },
@@ -56,23 +58,23 @@ function compositionResolver(views: Record<string, string | null>, onRead: (tag:
 describe("createBlocUsageResolver", () => {
     test("follows compiled template tags transitively", async () => {
         const resolve = compositionResolver({
-            "root-card": "const t = `<child-card></child-card>`;",
-            "child-card": "const t = `<leaf-badge></leaf-badge>`;",
+            "root-card": 'const t = `<div cms-bloc="child-card"></div>`;',
+            "child-card": 'const t = `<div cms-bloc="leaf-badge"></div>`;',
             "leaf-badge": "LEAF();",
         });
 
-        expect(await resolve("<root-card></root-card>")).toEqual(["child-card", "leaf-badge", "root-card"]);
+        expect(await resolve('<div cms-bloc="root-card"></div>')).toEqual(["child-card", "leaf-badge", "root-card"]);
     });
 
     test("deduplicates shared dependencies and stops cycles", async () => {
         const resolve = compositionResolver({
-            "root-card": "const t = `<child-card/><side-card/>`;",
-            "child-card": "const t = `<leaf-badge/><root-card/>`;",
-            "side-card": "const t = `<leaf-badge/>`;",
-            "leaf-badge": "const t = `<child-card/>`;",
+            "root-card": 'const t = `<div cms-bloc="child-card"></div><div cms-bloc="side-card"></div>`;',
+            "child-card": 'const t = `<div cms-bloc="leaf-badge"></div><div cms-bloc="root-card"></div>`;',
+            "side-card": 'const t = `<div cms-bloc="leaf-badge"></div>`;',
+            "leaf-badge": 'const t = `<div cms-bloc="child-card"></div>`;',
         });
 
-        expect(await resolve("<root-card/><root-card/>")).toEqual([
+        expect(await resolve('<div cms-bloc="root-card"></div><div cms-bloc="root-card"></div>')).toEqual([
             "child-card",
             "leaf-badge",
             "root-card",
@@ -82,24 +84,24 @@ describe("createBlocUsageResolver", () => {
 
     test("keeps registered missing views and ignores unknown tags", async () => {
         const resolve = compositionResolver({
-            "root-card": "const t = `<missing-card/><unknown-card/>`;",
+            "root-card": 'const t = `<div cms-bloc="missing-card"></div><div cms-bloc="unknown-card"></div>`;',
         });
 
-        expect(await resolve("<root-card/>")).toEqual(["missing-card", "root-card"]);
+        expect(await resolve('<div cms-bloc="root-card"></div>')).toEqual(["missing-card", "root-card"]);
     });
 
     test("reads each compiled view once while the resolver is reused", async () => {
         const reads: string[] = [];
         const resolve = compositionResolver(
             {
-                "root-card": "const t = `<child-card/>`;",
+                "root-card": 'const t = `<div cms-bloc="child-card"></div>`;',
                 "child-card": "CHILD();",
             },
             (tag) => reads.push(tag),
         );
 
-        await resolve("<root-card/>");
-        await resolve("<root-card/><child-card/>");
+        await resolve('<div cms-bloc="root-card"></div>');
+        await resolve('<div cms-bloc="root-card"></div><div cms-bloc="child-card"></div>');
 
         expect(reads.sort()).toEqual(["child-card", "root-card"]);
     });

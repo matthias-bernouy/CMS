@@ -96,7 +96,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
                         description: "",
                         compositionHTML: "<main><slot></slot></main>",
                         uses: ["shared-card"],
-                        nativeElement: { accepts: ["a"] },
+                        root: { accepts: ["a"] },
                         ownership: { kind: "code-managed" as const },
                     },
                 ];
@@ -108,7 +108,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
                 id: "archived-layout",
                 compositionHTML: "<main><slot></slot></main>",
                 uses: ["shared-card"],
-                nativeElement: { accepts: ["a"] },
+                root: { accepts: ["a"] },
             },
         ]);
         expect(includeInactive).toBe(true);

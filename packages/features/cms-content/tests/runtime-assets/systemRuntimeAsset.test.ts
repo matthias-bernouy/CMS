@@ -2,22 +2,25 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadBindingCoreRuntimeEntry, loadComponentRuntimeEntry } from "@bernouy/cms-content/runtime-assets";
+import { loadBindingCoreRuntimeEntry, loadBlocRuntimeEntry } from "@bernouy/cms-content/runtime-assets";
 import { buildContentBrowserAssets } from "@bernouy/cms-content/runtime-assets/build";
 
 describe("content browser runtime assets", () => {
-    test("exposes the generic component base through the public runtime bundle", async () => {
-        const entry = await loadComponentRuntimeEntry();
+    test("exposes the Light DOM Bloc behavior runtime", async () => {
+        const entry = await loadBlocRuntimeEntry();
         const source = new TextDecoder().decode(entry.raw);
 
         expect(entry.contentType).toBe("text/javascript");
-        expect(source).toMatch(/window\.cmsRuntime\s*=\s*\{[\s\S]*\bComponent\b/);
+        expect(source).toContain("BlocBehavior");
+        expect(source).toContain("registerBloc");
         expect(source).not.toContain("syncProviderMediaImage");
 
         (window as any).cmsRuntime = {};
         window.eval(source);
-        expect(typeof (window as any).cmsRuntime.Component).toBe("function");
-        expect((window as any).cmsRuntime.Composition).toBeUndefined();
+        expect(typeof (window as any).cmsRuntime.BlocBehavior).toBe("function");
+        expect(typeof (window as any).cmsRuntime.mountBlocBehavior).toBe("function");
+        expect(typeof (window as any).cmsRuntime.registerBloc).toBe("function");
+        expect((window as any).cmsRuntime.Component).toBeUndefined();
         expect((window as any).cmsRuntime.PROVIDER_IMAGE_WIDTHS).toBeUndefined();
     });
 
@@ -40,10 +43,10 @@ describe("content browser runtime assets", () => {
         try {
             await buildContentBrowserAssets(directory);
             const shippedEntries = {
-                "component.js": await loadComponentRuntimeEntry(),
+                "bloc-runtime.js": await loadBlocRuntimeEntry(),
                 "binding-core.js": await loadBindingCoreRuntimeEntry(),
             };
-            for (const filename of ["component.js", "binding-core.js"] as const) {
+            for (const filename of ["bloc-runtime.js", "binding-core.js"] as const) {
                 const [generated, shippedBytes] = await Promise.all([
                     readFile(join(directory, filename)),
                     Promise.resolve(shippedEntries[filename].raw),

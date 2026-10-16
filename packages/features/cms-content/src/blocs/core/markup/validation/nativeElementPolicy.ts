@@ -78,6 +78,7 @@ export function nativeElementAttributesIssue(
         allowImplementationAttributes,
         allowTextAttributes,
         allowIncompleteMedia,
+        typeof attributes["cms-bloc"] === "string",
     );
     if (attributeIssue) {
         return attributeIssue;
@@ -124,9 +125,13 @@ function nativeAttributesIssue(
     allowImplementationAttributes: boolean,
     allowTextAttributes: boolean,
     allowIncompleteMedia: boolean,
+    blocRoot: boolean,
 ): string | null {
     const controlled: Record<string, string> = {};
     for (const [name, value] of Object.entries(attributes)) {
+        if (blocRoot && name === "cms-bloc") {
+            continue;
+        }
         if ((tag !== "svg" && name !== name.toLowerCase()) || CONTROL_CHARACTER.test(value)) {
             return `attribute "${name}" is not safe on native <${tag}>`;
         }
@@ -149,6 +154,22 @@ function nativeAttributesIssue(
         }
         if (name.startsWith("cms-")) {
             return `attribute "${name}" is not a declared CMS binding`;
+        }
+        if (blocRoot && !isPlatformNativeAttributeAllowed(tag, name)) {
+            // Declared Bloc settings are checked against the Bloc contract.
+            continue;
+        }
+        if (name === "role") {
+            const accessibilityIssue = implementationAccessibilityAttributeIssue(name, value);
+            if (accessibilityIssue) {
+                return accessibilityIssue;
+            }
+            controlled[name] = value;
+            continue;
+        }
+        if (name.startsWith("aria-")) {
+            controlled[name] = value;
+            continue;
         }
         if (allowImplementationAttributes) {
             const dynamicKind = implementationAttributeBindingKind(name);
@@ -228,6 +249,13 @@ function isImplementationAttribute(name: string, value: string): boolean {
     }
     if (name === "tabindex") {
         return value === "-1" || value === "0";
+    }
+    if (name === "class" || name === "part") {
+        return (
+            value.length > 0 &&
+            value.length <= 512 &&
+            value.split(/\s+/u).every((token) => /^[a-z][a-z0-9_-]*$/u.test(token))
+        );
     }
     return /^data-(?!cms-)[a-z][a-z0-9-]*$/u.test(name);
 }

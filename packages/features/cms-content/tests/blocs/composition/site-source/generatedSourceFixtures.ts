@@ -1,5 +1,5 @@
 const expectedSnapshotJson = `{
-        "defaultContent": "<h1 slot=\\\"title\\\">Hello</h1><p>Body</p>",
+        "defaultContent": "<h1 cms-bloc=\\\"basic-heading-1\\\" slot=\\\"title\\\">Hello</h1><p cms-bloc=\\\"basic-paragraph\\\">Body</p>",
         "dependencies": [
             "basic-container",
             "layout-shell"

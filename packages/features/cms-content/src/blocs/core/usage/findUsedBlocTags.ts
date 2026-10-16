@@ -1,15 +1,11 @@
-import { escapeRegex } from "cms-content/pages/core/queries/escapeRegex";
-
 /**
- * Scan content for references to registered bloc tags.
- *
- * Tag-name anchored regex so `<my-bloc>` matches but `<my-bloc-extended>`
- * does not. Case-insensitive because HTML tag names are.
+ * Scan content for exact `cms-bloc` identities.
  */
 export function findUsedBlocTags(content: string, blocList: { id: string }[]): string[] {
     const used: string[] = [];
     for (const bloc of blocList) {
-        const re = new RegExp(`<${escapeRegex(bloc.id)}(\\s|>|/)`, "i");
+        const escaped = bloc.id.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+        const re = new RegExp(`\\bcms-bloc\\s*=\\s*(["'])${escaped}\\1`, "i");
         if (re.test(content)) {
             used.push(bloc.id);
         }

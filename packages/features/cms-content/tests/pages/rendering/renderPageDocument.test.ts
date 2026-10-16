@@ -7,7 +7,7 @@ describe("renderPageDocument", () => {
         const { document } = parseHTML("<html><body></body></html>");
         const rendered = await renderPageDocument(
             document.body,
-            { html: '<atlas-card onclick="alert(1)"><script>bad()</script>Hello</atlas-card>' },
+            { html: '<div cms-bloc=\"atlas-card\" onclick="alert(1)"><script>bad()</script>Hello</div>' },
             {
                 language: "en",
                 repository: {
@@ -15,7 +15,7 @@ describe("renderPageDocument", () => {
                         return [
                             {
                                 id: "atlas-card",
-                                componentHTML: "<article><slot></slot></article>",
+                                templateHTML: "<article><slot></slot></article>",
                                 uses: ["atlas-action"],
                             },
                             { id: "atlas-action" },
@@ -23,7 +23,7 @@ describe("renderPageDocument", () => {
                     },
                     async getBlocViewJS(tag) {
                         return ["atlas-action", "atlas-card"].includes(tag)
-                            ? `customElements.define('${tag}', class {})`
+                            ? `cmsRuntime.registerBloc('${tag}', { mount() {} })`
                             : null;
                     },
                 },
@@ -33,7 +33,7 @@ describe("renderPageDocument", () => {
             },
         );
 
-        expect(rendered.html).toContain("<atlas-card><article>Hello</article></atlas-card>");
+        expect(rendered.html).toContain('<div cms-bloc="atlas-card"><article>Hello</article></div>');
         expect(rendered.html).not.toContain("script");
         expect(rendered.html).not.toContain("onclick");
         expect(rendered.usedTags).toEqual(["atlas-action", "atlas-card"]);

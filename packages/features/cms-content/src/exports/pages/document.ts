@@ -11,7 +11,7 @@ export type {
     MediaAccept,
     PageBlocContract,
     PageDocument,
-    PageRichTextProfile,
+    PageNativeContentProfile,
     PageSlot,
     PageSlotAccept,
 } from "cms-content/pages/interfaces/document";

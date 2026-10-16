@@ -17,6 +17,7 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     }
     const bloc = normalizeBlocWrite(value);
     assertBlocArtifactBudgets(bloc.viewJS, bloc.source);
+    validateBlocRuntime(bloc.viewJS);
     if (bloc.thumbnail !== undefined) {
         bloc.thumbnail = parsePresentationImage(bloc.thumbnail);
     }
@@ -24,26 +25,29 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
         throw new ContentValidationError("catalogue", "expected active or inactive");
     }
     if (!isValidCustomElementTag(bloc.id)) {
-        throw new ContentValidationError("id", "valid lower-case custom-element tag expected");
+        throw new ContentValidationError("id", "valid lower-case namespaced Bloc identifier expected");
     }
     if (bloc.compositionHTML !== undefined && !bloc.compositionHTML.trim()) {
         throw new ContentValidationError("compositionHTML", "non-empty HTML expected");
     }
-    if (bloc.componentHTML !== undefined && !bloc.componentHTML.trim()) {
-        throw new ContentValidationError("componentHTML", "non-empty HTML expected");
+    if (bloc.templateHTML !== undefined && !bloc.templateHTML.trim()) {
+        throw new ContentValidationError("templateHTML", "non-empty HTML expected");
     }
-    if (bloc.componentHTML !== undefined && (bloc.compositionHTML !== undefined || !bloc.viewJS.trim())) {
-        throw new ContentValidationError("bloc", "componentHTML requires a component view without compositionHTML");
+    if (bloc.templateHTML !== undefined && bloc.compositionHTML !== undefined) {
+        throw new ContentValidationError("bloc", "templateHTML and compositionHTML are mutually exclusive");
     }
     if (bloc.compositionHTML !== undefined && bloc.viewJS.trim()) {
         throw new ContentValidationError("bloc", "viewJS and compositionHTML are mutually exclusive");
     }
     if (bloc.internal && (bloc.compositionHTML !== undefined || !bloc.viewJS.trim())) {
-        throw new ContentValidationError("internal", "internal blocs must provide a component view");
+        throw new ContentValidationError("internal", "internal blocs must provide a behavior runtime");
     }
-    validateManagedNativeElement(bloc.nativeElement);
-    if (bloc.nativeElement !== undefined && (bloc.internal || bloc.compositionHTML !== undefined)) {
-        throw new ContentValidationError("nativeElement", "managed native elements require an editable component view");
+    validateManagedNativeElement(bloc.root, "root");
+    if (bloc.content !== undefined) {
+        validateManagedNativeElement(bloc.content, "content");
+        if (bloc.compositionHTML !== undefined) {
+            throw new ContentValidationError("content", "composition Blocs cannot manage a Page-owned native child");
+        }
     }
     if (bloc.compositionHTML !== undefined) {
         bloc.compositionHTML = validateBlocContentMarkup(bloc.compositionHTML, {
@@ -52,9 +56,9 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
             ownerTag: bloc.id,
         }).html;
     }
-    if (bloc.componentHTML !== undefined) {
-        bloc.componentHTML = validateBlocContentMarkup(bloc.componentHTML, {
-            field: "componentHTML",
+    if (bloc.templateHTML !== undefined) {
+        bloc.templateHTML = validateBlocContentMarkup(bloc.templateHTML, {
+            field: "templateHTML",
             kind: "fixed",
             ownerTag: bloc.id,
         }).html;
@@ -69,27 +73,39 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     return bloc;
 }
 
-function validateManagedNativeElement(value: TBloc["nativeElement"]): void {
+function validateBlocRuntime(source: string): void {
+    if (/(?:\bwindow\s*\.\s*)?\bcustomElements\s*\.\s*define\s*\(/u.test(source)) {
+        throw new ContentValidationError(
+            "viewJS",
+            "customElements.define is forbidden; Bloc behavior must mount on the native cms-bloc root",
+        );
+    }
+    if (/\battachShadow\s*\(|\.\s*shadowRoot\b/u.test(source)) {
+        throw new ContentValidationError("viewJS", "Shadow DOM APIs are forbidden in Bloc behavior runtimes");
+    }
+}
+
+function validateManagedNativeElement(value: TBloc["root"], field: "root" | "content"): void {
     if (value === undefined) {
-        return;
+        throw new ContentValidationError(field, "a native element contract is required");
     }
     if (
         value === null ||
         typeof value !== "object" ||
         Array.isArray(value) ||
-        Object.keys(value).some((key) => key !== "accepts" && key !== "attributes") ||
+        Object.keys(value).some((key) => key !== "accepts" && key !== "attributes" && key !== "defaults") ||
         !Array.isArray(value.accepts) ||
         value.accepts.length === 0 ||
         new Set(value.accepts).size !== value.accepts.length
     ) {
-        throw new ContentValidationError("nativeElement", "non-empty unique accepts list expected");
+        throw new ContentValidationError(field, "non-empty unique accepts list expected");
     }
     for (const tag of value.accepts) {
         if (!isPlatformManagedNativeElementTag(tag)) {
-            throw new ContentValidationError("nativeElement", `unsupported managed native element tag ${tag}`);
+            throw new ContentValidationError(field, `unsupported managed native element tag ${tag}`);
         }
         if (tag !== tag.toLowerCase()) {
-            throw new ContentValidationError("nativeElement", "lower-case native element tags expected");
+            throw new ContentValidationError(field, "lower-case native element tags expected");
         }
     }
     if (value.attributes !== undefined) {
@@ -99,11 +115,11 @@ function validateManagedNativeElement(value: TBloc["nativeElement"]): void {
             Array.isArray(value.attributes) ||
             Object.keys(value.attributes).length === 0
         ) {
-            throw new ContentValidationError("nativeElement", "non-empty native attribute constraints expected");
+            throw new ContentValidationError(field, "non-empty native attribute constraints expected");
         }
         for (const [name, constraint] of Object.entries(value.attributes)) {
             if (!/^[a-z][a-z0-9-]*$/u.test(name) || constraint === null || typeof constraint !== "object") {
-                throw new ContentValidationError("nativeElement", "valid native attribute constraints expected");
+                throw new ContentValidationError(field, "valid native attribute constraints expected");
             }
             if (
                 Object.keys(constraint).some((key) => key !== "required" && key !== "values") ||
@@ -115,9 +131,18 @@ function validateManagedNativeElement(value: TBloc["nativeElement"]): void {
                         constraint.values.some((entry) => typeof entry !== "string"))) ||
                 (constraint.required === undefined && constraint.values === undefined)
             ) {
-                throw new ContentValidationError("nativeElement", "valid native attribute constraints expected");
+                throw new ContentValidationError(field, "valid native attribute constraints expected");
             }
         }
+    }
+    if (
+        value.defaults !== undefined &&
+        (value.defaults === null ||
+            typeof value.defaults !== "object" ||
+            Array.isArray(value.defaults) ||
+            Object.values(value.defaults).some((entry) => typeof entry !== "string"))
+    ) {
+        throw new ContentValidationError(field, "native defaults must be string attributes");
     }
 }
 
@@ -135,7 +160,7 @@ export function validateSiteBlocDefinition(value: SiteBlocDefinition): SiteBlocD
         throw new ContentValidationError("id", "required");
     }
     if (typeof value.tag !== "string" || !value.tag.startsWith("site-") || !isValidCustomElementTag(value.tag)) {
-        throw new ContentValidationError("tag", 'expected a valid custom-element tag starting with "site-"');
+        throw new ContentValidationError("tag", 'expected a valid namespaced Bloc identifier starting with "site-"');
     }
     if (
         !isRecord(value.ownership) ||

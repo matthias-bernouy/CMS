@@ -2,7 +2,6 @@ import { parseHTML } from "linkedom";
 import { nativeDomTreeIssue } from "cms-content/blocs/core/validation/nativeDom";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenStoredHtml";
-import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { storedMarkupSecurityIssue } from "cms-content/blocs/core/markup/security/storedMarkupIssue";
 import { parseMutation, parseQuery } from "cms-content/blocs/core/markup/bindings";
 import {
@@ -34,10 +33,10 @@ export function validatePageContentMarkup(value: string): string {
         if (node.nodeType === 3 && node.textContent?.trim()) {
             throw new ContentValidationError("content", "Page root text must be owned by a Bloc slot");
         }
-        if (node.nodeType === 1 && !isValidCustomElementTag((node as Element).localName)) {
+        if (node.nodeType === 1 && !(node as Element).hasAttribute("cms-bloc")) {
             throw new ContentValidationError(
                 "content",
-                `native <${(node as Element).localName}> cannot be a Page root; add it through a Bloc contract`,
+                `native <${(node as Element).localName}> cannot be a Page root without cms-bloc`,
             );
         }
     }
@@ -45,7 +44,24 @@ export function validatePageContentMarkup(value: string): string {
 }
 
 export function validateSiteBlocDefaultContent(value: string, ownerTag?: string): string {
-    return validateNativeMarkup(value, "draft.defaultContent", ownerTag, {}, true);
+    const html = validateNativeMarkup(value, "draft.defaultContent", ownerTag, {}, true);
+    const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
+    document.body.innerHTML = html;
+    for (const node of Array.from(document.body.childNodes)) {
+        if (node.nodeType === 3 && node.textContent?.trim()) {
+            throw new ContentValidationError(
+                "draft.defaultContent",
+                "Site Bloc default text must be owned by a referenced Bloc",
+            );
+        }
+        if (node.nodeType === 1 && !(node as Element).hasAttribute("cms-bloc")) {
+            throw new ContentValidationError(
+                "draft.defaultContent",
+                `native <${(node as Element).localName}> must be a direct referenced Bloc child`,
+            );
+        }
+    }
+    return html;
 }
 
 /** Canonical fixed/default Bloc-document grammar shared by every Bloc producer. */

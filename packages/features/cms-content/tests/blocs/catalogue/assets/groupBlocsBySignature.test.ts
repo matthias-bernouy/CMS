@@ -76,13 +76,13 @@ describe("groupBlocsBySignature", () => {
 describe("getBlocGroupManifest", () => {
     test("groups nested dependencies by their effective page signatures", async () => {
         const views: Record<string, string> = {
-            "site-header": "const t = `<base-nav></base-nav>`;",
+            "site-header": 'const t = `<div cms-bloc="base-nav"></div>`;',
             "base-nav": "NAV();",
         };
         const content = {
             getPublishedPages: async () => [
-                { content: "<site-header></site-header>" },
-                { content: "<site-header></site-header>" },
+                { content: '<div cms-bloc="site-header"></div>' },
+                { content: '<div cms-bloc="site-header"></div>' },
             ],
             getRenderableBlocs: async () => Object.keys(views).map((id) => ({ id })),
             getBlocViewJS: async (tag: string) => views[tag] ?? null,
@@ -97,13 +97,13 @@ describe("getBlocGroupManifest", () => {
 
     test("separates a dependency that is also used directly", async () => {
         const views: Record<string, string> = {
-            "site-header": "const t = `<base-nav></base-nav>`;",
+            "site-header": 'const t = `<div cms-bloc="base-nav"></div>`;',
             "base-nav": "NAV();",
         };
         const content = {
             getPublishedPages: async () => [
-                { content: "<site-header></site-header>" },
-                { content: "<base-nav></base-nav>" },
+                { content: '<div cms-bloc="site-header"></div>' },
+                { content: '<div cms-bloc="base-nav"></div>' },
             ],
             getRenderableBlocs: async () => Object.keys(views).map((id) => ({ id })),
             getBlocViewJS: async (tag: string) => views[tag] ?? null,
@@ -115,7 +115,7 @@ describe("getBlocGroupManifest", () => {
 
     test("does not include bloc usage found only in drafts", async () => {
         const content = {
-            getPublishedPages: async () => [{ content: "<published-card></published-card>" }],
+            getPublishedPages: async () => [{ content: '<div cms-bloc="published-card"></div>' }],
             getRenderableBlocs: async () => [{ id: "published-card" }, { id: "draft-only-card" }],
             getBlocViewJS: async () => null,
         } as unknown as ContentReader;

@@ -145,9 +145,10 @@ export function createContentReader(repository: CmsRepository, options: ContentR
             (await repository.getBlocsList({ includeInactive: true })).map((bloc) => ({
                 id: bloc.id,
                 ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
-                ...(bloc.componentHTML ? { componentHTML: bloc.componentHTML } : {}),
+                ...(bloc.templateHTML ? { templateHTML: bloc.templateHTML } : {}),
                 ...(bloc.uses?.length ? { uses: [...bloc.uses] } : {}),
-                ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
+                root: bloc.root,
+                ...(bloc.content ? { content: structuredClone(bloc.content) } : {}),
             })),
         getBlocViewJS: (tag) => repository.getBlocViewJS(tag),
         getRenderingSettings: async () => projectRenderingSettings(await repository.getSystem()),

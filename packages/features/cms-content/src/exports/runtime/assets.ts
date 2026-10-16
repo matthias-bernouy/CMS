@@ -1,6 +1,6 @@
 /** Prebuilt technical browser runtimes consumed by server composition. */
 export {
-    componentRuntimeCacheKey,
+    blocRuntimeCacheKey,
     loadBindingCoreRuntimeEntry,
-    loadComponentRuntimeEntry,
+    loadBlocRuntimeEntry,
 } from "cms-content/runtime-assets/runtimeAssets";

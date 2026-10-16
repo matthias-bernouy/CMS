@@ -9,6 +9,7 @@ const card: TBloc = {
     group: "Marketing",
     description: "A reusable card",
     viewJS: "view-code",
+    root: { accepts: ["div"] },
     ownership: { kind: "code-managed" },
     source: { "index.ts": "c291cmNl" },
 };
@@ -34,7 +35,7 @@ describe("MongoCmsRepository content persistence", () => {
         await repository.insertPage(
             "/references",
             "References",
-            '<official-card><img src="/.cms/call/ulvia.cms.files/files/file%201/generation">{{ cms.i18n.ulvia-official.card-title }}</official-card>',
+            '<div cms-bloc=\"official-card\"><img src="/.cms/call/ulvia.cms.files/files/file%201/generation">{{ cms.i18n.ulvia-official.card-title }}</div>',
         );
         const page = (await repository.getPage("/references"))!;
 
@@ -72,6 +73,7 @@ describe("MongoCmsRepository content persistence", () => {
                 name: "Card",
                 group: "Marketing",
                 description: "A reusable card",
+                root: { accepts: ["div"] },
                 ownership: { kind: "code-managed" },
             },
         ]);
@@ -83,6 +85,7 @@ describe("MongoCmsRepository content persistence", () => {
                 name: "Updated card",
                 group: "Marketing",
                 description: "A reusable card",
+                root: { accepts: ["div"] },
                 ownership: { kind: "code-managed" },
             },
         ]);

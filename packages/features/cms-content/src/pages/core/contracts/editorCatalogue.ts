@@ -33,7 +33,8 @@ export async function getCmsEditorCatalogue(
                 authoringJson: canonicalJson({
                     slots: bloc.slots ?? {},
                     settings: bloc.settings ?? [],
-                    ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
+                    ...(bloc.root ? { root: bloc.root } : {}),
+                    ...(bloc.content ? { content: bloc.content } : {}),
                 }),
             }),
         );

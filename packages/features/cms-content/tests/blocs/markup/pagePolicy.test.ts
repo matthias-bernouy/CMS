@@ -6,9 +6,10 @@ const repository: any = {
     getBlocsList: async () => [
         {
             id: "fixture-card",
-            slots: { body: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
+            root: { accepts: ["div"] },
+            slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
         },
-        { id: "fixture-action", nativeElement: { accepts: ["button", "a"] } },
+        { id: "fixture-action", root: { accepts: ["div"] }, content: { accepts: ["button", "a"] } },
     ],
 };
 
@@ -17,40 +18,50 @@ async function validate(content: string): Promise<void> {
 }
 
 test("Page-owned rich text rejects arbitrary native attributes", async () => {
-    await validate('<fixture-card><p slot="body">Text</p></fixture-card>');
-    for (const attribute of ['style="color:red"', 'data-track="body"', 'aria-label=""']) {
-        await expect(validate(`<fixture-card><p slot="body" ${attribute}>Text</p></fixture-card>`)).rejects.toThrow(
-            "not allowed",
-        );
+    await validate('<div cms-bloc=\"fixture-card\"><p slot="body">Text</p></div>');
+    await validate('<div cms-bloc=\"fixture-card\"><p slot="body" aria-label="Summary">Text</p></div>');
+    for (const attribute of ['style="color:red"', 'data-track="body"']) {
+        await expect(
+            validate(`<div cms-bloc=\"fixture-card\"><p slot="body" ${attribute}>Text</p></div>`),
+        ).rejects.toThrow("not allowed");
     }
+    await expect(
+        validate('<div cms-bloc=\"fixture-card\"><p slot="body" aria-label="">Text</p></div>'),
+    ).rejects.toThrow("must not be empty");
 });
 
 test("Page-owned rich text rejects descendant slot targets", async () => {
     await expect(
-        validate('<fixture-card><p slot="body"><span slot="ghost">Text</span></p></fixture-card>'),
+        validate('<div cms-bloc=\"fixture-card\"><p slot="body"><span slot="ghost">Text</span></p></div>'),
     ).rejects.toThrow("does not accept native");
 });
 
 test("managed native children use the closed native attribute policy", async () => {
-    await validate('<fixture-action><button type="button">Save</button></fixture-action>');
-    await validate('<fixture-action><button type="button" aria-label="Save"></button></fixture-action>');
+    await validate('<div cms-bloc=\"fixture-action\"><button type="button">Save</button></div>');
+    await validate('<div cms-bloc=\"fixture-action\"><button type="button" aria-label="Save"></button></div>');
+    await validate('<div cms-bloc=\"fixture-action\"><button type="button" aria-invalid="true">Save</button></div>');
     for (const attribute of ['type="wat"', 'style="position:fixed"', 'mystery="value"']) {
-        await expect(validate(`<fixture-action><button ${attribute}>Save</button></fixture-action>`)).rejects.toThrow();
+        await expect(
+            validate(`<div cms-bloc=\"fixture-action\"><button ${attribute}>Save</button></div>`),
+        ).rejects.toThrow();
     }
-    await expect(validate('<fixture-action><button type="button"></button></fixture-action>')).rejects.toThrow(
+    await expect(validate('<div cms-bloc=\"fixture-action\"><button type="button"></button></div>')).rejects.toThrow(
         "requires text content or a non-empty aria-label",
     );
     await expect(
-        validate('<fixture-action><a aria-current="selected">Current page</a></fixture-action>'),
+        validate('<div cms-bloc=\"fixture-action\"><a aria-current="selected">Current page</a></div>'),
     ).rejects.toThrow("aria-current");
+    await expect(
+        validate('<div cms-bloc=\"fixture-action\"><button type="button" aria-invalid="wrong">Save</button></div>'),
+    ).rejects.toThrow("uncontrolled ARIA value");
 });
 
 test("validates typed native attribute interpolation before storing a Page", async () => {
     await validate(
-        '<fixture-action><button type="button" disabled="{{ request.loading }}" aria-expanded="{{ menu.open }}">Save</button></fixture-action>',
+        '<div cms-bloc=\"fixture-action\"><button type="button" disabled="{{ request.loading }}" aria-expanded="{{ menu.open }}">Save</button></div>',
     );
     await validate(
-        '<fixture-action><button type="button" disabled="{{ request.state === \'pending\' }}">Save</button></fixture-action>',
+        '<div cms-bloc=\"fixture-action\"><button type="button" disabled="{{ request.state === \'pending\' }}">Save</button></div>',
     );
     for (const attribute of [
         'disabled="before {{ request.loading }}"',
@@ -62,20 +73,20 @@ test("validates typed native attribute interpolation before storing a Page", asy
         'cms-bind-boolean-disabled="request.loading"',
     ]) {
         await expect(
-            validate(`<fixture-action><button type="button" ${attribute}>Save</button></fixture-action>`),
+            validate(`<div cms-bloc=\"fixture-action\"><button type="button" ${attribute}>Save</button></div>`),
         ).rejects.toThrow();
     }
 });
 
 test("Page documents reject comments", () => {
-    expect(() => validatePageContentMarkup("<!-- hidden --><fixture-card></fixture-card>")).toThrow("comments");
+    expect(() => validatePageContentMarkup('<!-- hidden --><div cms-bloc="fixture-card"></div>')).toThrow("comments");
 });
 
 test("Page writes reject executable markup instead of silently repairing it", () => {
     for (const content of [
         "<script>alert(1)</script>",
-        '<fixture-card onclick="alert(1)"></fixture-card>',
-        '<fixture-card><a slot="body" href="javascript:alert(1)">Bad</a></fixture-card>',
+        '<div cms-bloc=\"fixture-card\" onclick="alert(1)"></div>',
+        '<div cms-bloc=\"fixture-card\"><a slot="body" href="javascript:alert(1)">Bad</a></div>',
     ]) {
         expect(() => validatePageContentMarkup(content)).toThrow(/forbidden/);
     }

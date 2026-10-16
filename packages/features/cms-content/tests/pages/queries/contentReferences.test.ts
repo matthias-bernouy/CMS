@@ -11,7 +11,7 @@ describe("Page content reference projection", () => {
     test("extracts unique Bloc, file, text, and authored Page paths", () => {
         expect(
             pageContentReferenceKeys(
-                '<official-card><a href="/target"><img src="/.cms/call/ulvia.cms.files/files/file%201/generation?v=abc">{{ cms.i18n.ulvia-official.card-title }}</a></official-card>',
+                '<div cms-bloc=\"official-card\"><a href="/target"><img src="/.cms/call/ulvia.cms.files/files/file%201/generation?v=abc">{{ cms.i18n.ulvia-official.card-title }}</a></div>',
             ),
         ).toEqual(["bloc:official-card", "file:file 1", "page-path:/target", "text:ulvia-official:card-title"]);
     });
@@ -21,7 +21,7 @@ describe("Page content reference projection", () => {
         await repository.insertPage(
             "/card",
             "Card",
-            '<official-card><img src="/.cms/call/ulvia.cms.files/files/file%201/generation">{{ cms.i18n.ulvia-official.card-title }}</official-card>',
+            '<div cms-bloc=\"official-card\"><img src="/.cms/call/ulvia.cms.files/files/file%201/generation">{{ cms.i18n.ulvia-official.card-title }}</div>',
         );
         const page = (await repository.getPage("/card"))!;
 

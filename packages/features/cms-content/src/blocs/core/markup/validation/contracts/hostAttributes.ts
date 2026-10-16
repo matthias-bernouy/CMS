@@ -1,10 +1,15 @@
-import type { BlocSettingItem, BlocSettings } from "cms-content/pages/interfaces/document";
+import type { BlocSettingItem, BlocSettings, ManagedNativeElement } from "cms-content/pages/interfaces/document";
+import { isPlatformNativeAttributeAllowed } from "cms-content/blocs/core/validation/nativeHtml";
 import { COMPOSITION_CONTROLLER_ATTRIBUTE } from "cms-content/blocs/core/composition/expandCompositions";
 import {
     implementationAccessibilityAttributeIssue,
     isSupportedAriaAttribute,
 } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
-import { isCmsBindingAttribute } from "cms-content/blocs/core/validation/nativeBindings";
+import {
+    isCmsBindingAttribute,
+    nativeBindingAttributeIssue,
+    nativeBindingElementIssue,
+} from "cms-content/blocs/core/validation/nativeBindings";
 import { boundAttributeValueIssue } from "cms-content/blocs/core/markup/validation/contracts/attributeBindings";
 
 const JSON_NUMBER = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/u;
@@ -12,6 +17,7 @@ const SLOT_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 
 export type PageBlocHostContract = {
     readonly id: string;
+    readonly root: ManagedNativeElement;
     readonly settings?: BlocSettings;
 };
 
@@ -22,10 +28,17 @@ export function pageBlocHostAttributesIssue(
     nested: boolean,
     allowDynamicSettings = true,
     allowImplementationAttributes = false,
+    hostTag?: string,
 ): string | null {
     const settings = contract.settings ?? [];
     const settingsById = new Map(settings.map((item) => [item.id, item]));
     for (const [name, value] of Object.entries(attributes)) {
+        if (name === "cms-bloc") {
+            if (value !== contract.id) {
+                return `Bloc root identity must be ${JSON.stringify(contract.id)}`;
+            }
+            continue;
+        }
         if (allowImplementationAttributes && name === COMPOSITION_CONTROLLER_ATTRIBUTE) {
             if (value !== "") {
                 return `${COMPOSITION_CONTROLLER_ATTRIBUTE} must use an empty HTML attribute`;
@@ -55,8 +68,21 @@ export function pageBlocHostAttributesIssue(
                 continue;
             }
         }
-        if (allowImplementationAttributes && isCmsBindingAttribute(name)) {
-            continue;
+        if (isCmsBindingAttribute(name)) {
+            if (!hostTag && allowImplementationAttributes) {
+                continue;
+            }
+            const attributeIssue = nativeBindingAttributeIssue(name, value);
+            if (attributeIssue) {
+                return attributeIssue;
+            }
+            const placementIssue = hostTag ? nativeBindingElementIssue(hostTag, attributes) : null;
+            if (placementIssue) {
+                return placementIssue;
+            }
+            if (hostTag) {
+                continue;
+            }
         }
         if (allowImplementationAttributes) {
             const implementationKind = dynamicImplementationAttributeKind(name);
@@ -82,8 +108,13 @@ export function pageBlocHostAttributesIssue(
             }
             continue;
         }
-        if (!settingsById.has(name)) {
-            return `Bloc <${contract.id}> attribute ${JSON.stringify(name)} is not a declared setting`;
+        if (
+            !settingsById.has(name) &&
+            !contract.root.accepts.some((tag) => isPlatformNativeAttributeAllowed(tag, name)) &&
+            !isImplementationAttribute(name, value) &&
+            implementationAccessibilityAttributeIssue(name, value) === undefined
+        ) {
+            return `Bloc <${contract.id}> attribute ${JSON.stringify(name)} is neither a declared setting nor a native root attribute`;
         }
     }
     try {
@@ -120,6 +151,10 @@ function isImplementationAttribute(name: string, value: string): boolean {
     }
     if (name === "tabindex") {
         return value === "-1" || value === "0";
+    }
+    if (name === "part") {
+        const tokens = value.split(/\s+/u).filter(Boolean);
+        return tokens.length > 0 && tokens.length <= 16 && tokens.every((token) => SLOT_NAME.test(token));
     }
     return false;
 }

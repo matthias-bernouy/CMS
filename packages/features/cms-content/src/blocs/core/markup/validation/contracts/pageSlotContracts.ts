@@ -1,4 +1,3 @@
-import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import type { PageBlocContract, PageSlot, PageSlotAccept } from "cms-content/pages/interfaces/document";
 
 type ContractElement = Element & { readonly children: HTMLCollectionOf<ContractElement> };
@@ -36,8 +35,17 @@ export function blocHostContractIssue(
     allowTemplateSlots = false,
     allowOwnedNative = false,
 ): string | null {
-    if (bloc.nativeElement) {
-        return validateNestedCustomElements(host, registered, unresolved, allowTemplateSlots, allowOwnedNative);
+    if (bloc.content) {
+        const authored = Array.from(host.childNodes).filter(
+            (node) => node.nodeType === 1 || (node.nodeType === 3 && Boolean(node.textContent?.trim())),
+        );
+        if (authored.length !== 1 || authored[0]?.nodeType !== 1) {
+            return `<${bloc.id}> requires exactly one Page-owned native child`;
+        }
+        if ((authored[0] as Element).hasAttribute("cms-bloc")) {
+            return `<${bloc.id}> managed native content cannot be another Bloc`;
+        }
+        return null;
     }
     const slots = bloc.slots ?? {};
     const counts = new Map<string, number>();
@@ -83,9 +91,9 @@ function slotChildIssue(
     allowTemplateSlots: boolean,
     allowOwnedNative: boolean,
 ): string | null {
-    const tag = child.localName.toLowerCase();
+    const tag = child.getAttribute("cms-bloc")?.toLowerCase();
     const accepts = slot.accepts ?? [];
-    if (isValidCustomElementTag(tag)) {
+    if (tag) {
         const nested = registered.get(tag);
         if (!nested && !unresolved.has(tag)) {
             return `references unavailable Bloc <${tag}>`;
@@ -121,7 +129,7 @@ function acceptsNativeElement(accept: PageSlotAccept, element: ContractElement):
     if (accept.kind === "plain-text") {
         return tag === "span" && element.children.length === 0;
     }
-    if (accept.kind !== "rich-text") {
+    if (accept.kind !== "native-content") {
         return false;
     }
     const roots = accept.profile === "inline" ? INLINE_ROOTS : PROSE_ROOTS;
@@ -140,37 +148,4 @@ function nativeSubtreeMatches(element: ContractElement, allowed: ReadonlySet<str
         }
     }
     return true;
-}
-
-function validateNestedCustomElements(
-    root: ContractElement,
-    registered: ReadonlyMap<string, ContractBloc>,
-    unresolved: ReadonlySet<string>,
-    allowTemplateSlots: boolean,
-    allowOwnedNative: boolean,
-): string | null {
-    for (const child of Array.from(root.children)) {
-        if (!isValidCustomElementTag(child.localName)) {
-            continue;
-        }
-        const nested = registered.get(child.localName);
-        if (!nested && !unresolved.has(child.localName)) {
-            return `<${root.localName}> references unavailable Bloc <${child.localName}>`;
-        }
-        if (!nested) {
-            continue;
-        }
-        const issue = blocHostContractIssue(
-            child,
-            nested,
-            registered,
-            unresolved,
-            allowTemplateSlots,
-            allowOwnedNative,
-        );
-        if (issue) {
-            return issue;
-        }
-    }
-    return null;
 }

@@ -52,6 +52,7 @@ function elementIssue(
     if (bindingStructureIssue) {
         return bindingStructureIssue;
     }
+    const blocRoot = element.getAttribute("cms-bloc") !== null;
     const custom = isValidCustomElementTag(tag);
     if (tag === "slot" && options.allowTemplateSlots) {
         const slotIssue = templateSlotIssue(element);
@@ -72,6 +73,9 @@ function elementIssue(
     if ((tag === "ul" || tag === "ol") && hasDirectAuthoredText(element)) {
         return `native <${tag}> can contain only direct <li> children`;
     }
+    if (custom && tag !== CMS_BINDING_CORE_TAG) {
+        return `custom element <${tag}> is not part of the Page grammar; use a native element with cms-bloc`;
+    }
     if (!custom && !isNativeHtmlTag(tag)) {
         return `unsupported HTML element <${tag}>`;
     }
@@ -87,15 +91,15 @@ function elementIssue(
     }
     if (!custom) {
         const placementIssue =
-            componentOwned || (rootElement && options.skipRootPlacement)
+            componentOwned || blocRoot || (rootElement && options.skipRootPlacement)
                 ? null
-                : nativePlacementIssue(tag, parentTag, element, rootElement, options.rootIsComponentChild === true);
+                : nativePlacementIssue(tag, parentTag, element, options.rootIsComponentChild === true);
         if (placementIssue) {
             return placementIssue;
         }
         const attributeIssue = nativeElementAttributesIssue(
             element,
-            componentOwned,
+            componentOwned || blocRoot,
             options.requireFormSource !== false,
             options.allowIncompleteMedia === true,
             options.allowImplementationAttributes === true,
@@ -109,7 +113,7 @@ function elementIssue(
         }
     }
 
-    const ownsChildren = componentOwned || (custom && tag !== CMS_BINDING_CORE_TAG);
+    const ownsChildren = componentOwned || blocRoot;
     for (const child of Array.from(element.children)) {
         const issue = elementIssue(child, element, tag, ownsChildren, false, options);
         if (issue) {
@@ -127,6 +131,9 @@ function bindingTreeIssue(element: NativePolicyElement, parent: NativePolicyElem
     }
     if (!ownsMatch) {
         return null;
+    }
+    if (element.getAttribute("cms-bloc") !== null) {
+        return "cms-match cannot share an element with cms-bloc because both own its direct children";
     }
     if (element.children.length === 0) {
         return "cms-match requires at least one cms-case child";
@@ -166,24 +173,21 @@ function nativePlacementIssue(
     tag: string,
     parentTag: string | undefined,
     element: NativePolicyElement,
-    rootElement: boolean,
     rootIsComponentChild: boolean,
 ): string | null {
-    const directCustomChild = Boolean(
-        parentTag && isValidCustomElementTag(parentTag) && (!rootElement || rootIsComponentChild),
-    );
-    if (element.getAttribute("slot") !== null && (!parentTag || !isValidCustomElementTag(parentTag))) {
-        return "native slot target has an invalid direct parent; it must be a direct custom-element child";
+    const directBlocChild = Boolean(rootIsComponentChild || element.getAttribute("slot") !== null);
+    if (element.getAttribute("slot") !== null && !parentTag) {
+        return "native slot target has an invalid direct parent; it must be a direct Bloc child";
     }
-    if (tag === "li" && parentTag !== "ul" && parentTag !== "ol" && !directCustomChild) {
+    if (tag === "li" && parentTag !== "ul" && parentTag !== "ol" && !directBlocChild) {
         return "native <li> must be a direct child of <ul> or <ol>";
     }
-    if (tag === "span" && !directCustomChild) {
+    if (tag === "span" && !directBlocChild) {
         return "native <span> is reserved for an explicit component text slot";
     }
     if (
         ["strong", "em", "code"].includes(tag) &&
-        !directCustomChild &&
+        !directBlocChild &&
         (!parentTag || !RICH_TEXT_PARENTS.test(parentTag))
     ) {
         return `native <${tag}> is only allowed inside rich text`;

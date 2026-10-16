@@ -78,7 +78,9 @@ export function compileMatch(
     const cases = Array.from(element.children, (child) => {
         const value = parseCase(child.getAttribute(CASE_ATTR) ?? "");
         if (value === undefined) {
-            throw new TypeError("Invalid cms-case binding");
+            throw new TypeError(
+                `Invalid cms-case binding under cms-match="${element.getAttribute(MATCH_ATTR) ?? ""}" on <${child.localName}>`,
+            );
         }
         const fragment = (element.ownerDocument ?? document).createDocumentFragment();
         const clone = child.cloneNode(true) as Element;

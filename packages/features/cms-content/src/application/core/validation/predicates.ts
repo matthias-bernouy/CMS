@@ -38,7 +38,8 @@ export function isValidResourceIdentifier(id: string): boolean {
 }
 
 /**
- * HTML custom-element name — the subset we accept for bloc tags. Must start
+ * Namespaced Bloc identifier. It deliberately retains the HTML custom-element
+ * naming subset even though the identifier is stored in `cms-bloc`. Must start
  * with a lowercase letter, contain at least one dash, and be composed of
  * lowercase alphanumerics and dashes after that. Locked to a conservative
  * subset so the tag can also be used safely as an authored artifact path.

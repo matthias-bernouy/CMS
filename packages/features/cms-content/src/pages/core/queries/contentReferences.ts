@@ -1,6 +1,6 @@
 import { pageContentPaths } from "cms-content/pages/core/routing/links";
 import { replaceContentTextExpressions } from "cms-content/pages/core/rendering/contentTexts";
-import { parseHTML } from "linkedom";
+import { extractRefs } from "cms-content/blocs/core/markup/contentRefs";
 
 export type PageContentReference =
     | { readonly kind: "bloc"; readonly tag: string }
@@ -27,12 +27,8 @@ export function pageContentReferenceKey(reference: PageContentReference): string
 /** Extracts the references whose reverse lookup must stay bounded as a site grows. */
 export function pageContentReferenceKeys(content: string): readonly string[] {
     const keys = new Set<string>();
-    const { document } = parseHTML(`<body>${content}</body>`);
-    for (const element of document.querySelectorAll<HTMLElement>("*")) {
-        const tag = element.tagName.toLowerCase();
-        if (tag.includes("-")) {
-            keys.add(pageContentReferenceKey({ kind: "bloc", tag }));
-        }
+    for (const tag of extractRefs(content).blocs) {
+        keys.add(pageContentReferenceKey({ kind: "bloc", tag }));
     }
     replaceContentTextExpressions(content, (namespace, textId) => {
         keys.add(pageContentReferenceKey({ kind: "text", namespace, textId }));

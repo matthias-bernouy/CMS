@@ -8,7 +8,7 @@ test("serves bloc sets with opaque composite content revisions", async () => {
         `http://localhost/.cms/blocset?tags=fixture-card&r=${encodeURIComponent(revision)}&v=hash`,
     );
     const response = await serveBlocSet(request, {
-        content: { getBlocViewJS: async () => "customElements.define('fixture-card', class extends HTMLElement {})" },
+        content: { getBlocViewJS: async () => "cmsRuntime.registerBloc('fixture-card', { mount() {} })" },
         cache: new InMemoryCache(),
         resolveContributedAssets: async (source) => source,
     });

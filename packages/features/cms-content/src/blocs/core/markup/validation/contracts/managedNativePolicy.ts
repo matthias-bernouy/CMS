@@ -1,8 +1,12 @@
 import type { ManagedNativeElement, ManagedNativeElementTag } from "cms-content/pages/interfaces/document";
 import { isCmsBindingAttribute } from "cms-content/blocs/core/validation/nativeBindings";
 import { isDeclaredPlatformNativeAttributeAllowed } from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";
+import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
+import { nativeAttributeValueIssue } from "cms-content/blocs/core/validation/nativeAttributeValues";
 
 export const MANAGED_NATIVE_ELEMENT_TAGS = [
+    "article",
+    "aside",
     "h1",
     "h2",
     "h3",
@@ -10,12 +14,38 @@ export const MANAGED_NATIVE_ELEMENT_TAGS = [
     "h5",
     "h6",
     "p",
+    "div",
+    "section",
+    "header",
+    "footer",
+    "main",
+    "nav",
+    "figure",
+    "figcaption",
+    "form",
+    "fieldset",
+    "legend",
+    "label",
+    "ul",
+    "ol",
+    "li",
+    "table",
+    "thead",
+    "tbody",
+    "tfoot",
+    "tr",
+    "th",
+    "td",
     "a",
     "button",
     "dialog",
     "input",
     "textarea",
     "select",
+    "optgroup",
+    "option",
+    "details",
+    "summary",
     "output",
     "img",
     "svg",
@@ -29,7 +59,19 @@ export function managedNativeAttributesIssue(
     options: { allowUnknown?: boolean } = {},
 ): string | null {
     if (tag && !options.allowUnknown) {
-        for (const name of Object.keys(attributes)) {
+        for (const [name, value] of Object.entries(attributes)) {
+            const accessibilityIssue =
+                name === "role"
+                    ? implementationAccessibilityAttributeIssue(name, value)
+                    : name.startsWith("aria-")
+                      ? nativeAttributeValueIssue(tag, name, value)
+                      : undefined;
+            if (accessibilityIssue !== undefined) {
+                if (accessibilityIssue) {
+                    return accessibilityIssue;
+                }
+                continue;
+            }
             if (
                 name !== "id" &&
                 !isDeclaredPlatformNativeAttributeAllowed(tag, name) &&

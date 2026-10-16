@@ -34,6 +34,7 @@ const PLATFORM_NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> 
         "multiple",
         "accept",
         "inputmode",
+        "form",
         "role",
         "aria-label",
         "aria-expanded",

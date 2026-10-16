@@ -6,7 +6,9 @@ describe("generated site Bloc source", () => {
     test("represents a composition without an unnecessary browser runtime", () => {
         const source = generateSiteBlocSourceBundle(definition());
         expect(source["template.html"]).toContain('<slot name="title" slot="title"></slot>');
-        expect(source["default.html"]).toBe('<site-hero><h1 slot="title">Hello</h1><p>Body</p></site-hero>\n');
+        expect(source["default.html"]).toBe(
+            '<div cms-bloc="site-hero"><h1 cms-bloc="basic-heading-1" slot="title">Hello</h1><p cms-bloc="basic-paragraph">Body</p></div>\n',
+        );
         expect(Object.keys(source)).not.toContain("runtime.js");
     });
 
@@ -197,14 +199,14 @@ describe("generated site Bloc source", () => {
             ],
             [{ ...base.draft, defaultContent: "<li>Orphan item</li>" }, /direct child of <ul> or <ol>/],
             [{ ...base.draft, defaultContent: "<ul>Loose text<li>Item</li></ul>" }, /only direct <li>/],
-            [{ ...base.draft, defaultContent: "<form></form>" }, /declared CMS mutation/],
+            [{ ...base.draft, defaultContent: '<form cms-bloc="site-contact-form"></form>' }, /declared CMS mutation/],
         ] as const) {
             expect(() => generateSiteBlocSourceBundle(base, snapshot as typeof base.draft)).toThrow(message);
         }
 
         const source = generateSiteBlocSourceBundle(base, {
             ...base.draft,
-            defaultContent: `<form cms-mutation="forms:contact as contact"
+            defaultContent: `<form cms-bloc="site-contact-form" cms-mutation="forms:contact as contact"
                 cms-mutation-reset="true"></form>`,
         });
         expect(source["default.html"]).toContain('cms-mutation="forms:contact as contact"');

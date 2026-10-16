@@ -13,15 +13,15 @@ const FALLBACK_END = "cms-composition-slot-fallback-end:";
 const COMPONENT_OUTPUT_START = "cms-component-output-start";
 const COMPONENT_OUTPUT_END = "cms-component-output-end";
 
-export type CompositionDefinition = { id: string; compositionHTML?: string; componentHTML?: string };
+export type CompositionDefinition = { id: string; compositionHTML?: string; templateHTML?: string };
 export type CompositionExpansionMode = "render" | "preview";
 type Template = { html: string; retainHost: boolean };
 
 /**
  * Expands registered composition templates into real light DOM.
  *
- * Pure compositions replace their host in rendered output. Component compositions
- * keep it so their fixed children can project through its shadow slots.
+ * Pure compositions replace their annotated root in rendered output. Component
+ * templates keep the native root carrying `cms-bloc`.
  * Preview mode retains page-owned children separately from generated markup.
  */
 export function expandCompositions(
@@ -31,8 +31,8 @@ export function expandCompositions(
 ): void {
     const templates = new Map<string, Template>(
         definitions.flatMap((definition) => {
-            const html = definition.compositionHTML ?? definition.componentHTML;
-            return html ? [[definition.id.toLowerCase(), { html, retainHost: !!definition.componentHTML }]] : [];
+            const html = definition.compositionHTML ?? definition.templateHTML;
+            return html ? [[definition.id.toLowerCase(), { html, retainHost: !!definition.templateHTML }]] : [];
         }),
     );
     if (templates.size === 0) {
@@ -47,7 +47,7 @@ export function expandCompositions(
             return;
         }
         expanded.add(host);
-        expandHost(host, templates.get(host.localName)!, mode);
+        expandHost(host, templates.get(host.getAttribute("cms-bloc")!)!, mode);
     }
     throw new Error("Composition expansion exceeded its safety limit; check for a recursive composition dependency");
 }
@@ -57,12 +57,9 @@ function nextComposition(
     templates: ReadonlyMap<string, Template>,
     expanded: WeakSet<Element>,
 ): Element | null {
-    for (const element of Array.from(root.querySelectorAll("*"))) {
-        if (
-            templates.has(element.localName) &&
-            !expanded.has(element) &&
-            !element.hasAttribute(COMPOSITION_RUNTIME_ATTRIBUTE)
-        ) {
+    for (const element of Array.from(root.querySelectorAll("[cms-bloc]"))) {
+        const id = element.getAttribute("cms-bloc")?.toLowerCase();
+        if (id && templates.has(id) && !expanded.has(element) && !element.hasAttribute(COMPOSITION_RUNTIME_ATTRIBUTE)) {
             return element;
         }
     }
@@ -91,7 +88,7 @@ function expandHost(host: Element, definition: Template, mode: CompositionExpans
                 JSON.stringify(Array.from(host.attributes).map((attribute) => [attribute.name, attribute.value])),
             );
         }
-        unwrapCmsHost(host, template.content);
+        applyRootMarker(host, template.content);
         if (mode === "render") {
             host.replaceChildren(...Array.from(template.content.childNodes));
             return;
@@ -121,15 +118,17 @@ function expandHost(host: Element, definition: Template, mode: CompositionExpans
     host.setAttribute(COMPOSITION_RUNTIME_ATTRIBUTE, "");
 }
 
-function unwrapCmsHost(host: Element, fragment: DocumentFragment): void {
-    const wrapper = Array.from(fragment.children).find((element) => element.localName === "cms-host");
-    if (!wrapper) {
+function applyRootMarker(host: Element, fragment: DocumentFragment): void {
+    const marker = fragment.querySelector("template[cms-root]");
+    if (!marker) {
         return;
     }
-    for (const attribute of Array.from(wrapper.attributes)) {
-        host.setAttribute(attribute.name, attribute.value);
+    for (const attribute of Array.from(marker.attributes)) {
+        if (attribute.name !== "cms-root") {
+            host.setAttribute(attribute.name, attribute.value);
+        }
     }
-    wrapper.replaceWith(...Array.from(wrapper.childNodes));
+    marker.remove();
 }
 
 function projectSlots(
@@ -151,7 +150,7 @@ function projectSlots(
             assigned.length > 0
                 ? assigned.map((node) => (mode === "preview" ? node : node.cloneNode(true)))
                 : Array.from(slot.childNodes);
-        remapProjectedSlot(projected, forwardedSlot);
+        remapProjectedSlot(projected, name, forwardedSlot);
         if (mode === "preview") {
             const encodedName = encodeURIComponent(name);
             const start = slot.ownerDocument.createComment(`${SLOT_START}${encodedName}`);
@@ -193,12 +192,17 @@ function assignedNodes(nodes: Node[], name: string): Node[] {
     });
 }
 
-function remapProjectedSlot(nodes: Node[], forwardedSlot: string | null): void {
+function remapProjectedSlot(nodes: Node[], consumedSlot: string, forwardedSlot: string | null): void {
     for (const node of nodes) {
         if (node.nodeType !== 1) {
             continue;
         }
         const element = node as Element;
+        if (consumedSlot) {
+            const parts = new Set((element.getAttribute("part") ?? "").split(/\s+/u).filter(Boolean));
+            parts.add(consumedSlot);
+            element.setAttribute("part", [...parts].join(" "));
+        }
         if (forwardedSlot === null) {
             element.removeAttribute("slot");
         } else {
@@ -214,7 +218,11 @@ function copyHostAttributes(host: Element, fragment: DocumentFragment): Element 
     }
     controller.removeAttribute(COMPOSITION_CONTROLLER_ATTRIBUTE);
     for (const attribute of Array.from(host.attributes)) {
-        if (attribute.name !== "slot" && !attribute.name.startsWith("data-cms-composition")) {
+        if (
+            attribute.name !== "cms-bloc" &&
+            attribute.name !== "slot" &&
+            !attribute.name.startsWith("data-cms-composition")
+        ) {
             controller.setAttribute(attribute.name, attribute.value);
         }
     }

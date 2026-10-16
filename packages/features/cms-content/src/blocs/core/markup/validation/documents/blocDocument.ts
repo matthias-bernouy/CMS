@@ -1,5 +1,4 @@
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
-import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { extractRefs } from "cms-content/blocs/core/markup/contentRefs";
 import { pageBlocHostAttributesIssue } from "cms-content/blocs/core/markup/validation/contracts/hostAttributes";
 import { blocHostContractIssue } from "cms-content/blocs/core/markup/validation/contracts/pageSlotContracts";
@@ -50,7 +49,7 @@ export function validateBlocDocument(
             kind: "fixed",
             ownerTag: bloc.id,
         });
-        validateFragment(fixed.html, bloc.id, known, unresolved, true);
+        validateFragment(fixed.html, bloc.id, known, unresolved);
         validateBindings(fixed.html, bindingOptions);
     }
     if (bloc.defaultContent !== undefined) {
@@ -86,15 +85,15 @@ function validateFragment(
     ownerTag: string,
     known: ReadonlyMap<string, PageDocumentBlocContract>,
     unresolved: ReadonlySet<string>,
-    allowCmsHost: boolean,
 ): void {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = html;
-    validateReferences(html, document, ownerTag, known, unresolved, allowCmsHost);
+    validateReferences(html, document, ownerTag, known, unresolved);
     validateHostAttributes(document, known, unresolved, true, true);
     validateManagedNative(html, known);
     for (const host of Array.from(document.body.querySelectorAll("*"))) {
-        const contract = known.get(host.localName);
+        const tag = host.getAttribute("cms-bloc")?.toLowerCase();
+        const contract = tag ? known.get(tag) : undefined;
         if (!contract) {
             continue;
         }
@@ -112,8 +111,15 @@ function validateDefaultContent(
     unresolved: ReadonlySet<string>,
 ): void {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
-    document.body.innerHTML = `<${owner.id}>${html}</${owner.id}>`;
-    validateReferences(html, document, owner.id, known, unresolved, false);
+    const rootTag = owner.root.accepts[0] ?? "div";
+    const root = document.createElement(rootTag);
+    root.setAttribute("cms-bloc", owner.id);
+    for (const [name, value] of Object.entries(owner.root.defaults ?? {})) {
+        root.setAttribute(name, value);
+    }
+    root.innerHTML = html;
+    document.body.append(root);
+    validateReferences(html, document, owner.id, known, unresolved);
     validateHostAttributes(document, known, unresolved, false);
     validateManagedNative(document.body.innerHTML, known);
     const host = document.body.firstElementChild!;
@@ -129,7 +135,6 @@ function validateReferences(
     ownerTag: string,
     known: ReadonlyMap<string, PageDocumentBlocContract>,
     unresolved: ReadonlySet<string>,
-    allowCmsHost: boolean,
 ): void {
     for (const tag of extractRefs(html).blocs) {
         if (tag === ownerTag) {
@@ -140,11 +145,8 @@ function validateReferences(
         }
     }
     for (const element of Array.from(document.body.querySelectorAll("*"))) {
-        const tag = element.localName.toLowerCase();
-        if (!isValidCustomElementTag(tag) || known.has(tag) || unresolved.has(tag)) {
-            continue;
-        }
-        if (allowCmsHost && tag === "cms-host") {
+        const tag = element.getAttribute("cms-bloc")?.toLowerCase();
+        if (!tag || known.has(tag) || unresolved.has(tag)) {
             continue;
         }
         throw new ContentValidationError("content", `unknown local bloc ${tag}`);
@@ -159,7 +161,10 @@ function validateHostAttributes(
     allowDynamicSettings = true,
 ): void {
     for (const host of Array.from(document.body.querySelectorAll("*"))) {
-        const tag = host.localName.toLowerCase();
+        const tag = host.getAttribute("cms-bloc")?.toLowerCase();
+        if (!tag) {
+            continue;
+        }
         const contract = known.get(tag);
         if (!contract || unresolved.has(tag)) {
             continue;
@@ -170,6 +175,7 @@ function validateHostAttributes(
             fragmentOwned || host.parentElement !== document.body,
             allowDynamicSettings,
             fragmentOwned,
+            host.localName,
         );
         if (issue) {
             throw new ContentValidationError("content", issue);
@@ -180,9 +186,7 @@ function validateHostAttributes(
 function validateManagedNative(html: string, known: ReadonlyMap<string, PageDocumentBlocContract>): void {
     const issue = managedNativeElementIssue(
         html,
-        [...known.values()].flatMap((bloc) =>
-            bloc.nativeElement ? [{ tag: bloc.id, nativeElement: bloc.nativeElement }] : [],
-        ),
+        [...known.values()].map((bloc) => ({ id: bloc.id, root: bloc.root, content: bloc.content })),
     );
     if (issue) {
         throw new ContentValidationError("content", issue);

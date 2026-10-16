@@ -4,9 +4,9 @@ import { generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBl
 import { generateStyleEntry } from "cms-content/theme/core/generateStyleEntry";
 import { getBlocGroupManifest } from "./blocGroupManifest";
 import {
-    componentRuntimeCacheKey,
+    blocRuntimeCacheKey,
     loadBindingCoreRuntimeEntry,
-    loadComponentRuntimeEntry,
+    loadBlocRuntimeEntry,
 } from "cms-content/runtime-assets/runtimeAssets";
 import { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
 
@@ -17,7 +17,7 @@ import { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
  * immutable` (1-year browser cache, zero revalidation).
  */
 export type AssetsManifest = {
-    componentUrl: string;
+    blocRuntimeUrl: string;
     /** System bloc: the data-binding activation root. Resolved on every page;
      *  `renderPage` injects its `<script>` only when the composed HTML uses
      *  the `<cms-binding-core>` tag (default Shell does; a custom one may not). */
@@ -27,7 +27,7 @@ export type AssetsManifest = {
      *  bundle today (the page's exact set); becomes several stable group
      *  URLs once blocs are grouped by signature. */
     blocUrls: string[];
-    /** `[componentUrl, ...blocUrls]` — convenience for emission in order. */
+    /** `[blocRuntimeUrl, ...blocUrls]` — convenience for emission in order. */
     scriptUrls: string[];
 };
 
@@ -60,8 +60,8 @@ export type PageAssetContext = {
 
 export async function resolvePageAssets(context: PageAssetContext, usedTags: string[]): Promise<AssetsManifest> {
     const prefix = context.cmsPathPrefix;
-    const componentJsUrl = `${prefix}/assets/component.js`;
-    const componentCacheKey = componentRuntimeCacheKey(componentJsUrl);
+    const blocRuntimeJsUrl = `${prefix}/assets/bloc-runtime.js`;
+    const blocRuntimeCacheEntryKey = blocRuntimeCacheKey(blocRuntimeJsUrl);
     const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
     const bindingCoreJsCacheKey = CMS_CACHE_KEYS.js(bindingCoreJsUrl);
     const collectionRevision = (await context.content.getContentRevision?.()) ?? 0;
@@ -95,8 +95,8 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
         ...(uncovered.length ? [uncovered.sort()] : []),
     ];
 
-    const [componentEntry, bindingCoreEntry, styleEntry, ...bundleEntries] = await Promise.all([
-        getOrGenerateEntryAsync(componentCacheKey, context.cache, loadComponentRuntimeEntry),
+    const [blocRuntimeEntry, bindingCoreEntry, styleEntry, ...bundleEntries] = await Promise.all([
+        getOrGenerateEntryAsync(blocRuntimeCacheEntryKey, context.cache, loadBlocRuntimeEntry),
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, context.cache, loadBindingCoreRuntimeEntry),
         getOrGenerateEntryAsync(CMS_CACHE_KEYS.STYLE, context.cache, () => generateStyleEntry(context.content)),
         ...bundles.map((tags) =>
@@ -106,7 +106,7 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
         ),
     ]);
 
-    const componentUrl = `${componentJsUrl}?v=${componentEntry!.hash}`;
+    const blocRuntimeUrl = `${blocRuntimeJsUrl}?v=${blocRuntimeEntry!.hash}`;
     const bindingCoreUrl = `${bindingCoreJsUrl}?v=${bindingCoreEntry!.hash}`;
     const styleUrl = `${prefix}/style?v=${styleEntry!.hash}`;
     const blocAssets = bundles
@@ -116,9 +116,9 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
         ({ tags, entry }) =>
             `${prefix}/blocset?tags=${[...tags].sort().join(",")}&r=${collectionRevisionDigest}&v=${entry.hash}`,
     );
-    const scriptUrls = [componentUrl, ...blocUrls];
+    const scriptUrls = [blocRuntimeUrl, ...blocUrls];
 
-    return { componentUrl, bindingCoreUrl, styleUrl, blocUrls, scriptUrls };
+    return { blocRuntimeUrl, bindingCoreUrl, styleUrl, blocUrls, scriptUrls };
 }
 
 export function collectionBlocsetCacheKey(tags: string[], collectionRevision: number | string): string {

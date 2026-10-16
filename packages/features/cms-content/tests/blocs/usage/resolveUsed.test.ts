@@ -14,23 +14,23 @@ function resolver(views: Record<string, string | null>) {
 describe("createBlocUsageResolver", () => {
     test("follows compiled template tags transitively", async () => {
         const resolve = resolver({
-            "root-card": "const t = `<child-card></child-card>`;",
-            "child-card": "const t = `<leaf-badge></leaf-badge>`;",
+            "root-card": 'const t = `<div cms-bloc="child-card"></div>`;',
+            "child-card": 'const t = `<div cms-bloc="leaf-badge"></div>`;',
             "leaf-badge": "LEAF();",
         });
 
-        expect(await resolve("<root-card></root-card>")).toEqual(["child-card", "leaf-badge", "root-card"]);
+        expect(await resolve('<div cms-bloc="root-card"></div>')).toEqual(["child-card", "leaf-badge", "root-card"]);
     });
 
     test("deduplicates shared dependencies and stops cycles", async () => {
         const resolve = resolver({
-            "root-card": "const t = `<child-card/><side-card/>`;",
-            "child-card": "const t = `<leaf-badge/><root-card/>`;",
-            "side-card": "const t = `<leaf-badge/>`;",
-            "leaf-badge": "const t = `<child-card/>`;",
+            "root-card": 'const t = `<div cms-bloc="child-card"></div><div cms-bloc="side-card"></div>`;',
+            "child-card": 'const t = `<div cms-bloc="leaf-badge"></div><div cms-bloc="root-card"></div>`;',
+            "side-card": 'const t = `<div cms-bloc="leaf-badge"></div>`;',
+            "leaf-badge": 'const t = `<div cms-bloc="child-card"></div>`;',
         });
 
-        expect(await resolve("<root-card/><root-card/>")).toEqual([
+        expect(await resolve('<div cms-bloc="root-card"></div><div cms-bloc="root-card"></div>')).toEqual([
             "child-card",
             "leaf-badge",
             "root-card",

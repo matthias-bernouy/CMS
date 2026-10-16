@@ -34,6 +34,7 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
                 name: id,
                 group: "",
                 description: "",
+                root: { accepts: ["div" as const] },
                 ...(id === "fixture-card"
                     ? {
                           slots: {
@@ -44,18 +45,18 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
                 ...(id === "fixture-newsletter-card"
                     ? {
                           slots: {
-                              title: { accepts: [{ kind: "rich-text" as const, profile: "inline" as const }] },
+                              title: { accepts: [{ kind: "native-content" as const, profile: "inline" as const }] },
                               actions: { accepts: [{ kind: "any-component" as const }] },
                               illustration: {
                                   accepts: [{ kind: "component" as const, tag: "fixture-image" }],
                               },
                               label: { accepts: [{ kind: "plain-text" as const }] },
-                              criteria: { accepts: [{ kind: "rich-text" as const, profile: "prose" as const }] },
+                              criteria: { accepts: [{ kind: "native-content" as const, profile: "prose" as const }] },
                           },
                       }
                     : {}),
-                ...(id === "fixture-button" ? { nativeElement: { accepts: ["button" as const] } } : {}),
-                ...(id === "fixture-image" ? { nativeElement: { accepts: ["img" as const] } } : {}),
+                ...(id === "fixture-button" ? { content: { accepts: ["button" as const] } } : {}),
+                ...(id === "fixture-image" ? { content: { accepts: ["img" as const] } } : {}),
             })),
     } as unknown as CmsRepository;
     return { repo: new ValidatingCmsRepository(inner), calls };
@@ -71,9 +72,11 @@ describe("ValidatingCmsRepository — pages", () => {
 
     test("insertPage validates copied content and its bloc references", async () => {
         const { repo, calls } = makeRepo({ blocs: ["fixture-card"] });
-        await repo.insertPage("/copy", "Copy", "<fixture-card></fixture-card>");
+        await repo.insertPage("/copy", "Copy", '<div cms-bloc="fixture-card"></div>');
         expect(calls.insertPage[0][2]).toContain("fixture-card");
-        await expect(repo.insertPage("/bad-copy", "Bad copy", "<fixture-ghost></fixture-ghost>")).rejects.toThrow();
+        await expect(
+            repo.insertPage("/bad-copy", "Bad copy", '<div cms-bloc="fixture-ghost"></div>'),
+        ).rejects.toThrow();
     });
 
     test("validates direct and transitive Bloc references with one Page grammar", async () => {
@@ -83,14 +86,15 @@ describe("ValidatingCmsRepository — pages", () => {
             name: id,
             group: "",
             description: "",
-            viewJS: "customElements.define('fixture-unused', class extends HTMLElement {})",
+            viewJS: "cmsRuntime.registerBloc('fixture-unused', { mount() {} })",
             ownership: { kind: "code-managed" as const },
             uses,
+            root: { accepts: ["div" as const] },
         });
         await repo.createBloc(bloc("fixture-card"));
         await repo.createBloc(bloc("fixture-shell", ["fixture-card"]));
-        await repo.insertPage("/page", "Page", "<fixture-shell></fixture-shell>");
-        expect((await repo.getPage("/page"))?.content).toBe("<fixture-shell></fixture-shell>");
+        await repo.insertPage("/page", "Page", '<div cms-bloc="fixture-shell"></div>');
+        expect((await repo.getPage("/page"))?.content).toBe('<div cms-bloc="fixture-shell"></div>');
     });
 
     test("updatePage trims the title and forwards it", async () => {
@@ -127,9 +131,9 @@ describe("ValidatingCmsRepository — pages", () => {
 
     test("updatePage hardens content and checks refs exist", async () => {
         const { repo, calls } = makeRepo({ blocs: ["fixture-card"] });
-        await repo.updatePage({ id: "p1", content: "<fixture-card></fixture-card>" });
+        await repo.updatePage({ id: "p1", content: '<div cms-bloc="fixture-card"></div>' });
         expect(calls.updatePage[0].content).toContain("fixture-card");
-        await expect(repo.updatePage({ id: "p1", content: "<fixture-ghost></fixture-ghost>" })).rejects.toThrow();
+        await expect(repo.updatePage({ id: "p1", content: '<div cms-bloc="fixture-ghost"></div>' })).rejects.toThrow();
     });
 
     test("publish revalidates the stored document against the active catalogue", async () => {
@@ -139,12 +143,13 @@ describe("ValidatingCmsRepository — pages", () => {
             name: "Card",
             group: "",
             description: "",
-            viewJS: "customElements.define('fixture-card', class extends HTMLElement {})",
+            viewJS: "cmsRuntime.registerBloc('fixture-card', { mount() {} })",
             ownership: { kind: "code-managed" as const },
             slots: {},
+            root: { accepts: ["div" as const] },
         };
         await repo.createBloc(bloc);
-        await repo.insertPage("/draft", "Draft", "<fixture-card></fixture-card>");
+        await repo.insertPage("/draft", "Draft", '<div cms-bloc="fixture-card"></div>');
         const page = (await repo.getPage("/draft"))!;
         await repo.replaceBloc({ ...bloc, catalogue: "inactive" });
 
@@ -158,26 +163,26 @@ describe("ValidatingCmsRepository — pages", () => {
             ["<span>Root bypass</span>", /explicit component text slot/],
             ["<li>Orphan</li>", /direct child/],
             ["<ul><section>Not an item</section></ul>", /only direct <li>/],
-            ["<ul><fixture-card>Not an item</fixture-card></ul>", /only direct <li>/],
+            ['<ul><div cms-bloc="fixture-card">Not an item</div></ul>', /only direct <li>/],
             ["<ul>Loose text<li>Item</li></ul>", /only direct <li>/],
             ['<h1 class="forged">Title</h1>', /not allowed/],
             ['<img src="https:\/\/example.invalid\/photo.jpg" alt="Photo">', /CMS media item/],
             ['<img alt="Photo">', /CMS media item/],
             ["<form></form>", /declared CMS mutation/],
-            ["<fixture-card><form></form></fixture-card>", /declared CMS mutation/],
+            ['<div cms-bloc="fixture-card"><form></form></div>', /declared CMS mutation/],
             [
-                '<fixture-card><img src="https:\/\/example.invalid\/photo.jpg" alt="Photo"></fixture-card>',
+                '<div cms-bloc=\"fixture-card\"><img src="https:\/\/example.invalid\/photo.jpg" alt="Photo"></div>',
                 /CMS media item/,
             ],
-            ['<fixture-card><img alt=""></fixture-card>', /alternative text/],
+            ['<div cms-bloc=\"fixture-card\"><img alt=""></div>', /alternative text/],
             [
-                '<fixture-card><section cms-source="https:\/\/example.invalid\/items"></section></fixture-card>',
+                '<div cms-bloc=\"fixture-card\"><section cms-source="https:\/\/example.invalid\/items"></section></div>',
                 /not a declared CMS binding/,
             ],
             [
-                `<fixture-card><form cms-mutation="forms:contact as contact"
+                `<div cms-bloc=\"fixture-card\"><form cms-mutation="forms:contact as contact"
                     ><button formaction="https://example.invalid/steal">Send</button>
-                </form></fixture-card>`,
+                </form></div>`,
                 /formaction.*forbidden/,
             ],
             [
@@ -201,14 +206,14 @@ describe("ValidatingCmsRepository — pages", () => {
     test("accepts immutable cms-files URLs and rejects the removed Source image route", async () => {
         const { repo, calls } = makeRepo({ blocs: ["fixture-card", "fixture-image"] });
         const image =
-            '<fixture-card><fixture-image slot="image"><img src="/.cms/call/ulvia.cms.files/files/photo/generation" alt="Product"></fixture-image></fixture-card>';
+            '<div cms-bloc=\"fixture-card\"><div cms-bloc=\"fixture-image\" slot="image"><img src="/.cms/call/ulvia.cms.files/files/photo/generation" alt="Product"></div></div>';
         await repo.updatePage({ id: "p1", content: image });
         expect(calls.updatePage[0].content).toContain("/.cms/call/ulvia.cms.files/files/");
         await expect(
             repo.updatePage({
                 id: "p1",
                 content:
-                    '<fixture-card><fixture-image slot="image"><img src="/.cms/sources/catalog/image?id={{ product.image }}" alt="Product"></fixture-image></fixture-card>',
+                    '<div cms-bloc=\"fixture-card\"><div cms-bloc=\"fixture-image\" slot="image"><img src="/.cms/sources/catalog/image?id={{ product.image }}" alt="Product"></div></div>',
             }),
         ).rejects.toThrow("static value");
     });
@@ -219,7 +224,7 @@ describe("ValidatingCmsRepository — pages", () => {
             repo.updatePage({
                 id: "p1",
                 content:
-                    '<fixture-card><img src="/.cms/call/ulvia.cms.files/files/photo-1/generation" data-cms-src="https://other.example/tracker.png" alt="Product"></fixture-card>',
+                    '<div cms-bloc=\"fixture-card\"><img src="/.cms/call/ulvia.cms.files/files/photo-1/generation" data-cms-src="https://other.example/tracker.png" alt="Product"></div>',
             }),
         ).rejects.toThrow('attribute "data-cms-src" is forbidden');
     });
@@ -229,13 +234,13 @@ describe("ValidatingCmsRepository — pages", () => {
             blocs: ["fixture-newsletter-card", "fixture-input", "fixture-button", "fixture-image"],
         });
         const content = `
-            <fixture-newsletter-card>
+            <div cms-bloc=\"fixture-newsletter-card\">
                 <h2 slot="title">Stay informed</h2>
-                <fixture-button slot="actions"><button type="button">Subscribe</button></fixture-button>
-                <fixture-image slot="illustration"><img src="/.cms/call/ulvia.cms.files/files/newsletter/generation" alt="Newsletter illustration"></fixture-image>
+                <div cms-bloc=\"fixture-button\" slot="actions"><button type="button">Subscribe</button></div>
+                <div cms-bloc=\"fixture-image\" slot="illustration"><img src="/.cms/call/ulvia.cms.files/files/newsletter/generation" alt="Newsletter illustration"></div>
                 <span slot="label">Newsletter label</span>
                 <p slot="criteria">Component-owned criterion</p>
-            </fixture-newsletter-card>
+            </div>
         `;
 
         await repo.insertPage("/newsletter", "Newsletter", content);
@@ -256,20 +261,21 @@ describe("ValidatingCmsRepository — pages", () => {
             group: "",
             description: "",
             ownership: { kind: "code-managed" },
-            nativeElement: { accepts: ["span"] },
-            viewJS: "customElements.define('fixture-query', class extends HTMLElement {})",
+            root: { accepts: ["div"] },
+            content: { accepts: ["span"] },
+            viewJS: "cmsRuntime.registerBloc('fixture-query', { mount() {} })",
         });
 
         await repo.insertPage(
             "/query",
             "Query",
-            `<fixture-query>${queryDocument('<span cms-repeat="pages.data.items as item">{{ item }}</span>')}</fixture-query>`,
+            `<div cms-bloc=\"fixture-query\">${queryDocument('<span cms-repeat="pages.data.items as item">{{ item }}</span>')}</div>`,
         );
         await expect(
             repo.insertPage(
                 "/invalid-query",
                 "Invalid query",
-                `<fixture-query>${queryDocument("<span>{{ pages.data.missing }}</span>")}</fixture-query>`,
+                `<div cms-bloc=\"fixture-query\">${queryDocument("<span>{{ pages.data.missing }}</span>")}</div>`,
             ),
         ).rejects.toThrow("is not declared by the output schema");
     });
@@ -298,8 +304,9 @@ describe("ValidatingCmsRepository — blocs", () => {
             group: "",
             description: "",
             ownership: { kind: "code-managed" as const },
-            componentHTML: queryDocument(body),
-            viewJS: "customElements.define('fixture-query', class extends HTMLElement {})",
+            templateHTML: queryDocument(body),
+            root: { accepts: ["div"] as const },
+            viewJS: "cmsRuntime.registerBloc('fixture-query', { mount() {} })",
         });
 
         await repo.createBloc(bloc('<p cms-repeat="pages.data.items as item">{{ item }}</p>'));
@@ -321,8 +328,9 @@ describe("ValidatingCmsRepository — blocs", () => {
                 group: "",
                 description: "",
                 ownership: { kind: "code-managed" },
-                viewJS: "customElements.define('fixture-default-query', class extends HTMLElement {})",
-                nativeElement: { accepts: ["span"] },
+                viewJS: "cmsRuntime.registerBloc('fixture-default-query', { mount() {} })",
+                root: { accepts: ["div"] },
+                content: { accepts: ["span"] },
                 defaultContent: '<span cms-query="catalog:list as pages"></span>',
             }),
         ).rejects.toThrow("cannot be resolved to an exact contract schema");
@@ -338,12 +346,13 @@ describe("ValidatingCmsRepository — blocs", () => {
             viewJS: "",
             ownership: { kind: "code-managed" as const },
             compositionHTML,
+            root: { accepts: ["div"] as const },
         });
         await repo.createBloc(composition("fixture-child", "<slot></slot>"));
-        await repo.createBloc(composition("fixture-parent", "<fixture-child></fixture-child>"));
+        await repo.createBloc(composition("fixture-parent", '<div cms-bloc="fixture-child"></div>'));
 
         await expect(
-            repo.replaceBloc(composition("fixture-child", "<fixture-parent></fixture-parent>")),
+            repo.replaceBloc(composition("fixture-child", '<div cms-bloc="fixture-parent"></div>')),
         ).rejects.toThrow("fixture-child -> fixture-parent -> fixture-child");
 
         const component = (id: string, uses: readonly string[]) => ({
@@ -354,6 +363,7 @@ describe("ValidatingCmsRepository — blocs", () => {
             viewJS: "export {}",
             ownership: { kind: "code-managed" as const },
             uses,
+            root: { accepts: ["div"] as const },
         });
         await repo.createBloc(component("fixture-declared-a", ["fixture-declared-b"]));
         await expect(repo.createBloc(component("fixture-declared-b", ["fixture-declared-a"]))).rejects.toThrow(
@@ -368,9 +378,10 @@ describe("ValidatingCmsRepository — blocs", () => {
             name: "Child",
             group: "",
             description: "",
-            viewJS: "customElements.define('fixture-child', class extends HTMLElement {})",
+            viewJS: "cmsRuntime.registerBloc('fixture-child', { mount() {} })",
             ownership: { kind: "code-managed" },
             slots: {},
+            root: { accepts: ["div"] },
         });
         await expect(
             repo.createBloc({
@@ -378,11 +389,12 @@ describe("ValidatingCmsRepository — blocs", () => {
                 name: "Shell",
                 group: "",
                 description: "",
-                viewJS: "customElements.define('fixture-shell', class extends HTMLElement {})",
+                viewJS: "cmsRuntime.registerBloc('fixture-shell', { mount() {} })",
                 ownership: { kind: "code-managed" },
                 slots: { body: { accepts: [{ kind: "component", tag: "fixture-child" }] } },
                 uses: ["fixture-child"],
-                defaultContent: '<fixture-child slot="ghost"></fixture-child>',
+                root: { accepts: ["div"] },
+                defaultContent: '<div cms-bloc=\"fixture-child\" slot="ghost"></div>',
             }),
         ).rejects.toThrow("does not declare slot");
     });

@@ -63,6 +63,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
             ? null
             : "native slot placement must target a named custom-element slot";
     }
+    if (normalizedAttribute === "form") {
+        return STATIC_ELEMENT_ID.test(value) ? null : `attribute "${attribute}" must reference one static valid id`;
+    }
 
     if (normalizedAttribute === "aria-label") {
         return value.trim() ? null : `attribute "${attribute}" must not be empty`;
