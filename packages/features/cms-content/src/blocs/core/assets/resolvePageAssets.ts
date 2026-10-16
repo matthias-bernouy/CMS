@@ -2,6 +2,11 @@ import { getOrGenerateEntryAsync, type Cache } from "@bernouy/http-runner";
 import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
 import { generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 import { generateStyleEntry } from "cms-content/theme/core/generateStyleEntry";
+import {
+    collectionBlocStyleCacheKey,
+    generateBlocStyleEntry,
+    groupBlocStylesByCollection,
+} from "./generateBlocStyleGroupEntry";
 import { getBlocGroupManifest } from "./blocGroupManifest";
 import {
     blocRuntimeCacheKey,
@@ -23,11 +28,13 @@ export type AssetsManifest = {
      *  the `<cms-binding-core>` tag (default Shell does; a custom one may not). */
     bindingCoreUrl: string;
     styleUrl: string;
+    /** Immutable contribution-owned stylesheets required by this Page. */
+    blocStyleUrls: string[];
     /** The bloc-bundle URL(s) covering the page's blocs — one `/blocset`
      *  bundle today (the page's exact set); becomes several stable group
      *  URLs once blocs are grouped by signature. */
     blocUrls: string[];
-    /** `[blocRuntimeUrl, ...blocUrls]` — convenience for emission in order. */
+    /** `[blocRuntimeUrl, ...blocUrls]` when behavior exists, otherwise empty. */
     scriptUrls: string[];
 };
 
@@ -37,7 +44,7 @@ export type AssetsManifest = {
  * hashed URLs under `<cmsPathPrefix>/`. Used by the live serving path; the
  * build pipeline has its own resolver that uploads to the CDN instead.
  *
- * Blocs ship as `/blocset` bundles chosen by the signature grouping (see
+ * Bloc behavior ships as `/blocset` bundles chosen by the signature grouping (see
  * `blocGroupManifest`): the page's tags are mapped to the STABLE groups that
  * cover them, so a group bundle has the same content-hashed URL on every page
  * that uses it → cross-page / cross-visitor immutable cache reuse. Each group
@@ -73,9 +80,14 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
         },
     };
 
+    const [manifest, renderableBlocs] = await Promise.all([
+        getBlocGroupManifest(context.content, collectionRevision),
+        context.content.getRenderableBlocs(),
+    ]);
+    const blocsById = new Map(renderableBlocs.map((bloc) => [bloc.id, bloc]));
+
     // Partition the page's blocs into the stable signature groups that cover
     // them + a fallback bundle for any tag the manifest doesn't know yet.
-    const manifest = await getBlocGroupManifest(context.content);
     const groupIds = new Set<string>();
     const uncovered: string[] = [];
     for (const tag of new Set(usedTags)) {
@@ -90,18 +102,37 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
     // One sorted tag set per bundle. Deterministic order → a stable <script>
     // sequence. Group tags come from the manifest (already the full group);
     // the uncovered remainder is its own per-page bundle.
-    const bundles: string[][] = [
+    const candidateBundles: string[][] = [
         ...[...groupIds].sort().map((gid) => manifest.groups.get(gid)!),
         ...(uncovered.length ? [uncovered.sort()] : []),
     ];
+    const behaviorBundles = candidateBundles
+        .map((tags) => tags.filter((tag) => blocsById.get(tag)?.hasBehavior))
+        .filter((tags) => tags.length > 0);
+    const styleBundles = candidateBundles.flatMap((tags) => groupBlocStylesByCollection(tags, blocsById));
 
-    const [blocRuntimeEntry, bindingCoreEntry, styleEntry, ...bundleEntries] = await Promise.all([
+    const [blocRuntimeEntry, bindingCoreEntry, styleEntry, behaviorEntries, blocStyleEntries] = await Promise.all([
         getOrGenerateEntryAsync(blocRuntimeCacheEntryKey, context.cache, loadBlocRuntimeEntry),
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, context.cache, loadBindingCoreRuntimeEntry),
         getOrGenerateEntryAsync(CMS_CACHE_KEYS.STYLE, context.cache, () => generateStyleEntry(context.content)),
-        ...bundles.map((tags) =>
-            getOrGenerateEntryAsync(collectionBlocsetCacheKey(tags, collectionRevisionDigest), context.cache, () =>
-                generateBlocSetEntry(tags, collectionAssetReader),
+        Promise.all(
+            behaviorBundles.map((tags) =>
+                getOrGenerateEntryAsync(collectionBlocsetCacheKey(tags, collectionRevisionDigest), context.cache, () =>
+                    generateBlocSetEntry(tags, collectionAssetReader),
+                ),
+            ),
+        ),
+        Promise.all(
+            styleBundles.map(({ collectionId, tags }) =>
+                getOrGenerateEntryAsync(
+                    collectionBlocStyleCacheKey(collectionId, tags, collectionRevisionDigest),
+                    context.cache,
+                    () =>
+                        generateBlocStyleEntry(
+                            tags.map((tag) => ({ id: tag, styleCSS: blocsById.get(tag)!.styleCSS! })),
+                            context.resolveContributedAssets,
+                        ),
+                ),
             ),
         ),
     ]);
@@ -109,16 +140,17 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
     const blocRuntimeUrl = `${blocRuntimeJsUrl}?v=${blocRuntimeEntry!.hash}`;
     const bindingCoreUrl = `${bindingCoreJsUrl}?v=${bindingCoreEntry!.hash}`;
     const styleUrl = `${prefix}/style?v=${styleEntry!.hash}`;
-    const blocAssets = bundles
-        .map((tags, i) => ({ tags, entry: bundleEntries[i]! }))
-        .filter((asset) => asset.entry.raw.length > 0);
-    const blocUrls = blocAssets.map(
-        ({ tags, entry }) =>
-            `${prefix}/blocset?tags=${[...tags].sort().join(",")}&r=${collectionRevisionDigest}&v=${entry.hash}`,
+    const blocUrls = behaviorBundles.map(
+        (tags, index) =>
+            `${prefix}/blocset?tags=${[...tags].sort().join(",")}&r=${collectionRevisionDigest}&v=${behaviorEntries[index]!.hash}`,
     );
-    const scriptUrls = [blocRuntimeUrl, ...blocUrls];
+    const blocStyleUrls = styleBundles.map(
+        ({ collectionId, tags }, index) =>
+            `${prefix}/blocstyles?collection=${encodeURIComponent(collectionId)}&tags=${tags.join(",")}&r=${collectionRevisionDigest}&v=${blocStyleEntries[index]!.hash}`,
+    );
+    const scriptUrls = blocUrls.length > 0 ? [blocRuntimeUrl, ...blocUrls] : [];
 
-    return { blocRuntimeUrl, bindingCoreUrl, styleUrl, blocUrls, scriptUrls };
+    return { blocRuntimeUrl, bindingCoreUrl, styleUrl, blocStyleUrls, blocUrls, scriptUrls };
 }
 
 export function collectionBlocsetCacheKey(tags: string[], collectionRevision: number | string): string {

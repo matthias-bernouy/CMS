@@ -3,6 +3,8 @@ import { cyclePublicationState, mutateRoute, mutateSeo } from "./pageLifecycle";
 import { submitPageMutation, waitForRevisionChange } from "./pageMutations";
 
 export async function mutatePages(page: Page, kernelOrigin: string): Promise<void> {
+    await page.goto(`${kernelOrigin}/admin/pages`);
+    await page.locator("#pages-list").waitFor();
     const createDialog = page.locator("#create-page-dialog");
     if (await createDialog.evaluate((dialog: HTMLDialogElement) => dialog.open)) {
         throw new Error("The create Page dialog must be closed on initial render");
@@ -45,7 +47,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     await mutateSeo(page);
     await page.locator('a[href="#page-content"]').click();
     await page.waitForURL(/#page-content$/u);
-    const addHeading = page.getByRole("button", { name: "Add Heading", exact: true });
+    const addHeading = page.locator('button[data-add="ulvia-official-heading"]');
     await addHeading.waitFor();
     await waitUntilEnabled(addHeading, "Page editor did not become ready");
     const editorError = page.locator('[cms-bloc="ulvia-official-page-editor"] [data-notice][data-error]');
@@ -54,9 +56,9 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     }
     await addHeading.click();
     await fillLatestVisibleElementContent(page, "Smoke Page");
-    await page.getByRole("button", { name: "Add Heading", exact: true }).click();
+    await addHeading.click();
     await fillLatestVisibleElementContent(page, "Published through the Kernel.");
-    await page.getByRole("button", { name: "Add Heading", exact: true }).click();
+    await addHeading.click();
     await fillLatestVisibleElementContent(page, "Built with the visual Page editor.");
     const saveResponse = await submitPageMutation(page, "update");
     if (!saveResponse.ok()) {
@@ -74,7 +76,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
 }
 
 async function fillLatestVisibleElementContent(page: Page, value: string): Promise<void> {
-    const fields = page.getByLabel("Element content", { exact: true });
+    const fields = page.locator("textarea[data-element-content]");
     const deadline = Date.now() + 15_000;
     while (Date.now() < deadline) {
         for (let index = (await fields.count()) - 1; index >= 0; index -= 1) {

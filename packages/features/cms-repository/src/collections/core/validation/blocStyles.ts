@@ -1,6 +1,7 @@
 import { parse, walk } from "css-tree";
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../errors";
+import { compileBlocStyle } from "./blocStyleCompilation";
 
 type StyleContract = {
     readonly themeVariables: ReadonlySet<string>;
@@ -27,6 +28,11 @@ function validateStyle(
     theme: ReadonlySet<string>,
 ): void {
     const path = `$.blocs[${bloc.id}].style`;
+    try {
+        compileBlocStyle(bloc.id, source);
+    } catch (error) {
+        invalid(error instanceof Error ? error.message : "invalid Bloc CSS", path);
+    }
     let ast: ReturnType<typeof parse>;
     try {
         ast = parse(source, { context: "stylesheet" });

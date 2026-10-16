@@ -11,8 +11,6 @@ export interface CollectionBlocBuildInput {
     readonly tag: string;
     /** Optional TypeScript or JavaScript source exporting `mount(root)`. */
     readonly viewSource?: string;
-    /** Already scoped and validated CSS registered with the Bloc. */
-    readonly style?: string;
     /** Base64-encoded files available to relative imports from the view source. */
     readonly source?: Readonly<Record<string, string>>;
     /** Relative entry path inside the supplied source bundle. */
@@ -42,7 +40,7 @@ export async function buildCollectionBloc(input: CollectionBlocBuildInput): Prom
         if (viewPath && input.viewSource) {
             await Bun.write(viewPath, input.viewSource);
         }
-        const entryPath = await writeViewRegistrationEntry(tempDir, viewPath, input.tag, input.style ?? "");
+        const entryPath = await writeViewRegistrationEntry(tempDir, viewPath, input.tag);
         const viewJS = await runBuild(
             {
                 entrypoints: [entryPath],

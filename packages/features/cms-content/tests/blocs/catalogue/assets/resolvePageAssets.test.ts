@@ -12,6 +12,7 @@ function repositoryWith(options: {
     pageContent: string;
     blocTags: string[];
     viewJS?: Record<string, string | null>;
+    styles?: Record<string, { css: string; group: string }>;
 }): ContentReader {
     const page = {
         path: "/",
@@ -23,7 +24,18 @@ function repositoryWith(options: {
     } as TPage;
 
     return {
-        getRenderableBlocs: async () => options.blocTags.map((id) => ({ id, name: id, group: "", description: "" })),
+        getRenderableBlocs: async () =>
+            options.blocTags.map((id) => ({
+                id,
+                name: id,
+                group: "",
+                description: "",
+                root: { accepts: ["div"] },
+                hasBehavior: Boolean(options.viewJS?.[id]),
+                ...(options.styles?.[id]
+                    ? { styleCSS: options.styles[id]!.css, styleCollectionId: options.styles[id]!.group }
+                    : {}),
+            })),
         getBlocViewJS: async (tag: string) => options.viewJS?.[tag] ?? null,
         getRenderingSettings: async () => system,
         getPublishedPage: async () => null,
@@ -60,7 +72,7 @@ describe("resolvePageAssets", () => {
         );
 
         expect(assets.blocUrls).toEqual([]);
-        expect(assets.scriptUrls).toEqual([expect.stringContaining("/.cms/assets/bloc-runtime.js?v=")]);
+        expect(assets.scriptUrls).toEqual([]);
     });
 
     test("keeps a blocset script when at least one referenced bloc has viewJS", async () => {
@@ -76,5 +88,37 @@ describe("resolvePageAssets", () => {
         expect(assets.blocUrls).toHaveLength(1);
         expect(assets.blocUrls[0]).toContain("tags=site-card");
         expect(assets.scriptUrls).toHaveLength(2);
+    });
+
+    test("serves only the CSS fragments required by a Page without a blocset", async () => {
+        const assets = await resolveAssets(
+            repositoryWith({
+                pageContent: '<section cms-bloc="collection-card"></section>',
+                blocTags: ["collection-card", "collection-panel"],
+                styles: {
+                    "collection-card": { css: "@scope (.card) {}", group: "collection" },
+                    "collection-panel": { css: "@scope (.panel) {}", group: "collection" },
+                },
+            }),
+            ["collection-card"],
+        );
+
+        expect(assets.blocUrls).toEqual([]);
+        expect(assets.scriptUrls).toEqual([]);
+        expect(assets.blocStyleUrls).toHaveLength(1);
+        expect(assets.blocStyleUrls[0]).toContain("/.cms/blocstyles?collection=collection&tags=collection-card");
+        const entry = await resolveAssets(
+            repositoryWith({
+                pageContent: '<section cms-bloc="collection-panel"></section>',
+                blocTags: ["collection-card", "collection-panel"],
+                styles: {
+                    "collection-card": { css: "@scope (.card) {}", group: "collection" },
+                    "collection-panel": { css: "@scope (.panel) {}", group: "collection" },
+                },
+            }),
+            ["collection-panel"],
+        );
+        expect(entry.blocStyleUrls[0]).toContain("tags=collection-panel");
+        expect(entry.blocStyleUrls[0]?.split("&v=")[1]).not.toBe(assets.blocStyleUrls[0]?.split("&v=")[1]);
     });
 });

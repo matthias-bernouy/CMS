@@ -103,6 +103,29 @@ test("component runtime modules stay inside the Bloc source boundary", async () 
     await expect(loadCollectionBlocs(root, "Example")).rejects.toThrow("must have only lightdom.html");
 });
 
+test("CSS-only components do not receive a synthetic JavaScript runtime", async () => {
+    const root = await temporaryDirectory();
+    const componentRoot = join(root, "content", "example-card");
+    await writeJson(join(componentRoot, "definition.json"), {
+        id: "example-card",
+        kind: "component",
+        label: "bloc.example-card.label",
+        root: { accepts: ["div"] },
+        uses: [],
+        requires: [],
+        slots: {},
+    });
+    await Bun.write(join(componentRoot, "template.html"), "<div></div>");
+    await Bun.write(join(componentRoot, "style.css"), ":scope { display: block; }");
+
+    const [bloc] = (await loadCollectionBlocs(root, "Example")) as {
+        style?: string;
+        runtime?: { viewJS?: string };
+    }[];
+    expect(bloc?.style).toBe(":scope { display: block; }");
+    expect(bloc?.runtime).toBeUndefined();
+});
+
 test("Bloc discovery follows the collection admission ceiling beyond the former 256 limit", async () => {
     const root = await temporaryDirectory();
     await Promise.all(

@@ -33,6 +33,7 @@ function makeCtx(siteHost = ""): RenderContext {
             blocRuntimeUrl: "/.cms/assets/bloc-runtime.js?v=c",
             bindingCoreUrl: BINDING_CORE_URL,
             styleUrl: "/.cms/style?v=s",
+            blocStyleUrls: ["/.cms/blocstyles?collection=example&tags=example-card&r=revision&v=css"],
             blocUrls: ["/.cms/blocs/example.js?v=b"],
             scriptUrls: ["/.cms/assets/bloc-runtime.js?v=c", "/.cms/blocs/example.js?v=b"],
         }),

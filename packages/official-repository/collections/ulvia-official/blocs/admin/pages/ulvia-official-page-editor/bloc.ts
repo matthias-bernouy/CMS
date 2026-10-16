@@ -23,9 +23,9 @@ class Controller {
     }
 
     connect(): void {
-        this?.addEventListener("click", this.handleClick);
-        this?.addEventListener("input", this.handleInput);
-        this?.addEventListener("change", this.handleChange);
+        this.blocRoot.addEventListener("click", this.handleClick);
+        this.blocRoot.addEventListener("input", this.handleInput);
+        this.blocRoot.addEventListener("change", this.handleChange);
         this.render();
         void this.load();
     }
@@ -47,9 +47,9 @@ class Controller {
     }
 
     disconnect(): void {
-        this?.removeEventListener("click", this.handleClick);
-        this?.removeEventListener("input", this.handleInput);
-        this?.removeEventListener("change", this.handleChange);
+        this.blocRoot.removeEventListener("click", this.handleClick);
+        this.blocRoot.removeEventListener("input", this.handleInput);
+        this.blocRoot.removeEventListener("change", this.handleChange);
     }
 
     private async loadCatalogue(): Promise<void> {

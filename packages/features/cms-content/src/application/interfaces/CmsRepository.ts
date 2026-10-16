@@ -35,6 +35,9 @@ export type BlocListItemResponse = {
     uses?: TBloc["uses"];
     root: TBloc["root"];
     content?: TBloc["content"];
+    styleCSS?: TBloc["styleCSS"];
+    styleCollectionId?: TBloc["styleCollectionId"];
+    hasBehavior: boolean;
     ownership: TBloc["ownership"];
 };
 

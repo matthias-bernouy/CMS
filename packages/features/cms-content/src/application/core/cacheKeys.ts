@@ -8,6 +8,7 @@ export const CMS_CACHE_KEYS = {
     /** A signature-grouped bundle = several blocs concatenated. Keyed on the
      *  deduped+sorted tag set so any page using the same set shares the entry. */
     blocset: (tags: string[]) => `blocset:${[...new Set(tags)].sort().join(",")}`,
+    blocStyles: (collectionId: string) => `blocstyles:${collectionId}`,
     page: (path: string) => `page:${path}`,
     css: (url: string) => `css:${url}`,
     js: (url: string) => `js:${url}`,

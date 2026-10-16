@@ -1,6 +1,7 @@
 import type { Page } from "playwright";
 import {
     inspectDiagnostics,
+    inspectLightDomIsolation,
     inspectResponsiveAdministration,
     mutateSettings,
     verifyAdministrationAfterRestart,
@@ -19,6 +20,7 @@ export async function runKernelSmoke(
     await stage("sign in", () => signIn(page, credentials, kernelOrigin));
     await stage("admin routes", () => inspectAdminRoutes(page, kernelOrigin));
     await stage("responsive administration", () => inspectResponsiveAdministration(page, kernelOrigin));
+    await stage("Light DOM isolation", () => inspectLightDomIsolation(page));
     await stage("Pages", () => mutatePages(page, kernelOrigin));
     await stage("files", () => mutateFiles(page));
     await stage("collections and theme", () => mutateCollections(page));

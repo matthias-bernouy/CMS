@@ -1,13 +1,42 @@
 import type { Page } from "playwright";
 
+export async function inspectLightDomIsolation(page: Page): Promise<void> {
+    await page.setContent(`
+        <style>
+            @scope ([cms-bloc="test-parent"]) to (:scope [cms-bloc]) {
+                [data-scope-probe] { --cms-test-owner: parent; }
+            }
+        </style>
+        <section cms-bloc="test-parent">
+            <span data-scope-probe="owned"></span>
+            <div cms-bloc="test-child">
+                <span data-scope-probe="nested"></span>
+            </div>
+        </section>
+    `);
+    const result = await page.evaluate(() => {
+        const value = (selector: string): string =>
+            getComputedStyle(document.querySelector<HTMLElement>(selector)!)
+                .getPropertyValue("--cms-test-owner")
+                .trim();
+        return {
+            nested: value('[data-scope-probe="nested"]'),
+            owned: value('[data-scope-probe="owned"]'),
+        };
+    });
+    if (result.owned !== "parent" || result.nested !== "") {
+        throw new Error(`Native scoped CSS crossed a nested Bloc boundary (${JSON.stringify(result)}).`);
+    }
+}
+
 export async function inspectResponsiveAdministration(page: Page, kernelOrigin: string): Promise<void> {
     await page.setViewportSize({ width: 390, height: 844 });
     try {
         await page.goto(`${kernelOrigin}/admin/collections`);
         const shell = page.locator('[cms-bloc="ulvia-official-app-shell"]');
-        const navigation = shell.locator('[part="secondary-navigation"]');
+        const navigation = shell.locator("#workspace-navigation");
         const navigationToggle = shell.locator('[data-mobile-toggle="navigation"]');
-        const contextual = shell.locator('[part="secondary-sidebar"]');
+        const contextual = shell.locator("#context-navigation");
         const contextualToggle = shell.locator('[data-mobile-toggle="contextual"]');
         await navigationToggle.waitFor({ state: "visible" });
         await contextualToggle.waitFor({ state: "visible" });

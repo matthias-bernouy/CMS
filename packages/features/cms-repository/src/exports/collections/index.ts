@@ -96,6 +96,7 @@ export {
     pageRequirements,
 } from "cms-repository/collections/core/admission/pageRequirements";
 export { pageLinkSources } from "cms-repository/collections/core/parsing/pages/references";
+export { compileBlocStyle } from "cms-repository/collections/core/validation/blocStyleCompilation";
 export {
     pageBlocHostAttributesIssue,
     type PageBlocHostContract,

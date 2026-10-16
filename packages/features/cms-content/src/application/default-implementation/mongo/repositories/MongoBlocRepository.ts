@@ -140,7 +140,7 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
     }
 
     async getBlocViewJS(htmlTag: string): Promise<string | null> {
-        return (await this.getBlocRecord(htmlTag))?.artifact?.viewJS ?? null;
+        return (await this.getBlocRecord(htmlTag))?.artifact?.viewJS || null;
     }
 
     async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {

@@ -5,17 +5,9 @@ export const CMS_BLOC_ATTRIBUTE = "cms-bloc";
 
 const definitions = new Map<string, BlocMount | null>();
 const mounted = new WeakMap<HTMLElement, BlocCleanup | null>();
-const styles = new Set<string>();
 let observer: MutationObserver | null = null;
 
-export function registerBloc(id: string, definition: { readonly mount?: BlocMount; readonly style?: string }): void {
-    if (definition.style && !styles.has(id)) {
-        const style = document.createElement("style");
-        style.setAttribute("data-cms-bloc-style", id);
-        style.textContent = definition.style;
-        document.head.append(style);
-        styles.add(id);
-    }
+export function registerBloc(id: string, definition: { readonly mount?: BlocMount }): void {
     definitions.set(id, definition.mount ?? null);
     activate(document);
 }

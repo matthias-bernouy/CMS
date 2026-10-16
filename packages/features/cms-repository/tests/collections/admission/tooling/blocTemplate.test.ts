@@ -58,6 +58,15 @@ describe("collection Bloc style tooling", () => {
         );
     });
 
+    test("keeps validated collection asset expressions for installation-time linking", () => {
+        expect(
+            compileBlocStyle(
+                "example-card",
+                ':scope { background-image: url("{{ cms.asset.example.background.webp }}"); }',
+            ),
+        ).toContain("{{ cms.asset.example.background.webp }}");
+    });
+
     test.each([
         [":host { display: block; }", "Shadow DOM selectors"],
         ["body { margin: 0; }", "document selectors"],

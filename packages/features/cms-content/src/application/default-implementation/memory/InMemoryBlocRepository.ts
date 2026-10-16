@@ -137,6 +137,9 @@ export class InMemoryBlocRepository {
                           ...(bloc.uses ? { uses: [...bloc.uses] } : {}),
                           root: bloc.root,
                           ...(bloc.content ? { content: structuredClone(bloc.content) } : {}),
+                          ...(bloc.styleCSS ? { styleCSS: bloc.styleCSS } : {}),
+                          ...(bloc.styleCollectionId ? { styleCollectionId: bloc.styleCollectionId } : {}),
+                          hasBehavior: Boolean(bloc.viewJS),
                           ...(bloc.thumbnail ? { thumbnail: structuredClone(bloc.thumbnail) } : {}),
                           ownership: structuredClone(record.ownership),
                       },
@@ -146,7 +149,7 @@ export class InMemoryBlocRepository {
     }
 
     async getBlocViewJS(htmlTag: string): Promise<string | null> {
-        return this.blocs.get(htmlTag)?.artifact?.viewJS ?? null;
+        return this.blocs.get(htmlTag)?.artifact?.viewJS || null;
     }
 
     async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {

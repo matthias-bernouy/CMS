@@ -11,7 +11,7 @@ The Kernel owns route composition and Page HTTP presentation for:
 - feature-owned handlers for the prebuilt `cms-content` browser runtimes;
 - generic capability calls implemented by `cms-gateway`;
 - every Page path, resolved from the shared site route registry;
-- `/.cms/call/*`, `/.cms/blocset` and immutable collection asset routes, whose
+- `/.cms/call/*`, `/.cms/blocset`, `/.cms/blocstyles` and immutable collection asset routes, whose
   behavior remains in their owning feature packages;
 - sitemap and robots handlers implemented by `cms-seo`.
 

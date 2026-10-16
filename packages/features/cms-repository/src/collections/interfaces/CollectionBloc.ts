@@ -59,8 +59,11 @@ export interface CollectionComponent extends CollectionBlocBase {
     readonly template: string;
     readonly style?: string;
     readonly settings?: CollectionComponentSettings;
-    /** Immutable browser bundles produced from optional local bloc source. */
-    readonly runtime?: { readonly viewJS: string };
+    /** Immutable browser artifacts derived and verified when the release is admitted. */
+    readonly runtime?: {
+        readonly styleCSS?: string;
+        readonly viewJS?: string;
+    };
 }
 
 export interface CollectionComposition extends CollectionBlocBase {

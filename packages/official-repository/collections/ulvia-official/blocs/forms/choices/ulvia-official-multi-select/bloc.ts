@@ -63,7 +63,7 @@ class Controller {
     }
 
     connect(): void {
-        this?.addEventListener("click", this.handleClick);
+        this.blocRoot.addEventListener("click", this.handleClick);
         this.listbox?.addEventListener("keydown", this.handleKeydown);
         this.root = this.blocRoot.ownerDocument;
         this.root.addEventListener("reset", this.queueRender);
@@ -71,7 +71,7 @@ class Controller {
     }
 
     disconnect(): void {
-        this?.removeEventListener("click", this.handleClick);
+        this.blocRoot.removeEventListener("click", this.handleClick);
         this.listbox?.removeEventListener("keydown", this.handleKeydown);
         this.root?.removeEventListener("reset", this.queueRender);
         this.root = null;

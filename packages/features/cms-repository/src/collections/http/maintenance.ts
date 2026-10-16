@@ -2,7 +2,7 @@ import type { Middleware } from "@bernouy/http-runner";
 import type { CollectionMigrationService } from "cms-repository/collections/installations/migrations/runtime/CollectionMigrationService";
 
 const AVAILABLE_PREFIXES = ["/login", "/.cms/auth", "/.cms/public-auth", "/.cms/assets", "/.cms/collections"];
-const AVAILABLE_PATHS = new Set(["/favicon.ico", "/.cms/blocset", "/.cms/style"]);
+const AVAILABLE_PATHS = new Set(["/favicon.ico", "/.cms/blocset", "/.cms/blocstyles", "/.cms/style"]);
 const RECOVERY_CAPABILITIES = new Set([
     "ulvia.cms.collections/get-migration",
     "ulvia.cms.collections/migration-status",

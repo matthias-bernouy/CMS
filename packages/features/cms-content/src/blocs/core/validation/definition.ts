@@ -16,7 +16,7 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
         validateOwnership(value.ownership);
     }
     const bloc = normalizeBlocWrite(value);
-    assertBlocArtifactBudgets(bloc.viewJS, bloc.source);
+    assertBlocArtifactBudgets(bloc.viewJS, bloc.source, bloc.styleCSS);
     validateBlocRuntime(bloc.viewJS);
     if (bloc.thumbnail !== undefined) {
         bloc.thumbnail = parsePresentationImage(bloc.thumbnail);
@@ -35,6 +35,18 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     }
     if (bloc.templateHTML !== undefined && bloc.compositionHTML !== undefined) {
         throw new ContentValidationError("bloc", "templateHTML and compositionHTML are mutually exclusive");
+    }
+    if ((bloc.styleCSS === undefined) !== (bloc.styleCollectionId === undefined)) {
+        throw new ContentValidationError("styleCSS", "styleCSS and styleCollectionId must be supplied together");
+    }
+    if (bloc.styleCSS !== undefined && !bloc.styleCSS.trim()) {
+        throw new ContentValidationError("styleCSS", "non-empty scoped CSS expected");
+    }
+    if (bloc.styleCollectionId !== undefined && !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(bloc.styleCollectionId)) {
+        throw new ContentValidationError("styleCollectionId", "valid lower-case collection identifier expected");
+    }
+    if (bloc.compositionHTML !== undefined && bloc.styleCSS !== undefined) {
+        throw new ContentValidationError("bloc", "styleCSS and compositionHTML are mutually exclusive");
     }
     if (bloc.compositionHTML !== undefined && bloc.viewJS.trim()) {
         throw new ContentValidationError("bloc", "viewJS and compositionHTML are mutually exclusive");

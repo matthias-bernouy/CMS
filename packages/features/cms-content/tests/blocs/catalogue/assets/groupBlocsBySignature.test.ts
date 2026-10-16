@@ -124,4 +124,21 @@ describe("getBlocGroupManifest", () => {
         expect(tagToGroup.has("published-card")).toBe(true);
         expect(tagToGroup.has("draft-only-card")).toBe(false);
     });
+
+    test("refreshes cached groups when the content revision changes", async () => {
+        let pages = [{ content: '<div cms-bloc="heading"></div><div cms-bloc="login-method"></div>' }];
+        const content = {
+            getPublishedPages: async () => pages,
+            getRenderableBlocs: async () => [{ id: "heading" }, { id: "login-method" }],
+            getBlocViewJS: async () => null,
+        } as unknown as ContentReader;
+
+        const initial = await getBlocGroupManifest(content, 1);
+        expect(initial.tagToGroup.get("heading")).toBe(initial.tagToGroup.get("login-method"));
+
+        pages = [...pages, { content: '<div cms-bloc="heading"></div>' }];
+        const refreshed = await getBlocGroupManifest(content, 2);
+
+        expect(refreshed.tagToGroup.get("heading")).not.toBe(refreshed.tagToGroup.get("login-method"));
+    });
 });

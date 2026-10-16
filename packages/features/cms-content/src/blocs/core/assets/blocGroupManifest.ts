@@ -3,18 +3,19 @@ import { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUse
 import { groupBlocsBySignature, type BlocGroups } from "./groupBlocsBySignature";
 
 const TTL_MS = 5 * 60_000;
-type Memo = { promise: Promise<BlocGroups>; computedAt: number };
+type ContentRevision = number | string | undefined;
+type Memo = { promise: Promise<BlocGroups>; computedAt: number; revision: ContentRevision };
 const memo = new WeakMap<ContentReader, Memo>();
 
 /** Build and briefly memoize the stable Bloc groups used by published Pages. */
-export function getBlocGroupManifest(content: ContentReader): Promise<BlocGroups> {
+export function getBlocGroupManifest(content: ContentReader, revision?: ContentRevision): Promise<BlocGroups> {
     const now = Date.now();
     const cached = memo.get(content);
-    if (cached && now - cached.computedAt < TTL_MS) {
+    if (cached && cached.revision === revision && now - cached.computedAt < TTL_MS) {
         return cached.promise;
     }
     const promise = computeBlocGroupManifest(content);
-    memo.set(content, { promise, computedAt: now });
+    memo.set(content, { promise, computedAt: now, revision });
     promise.catch(() => {
         if (memo.get(content)?.promise === promise) {
             memo.delete(content);

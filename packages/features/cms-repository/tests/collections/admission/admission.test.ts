@@ -31,6 +31,23 @@ describe("collection authored bundle admission", () => {
         expect((await admitCollectionRelease(renamed)).digest).not.toBe(admission.digest);
     });
 
+    test("derives immutable scoped CSS fragments while admitting a release", async () => {
+        const source = collectionDocument();
+        const admission = await admitCollectionRelease(source);
+        const component = admission.release.blocs.find((bloc) => bloc.id === "atlas-panel");
+
+        expect(component?.kind === "component" ? component.runtime?.styleCSS : undefined).toContain(
+            '@scope ([cms-bloc="atlas-panel"]) to (:scope [cms-bloc])',
+        );
+        expect(component?.kind === "component" ? component.runtime?.viewJS : undefined).toBeUndefined();
+
+        const forged = structuredClone(source);
+        (forged.blocs as Record<string, unknown>[])[0]!.runtime = { styleCSS: "forged" };
+        await expect(admitCollectionRelease(forged)).rejects.toThrow(
+            "must be the canonical compilation of the Bloc style",
+        );
+    });
+
     test("requires one common contract witness for all requirements of one bloc", async () => {
         const contracts = await releaseCatalogue(
             contractDocument("payment", "create-link"),

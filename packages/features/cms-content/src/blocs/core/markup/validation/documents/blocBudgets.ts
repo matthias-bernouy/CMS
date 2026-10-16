@@ -2,6 +2,7 @@ import { ContentValidationError } from "cms-content/application/core/validation/
 
 export const BLOC_DOCUMENT_LIMITS = Object.freeze({
     maxMarkupLength: 64 * 1024,
+    maxStyleCssLength: 128 * 1024,
     maxViewJsLength: 1024 * 1024,
     maxSourceFiles: 256,
     maxSourceFileLength: 1024 * 1024,
@@ -15,8 +16,15 @@ export function assertBlocMarkupLength(field: string, value: string): void {
     assertLength(field, value, BLOC_DOCUMENT_LIMITS.maxMarkupLength);
 }
 
-export function assertBlocArtifactBudgets(viewJS: string, source?: Readonly<Record<string, string>>): void {
+export function assertBlocArtifactBudgets(
+    viewJS: string,
+    source?: Readonly<Record<string, string>>,
+    styleCSS?: string,
+): void {
     assertLength("viewJS", viewJS, BLOC_DOCUMENT_LIMITS.maxViewJsLength);
+    if (styleCSS !== undefined) {
+        assertLength("styleCSS", styleCSS, BLOC_DOCUMENT_LIMITS.maxStyleCssLength);
+    }
     if (source === undefined) {
         return;
     }

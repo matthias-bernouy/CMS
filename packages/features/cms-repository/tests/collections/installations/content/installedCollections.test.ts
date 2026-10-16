@@ -9,7 +9,7 @@ import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repositor
 import { InMemoryCmsRepository, InMemoryPageRouteRegistry, ValidatingCmsRepository } from "@bernouy/cms-content";
 import { createContentReader, expandCompositions, generateStyleEntry } from "@bernouy/cms-content/rendering";
 import { parseHTML } from "linkedom";
-import { buildCollectionBloc, compileBlocStyle } from "@bernouy/cms-repository/collections/build";
+import { compileBlocStyle } from "@bernouy/cms-repository/collections/build";
 
 const release = {
     kind: "collection",
@@ -209,15 +209,11 @@ test("installed collection theme contributes immutable tokens to editing and pub
     expect(css).toContain("#abcdef");
 });
 
-test("installed Light DOM component is served with its scoped style runtime", async () => {
+test("installed Light DOM component projects its repository-compiled style without JavaScript", async () => {
     const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
     const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}` as const;
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const style = compileBlocStyle(
-        "test-card",
-        ':scope { color: var(--test-card-accent, #123456); background-image: url("data:image/svg+xml,%3Csvg/%3E"); }',
-    );
-    const runtime = await buildCollectionBloc({ tag: "test-card", style });
+    const style = ":scope { color: var(--test-card-accent, #123456); }";
     const artifact = await store.importRelease(
         {
             ...release,
@@ -230,8 +226,7 @@ test("installed Light DOM component is served with its scoped style runtime", as
                     id: "test-card",
                     label: "bloc.card.label",
                     template: '<article class="card"><slot name="body"></slot></article>',
-                    style: ":scope { color: var(--test-card-accent, #123456); }",
-                    runtime,
+                    style,
                     uses: [],
                     requires: [],
                     slots: { body: {} },
@@ -243,13 +238,14 @@ test("installed Light DOM component is served with its scoped style runtime", as
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
     const reader = createContentReader(repository);
-    const script = await reader.getBlocViewJS("test-card");
-    expect(script).toContain("registerBloc");
-    expect(script).toContain('@scope ([cms-bloc="test-card"]) to (:scope [cms-bloc])');
-    expect(script).toContain("var(--test-card-accent, #123456)");
-    expect(
-        (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-card")?.compositionHTML,
-    ).toBeUndefined();
+    expect(await reader.getBlocViewJS("test-card")).toBeNull();
+    const projected = (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-card");
+    expect(projected).toMatchObject({
+        hasBehavior: false,
+        styleCollectionId: "test",
+        styleCSS: compileBlocStyle("test-card", style),
+    });
+    expect(projected?.compositionHTML).toBeUndefined();
 });
 
 test("installed polymorphic native components project their contract and keep wrapper attributes separate", async () => {

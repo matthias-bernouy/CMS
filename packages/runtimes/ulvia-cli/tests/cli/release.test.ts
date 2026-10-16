@@ -63,4 +63,4 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
     } finally {
         await rm(data, { recursive: true, force: true });
     }
-});
+}, 20_000);

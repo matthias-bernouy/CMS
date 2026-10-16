@@ -69,24 +69,25 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
     const lightdom = (await light.exists()) ? (await light.text()).trim() : undefined;
     const css = (await style.exists()) ? (await style.text()).trim() : undefined;
     const template = compileBlocTemplate(shell, lightdom);
-    const scopedStyle = compileBlocStyle(id, css ?? "");
-    const compiled = await buildCollectionBloc({
-        tag: id,
-        ...((await script.exists()) ? { viewSource: await script.text() } : {}),
-        style: scopedStyle,
-        source: {
-            ...runtimeSources,
-        },
-        viewPath: "bloc.ts",
-        uses: Array.isArray(definition.uses) ? (definition.uses as string[]) : [],
-    });
+    compileBlocStyle(id, css ?? "");
+    const compiled = (await script.exists())
+        ? await buildCollectionBloc({
+              tag: id,
+              viewSource: await script.text(),
+              source: {
+                  ...runtimeSources,
+              },
+              viewPath: "bloc.ts",
+              uses: Array.isArray(definition.uses) ? (definition.uses as string[]) : [],
+          })
+        : undefined;
     return {
         ...definition,
         ...(hasSettingsDirectory ? { settings: await settingsFile.json() } : {}),
         template,
         ...(defaultContent ? { defaultContent } : {}),
         ...(css ? { style: css } : {}),
-        runtime: { viewJS: compiled.viewJS },
+        ...(compiled ? { runtime: { viewJS: compiled.viewJS } } : {}),
     };
 }
 

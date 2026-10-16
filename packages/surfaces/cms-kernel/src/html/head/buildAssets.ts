@@ -12,11 +12,13 @@ export function buildAssetPreloads(
     assets: AssetsManifest,
     options: { includeBindingCore?: boolean } = {},
 ): void {
-    const stylePreload = document.createElement("link");
-    stylePreload.setAttribute("rel", "preload");
-    stylePreload.setAttribute("as", "style");
-    stylePreload.setAttribute("href", assets.styleUrl);
-    head.appendChild(stylePreload);
+    for (const href of new Set([assets.styleUrl, ...assets.blocStyleUrls])) {
+        const stylePreload = document.createElement("link");
+        stylePreload.setAttribute("rel", "preload");
+        stylePreload.setAttribute("as", "style");
+        stylePreload.setAttribute("href", href);
+        head.appendChild(stylePreload);
+    }
 
     const [blocRuntimeUrl, ...blocUrls] = assets.scriptUrls;
     const scriptUrls = options.includeBindingCore
@@ -44,13 +46,15 @@ export function buildBindingCloak(document: Document, head: HTMLElement, enabled
 }
 
 /**
- * `<link rel="stylesheet">` for the theme CSS. Emitted late in `<head>`
+ * `<link rel="stylesheet">` entries for theme and Bloc CSS. Emitted late in `<head>`
  * (after preloads + meta tags) because the browser has already started the
  * download from the preload hint by the time it reaches this tag.
  */
 export function buildStylesheetLink(document: Document, head: HTMLElement, assets: AssetsManifest): void {
-    const link = document.createElement("link");
-    link.setAttribute("rel", "stylesheet");
-    link.setAttribute("href", assets.styleUrl);
-    head.appendChild(link);
+    for (const href of new Set([assets.styleUrl, ...assets.blocStyleUrls])) {
+        const link = document.createElement("link");
+        link.setAttribute("rel", "stylesheet");
+        link.setAttribute("href", href);
+        head.appendChild(link);
+    }
 }

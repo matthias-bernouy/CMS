@@ -45,12 +45,9 @@ export async function renderPageDocument(
 
     const html = body.innerHTML;
     const resolvedTags = await createBlocUsageResolver(blocList, context.repository)(html);
-    const viewEntries = await Promise.all(
-        resolvedTags.map(async (tag) => ({ tag, viewJS: await context.repository.getBlocViewJS(tag) })),
-    );
     return {
         html,
-        usedTags: viewEntries.filter((entry) => !!entry.viewJS).map((entry) => entry.tag),
+        usedTags: resolvedTags,
         hasBindingCore: body.querySelector(CMS_BINDING_CORE_TAG) !== null,
     };
 }

@@ -7,6 +7,7 @@ import { parseComponentSettings } from "./settings";
 import { blocReferences, parseSlots } from "./slots";
 import { parseCollectionBlocTag, parseCollectionNamespace } from "../../namespace";
 import { parseManagedNativeElement } from "./managedNativeElement";
+import { compileBlocStyle } from "../../validation/blocStyleCompilation";
 
 const common = [
     "kind",
@@ -92,23 +93,43 @@ function parseBloc(
     }
     const settings =
         source.settings === undefined ? undefined : parseComponentSettings(source.settings, `${path}.settings`, limits);
+    const style =
+        source.style === undefined ? undefined : optionalText(source.style, limits.maxMarkupLength, `${path}.style`);
+    let styleCSS: string | undefined;
+    if (style) {
+        try {
+            styleCSS = compileBlocStyle(id, style);
+        } catch (error) {
+            invalid(error instanceof Error ? error.message : "invalid Bloc CSS", `${path}.style`);
+        }
+    }
     const runtime = source.runtime === undefined ? undefined : record(source.runtime, `${path}.runtime`);
     if (runtime) {
-        keys(runtime, ["viewJS"], `${path}.runtime`);
+        keys(runtime, ["styleCSS", "viewJS"], `${path}.runtime`);
     }
+    const providedStyleCSS =
+        runtime?.styleCSS === undefined
+            ? undefined
+            : string(runtime.styleCSS, limits.maxDocumentBytes, `${path}.runtime.styleCSS`);
+    if (providedStyleCSS !== undefined && providedStyleCSS !== styleCSS) {
+        invalid("must be the canonical compilation of the Bloc style", `${path}.runtime.styleCSS`);
+    }
+    const viewJS =
+        runtime?.viewJS === undefined
+            ? undefined
+            : string(runtime.viewJS, limits.maxDocumentBytes, `${path}.runtime.viewJS`);
     return {
         ...base,
         kind: "component",
         template: string(source.template, limits.maxMarkupLength, `${path}.template`),
-        ...(source.style === undefined
-            ? {}
-            : { style: optionalText(source.style, limits.maxMarkupLength, `${path}.style`) }),
+        ...(style === undefined ? {} : { style }),
         ...(settings === undefined ? {} : { settings }),
-        ...(runtime === undefined
+        ...(styleCSS === undefined && viewJS === undefined
             ? {}
             : {
                   runtime: {
-                      viewJS: string(runtime.viewJS, limits.maxDocumentBytes, `${path}.runtime.viewJS`),
+                      ...(styleCSS === undefined ? {} : { styleCSS }),
+                      ...(viewJS === undefined ? {} : { viewJS }),
                   },
               }),
     };

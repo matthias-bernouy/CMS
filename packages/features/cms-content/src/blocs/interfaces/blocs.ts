@@ -26,6 +26,10 @@ export type TBloc = {
     root: ManagedNativeElement;
     /** Optional single Page-owned native child managed by a wrapper Bloc. */
     content?: ManagedNativeElement;
+    /** Validated, fully scoped CSS ready to serve without JavaScript execution. */
+    styleCSS?: string;
+    /** Collection owning this immutable style fragment. */
+    styleCollectionId?: string;
     viewJS: string;
     /**
      * Server-rendered light-DOM template. A bloc carrying this field is a

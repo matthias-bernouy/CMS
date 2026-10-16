@@ -75,6 +75,7 @@ describe("MongoCmsRepository content persistence", () => {
                 description: "A reusable card",
                 root: { accepts: ["div"] },
                 ownership: { kind: "code-managed" },
+                hasBehavior: true,
             },
         ]);
 
@@ -87,6 +88,7 @@ describe("MongoCmsRepository content persistence", () => {
                 description: "A reusable card",
                 root: { accepts: ["div"] },
                 ownership: { kind: "code-managed" },
+                hasBehavior: true,
             },
         ]);
         expect(await repository.getBlocSource(card.id)).toBeNull();

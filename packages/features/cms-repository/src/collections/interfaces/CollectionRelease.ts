@@ -108,7 +108,7 @@ export type CollectionTranslationKey = string;
 /** Immutable administration copy: canonical locale -> translation key -> static value. */
 export type CollectionTranslations = Readonly<Record<string, Readonly<Record<string, string>>>>;
 
-/** Authored release data; admission does not compile rendering or grant execution authority. */
+/** Immutable release data; admission derives verified rendering fragments but grants no execution authority. */
 export interface CollectionRelease {
     readonly kind: "collection";
     readonly protocol: "ulvia-collection/v1";

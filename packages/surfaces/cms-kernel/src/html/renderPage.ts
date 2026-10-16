@@ -62,7 +62,7 @@ export async function renderPage(
     // URLs would otherwise be blocked by `style-src 'self'` /
     // `default-src 'self'`. Same-origin assets contribute nothing — the
     // unique-host set naturally drops them via Set semantics.
-    const styleHosts = uniqueOrigins([assets.styleUrl]);
+    const styleHosts = uniqueOrigins([assets.styleUrl, ...assets.blocStyleUrls]);
     const scriptHosts = uniqueOrigins([...assets.scriptUrls, ...(hasBindingCore ? [assets.bindingCoreUrl] : [])]);
     const cspExtras = {
         connectExtras: [...settings.security.connectExtras],

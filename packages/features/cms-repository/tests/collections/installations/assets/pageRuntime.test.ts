@@ -3,11 +3,11 @@ import { expect, test } from "bun:test";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
 import { blocRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
-import { collectionBlocsetCacheKey, resolvePageAssets } from "@bernouy/cms-content/rendering";
+import { collectionBlocStyleCacheKey, resolvePageAssets } from "@bernouy/cms-content/rendering";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
 
-test("resolves collection asset expressions inside immutable Bloc JavaScript", async () => {
+test("resolves collection asset expressions inside immutable Bloc CSS bundles", async () => {
     const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
     const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}` as const;
     const store = new CollectionStore(new MemoryCollectionStorage());
@@ -29,7 +29,7 @@ test("resolves collection asset expressions inside immutable Bloc JavaScript", a
     );
     await store.install("site", artifact.digest, 0);
     const content = repositoryWith(
-        'style.textContent = `.card { background-image: url("{{ cms.asset.design-system.mark.svg }}"); }`;',
+        '@scope (.card) { background-image: url("{{ cms.asset.design-system.mark.svg }}"); }',
     );
     const runtime = runtimeWith(content, { siteId: "site", store });
 
@@ -43,15 +43,15 @@ test("resolves collection asset expressions inside immutable Bloc JavaScript", a
         },
         ["site-card"],
     );
-    const revision = new URL(assets.blocUrls[0]!, "http://localhost").searchParams.get("r");
+    const revision = new URL(assets.blocStyleUrls[0]!, "http://localhost").searchParams.get("r");
     expect(revision).toMatch(/^sha256:[a-f0-9]{64}$/);
-    const entry = runtime.cache.get(collectionBlocsetCacheKey(["site-card"], revision!));
-    const js = new TextDecoder().decode(entry!.raw);
+    const entry = runtime.cache.get(collectionBlocStyleCacheKey("design-system", ["site-card"], revision!));
+    const css = new TextDecoder().decode(entry!.raw);
 
-    expect(assets.blocUrls[0]).toContain(`r=${revision}`);
-    expect(js).toContain("/.cms/collections/design-system/assets/mark.svg?v=");
-    expect(js).toContain("background-image");
-    expect(js).not.toContain("cms.asset.design-system.mark.svg");
+    expect(assets.blocStyleUrls[0]).toContain(`r=${revision}`);
+    expect(css).toContain("/.cms/collections/design-system/assets/mark.svg?v=");
+    expect(css).toContain("background-image");
+    expect(css).not.toContain("cms.asset.design-system.mark.svg");
 });
 
 function runtimeWith(content: ContentReader, collectionAssets: Parameters<typeof resolveInstalledCollectionAssets>[1]) {
@@ -62,12 +62,20 @@ function runtimeWith(content: ContentReader, collectionAssets: Parameters<typeof
     return { basePath: "", cmsPathPrefix: "/.cms", cache, content, collectionAssets };
 }
 
-function repositoryWith(viewJS: string): ContentReader {
+function repositoryWith(styleCSS: string): ContentReader {
     const system = defaultSystem();
     const page = { path: "/", content: '<div cms-bloc="site-card"></div>' } as TPage;
     return {
-        getRenderableBlocs: async () => [{ id: "site-card", name: "site-card", group: "", description: "" }],
-        getBlocViewJS: async () => viewJS,
+        getRenderableBlocs: async () => [
+            {
+                id: "site-card",
+                root: { accepts: ["div"] },
+                styleCSS,
+                styleCollectionId: "design-system",
+                hasBehavior: false,
+            },
+        ],
+        getBlocViewJS: async () => null,
         getRenderingSettings: async () => system,
         getPublishedPage: async () => null,
         getPublishedPageById: async () => null,

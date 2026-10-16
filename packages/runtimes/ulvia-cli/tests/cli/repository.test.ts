@@ -51,7 +51,8 @@ test("local repository lists immutable metadata and serves matching release byte
         const action = release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
         expect(action?.kind).toBe("component");
         if (action?.kind === "component") {
-            expect(action.runtime?.viewJS).toContain("ulvia-official-action");
+            expect(action.runtime?.viewJS).toBeUndefined();
+            expect(action.runtime?.styleCSS).toContain('@scope ([cms-bloc="ulvia-official-action"])');
             expect(action.root).toEqual({ accepts: ["button", "a"], defaults: { type: "button" } });
             expect(action.lightdom).toBeUndefined();
             expect(action.defaultContent).toContain("<span>{{ cms.i18n.ulvia-official.ui-action-label }}</span>");

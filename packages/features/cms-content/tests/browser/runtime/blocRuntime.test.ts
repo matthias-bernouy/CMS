@@ -81,24 +81,21 @@ describe("Light DOM Bloc runtime", () => {
         expect(changes).toEqual(["open"]);
     });
 
-    test("mounts existing roots once and installs one scoped style", () => {
+    test("mounts existing roots once", () => {
         document.body.innerHTML = '<section cms-bloc="test-runtime-existing"></section>';
         let mounts = 0;
         registerBloc("test-runtime-existing", {
-            style: '@scope ([cms-bloc="test-runtime-existing"]) { :scope { display: block; } }',
             mount: () => {
                 mounts += 1;
             },
         });
         registerBloc("test-runtime-existing", {
-            style: "ignored",
             mount: () => {
                 mounts += 1;
             },
         });
 
         expect(mounts).toBe(1);
-        expect(document.head.querySelectorAll('[data-cms-bloc-style="test-runtime-existing"]')).toHaveLength(1);
     });
 
     test("mounts inserted roots and cleans removed subtrees", async () => {

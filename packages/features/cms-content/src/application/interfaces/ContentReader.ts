@@ -11,6 +11,9 @@ export type RenderableBloc = {
     uses?: readonly string[];
     root: TBloc["root"];
     content?: TBloc["content"];
+    styleCSS?: string;
+    styleCollectionId?: string;
+    hasBehavior: boolean;
 };
 
 export type PageCapabilityRequirement = {

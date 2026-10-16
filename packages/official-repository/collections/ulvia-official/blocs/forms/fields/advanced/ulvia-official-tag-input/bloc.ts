@@ -22,6 +22,7 @@ class Controller {
 
     constructor(private readonly blocRoot: HTMLElement) {
         this.scope = createBlocScope(this.blocRoot);
+        this.source = this.scope.querySelector<HTMLInputElement>("input");
         this.input = document.createElement("input");
         this.input.type = "text";
         this.input.autocomplete = "off";
@@ -33,7 +34,6 @@ class Controller {
     }
 
     connect(): void {
-        this.source = this.scope.querySelector<HTMLInputElement>("input");
         this.hideSourceFromAccessibilityTree();
         this.tags = this.parseTags(this.source?.value ?? "");
         this.input?.addEventListener("keydown", this.handleKeydown);

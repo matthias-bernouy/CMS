@@ -1,5 +1,5 @@
 import type KernelCms from "cms-kernel/KernelCms";
-import { serveBlocSet } from "@bernouy/cms-content/http";
+import { serveBlocSet, serveBlocStyles } from "@bernouy/cms-content/http";
 import serveFavicon from "cms-kernel/http/assets/serveFavicon";
 import { serveBindingCoreRuntime, serveBlocRuntime } from "@bernouy/cms-content/http";
 import {
@@ -50,6 +50,7 @@ export function mountKernelRoutes(kernel: KernelCms) {
         collectionAssetsPath: `${kernel.basePath}${COLLECTION_ASSETS_ROUTE}`,
         publicRuntimePaths: [
             `${kernel.cmsPathPrefix}/style`,
+            `${kernel.cmsPathPrefix}/blocstyles`,
             `${kernel.cmsPathPrefix}/blocset`,
             `${kernel.cmsPathPrefix}/assets/bloc-runtime.js`,
             `${kernel.cmsPathPrefix}/assets/cms-binding-core.js`,
@@ -80,6 +81,14 @@ export function mountKernelRoutes(kernel: KernelCms) {
 
     runner.addEndpoint("GET", "/.cms/blocset", (request) =>
         serveBlocSet(request, {
+            content: kernel.content,
+            cache: kernel.cache,
+            resolveContributedAssets: (input) =>
+                resolveInstalledCollectionAssets(input, kernel.collectionAssets, kernel.basePath),
+        }),
+    );
+    runner.addEndpoint("GET", "/.cms/blocstyles", (request) =>
+        serveBlocStyles(request, {
             content: kernel.content,
             cache: kernel.cache,
             resolveContributedAssets: (input) =>

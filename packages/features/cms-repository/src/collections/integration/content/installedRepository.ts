@@ -89,6 +89,12 @@ export function withInstalledCollections(
                                 ...(bloc.content ? { content: bloc.content } : {}),
                                 ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
                                 ...(bloc.kind === "component" ? { templateHTML: bloc.template } : {}),
+                                ...(bloc.kind === "component" && bloc.runtime?.styleCSS
+                                    ? {
+                                          styleCSS: bloc.runtime.styleCSS,
+                                          styleCollectionId: collectionId,
+                                      }
+                                    : {}),
                                 ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
                                 slots: bloc.slots,
                                 ...(bloc.kind === "component" && bloc.settings
@@ -213,7 +219,7 @@ export function withInstalledCollections(
             const uses = await createBlocUsageResolver([...local, ...resources], {
                 getBlocViewJS: async (tag) => {
                     const record = installed.byTag.get(tag);
-                    return record ? (record.artifact?.viewJS ?? null) : repository.getBlocViewJS(tag);
+                    return record ? record.artifact?.viewJS || null : repository.getBlocViewJS(tag);
                 },
             })(page.content);
             return pageRequirements(
@@ -225,12 +231,15 @@ export function withInstalledCollections(
         getBlocRecord: read,
         getBlocsList: async (options) => {
             const local = await repository.getBlocsList(options);
-            const resources = (await installedState()).records.map((record) => structuredClone(record.artifact!));
+            const resources = (await installedState()).records.map((record) => ({
+                ...structuredClone(record.artifact!),
+                hasBehavior: Boolean(record.artifact?.viewJS),
+            }));
             return [...local, ...resources.filter((bloc) => options?.includeInactive || !bloc.internal)];
         },
         getBlocViewJS: async (tag) => {
             const record = (await installedState()).byTag.get(tag);
-            return record ? (record.artifact?.viewJS ?? null) : repository.getBlocViewJS(tag);
+            return record ? record.artifact?.viewJS || null : repository.getBlocViewJS(tag);
         },
         getBlocSource: async (tag) => ((await installedState()).byTag.has(tag) ? null : repository.getBlocSource(tag)),
     };

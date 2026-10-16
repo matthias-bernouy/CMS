@@ -61,7 +61,7 @@ export async function waitForRevisionChange(
 
 function mutationButton(page: Page, capability: string, visible: boolean) {
     if (capability === "update") {
-        return page.getByRole("button", { name: "Save document", exact: true });
+        return page.locator('[cms-bloc="ulvia-official-page-editor"] button[data-save]');
     }
     return page
         .locator(`form[cms-mutation^="ulvia.cms.pages:${capability} "]`)

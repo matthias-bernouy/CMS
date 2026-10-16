@@ -33,6 +33,12 @@ export {
 export { expandCompositions } from "cms-content/blocs/core/composition/expandCompositions";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 export {
+    collectionBlocStyleCacheKey,
+    generateBlocStyleEntry,
+    generateBlocStyleGroupEntry,
+    groupBlocStylesByCollection,
+} from "cms-content/blocs/core/assets/generateBlocStyleGroupEntry";
+export {
     collectCmsMutationBindings,
     collectCmsQueryBindings,
 } from "cms-content/pages/core/indexing/operationBindings";

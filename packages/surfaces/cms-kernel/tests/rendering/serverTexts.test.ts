@@ -21,6 +21,7 @@ const ctx: RenderContext = {
         blocRuntimeUrl: "/bloc-runtime.js",
         bindingCoreUrl: "/binding.js",
         styleUrl: "/style.css",
+        blocStyleUrls: [],
         blocUrls: [],
         scriptUrls: [],
     }),
