@@ -74,11 +74,13 @@ describe("collection authored bundle admission", () => {
                 name: "page.catalog.name",
                 requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
                 document: {
-                    html: '<atlas-panel cms-mutation="catalog.items:item.list as catalog"></atlas-panel>',
+                    html: '<div cms-bloc=\"atlas-panel\" cms-mutation="catalog.items:item.list as catalog"></div>',
                 },
             },
         ];
-        await expect(admitCollectionRelease(source, [], { contracts })).rejects.toThrow("not a declared setting");
+        await expect(admitCollectionRelease(source, [], { contracts })).rejects.toThrow(
+            "mutations are reserved for form submissions",
+        );
     });
 
     test("admits cms-query only for capabilities declared as queries", async () => {
@@ -93,6 +95,7 @@ describe("collection authored bundle admission", () => {
         const source = collectionDocument();
         (source.blocs as Record<string, unknown>[]).push({
             kind: "composition",
+            root: { accepts: ["div"] },
             id: "atlas-catalog",
             label: "bloc.page.label",
             lightdom: `<section cms-query="catalog.items:item.list as items">
@@ -152,6 +155,7 @@ describe("collection authored bundle admission", () => {
         ];
         (source.blocs as Record<string, unknown>[]).push({
             kind: "composition",
+            root: { accepts: ["div"] },
             id: "atlas-catalog",
             label: "bloc.page.label",
             lightdom: `<section

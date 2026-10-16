@@ -2,15 +2,17 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assertValidJavaScriptArtifact, materializeSourceBundle, resolveSourceEntryPath, runBuild } from "./buildFiles";
-import { collectionSourceBoundaryPlugin, hostRuntimeExternalsPlugin } from "./hostRuntimeExternalsPlugin";
-import { validateBlocTag } from "./validateBloc";
+import { blocRuntimeExternalsPlugin, collectionSourceBoundaryPlugin } from "./blocRuntimeExternalsPlugin";
+import { validateBloc } from "./validateBloc";
 import { writeViewRegistrationEntry } from "./viewRegistrationEntry";
 
 export interface CollectionBlocBuildInput {
-    /** Admitted collection Bloc tag used by the generated custom-element registration. */
+    /** Admitted collection Bloc identity used by the generated Light DOM registration. */
     readonly tag: string;
-    /** TypeScript or JavaScript source for the component's browser behavior. */
-    readonly viewSource: string;
+    /** Optional TypeScript or JavaScript source exporting `mount(root)`. */
+    readonly viewSource?: string;
+    /** Already scoped and validated CSS registered with the Bloc. */
+    readonly style?: string;
     /** Base64-encoded files available to relative imports from the view source. */
     readonly source?: Readonly<Record<string, string>>;
     /** Relative entry path inside the supplied source bundle. */
@@ -23,28 +25,28 @@ export interface CollectionBlocBuildArtifact {
 
 /** Compile one collection component's browser runtime without admitting or persisting it. */
 export async function buildCollectionBloc(input: CollectionBlocBuildInput): Promise<CollectionBlocBuildArtifact> {
-    const tagIssue = validateBlocTag(input.tag);
-    if (tagIssue) {
-        throw new Error(tagIssue);
+    const validation = validateBloc({ tag: input.tag, ...(input.viewSource ? { viewSource: input.viewSource } : {}) });
+    if (validation.errors.length > 0) {
+        throw new Error(validation.errors.join("\n"));
     }
     const tempDir = await mkdtemp(join(tmpdir(), "cms-collection-bloc-"));
     try {
         await materializeSourceBundle(tempDir, input.source);
-        const viewPath = resolveSourceEntryPath(tempDir, input.viewPath ?? "bloc.ts");
-        await Bun.write(viewPath, input.viewSource);
-        const entryPath = await writeViewRegistrationEntry(tempDir, viewPath);
-        const viewJS = (
-            await runBuild(
-                {
-                    entrypoints: [entryPath],
-                    target: "browser",
-                    format: "iife",
-                    minify: true,
-                    plugins: [hostRuntimeExternalsPlugin, collectionSourceBoundaryPlugin(tempDir)],
-                },
-                `view bundle for ${input.tag}`,
-            )
-        ).replaceAll("BE5_TAG_TO_BE_REPLACED", input.tag);
+        const viewPath = input.viewSource ? resolveSourceEntryPath(tempDir, input.viewPath ?? "bloc.ts") : undefined;
+        if (viewPath && input.viewSource) {
+            await Bun.write(viewPath, input.viewSource);
+        }
+        const entryPath = await writeViewRegistrationEntry(tempDir, viewPath, input.tag, input.style ?? "");
+        const viewJS = await runBuild(
+            {
+                entrypoints: [entryPath],
+                target: "browser",
+                format: "iife",
+                minify: true,
+                plugins: [blocRuntimeExternalsPlugin, collectionSourceBoundaryPlugin(tempDir)],
+            },
+            `view bundle for ${input.tag}`,
+        );
         assertValidJavaScriptArtifact(viewJS, `view bundle for ${input.tag}`);
         return { viewJS };
     } finally {

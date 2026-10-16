@@ -14,6 +14,7 @@ function release() {
         blocs: [
             {
                 kind: "composition",
+                root: { accepts: ["div"] },
                 id: "atlas-welcome",
                 label: "bloc.welcome.label",
                 lightdom: "<p>{{ copy }}</p>",
@@ -158,9 +159,10 @@ test("upgrades may widen but never narrow the stored settings contract", async (
     const initial = release();
     initial.blocs[0] = {
         kind: "component",
+        root: { accepts: ["div"] },
         id: "atlas-card",
         label: "bloc.card.label",
-        shadowdom: "<article></article>",
+        template: "<article></article>",
         uses: [],
         requires: [],
         slots: {},

@@ -30,14 +30,14 @@ This slice supports:
 - Optional Pages: bounded collection-owned documents carrying a collection
   default path and capability requirements that determine their access policy.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
-- Component blocs with a static `shadowdom` shell and optional fixed `lightdom`,
-  `style` source and declarative setting items. Optional translated `category`
+- Retained Blocs with optional fixed `template`, scoped `style`, behavior and
+  declarative setting items. Optional translated `category`
   and numeric `order` metadata organize the author-facing catalogue without
   deriving public identity from source paths.
-- Composition blocs with fixed `lightdom` only: their authoring host is replaced
+- Composition Blocs with fixed `lightdom` only: their authoring host is replaced
   by their content at delivery. They have no own shell, settings or stylesheet.
-- Explicit local `uses`, named slots for components, media, plain text or bounded
-  rich-text profiles, optional thumbnail asset, initial editable `defaultContent`
+- Explicit local `uses`, named slots for Blocs, plain text or bounded
+  native-content profiles, optional thumbnail asset, initial editable `defaultContent`
   and resource-level capability requirements.
 - Selective public Bloc/theme-token/text/asset/Page exports and bounded cross-collection imports.
   Every imported resource pins the exact contract generation understood by the
@@ -52,22 +52,22 @@ Initial content is not inserted into the fixed composition during admission.
 
 ## Light DOM invariants
 
-The model follows UlviaInterfaces' shell/composition distinction. A component
-can combine a static shadow shell and fixed light-DOM children distributed
-through its slots. A composition alone is a shared assembly whose host is
-replaced at delivery, not a copy of its template into each page.
+Every Bloc declares a native `root` contract. Retained Blocs keep that native
+element and may add fixed Light DOM, scoped CSS and optional behavior. A
+composition is a shared assembly whose temporary authoring host is replaced at
+delivery.
 
 Structural validation uses an HTML parser, not a regex template scanner. It
 checks declared page slots, local bloc references, `uses` cycles, immediate
-parent slot targets and `<cms-host>`. That marker is only valid as the single
-root of a component's light DOM. Shells reject dynamic interpolation, visible
-text, semantic content and CMS directives. Inline styles are forbidden in all
-markup; classes belong only in shadow shells and bindings only in light DOM.
+parent slot targets and the native element carrying `cms-bloc`. Inline styles
+are forbidden in all markup; structural classes belong only in fixed templates
+and bindings only in Light DOM. CSS is parsed and wrapped in a Bloc-owned
+`@scope`; Shadow DOM selectors and APIs reject.
 Composition-only settings, styles and behaviour fields reject.
 Collection Page roots must be collection or explicitly imported Blocs. Page
 documents and `defaultContent` enforce named slot acceptance and cardinality;
-native editable content exists only through `plain-text`, `rich-text`, `media`
-or managed-native contracts. `any-component` excludes compositions. Fixed
+native editable content exists only through `plain-text`, `native-content` or
+managed-native contracts. `any-component` excludes compositions. Fixed
 Light DOM remains code-owned native markup, while its nested Bloc placements
 must target compatible component slots.
 Component settings are an ordered list of items. Each item owns a safe lowercase
@@ -81,22 +81,17 @@ The local repository may read this list from a bloc's
 Optional `visibleWhen` rules reference other finite-valued items and affect
 editor visibility only; admission rejects invalid references and cycles.
 
-A component may declare a managed native child with
-`nativeElement: { accepts: ["button", "a"] }`. The accepted list is nonempty,
-unique and restricted to the platform-managed vocabulary. These components
-have exactly one unnamed Shadow DOM slot, no named page slots or fixed Light
-DOM, and one direct, un-slotted accepted native root in `defaultContent`.
-Nested authored occurrences must contain the same single-child structure. The
-real child tag is authoritative; wrapper settings and native child attributes
-remain separate targets even when they use the same attribute name. Changing
-the accepted set is an incompatible installed component-contract change.
+A retained Bloc may declare `content: { accepts: ["button", "a"] }` for one
+Page-owned native child. Accepted lists are nonempty, unique and restricted to
+the platform vocabulary. Authored occurrences must contain exactly one matching
+child. Root settings and child native attributes remain separate targets.
 
 String controls are `text`, `select`, `segmented`, `color`,
 `media-picker` and `theme-token-picker`. Booleans use `toggle`; numbers and
 integers use `number` or a bounded `range`. Media content normally belongs in a
-media slot; the setting control is for component configuration such as a poster
-or background. Rich text is page-owned HTML in a `plain-text` or `rich-text`
-slot, never an HTML string stored in a setting. Rich-text profiles are currently
+dedicated media Bloc; the setting control is for Bloc configuration such as a
+poster or background. Rich text is page-owned HTML in a `plain-text` or
+`native-content` slot, never an HTML string stored in a setting. Native-content profiles are currently
 the closed `inline` and `prose` vocabulary; the future editor may expose only
 features permitted by that profile.
 
@@ -106,26 +101,25 @@ Installation repeats type checks for exact aliases to imported tokens.
 
 **Admission is not an HTML/CSS sanitizer or template compiler.** The separate
 `@bernouy/cms-repository/collections/build` authoring toolchain compiles a
-component's browser runtime before admission, but it does not weaken these
+Bloc's browser behavior before admission, but it does not weaken these
 admission boundaries. Admission itself does not type-check arbitrary business
 expressions, general CSS or final render expansion. It does validate controlled
-capability bindings, slot content cardinalities and rich-text profiles at the
+capability bindings, slot content cardinalities and native-content profiles at the
 authored boundaries. Stored component settings are validated separately by
 `cms-content`. The HTML parser applies
 its parsing rules; acceptance does not certify author syntax as conforming HTML.
 Never render or execute an admitted bundle directly as trusted code. Renderer
 compilation, content policies and execution authorization are separate gates
 owned by the authoring toolchain, Content and Gateway. An optional `runtime`
-field carries a compiled browser view bundle for
-components. Admission hashes and bounds those bytes but does not audit the
+field carries a compiled browser behavior bundle. Admission hashes and bounds those bytes but does not audit the
 executable behavior; installation therefore trusts the configured repository.
 
 ## Dependencies and identity
 
 The collection ID is its global runtime namespace. It uses lowercase kebab-case
 without dots and cannot claim the platform-owned `be5-`, `cms-`, `p9r-`,
-`site-`, or `w13c-` roots. Every Bloc is a valid custom-element tag prefixed
-with `<collectionId>-`. Local `uses` and slot `accepts` references resolve inside
+`site-`, or `w13c-` roots. Every Bloc has a valid namespaced identifier prefixed
+with `<collectionId>-`; DOM instances carry it in `cms-bloc`. Local `uses` and slot `accepts` references resolve inside
 the release. External references must appear in one dependency's exact imported
 Bloc list. A dependency pins the target collection ID, publisher ID and bounded
 SemVer range; it separately imports public resources with their exact contract

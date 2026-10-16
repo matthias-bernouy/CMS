@@ -6,7 +6,7 @@ test("blocks removal of a collection Page used by an external feature", async ()
         translations: {
             en: { "collection.name": "Atlas", "bloc.label": "Card", "view.name": "Legacy view" },
         },
-        pages: [controlPage("legacy", '<atlas-card><p slot="content">{{ page.title }}</p></atlas-card>')],
+        pages: [controlPage("legacy", '<div cms-bloc=\"atlas-card\"><p slot="content">{{ page.title }}</p></div>')],
     });
     const next = await fixture.collections.importRelease({
         ...release("2.0.0", "atlas-card"),
@@ -55,7 +55,7 @@ test("digests participant resource identities independently from diagnostic labe
         translations: {
             en: { "collection.name": "Atlas", "bloc.label": "Card", "view.name": "Overview" },
         },
-        pages: [controlPage("overview", '<atlas-card><p slot="content">{{ page.title }}</p></atlas-card>')],
+        pages: [controlPage("overview", '<div cms-bloc=\"atlas-card\"><p slot="content">{{ page.title }}</p></div>')],
     };
     const fixture = await referenceFixture(patch);
     const next = await fixture.collections.importRelease({ ...release("1.1.0", "atlas-card"), ...patch });
@@ -141,7 +141,7 @@ function previousResources(): Record<string, unknown> {
                 "view.name": "Legacy view",
             },
         },
-        pages: [controlPage("legacy", '<atlas-card><p slot="content">{{ page.title }}</p></atlas-card>')],
+        pages: [controlPage("legacy", '<div cms-bloc=\"atlas-card\"><p slot="content">{{ page.title }}</p></div>')],
     };
 }
 

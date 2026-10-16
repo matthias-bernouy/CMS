@@ -32,7 +32,7 @@ test("migrates a renamed bloc under maintenance and rolls it back without rewind
     expect((await fixture.collections.snapshot("site")).collections[0]!.digest).toBe(fixture.next.digest);
     expect(await fixture.repository.getPageById(fixture.page.id)).toMatchObject({
         revision: 2,
-        content: "<atlas-panel></atlas-panel>",
+        content: '<div cms-bloc="atlas-panel"></div>',
     });
 
     const rolledBack = await fixture.service.rollback("site", completed.id);
@@ -40,7 +40,7 @@ test("migrates a renamed bloc under maintenance and rolls it back without rewind
     expect((await fixture.collections.snapshot("site")).collections[0]!.digest).toBe(fixture.previous.digest);
     expect(await fixture.repository.getPageById(fixture.page.id)).toMatchObject({
         revision: 3,
-        content: "<atlas-card></atlas-card>",
+        content: '<div cms-bloc="atlas-card"></div>',
     });
 });
 
@@ -74,7 +74,7 @@ test("migrates an installed collection asset reference and restores it on rollba
     await repository.insertPage(
         "/asset",
         "Asset",
-        '<atlas-card><atlas-image slot="media"><img src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></atlas-image></atlas-card>',
+        '<div cms-bloc=\"atlas-card\"><div cms-bloc=\"atlas-image\" slot="media"><img src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></div></div>',
     );
     const inserted = (await repository.getPage("/asset"))!;
     const storage = new MemoryCollectionMigrationStorage();
@@ -86,7 +86,7 @@ test("migrates an installed collection asset reference and restores it on rollba
     const completed = await service.execute("site", [{ digest: next.digest, repositoryId: "local" }], 1);
     expect(await repository.getPageById(inserted.id)).toMatchObject({
         content:
-            '<atlas-card><atlas-image slot="media"><img src="{{ cms.asset.atlas.new.svg }}" alt="Asset"></atlas-image></atlas-card>',
+            '<div cms-bloc=\"atlas-card\"><div cms-bloc=\"atlas-image\" slot="media"><img src="{{ cms.asset.atlas.new.svg }}" alt="Asset"></div></div>',
         revision: 2,
     });
     expect(await collections.getReleaseAsset(next.digest, "new.svg")).toEqual(newBytes);
@@ -94,7 +94,7 @@ test("migrates an installed collection asset reference and restores it on rollba
     await service.rollback("site", completed.id);
     expect(await repository.getPageById(inserted.id)).toMatchObject({
         content:
-            '<atlas-card><atlas-image slot="media"><img src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></atlas-image></atlas-card>',
+            '<div cms-bloc=\"atlas-card\"><div cms-bloc=\"atlas-image\" slot="media"><img src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></div></div>',
         revision: 3,
     });
     expect(await collections.getReleaseAsset(previous.digest, "old.svg")).toEqual(oldBytes);
@@ -201,7 +201,7 @@ test("resumes a partially committed forward migration without reacquiring the in
     expect(completed.status).toBe("completed");
     expect(await fixture.repository.getPageById(fixture.page.id)).toMatchObject({
         revision: 2,
-        content: "<atlas-panel></atlas-panel>",
+        content: '<div cms-bloc="atlas-panel"></div>',
     });
 });
 
@@ -233,11 +233,11 @@ test("stores exact page snapshots separately and verifies their digest", async (
 
     expect(main.pages).toBeUndefined();
     expect(main.pageCount).toBe(1);
-    expect(page.afterContent).toBe("<atlas-panel></atlas-panel>");
+    expect(page.afterContent).toBe('<div cms-bloc="atlas-panel"></div>');
     expect(page.afterContentDigest).toMatch(/^sha256:/);
     await db.get("collection_migrations").updateOne({ _id: completed.id }, { $set: { operationGroups: [] } });
     expect(await storage.getPageBatch(completed.id, 0, 10)).toMatchObject([
-        { afterContent: "<atlas-panel></atlas-panel>", state: "applied" },
+        { afterContent: '<div cms-bloc="atlas-panel"></div>', state: "applied" },
     ]);
     await db
         .get("collection_migration_pages")
@@ -266,7 +266,7 @@ test("resumes rollback when the page write succeeded before its journal update",
     await expect(service.rollback("site", completed.id)).rejects.toThrow("simulated journal interruption");
     expect(await fixture.repository.getPageById(fixture.page.id)).toMatchObject({
         revision: 3,
-        content: "<atlas-card></atlas-card>",
+        content: '<div cms-bloc="atlas-card"></div>',
     });
 
     const rolledBack = await service.resume("site", completed.id);
@@ -414,7 +414,7 @@ async function migrationFixture() {
     await collections.install("site", previous.digest, 0, "local");
     const inner = new InMemoryCmsRepository();
     const repository = new ValidatingCmsRepository(withInstalledCollections(inner, collections, "site"));
-    await repository.insertPage("/demo", "Demo", "<atlas-card></atlas-card>");
+    await repository.insertPage("/demo", "Demo", '<div cms-bloc="atlas-card"></div>');
     const page = (await repository.getPage("/demo"))!;
     const storage = new MemoryCollectionMigrationStorage();
     return {
@@ -451,22 +451,24 @@ function release(version: string, id: string): Record<string, unknown> {
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id,
                 label: "bloc.label",
-                shadowdom: '<div><slot name="media"></slot></div>',
+                template: '<div><slot name="media"></slot></div>',
                 uses: [],
                 requires: [],
                 slots: { media: { accepts: [{ kind: "component", tag: "atlas-image" }] } },
             },
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id: "atlas-image",
                 label: "bloc.label",
-                shadowdom: "<slot></slot>",
+                template: "<slot></slot>",
                 uses: [],
                 requires: [],
                 slots: {},
-                nativeElement: { accepts: ["img"] },
+                content: { accepts: ["img"] },
                 defaultContent: '<img alt="">',
             },
         ],

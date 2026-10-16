@@ -10,14 +10,14 @@ import type {
     ManagedNativeElement,
     ManagedNativeElementTag,
     MediaAccept,
-    PageRichTextProfile,
+    PageNativeContentProfile,
     PageSlot,
     PageSlotAccept,
 } from "@bernouy/cms-content/page-document";
 
 export type CollectionSlot = PageSlot;
 export type CollectionSlotAccept = PageSlotAccept;
-export type CollectionRichTextProfile = PageRichTextProfile;
+export type CollectionNativeContentProfile = PageNativeContentProfile;
 export type CollectionMediaAccept = MediaAccept;
 export type CollectionManagedNativeElementTag = ManagedNativeElementTag;
 export type CollectionManagedNativeAttributeConstraint = ManagedNativeAttributeConstraint;
@@ -30,7 +30,7 @@ export type CollectionSettingItem = BlocSettingItem;
 export type CollectionComponentSettings = BlocSettings;
 
 interface CollectionBlocBase {
-    /** A stable custom-element tag prefixed by the collection ID. */
+    /** A stable namespaced Bloc identifier prefixed by the collection ID. */
     readonly id: string;
     /** Independent public-contract generation for selective consumers. */
     readonly generation?: number;
@@ -45,17 +45,18 @@ interface CollectionBlocBase {
     readonly uses: readonly string[];
     readonly requires: readonly CollectionCapabilityRequirement[];
     readonly slots: Readonly<Record<string, CollectionSlot>>;
+    /** Native element contract for the authored element carrying `cms-bloc`. */
+    readonly root: CollectionManagedNativeElement;
+    /** Optional single Page-owned native child managed by a wrapper Bloc. */
+    readonly content?: CollectionManagedNativeElement;
     /** Editable initial page content, distinct from the fixed composition. */
     readonly defaultContent?: string;
 }
 
 export interface CollectionComponent extends CollectionBlocBase {
     readonly kind: "component";
-    /** Contract for the single page-owned native Light DOM child. */
-    readonly nativeElement?: CollectionManagedNativeElement;
-    /** Static shadow shell; dynamic bindings belong to the light DOM. */
-    readonly shadowdom: string;
-    readonly lightdom?: string;
+    /** Server-expanded Light DOM template. */
+    readonly template: string;
     readonly style?: string;
     readonly settings?: CollectionComponentSettings;
     /** Immutable browser bundles produced from optional local bloc source. */

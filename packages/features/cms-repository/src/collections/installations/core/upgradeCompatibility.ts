@@ -30,8 +30,11 @@ function assertBlocCompatibility(previous: CollectionBloc, next: CollectionBloc 
         if (!settingsAcceptPrevious(previous.settings ?? [], next.settings ?? [])) {
             reject(`Upgrade changes existing settings contract ${previous.id}`);
         }
-        if (!nativeElementAcceptsPrevious(previous.nativeElement, next.nativeElement)) {
+        if (!managedNativeAcceptsPrevious(previous.root, next.root)) {
             reject(`Upgrade changes existing managed native contract ${previous.id}`);
+        }
+        if (!managedNativeAcceptsPrevious(previous.content, next.content)) {
+            reject(`Upgrade changes existing managed native content contract ${previous.id}`);
         }
     }
 }
@@ -52,9 +55,9 @@ function settingsAcceptPrevious(previous: CollectionComponentSettings, next: Col
     });
 }
 
-function nativeElementAcceptsPrevious(
-    previous: Extract<CollectionBloc, { kind: "component" }>["nativeElement"],
-    next: Extract<CollectionBloc, { kind: "component" }>["nativeElement"],
+function managedNativeAcceptsPrevious(
+    previous: Extract<CollectionBloc, { kind: "component" }>["content"],
+    next: Extract<CollectionBloc, { kind: "component" }>["content"],
 ): boolean {
     if (!previous || !next) {
         return previous === next;
@@ -88,7 +91,7 @@ function acceptIncludes(candidate: CollectionSlotAccept, previous: CollectionSlo
     if (candidate.kind === "component" && previous.kind === "component") {
         return candidate.tag === previous.tag;
     }
-    if (candidate.kind === "rich-text" && previous.kind === "rich-text") {
+    if (candidate.kind === "native-content" && previous.kind === "native-content") {
         return candidate.profile === previous.profile;
     }
     return true;

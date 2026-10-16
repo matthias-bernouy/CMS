@@ -34,7 +34,7 @@ export type {
     CollectionComposition,
     CollectionSlot,
     CollectionSlotAccept,
-    CollectionRichTextProfile,
+    CollectionNativeContentProfile,
     CollectionMediaAccept,
     CollectionComponentSettings,
     CollectionSettingControl,

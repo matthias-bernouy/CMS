@@ -16,6 +16,10 @@ type BindingTarget = {
     readonly effect: "query" | "command";
 };
 
+function blocMarkup(bloc: CollectionBloc): string {
+    return bloc.kind === "component" ? bloc.template : bloc.lightdom;
+}
+
 /** Each resource and its used blocs need joint witnesses; unrelated resources stay independent. */
 export async function verifyCollectionRequirements(
     release: CollectionRelease,
@@ -27,12 +31,12 @@ export async function verifyCollectionRequirements(
         const closure = used.flatMap((item) => item.requires);
         const capabilities = await verifyRequirements(
             closure,
-            bindingTargets(used.map((item) => item.lightdom ?? "")),
+            bindingTargets(used.map(blocMarkup)),
             `$.blocs.${bloc.id}.requires`,
             "this bloc and its used blocs",
             catalogue,
         );
-        validateBindings(release, bloc.lightdom ?? "", capabilities, `$.blocs.${bloc.id}.lightdom`);
+        validateBindings(release, blocMarkup(bloc), capabilities, `$.blocs.${bloc.id}.markup`);
     }
     for (const page of release.pages ?? []) {
         const used = page.uses.flatMap((id) => {
@@ -42,7 +46,7 @@ export async function verifyCollectionRequirements(
         const closure = [...page.requires, ...used.flatMap((item) => item.requires)];
         const capabilities = await verifyRequirements(
             closure,
-            bindingTargets([page.document.html, ...used.map((item) => item.lightdom ?? "")]),
+            bindingTargets([page.document.html, ...used.map(blocMarkup)]),
             `$.pages.${page.id}.requires`,
             "this page and its used blocs",
             catalogue,

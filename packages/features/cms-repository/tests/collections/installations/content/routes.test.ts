@@ -170,6 +170,7 @@ function collectionRelease(html: string) {
         blocs: [
             {
                 kind: "composition",
+                root: { accepts: ["div"] },
                 id: "official-page",
                 label: "bloc.page.label",
                 lightdom: html,
@@ -186,7 +187,7 @@ function collectionRelease(html: string) {
                 name: "page.overview.name",
                 uses: ["official-page"],
                 requires: [],
-                document: { html: "<official-page></official-page>" },
+                document: { html: '<div cms-bloc="official-page"></div>' },
             },
         ],
     };

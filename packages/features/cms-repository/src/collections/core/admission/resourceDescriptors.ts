@@ -46,7 +46,7 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
             requires: bloc.requires,
             slots: bloc.slots,
             ...(bloc.kind === "component"
-                ? { nativeElement: bloc.nativeElement ?? null, settings: bloc.settings ?? [] }
+                ? { root: bloc.root, content: bloc.content ?? null, settings: bloc.settings ?? [] }
                 : {}),
         },
         implementation: {

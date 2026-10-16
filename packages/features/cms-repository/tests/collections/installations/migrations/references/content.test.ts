@@ -27,7 +27,7 @@ test("blocks removal of a collection text still referenced by a page", async () 
     await fixture.repository.insertPage(
         "/demo",
         "Demo",
-        '<atlas-card><p slot="content">{{ cms.i18n.atlas.legacy-title }}</p></atlas-card>',
+        '<div cms-bloc=\"atlas-card\"><p slot="content">{{ cms.i18n.atlas.legacy-title }}</p></div>',
     );
 
     const plan = await fixture.service.plan("site", [{ digest: next.digest }], 1);
@@ -53,7 +53,8 @@ test("blocks target changes that would break a site-owned bloc", async () => {
         group: "Local",
         description: "",
         viewJS: "",
-        compositionHTML: "<atlas-card></atlas-card>",
+        compositionHTML: '<div cms-bloc="atlas-card"></div>',
+        root: { accepts: ["div"] },
         ownership: { kind: "code-managed" },
     });
 

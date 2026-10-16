@@ -15,54 +15,58 @@ describe("collection bloc admission", () => {
         expect(() => check([component({ order: -1 })])).toThrow("integer");
     });
 
-    test("requires platform-safe namespaced custom-element tags", () => {
-        expect(() => parseBlocs([component({ id: "demo.widgets-card" })], "demo", limits)).toThrow("custom-element");
-        expect(() => parseBlocs([component({ id: "font-face" })], "font", limits)).toThrow("custom-element");
+    test("requires platform-safe namespaced Bloc identifiers", () => {
+        expect(() => parseBlocs([component({ id: "demo.widgets-card" })], "demo", limits)).toThrow("Bloc identifier");
+        expect(() => parseBlocs([component({ id: "font-face" })], "font", limits)).toThrow("Bloc identifier");
         expect(() => parseBlocs([component({ id: "cms-card" })], "cms", limits)).toThrow("reserved");
         expect(() => parseBlocs([component({ id: "demo-card" })], "other", limits)).toThrow(
             "other- collection namespace",
         );
     });
 
-    test.each(["settings", "style", "shadowdom", "behaviour", "behaviourJS", "nativeElement"])(
+    test.each(["settings", "style", "template", "behaviour", "behaviourJS", "content"])(
         "refuses composition %s",
         (key) => {
             expect(() => check([composition({ [key]: {} })])).toThrow("unknown property");
         },
     );
 
-    test("admits bounded polymorphic native-element contracts", () => {
-        const nativeElement = { accepts: ["button", "a"] };
+    test("admits bounded native root and Page-owned content contracts", () => {
+        const root = { accepts: ["button", "a"] };
         const parsed = check([
             component({
-                nativeElement,
-                shadowdom: "<span><slot></slot></span>",
+                root,
+                content: { accepts: ["span"] },
+                template: "<span><slot></slot></span>",
                 slots: {},
-                defaultContent: '<button type="button">Action</button>',
+                defaultContent: "<span>Action</span>",
             }),
         ])[0];
-        expect(parsed?.kind === "component" ? parsed.nativeElement : undefined).toEqual(nativeElement);
-        expect(() => check([component({ nativeElement: "button" })])).toThrow("object");
-        expect(() => check([component({ nativeElement: { accepts: [] } })])).toThrow("at least one");
-        expect(() => check([component({ nativeElement: { accepts: ["a", "a"] } })])).toThrow("duplicate");
-        expect(() => check([component({ nativeElement: { accepts: ["div"] } })])).toThrow("must be one of");
+        expect(parsed?.root).toEqual(root);
+        expect(parsed?.content).toEqual({ accepts: ["span"] });
+        expect(() => check([component({ root: "button" })])).toThrow("object");
+        expect(() => check([component({ root: { accepts: [] } })])).toThrow("at least one");
+        expect(() => check([component({ root: { accepts: ["a", "a"] } })])).toThrow("duplicate");
+        expect(() => check([component({ root: { accepts: ["video"] } })])).toThrow("must be one of");
         expect(() =>
             check([
                 component({
-                    nativeElement: { accepts: ["button"] },
-                    shadowdom: "<slot></slot>",
+                    root: { accepts: ["button"] },
+                    content: { accepts: ["span"] },
+                    template: "<slot></slot>",
                     slots: {},
-                    defaultContent: '<button type="button"></button>',
+                    defaultContent: "<span></span>",
                 }),
             ]),
         ).toThrow("requires text content or a non-empty aria-label");
         expect(() =>
             check([
                 component({
-                    nativeElement: { accepts: ["button"] },
-                    shadowdom: "<slot></slot>",
+                    root: { accepts: ["button"], defaults: { "aria-label": "Save" } },
+                    content: { accepts: ["span"] },
+                    template: "<slot></slot>",
                     slots: {},
-                    defaultContent: '<button type="button" aria-label="Save"></button>',
+                    defaultContent: "<span></span>",
                 }),
             ]),
         ).not.toThrow();
@@ -73,18 +77,20 @@ describe("collection bloc admission", () => {
         expect(
             check([
                 component({
-                    nativeElement: checkbox,
-                    shadowdom: "<slot></slot>",
+                    root: { accepts: ["div"] },
+                    content: checkbox,
+                    template: "<slot></slot>",
                     slots: {},
                     defaultContent: '<input type="checkbox">',
                 }),
             ])[0],
-        ).toMatchObject({ nativeElement: checkbox });
+        ).toMatchObject({ content: checkbox });
         expect(() =>
             check([
                 component({
-                    nativeElement: checkbox,
-                    shadowdom: "<slot></slot>",
+                    root: { accepts: ["div"] },
+                    content: checkbox,
+                    template: "<slot></slot>",
                     slots: {},
                     defaultContent: '<input type="radio">',
                 }),
@@ -93,14 +99,15 @@ describe("collection bloc admission", () => {
         expect(() =>
             check([
                 component({
-                    nativeElement,
-                    shadowdom: "<slot></slot>",
+                    root,
+                    content: { accepts: ["span"] },
+                    template: "<slot></slot>",
                     lightdom: "<a>Fixed</a>",
                     slots: {},
-                    defaultContent: "<a>Action</a>",
+                    defaultContent: "<span>Action</span>",
                 }),
             ]),
-        ).toThrow("cannot declare fixed lightdom");
+        ).toThrow('unknown property "lightdom"');
     });
 
     test.each(["uses", "requires", "slots"])("does not normalize explicit null %s into omission", (key) => {
@@ -288,7 +295,7 @@ describe("collection bloc admission", () => {
                         accepts: [
                             { kind: "any-component" },
                             { kind: "plain-text" },
-                            { kind: "rich-text", profile: "prose" },
+                            { kind: "native-content", profile: "prose" },
                         ],
                     },
                 },
@@ -326,7 +333,7 @@ describe("collection bloc admission", () => {
                     slots: { body: { accepts: [{ kind: "media", accept: ["image"] }] as never } },
                 }),
             ]),
-        ).toThrow("slot acceptance kind must be component, any-component, plain-text or rich-text");
+        ).toThrow("slot acceptance kind must be component, any-component, plain-text or native-content");
         expect(parsed?.kind === "component" ? parsed.settings?.map(({ control }) => control.kind) : undefined).toEqual([
             "text",
             "media-picker",
@@ -335,7 +342,7 @@ describe("collection bloc admission", () => {
         expect(() =>
             check([
                 component({
-                    slots: { body: { accepts: [{ kind: "rich-text", profile: "arbitrary" }] } },
+                    slots: { body: { accepts: [{ kind: "native-content", profile: "arbitrary" }] } },
                 }),
             ]),
         ).toThrow("inline, prose");

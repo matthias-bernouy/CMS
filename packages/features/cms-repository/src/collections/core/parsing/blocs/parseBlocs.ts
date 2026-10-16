@@ -21,6 +21,7 @@ const common = [
     "uses",
     "requires",
     "slots",
+    "root",
     "defaultContent",
 ];
 
@@ -45,9 +46,7 @@ function parseBloc(
         source,
         [
             ...common,
-            ...(source.kind === "component"
-                ? ["shadowdom", "lightdom", "style", "settings", "runtime", "nativeElement"]
-                : ["lightdom"]),
+            ...(source.kind === "component" ? ["content", "template", "style", "settings", "runtime"] : ["lightdom"]),
         ],
         path,
     );
@@ -74,6 +73,10 @@ function parseBloc(
         uses: blocReferences(source.uses === undefined ? [] : source.uses, `${path}.uses`, limits),
         requires: parseRequirements(source.requires === undefined ? [] : source.requires, `${path}.requires`, limits),
         slots: parseSlots(source.slots === undefined ? {} : source.slots, `${path}.slots`, limits),
+        root: parseManagedNativeElement(source.root, `${path}.root`),
+        ...(source.kind !== "component" || source.content === undefined
+            ? {}
+            : { content: parseManagedNativeElement(source.content, `${path}.content`) }),
         ...(source.defaultContent === undefined
             ? {}
             : {
@@ -89,13 +92,6 @@ function parseBloc(
     }
     const settings =
         source.settings === undefined ? undefined : parseComponentSettings(source.settings, `${path}.settings`, limits);
-    const nativeElement =
-        source.nativeElement === undefined
-            ? undefined
-            : parseManagedNativeElement(source.nativeElement, `${path}.nativeElement`);
-    if (nativeElement && source.lightdom !== undefined) {
-        invalid("managed native components cannot declare fixed lightdom", `${path}.lightdom`);
-    }
     const runtime = source.runtime === undefined ? undefined : record(source.runtime, `${path}.runtime`);
     if (runtime) {
         keys(runtime, ["viewJS"], `${path}.runtime`);
@@ -103,11 +99,7 @@ function parseBloc(
     return {
         ...base,
         kind: "component",
-        ...(nativeElement === undefined ? {} : { nativeElement }),
-        shadowdom: string(source.shadowdom, limits.maxMarkupLength, `${path}.shadowdom`),
-        ...(source.lightdom === undefined
-            ? {}
-            : { lightdom: string(source.lightdom, limits.maxMarkupLength, `${path}.lightdom`) }),
+        template: string(source.template, limits.maxMarkupLength, `${path}.template`),
         ...(source.style === undefined
             ? {}
             : { style: optionalText(source.style, limits.maxMarkupLength, `${path}.style`) }),

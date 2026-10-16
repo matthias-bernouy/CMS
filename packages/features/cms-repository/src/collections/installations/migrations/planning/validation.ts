@@ -48,8 +48,9 @@ export async function validateTargetPages(
             slots: bloc.slots,
             uses: bloc.uses,
             ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
-            ...(bloc.kind === "component" && bloc.lightdom ? { componentHTML: bloc.lightdom } : {}),
-            ...(bloc.kind === "component" && bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
+            ...(bloc.kind === "component" ? { templateHTML: bloc.template } : {}),
+            root: bloc.root,
+            ...(bloc.content ? { content: bloc.content } : {}),
             ...(bloc.kind === "component" && bloc.settings ? { settings: bloc.settings } : {}),
         })),
     );

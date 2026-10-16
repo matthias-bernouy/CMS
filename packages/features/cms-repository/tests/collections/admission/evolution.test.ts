@@ -12,7 +12,7 @@ function release(version: string, update: (source: Record<string, unknown>) => v
 test("collection publication separates implementation, compatible contract and breaking changes", async () => {
     const initial = release("1.0.0");
     const implementation = release("1.0.1", (source) => {
-        (source.blocs as Record<string, unknown>[])[0]!.style = ":host { display: grid; }";
+        (source.blocs as Record<string, unknown>[])[0]!.style = ":scope { display: grid; }";
     });
     await expect(verifyCollectionPublicationEvolution(initial, implementation)).resolves.toBeUndefined();
 

@@ -11,10 +11,11 @@ export function validateCollectionAssetReferences(
     pages: readonly CollectionPage[] = [],
 ): void {
     for (const bloc of blocs) {
-        const values = [bloc.lightdom, bloc.defaultContent];
-        if (bloc.kind === "component") {
-            values.push(bloc.shadowdom, bloc.style);
-        }
+        const values = [
+            bloc.kind === "component" ? bloc.template : bloc.lightdom,
+            bloc.defaultContent,
+            bloc.kind === "component" ? bloc.style : undefined,
+        ];
         for (const value of values) {
             if (value !== undefined) {
                 validateValue(value, collectionId, assetIds, importedAssets, `$.blocs[${bloc.id}]`);

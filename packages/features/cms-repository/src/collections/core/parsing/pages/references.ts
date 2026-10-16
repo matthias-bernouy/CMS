@@ -10,7 +10,7 @@ export function validateDeclaredPageLinks(release: Pick<CollectionRelease, "page
         ),
     ]);
     for (const bloc of release.blocs) {
-        const sources = [bloc.lightdom, bloc.defaultContent, bloc.kind === "component" ? bloc.shadowdom : undefined];
+        const sources = [bloc.kind === "component" ? bloc.template : bloc.lightdom, bloc.defaultContent];
         for (const path of sources.flatMap((source) => (source ? pageLinks(source) : []))) {
             if (!available.has(path)) {
                 throw new TypeError(`Collection Bloc ${bloc.id} references an undeclared Page route: ${path}`);
@@ -42,9 +42,7 @@ export function pageLinkSources(release: Pick<CollectionRelease, "blocs">, rootB
         if (!bloc) {
             continue;
         }
-        if (bloc.lightdom) {
-            sources.push(bloc.lightdom);
-        }
+        sources.push(bloc.kind === "component" ? bloc.template : bloc.lightdom);
         pending.push(...bloc.uses);
     }
     return sources;

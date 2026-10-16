@@ -10,7 +10,7 @@ import {
 test("rejects rollback when a page created later needs a target-only bloc", async () => {
     const fixture = await rollbackFixture();
     const completed = await fixture.service.execute("site", [{ digest: fixture.next.digest }], 1);
-    await fixture.repository.insertPage("/new", "New", "<atlas-panel></atlas-panel>");
+    await fixture.repository.insertPage("/new", "New", '<div cms-bloc="atlas-panel"></div>');
 
     await expect(fixture.service.rollback("site", completed.id)).rejects.toMatchObject({ status: 409 });
     expect((await fixture.collections.snapshot("site")).collections[0]!.digest).toBe(fixture.next.digest);
@@ -25,7 +25,7 @@ test("rejects rollback when a later page needs a target-only theme token or text
     await fixture.repository.insertPage(
         "/new",
         "New",
-        '<stable-shell><p slot="content">var(--atlas-brand) {{ cms.i18n.atlas.new-title }}</p></stable-shell>',
+        '<div cms-bloc=\"stable-shell\"><p slot="content">var(--atlas-brand) {{ cms.i18n.atlas.new-title }}</p></div>',
     );
 
     await expect(fixture.service.rollback("site", completed.id)).rejects.toThrow("Rollback would invalidate page");
@@ -39,7 +39,7 @@ test("rejects rollback when a later page needs only a target collection text", a
     await fixture.repository.insertPage(
         "/new",
         "New",
-        '<stable-shell><p slot="content">{{ cms.i18n.atlas.new-title }}</p></stable-shell>',
+        '<div cms-bloc=\"stable-shell\"><p slot="content">{{ cms.i18n.atlas.new-title }}</p></div>',
     );
 
     await expect(fixture.service.rollback("site", completed.id)).rejects.toThrow(
@@ -70,7 +70,7 @@ test("preserves page metadata changes while restoring only migrated content", as
     await fixture.service.rollback("site", completed.id);
     expect(await fixture.repository.getPage("/existing")).toMatchObject({
         title: "Renamed after migration",
-        content: "<atlas-card></atlas-card>",
+        content: '<div cms-bloc="atlas-card"></div>',
     });
 });
 
@@ -125,7 +125,7 @@ async function rollbackFixture() {
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
     );
-    await repository.insertPage("/existing", "Existing", "<atlas-card></atlas-card>");
+    await repository.insertPage("/existing", "Existing", '<div cms-bloc="atlas-card"></div>');
     const storage = new MemoryCollectionMigrationStorage();
     return {
         collections,
@@ -143,7 +143,8 @@ function stableShell() {
         group: "Test",
         description: "",
         viewJS: "",
-        slots: { content: { accepts: [{ kind: "rich-text" as const, profile: "prose" as const }] } },
+        root: { accepts: ["div"] as const },
+        slots: { content: { accepts: [{ kind: "native-content" as const, profile: "prose" as const }] } },
         ownership: { kind: "code-managed" as const },
     };
 }
@@ -185,12 +186,13 @@ function release(version: string, blocId: string, extended: boolean): Record<str
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id: blocId,
                 label: "bloc.label",
-                shadowdom: '<div><slot name="content"></slot></div>',
+                template: '<div><slot name="content"></slot></div>',
                 uses: [],
                 requires: [],
-                slots: { content: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
+                slots: { content: { accepts: [{ kind: "native-content", profile: "prose" }] } },
             },
         ],
         theme: {

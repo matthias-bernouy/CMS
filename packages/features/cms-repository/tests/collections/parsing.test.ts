@@ -70,8 +70,8 @@ describe("collection release parsing", () => {
         expect(parsed.blocs.map((bloc) => bloc.id)).toEqual(["atlas-page", "atlas-panel"]);
         expect(Object.isFrozen(source.blocs)).toBe(false);
         expect(Object.isFrozen(parsed.blocs)).toBe(true);
-        (source.blocs as Record<string, unknown>[])[0]!.shadowdom = "Changed";
-        expect(parsed.blocs.find((bloc) => bloc.kind === "component")!.shadowdom).toContain("<section>");
+        (source.blocs as Record<string, unknown>[])[0]!.template = "Changed";
+        expect(parsed.blocs.find((bloc) => bloc.kind === "component")!.template).toContain("<section>");
         expect(parseCollectionReleaseJson(JSON.stringify(parsed))).toEqual(parsed);
     });
 
@@ -339,7 +339,7 @@ describe("collection release parsing", () => {
                 id: "overview",
                 defaultPath: "/admin",
                 name: "page.overview.name",
-                document: { html: "<atlas-panel></atlas-panel>" },
+                document: { html: '<div cms-bloc="atlas-panel"></div>' },
             },
         ];
         source.states = [
@@ -378,7 +378,7 @@ describe("collection release parsing", () => {
         });
         (source.blocs as Record<string, unknown>[])[1]!.uses = ["atlas-panel", "ulvia-official-button"];
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
-            '<atlas-panel><slot name="main" slot="body"></slot><ulvia-official-button slot="body"></ulvia-official-button></atlas-panel>';
+            '<div cms-bloc=\"atlas-panel\"><slot name="main" slot="body"></slot><div cms-bloc=\"ulvia-official-button\" slot="body"></div></div>';
 
         const parsed = parseCollectionRelease(source);
         expect(parsed.exports).toEqual({
@@ -490,23 +490,23 @@ describe("collection release parsing", () => {
             },
         ];
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
-            '<atlas-panel cms-query="@page:atlas-products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></atlas-panel>';
+            '<div cms-bloc=\"atlas-panel\" cms-query="@page:atlas-products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></div>';
         expect(parseCollectionRelease(source).states?.[0]?.id).toBe("products");
 
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
-            '<atlas-panel cms-queries="@page:atlas-products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></atlas-panel>';
+            '<div cms-bloc=\"atlas-panel\" cms-queries="@page:atlas-products as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></div>';
         expect(parseCollectionRelease(source).states?.[0]?.id).toBe("products");
 
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
-            '<atlas-panel cms-queries="@page:atlas-undeclared as products"><slot name="main" slot="body"></slot></atlas-panel>';
+            '<div cms-bloc=\"atlas-panel\" cms-queries="@page:atlas-undeclared as products"><slot name="main" slot="body"></slot></div>';
         expect(() => parseCollectionRelease(source)).toThrow("declared locally or explicitly imported");
 
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
-            '<atlas-panel cms-query="@page:atlas-undeclared as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></atlas-panel>';
+            '<div cms-bloc=\"atlas-panel\" cms-query="@page:atlas-undeclared as products"><slot name="main" slot="body"><p>{{ products.data[0] }}</p></slot></div>';
         expect(() => parseCollectionRelease(source)).toThrow("declared locally or explicitly imported");
 
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
-            '<atlas-panel cms-query="catalog:items.list as products" cms-query-listen="@page:atlas-undeclared"><slot name="main" slot="body"></slot></atlas-panel>';
+            '<div cms-bloc=\"atlas-panel\" cms-query="catalog:items.list as products" cms-query-listen="@page:atlas-undeclared"><slot name="main" slot="body"></slot></div>';
         (source.blocs as Record<string, unknown>[])[1]!.requires = [
             { contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" },
         ];
@@ -535,16 +535,16 @@ describe("collection release parsing", () => {
         ];
         const consumer = (source.blocs as Record<string, unknown>[])[1]!;
         consumer.requires = [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
-        consumer.lightdom = `<atlas-panel
+        consumer.lightdom = `<div cms-bloc=\"atlas-panel\"
             cms-query="catalog:items.list as items"
             cms-query-listen="@page:atlas-save/lastSuccess/requestId"
-        ><slot name="main" slot="body"></slot></atlas-panel>`;
+        ><slot name="main" slot="body"></slot></div>`;
         expect(() => parseCollectionRelease(source)).not.toThrow();
 
-        consumer.lightdom = `<atlas-panel
+        consumer.lightdom = `<div cms-bloc=\"atlas-panel\"
             cms-query="catalog:items.list as items"
             cms-query-listen="@page:atlas-save/lastSuccess/missing"
-        ><slot name="main" slot="body"></slot></atlas-panel>`;
+        ><slot name="main" slot="body"></slot></div>`;
         expect(() => parseCollectionRelease(source)).toThrow("unknown state property");
     });
 
@@ -610,10 +610,10 @@ describe("collection release parsing", () => {
         ];
         const consumer = (source.blocs as Record<string, unknown>[])[1]!;
         consumer.requires = [{ contractId: "catalog", capabilityId: "items.list", versionRange: "^1.0.0" }];
-        consumer.lightdom = `<atlas-panel
+        consumer.lightdom = `<div cms-bloc=\"atlas-panel\"
             cms-query="catalog:items.list as items"
             cms-query-input='{"page":{"from":"state","key":"@page:atlas-filters","path":["page"],"cast":"integer","fallback":"1"}}'
-        ><slot name="main" slot="body"><p>{{ items.data }}</p></slot></atlas-panel>`;
+        ><slot name="main" slot="body"><p>{{ items.data }}</p></slot></div>`;
         expect(() => parseCollectionRelease(source)).not.toThrow();
 
         for (const input of [
@@ -622,7 +622,7 @@ describe("collection release parsing", () => {
             '{"page":{"from":"state","key":"@page:atlas-filters","cast":"string"}}',
             '{"page":{"from":"state","key":"@page:atlas-filters","path":["page"],"fallback":12}}',
         ]) {
-            consumer.lightdom = `<atlas-panel cms-query="catalog:items.list as items" cms-query-input='${input}'><slot name="main" slot="body"></slot></atlas-panel>`;
+            consumer.lightdom = `<div cms-bloc=\"atlas-panel\" cms-query="catalog:items.list as items" cms-query-input='${input}'><slot name="main" slot="body"></slot></div>`;
             expect(() => parseCollectionRelease(source)).toThrow(/state input/);
         }
     });
@@ -692,7 +692,7 @@ describe("collection release parsing", () => {
     test("normalizes resource generations and computes contract and implementation digests separately", async () => {
         const previous = parseCollectionRelease(collectionDocument());
         const nextSource = collectionDocument();
-        (nextSource.blocs as Record<string, unknown>[])[0]!.style = ":host { display: grid; }";
+        (nextSource.blocs as Record<string, unknown>[])[0]!.style = ":scope { display: grid; }";
         const next = parseCollectionRelease({ ...nextSource, version: "1.0.1" });
         const previousPanel = (await describeCollectionResources(previous)).find(
             (resource) => resource.id === "atlas-panel",

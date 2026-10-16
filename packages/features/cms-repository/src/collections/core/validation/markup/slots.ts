@@ -3,21 +3,22 @@ import { invalid } from "../../errors";
 import { elements, isElement, type MarkupElement, type MarkupTree, offeredSlots } from "./tree";
 
 export interface BlocMarkup {
-    readonly light?: MarkupTree;
-    readonly shadow?: MarkupTree;
+    readonly template?: MarkupTree;
     readonly initial?: MarkupTree;
-    readonly shellSlots: ReadonlySet<string>;
     readonly pageSlots: ReadonlySet<string>;
 }
 
 export function validatePageSlots(bloc: CollectionBloc, markup: BlocMarkup, path: string): void {
-    if (bloc.kind === "component" && bloc.nativeElement) {
-        return;
+    if (markup.pageSlots.has("") && !bloc.content) {
+        invalid("an unnamed slot requires a managed Page-owned native child", `${path}.content`);
     }
-    if (markup.pageSlots.has("")) {
-        invalid("slots the page fills must have a name", `${path}.slots`);
+    if (bloc.content && !markup.pageSlots.has("")) {
+        invalid("managed Page-owned native content requires one unnamed slot", `${path}.content`);
     }
     for (const name of markup.pageSlots) {
+        if (name === "") {
+            continue;
+        }
         if (!Object.hasOwn(bloc.slots, name)) {
             invalid(`must declare page slot ${name}`, `${path}.slots`);
         }
@@ -37,15 +38,19 @@ function targets(
     markup: ReadonlyMap<string, BlocMarkup>,
 ): ReadonlySet<string> | undefined {
     const parent = node.parent;
-    if (parent === tree || (parent && isElement(parent) && parent.name === "cms-host")) {
+    if (
+        parent === tree ||
+        (parent && isElement(parent) && parent.name === "template" && parent.attribs["cms-root"] !== undefined)
+    ) {
         return rootSlots;
     }
     if (!parent || !isElement(parent)) {
         return undefined;
     }
-    const target = blocs.get(parent.name);
-    const content = markup.get(parent.name);
-    return target?.kind === "component" && !content?.light ? content?.shellSlots : content?.pageSlots;
+    const targetId = parent.attribs["cms-bloc"];
+    const target = targetId ? blocs.get(targetId) : undefined;
+    const content = targetId ? markup.get(targetId) : undefined;
+    return target ? content?.pageSlots : undefined;
 }
 
 export function validateSlotTargets(
@@ -59,7 +64,7 @@ export function validateSlotTargets(
     for (const node of elements(tree)) {
         const name = node.attribs.slot;
         const parent = node.parent;
-        if (name !== undefined && parent && isElement(parent) && importedBlocs.has(parent.name)) {
+        if (name !== undefined && parent && isElement(parent) && importedBlocs.has(parent.attribs["cms-bloc"] ?? "")) {
             continue;
         }
         if (name !== undefined && !targets(node, tree, rootSlots, blocs, markup)?.has(name)) {
@@ -68,7 +73,7 @@ export function validateSlotTargets(
     }
 }
 
-export function pageSlots(light: MarkupTree | undefined, shadow: MarkupTree | undefined): ReadonlySet<string> {
-    const tree = light ?? shadow;
+export function pageSlots(template: MarkupTree | undefined): ReadonlySet<string> {
+    const tree = template;
     return tree ? offeredSlots(tree) : new Set();
 }

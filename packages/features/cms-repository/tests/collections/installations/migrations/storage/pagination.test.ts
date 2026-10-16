@@ -26,7 +26,7 @@ test("plans, executes, verifies, and rolls back through bounded page cursors", a
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
     );
     for (let index = 0; index < 620; index += 1) {
-        await inner.insertPage(`/page-${index}`, `Page ${index}`, "<atlas-card></atlas-card>");
+        await inner.insertPage(`/page-${index}`, `Page ${index}`, '<div cms-bloc="atlas-card"></div>');
     }
     let scans = 0;
     let largestBatch = 0;
@@ -80,10 +80,10 @@ test("plans, executes, verifies, and rolls back through bounded page cursors", a
     expect(completed.status).toBe("completed");
     expect(completed.pageCount).toBe(620);
     expect(completed).not.toHaveProperty("pages");
-    expect(await repository.getPage("/page-20")).toMatchObject({ content: "<atlas-panel></atlas-panel>" });
+    expect(await repository.getPage("/page-20")).toMatchObject({ content: '<div cms-bloc="atlas-panel"></div>' });
     const rolledBack = await service.rollback("site", completed.id);
     expect(rolledBack.status).toBe("rolled-back");
-    expect(await repository.getPage("/page-20")).toMatchObject({ content: "<atlas-card></atlas-card>" });
+    expect(await repository.getPage("/page-20")).toMatchObject({ content: '<div cms-bloc="atlas-card"></div>' });
     expect(scans).toBeGreaterThan(20);
     expect(largestBatch).toBe(7);
     expect(largestStagedBatch).toBe(7);
@@ -105,9 +105,10 @@ function release(version: string, blocId: string): Record<string, unknown> {
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id: blocId,
                 label: "bloc.label",
-                shadowdom: "<div></div>",
+                template: "<div></div>",
                 uses: [],
                 requires: [],
                 slots: {},

@@ -9,6 +9,7 @@ import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repositor
 import { InMemoryCmsRepository, InMemoryPageRouteRegistry, ValidatingCmsRepository } from "@bernouy/cms-content";
 import { createContentReader, expandCompositions, generateStyleEntry } from "@bernouy/cms-content/rendering";
 import { parseHTML } from "linkedom";
+import { buildCollectionBloc, compileBlocStyle } from "@bernouy/cms-repository/collections/build";
 
 const release = {
     kind: "collection",
@@ -52,6 +53,7 @@ const release = {
     blocs: [
         {
             kind: "composition",
+            root: { accepts: ["div"] },
             id: "test-welcome",
             label: "bloc.welcome.label",
             category: "bloc.category.content",
@@ -70,7 +72,7 @@ test("installed resources participate in authoring validation and public read mo
     await store.install("site", artifact.digest, 0);
     const local = new InMemoryCmsRepository();
     const repository = new ValidatingCmsRepository(withInstalledCollections(local, store, "site"));
-    await repository.insertPage("/test", "Test", "<test-welcome></test-welcome>");
+    await repository.insertPage("/test", "Test", '<div cms-bloc="test-welcome"></div>');
     const page = (await repository.getPage("/test"))!;
     await repository.updatePage({ id: page.id, visible: true });
     expect(await local.getBlocRecord("test-welcome")).toBeNull();
@@ -109,7 +111,7 @@ test("installed Page aliases redirect to their effective collection route", asyn
                 name: "page.overview.name",
                 uses: ["test-welcome"],
                 requires: [],
-                document: { html: "<test-welcome></test-welcome>" },
+                document: { html: '<div cms-bloc="test-welcome"></div>' },
             },
         ],
     });
@@ -150,10 +152,11 @@ test("installed internal blocs stay out of the authoring catalogue but remain av
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id: "test-helper",
                 label: "bloc.helper.label",
                 internal: true,
-                shadowdom: "<div></div>",
+                template: "<div></div>",
                 uses: [],
                 requires: [],
                 slots: {},
@@ -206,10 +209,15 @@ test("installed collection theme contributes immutable tokens to editing and pub
     expect(css).toContain("#abcdef");
 });
 
-test("installed shadow component is served as browser bloc JavaScript", async () => {
+test("installed Light DOM component is served with its scoped style runtime", async () => {
     const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
     const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}` as const;
     const store = new CollectionStore(new MemoryCollectionStorage());
+    const style = compileBlocStyle(
+        "test-card",
+        ':scope { color: var(--test-accent); background-image: url("data:image/svg+xml,%3Csvg/%3E"); }',
+    );
+    const runtime = await buildCollectionBloc({ tag: "test-card", style });
     const artifact = await store.importRelease(
         {
             ...release,
@@ -218,10 +226,12 @@ test("installed shadow component is served as browser bloc JavaScript", async ()
                 ...release.blocs,
                 {
                     kind: "component",
+                    root: { accepts: ["div"] },
                     id: "test-card",
                     label: "bloc.card.label",
-                    shadowdom: '<article class="card"><slot name="body"></slot></article>',
-                    style: '.card { color: var(--test-accent); background-image: url("{{ cms.asset.test.mark.svg }}"); }',
+                    template: '<article class="card"><slot name="body"></slot></article>',
+                    style: ":scope { color: var(--test-accent); }",
+                    runtime,
                     uses: [],
                     requires: [],
                     slots: { body: {} },
@@ -234,9 +244,9 @@ test("installed shadow component is served as browser bloc JavaScript", async ()
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
     const reader = createContentReader(repository);
     const script = await reader.getBlocViewJS("test-card");
-    expect(script).toContain("attachShadow");
+    expect(script).toContain("registerBloc");
+    expect(script).toContain('@scope ([cms-bloc="test-card"]) to (:scope [cms-bloc] *)');
     expect(script).toContain("var(--test-accent)");
-    expect(script).toContain("cms.asset.test.mark.svg");
     expect(
         (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-card")?.compositionHTML,
     ).toBeUndefined();
@@ -258,8 +268,9 @@ test("installed polymorphic native components project their contract and keep wr
                 kind: "component",
                 id: "test-action",
                 label: "bloc.card.label",
-                nativeElement: { accepts: ["button", "a"] },
-                shadowdom: "<slot></slot>",
+                root: { accepts: ["div"] },
+                content: { accepts: ["button", "a"] },
+                template: "<slot></slot>",
                 defaultContent: '<button type="button">{{ cms.i18n.test.title }}</button>',
                 settings: [
                     {
@@ -282,23 +293,23 @@ test("installed polymorphic native components project their contract and keep wr
         withInstalledCollections(new InMemoryCmsRepository(), store, "site"),
     );
     const projected = (await repository.getBlocRecord("test-action"))!.artifact!;
-    expect(projected.nativeElement).toEqual({ accepts: ["button", "a"] });
+    expect(projected.content).toEqual({ accepts: ["button", "a"] });
     expect((await createContentReader(repository).getRenderableBlocs()).find(({ id }) => id === "test-action")).toEqual(
-        expect.objectContaining({ nativeElement: { accepts: ["button", "a"] } }),
+        expect.objectContaining({ content: { accepts: ["button", "a"] } }),
     );
     await repository.insertPage(
         "/native-button",
         "Button",
-        '<test-action title="Wrapper title"><button type="button">Save</button></test-action>',
+        '<div cms-bloc=\"test-action\" title="Wrapper title"><button type="button">Save</button></div>',
     );
     await repository.insertPage(
         "/native-link",
         "Link",
-        '<test-action title="Wrapper title"><a href="/about">About</a></test-action>',
+        '<div cms-bloc=\"test-action\" title="Wrapper title"><a href="/about">About</a></div>',
     );
     await expect(
-        repository.insertPage("/native-wrong", "Wrong", "<test-action><p>Wrong</p></test-action>"),
-    ).rejects.toThrow("accepted native child");
+        repository.insertPage("/native-wrong", "Wrong", '<div cms-bloc="test-action"><p>Wrong</p></div>'),
+    ).rejects.toThrow("accepted native element");
 });
 
 test("installed collection thumbnails are projected from verified release assets", async () => {
@@ -318,10 +329,11 @@ test("installed collection thumbnails are projected from verified release assets
             blocs: [
                 {
                     kind: "component",
+                    root: { accepts: ["div"] },
                     id: "test-card",
                     label: "bloc.card.label",
                     thumbnail: "card.svg",
-                    shadowdom: "<article></article>",
+                    template: "<article></article>",
                     uses: [],
                     requires: [],
                     slots: {},
@@ -345,11 +357,11 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id: "test-card",
                 label: "bloc.card.label",
-                shadowdom: '<article><slot name="body"></slot></article>',
-                lightdom:
-                    '<slot name="title" slot="body"></slot><section slot="body"><p>{{ cms.i18n.test.title }}</p></section>',
+                template:
+                    '<article><slot name="title"></slot><section><p>{{ cms.i18n.test.title }}</p></section></article>',
                 defaultContent: '<h2 slot="title">{{ cms.i18n.test.title }}</h2>',
                 settings: [
                     {
@@ -377,29 +389,31 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
                 ],
                 uses: [],
                 requires: [],
-                slots: { title: { accepts: [{ kind: "rich-text", profile: "inline" }] } },
+                slots: { title: { accepts: [{ kind: "native-content", profile: "inline" }] } },
             },
         ],
     });
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
     const record = (await repository.getBlocRecord("test-card"))!;
-    expect(record.artifact?.componentHTML).toContain("cms.i18n.test.title");
+    expect(record.artifact?.templateHTML).toContain("cms.i18n.test.title");
     expect(record.artifact?.defaultContent).toContain("cms.i18n.test.title");
     expect(record.artifact?.settings?.map((item) => [item.id, item.default])).toEqual([
         ["tone", "quiet"],
         ["compact", false],
     ]);
-    expect((await createContentReader(repository).getRenderableBlocs())[0]?.componentHTML).toContain(
+    expect((await createContentReader(repository).getRenderableBlocs())[0]?.templateHTML).toContain(
         "cms.i18n.test.title",
     );
-    const { document } = parseHTML('<html><body><test-card><h2 slot="title">My page</h2></test-card></body></html>');
+    const { document } = parseHTML(
+        '<html><body><div cms-bloc=\"test-card\"><h2 slot="title">My page</h2></div></body></html>',
+    );
     expandCompositions(document.body, await createContentReader(repository).getRenderableBlocs());
     renderCollectionTexts(document.body, "en", [{ collection: artifact.release }]);
-    expect(document.querySelector("test-card")?.textContent).toBe("My pageWelcome");
+    expect(document.querySelector('[cms-bloc="test-card"]')?.textContent).toBe("My pageWelcome");
     const validated = new ValidatingCmsRepository(repository);
-    await validated.insertPage("/valid-card", "Valid", '<test-card tone="accent" compact></test-card>');
+    await validated.insertPage("/valid-card", "Valid", '<div cms-bloc=\"test-card\" tone="accent" compact></div>');
     await expect(
-        validated.insertPage("/invalid-card", "Invalid", '<test-card tone="unknown"></test-card>'),
+        validated.insertPage("/invalid-card", "Invalid", '<div cms-bloc=\"test-card\" tone="unknown"></div>'),
     ).rejects.toThrow("settings are invalid");
 });

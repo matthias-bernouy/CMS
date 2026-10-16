@@ -15,7 +15,7 @@ test("theme-token migration replaces only the exact CSS variable", () => {
     );
 
     const page = migratePageContent(
-        '<atlas-card tone="var(--atlas-primary)" hover="var(--atlas-primary-hover)"></atlas-card>',
+        '<div cms-bloc=\"atlas-card\" tone="var(--atlas-primary)" hover="var(--atlas-primary-hover)"></div>',
         [operation],
         "atlas",
     );

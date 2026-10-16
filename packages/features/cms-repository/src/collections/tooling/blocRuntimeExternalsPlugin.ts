@@ -1,25 +1,22 @@
 import type { BunPlugin } from "bun";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 
-/**
- * Bloc bundles must not re-bundle the shared browser runtime. Each
- * bundle keeps only its own view behavior and reads shared APIs from the host.
- */
-export const hostRuntimeExternalsPlugin: BunPlugin = {
-    name: "cms-host-runtime-externals",
+/** Bloc bundles reuse the shared browser runtime instead of bundling it. */
+export const blocRuntimeExternalsPlugin: BunPlugin = {
+    name: "cms-bloc-runtime-externals",
     setup(build) {
-        build.onResolve(
-            {
-                filter: /^@bernouy\/cms-content\/browser$/,
-            },
-            (args) => ({ path: args.path, namespace: "cms-host-runtime" }),
-        );
+        build.onResolve({ filter: /^@bernouy\/cms-content\/browser$/ }, (args) => ({
+            path: args.path,
+            namespace: "cms-bloc-runtime",
+        }));
 
-        build.onLoad({ filter: /.*/, namespace: "cms-host-runtime" }, (args) => {
+        build.onLoad({ filter: /.*/, namespace: "cms-bloc-runtime" }, (args) => {
             if (args.path === "@bernouy/cms-content/browser") {
                 return {
                     contents: [
-                        "export const Component = window.cmsRuntime.Component;",
+                        "export const BlocBehavior = window.cmsRuntime.BlocBehavior;",
+                        "export const mountBlocBehavior = window.cmsRuntime.mountBlocBehavior;",
+                        "export const registerBloc = window.cmsRuntime.registerBloc;",
                         "export const mutationFormRequest = window.cmsRuntime.mutationFormRequest;",
                         "export const MutationFormError = window.cmsRuntime.MutationFormError;",
                     ].join("\n"),

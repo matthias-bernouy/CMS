@@ -33,7 +33,9 @@ export async function validateTargetSiteResources(
             id: bloc.id,
             slots: bloc.slots,
             ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
-            ...(bloc.kind === "component" && bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
+            ...(bloc.kind === "component" ? { templateHTML: bloc.template } : {}),
+            root: bloc.root,
+            ...(bloc.content ? { content: bloc.content } : {}),
             ...(bloc.kind === "component" && bloc.settings ? { settings: bloc.settings } : {}),
         })),
     );
@@ -142,7 +144,7 @@ function recordContents(record: BlocRecord): [string, string][] {
     const contents: [string, string][] = [];
     for (const [name, value] of Object.entries({
         composition: record.artifact?.compositionHTML,
-        component: record.artifact?.componentHTML,
+        component: record.artifact?.templateHTML,
         default: record.artifact?.defaultContent,
     })) {
         if (value) {

@@ -199,7 +199,10 @@ function assertReadable(
 function collectionMarkups(owner: StateOwner): readonly { html: string; path: string }[] {
     return [
         ...owner.blocs.flatMap((bloc) => [
-            ...(bloc.lightdom === undefined ? [] : [{ html: bloc.lightdom, path: `$.blocs[${bloc.id}].lightdom` }]),
+            {
+                html: bloc.kind === "component" ? bloc.template : bloc.lightdom,
+                path: `$.blocs[${bloc.id}].${bloc.kind === "component" ? "template" : "lightdom"}`,
+            },
             ...(bloc.defaultContent === undefined
                 ? []
                 : [{ html: bloc.defaultContent, path: `$.blocs[${bloc.id}].defaultContent` }]),

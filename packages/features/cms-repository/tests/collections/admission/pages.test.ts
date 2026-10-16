@@ -8,7 +8,7 @@ const page = {
     name: "page.overview.name",
     icon: "star",
     document: {
-        html: "<atlas-panel></atlas-panel>",
+        html: '<div cms-bloc="atlas-panel"></div>',
     },
 } as const;
 
@@ -32,10 +32,10 @@ test("collection Page hosts reject undeclared capability and resource attributes
         ...page,
         requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
         document: {
-            html: '<atlas-panel cms-mutation="catalog.items:item.list as catalog"></atlas-panel>',
+            html: '<div cms-bloc=\"atlas-panel\" cms-mutation="catalog.items:item.list as catalog"></div>',
         },
     };
-    expect(() => parseCollectionRelease({ ...source, pages: [bound] })).toThrow(/not a declared setting/);
+    expect(() => parseCollectionRelease({ ...source, pages: [bound] })).toThrow(/mutations are reserved for form/u);
 
     const localized = {
         ...source,
@@ -52,20 +52,23 @@ test("collection Page hosts reject undeclared capability and resource attributes
             {
                 ...page,
                 document: {
-                    html: '<atlas-panel title="{{ cms.i18n.atlas.heading }}" artwork="{{ cms.asset.atlas.logo }}"></atlas-panel>',
+                    html: '<div cms-bloc=\"atlas-panel\" title="{{ cms.i18n.atlas.heading }}" artwork="{{ cms.asset.atlas.logo }}"></div>',
                 },
             },
         ],
     };
-    expect(() => parseCollectionRelease(localized)).toThrow(/not a declared setting/);
+    expect(() => parseCollectionRelease(localized)).toThrow(/neither a declared setting/);
     expect(() =>
         parseCollectionRelease({
             ...localized,
             pages: [
-                { ...page, document: { html: '<atlas-panel title="{{ cms.i18n.atlas.unknown }}"></atlas-panel>' } },
+                {
+                    ...page,
+                    document: { html: '<div cms-bloc=\"atlas-panel\" title="{{ cms.i18n.atlas.unknown }}"></div>' },
+                },
             ],
         }),
-    ).toThrow(/not a declared setting/);
+    ).toThrow(/neither a declared setting/);
 });
 
 test("collection Pages admit typed capability forms owned by a composition", () => {
@@ -74,6 +77,7 @@ test("collection Pages admit typed capability forms owned by a composition", () 
         '<form cms-mutation="catalog.items:item.rename as renamed"><label for="title">{{ copy }}</label><input id="title" type="text" name="title" required><input type="hidden" name="expectedRevision" value="1" cms-form-value-type="number"><button type="submit">{{ copy }}</button></form>';
     (source.blocs as Record<string, unknown>[]).push({
         kind: "composition",
+        root: { accepts: ["div"] },
         id: "atlas-form-page",
         label: "bloc.page.label",
         lightdom: form,
@@ -83,7 +87,7 @@ test("collection Pages admit typed capability forms owned by a composition", () 
     });
     const mutation = {
         ...page,
-        document: { html: "<atlas-form-page></atlas-form-page>" },
+        document: { html: '<div cms-bloc="atlas-form-page"></div>' },
     };
     expect(() => parseCollectionRelease({ ...source, pages: [mutation] })).not.toThrow();
     for (const html of [
@@ -101,6 +105,7 @@ test("collection system Pages admit only the closed authentication bindings", ()
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const authentication = {
         kind: "composition",
+        root: { accepts: ["div"] },
         id: "atlas-authentication",
         label: "bloc.page.label",
         lightdom: `<section cms-query="kernel.auth:methods as methods">
@@ -114,7 +119,7 @@ test("collection system Pages admit only the closed authentication bindings", ()
         uses: [],
         requires: [],
     };
-    const login = { ...page, document: { html: "<atlas-authentication></atlas-authentication>" } };
+    const login = { ...page, document: { html: '<div cms-bloc="atlas-authentication"></div>' } };
     expect(() =>
         parseCollectionRelease({ ...source, blocs: [...source.blocs, authentication], pages: [login] }),
     ).not.toThrow();
@@ -158,16 +163,16 @@ test("collection Pages use native links with statically identifiable paths", () 
         "page.private.name": "Private",
     });
     const html =
-        '<atlas-panel><a slot="body" href="/admin/details?id={{ page.id | urlencode }}">{{ copy }}</a></atlas-panel>';
+        '<div cms-bloc=\"atlas-panel\"><a slot="body" href="/admin/details?id={{ page.id | urlencode }}">{{ copy }}</a></div>';
     const details = { ...page, id: "details", defaultPath: "/admin/details", name: "page.details.name" };
     expect(() =>
         parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }, details] }),
     ).not.toThrow();
     for (const invalidHtml of [
-        '<atlas-panel><a slot="body" href="/{{ page.path }}">{{ copy }}</a></atlas-panel>',
-        '<atlas-panel><a slot="body" href="/admin/pagez">{{ copy }}</a></atlas-panel>',
-        '<atlas-panel><a slot="body" data-cms-page-ref="details">{{ copy }}</a></atlas-panel>',
-        '<atlas-panel><div slot="body" href="/admin/details">{{ copy }}</div></atlas-panel>',
+        '<div cms-bloc=\"atlas-panel\"><a slot="body" href="/{{ page.path }}">{{ copy }}</a></div>',
+        '<div cms-bloc=\"atlas-panel\"><a slot="body" href="/admin/pagez">{{ copy }}</a></div>',
+        '<div cms-bloc=\"atlas-panel\"><a slot="body" data-cms-page-ref="details">{{ copy }}</a></div>',
+        '<div cms-bloc=\"atlas-panel\"><div slot="body" href="/admin/details">{{ copy }}</div></div>',
     ]) {
         expect(() =>
             parseCollectionRelease({ ...source, pages: [{ ...page, document: { html: invalidHtml } }] }),
@@ -201,8 +206,8 @@ test("collection Pages use the closed content grammar", () => {
     });
     const details = { ...page, id: "details", defaultPath: "/admin/details", name: "page.details.name" };
     const invalidDocuments = [
-        '<atlas-panel><p slot="body"><span slot="ghost">{{ copy }}</span></p></atlas-panel>',
-        '<atlas-panel><a slot="body" data-cms-page-ref="details"></a></atlas-panel>',
+        '<div cms-bloc=\"atlas-panel\"><p slot="body"><span slot="ghost">{{ copy }}</span></p></div>',
+        '<div cms-bloc=\"atlas-panel\"><a slot="body" data-cms-page-ref="details"></a></div>',
     ];
     for (const html of invalidDocuments) {
         expect(() =>
@@ -218,7 +223,7 @@ test("collection Pages reject executable or unbounded markup", () => {
         '<a href="https://example.com">Leave</a>',
         '<div style="color:red">Inline style</div>',
         '<div onclick="run()">Handler</div>',
-        "<atlas-unknown></atlas-unknown>",
+        '<div cms-bloc="atlas-unknown"></div>',
         '<section cms-mutation="catalog.items:item.list as items"></section>',
         '<section cms-query="catalog.items:item.list"></section>',
     ]) {

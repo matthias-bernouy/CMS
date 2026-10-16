@@ -16,7 +16,6 @@ import {
     type RenderablePage,
     type TBloc,
 } from "@bernouy/cms-content";
-import { compileCollectionComponent } from "./compiledComponent";
 import { createInstalledSnapshotReader } from "./installedSnapshot";
 import { composeCollectionThemes } from "./theme";
 import { projectCollectionTextSource } from "./texts";
@@ -84,16 +83,12 @@ export function withInstalledCollections(
                                     : "",
                                 ownership: { kind: "code-managed" },
                                 uses: bloc.uses,
-                                viewJS:
-                                    bloc.kind === "component"
-                                        ? (bloc.runtime?.viewJS ?? compileCollectionComponent(bloc))
-                                        : "",
+                                viewJS: bloc.kind === "component" ? (bloc.runtime?.viewJS ?? "") : "",
                                 internal: bloc.internal,
-                                ...(bloc.kind === "component" && bloc.nativeElement
-                                    ? { nativeElement: bloc.nativeElement }
-                                    : {}),
+                                root: bloc.root,
+                                ...(bloc.content ? { content: bloc.content } : {}),
                                 ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
-                                ...(bloc.kind === "component" && bloc.lightdom ? { componentHTML: bloc.lightdom } : {}),
+                                ...(bloc.kind === "component" ? { templateHTML: bloc.template } : {}),
                                 ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
                                 slots: bloc.slots,
                                 ...(bloc.kind === "component" && bloc.settings

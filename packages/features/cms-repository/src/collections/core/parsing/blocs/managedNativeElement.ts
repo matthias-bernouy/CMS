@@ -20,7 +20,7 @@ function parseTag(value: unknown, path: string): CollectionManagedNativeElementT
 
 export function parseManagedNativeElement(value: unknown, path: string): CollectionManagedNativeElement {
     const source = record(value, path);
-    keys(source, ["accepts", "attributes"], path);
+    keys(source, ["accepts", "attributes", "defaults"], path);
     const accepts = array(source.accepts, COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS.length, `${path}.accepts`).map(
         (tag, index) => parseTag(tag, `${path}.accepts[${index}]`),
     );
@@ -32,7 +32,24 @@ export function parseManagedNativeElement(value: unknown, path: string): Collect
         source.attributes === undefined
             ? undefined
             : parseAttributeConstraints(source.attributes, `${path}.attributes`);
-    return { accepts, ...(attributes ? { attributes } : {}) };
+    const defaults =
+        source.defaults === undefined
+            ? undefined
+            : Object.fromEntries(
+                  Object.entries(record(source.defaults, `${path}.defaults`)).map(([name, value]) => {
+                      if (!/^[a-z][a-z0-9-]*$/u.test(name)) {
+                          invalid("default attribute name must be safe and lowercase", `${path}.defaults.${name}`);
+                      }
+                      if (typeof value !== "string" || value.length > 4096 || /[\u0000-\u001f\u007f]/u.test(value)) {
+                          invalid(
+                              "default attribute value must be at most 4096 characters without controls",
+                              `${path}.defaults.${name}`,
+                          );
+                      }
+                      return [name, value];
+                  }),
+              );
+    return { accepts, ...(attributes ? { attributes } : {}), ...(defaults ? { defaults } : {}) };
 }
 
 function parseAttributeConstraints(

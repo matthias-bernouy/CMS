@@ -34,42 +34,33 @@ describe("validateBloc — source patterns", () => {
     test("accepts source without customElements.define", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `import { Component } from "@bernouy/cms-content/browser";
-                         export class MyBloc extends Component {}`,
+            viewSource: `export function mount(root) { root.toggleAttribute("ready", true); }`,
         });
         expect(r.errors).toHaveLength(0);
     });
 
-    test("accepts placeholder customElements.define", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            viewSource: `customElements.define("BE5_TAG_TO_BE_REPLACED", X);`,
-        });
-        expect(r.errors).toHaveLength(0);
-    });
-
-    test("accepts a single legitimate customElements.define matching the bloc tag (build-wrapper output)", () => {
+    test("rejects every direct custom element registration", () => {
         const r = validateBloc({
             tag: "my-bloc",
             viewSource: `customElements.define("my-bloc", X);`,
         });
-        expect(r.errors).toHaveLength(0);
+        expect(r.errors).toEqual([expect.stringContaining("is forbidden")]);
     });
 
-    test("rejects duplicate customElements.define on the same bloc tag (author added their own on top of the wrapper)", () => {
+    test("rejects window.customElements registration with flexible spacing", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `customElements.define("my-bloc", X); customElements.define("my-bloc", X);`,
+            viewSource: `window . customElements . define ("other-tag", X);`,
         });
-        expect(r.errors).toEqual([expect.stringContaining("duplicate")]);
+        expect(r.errors).toEqual([expect.stringContaining("BlocBehavior")]);
     });
 
-    test("rejects customElements.define with a different tag than the bloc", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            viewSource: `customElements.define("other-tag", X);`,
-        });
-        expect(r.errors).toEqual([expect.stringContaining(`Bloc: hardcoded \`customElements.define("other-tag"`)]);
+    test.each([
+        [`export function mount(root) { root.attachShadow({ mode: "open" }); }`],
+        [`export function mount(root) { return root.shadowRoot; }`],
+    ])("rejects removed Shadow DOM APIs", (viewSource) => {
+        const result = validateBloc({ tag: "my-bloc", viewSource });
+        expect(result.errors).toEqual([expect.stringContaining("Shadow DOM APIs are forbidden")]);
     });
 });
 
@@ -77,7 +68,7 @@ describe("validateBloc — Location mutations (#6)", () => {
     test("rejects `location.href = …` in viewSource", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `customElements.define("my-bloc", class { go() { location.href = "/x"; } });`,
+            viewSource: `export function mount() { location.href = "/x"; }`,
         });
         expect(r.errors).toEqual([expect.stringContaining("location.href = …")]);
     });
@@ -85,10 +76,10 @@ describe("validateBloc — Location mutations (#6)", () => {
     test("rejects `location.assign(...)` and `location.replace(...)`", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `customElements.define("my-bloc", class {
+            viewSource: `export class Bloc {
                 a() { location.assign("/a"); }
                 b() { location.replace("/b"); }
-            });`,
+            }`,
         });
         expect(r.errors.filter((e) => e.includes("location.assign(…)"))).toHaveLength(1);
         expect(r.errors.filter((e) => e.includes("location.replace(…)"))).toHaveLength(1);
@@ -97,10 +88,10 @@ describe("validateBloc — Location mutations (#6)", () => {
     test("accepts `history.pushState` and `<a href>` patterns", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `customElements.define("my-bloc", class {
+            viewSource: `export class Bloc {
                 go() { history.pushState({}, "", "/x"); }
                 anchor() { return '<a href="/y">y</a>'; }
-            });`,
+            }`,
         });
         expect(r.errors).toHaveLength(0);
     });
@@ -108,9 +99,9 @@ describe("validateBloc — Location mutations (#6)", () => {
     test("does not false-positive on `window.location ==` comparisons", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `customElements.define("my-bloc", class {
+            viewSource: `export class Bloc {
                 check() { return window.location == otherLocation; }
-            });`,
+            }`,
         });
         expect(r.errors).toHaveLength(0);
     });
@@ -127,12 +118,11 @@ describe("validateBloc — graceful degradation", () => {
         expect(r.errors.length).toBeGreaterThan(0);
     });
 
-    test("rejects native roots because collection Blocs require custom-element tags", () => {
+    test("rejects native tag names because collection Blocs require namespaced identifiers", () => {
         const tags = ["a", "article", "aside", "div", "footer", "h1", "header", "main", "nav", "p", "section", "svg"];
         for (const tag of tags) {
-            expect(validateBloc({ tag }).errors).toEqual([expect.stringContaining("custom-element tag")]);
+            expect(validateBloc({ tag }).errors).toEqual([expect.stringContaining("namespaced Bloc identifier")]);
         }
-        expect(validateBloc({ tag: "my-bloc", native: true }).errors[0]).toContain("retired native artifact mode");
     });
 
     test("rejects legacy form-control artifacts now owned by the platform", () => {
@@ -150,7 +140,7 @@ describe("validateBloc — graceful degradation", () => {
             "img",
         ];
         for (const tag of tags) {
-            expect(validateBloc({ tag }).errors[0]).toContain("custom-element tag");
+            expect(validateBloc({ tag }).errors[0]).toContain("namespaced Bloc identifier");
         }
     });
 });

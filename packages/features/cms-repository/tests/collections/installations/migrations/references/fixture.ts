@@ -43,12 +43,13 @@ export function release(version: string, id: string): Record<string, unknown> {
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id,
                 label: "bloc.label",
-                shadowdom: '<div><slot name="content"></slot></div>',
+                template: '<div><slot name="content"></slot></div>',
                 uses: [],
                 requires: [],
-                slots: { content: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
+                slots: { content: { accepts: [{ kind: "native-content", profile: "prose" }] } },
             },
         ],
     };

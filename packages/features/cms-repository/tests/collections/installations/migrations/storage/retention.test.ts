@@ -97,7 +97,7 @@ async function fixtureWithMigration() {
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
     );
-    await repository.insertPage("/demo", "Demo", "<atlas-card></atlas-card>");
+    await repository.insertPage("/demo", "Demo", '<div cms-bloc="atlas-card"></div>');
     return { collections, repository, nextDigest: next.digest, storage: new MemoryCollectionMigrationStorage() };
 }
 
@@ -116,9 +116,10 @@ function release(version: string, id: string): Record<string, unknown> {
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id,
                 label: "bloc.label",
-                shadowdom: "<div></div>",
+                template: "<div></div>",
                 uses: [],
                 requires: [],
                 slots: {},

@@ -27,7 +27,7 @@ test("allows exactly one concurrent migration to commit in memory", async () => 
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
     );
-    await repository.insertPage("/demo", "Demo", "<atlas-card></atlas-card>");
+    await repository.insertPage("/demo", "Demo", '<div cms-bloc="atlas-card"></div>');
     const storage = new MemoryCollectionMigrationStorage();
     const service = new CollectionMigrationService(repository, collections, storage);
 
@@ -42,7 +42,7 @@ test("allows exactly one concurrent migration to commit in memory", async () => 
     expect((await collections.snapshot("site")).collections[0]!.digest).toBe(next.digest);
     expect(await repository.getPage("/demo")).toMatchObject({
         revision: 2,
-        content: "<atlas-panel></atlas-panel>",
+        content: '<div cms-bloc="atlas-panel"></div>',
     });
 });
 
@@ -64,7 +64,7 @@ test("cancels a plan that acquires the journal only after another migration comp
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
     );
-    await repository.insertPage("/demo", "Demo", "<atlas-card></atlas-card>");
+    await repository.insertPage("/demo", "Demo", '<div cms-bloc="atlas-card"></div>');
     const storage = new MemoryCollectionMigrationStorage();
     let claimCount = 0;
     let createCount = 0;
@@ -131,7 +131,7 @@ test("drains an in-flight write before planning and migrating its final snapshot
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
     );
-    await repository.insertPage("/demo", "Demo", "<atlas-card></atlas-card>");
+    await repository.insertPage("/demo", "Demo", '<div cms-bloc="atlas-card"></div>');
     const page = (await repository.getPage("/demo"))!;
     let releaseWrite!: () => void;
     let announceWrite!: () => void;
@@ -182,7 +182,7 @@ test("drains an in-flight write before planning and migrating its final snapshot
     expect((await collections.snapshot("site")).collections[0]!.digest).toBe(next.digest);
     expect(await repository.getPage("/demo")).toMatchObject({
         title: "Concurrent edit",
-        content: "<atlas-panel></atlas-panel>",
+        content: '<div cms-bloc="atlas-panel"></div>',
         revision: 3,
     });
 });
@@ -202,9 +202,10 @@ function release(version: string, blocId: string): Record<string, unknown> {
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id: blocId,
                 label: "bloc.label",
-                shadowdom: "<div></div>",
+                template: "<div></div>",
                 uses: [],
                 requires: [],
                 slots: {},

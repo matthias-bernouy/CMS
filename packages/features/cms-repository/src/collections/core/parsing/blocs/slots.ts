@@ -3,7 +3,7 @@ import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, ordinal, record, unique } from "../../values";
 
-const RICH_TEXT_PROFILES = ["inline", "prose"] as const;
+const NATIVE_CONTENT_PROFILES = ["inline", "prose"] as const;
 
 export function blocReferences(value: unknown, path: string, limits: Readonly<CollectionLimits>): string[] {
     const result = array(value, limits.maxBlocs, path).map((item, index) => identifier(item, `${path}[${index}]`));
@@ -67,15 +67,15 @@ function parseSlotAccepts(value: unknown, path: string, limits: Readonly<Collect
             keys(source, ["kind"], itemPath);
             return { kind: "plain-text" };
         }
-        if (source.kind === "rich-text") {
+        if (source.kind === "native-content") {
             keys(source, ["kind", "profile"], itemPath);
-            if (!RICH_TEXT_PROFILES.includes(source.profile as (typeof RICH_TEXT_PROFILES)[number])) {
-                invalid(`must be one of ${RICH_TEXT_PROFILES.join(", ")}`, `${itemPath}.profile`);
+            if (!NATIVE_CONTENT_PROFILES.includes(source.profile as (typeof NATIVE_CONTENT_PROFILES)[number])) {
+                invalid(`must be one of ${NATIVE_CONTENT_PROFILES.join(", ")}`, `${itemPath}.profile`);
             }
-            return { kind: "rich-text", profile: source.profile as (typeof RICH_TEXT_PROFILES)[number] };
+            return { kind: "native-content", profile: source.profile as (typeof NATIVE_CONTENT_PROFILES)[number] };
         }
         return invalid(
-            "slot acceptance kind must be component, any-component, plain-text or rich-text",
+            "slot acceptance kind must be component, any-component, plain-text or native-content",
             `${itemPath}.kind`,
         );
     });

@@ -2,10 +2,10 @@ import { invalid } from "./errors";
 import { string } from "./values";
 
 const COLLECTION_NAMESPACE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
-const CUSTOM_ELEMENT_TAG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/u;
+const BLOC_ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/u;
 const LOCAL_THEME_TOKEN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const RESERVED_COLLECTION_ROOTS = ["be5", "cms", "p9r", "site", "w13c"] as const;
-const RESERVED_CUSTOM_ELEMENT_TAGS = new Set([
+const RESERVED_BLOC_IDS = new Set([
     "annotation-xml",
     "color-profile",
     "font-face",
@@ -17,11 +17,11 @@ const RESERVED_CUSTOM_ELEMENT_TAGS = new Set([
 ]);
 
 export function collectionBlocTagIssue(value: unknown): string | null {
-    if (typeof value !== "string" || value.length === 0 || value.length > 96 || !CUSTOM_ELEMENT_TAG.test(value)) {
-        return "must be a valid lowercase custom-element tag";
+    if (typeof value !== "string" || value.length === 0 || value.length > 96 || !BLOC_ID.test(value)) {
+        return "must be a valid lowercase namespaced Bloc identifier";
     }
-    if (RESERVED_CUSTOM_ELEMENT_TAGS.has(value)) {
-        return "uses a platform-reserved custom-element name";
+    if (RESERVED_BLOC_IDS.has(value)) {
+        return "uses a platform-reserved Bloc identifier";
     }
     const reserved = RESERVED_COLLECTION_ROOTS.find((root) => value === root || value.startsWith(`${root}-`));
     return reserved ? `must not use the reserved ${reserved}- namespace` : null;

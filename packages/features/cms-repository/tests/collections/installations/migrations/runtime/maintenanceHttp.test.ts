@@ -27,7 +27,7 @@ describe("collection migration maintenance HTTP guard", () => {
             "/login",
             "/.cms/auth/methods",
             "/.cms/public-auth/me",
-            "/.cms/assets/component.js",
+            "/.cms/assets/bloc-runtime.js",
             "/.cms/collections/official/assets/logo",
             "/.cms/blocset",
             "/.cms/style",

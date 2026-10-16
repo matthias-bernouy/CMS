@@ -24,13 +24,8 @@ export function migratePageContent(
     let markupApplied = 0;
     for (const operation of operations) {
         if (operation.kind === "rename-bloc") {
-            for (const element of [...document.querySelectorAll(operation.from)]) {
-                const replacement = document.createElement(operation.to);
-                for (const attribute of [...element.attributes]) {
-                    replacement.setAttribute(attribute.name, attribute.value);
-                }
-                replacement.append(...[...element.childNodes]);
-                element.replaceWith(replacement);
+            for (const element of [...document.querySelectorAll(`[cms-bloc="${operation.from}"]`)]) {
+                element.setAttribute("cms-bloc", operation.to);
                 markupApplied += 1;
             }
             continue;
@@ -41,7 +36,7 @@ export function migratePageContent(
             operation.kind === "remove-setting" ||
             operation.kind === "map-setting-value"
         ) {
-            for (const element of [...document.querySelectorAll(operation.bloc)]) {
+            for (const element of [...document.querySelectorAll(`[cms-bloc="${operation.bloc}"]`)]) {
                 markupApplied += migrateSetting(element, operation);
             }
             continue;

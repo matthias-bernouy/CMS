@@ -16,6 +16,7 @@ function release(collectionId: string, version = "1.0.0") {
         blocs: [
             {
                 kind: "composition",
+                root: { accepts: ["div"] },
                 id: `${collectionId}-block`,
                 label: "bloc.label",
                 lightdom: "<p>{{ copy }}</p>",
@@ -34,7 +35,7 @@ test("installs an exact dependency graph atomically in any request order", async
         exports: { blocs: ["foundation-block"], themeTokens: [] },
     };
     const consumer = release("consumer");
-    consumer.blocs[0]!.lightdom = "<foundation-block></foundation-block>";
+    consumer.blocs[0]!.lightdom = '<div cms-bloc="foundation-block"></div>';
     consumer.blocs[0]!.uses = ["foundation-block"];
     Object.assign(consumer, {
         dependencies: [

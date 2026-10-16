@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { expect, test } from "bun:test";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
-import { componentRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
+import { blocRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
 import { collectionBlocsetCacheKey, resolvePageAssets } from "@bernouy/cms-content/rendering";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
@@ -56,7 +56,7 @@ test("resolves collection asset expressions inside immutable Bloc JavaScript", a
 
 function runtimeWith(content: ContentReader, collectionAssets: Parameters<typeof resolveInstalledCollectionAssets>[1]) {
     const cache = new InMemoryCache();
-    cache.set(componentRuntimeCacheKey("/.cms/assets/component.js"), compress("component", "text/javascript"));
+    cache.set(blocRuntimeCacheKey("/.cms/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
     return { basePath: "", cmsPathPrefix: "/.cms", cache, content, collectionAssets };
@@ -64,7 +64,7 @@ function runtimeWith(content: ContentReader, collectionAssets: Parameters<typeof
 
 function repositoryWith(viewJS: string): ContentReader {
     const system = defaultSystem();
-    const page = { path: "/", content: "<site-card></site-card>" } as TPage;
+    const page = { path: "/", content: '<div cms-bloc="site-card"></div>' } as TPage;
     return {
         getRenderableBlocs: async () => [{ id: "site-card", name: "site-card", group: "", description: "" }],
         getBlocViewJS: async () => viewJS,

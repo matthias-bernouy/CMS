@@ -239,14 +239,15 @@ models and validation for CMS-owned installations and site selections.
 
 ## Collection authored bundles
 
-- Keep components and compositions distinct: components have static shadow
-  shells and optional light DOM; composition-only blocs expand into Light DOM
-  without retaining their authoring host. They cannot have settings, styles,
-  behaviour modules or `cms-host`. Bindings never belong in the shadow shell.
-- Reject inline style attributes in all authored markup. `class` is valid only
-  in Shadow DOM, and binding expressions only in Light DOM. Compiled component
-  runtime bundles are hashed with the release and remain executable source
-  trust, not proof that admission has audited behavior.
+- Keep retained Blocs and compositions distinct: retained Blocs may have fixed
+  `template.html`, scoped styles and optional behavior; compositions expand
+  into Light DOM without retaining their authoring host. Compositions cannot
+  have settings, styles or behavior modules.
+- Reject inline style attributes in all authored markup. Structural classes are
+  valid only in fixed templates, while binding expressions live in Light DOM.
+  CSS is parsed and wrapped in a Bloc-owned `@scope`; Shadow DOM selectors and
+  APIs are forbidden. Compiled behavior remains executable source trust, not
+  proof that admission has audited every semantic effect.
 - Configuration/defaults use bounded, nonnullable object schemas with only
   JSON-representable leaves. Keep page-owned initial content separate from a
   bloc's fixed light-DOM assembly.
@@ -261,15 +262,15 @@ models and validation for CMS-owned installations and site selections.
   Optional `visibleWhen` is editor-only and may reference declared boolean or
   finite-option string items. Validate comparisons and reject visibility cycles;
   hiding a control never clears or exempts its stored attribute.
-- Managed native components declare a nonempty unique `nativeElement.accepts`
-  list. They have exactly one unnamed Shadow DOM slot, no named page slots or
-  fixed Light DOM, and one direct accepted native root in default content. The
-  real child tag is authoritative; wrapper settings never duplicate it.
+- Every Bloc declares a nonempty unique `root.accepts` list for the native
+  element carrying `cms-bloc`. A retained wrapper may also declare `content`
+  for exactly one Page-owned native child. Root settings and child native
+  attributes remain separate contracts.
 - Every bloc declares its author-facing label. Optional catalogue categories are
   translation keys and optional nonnegative order values are stable within that
   category; source paths never become catalogue metadata. Slot acceptance is declarative:
-  exact component tags, any component, bounded media kinds, plain text, or the
-  closed inline/prose rich-text profiles. Rich text remains page-owned HTML and
+  exact Bloc IDs, any retained Bloc, plain text, or the closed inline/prose
+  native-content profiles. Rich text remains page-owned HTML and
   never becomes a setting attribute or collection-owned editor document. Verify all local
   uses, exact component accepts, slots and thumbnail references and reject cycles.
   Structural markup validation must use a parser. It is not a renderer,
@@ -310,7 +311,7 @@ models and validation for CMS-owned installations and site selections.
   Text locale values are static strings: parameters, plural forms and braces are
   not part of the collection contract.
 - Treat `collectionId` as the runtime namespace. It is lowercase kebab-case,
-  excludes platform-owned roots, prefixes every custom-element tag and derives
+  excludes platform-owned roots, prefixes every Bloc identifier and derives
   global theme token IDs and CSS variables. Validate derived identities during
   collection admission rather than waiting for installation or compilation.
 - Collection theme categories, tokens and Pages are admitted

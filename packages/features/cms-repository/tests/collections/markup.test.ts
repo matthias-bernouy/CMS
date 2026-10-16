@@ -9,142 +9,138 @@ import {
 } from "./fixtures";
 
 describe("collection markup admission", () => {
-    test.each([
-        '<div cms-source="source"></div>',
-        "<div>&#123;&#123; data }}</div>",
-        '<div data-state="#{id}"></div>',
-        "<cms-host></cms-host>",
-    ])("rejects dynamic shadow markup %s", (shadowdom) => {
-        expect(() => check([component({ shadowdom, slots: {} })])).toThrow("shadow shells");
+    test("rejects the removed Shadow DOM contract", () => {
+        expect(() => check([component({ shadowdom: "<div></div>" })])).toThrow('unknown property "shadowdom"');
+        expect(() => check([component({ nativeElement: { accepts: ["div"] } })])).toThrow(
+            'unknown property "nativeElement"',
+        );
     });
 
-    test("requires a component and a single real root for cms-host", () => {
-        const lightdom = '<cms-host><slot name="body" slot="body"></slot></cms-host>';
-        expect(() => check([component({ lightdom })])).not.toThrow();
-        expect(() => check([composition({ lightdom })])).toThrow("requires a component");
-        expect(() => check([component({ lightdom: `${lightdom}<p>extra</p>` })])).toThrow("single root");
-        expect(() => check([component({ lightdom: `<div>${lightdom}</div>` })])).toThrow("single root");
+    test("requires a native root contract on every Bloc", () => {
+        const source = component();
+        delete source.root;
+        expect(() => check([source])).toThrow("root");
+        const composed = composition();
+        delete composed.root;
+        expect(() => check([composed])).toThrow("root");
     });
 
-    test("reads real HTML nodes and decoded attributes, ignoring comments", () => {
-        const shadowdom =
-            '<!-- <slot name="fake"> --><section data-layout="a > b"><slot name="bo&#100;y"></slot></section>';
-        expect(() => check([component({ shadowdom })])).not.toThrow();
+    test("reads real template nodes and decoded slot names", () => {
+        expect(() =>
+            check([
+                component({
+                    template: '<section data-layout="a > b"><slot name="bo&#100;y"></slot></section>',
+                }),
+            ]),
+        ).not.toThrow();
     });
 
-    test("requires all page slots to be named and declared in both directions", () => {
+    test("requires Page slots to be named and declared in both directions", () => {
         expect(() => check([component({ slots: {} })])).toThrow("must declare page slot");
         expect(() => check([component({ slots: { body: {}, missing: {} } })])).toThrow("does not exist");
-        expect(() => check([composition({ lightdom: "<slot></slot>", slots: {} })])).toThrow("must have a name");
+        expect(() => check([composition({ lightdom: "<slot></slot>", slots: {} })])).toThrow("unnamed slot requires");
     });
 
-    test("validates polymorphic managed-native definitions and placed hosts", () => {
-        const action = component({
-            nativeElement: { accepts: ["button", "a"] },
-            shadowdom: "<span><slot></slot></span>",
-            slots: {},
-            defaultContent: '<button type="button">Action</button>',
-        });
-        const page = composition({
-            uses: ["demo-card"],
-            lightdom: '<demo-card><a href="/about">About</a></demo-card>',
-            slots: {},
-        });
-        expect(() => check([action, page])).not.toThrow();
-        expect(() => check([{ ...action, defaultContent: '<a href="#">Link</a>' }, page])).not.toThrow();
-        expect(() => check([{ ...action, shadowdom: '<slot name="content"></slot>' }])).toThrow(
-            "one default shadow slot",
-        );
-        expect(() => check([{ ...action, slots: { content: {} } }])).toThrow("cannot declare page slots");
-        expect(() => check([{ ...action, defaultContent: "<span>Wrong</span>" }])).toThrow("accepted native root");
-        for (const lightdom of [
-            "<demo-card></demo-card>",
-            "<demo-card><span>Wrong</span></demo-card>",
-            '<demo-card><a slot="action">Wrong</a></demo-card>',
-            "<demo-card><button>One</button><a>Two</a></demo-card>",
-        ]) {
-            expect(() => check([action, { ...page, lightdom }])).toThrow("accepted native child");
-        }
-    });
-
-    test("enforces managed-native attribute discriminators in defaults and placements", () => {
-        const checkbox = component({
+    test("validates Page-owned native content separately from the Bloc root", () => {
+        const input = component({
             id: "demo-checkbox",
-            nativeElement: {
+            template: '<label><slot></slot><span part="label"></span></label>',
+            slots: {},
+            root: { accepts: ["div"] },
+            content: {
                 accepts: ["input"],
                 attributes: { type: { required: true, values: ["checkbox"] } },
+                defaults: { type: "checkbox" },
             },
-            shadowdom: "<slot></slot>",
-            slots: {},
             defaultContent: '<input type="checkbox">',
         });
         const page = composition({
             uses: ["demo-checkbox"],
-            lightdom: '<demo-checkbox><input type="checkbox"></demo-checkbox>',
+            lightdom: '<div cms-bloc=\"demo-checkbox\"><input type="checkbox"></div>',
             slots: {},
         });
-        expect(() => check([checkbox, page])).not.toThrow();
-        expect(() => check([{ ...checkbox, defaultContent: "<input>" }])).toThrow("requires native attribute");
+        expect(() => check([input, page])).not.toThrow();
+        expect(() => check([{ ...input, defaultContent: "<input>" }])).toThrow("requires native attribute");
         expect(() =>
-            check([checkbox, { ...page, lightdom: '<demo-checkbox><input type="radio"></demo-checkbox>' }]),
-        ).toThrow("accepted native child");
+            check([input, { ...page, lightdom: '<div cms-bloc=\"demo-checkbox\"><input type="radio"></div>' }]),
+        ).toThrow("invalid native attributes");
+        expect(() => check([input, { ...page, lightdom: '<div cms-bloc=\"demo-checkbox\"></div>' }])).toThrow(
+            "exactly one Page-owned native child",
+        );
     });
 
-    test("resolves slot targets against their actual parent, not unrelated shells", () => {
-        const card = component({
-            shadowdom: '<slot name="heading"></slot>',
-            slots: { heading: { accepts: [{ kind: "rich-text", profile: "inline" }] } },
+    test("validates polymorphic semantic roots without wrapper custom elements", () => {
+        const action = component({
+            root: { accepts: ["button", "a"], defaults: { type: "button" } },
+            content: { accepts: ["span"] },
+            template: '<span part="label"><slot></slot></span>',
+            slots: {},
+            defaultContent: "<span>Action</span>",
         });
         const page = composition({
             uses: ["demo-card"],
-            lightdom: '<demo-card><p slot="heading">Title</p></demo-card>',
+            lightdom: '<a cms-bloc=\"demo-card\" href="/about"><span>About</span></a>',
+            slots: {},
+        });
+        expect(() => check([action, page])).not.toThrow();
+        expect(() =>
+            check([action, { ...page, lightdom: '<a cms-bloc=\"demo-card\"><span>About</span></a>' }]),
+        ).toThrow("declare href");
+        expect(() =>
+            check([
+                action,
+                {
+                    ...page,
+                    lightdom: '<a cms-bloc=\"demo-card\" href="/about"><span>About</span><button>Nested</button></a>',
+                },
+            ]),
+        ).toThrow("cannot nest interactive content");
+    });
+
+    test("resolves slot targets against their direct Bloc parent", () => {
+        const card = component({
+            template: '<slot name="heading"></slot>',
+            slots: { heading: { accepts: [{ kind: "native-content", profile: "inline" }] } },
+        });
+        const page = composition({
+            uses: ["demo-card"],
+            lightdom: '<div cms-bloc=\"demo-card\"><p slot="heading">Title</p></div>',
             slots: {},
         });
         expect(() => check([card, page])).not.toThrow();
         expect(() => check([card, { ...page, lightdom: '<div><p slot="heading">Lost</p></div>' }])).toThrow(
             "direct parent",
         );
-        expect(() => check([card, { ...page, lightdom: '<demo-card><p slot="missing">Lost</p></demo-card>' }])).toThrow(
-            "direct parent",
-        );
+        expect(() =>
+            check([card, { ...page, lightdom: '<div cms-bloc=\"demo-card\"><p slot="missing">Lost</p></div>' }]),
+        ).toThrow("direct parent");
     });
 
-    test("allows forwarded substitution names and validates editable defaults", () => {
-        const card = component({
-            shadowdom: '<slot name="shell"></slot>',
-            lightdom: '<slot name="body" slot="shell"></slot>',
-            defaultContent: '<p slot="body">Initial</p>',
-            slots: { body: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
-        });
-        const page = composition({
-            uses: ["demo-card"],
-            lightdom: '<demo-card><p slot="body">Content</p></demo-card>',
-            slots: {},
-        });
-        expect(() => check([card, page])).not.toThrow();
-        expect(() => check([{ ...card, defaultContent: '<p slot="shell">Wrong interface</p>' }])).toThrow(
-            "direct parent",
-        );
+    test("requires fixed placed Blocs to be known and declared", () => {
+        expect(() =>
+            check([
+                composition({
+                    slots: {},
+                    uses: ["demo-missing"],
+                    lightdom: '<div cms-bloc=\"demo-missing\"></div>',
+                }),
+            ]),
+        ).toThrow("neither local nor imported");
+        expect(() =>
+            check([component(), composition({ slots: {}, uses: [], lightdom: '<div cms-bloc=\"demo-card\"></div>' })]),
+        ).toThrow("declared in uses");
     });
 
-    test("requires fixed placed blocs to be known and declared", () => {
-        expect(() => check([composition({ slots: {}, lightdom: "<demo-missing></demo-missing>" })])).toThrow(
-            "unknown local bloc",
-        );
-        expect(() => check([component(), composition({ slots: {}, lightdom: "<demo-card></demo-card>" })])).toThrow(
-            "declared in uses",
-        );
-    });
-
-    test.each(["shadowdom", "lightdom", "defaultContent"])("excludes script and event handlers in %s", (field) => {
-        const source = component({ shadowdom: "<div></div>", slots: {} });
+    test.each(["template", "lightdom", "defaultContent"])("excludes script and event handlers in %s", (field) => {
+        const source =
+            field === "lightdom" ? composition({ slots: {} }) : component({ template: "<div></div>", slots: {} });
         expect(() => check([{ ...source, [field]: "<script>run()</script>" }])).toThrow("script elements");
-        expect(() => check([{ ...source, [field]: '<button oNclick="run()">Run</button>' }])).toThrow(
+        expect(() => check([{ ...source, [field]: '<button onclick="run()">Run</button>' }])).toThrow(
             "event-handler attributes",
         );
     });
 
-    test("applies the shared stored-document security policy to Bloc light DOM", () => {
+    test("applies the shared stored-document security policy to composition Light DOM", () => {
         for (const lightdom of [
             '<iframe srcdoc="<script>run()</script>"></iframe>',
             '<object data="https://example.invalid/payload"></object>',
@@ -154,151 +150,63 @@ describe("collection markup admission", () => {
         }
     });
 
-    test("places nested blocs in lightdom, outside static shadow shells", () => {
-        const shell = component({ shadowdom: "<demo-page></demo-page>", slots: {}, uses: ["demo-page"] });
-        expect(() => check([shell, composition()])).toThrow("layout and slots only");
-    });
-
-    test("allows internal application components to author interactive shadow structure without copy", () => {
-        const workspace = component({
-            internal: true,
-            shadowdom:
-                '<form><label><slot name="label"></slot><input data-value=""></label><button type="submit"><slot name="submit"></slot></button></form>',
-            lightdom:
-                '<span slot="label">{{ cms.i18n.demo.label }}</span><span slot="submit">{{ cms.i18n.demo.submit }}</span>',
-            slots: {},
-        });
-        expect(() => check([workspace])).not.toThrow();
-        expect(() => check([{ ...workspace, internal: false }])).toThrow("layout and slots only");
+    test("requires nested Blocs in templates to be declared", () => {
+        const nested = component({ template: '<div cms-bloc=\"demo-page\"></div>', slots: {}, uses: [] });
+        expect(() => check([nested, composition()])).toThrow("declared in uses");
     });
 
     test("any-component slots reject compositions", () => {
         expect(() =>
             check([
                 component({ slots: { body: { accepts: [{ kind: "any-component" }] } } }),
+                composition({ id: "demo-nested", slots: {}, uses: [], lightdom: "<div></div>" }),
                 composition({
-                    id: "demo-nested",
-                    lightdom: "<demo-card></demo-card>",
-                    uses: ["demo-card"],
                     slots: {},
-                }),
-                composition({
-                    lightdom: '<demo-card><demo-nested slot="body"></demo-nested></demo-card>',
                     uses: ["demo-card", "demo-nested"],
-                    slots: {},
+                    lightdom: '<div cms-bloc=\"demo-card\"><div cms-bloc=\"demo-nested\" slot="body"></div></div>',
                 }),
             ]),
         ).toThrow("does not accept Bloc demo-nested");
     });
 
-    test("forbids inline style attributes in every markup field", () => {
-        expect(() => check([component({ shadowdom: '<p style="color:red">Text</p>', slots: {} })])).toThrow(
-            "inline style attributes",
-        );
-        expect(() => check([composition({ lightdom: '<p style="color:red">Text</p>', slots: {} })])).toThrow(
-            "inline style attributes",
-        );
-        expect(() =>
-            check([
-                composition({ lightdom: "<p>Text</p>", slots: {}, defaultContent: '<p style="color:red">Text</p>' }),
-            ]),
-        ).toThrow("inline style attributes");
-    });
-
-    test("allows class only in a shadow shell", () => {
-        expect(() => check([component({ shadowdom: '<div class="card"></div>', slots: {} })])).not.toThrow();
+    test("allows structural classes only in component templates", () => {
+        expect(() => check([component({ template: '<div class="card"></div>', slots: {} })])).not.toThrow();
         expect(() => check([composition({ lightdom: '<p class="card">Text</p>', slots: {} })])).toThrow(
-            "class attributes belong only in shadowdom",
+            "class attributes belong only in a Bloc template",
         );
         expect(() =>
-            check([composition({ lightdom: "<p>Text</p>", slots: {}, defaultContent: '<p class="card">Text</p>' })]),
-        ).toThrow("class attributes belong only in shadowdom");
+            check([component({ template: "<div></div>", slots: {}, defaultContent: '<p class="card">Text</p>' })]),
+        ).toThrow("class attributes belong only in a Bloc template");
     });
 
-    test("allows bindings only in lightdom", () => {
-        expect(() => check([composition({ lightdom: "<p>{{ cms.i18n.demo.title }}</p>", slots: {} })])).not.toThrow();
-        expect(() => check([component({ shadowdom: "<div>{{ title }}</div>", slots: {} })])).toThrow("bindings");
-        expect(() =>
-            check([composition({ lightdom: "<p>Text</p>", slots: {}, defaultContent: "<p>{{ title }}</p>" })]),
-        ).toThrow("bindings belong only in lightdom");
-    });
-
-    test("resolves reserved text bindings within the declaring collection", () => {
+    test("resolves collection text bindings in authored Light DOM", () => {
         const source = collectionDocument();
         source.texts = [textDefinition("title", { "en-US": "Title" })];
-        const composition = (source.blocs as Record<string, unknown>[])[1]!;
-
-        composition.lightdom =
-            '<atlas-panel><slot name="main" slot="body"><p>{{ cms.i18n.atlas.title }}</p><p>{{ order.total }}</p></slot></atlas-panel>';
+        const composed = (source.blocs as Record<string, unknown>[])[1]!;
+        composed.lightdom =
+            '<div cms-bloc=\"atlas-panel\"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.title }}</p></slot></div>';
         expect(() => parseCollectionRelease(source)).not.toThrow();
-
-        for (const expression of [
-            "{{ cms.i18n.other.title }}",
-            "{{ cms.i18n.atlas.missing }}",
-            "{{ cms.i18n.atlas.title | innerHTML }}",
-        ]) {
-            composition.lightdom = `<atlas-panel><slot name="main" slot="body"><p>${expression}</p></slot></atlas-panel>`;
-            expect(() => parseCollectionRelease(source)).toThrow();
-        }
-    });
-
-    test("validates collection text references in editable defaults", () => {
-        const source = collectionDocument();
-        source.texts = [textDefinition("title", { "en-US": "Title" })];
-        (source.blocs as Record<string, unknown>[])[0]!.defaultContent =
-            '<p slot="body">{{ cms.i18n.atlas.missing }}</p>';
+        composed.lightdom =
+            '<div cms-bloc=\"atlas-panel\"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.missing }}</p></slot></div>';
         expect(() => parseCollectionRelease(source)).toThrow("unknown collection text missing");
     });
 
-    test("rejects hardcoded user-facing copy in Blocs and Pages", () => {
-        const blocSource = collectionDocument();
-        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = '<p slot="body">Hardcoded copy</p>';
-        expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
+    test("rejects hardcoded user-facing copy in defaults and Pages", () => {
+        const source = collectionDocument({ "page.demo.name": "Demo" });
+        (source.blocs as Record<string, unknown>[])[0]!.defaultContent = '<p slot="body">Hardcoded copy</p>';
+        expect(() => parseCollectionRelease(source)).toThrow("user-facing copy");
 
-        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent =
-            '<p slot="body">{{ cms.i18n.atlas.title }}:</p>';
-        blocSource.texts = [textDefinition("title", { "en-US": "Title" })];
-        expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
-
-        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = '<p slot="body" title="Save"></p>';
-        expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
-
-        const pageSource = collectionDocument({ "page.demo.name": "Demo" });
-        pageSource.pages = [
+        delete (source.blocs as Record<string, unknown>[])[0]!.defaultContent;
+        source.pages = [
             {
                 id: "demo",
                 defaultPath: "/demo",
                 name: "page.demo.name",
                 document: {
-                    html: '<atlas-panel><p slot="body" title="Hardcoded tooltip">Hardcoded copy</p></atlas-panel>',
+                    html: '<div cms-bloc=\"atlas-panel\"><p slot="body">Hardcoded copy</p></div>',
                 },
             },
         ];
-        expect(() => parseCollectionRelease(pageSource)).toThrow('attribute "title" is not allowed');
-
-        (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
-            '<atlas-panel><p slot="body" aria-label="Hardcoded accessible name"></p></atlas-panel>';
-        expect(() => parseCollectionRelease(pageSource)).toThrow('attribute "aria-label" is not allowed');
-
-        (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
-            '<atlas-panel><p slot="body" aria-label="{{ cms.asset.ulvia-official.icon }}"></p></atlas-panel>';
-        expect(() => parseCollectionRelease(pageSource)).toThrow('attribute "aria-label" is not allowed');
-
-        (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
-            '<atlas-panel><p slot="body" title="{{ page.tooltip }}">{{ page.copy }}</p></atlas-panel>';
-        expect(() => parseCollectionRelease(pageSource)).toThrow('attribute "title" is not allowed');
-    });
-
-    test.each([
-        ["text", "<div>Hidden headline</div>"],
-        ["link", '<a href="/products"><slot name="body"></slot></a>'],
-        ["heading", "<h1></h1>"],
-        ["image", '<img src="/image.jpg" alt="Product">'],
-        ["URL attribute", '<div href="/products"></div>'],
-        ["text attribute", '<div aria-label="Product"></div>'],
-    ])("keeps crawlable %s out of shadowdom", (_, shadowdom) => {
-        expect(() => check([component({ shadowdom, slots: shadowdom.includes("<slot") ? { body: {} } : {} })])).toThrow(
-            "shadow shells",
-        );
+        expect(() => parseCollectionRelease(source)).toThrow("user-facing copy");
     });
 });

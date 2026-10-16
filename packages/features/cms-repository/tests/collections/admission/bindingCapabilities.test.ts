@@ -32,6 +32,7 @@ function collection(field: string, versionRange: string): Record<string, unknown
     const source = collectionDocument();
     (source.blocs as Record<string, unknown>[]).push({
         kind: "composition",
+        root: { accepts: ["div"] },
         id: "atlas-catalog",
         label: "bloc.page.label",
         lightdom: `<section cms-query="catalog.items:item.list as items">

@@ -5,9 +5,9 @@ describe("binding Bloc external", () => {
     test("maps the supported form mutation helpers to window.cmsRuntime", async () => {
         const viewSource = [
             `import { mutationFormRequest, MutationFormError } from "@bernouy/cms-content/browser";`,
-            `customElements.define("demo-binding", class extends HTMLElement {`,
-            `  static bindingApi = { mutationFormRequest, MutationFormError };`,
-            `});`,
+            `export function mount(root) {`,
+            `  root.bindingApi = { mutationFormRequest, MutationFormError };`,
+            `}`,
         ].join("\n");
 
         const bloc = await buildCollectionBloc({ tag: "demo-binding", viewSource });

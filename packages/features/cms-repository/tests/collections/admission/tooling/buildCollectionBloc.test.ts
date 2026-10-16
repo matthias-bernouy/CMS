@@ -23,7 +23,7 @@ describe("buildCollectionBloc output", () => {
             tag: "demo-minified",
             viewSource: [
                 "// VIEW_COMMENT_TO_REMOVE",
-                "customElements.define('demo-minified', class extends HTMLElement {});",
+                'export function mount(root) { root.toggleAttribute("mounted", true); }',
             ].join("\n"),
         });
 
@@ -43,11 +43,11 @@ describe("buildCollectionBloc output", () => {
             viewSource: [
                 `import template from "./template.html" with { type: "text" };`,
                 `import css from "./style.css" with { type: "text" };`,
-                `customElements.define("demo-separated", class extends HTMLElement { static template = template; static css = css; });`,
+                `export function mount(root) { root.dataset.template = template; root.dataset.css = css; }`,
             ].join("\n"),
             source: {
                 "template.html": Buffer.from("<p>Separated template</p>").toString("base64"),
-                "style.css": Buffer.from(":host { display: block; }").toString("base64"),
+                "style.css": Buffer.from(":scope { display: block; }").toString("base64"),
             },
         });
 
@@ -60,7 +60,7 @@ describe("buildCollectionBloc output", () => {
             tag: "demo-nested",
             viewSource: [
                 `import { label } from "../label";`,
-                `customElements.define("BE5_TAG_TO_BE_REPLACED", class extends HTMLElement { label = label; });`,
+                `export function mount(root) { root.dataset.label = label; }`,
             ].join("\n"),
             source: { "label.ts": Buffer.from(`export const label = "Nested";`).toString("base64") },
             viewPath: "controller/bloc.ts",
@@ -107,47 +107,37 @@ describe("buildCollectionBloc output", () => {
         ).rejects.toThrow("Bloc imports may only use bundled relative sources or approved host APIs");
     });
 
-    test("exposes the Component base and registers an exported view", async () => {
+    test("registers an exported Light DOM mount function", async () => {
         const artifact = await buildCollectionBloc({
             tag: "demo-component",
-            viewSource: [
-                `import { Component } from "@bernouy/cms-content/browser";`,
-                `export class DemoComponent extends Component { constructor() { super({ template: "<slot></slot>" }); } }`,
-            ].join("\n"),
+            viewSource: `export function mount(root) { root.toggleAttribute("mounted", true); }`,
         });
-        expect(artifact.viewJS).toContain("window.cmsRuntime.Component");
+        expect(artifact.viewJS).toContain("window.cmsRuntime.registerBloc");
         expect(artifact.viewJS).toContain("demo-component");
 
-        const definitions = new Map<string, unknown>();
-        const customElements = {
-            define: (tag: string, constructor: unknown) => definitions.set(tag, constructor),
-            get: (tag: string) => definitions.get(tag),
+        const definitions = new Map<string, { mount?: (root: HTMLElement) => void }>();
+        const cmsRuntime = {
+            BlocBehavior: class {},
+            mountBlocBehavior: () => undefined,
+            registerBloc: (id: string, definition: { mount?: (root: HTMLElement) => void }) =>
+                definitions.set(id, definition),
         };
-        new Function("window", "customElements", "HTMLElement", artifact.viewJS)(
-            { cmsRuntime: { Component: class {} } },
-            customElements,
-            class {},
-        );
-        expect(definitions.get("demo-component")).toBeFunction();
+        new Function("window", artifact.viewJS)({ cmsRuntime });
+        const attributes = new Set<string>();
+        const root = {
+            toggleAttribute: (name: string, force: boolean) => (force ? attributes.add(name) : attributes.delete(name)),
+        } as unknown as HTMLElement;
+        definitions.get("demo-component")?.mount?.(root);
+        expect(attributes.has("mounted")).toBe(true);
     });
 
-    test("keeps a legacy self-registering view from registering twice", async () => {
-        const artifact = await buildCollectionBloc({
-            tag: "legacy-card",
-            viewSource: "customElements.define('legacy-card', class extends HTMLElement {});",
-        });
-        const definitions = new Map<string, unknown>();
-        let registrations = 0;
-        const customElements = {
-            define: (tag: string, constructor: unknown) => {
-                registrations++;
-                definitions.set(tag, constructor);
-            },
-            get: (tag: string) => definitions.get(tag),
-        };
-        new Function("customElements", "HTMLElement", artifact.viewJS)(customElements, class {});
-        expect(registrations).toBe(1);
-        expect(definitions.get("legacy-card")).toBeFunction();
+    test("rejects legacy self-registering custom elements", async () => {
+        await expect(
+            buildCollectionBloc({
+                tag: "legacy-card",
+                viewSource: "customElements.define('legacy-card', class extends HTMLElement {});",
+            }),
+        ).rejects.toThrow("customElements.define");
     });
 
     test("reports Bun build failures and missing outputs", async () => {

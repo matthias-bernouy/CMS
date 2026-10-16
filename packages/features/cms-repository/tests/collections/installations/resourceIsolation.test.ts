@@ -28,6 +28,7 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
         blocs: [
             {
                 kind: "composition",
+                root: { accepts: ["div"] },
                 id: blocId,
                 label: "bloc.welcome.label",
                 lightdom: "<p>{{ copy }}</p>",
@@ -92,7 +93,7 @@ test("installations reject collection Pages claiming the same global path", asyn
                     id: pageId,
                     defaultPath: "/admin/shared",
                     name: `page.${pageId}.name`,
-                    document: { html: `<${collectionId}-card></${collectionId}-card>` },
+                    document: { html: `<div cms-bloc=\"${collectionId}-card\"></div>` },
                 },
             ],
         };
@@ -131,7 +132,7 @@ test("installs only declared public resources from compatible collection depende
                 id: "home",
                 defaultPath: "/",
                 name: "page.home.name",
-                document: { html: "<ulvia-official-button></ulvia-official-button>" },
+                document: { html: '<div cms-bloc="ulvia-official-button"></div>' },
             },
         ],
         assets: [
@@ -157,7 +158,7 @@ test("installs only declared public resources from compatible collection depende
             {
                 ...baseConsumer.blocs[0]!,
                 lightdom:
-                    '<ulvia-official-button></ulvia-official-button><span>{{ cms.i18n.ulvia-official.submit }}</span><img src="{{ cms.asset.ulvia-official.empty.svg }}" alt="{{ cms.i18n.ulvia-official.submit }}">',
+                    '<div cms-bloc=\"ulvia-official-button\"></div><span>{{ cms.i18n.ulvia-official.submit }}</span><img src="{{ cms.asset.ulvia-official.empty.svg }}" alt="{{ cms.i18n.ulvia-official.submit }}">',
                 uses: ["ulvia-official-button"],
             },
         ],
@@ -256,7 +257,7 @@ test("admits imported Blocs under the same Page grammar", async () => {
                 id: "home",
                 defaultPath: "/",
                 name: "page.home.name",
-                document: { html: "<ulvia-official-admin-card></ulvia-official-admin-card>" },
+                document: { html: '<div cms-bloc="ulvia-official-admin-card"></div>' },
             },
         ],
     };
@@ -274,12 +275,13 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id: "foundation-card",
                 label: "bloc.welcome.label",
-                shadowdom: '<section><slot name="body"></slot></section>',
+                template: '<section><slot name="body"></slot></section>',
                 uses: [],
                 requires: [],
-                slots: { body: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
+                slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
             },
         ],
         exports: { blocs: ["foundation-card"], themeTokens: [] },
@@ -307,8 +309,8 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
     });
 
     for (const [html, message] of [
-        ['<foundation-card><p slot="ghost"></p></foundation-card>', "slot target"],
-        ['<foundation-card mystery="value"><p slot="body"></p></foundation-card>', "attribute"],
+        ['<div cms-bloc=\"foundation-card\"><p slot="ghost"></p></div>', "slot target"],
+        ['<div cms-bloc=\"foundation-card\" mystery="value"><p slot="body"></p></div>', "attribute"],
     ] as const) {
         const store = new CollectionStore(new MemoryCollectionStorage());
         const foundation = await store.importRelease(foundationSource);
@@ -320,7 +322,7 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
     const store = new CollectionStore(new MemoryCollectionStorage());
     const foundation = await store.importRelease(foundationSource);
     const valid = await store.importRelease(
-        consumer('<foundation-card><p slot="body"></p></foundation-card>', "1.0.1"),
+        consumer('<div cms-bloc=\"foundation-card\"><p slot="body"></p></div>', "1.0.1"),
     );
     await store.install("site", foundation.digest, 0);
     await expect(store.install("site", valid.digest, 1)).resolves.toMatchObject({ revision: 2 });
@@ -339,7 +341,7 @@ test("rejects imports that the dependency does not export", async () => {
         blocs: [
             {
                 ...baseConsumer.blocs[0]!,
-                lightdom: "<ulvia-official-button></ulvia-official-button>",
+                lightdom: '<div cms-bloc="ulvia-official-button"></div>',
                 uses: ["ulvia-official-button"],
             },
         ],

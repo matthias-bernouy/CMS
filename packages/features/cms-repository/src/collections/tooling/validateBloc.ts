@@ -6,10 +6,8 @@ import { collectionBlocTagIssue } from "cms-repository/collections/core/namespac
  * the full bloc folder. The validator runs whichever checks the inputs support.
  */
 export type ValidateBlocInput = {
-    /** Manifest tag — required, the only mandatory field. */
+    /** Stable collection Bloc identity. */
     tag: string;
-    /** Legacy native marker, retained only so validation can reject old packages explicitly. */
-    native?: boolean;
     /** User's view source (typically `Bloc.ts`). */
     viewSource?: string;
 };
@@ -19,7 +17,7 @@ export type ValidateBlocResult = {
 };
 
 /**
- * Bloc-specific tag check: format-valid custom-element name AND not in a
+ * Bloc-specific identity check: valid namespaced ID and not in a
  * system-reserved prefix. Returns `null` when the tag is acceptable, an
  * error string otherwise.
  */
@@ -36,55 +34,33 @@ export function validateBlocTag(tag: string): string | null {
 export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     const errors: string[] = [];
 
-    const tagError = input.native
-        ? `Collection Bloc "${input.tag}" cannot use the retired native artifact mode.`
-        : validateBlocTag(input.tag);
+    const tagError = validateBlocTag(input.tag);
     if (tagError) {
         errors.push(tagError);
     }
 
     if (input.viewSource) {
-        errors.push(...checkNoHardcodedDefine(input.viewSource, "Bloc", input.tag));
+        errors.push(...checkNoCustomElementRegistration(input.viewSource, "Bloc"));
+        errors.push(...checkNoShadowDom(input.viewSource, "Bloc"));
         errors.push(...checkNoLocationMutation(input.viewSource, "Bloc"));
     }
     return { errors };
 }
 
-// ── #3: Hardcoded `customElements.define` ─────────────────────────────────
-
-/**
- * Bloc registration is owned by the build wrapper, which stamps in the
- * manifest tag via `BE5_TAG_TO_BE_REPLACED`. After build the placeholder
- * is substituted, so the bundle always contains exactly one legitimate
- * `customElements.define("<expected-tag>", …)`. We reject any literal
- * that doesn't match the expected tag (means the author hardcoded a
- * different tag) and any duplicate (means the author added their own
- * call on top of the wrapper's — would crash with "already defined").
- */
-function checkNoHardcodedDefine(source: string, fileLabel: string, expectedTag: string): string[] {
-    const errors: string[] = [];
-    const re = /customElements\.define\s*\(\s*["']([^"']*)["']/g;
-    let match: RegExpExecArray | null;
-    let expectedSeen = 0;
-    while ((match = re.exec(source)) !== null) {
-        const literal = match[1]!;
-        if (literal === "BE5_TAG_TO_BE_REPLACED") {
-            continue;
-        }
-        if (literal === expectedTag) {
-            expectedSeen++;
-            if (expectedSeen > 1) {
-                errors.push(
-                    `${fileLabel}: duplicate \`customElements.define("${literal}", …)\` — the build wrapper already registers the bloc, remove the extra call.`,
-                );
-            }
-            continue;
-        }
-        errors.push(
-            `${fileLabel}: hardcoded \`customElements.define("${literal}", …)\` — bloc registration is handled by the build wrapper, remove this call.`,
-        );
+function checkNoShadowDom(source: string, fileLabel: string): string[] {
+    if (!/\battachShadow\s*\(|\.\s*shadowRoot\b/u.test(source)) {
+        return [];
     }
-    return errors;
+    return [`${fileLabel}: Shadow DOM APIs are forbidden — mount behavior on the native \`cms-bloc\` root.`];
+}
+
+function checkNoCustomElementRegistration(source: string, fileLabel: string): string[] {
+    if (!/(?:\bwindow\s*\.\s*)?\bcustomElements\s*\.\s*define\s*\(/u.test(source)) {
+        return [];
+    }
+    return [
+        `${fileLabel}: \`customElements.define(…)\` is forbidden — export \`mount(root)\` or a \`BlocBehavior\` controller instead.`,
+    ];
 }
 
 // ── #6: Direct `Location` mutation ────────────────────────────────────────

@@ -49,10 +49,11 @@ test("indexes installed Blocs once per collection revision", async () => {
             blocs: [
                 {
                     kind: "component",
+                    root: { accepts: ["div"] },
                     id: "cached-card",
                     label: "bloc.card.label",
                     thumbnail: "card.svg",
-                    shadowdom: "<article></article>",
+                    template: "<article></article>",
                     uses: [],
                     requires: [],
                     slots: {},
