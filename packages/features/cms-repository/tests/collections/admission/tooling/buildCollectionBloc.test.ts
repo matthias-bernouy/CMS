@@ -114,11 +114,14 @@ describe("buildCollectionBloc output", () => {
         });
         expect(artifact.viewJS).toContain("window.cmsRuntime.registerBloc");
         expect(artifact.viewJS).toContain("demo-component");
+        expect(artifact.browserAbi).toBe("v1");
 
         const definitions = new Map<string, { mount?: (root: HTMLElement) => void }>();
         const cmsRuntime = {
-            registerBloc: (id: string, definition: { mount?: (root: HTMLElement) => void }) =>
-                definitions.set(id, definition),
+            registerBloc: (id: string, definition: { mount?: (root: HTMLElement) => void }, abi: string) => {
+                expect(abi).toBe("v1");
+                definitions.set(id, definition);
+            },
         };
         new Function("window", artifact.viewJS)({ cmsRuntime });
         const attributes = new Set<string>();

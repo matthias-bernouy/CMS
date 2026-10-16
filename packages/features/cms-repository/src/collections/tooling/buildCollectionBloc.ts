@@ -5,6 +5,7 @@ import { assertValidJavaScriptArtifact, materializeSourceBundle, resolveSourceEn
 import { blocRuntimeExternalsPlugin, collectionSourceBoundaryPlugin } from "./blocRuntimeExternalsPlugin";
 import { validateBloc } from "./validateBloc";
 import { writeViewRegistrationEntry } from "./viewRegistrationEntry";
+import { CMS_BROWSER_RUNTIME_ABI, type CmsBrowserRuntimeAbi } from "@bernouy/cms-content/runtime-abi";
 
 export interface CollectionBlocBuildInput {
     /** Admitted collection Bloc identity used by the generated Light DOM registration. */
@@ -20,6 +21,7 @@ export interface CollectionBlocBuildInput {
 }
 
 export interface CollectionBlocBuildArtifact {
+    readonly browserAbi: CmsBrowserRuntimeAbi;
     readonly viewJS: string;
 }
 
@@ -40,7 +42,7 @@ export async function buildCollectionBloc(input: CollectionBlocBuildInput): Prom
         if (viewPath && input.viewSource) {
             await Bun.write(viewPath, input.viewSource);
         }
-        const entryPath = await writeViewRegistrationEntry(tempDir, viewPath, input.tag);
+        const entryPath = await writeViewRegistrationEntry(tempDir, viewPath, input.tag, CMS_BROWSER_RUNTIME_ABI);
         const viewJS = await runBuild(
             {
                 entrypoints: [entryPath],
@@ -52,7 +54,7 @@ export async function buildCollectionBloc(input: CollectionBlocBuildInput): Prom
             `view bundle for ${input.tag}`,
         );
         assertValidJavaScriptArtifact(viewJS, `view bundle for ${input.tag}`);
-        return { viewJS };
+        return { browserAbi: CMS_BROWSER_RUNTIME_ABI, viewJS };
     } finally {
         await rm(tempDir, { recursive: true, force: true }).catch(() => null);
     }

@@ -11,4 +11,5 @@ export {
     connectBlocFormControl,
 } from "cms-content/browser/component/BlocFormControl";
 export { CMS_BLOC_ATTRIBUTE, registerBloc } from "cms-content/browser/component/BlocRuntime";
+export { CMS_BROWSER_RUNTIME_ABI, type CmsBrowserRuntimeAbi } from "cms-content/browser/runtimeAbi";
 export * from "cms-content/browser/binding/bindingCore";

@@ -15,8 +15,9 @@ describe("serveBlocRuntime", () => {
 
         expect(current.status).toBe(200);
         expect(immutable.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
-        (window as any).cmsRuntime = {};
+        delete (window as any).cmsRuntime;
         window.eval(await immutable.text());
+        expect((window as any).cmsRuntime.abi).toBe("v1");
         expect(typeof (window as any).cmsRuntime.createBlocScope).toBe("function");
         expect(typeof (window as any).cmsRuntime.registerBloc).toBe("function");
 

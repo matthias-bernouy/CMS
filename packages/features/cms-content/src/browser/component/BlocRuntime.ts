@@ -1,5 +1,6 @@
 import type { BlocCleanup, BlocMount } from "./Bloc";
 import { CMS_BLOC_FORM_CONTROL_READY_EVENT, installBlocFormControlProvider } from "./BlocFormControl";
+import { CMS_BROWSER_RUNTIME_ABI, type CmsBrowserRuntimeAbi } from "cms-content/browser/runtimeAbi";
 
 export const CMS_BLOC_ATTRIBUTE = "cms-bloc";
 
@@ -7,7 +8,16 @@ const definitions = new Map<string, BlocMount | null>();
 const mounted = new WeakMap<HTMLElement, BlocCleanup | null>();
 let observer: MutationObserver | null = null;
 
-export function registerBloc(id: string, definition: { readonly mount?: BlocMount }): void {
+export function registerBloc(
+    id: string,
+    definition: { readonly mount?: BlocMount },
+    requiredAbi: CmsBrowserRuntimeAbi,
+): void {
+    if (requiredAbi !== CMS_BROWSER_RUNTIME_ABI) {
+        throw new Error(
+            `Bloc ${JSON.stringify(id)} requires browser runtime ABI ${String(requiredAbi)}; this runtime provides ${CMS_BROWSER_RUNTIME_ABI}.`,
+        );
+    }
     definitions.set(id, definition.mount ?? null);
     activate(document);
 }

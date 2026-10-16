@@ -1,4 +1,5 @@
 import type { CollectionCapabilityRequirement, CollectionTranslationKey } from "./CollectionRelease";
+import type { CmsBrowserRuntimeAbi } from "@bernouy/cms-content/runtime-abi";
 import type {
     BlocSettingControl,
     BlocSettingItem,
@@ -62,6 +63,8 @@ export interface CollectionComponent extends CollectionBlocBase {
     readonly settings?: CollectionComponentSettings;
     /** Immutable browser artifacts derived and verified when the release is admitted. */
     readonly runtime?: {
+        /** Browser runtime contract required by `viewJS`; omitted for style-only artifacts. */
+        readonly browserAbi?: CmsBrowserRuntimeAbi;
         readonly styleCSS?: string;
         readonly viewJS?: string;
     };

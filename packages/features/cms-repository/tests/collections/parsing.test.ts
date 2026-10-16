@@ -145,10 +145,40 @@ describe("collection release parsing", () => {
     test("admits collection documents beyond the former two MiB transport ceiling", () => {
         const source = collectionDocument();
         (source.blocs as Record<string, unknown>[])[0]!.runtime = {
-            viewJS: `export default ${JSON.stringify("x".repeat(2 * 1024 * 1024))}`,
+            browserAbi: "v1",
+            viewJS: `void ${JSON.stringify("x".repeat(2 * 1024 * 1024))}`,
         };
         expect(parseCollectionRelease(source).blocs[1]).toHaveProperty("runtime");
         expect(parseCollectionReleaseJson(JSON.stringify(source)).blocs[1]).toHaveProperty("runtime");
+    });
+
+    test("requires and validates the browser ABI for compiled Bloc behavior", () => {
+        const source = collectionDocument();
+        const component = (source.blocs as Record<string, unknown>[])[0]!;
+
+        component.runtime = { viewJS: "void 0" };
+        expect(() => parseCollectionRelease(source)).toThrow("must equal v1 when viewJS is present");
+
+        component.runtime = { browserAbi: "v2", viewJS: "void 0" };
+        expect(() => parseCollectionRelease(source)).toThrow("must equal v1 when viewJS is present");
+
+        component.runtime = { browserAbi: "v1" };
+        expect(() => parseCollectionRelease(source)).toThrow("is only allowed with viewJS");
+    });
+
+    test("rechecks compiled Bloc behavior at collection admission", () => {
+        const source = collectionDocument();
+        const component = (source.blocs as Record<string, unknown>[])[0]!;
+
+        for (const viewJS of [
+            "customElements.define('unsafe-element', class extends HTMLElement {})",
+            "document.body.attachShadow({ mode: 'open' })",
+            "window.location.href = '/escaped'",
+            "try {",
+        ]) {
+            component.runtime = { browserAbi: "v1", viewJS };
+            expect(() => parseCollectionRelease(source)).toThrow();
+        }
     });
 
     test("rejects invalid I-JSON before traversing resources", () => {

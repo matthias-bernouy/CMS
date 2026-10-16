@@ -1,8 +1,8 @@
 import { CMS_BINDING_CORE_TAG } from "cms-content/blocs/core/markup/bindings/types";
 import { BindingCore, mutationFormRequest, MutationFormError } from "cms-content/browser";
+import { getCmsBrowserRuntime } from "cms-content/browser/runtimeGlobal";
 
-type CmsRuntimeWindow = Window & { cmsRuntime?: Record<string, unknown> };
-const runtime = ((window as CmsRuntimeWindow).cmsRuntime ??= {});
+const runtime = getCmsBrowserRuntime(window);
 
 Object.assign(runtime, {
     mutationFormRequest,

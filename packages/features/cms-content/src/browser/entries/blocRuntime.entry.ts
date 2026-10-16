@@ -4,11 +4,13 @@ import {
     connectBlocFormControl,
 } from "cms-content/browser/component/BlocFormControl";
 import { registerBloc } from "cms-content/browser/component/BlocRuntime";
+import { getCmsBrowserRuntime } from "cms-content/browser/runtimeGlobal";
+import { CMS_BROWSER_RUNTIME_ABI } from "cms-content/browser/runtimeAbi";
 
-type CmsRuntimeWindow = Window & { cmsRuntime?: Record<string, unknown> };
-const runtime = ((window as CmsRuntimeWindow).cmsRuntime ??= {});
+const runtime = getCmsBrowserRuntime(window);
 
 Object.assign(runtime, {
+    CMS_BROWSER_RUNTIME_ABI,
     CMS_BLOC_FORM_CONTROL_READY_EVENT,
     connectBlocFormControl,
     createBlocScope,

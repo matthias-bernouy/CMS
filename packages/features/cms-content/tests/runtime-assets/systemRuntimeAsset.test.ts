@@ -15,8 +15,9 @@ describe("content browser runtime assets", () => {
         expect(source).toContain("registerBloc");
         expect(source).not.toContain("syncProviderMediaImage");
 
-        (window as any).cmsRuntime = {};
+        delete (window as any).cmsRuntime;
         window.eval(source);
+        expect((window as any).cmsRuntime.abi).toBe("v1");
         expect(typeof (window as any).cmsRuntime.createBlocScope).toBe("function");
         expect(typeof (window as any).cmsRuntime.observeBlocAttributes).toBe("function");
         expect(typeof (window as any).cmsRuntime.registerBloc).toBe("function");

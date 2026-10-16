@@ -87,7 +87,7 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
         template,
         ...(defaultContent ? { defaultContent } : {}),
         ...(css ? { style: css } : {}),
-        ...(compiled ? { runtime: { viewJS: compiled.viewJS } } : {}),
+        ...(compiled ? { runtime: { browserAbi: compiled.browserAbi, viewJS: compiled.viewJS } } : {}),
     };
 }
 

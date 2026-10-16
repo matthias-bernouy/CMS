@@ -8,6 +8,8 @@ import { blocReferences, parseSlots } from "./slots";
 import { parseCollectionBlocTag, parseCollectionNamespace } from "../../namespace";
 import { parseManagedNativeElement } from "./managedNativeElement";
 import { compileBlocStyle } from "../../validation/blocStyleCompilation";
+import { validateCompiledBlocBehavior } from "../../validation/blocBehaviorPolicy";
+import { CMS_BROWSER_RUNTIME_ABI } from "@bernouy/cms-content/runtime-abi";
 
 const common = [
     "kind",
@@ -105,7 +107,7 @@ function parseBloc(
     }
     const runtime = source.runtime === undefined ? undefined : record(source.runtime, `${path}.runtime`);
     if (runtime) {
-        keys(runtime, ["styleCSS", "viewJS"], `${path}.runtime`);
+        keys(runtime, ["browserAbi", "styleCSS", "viewJS"], `${path}.runtime`);
     }
     const providedStyleCSS =
         runtime?.styleCSS === undefined
@@ -118,6 +120,18 @@ function parseBloc(
         runtime?.viewJS === undefined
             ? undefined
             : string(runtime.viewJS, limits.maxDocumentBytes, `${path}.runtime.viewJS`);
+    if (viewJS === undefined && runtime?.browserAbi !== undefined) {
+        invalid("is only allowed with viewJS", `${path}.runtime.browserAbi`);
+    }
+    if (viewJS !== undefined && runtime?.browserAbi !== CMS_BROWSER_RUNTIME_ABI) {
+        invalid(`must equal ${CMS_BROWSER_RUNTIME_ABI} when viewJS is present`, `${path}.runtime.browserAbi`);
+    }
+    if (viewJS !== undefined) {
+        const behaviorErrors = validateCompiledBlocBehavior(viewJS, `${path}.runtime.viewJS`);
+        if (behaviorErrors[0]) {
+            invalid(behaviorErrors.join("; "), `${path}.runtime.viewJS`);
+        }
+    }
     return {
         ...base,
         kind: "component",
@@ -128,6 +142,7 @@ function parseBloc(
             ? {}
             : {
                   runtime: {
+                      ...(viewJS === undefined ? {} : { browserAbi: CMS_BROWSER_RUNTIME_ABI }),
                       ...(styleCSS === undefined ? {} : { styleCSS }),
                       ...(viewJS === undefined ? {} : { viewJS }),
                   },

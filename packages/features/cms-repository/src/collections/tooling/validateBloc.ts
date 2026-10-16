@@ -1,4 +1,5 @@
 import { collectionBlocTagIssue } from "cms-repository/collections/core/namespace";
+import { validateForbiddenBlocBehavior } from "cms-repository/collections/core/validation/blocBehaviorPolicy";
 
 const viewTranspiler = new Bun.Transpiler({ loader: "ts" });
 
@@ -44,10 +45,8 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     }
 
     if (input.viewSource) {
-        errors.push(...checkNoCustomElementRegistration(input.viewSource, "Bloc"));
+        errors.push(...validateForbiddenBlocBehavior(input.viewSource, "Bloc"));
         errors.push(...checkFunctionalMountExport(input.viewSource, "Bloc"));
-        errors.push(...checkNoShadowDom(input.viewSource, "Bloc"));
-        errors.push(...checkNoLocationMutation(input.viewSource, "Bloc"));
         errors.push(...checkStyleVariableWrites(input.viewSource, input.tag, input.uses ?? [], "Bloc"));
     }
     return { errors };
@@ -80,51 +79,6 @@ function checkStyleVariableWrites(source: string, tag: string, uses: readonly st
         if (!owners.some((owner) => variable.startsWith(`--${owner}-`))) {
             errors.push(
                 `${fileLabel}: CSS variable ${variable} must belong to Bloc ${tag} or a Bloc declared in uses.`,
-            );
-        }
-    }
-    return errors;
-}
-
-function checkNoShadowDom(source: string, fileLabel: string): string[] {
-    if (!/\battachShadow\s*\(|\.\s*shadowRoot\b/u.test(source)) {
-        return [];
-    }
-    return [`${fileLabel}: Shadow DOM APIs are forbidden — mount behavior on the native \`cms-bloc\` root.`];
-}
-
-function checkNoCustomElementRegistration(source: string, fileLabel: string): string[] {
-    if (!/(?:\bwindow\s*\.\s*)?\bcustomElements\s*\.\s*define\s*\(/u.test(source)) {
-        return [];
-    }
-    return [`${fileLabel}: \`customElements.define(…)\` is forbidden — export a \`mount(root)\` function instead.`];
-}
-
-// ── #6: Direct `Location` mutation ────────────────────────────────────────
-
-/**
- * Browsers refuse runtime overrides of `location.assign`, `location.replace`
- * and the `location.href` setter. The authoring surface consequently has no way
- * to intercept Blocs that mutate `location.*` directly: such Blocs navigate
- * away from the current workflow.
- *
- * We reject the mutation patterns at push time and steer authors toward
- * `<a href>` (static nav) or `history.pushState` (SPA-style transitions),
- * both of which the site shell can intercept.
- */
-function checkNoLocationMutation(source: string, fileLabel: string): string[] {
-    const PATTERNS: { name: string; re: RegExp }[] = [
-        { name: "location.href = …", re: /\blocation\s*\.\s*href\s*=/g },
-        { name: "window.location.href = …", re: /\bwindow\s*\.\s*location\s*\.\s*href\s*=/g },
-        { name: "location.assign(…)", re: /\blocation\s*\.\s*assign\s*\(/g },
-        { name: "location.replace(…)", re: /\blocation\s*\.\s*replace\s*\(/g },
-        { name: "window.location = …", re: /\bwindow\s*\.\s*location\s*=(?!=)/g },
-    ];
-    const errors: string[] = [];
-    for (const { name, re } of PATTERNS) {
-        if (re.test(source)) {
-            errors.push(
-                `${fileLabel}: \`${name}\` detected — Location mutations bypass the site shell (browser blocks its intercept). Use \`<a href="…">\` for static navigation or \`history.pushState(...)\` for SPA-style transitions.`,
             );
         }
     }

@@ -9,6 +9,7 @@
         ".": "./src/exports/index.ts",
         "./bindings": "./src/exports/bindings.ts",
         "./browser": "./src/exports/runtime/browser.ts",
+        "./runtime-abi": "./src/exports/runtime/abi.ts",
         "./runtime-assets": "./src/exports/runtime/assets.ts",
         "./runtime-assets/build": "./src/exports/runtime/assets-build.ts",
         "./browser/dom": "./src/exports/runtime/browser-dom.ts",
