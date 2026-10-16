@@ -17,7 +17,7 @@ describe("serveBlocRuntime", () => {
         expect(immutable.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
         (window as any).cmsRuntime = {};
         window.eval(await immutable.text());
-        expect(typeof (window as any).cmsRuntime.BlocBehavior).toBe("function");
+        expect(typeof (window as any).cmsRuntime.createBlocScope).toBe("function");
         expect(typeof (window as any).cmsRuntime.registerBloc).toBe("function");
 
         const unknown = await serveBlocRuntime(

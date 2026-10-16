@@ -6,19 +6,19 @@ import { loadBindingCoreRuntimeEntry, loadBlocRuntimeEntry } from "@bernouy/cms-
 import { buildContentBrowserAssets } from "@bernouy/cms-content/runtime-assets/build";
 
 describe("content browser runtime assets", () => {
-    test("exposes the Light DOM Bloc behavior runtime", async () => {
+    test("exposes the functional Light DOM Bloc runtime", async () => {
         const entry = await loadBlocRuntimeEntry();
         const source = new TextDecoder().decode(entry.raw);
 
         expect(entry.contentType).toBe("text/javascript");
-        expect(source).toContain("BlocBehavior");
+        expect(source).toContain("createBlocScope");
         expect(source).toContain("registerBloc");
         expect(source).not.toContain("syncProviderMediaImage");
 
         (window as any).cmsRuntime = {};
         window.eval(source);
-        expect(typeof (window as any).cmsRuntime.BlocBehavior).toBe("function");
-        expect(typeof (window as any).cmsRuntime.mountBlocBehavior).toBe("function");
+        expect(typeof (window as any).cmsRuntime.createBlocScope).toBe("function");
+        expect(typeof (window as any).cmsRuntime.observeBlocAttributes).toBe("function");
         expect(typeof (window as any).cmsRuntime.registerBloc).toBe("function");
         expect((window as any).cmsRuntime.Component).toBeUndefined();
         expect((window as any).cmsRuntime.PROVIDER_IMAGE_WIDTHS).toBeUndefined();

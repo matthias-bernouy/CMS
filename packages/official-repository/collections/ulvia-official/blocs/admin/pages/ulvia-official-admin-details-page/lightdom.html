@@ -41,7 +41,7 @@
                         </div>
                     </div>
                     <div cms-bloc="ulvia-official-stack" gap="lg" cms-case='"success"'>
-                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-general">
+                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-general" role="tabpanel">
                             <form
                                 slot="content"
                                 cms-mutation="ulvia.cms.pages:update as saved"
@@ -111,10 +111,10 @@
                                 </div>
                             </form>
                         </div>
-                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-content">
+                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-content" role="tabpanel">
                             <div cms-bloc="ulvia-official-page-editor" slot="content"></div>
                         </div>
-                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-routes">
+                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-routes" role="tabpanel">
                             <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
                                 <header slot="items">
                                     <h2>{{ cms.i18n.ulvia-official.ui-routes }}</h2>
@@ -170,7 +170,7 @@
                                 </form>
                             </div>
                         </div>
-                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-search">
+                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-search" role="tabpanel">
                             <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
                                 <header slot="items">
                                     <h2>{{ cms.i18n.ulvia-official.ui-search-metadata }}</h2>
@@ -236,7 +236,15 @@
                                 </form>
                             </div>
                         </div>
-                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-publication">
+                        <div
+                            cms-bloc="ulvia-official-surface"
+                            radius="sm"
+                            padding="md"
+                            appearance="outlined"
+                            slot="items"
+                            id="page-publication"
+                            role="tabpanel"
+                        >
                             <div cms-bloc="ulvia-official-cluster" justify="between" align="center" slot="content">
                                 <div slot="items">
                                     <h2>{{ cms.i18n.ulvia-official.ui-publication }}</h2>
@@ -299,7 +307,7 @@
                                 </form>
                             </div>
                         </div>
-                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-danger">
+                        <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-danger" role="tabpanel">
                             <h2 slot="content">{{ cms.i18n.ulvia-official.ui-danger-zone }}</h2>
                             <p slot="content">{{ cms.i18n.ulvia-official.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit }}</p>
                             <form slot="content" cms-mutation="ulvia.cms.pages:delete as deletion" cms-mutation-redirect="/admin/pages">

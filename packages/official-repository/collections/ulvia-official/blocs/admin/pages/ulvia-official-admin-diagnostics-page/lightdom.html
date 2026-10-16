@@ -9,6 +9,7 @@
     <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
         <section
             id="migration-health"
+            role="tabpanel"
             slot="items"
             aria-labelledby="migration-health-title"
             cms-query="ulvia.cms.collections:migration-status as migrations"
@@ -54,6 +55,7 @@
         </section>
         <section
             id="job-health"
+            role="tabpanel"
             slot="items"
             aria-labelledby="job-health-title"
             cms-query="ulvia.cms.jobs:list as jobs"
@@ -85,7 +87,7 @@
                 </div>
             </div>
         </section>
-        <section id="provider-health" slot="items" aria-labelledby="provider-health-title" cms-query="ulvia.cms.providers:list as providers">
+        <section id="provider-health" role="tabpanel" slot="items" aria-labelledby="provider-health-title" cms-query="ulvia.cms.providers:list as providers">
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
                 <h2 slot="content" id="provider-health-title">{{ cms.i18n.ulvia-official.ui-provider-installations }}</h2>
                 <p slot="content" role="status" cms-condition="providers.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-provider-state }}</p>

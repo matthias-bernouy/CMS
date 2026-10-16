@@ -7,7 +7,6 @@ export function renderCatalogue(target: HTMLElement, catalogue: EditorCatalogueI
         const button = document.createElement("button");
         button.type = "button";
         button.dataset.add = item.id;
-        button.setAttribute("aria-label", `Add ${item.name}`);
         const name = document.createElement("strong");
         name.textContent = item.name;
         const details = document.createElement("small");
@@ -15,9 +14,9 @@ export function renderCatalogue(target: HTMLElement, catalogue: EditorCatalogueI
         button.append(name, details);
         target.append(button);
     }
-    if (!target.childElementCount) {
-        target.textContent = "No matching Blocs.";
-    }
+    target.parentElement
+        ?.querySelector<HTMLElement>("[data-catalogue-empty]")
+        ?.toggleAttribute("hidden", target.childElementCount > 0);
 }
 
 export function renderOutline(

@@ -14,9 +14,10 @@ export const blocRuntimeExternalsPlugin: BunPlugin = {
             if (args.path === "@bernouy/cms-content/browser") {
                 return {
                     contents: [
-                        "export const BlocBehavior = window.cmsRuntime.BlocBehavior;",
                         "export const CMS_BLOC_FORM_CONTROL_READY_EVENT = window.cmsRuntime.CMS_BLOC_FORM_CONTROL_READY_EVENT;",
-                        "export const mountBlocBehavior = window.cmsRuntime.mountBlocBehavior;",
+                        "export const connectBlocFormControl = window.cmsRuntime.connectBlocFormControl;",
+                        "export const createBlocScope = window.cmsRuntime.createBlocScope;",
+                        "export const observeBlocAttributes = window.cmsRuntime.observeBlocAttributes;",
                         "export const registerBloc = window.cmsRuntime.registerBloc;",
                         "export const mutationFormRequest = window.cmsRuntime.mutationFormRequest;",
                         "export const MutationFormError = window.cmsRuntime.MutationFormError;",

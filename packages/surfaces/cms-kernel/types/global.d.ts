@@ -1,9 +1,10 @@
 import type {
-    BlocBehavior,
     CMS_BLOC_FORM_CONTROL_READY_EVENT,
-    mountBlocBehavior,
+    connectBlocFormControl,
+    createBlocScope,
     mutationFormRequest,
     MutationFormError,
+    observeBlocAttributes,
     registerBloc,
 } from "@bernouy/cms-content/browser";
 
@@ -14,9 +15,10 @@ import type {
 
 declare global {
     var cmsRuntime: {
-        readonly BlocBehavior: typeof BlocBehavior;
         readonly CMS_BLOC_FORM_CONTROL_READY_EVENT: typeof CMS_BLOC_FORM_CONTROL_READY_EVENT;
-        readonly mountBlocBehavior: typeof mountBlocBehavior;
+        readonly connectBlocFormControl: typeof connectBlocFormControl;
+        readonly createBlocScope: typeof createBlocScope;
+        readonly observeBlocAttributes: typeof observeBlocAttributes;
         readonly registerBloc: typeof registerBloc;
         readonly mutationFormRequest: typeof mutationFormRequest;
         readonly MutationFormError: typeof MutationFormError;

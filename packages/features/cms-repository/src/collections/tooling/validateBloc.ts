@@ -1,5 +1,7 @@
 import { collectionBlocTagIssue } from "cms-repository/collections/core/namespace";
 
+const viewTranspiler = new Bun.Transpiler({ loader: "ts" });
+
 /**
  * Inputs passed to `validateBloc`. The view source is optional —
  * server-side calls may have only the JS source available, CLI calls have
@@ -43,11 +45,24 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
 
     if (input.viewSource) {
         errors.push(...checkNoCustomElementRegistration(input.viewSource, "Bloc"));
+        errors.push(...checkFunctionalMountExport(input.viewSource, "Bloc"));
         errors.push(...checkNoShadowDom(input.viewSource, "Bloc"));
         errors.push(...checkNoLocationMutation(input.viewSource, "Bloc"));
         errors.push(...checkStyleVariableWrites(input.viewSource, input.tag, input.uses ?? [], "Bloc"));
     }
     return { errors };
+}
+
+function checkFunctionalMountExport(source: string, fileLabel: string): string[] {
+    try {
+        const javascript = viewTranspiler.transformSync(source);
+        if (/^export\s+function\s+mount\s*\(/mu.test(javascript)) {
+            return [];
+        }
+    } catch {
+        // The build step reports syntax diagnostics with the artifact path.
+    }
+    return [`${fileLabel}: behavior must export a \`mount(root)\` function.`];
 }
 
 function checkStyleVariableWrites(source: string, tag: string, uses: readonly string[], fileLabel: string): string[] {
@@ -82,9 +97,7 @@ function checkNoCustomElementRegistration(source: string, fileLabel: string): st
     if (!/(?:\bwindow\s*\.\s*)?\bcustomElements\s*\.\s*define\s*\(/u.test(source)) {
         return [];
     }
-    return [
-        `${fileLabel}: \`customElements.define(…)\` is forbidden — export \`mount(root)\` or a \`BlocBehavior\` controller instead.`,
-    ];
+    return [`${fileLabel}: \`customElements.define(…)\` is forbidden — export a \`mount(root)\` function instead.`];
 }
 
 // ── #6: Direct `Location` mutation ────────────────────────────────────────

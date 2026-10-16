@@ -1,4 +1,4 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -335,7 +335,8 @@ class DatePicker {
     }
 }
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private input: HTMLInputElement | null = null;
     private dateUi: HTMLElement | null;
     private datePicker: DatePicker | null = null;
@@ -345,22 +346,22 @@ export class Bloc extends BlocBehavior {
         return ["locale", "today-label", "clear-label", "previous-month-label", "next-month-label"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
-        this.dateUi = this?.querySelector('[part="date-ui"]') ?? null;
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
+        this.dateUi = this.scope.querySelector('[part="date-ui"]') ?? null;
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this.bindInput();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.observer.disconnect();
         this.datePicker?.disconnect();
         this.datePicker = null;
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.datePicker?.sync();
     }
 
@@ -368,7 +369,7 @@ export class Bloc extends BlocBehavior {
         this.observer.disconnect();
         this.datePicker?.disconnect();
         this.datePicker = null;
-        this.input = this.querySelector<HTMLInputElement>("input");
+        this.input = this.scope.querySelector<HTMLInputElement>("input");
         if (this.input) {
             this.observer.observe(this.input, {
                 attributes: true,
@@ -397,9 +398,21 @@ export class Bloc extends BlocBehavior {
             this.datePicker = null;
         }
         this.dateUi?.toggleAttribute("hidden", !customDate);
-        this.toggleAttribute("data-custom-date", customDate);
-        this.toggleAttribute("data-disabled", this.input?.disabled === true);
-        this.toggleAttribute("data-invalid", this.input?.getAttribute("aria-invalid") === "true");
+        this.blocRoot.toggleAttribute("data-custom-date", customDate);
+        this.blocRoot.toggleAttribute("data-disabled", this.input?.disabled === true);
+        this.blocRoot.toggleAttribute("data-invalid", this.input?.getAttribute("aria-invalid") === "true");
         this.datePicker?.sync();
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

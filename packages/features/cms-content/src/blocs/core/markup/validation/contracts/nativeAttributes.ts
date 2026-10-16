@@ -17,6 +17,7 @@ const PLATFORM_NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> 
     footer: new Set(["aria-label"]),
     form: new Set(["autocomplete"]),
     header: new Set(["aria-label"]),
+    iframe: new Set(["sandbox", "title"]),
     input: new Set([
         "type",
         "name",

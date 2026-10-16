@@ -58,9 +58,10 @@ CSS is parsed, checked, and wrapped in `@scope ([cms-bloc="<id>"])` by the
 build. Shadow DOM selectors and global selectors are rejected. Named template
 slots become Light DOM `part` tokens after projection.
 
-Behavior is optional. `bloc.ts` exports `mount(root)` or a `BlocBehavior`
-controller. The build owns registration with `bloc-runtime.js`; collection code
-cannot define custom elements or create Shadow Roots.
+Behavior is optional. When present, `bloc.ts` exports one `mount(root)` function
+and returns cleanup when it installs listeners or observers. The build owns
+registration with `bloc-runtime.js`; collection code cannot define custom
+elements or create Shadow Roots.
 
 ## Page Grammar
 

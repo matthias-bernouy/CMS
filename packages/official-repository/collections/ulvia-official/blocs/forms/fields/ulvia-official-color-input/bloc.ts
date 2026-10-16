@@ -1,4 +1,4 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
 type Rgb = { red: number; green: number; blue: number };
 type ColourMode = "hex" | "rgb" | "hsl" | "hsv" | "cmyk";
@@ -150,7 +150,8 @@ function labelFor(input: HTMLInputElement): string {
     );
 }
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private input: HTMLInputElement | null = null;
     private trigger: HTMLButtonElement;
     private swatch: HTMLElement;
@@ -170,8 +171,8 @@ export class Bloc extends BlocBehavior {
         return ["action-label", "default-mode"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
         this.popover = this.requiredPart("popover");
         this.popover.setAttribute("role", "dialog");
         this.popover.setAttribute("aria-label", "Compose colour");
@@ -202,25 +203,25 @@ export class Bloc extends BlocBehavior {
         indicator.setAttribute("part", "indicator");
         indicator.setAttribute("aria-hidden", "true");
         this.trigger.append(this.swatch, this.value, this.action, indicator);
-        this?.querySelector('[part="trigger-shell"]')?.append(this.trigger);
+        this.scope.querySelector('[part="trigger-shell"]')?.append(this.trigger);
         this.renderModes();
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this.trigger.addEventListener("click", this.toggle);
         this.modeTabs.addEventListener("click", this.changeMode);
         this.editor.addEventListener("input", this.changeValue);
-        this.ownerDocument.addEventListener("pointerdown", this.closeFromOutside);
-        this.ownerDocument.addEventListener("reset", this.handleReset);
+        this.blocRoot.ownerDocument.addEventListener("pointerdown", this.closeFromOutside);
+        this.blocRoot.ownerDocument.addEventListener("reset", this.handleReset);
         this.bindInput();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.trigger.removeEventListener("click", this.toggle);
         this.modeTabs.removeEventListener("click", this.changeMode);
         this.editor.removeEventListener("input", this.changeValue);
-        this.ownerDocument.removeEventListener("pointerdown", this.closeFromOutside);
-        this.ownerDocument.removeEventListener("reset", this.handleReset);
+        this.blocRoot.ownerDocument.removeEventListener("pointerdown", this.closeFromOutside);
+        this.blocRoot.ownerDocument.removeEventListener("reset", this.handleReset);
         this.input?.removeEventListener("input", this.sync);
         this.input?.removeEventListener("focus", this.redirectFocus);
         this.input?.removeEventListener("click", this.openFromSource);
@@ -228,7 +229,7 @@ export class Bloc extends BlocBehavior {
         this.restoreSource();
     }
 
-    attributeChangedCallback(name: string): void {
+    attributeChanged(name: string): void {
         if (name === "default-mode") {
             this.mode = this.requestedMode();
             this.renderModes();
@@ -238,7 +239,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private requiredPart(part: string): HTMLElement {
-        const element = this?.querySelector<HTMLElement>(`[part="${part}"]`);
+        const element = this.scope.querySelector<HTMLElement>(`[part="${part}"]`);
         if (!element) {
             throw new Error(`Missing ${part} part`);
         }
@@ -246,12 +247,12 @@ export class Bloc extends BlocBehavior {
     }
 
     private requestedMode(): ColourMode {
-        const requested = this.getAttribute("default-mode") as ColourMode | null;
+        const requested = this.blocRoot.getAttribute("default-mode") as ColourMode | null;
         return requested && MODES.includes(requested) ? requested : "hex";
     }
 
     private bindInput(): void {
-        this.input = this.querySelector<HTMLInputElement>('input[type="color"]');
+        this.input = this.scope.querySelector<HTMLInputElement>('input[type="color"]');
         if (!this.input) {
             return;
         }
@@ -268,7 +269,7 @@ export class Bloc extends BlocBehavior {
         this.mode = this.requestedMode();
         this.renderModes();
         this.renderEditor();
-        this.toggleAttribute("data-ready", true);
+        this.blocRoot.toggleAttribute("data-ready", true);
         this.sync();
     }
 
@@ -371,18 +372,21 @@ export class Bloc extends BlocBehavior {
             return;
         }
         const colour = normalizeHex(this.input.value) ?? "#000000";
-        this.style.setProperty("--ulvia-official-color-input-selected-color", colour);
-        this.style.setProperty("--ulvia-official-color-input-selected-hue", String(rgbToHsl(hexToRgb(colour))[0]));
+        this.blocRoot.style.setProperty("--ulvia-official-color-input-selected-color", colour);
+        this.blocRoot.style.setProperty(
+            "--ulvia-official-color-input-selected-hue",
+            String(rgbToHsl(hexToRgb(colour))[0]),
+        );
         this.value.textContent = colour.toUpperCase();
         this.preview.setAttribute("aria-label", colour.toUpperCase());
-        this.action.textContent = this.getAttribute("action-label") || "Compose";
+        this.action.textContent = this.blocRoot.getAttribute("action-label") || "Compose";
         this.trigger.disabled = this.input.disabled;
         this.trigger.setAttribute("aria-label", labelFor(this.input));
         this.trigger.setAttribute("aria-expanded", String(!this.popover.hasAttribute("hidden")));
         this.editor
             .querySelectorAll<HTMLInputElement>("input")
             .forEach((input) => (input.disabled = this.input?.disabled === true));
-        this.toggleAttribute("data-disabled", this.input.disabled);
+        this.blocRoot.toggleAttribute("data-disabled", this.input.disabled);
     };
 
     private changeMode = (event: Event): void => {
@@ -442,14 +446,14 @@ export class Bloc extends BlocBehavior {
         const nextOpen = open && !this.input?.disabled;
         this.popover.toggleAttribute("hidden", !nextOpen);
         this.trigger.setAttribute("aria-expanded", String(nextOpen));
-        this.toggleAttribute("data-open", nextOpen);
+        this.blocRoot.toggleAttribute("data-open", nextOpen);
         if (nextOpen) {
             queueMicrotask(() => this.modeTabs.querySelector<HTMLElement>("[aria-selected=true]")?.focus());
         }
     }
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.contains(event.target) && !this?.contains(event.target)) {
+        if (event.target instanceof Node && !this.blocRoot.contains(event.target)) {
             this.setOpen(false);
         }
     };
@@ -483,4 +487,16 @@ export class Bloc extends BlocBehavior {
             ? this.input.removeAttribute("aria-hidden")
             : this.input.setAttribute("aria-hidden", this.sourceAriaHidden);
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, (name) =>
+        controller.attributeChanged(name),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

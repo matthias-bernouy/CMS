@@ -1,6 +1,4 @@
 {
-    "bloc.document-preview.description": "A sandboxed preview of a Page document that never executes document scripts.",
-    "bloc.document-preview.label": "Page document preview",
     "bloc.page-editor.description": "Compose a Page from the Blocs installed on this site",
     "bloc.page-editor.label": "Page editor",
     "bloc.action.description": "A theme-aware native button or navigation link",

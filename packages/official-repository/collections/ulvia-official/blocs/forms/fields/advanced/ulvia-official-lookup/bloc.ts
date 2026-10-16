@@ -1,8 +1,9 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
 let nextListboxId = 0;
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private select: HTMLSelectElement | null = null;
     private input: HTMLInputElement | null;
     private listbox: HTMLElement | null;
@@ -22,28 +23,28 @@ export class Bloc extends BlocBehavior {
         return ["placeholder", "no-results-label", "clear-label", "remove-label"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
         this.input = document.createElement("input");
         this.input.type = "text";
         this.input.autocomplete = "off";
         this.input.setAttribute("part", "input");
         this.input.setAttribute("role", "combobox");
         this.input.setAttribute("aria-autocomplete", "list");
-        this?.querySelector('[part="query"]')?.append(this.input);
-        this.listbox = this?.querySelector('[part="listbox"]') ?? null;
-        this.popover = this?.querySelector('[part="popover"]') ?? null;
-        this.empty = this?.querySelector('[part="empty"]') ?? null;
-        this.chips = this?.querySelector('[part="chips"]') ?? null;
+        this.scope.querySelector('[part="query"]')?.append(this.input);
+        this.listbox = this.scope.querySelector('[part="listbox"]') ?? null;
+        this.popover = this.scope.querySelector('[part="popover"]') ?? null;
+        this.empty = this.scope.querySelector('[part="empty"]') ?? null;
+        this.chips = this.scope.querySelector('[part="chips"]') ?? null;
         this.clearButton = document.createElement("button");
         this.clearButton.type = "button";
         this.clearButton.hidden = true;
         this.clearButton.setAttribute("part", "clear");
-        this?.querySelector('[part="clear-shell"]')?.append(this.clearButton);
+        this.scope.querySelector('[part="clear-shell"]')?.append(this.clearButton);
     }
 
-    override connectedCallback(): void {
-        this.select = this.querySelector<HTMLSelectElement>("select");
+    connect(): void {
+        this.select = this.scope.querySelector<HTMLSelectElement>("select");
         this.input?.addEventListener("input", this.handleInput);
         this.input?.addEventListener("focus", this.open);
         this.input?.addEventListener("keydown", this.handleKeydown);
@@ -53,7 +54,7 @@ export class Bloc extends BlocBehavior {
         this.select?.addEventListener("change", this.syncSelection);
         this.select?.addEventListener("focus", this.redirectFocus);
         document.addEventListener("pointerdown", this.closeFromOutside);
-        this.root = this.ownerDocument;
+        this.root = this.blocRoot.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
         if (this.select) {
             this.hideSourceFromAccessibilityTree();
@@ -63,7 +64,7 @@ export class Bloc extends BlocBehavior {
         this.syncSelection();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.input?.removeEventListener("input", this.handleInput);
         this.input?.removeEventListener("focus", this.open);
         this.input?.removeEventListener("keydown", this.handleKeydown);
@@ -79,7 +80,7 @@ export class Bloc extends BlocBehavior {
         this.restoreSourceAccessibility();
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.prepareAccessibility();
         this.render();
     }
@@ -93,8 +94,8 @@ export class Bloc extends BlocBehavior {
         this.input.setAttribute("aria-expanded", this.input.getAttribute("aria-expanded") || "false");
         this.input.setAttribute("aria-haspopup", "listbox");
         this.input.setAttribute("aria-label", this.accessibleName());
-        this.input.placeholder = this.getAttribute("placeholder") || "Search options";
-        this.clearButton.setAttribute("aria-label", this.getAttribute("clear-label") || "Clear selection");
+        this.input.placeholder = this.blocRoot.getAttribute("placeholder") || "Search options";
+        this.clearButton.setAttribute("aria-label", this.blocRoot.getAttribute("clear-label") || "Clear selection");
         this.listbox.setAttribute("aria-multiselectable", String(this.select?.multiple ?? false));
     }
 
@@ -205,7 +206,7 @@ export class Bloc extends BlocBehavior {
             this.input.value = selected[0]?.text ?? "";
         }
         this.input.disabled = this.select.disabled;
-        this.toggleAttribute("data-disabled", this.select.disabled);
+        this.blocRoot.toggleAttribute("data-disabled", this.select.disabled);
         this.clearButton?.toggleAttribute("hidden", selected.length === 0 || this.select.disabled);
         this.prepareAccessibility();
         this.render();
@@ -239,7 +240,7 @@ export class Bloc extends BlocBehavior {
                 return button;
             }),
         );
-        this.empty.textContent = this.getAttribute("no-results-label") || "No matching options";
+        this.empty.textContent = this.blocRoot.getAttribute("no-results-label") || "No matching options";
         this.empty.toggleAttribute("hidden", this.filteredOptions.length > 0);
         const activeOption = this.listbox.querySelector<HTMLElement>(`#${this.listbox.id}-option-${this.activeIndex}`);
         if (activeOption) {
@@ -259,7 +260,7 @@ export class Bloc extends BlocBehavior {
         const selected = this.select.multiple
             ? Array.from(this.select.selectedOptions).filter((option) => option.value)
             : [];
-        const removeLabel = this.getAttribute("remove-label") || "Remove";
+        const removeLabel = this.blocRoot.getAttribute("remove-label") || "Remove";
         this.chips.replaceChildren(
             ...selected.map((option) => {
                 const chip = document.createElement("span");
@@ -278,7 +279,7 @@ export class Bloc extends BlocBehavior {
             }),
         );
         this.chips.toggleAttribute("hidden", selected.length === 0);
-        this.toggleAttribute("data-multiple", this.select.multiple);
+        this.blocRoot.toggleAttribute("data-multiple", this.select.multiple);
     }
 
     private setOptionSelected(option: HTMLOptionElement, selected: boolean): void {
@@ -299,7 +300,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.contains(event.target) && !this?.contains(event.target)) {
+        if (event.target instanceof Node && !this.blocRoot.contains(event.target)) {
             this.setOpen(false);
         }
     };
@@ -324,7 +325,7 @@ export class Bloc extends BlocBehavior {
         return (
             this.select?.getAttribute("aria-label")?.trim() ||
             this.select?.labels?.item(0)?.textContent?.trim() ||
-            this.getAttribute("placeholder") ||
+            this.blocRoot.getAttribute("placeholder") ||
             "Search options"
         );
     }
@@ -356,4 +357,16 @@ export class Bloc extends BlocBehavior {
         }
         this.sourcePrepared = false;
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

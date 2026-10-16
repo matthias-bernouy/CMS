@@ -1,11 +1,17 @@
+import { createBlocScope, observeBlocAttributes } from "cms-content/browser/component/Bloc";
 import {
-    BlocBehavior,
     CMS_BLOC_FORM_CONTROL_READY_EVENT,
-    mountBlocBehavior,
-} from "cms-content/browser/component/BlocBehavior";
+    connectBlocFormControl,
+} from "cms-content/browser/component/BlocFormControl";
 import { registerBloc } from "cms-content/browser/component/BlocRuntime";
 
 type CmsRuntimeWindow = Window & { cmsRuntime?: Record<string, unknown> };
 const runtime = ((window as CmsRuntimeWindow).cmsRuntime ??= {});
 
-Object.assign(runtime, { BlocBehavior, CMS_BLOC_FORM_CONTROL_READY_EVENT, mountBlocBehavior, registerBloc });
+Object.assign(runtime, {
+    CMS_BLOC_FORM_CONTROL_READY_EVENT,
+    connectBlocFormControl,
+    createBlocScope,
+    observeBlocAttributes,
+    registerBloc,
+});

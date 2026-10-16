@@ -1,4 +1,4 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 
 let nextListboxId = 0;
 
@@ -12,7 +12,8 @@ function labelFor(select: HTMLSelectElement): string {
     );
 }
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private select: HTMLSelectElement | null = null;
     private trigger: HTMLButtonElement;
     private value: HTMLElement;
@@ -23,8 +24,8 @@ export class Bloc extends BlocBehavior {
     private sourceAriaHidden: string | null = null;
     private observer = new MutationObserver(() => this.sync());
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
         this.trigger = document.createElement("button");
         this.trigger.type = "button";
         this.trigger.setAttribute("part", "trigger");
@@ -36,26 +37,26 @@ export class Bloc extends BlocBehavior {
         indicator.setAttribute("part", "indicator");
         indicator.setAttribute("aria-hidden", "true");
         this.trigger.append(this.value, indicator);
-        this?.querySelector('[part="trigger-shell"]')?.append(this.trigger);
-        this.listbox = this?.querySelector('[part="listbox"]') ?? null;
-        this.popover = this?.querySelector('[part="popover"]') ?? null;
+        this.scope.querySelector('[part="trigger-shell"]')?.append(this.trigger);
+        this.listbox = this.scope.querySelector('[part="listbox"]') ?? null;
+        this.popover = this.scope.querySelector('[part="popover"]') ?? null;
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this.trigger.addEventListener("click", this.toggle);
         this.trigger.addEventListener("keydown", this.handleKeydown);
         this.listbox?.addEventListener("click", this.handleOptionClick);
-        this.ownerDocument.addEventListener("pointerdown", this.closeFromOutside);
-        this.ownerDocument.addEventListener("reset", this.handleReset);
+        this.blocRoot.ownerDocument.addEventListener("pointerdown", this.closeFromOutside);
+        this.blocRoot.ownerDocument.addEventListener("reset", this.handleReset);
         this.bindSelect();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.trigger.removeEventListener("click", this.toggle);
         this.trigger.removeEventListener("keydown", this.handleKeydown);
         this.listbox?.removeEventListener("click", this.handleOptionClick);
-        this.ownerDocument.removeEventListener("pointerdown", this.closeFromOutside);
-        this.ownerDocument.removeEventListener("reset", this.handleReset);
+        this.blocRoot.ownerDocument.removeEventListener("pointerdown", this.closeFromOutside);
+        this.blocRoot.ownerDocument.removeEventListener("reset", this.handleReset);
         this.select?.removeEventListener("change", this.sync);
         this.select?.removeEventListener("invalid", this.handleInvalid);
         this.select?.removeEventListener("focus", this.redirectFocus);
@@ -65,7 +66,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private bindSelect(): void {
-        this.select = this.querySelector<HTMLSelectElement>("select:not([multiple])");
+        this.select = this.scope.querySelector<HTMLSelectElement>("select:not([multiple])");
         if (!this.select || !this.listbox) {
             return;
         }
@@ -80,7 +81,7 @@ export class Bloc extends BlocBehavior {
         this.observer.observe(this.select, { attributes: true, childList: true, subtree: true });
         this.listbox.id ||= `ulvia-select-${++nextListboxId}`;
         this.trigger.setAttribute("aria-controls", this.listbox.id);
-        this.toggleAttribute("data-ready", true);
+        this.blocRoot.toggleAttribute("data-ready", true);
         this.sync();
     }
 
@@ -114,8 +115,8 @@ export class Bloc extends BlocBehavior {
             }),
         );
         this.trigger.setAttribute("aria-activedescendant", `${this.listbox.id}-option-${this.activeIndex}`);
-        this.toggleAttribute("data-disabled", this.select.disabled);
-        this.toggleAttribute("data-invalid", invalid);
+        this.blocRoot.toggleAttribute("data-disabled", this.select.disabled);
+        this.blocRoot.toggleAttribute("data-invalid", invalid);
     };
 
     private toggle = (): void => {
@@ -126,7 +127,7 @@ export class Bloc extends BlocBehavior {
         const nextOpen = open && !this.select?.disabled;
         this.popover?.toggleAttribute("hidden", !nextOpen);
         this.trigger.setAttribute("aria-expanded", String(nextOpen));
-        this.toggleAttribute("data-open", nextOpen);
+        this.blocRoot.toggleAttribute("data-open", nextOpen);
     }
 
     private handleKeydown = (event: KeyboardEvent): void => {
@@ -196,7 +197,7 @@ export class Bloc extends BlocBehavior {
 
     private handleInvalid = (event: Event): void => {
         event.preventDefault();
-        this.toggleAttribute("data-invalid", true);
+        this.blocRoot.toggleAttribute("data-invalid", true);
         this.trigger.focus();
     };
 
@@ -208,7 +209,7 @@ export class Bloc extends BlocBehavior {
     };
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.contains(event.target) && !this?.contains(event.target)) {
+        if (event.target instanceof Node && !this.blocRoot.contains(event.target)) {
             this.setOpen(false);
         }
     };
@@ -230,4 +231,12 @@ export class Bloc extends BlocBehavior {
             ? this.select.removeAttribute("aria-hidden")
             : this.select.setAttribute("aria-hidden", this.sourceAriaHidden);
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
+    };
 }

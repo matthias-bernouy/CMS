@@ -7,13 +7,13 @@ import { assertValidJavaScriptArtifact, runBuild } from "../../../../src/collect
 
 describe("buildCollectionBloc output", () => {
     test("rejects an invalid collection Bloc tag at the public build boundary", async () => {
-        await expect(buildCollectionBloc({ tag: "../invalid", viewSource: "export class Bloc {}" })).rejects.toThrow(
-            'Invalid collection Bloc tag "../invalid"',
-        );
+        await expect(
+            buildCollectionBloc({ tag: "../invalid", viewSource: "export function mount() {}" }),
+        ).rejects.toThrow('Invalid collection Bloc tag "../invalid"');
     });
 
     test("rejects native HTML tags before building browser bundles", async () => {
-        await expect(buildCollectionBloc({ tag: "img", viewSource: "export class Bloc {}" })).rejects.toThrow(
+        await expect(buildCollectionBloc({ tag: "img", viewSource: "export function mount() {}" })).rejects.toThrow(
             'Invalid collection Bloc tag "img"',
         );
     });
@@ -73,7 +73,7 @@ describe("buildCollectionBloc output", () => {
         await expect(
             buildCollectionBloc({
                 tag: "demo-card",
-                viewSource: "export class Bloc {}",
+                viewSource: "export function mount() {}",
                 source: { "../outside.js": Buffer.from("unsafe").toString("base64") },
             }),
         ).rejects.toThrow("Invalid collection Bloc source path: ../outside.js");
@@ -89,7 +89,7 @@ describe("buildCollectionBloc output", () => {
                     tag: "demo-outside",
                     viewSource: [
                         `import { marker } from ${JSON.stringify(outsidePath)};`,
-                        "export class Bloc { static marker = marker; }",
+                        "export function mount() { return marker; }",
                     ].join("\n"),
                 }),
             ).rejects.toThrow();
@@ -102,7 +102,7 @@ describe("buildCollectionBloc output", () => {
         await expect(
             buildCollectionBloc({
                 tag: "demo-unsafe-package",
-                viewSource: `import { readFile } from "node:fs/promises"; export class Bloc { static readFile = readFile; }`,
+                viewSource: `import { readFile } from "node:fs/promises"; export function mount() { return readFile; }`,
             }),
         ).rejects.toThrow("Bloc imports may only use bundled relative sources or approved host APIs");
     });
@@ -117,8 +117,6 @@ describe("buildCollectionBloc output", () => {
 
         const definitions = new Map<string, { mount?: (root: HTMLElement) => void }>();
         const cmsRuntime = {
-            BlocBehavior: class {},
-            mountBlocBehavior: () => undefined,
             registerBloc: (id: string, definition: { mount?: (root: HTMLElement) => void }) =>
                 definitions.set(id, definition),
         };
@@ -141,9 +139,12 @@ describe("buildCollectionBloc output", () => {
     });
 
     test("reports Bun build failures and missing outputs", async () => {
-        await expect(buildCollectionBloc({ tag: "demo-card", viewSource: "import './missing.js';" })).rejects.toThrow(
-            /Build failed \(view bundle for demo-card\):/,
-        );
+        await expect(
+            buildCollectionBloc({
+                tag: "demo-card",
+                viewSource: "import './missing.js'; export function mount() {}",
+            }),
+        ).rejects.toThrow(/Build failed \(view bundle for demo-card\):/);
         const build = async () => ({ success: true, outputs: [], logs: [] }) as unknown as Bun.BuildOutput;
         await expect(runBuild({ entrypoints: ["demo-card.js"] }, "view bundle for demo-card", build)).rejects.toThrow(
             /Build failed \(view bundle for demo-card\):\n  \(no details from Bun.build\)/,

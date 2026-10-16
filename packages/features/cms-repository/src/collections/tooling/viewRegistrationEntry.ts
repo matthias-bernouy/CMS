@@ -11,14 +11,13 @@ export async function writeViewRegistrationEntry(
     const entryPath = `${tempDir}/${VIEW_ENTRY_FILE}`;
     const importPath = viewPath ? `./${relative(tempDir, viewPath).replaceAll("\\", "/")}` : null;
     const source = `
-import { mountBlocBehavior, registerBloc } from "@bernouy/cms-content/browser";
+import { registerBloc } from "@bernouy/cms-content/browser";
 ${importPath ? `import * as viewModule from ${JSON.stringify(importPath)};` : "const viewModule = {};"}
 
 const directMount = "mount" in viewModule && typeof viewModule.mount === "function" ? viewModule.mount : undefined;
-const Controller = "Bloc" in viewModule && typeof viewModule.Bloc === "function" ? viewModule.Bloc : undefined;
 registerBloc(${JSON.stringify(id)}, {
     style: ${JSON.stringify(style)},
-    mount: directMount ?? (Controller ? (root) => mountBlocBehavior(root, Controller) : undefined),
+    mount: directMount,
 });
 `;
     await Bun.write(entryPath, source);

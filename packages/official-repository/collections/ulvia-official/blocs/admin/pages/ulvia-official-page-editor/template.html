@@ -1,1 +1,65 @@
-<div data-workspace></div>
+<section part="editor" aria-labelledby="page-editor-title">
+    <header part="header">
+        <div>
+            <p part="eyebrow">{{ cms.i18n.ulvia-official.ui-page-builder }}</p>
+            <h3 id="page-editor-title">{{ cms.i18n.ulvia-official.ui-page-document }}</h3>
+            <p>{{ cms.i18n.ulvia-official.ui-compose-the-page-from-the-blocs-installed-on-this-site }}</p>
+        </div>
+        <button type="button" data-save>{{ cms.i18n.ulvia-official.ui-save-changes }}</button>
+    </header>
+    <p part="notice" data-notice role="status" aria-live="polite"></p>
+    <div part="workspace">
+        <aside part="panel catalogue" aria-labelledby="catalogue-title">
+            <h4 id="catalogue-title">{{ cms.i18n.ulvia-official.ui-add-a-bloc }}</h4>
+            <label part="visually-hidden" for="page-editor-search">
+                {{ cms.i18n.ulvia-official.ui-search-blocs }}
+            </label>
+            <input id="page-editor-search" type="search" data-search placeholder="{{ cms.i18n.ulvia-official.ui-search-blocs }}" autocomplete="off">
+            <div part="catalogue-list" data-catalogue></div>
+            <p data-catalogue-empty hidden>{{ cms.i18n.ulvia-official.ui-no-matching-blocs }}</p>
+        </aside>
+        <main part="panel structure" aria-labelledby="structure-title">
+            <h4 id="structure-title">{{ cms.i18n.ulvia-official.ui-document-structure }}</h4>
+            <div part="empty" data-empty>{{ cms.i18n.ulvia-official.ui-no-elements-yet-add-a-bloc-to-start }}</div>
+            <ol data-outline></ol>
+        </main>
+        <aside part="panel inspector" aria-labelledby="inspector-title">
+            <h4 id="inspector-title">{{ cms.i18n.ulvia-official.ui-selected-element }}</h4>
+            <div data-inspector-empty>{{ cms.i18n.ulvia-official.ui-select-an-element-to-edit-it }}</div>
+            <div data-inspector hidden>
+                <strong data-selected-label></strong>
+                <label>
+                    {{ cms.i18n.ulvia-official.ui-element-content }}
+                    <textarea data-element-content rows="10"></textarea>
+                </label>
+                <div data-settings></div>
+                <div part="element-actions">
+                    <button type="button" data-move="-1">{{ cms.i18n.ulvia-official.ui-move-up }}</button>
+                    <button type="button" data-move="1">{{ cms.i18n.ulvia-official.ui-move-down }}</button>
+                    <button type="button" data-duplicate>{{ cms.i18n.ulvia-official.ui-duplicate }}</button>
+                    <button type="button" data-remove data-danger>{{ cms.i18n.ulvia-official.ui-remove }}</button>
+                </div>
+            </div>
+        </aside>
+    </div>
+    <section part="preview-section" aria-labelledby="preview-title">
+        <h4 id="preview-title">{{ cms.i18n.ulvia-official.ui-document-preview }}</h4>
+        <iframe data-preview title="{{ cms.i18n.ulvia-official.ui-document-preview }}" sandbox=""></iframe>
+    </section>
+    <details part="source">
+        <summary>{{ cms.i18n.ulvia-official.ui-advanced-document-source }}</summary>
+        <label>
+            {{ cms.i18n.ulvia-official.ui-html-document }}
+            <textarea data-source rows="14" maxlength="1048576"></textarea>
+        </label>
+        <button type="button" data-apply-source>{{ cms.i18n.ulvia-official.ui-apply-source-to-draft }}</button>
+    </details>
+    <div hidden aria-hidden="true">
+        <span data-copy="request-failed">{{ cms.i18n.ulvia-official.ui-request-failed }}</span>
+        <span data-copy="page-identity-missing">{{ cms.i18n.ulvia-official.ui-the-page-identity-is-missing }}</span>
+        <span data-copy="page-revision-missing">{{ cms.i18n.ulvia-official.ui-the-page-revision-is-missing }}</span>
+        <span data-copy="page-changed">{{ cms.i18n.ulvia-official.ui-the-page-document-changed-reload-before-saving }}</span>
+        <span data-copy="document-saved">{{ cms.i18n.ulvia-official.ui-document-saved-reloading-the-page }}</span>
+        <span data-copy="unsaved-changes">{{ cms.i18n.ulvia-official.ui-unsaved-document-changes }}</span>
+    </div>
+</section>

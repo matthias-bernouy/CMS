@@ -1,8 +1,9 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
 let nextHintId = 0;
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private source: HTMLInputElement | null = null;
     private input: HTMLInputElement | null;
     private tagsContainer: HTMLElement | null;
@@ -19,28 +20,28 @@ export class Bloc extends BlocBehavior {
         return ["placeholder", "hint", "separator", "serialization", "max-tags", "add-on-blur"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
         this.input = document.createElement("input");
         this.input.type = "text";
         this.input.autocomplete = "off";
         this.input.setAttribute("part", "input");
-        this?.querySelector('[part="draft"]')?.append(this.input);
-        this.tagsContainer = this?.querySelector('[part="tags"]') ?? null;
-        this.hint = this?.querySelector('[part="hint"]') ?? null;
-        this.status = this?.querySelector('[part="status"]') ?? null;
+        this.scope.querySelector('[part="draft"]')?.append(this.input);
+        this.tagsContainer = this.scope.querySelector('[part="tags"]') ?? null;
+        this.hint = this.scope.querySelector('[part="hint"]') ?? null;
+        this.status = this.scope.querySelector('[part="status"]') ?? null;
     }
 
-    override connectedCallback(): void {
-        this.source = this.querySelector<HTMLInputElement>("input");
+    connect(): void {
+        this.source = this.scope.querySelector<HTMLInputElement>("input");
         this.hideSourceFromAccessibilityTree();
         this.tags = this.parseTags(this.source?.value ?? "");
         this.input?.addEventListener("keydown", this.handleKeydown);
         this.input?.addEventListener("blur", this.handleBlur);
         this.source?.addEventListener("focus", this.redirectFocus);
-        this.root = this.ownerDocument;
+        this.root = this.blocRoot.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
-        this?.querySelector('[part="control"]')?.addEventListener("click", this.focusInput);
+        this.scope.querySelector('[part="control"]')?.addEventListener("click", this.focusInput);
         this.tagsContainer?.addEventListener("click", this.removeTag);
         if (this.source) {
             this.observer.observe(this.source, {
@@ -52,19 +53,19 @@ export class Bloc extends BlocBehavior {
         this.render();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.input?.removeEventListener("keydown", this.handleKeydown);
         this.input?.removeEventListener("blur", this.handleBlur);
         this.source?.removeEventListener("focus", this.redirectFocus);
         this.root?.removeEventListener("reset", this.handleReset);
         this.root = null;
-        this?.querySelector('[part="control"]')?.removeEventListener("click", this.focusInput);
+        this.scope.querySelector('[part="control"]')?.removeEventListener("click", this.focusInput);
         this.tagsContainer?.removeEventListener("click", this.removeTag);
         this.observer.disconnect();
         this.restoreSourceAccessibility();
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.syncState();
     }
 
@@ -79,7 +80,7 @@ export class Bloc extends BlocBehavior {
     };
 
     private handleBlur = (): void => {
-        const addOnBlur = this.getAttribute("add-on-blur");
+        const addOnBlur = this.blocRoot.getAttribute("add-on-blur");
         if (addOnBlur === "" || addOnBlur === "true") {
             this.addTag(this.input?.value ?? "");
         }
@@ -103,7 +104,7 @@ export class Bloc extends BlocBehavior {
         if (!value || this.source?.disabled) {
             return;
         }
-        const maximum = Number(this.getAttribute("max-tags") || "20");
+        const maximum = Number(this.blocRoot.getAttribute("max-tags") || "20");
         if (
             this.tags.length >= maximum ||
             this.tags.some((tag) => tag.toLocaleLowerCase() === value.toLocaleLowerCase())
@@ -172,12 +173,12 @@ export class Bloc extends BlocBehavior {
     private syncState(): void {
         if (this.input) {
             this.input.placeholder =
-                this.source?.placeholder || this.getAttribute("placeholder") || "Type and press Enter";
+                this.source?.placeholder || this.blocRoot.getAttribute("placeholder") || "Type and press Enter";
             this.input.disabled = this.source?.disabled === true;
             this.input.setAttribute("aria-label", this.accessibleName());
         }
         if (this.hint) {
-            const hint = this.getAttribute("hint")?.trim() ?? "";
+            const hint = this.blocRoot.getAttribute("hint")?.trim() ?? "";
             this.hint.textContent = hint;
             this.hint.toggleAttribute("hidden", !hint);
             if (hint) {
@@ -194,16 +195,16 @@ export class Bloc extends BlocBehavior {
                 }
             }
         }
-        this.toggleAttribute("data-disabled", this.source?.disabled === true);
+        this.blocRoot.toggleAttribute("data-disabled", this.source?.disabled === true);
         this.render();
     }
 
     private separator(): string {
-        return this.getAttribute("separator")?.charAt(0) || ",";
+        return this.blocRoot.getAttribute("separator")?.charAt(0) || ",";
     }
 
     private parseTags(value: string): string[] {
-        if (this.getAttribute("serialization") === "json") {
+        if (this.blocRoot.getAttribute("serialization") === "json") {
             try {
                 const parsed: unknown = JSON.parse(value);
                 return Array.isArray(parsed)
@@ -223,7 +224,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private serializeTags(): string {
-        return this.getAttribute("serialization") === "json"
+        return this.blocRoot.getAttribute("serialization") === "json"
             ? JSON.stringify(this.tags)
             : this.tags.join(this.separator());
     }
@@ -248,7 +249,7 @@ export class Bloc extends BlocBehavior {
         return (
             this.source?.getAttribute("aria-label")?.trim() ||
             this.source?.labels?.item(0)?.textContent?.trim() ||
-            this.getAttribute("placeholder") ||
+            this.blocRoot.getAttribute("placeholder") ||
             "Add a tag"
         );
     }
@@ -280,4 +281,16 @@ export class Bloc extends BlocBehavior {
         }
         this.sourcePrepared = false;
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

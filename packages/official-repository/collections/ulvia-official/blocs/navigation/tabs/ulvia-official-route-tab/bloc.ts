@@ -1,19 +1,20 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     static get observedAttributes(): string[] {
         return ["active"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this.syncCurrentPage();
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.syncCurrentPage();
     }
 
@@ -22,10 +23,21 @@ export class Bloc extends BlocBehavior {
         if (!link) {
             return;
         }
-        if (this.hasAttribute("active")) {
+        if (this.blocRoot.hasAttribute("active")) {
             link.setAttribute("aria-current", "page");
         } else {
             link.removeAttribute("aria-current");
         }
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+    };
 }

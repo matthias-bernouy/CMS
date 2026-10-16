@@ -44,7 +44,7 @@ describe("validateBloc — source patterns", () => {
             tag: "my-bloc",
             viewSource: `customElements.define("my-bloc", X);`,
         });
-        expect(r.errors).toEqual([expect.stringContaining("is forbidden")]);
+        expect(r.errors).toContainEqual(expect.stringContaining("is forbidden"));
     });
 
     test("rejects window.customElements registration with flexible spacing", () => {
@@ -52,7 +52,22 @@ describe("validateBloc — source patterns", () => {
             tag: "my-bloc",
             viewSource: `window . customElements . define ("other-tag", X);`,
         });
-        expect(r.errors).toEqual([expect.stringContaining("BlocBehavior")]);
+        expect(r.errors).toContainEqual(expect.stringContaining("mount(root)"));
+    });
+
+    test("rejects behavior without a functional mount export", () => {
+        const result = validateBloc({ tag: "my-bloc", viewSource: "export class Bloc {}" });
+        expect(result.errors).toEqual([expect.stringContaining("must export a `mount(root)` function")]);
+    });
+
+    test("rejects asynchronous mount because cleanup is synchronous", () => {
+        const result = validateBloc({ tag: "my-bloc", viewSource: "export async function mount() {}" });
+        expect(result.errors).toEqual([expect.stringContaining("must export a `mount(root)` function")]);
+    });
+
+    test("does not accept a mount signature hidden in comments", () => {
+        const result = validateBloc({ tag: "my-bloc", viewSource: "// export function mount(root) {}" });
+        expect(result.errors).toEqual([expect.stringContaining("must export a `mount(root)` function")]);
     });
 
     test.each([
@@ -76,9 +91,9 @@ describe("validateBloc — Location mutations (#6)", () => {
     test("rejects `location.assign(...)` and `location.replace(...)`", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `export class Bloc {
-                a() { location.assign("/a"); }
-                b() { location.replace("/b"); }
+            viewSource: `export function mount() {
+                location.assign("/a");
+                location.replace("/b");
             }`,
         });
         expect(r.errors.filter((e) => e.includes("location.assign(…)"))).toHaveLength(1);
@@ -88,9 +103,9 @@ describe("validateBloc — Location mutations (#6)", () => {
     test("accepts `history.pushState` and `<a href>` patterns", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `export class Bloc {
-                go() { history.pushState({}, "", "/x"); }
-                anchor() { return '<a href="/y">y</a>'; }
+            viewSource: `export function mount() {
+                history.pushState({}, "", "/x");
+                return '<a href="/y">y</a>';
             }`,
         });
         expect(r.errors).toHaveLength(0);
@@ -99,9 +114,7 @@ describe("validateBloc — Location mutations (#6)", () => {
     test("does not false-positive on `window.location ==` comparisons", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `export class Bloc {
-                check() { return window.location == otherLocation; }
-            }`,
+            viewSource: `export function mount() { return window.location == otherLocation; }`,
         });
         expect(r.errors).toHaveLength(0);
     });

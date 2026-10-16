@@ -1,6 +1,7 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private input: HTMLInputElement | null = null;
     private current: HTMLElement | null;
     private minimum: HTMLElement | null;
@@ -12,20 +13,20 @@ export class Bloc extends BlocBehavior {
         return ["value-prefix", "value-suffix"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
-        this.current = this?.querySelector('[part="current"]') ?? null;
-        this.minimum = this?.querySelector('[part="minimum"]') ?? null;
-        this.maximum = this?.querySelector('[part="maximum"]') ?? null;
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
+        this.current = this.scope.querySelector('[part="current"]') ?? null;
+        this.minimum = this.scope.querySelector('[part="minimum"]') ?? null;
+        this.maximum = this.scope.querySelector('[part="maximum"]') ?? null;
     }
 
-    override connectedCallback(): void {
-        this.root = this.ownerDocument;
+    connect(): void {
+        this.root = this.blocRoot.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
         this.bindInput();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.input?.removeEventListener("input", this.sync);
         this.input?.removeEventListener("change", this.sync);
         this.root?.removeEventListener("reset", this.handleReset);
@@ -33,7 +34,7 @@ export class Bloc extends BlocBehavior {
         this.observer.disconnect();
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.sync();
     }
 
@@ -41,7 +42,7 @@ export class Bloc extends BlocBehavior {
         this.input?.removeEventListener("input", this.sync);
         this.input?.removeEventListener("change", this.sync);
         this.observer.disconnect();
-        this.input = this.querySelector<HTMLInputElement>('input[type="range"]');
+        this.input = this.scope.querySelector<HTMLInputElement>('input[type="range"]');
         this.input?.addEventListener("input", this.sync);
         this.input?.addEventListener("change", this.sync);
         if (this.input) {
@@ -61,8 +62,8 @@ export class Bloc extends BlocBehavior {
         const maximum = Number(this.input.max || "100");
         const value = Number(this.input.value);
         const fraction = maximum === minimum ? 0 : Math.min(1, Math.max(0, (value - minimum) / (maximum - minimum)));
-        this.style.setProperty("--ulvia-official-range-progress", `${fraction * 100}%`);
-        this.style.setProperty(
+        this.blocRoot.style.setProperty("--ulvia-official-range-progress", `${fraction * 100}%`);
+        this.blocRoot.style.setProperty(
             "--ulvia-official-range-thumb-position",
             `calc(${fraction * 100}% + ${0.625 - fraction * 1.25}rem)`,
         );
@@ -75,11 +76,11 @@ export class Bloc extends BlocBehavior {
         if (this.maximum) {
             this.maximum.textContent = this.formatValue(this.input.max || "100");
         }
-        this.toggleAttribute("data-disabled", this.input.disabled);
+        this.blocRoot.toggleAttribute("data-disabled", this.input.disabled);
     };
 
     private formatValue(value: string): string {
-        return `${this.getAttribute("value-prefix") ?? ""}${value}${this.getAttribute("value-suffix") ?? ""}`;
+        return `${this.blocRoot.getAttribute("value-prefix") ?? ""}${value}${this.blocRoot.getAttribute("value-suffix") ?? ""}`;
     }
 
     private handleReset = (event: Event): void => {
@@ -87,5 +88,17 @@ export class Bloc extends BlocBehavior {
             return;
         }
         window.setTimeout(this.sync);
+    };
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
     };
 }

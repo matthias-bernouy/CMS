@@ -1,18 +1,19 @@
-import { BlocBehavior, mutationFormRequest } from "@bernouy/cms-content/browser";
+import { mutationFormRequest, createBlocScope } from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private button: HTMLButtonElement | null = null;
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
-        this.button = this.querySelector(":scope > button");
+    connect(): void {
+        this.button = this.scope.querySelector(":scope > button");
         this.button?.addEventListener("click", this.open);
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.button?.removeEventListener("click", this.open);
         this.button = null;
     }
@@ -24,7 +25,7 @@ export class Bloc extends BlocBehavior {
         this.button.disabled = true;
         this.showError(false);
         try {
-            const url = this.getAttribute("url")?.trim() || (await this.signedUrl());
+            const url = this.blocRoot.getAttribute("url")?.trim() || (await this.signedUrl());
             const target = new URL(url, location.href);
             if (target.origin !== location.origin || !target.pathname.startsWith("/.cms/call/ulvia.cms.files/files/")) {
                 throw new Error();
@@ -41,8 +42,8 @@ export class Bloc extends BlocBehavior {
     };
 
     private async signedUrl(): Promise<string> {
-        const fileId = this.getAttribute("file-id")?.trim();
-        const generation = this.getAttribute("generation")?.trim();
+        const fileId = this.blocRoot.getAttribute("file-id")?.trim();
+        const generation = this.blocRoot.getAttribute("generation")?.trim();
         if (!fileId || !generation) {
             throw new Error();
         }
@@ -58,11 +59,20 @@ export class Bloc extends BlocBehavior {
     }
 
     private showError(visible: boolean): void {
-        const output = this.querySelector<HTMLOutputElement>("output[name='file-link-error']");
+        const output = this.scope.querySelector<HTMLOutputElement>("output[name='file-link-error']");
         if (output) {
             output.textContent = visible
-                ? (this.querySelector<HTMLOutputElement>("output[name='file-link-error-label']")?.textContent ?? "")
+                ? (this.scope.querySelector<HTMLOutputElement>("output[name='file-link-error-label']")?.textContent ??
+                  "")
                 : "";
         }
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
+    };
 }

@@ -1,23 +1,24 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private textarea: HTMLTextAreaElement | null = null;
     private counter: HTMLElement | null;
     private root: Document | null = null;
     private observer = new MutationObserver(() => this.sync());
 
-    constructor(root: HTMLElement) {
-        super(root);
-        this.counter = this?.querySelector('[part="count"]') ?? null;
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
+        this.counter = this.scope.querySelector('[part="count"]') ?? null;
     }
 
-    override connectedCallback(): void {
-        this.root = this.ownerDocument;
+    connect(): void {
+        this.root = this.blocRoot.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
         this.bindTextarea();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.textarea?.removeEventListener("input", this.sync);
         this.root?.removeEventListener("reset", this.handleReset);
         this.root = null;
@@ -27,7 +28,7 @@ export class Bloc extends BlocBehavior {
     private bindTextarea = (): void => {
         this.textarea?.removeEventListener("input", this.sync);
         this.observer.disconnect();
-        this.textarea = this.querySelector<HTMLTextAreaElement>("textarea");
+        this.textarea = this.scope.querySelector<HTMLTextAreaElement>("textarea");
         this.textarea?.addEventListener("input", this.sync);
         if (this.textarea) {
             this.observer.observe(this.textarea, {
@@ -41,7 +42,7 @@ export class Bloc extends BlocBehavior {
     private sync = (): void => {
         const limit = this.textarea?.maxLength ?? -1;
         const length = this.textarea?.value.length ?? 0;
-        this.toggleAttribute("data-count-ready", limit > 0);
+        this.blocRoot.toggleAttribute("data-count-ready", limit > 0);
         if (this.counter) {
             this.counter.textContent = limit > 0 ? `${length} / ${limit}` : "";
         }
@@ -52,5 +53,13 @@ export class Bloc extends BlocBehavior {
             return;
         }
         window.setTimeout(this.sync);
+    };
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
     };
 }

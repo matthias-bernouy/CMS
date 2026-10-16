@@ -1,6 +1,7 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private readonly observer: MutationObserver;
     private syncQueued = false;
 
@@ -8,33 +9,38 @@ export class Bloc extends BlocBehavior {
         return ["label"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
         this.observer = new MutationObserver(this.scheduleSync);
         this.syncLabel();
     }
 
-    override connectedCallback(): void {
-        this.addEventListener("click", this.handleClick);
-        this.addEventListener("keydown", this.handleKeydown);
+    connect(): void {
+        this.blocRoot.addEventListener("click", this.handleClick);
+        this.blocRoot.addEventListener("keydown", this.handleKeydown);
         window.addEventListener("hashchange", this.scheduleSync);
-        this.observer.observe(this.getRootNode(), { childList: true, subtree: true });
+        const scope = this.panelScope();
+        if (scope) {
+            this.observer.observe(scope, { childList: true, subtree: true });
+        }
         this.scheduleSync();
     }
 
-    disconnectedCallback(): void {
-        this.removeEventListener("click", this.handleClick);
-        this.removeEventListener("keydown", this.handleKeydown);
+    disconnect(): void {
+        this.blocRoot.removeEventListener("click", this.handleClick);
+        this.blocRoot.removeEventListener("keydown", this.handleKeydown);
         window.removeEventListener("hashchange", this.scheduleSync);
         this.observer.disconnect();
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.syncLabel();
     }
 
     private syncLabel(): void {
-        this?.querySelector("nav")?.setAttribute("aria-label", this.getAttribute("label") || "Page navigation");
+        this.scope
+            .querySelector("nav")
+            ?.setAttribute("aria-label", this.blocRoot.getAttribute("label") || "Page navigation");
     }
 
     private handleClick = (event: Event): void => {
@@ -76,11 +82,16 @@ export class Bloc extends BlocBehavior {
     };
 
     private syncPanels(): void {
+        const scope = this.panelScope();
+        if (!scope) {
+            return;
+        }
         const localLinks = this.localLinks();
         const entries = localLinks
             .map((link) => {
                 const id = this.targetId(link);
-                return id ? { link, panel: document.getElementById(id) } : null;
+                const panel = id ? scope.querySelector<HTMLElement>(`[role="tabpanel"]#${CSS.escape(id)}`) : null;
+                return panel ? { link, panel } : null;
             })
             .filter(
                 (entry): entry is { link: HTMLAnchorElement; panel: HTMLElement } =>
@@ -128,9 +139,9 @@ export class Bloc extends BlocBehavior {
     }
 
     private localLinks(): HTMLAnchorElement[] {
-        return this.queryBlocRoots<HTMLAnchorElement>("ulvia-official-route-tab").filter(
-            (link) => link.hasAttribute("href") && Boolean(this.targetId(link)),
-        );
+        return this.scope
+            .queryBlocRoots<HTMLAnchorElement>("ulvia-official-route-tab")
+            .filter((link) => link.hasAttribute("href") && Boolean(this.targetId(link)));
     }
 
     private targetId(link: HTMLAnchorElement): string | null {
@@ -140,4 +151,20 @@ export class Bloc extends BlocBehavior {
         }
         return decodeURIComponent(target.hash.slice(1));
     }
+
+    private panelScope(): HTMLElement | null {
+        return this.blocRoot.parentElement?.closest<HTMLElement>("[cms-bloc]") ?? null;
+    }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

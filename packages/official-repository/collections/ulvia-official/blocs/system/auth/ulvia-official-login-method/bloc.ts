@@ -1,26 +1,27 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 
 const LOGIN_PATH = /\/auth\/[a-z][a-z0-9._-]*\/login$/u;
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private button: HTMLButtonElement | null = null;
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this.button = this.blocRoot instanceof HTMLButtonElement ? this.blocRoot : null;
         this.button?.addEventListener("click", this.open);
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.button?.removeEventListener("click", this.open);
         this.button = null;
     }
 
     private open = (): void => {
-        const raw = this.getAttribute("login-url")?.trim();
+        const raw = this.blocRoot.getAttribute("login-url")?.trim();
         if (!raw) {
             return;
         }
@@ -45,4 +46,12 @@ function safeReturnTo(value: string | null): string | null {
     }
     const target = new URL(value, location.origin);
     return target.origin === location.origin ? `${target.pathname}${target.search}${target.hash}` : null;
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
+    };
 }

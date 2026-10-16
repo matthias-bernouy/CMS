@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { createBlocScope, observeBlocAttributes } from "../../../src/browser/component/Bloc";
 import {
-    BlocBehavior,
     CMS_BLOC_FORM_CONTROL_READY_EVENT,
-    mountBlocBehavior,
-} from "../../../src/browser/component/BlocBehavior";
+    connectBlocFormControl,
+} from "../../../src/browser/component/BlocFormControl";
 import { registerBloc } from "../../../src/browser/component/BlocRuntime";
 import { resetDom, waitFor } from "../support/testUtils";
 
@@ -23,17 +23,12 @@ describe("Light DOM Bloc runtime", () => {
             throw new Error("Expected parent Bloc root");
         }
         let result: Readonly<{ target: string | undefined; count: number; child: string | null }> | undefined;
-        class ProbeBehavior extends BlocBehavior {
-            override connectedCallback(): void {
-                result = {
-                    target: this.querySelector<HTMLElement>("[data-target]")?.dataset.target,
-                    count: this.querySelectorAll("[data-target]").length,
-                    child: this.queryBlocRoot("test-child")?.getAttribute("data-target") ?? null,
-                };
-            }
-        }
-
-        mountBlocBehavior(root, ProbeBehavior);
+        const scope = createBlocScope(root);
+        result = {
+            target: scope.querySelector<HTMLElement>("[data-target]")?.dataset.target,
+            count: scope.querySelectorAll("[data-target]").length,
+            child: scope.queryBlocRoot("test-child")?.getAttribute("data-target") ?? null,
+        };
 
         expect(result).toEqual({ target: "owned", count: 1, child: "child-root" });
     });
@@ -45,31 +40,45 @@ describe("Light DOM Bloc runtime", () => {
                 <div part="field-description">Used to sign in</div>
                 <div cms-bloc="test-input"><input type="email"></div>
             </div>`;
+        registerBloc("test-field", {
+            mount: (root) => {
+                const scope = createBlocScope(root);
+                const connectReady = (event: Event): void => {
+                    if (event.target instanceof HTMLElement) {
+                        connectBlocFormControl(event.target, {
+                            label: scope.querySelector<HTMLLabelElement>("label")!,
+                            descriptions: scope.querySelectorAll<HTMLElement>('[part="field-description"]'),
+                        });
+                    }
+                };
+                root.addEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, connectReady);
+                return () => root.removeEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, connectReady);
+            },
+        });
+        registerBloc("test-input", {});
+
         const field = document.querySelector<HTMLElement>('[cms-bloc="test-field"]')!;
         const inputRoot = document.querySelector<HTMLElement>('[cms-bloc="test-input"]')!;
-        class FieldBehavior extends BlocBehavior {
-            override connectedCallback(): void {
-                this.addEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.connectReady);
-            }
-
-            private connectReady = (event: Event): void => {
-                if (event.target instanceof HTMLElement) {
-                    this.connectBlocFormControl(event.target, {
-                        label: this.querySelector<HTMLLabelElement>("label")!,
-                        descriptions: this.querySelectorAll<HTMLElement>('[part="field-description"]'),
-                    });
-                }
-            };
-        }
-        class InputBehavior extends BlocBehavior {}
-
-        mountBlocBehavior(field, FieldBehavior);
-        mountBlocBehavior(inputRoot, InputBehavior);
-
         const input = inputRoot.querySelector<HTMLInputElement>("input")!;
         expect(input.id).toMatch(/^ulvia-form-control-/u);
         expect(field.querySelector("label")?.htmlFor).toBe(input.id);
         expect(input.getAttribute("aria-describedby")).toBe(`${input.id}-field-description`);
+    });
+
+    test("observes only declared attributes and stops after cleanup", async () => {
+        const root = document.createElement("section");
+        const changes: string[] = [];
+        const cleanup = observeBlocAttributes(root, ["open"], (name) => changes.push(name));
+
+        root.setAttribute("ignored", "yes");
+        root.setAttribute("open", "");
+        await Promise.resolve();
+        expect(changes).toEqual(["open"]);
+
+        cleanup();
+        root.removeAttribute("open");
+        await Promise.resolve();
+        expect(changes).toEqual(["open"]);
     });
 
     test("mounts existing roots once and installs one scoped style", () => {

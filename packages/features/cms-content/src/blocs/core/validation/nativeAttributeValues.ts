@@ -198,6 +198,14 @@ export function nativeAttributeSetIssue(tag: string, attributes: Readonly<Record
             return "informative native images require non-empty alternative text";
         }
     }
+    if (normalizedTag === "iframe") {
+        if (normalizedAttributes.sandbox !== "") {
+            return "native iframes require an empty sandbox attribute";
+        }
+        if (!normalizedAttributes.title?.trim()) {
+            return "native iframes require a non-empty title";
+        }
+    }
     if (normalizedTag === "svg") {
         const informative = normalizedAttributes.role === "img";
         if (

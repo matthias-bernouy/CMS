@@ -1,14 +1,14 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 import { callCapability } from "./runtime/client";
 import { EditablePageDocument } from "./runtime/document";
 import type { EditorCatalogue, EditorCatalogueItem, PageUpdate } from "./runtime/model";
 import { EditorStatus } from "./runtime/status";
 import { itemForElement, renderCatalogue, renderOutline, renderSettings } from "./runtime/view";
-import { initializePageEditor } from "./runtime/workspace";
 
 const PAGE_ID_PARAM = "ulvia-official-page-id";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private pageDocument = new EditablePageDocument("");
     private catalogue: EditorCatalogueItem[] = [];
     private selected = -1;
@@ -17,13 +17,12 @@ export class Bloc extends BlocBehavior {
     private loadedContent = "";
     private readonly status: EditorStatus;
 
-    constructor(root: HTMLElement) {
-        super(root);
-        initializePageEditor(this.blocRoot);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
         this.status = new EditorStatus(this.blocRoot);
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this?.addEventListener("click", this.handleClick);
         this?.addEventListener("input", this.handleInput);
         this?.addEventListener("change", this.handleChange);
@@ -35,7 +34,7 @@ export class Bloc extends BlocBehavior {
         await this.status.run(async () => {
             const id = new URL(location.href).searchParams.get(PAGE_ID_PARAM);
             if (!id) {
-                throw new Error("The Page identity is missing.");
+                throw new Error(this.copy("page-identity-missing"));
             }
             const page = await callCapability<PageUpdate>("get", { id });
             this.pageId = page.id;
@@ -47,7 +46,7 @@ export class Bloc extends BlocBehavior {
         await this.loadCatalogue();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this?.removeEventListener("click", this.handleClick);
         this?.removeEventListener("input", this.handleInput);
         this?.removeEventListener("change", this.handleChange);
@@ -128,11 +127,11 @@ export class Bloc extends BlocBehavior {
             const id = this.pageId;
             const revision = this.pageRevision;
             if (!id || !Number.isSafeInteger(revision)) {
-                throw new Error("The Page identity or revision is missing.");
+                throw new Error(this.copy("page-revision-missing"));
             }
             const latest = await callCapability<PageUpdate>("get", { id });
             if (latest.content !== this.loadedContent) {
-                throw new Error("The Page document changed since it was loaded. Reload before saving.");
+                throw new Error(this.copy("page-changed"));
             }
             const updated = await callCapability<PageUpdate>("update", {
                 id,
@@ -141,7 +140,7 @@ export class Bloc extends BlocBehavior {
             });
             this.pageRevision = updated.revision;
             this.loadedContent = updated.content;
-            this.status.notice("Document saved. Reloading the Page…");
+            this.status.notice(this.copy("document-saved"));
             location.reload();
         });
     }
@@ -152,7 +151,7 @@ export class Bloc extends BlocBehavior {
         if (renderInspector) {
             this.render();
         }
-        this.status.notice("Unsaved document changes.");
+        this.status.notice(this.copy("unsaved-changes"));
     }
 
     private render(): void {
@@ -181,10 +180,22 @@ export class Bloc extends BlocBehavior {
     }
 
     private required<T extends Element = HTMLElement>(selector: string): T {
-        const element = this?.querySelector<T>(selector);
+        const element = this.scope.querySelector<T>(selector);
         if (!element) {
             throw new Error(`Missing Page editor element: ${selector}`);
         }
         return element;
     }
+
+    private copy(name: string): string {
+        return this.required<HTMLElement>(`[data-copy="${CSS.escape(name)}"]`).textContent?.trim() ?? "";
+    }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
+    };
 }

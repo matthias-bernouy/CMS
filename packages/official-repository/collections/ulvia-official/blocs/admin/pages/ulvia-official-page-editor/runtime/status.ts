@@ -15,7 +15,9 @@ export class EditorStatus {
             await task();
         } catch (error) {
             const suffix = error instanceof CapabilityError ? ` (${error.code})` : "";
-            this.notice(`${error instanceof Error ? error.message : "Request failed"}${suffix}`, true);
+            const fallback =
+                this.root.querySelector<HTMLElement>('[data-copy="request-failed"]')?.textContent?.trim() ?? "";
+            this.notice(`${error instanceof Error ? error.message : fallback}${suffix}`, true);
         } finally {
             this.setBusy(false);
             this.busy = false;

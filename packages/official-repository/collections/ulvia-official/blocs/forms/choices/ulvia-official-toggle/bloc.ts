@@ -1,15 +1,16 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private input: HTMLInputElement | null = null;
     private observer = new MutationObserver(() => this.sync());
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
-        this.input = this.querySelector<HTMLInputElement>('input[type="checkbox"][role="switch"]');
+    connect(): void {
+        this.input = this.scope.querySelector<HTMLInputElement>('input[type="checkbox"][role="switch"]');
         this.input?.addEventListener("change", this.sync);
         if (this.input) {
             this.observer.observe(this.input, {
@@ -20,14 +21,22 @@ export class Bloc extends BlocBehavior {
         this.sync();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.input?.removeEventListener("change", this.sync);
         this.observer.disconnect();
     }
 
     private sync = (): void => {
-        this.toggleAttribute("data-checked", this.input?.checked === true);
-        this.toggleAttribute("data-disabled", this.input?.disabled === true);
-        this.toggleAttribute("data-invalid", this.input?.getAttribute("aria-invalid") === "true");
+        this.blocRoot.toggleAttribute("data-checked", this.input?.checked === true);
+        this.blocRoot.toggleAttribute("data-disabled", this.input?.disabled === true);
+        this.blocRoot.toggleAttribute("data-invalid", this.input?.getAttribute("aria-invalid") === "true");
+    };
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
     };
 }

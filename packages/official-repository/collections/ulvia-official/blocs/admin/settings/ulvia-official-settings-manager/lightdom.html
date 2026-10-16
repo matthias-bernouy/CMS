@@ -1,6 +1,7 @@
 <div cms-bloc="ulvia-official-stack" gap="lg">
     <section
         id="settings-general"
+        role="tabpanel"
         slot="items"
         cms-query="ulvia.cms.access:overview as settingsAccess"
         cms-query-listen="@page:ulvia-official-settings-mutation/lastSuccess/requestId"
@@ -116,6 +117,7 @@
 
     <section
         id="settings-languages"
+        role="tabpanel"
         slot="items"
         cms-query="ulvia.cms.localization:overview as settingsLocalization"
         cms-query-listen="@page:ulvia-official-settings-mutation/lastSuccess/requestId"

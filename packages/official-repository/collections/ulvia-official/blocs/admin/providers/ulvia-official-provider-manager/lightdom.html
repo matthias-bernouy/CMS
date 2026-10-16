@@ -11,7 +11,7 @@
             </div>
         </div>
         <div cms-bloc="ulvia-official-stack" gap="lg" cms-case='"success"'>
-            <div id="provider-installations" slot="items">
+            <div id="provider-installations" role="tabpanel" slot="items">
                 <header>
                     <h2>{{ cms.i18n.ulvia-official.ui-provider-installations }}</h2>
                     <p>
@@ -159,7 +159,7 @@
                 </div>
             </div>
 
-            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="contract-routing">
+            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="contract-routing" role="tabpanel">
                 <form
                     slot="content"
                     cms-mutation="ulvia.cms.providers:replace-selections as mutation"

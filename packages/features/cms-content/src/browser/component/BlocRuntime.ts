@@ -1,8 +1,9 @@
-import type { BlocCleanup, BlocMount } from "./BlocBehavior";
+import type { BlocCleanup, BlocMount } from "./Bloc";
+import { CMS_BLOC_FORM_CONTROL_READY_EVENT, installBlocFormControlProvider } from "./BlocFormControl";
 
 export const CMS_BLOC_ATTRIBUTE = "cms-bloc";
 
-const definitions = new Map<string, BlocMount>();
+const definitions = new Map<string, BlocMount | null>();
 const mounted = new WeakMap<HTMLElement, BlocCleanup | null>();
 const styles = new Set<string>();
 let observer: MutationObserver | null = null;
@@ -15,9 +16,7 @@ export function registerBloc(id: string, definition: { readonly mount?: BlocMoun
         document.head.append(style);
         styles.add(id);
     }
-    if (definition.mount) {
-        definitions.set(id, definition.mount);
-    }
+    definitions.set(id, definition.mount ?? null);
     activate(document);
 }
 
@@ -52,11 +51,16 @@ function mount(root: HTMLElement): void {
         return;
     }
     const id = root.getAttribute(CMS_BLOC_ATTRIBUTE);
-    const definition = id ? definitions.get(id) : undefined;
-    if (!definition) {
+    if (!id || !definitions.has(id)) {
         return;
     }
-    mounted.set(root, definition(root) ?? null);
+    const cleanupFormControl = installBlocFormControlProvider(root);
+    const cleanupBehavior = definitions.get(id)?.(root);
+    mounted.set(root, () => {
+        cleanupBehavior?.();
+        cleanupFormControl();
+    });
+    root.dispatchEvent(new CustomEvent(CMS_BLOC_FORM_CONTROL_READY_EVENT, { bubbles: true }));
 }
 
 function cleanupTree(node: Node): void {

@@ -1,22 +1,25 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { CMS_BLOC_FORM_CONTROL_READY_EVENT, createBlocScope } from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private root: Document | null = null;
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
-        this.root = this.ownerDocument;
+    connect(): void {
+        this.root = this.blocRoot.ownerDocument;
+        this.blocRoot.addEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
         this.root.addEventListener("change", this.syncFromGroup);
         this.root.addEventListener("reset", this.queueSync);
         this.syncState();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.root?.removeEventListener("change", this.syncFromGroup);
         this.root?.removeEventListener("reset", this.queueSync);
+        this.blocRoot.removeEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
         this.root = null;
     }
 
@@ -30,9 +33,25 @@ export class Bloc extends BlocBehavior {
         window.setTimeout(() => this.syncState());
     };
 
+    private handleControlReady = (event: Event): void => {
+        if (event.target === this.scope.queryBlocRoot("ulvia-official-radio")) {
+            this.syncState();
+        }
+    };
+
     private syncState(): void {
-        const input = this.querySelector<HTMLInputElement>('input[type="radio"]');
-        this.toggleAttribute("data-selected", input?.checked === true);
-        this.toggleAttribute("data-disabled", input?.disabled === true);
+        const controlRoot = this.scope.queryBlocRoot("ulvia-official-radio");
+        const control = controlRoot ? this.scope.getFormControl(controlRoot) : this.scope.getFormControl(this.blocRoot);
+        const input = control instanceof HTMLInputElement && control.type === "radio" ? control : null;
+        this.blocRoot.toggleAttribute("data-selected", input?.checked === true);
+        this.blocRoot.toggleAttribute("data-disabled", input?.disabled === true);
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
+    };
 }

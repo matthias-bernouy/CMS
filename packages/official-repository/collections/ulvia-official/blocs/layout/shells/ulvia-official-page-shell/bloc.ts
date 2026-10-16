@@ -1,19 +1,20 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 
 const OPTIONAL_REGIONS = ["breadcrumb", "actions", "description", "navigation", "footer"] as const;
 
-export class Bloc extends BlocBehavior {
-    constructor(root: HTMLElement) {
-        super(root);
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this.sync();
     }
 
     private readonly sync = (): void => {
         for (const name of OPTIONAL_REGIONS) {
-            const region = this?.querySelector<HTMLElement>('[part="' + name + '"]');
+            const region = this.scope.querySelector<HTMLElement>('[part="' + name + '"]');
             if (region) {
                 region.hidden = !Array.from(region.childNodes).some(hasMeaningfulContent);
             }
@@ -32,4 +33,9 @@ function hasMeaningfulContent(node: Node): boolean {
         return true;
     }
     return Array.from(node.childNodes).some(hasMeaningfulContent);
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
 }

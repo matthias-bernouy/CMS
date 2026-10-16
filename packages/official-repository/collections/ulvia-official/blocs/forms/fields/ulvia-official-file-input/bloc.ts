@@ -1,6 +1,11 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import {
+    CMS_BLOC_FORM_CONTROL_READY_EVENT,
+    createBlocScope,
+    observeBlocAttributes,
+} from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private input: HTMLInputElement | null = null;
     private emptyState: HTMLElement | null = null;
     private fileName: HTMLOutputElement | null = null;
@@ -17,34 +22,36 @@ export class Bloc extends BlocBehavior {
         return ["variant"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
-        this.preview = this?.querySelector('[part="preview"]') ?? null;
-        this.cardPreview = this?.querySelector('[part="card-preview"]') ?? null;
-        this.cardActions = this?.querySelector('[part="card-actions"]') ?? null;
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
+        this.preview = this.scope.querySelector('[part="preview"]') ?? null;
+        this.cardPreview = this.scope.querySelector('[part="card-preview"]') ?? null;
+        this.cardActions = this.scope.querySelector('[part="card-actions"]') ?? null;
     }
 
-    override connectedCallback(): void {
-        this.root = this.ownerDocument;
+    connect(): void {
+        this.root = this.blocRoot.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
-        this.addEventListener("dragenter", this.handleDragEnter);
-        this.addEventListener("dragover", this.handleDragOver);
-        this.addEventListener("dragleave", this.handleDragLeave);
-        this.addEventListener("drop", this.handleDrop);
-        this.emptyState = this.querySelector<HTMLElement>("[data-file-empty-state]");
-        this.fileName = this.querySelector<HTMLOutputElement>("[data-file-name]");
-        this.replaceButton = this.querySelector<HTMLButtonElement>("[data-file-replace]");
-        this.removeButton = this.querySelector<HTMLButtonElement>("[data-file-remove]");
+        this.blocRoot.addEventListener("dragenter", this.handleDragEnter);
+        this.blocRoot.addEventListener("dragover", this.handleDragOver);
+        this.blocRoot.addEventListener("dragleave", this.handleDragLeave);
+        this.blocRoot.addEventListener("drop", this.handleDrop);
+        this.blocRoot.addEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
+        this.emptyState = this.scope.querySelector<HTMLElement>("[data-file-empty-state]");
+        this.fileName = this.scope.querySelector<HTMLOutputElement>("[data-file-name]");
+        this.replaceButton = this.scope.querySelector<HTMLButtonElement>("[data-file-replace]");
+        this.removeButton = this.scope.querySelector<HTMLButtonElement>("[data-file-remove]");
         this.replaceButton?.addEventListener("click", this.replaceFile);
         this.removeButton?.addEventListener("click", this.removeFile);
         this.bindInput();
     }
 
-    disconnectedCallback(): void {
-        this.removeEventListener("dragenter", this.handleDragEnter);
-        this.removeEventListener("dragover", this.handleDragOver);
-        this.removeEventListener("dragleave", this.handleDragLeave);
-        this.removeEventListener("drop", this.handleDrop);
+    disconnect(): void {
+        this.blocRoot.removeEventListener("dragenter", this.handleDragEnter);
+        this.blocRoot.removeEventListener("dragover", this.handleDragOver);
+        this.blocRoot.removeEventListener("dragleave", this.handleDragLeave);
+        this.blocRoot.removeEventListener("drop", this.handleDrop);
+        this.blocRoot.removeEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
         this.replaceButton?.removeEventListener("click", this.replaceFile);
         this.removeButton?.removeEventListener("click", this.removeFile);
         this.input?.removeEventListener("change", this.sync);
@@ -54,14 +61,16 @@ export class Bloc extends BlocBehavior {
         this.clearPreviewUrls();
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.sync();
     }
 
     private bindInput = (): void => {
         this.input?.removeEventListener("change", this.sync);
         this.observer.disconnect();
-        this.input = this.querySelector<HTMLInputElement>('input[type="file"]');
+        const controlRoot = this.scope.queryBlocRoot("ulvia-official-file-upload-input");
+        const control = controlRoot ? this.scope.getFormControl(controlRoot) : this.scope.getFormControl(this.blocRoot);
+        this.input = control instanceof HTMLInputElement && control.type === "file" ? control : null;
         this.input?.addEventListener("change", this.sync);
         if (this.input) {
             this.observer.observe(this.input, {
@@ -72,14 +81,20 @@ export class Bloc extends BlocBehavior {
         this.sync();
     };
 
+    private handleControlReady = (event: Event): void => {
+        if (event.target === this.scope.queryBlocRoot("ulvia-official-file-upload-input")) {
+            this.bindInput();
+        }
+    };
+
     private handleDragEnter = (): void => {
         if (!this.input?.disabled) {
-            this.toggleAttribute("data-dragging", true);
+            this.blocRoot.toggleAttribute("data-dragging", true);
         }
     };
 
     private handleDragLeave = (): void => {
-        this.removeAttribute("data-dragging");
+        this.blocRoot.removeAttribute("data-dragging");
     };
 
     private handleDragOver = (event: DragEvent): void => {
@@ -93,7 +108,7 @@ export class Bloc extends BlocBehavior {
     };
 
     private handleDrop = (event: DragEvent): void => {
-        this.removeAttribute("data-dragging");
+        this.blocRoot.removeAttribute("data-dragging");
         if (this.input?.disabled || !event.dataTransfer?.files.length) {
             return;
         }
@@ -112,9 +127,9 @@ export class Bloc extends BlocBehavior {
         }
         this.emptyState?.toggleAttribute("hidden", files.length > 0);
         this.renderPreview(files);
-        this.toggleAttribute("data-has-files", files.length > 0);
-        this.toggleAttribute("data-disabled", this.input?.disabled === true);
-        this.toggleAttribute("data-invalid", this.input?.getAttribute("aria-invalid") === "true");
+        this.blocRoot.toggleAttribute("data-has-files", files.length > 0);
+        this.blocRoot.toggleAttribute("data-disabled", this.input?.disabled === true);
+        this.blocRoot.toggleAttribute("data-invalid", this.input?.getAttribute("aria-invalid") === "true");
     };
 
     private handleReset = (event: Event): void => {
@@ -129,7 +144,7 @@ export class Bloc extends BlocBehavior {
             return;
         }
         this.clearPreviewUrls();
-        const cardVariant = this.getAttribute("variant") === "card";
+        const cardVariant = this.blocRoot.getAttribute("variant") === "card";
         const cardFile = cardVariant ? files.at(0) : undefined;
         this.cardPreview.replaceChildren(...(cardFile ? [this.createPreviewCard(cardFile, true)] : []));
         this.cardPreview.toggleAttribute("hidden", !cardFile);
@@ -215,4 +230,16 @@ export class Bloc extends BlocBehavior {
         }
         return `${Math.round(size / 1024 / 102.4) / 10} MB`;
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

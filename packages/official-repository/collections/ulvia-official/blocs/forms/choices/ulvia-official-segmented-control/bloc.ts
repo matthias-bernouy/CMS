@@ -1,17 +1,18 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private root: Document | null = null;
     private list: HTMLElement | null = null;
     private resizeObserver = new ResizeObserver(() => this.queueIndicator());
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
-        this.root = this.ownerDocument;
-        this.list = this.queryBlocRoot("ulvia-official-option-list");
+    connect(): void {
+        this.root = this.blocRoot.ownerDocument;
+        this.list = this.scope.queryBlocRoot("ulvia-official-option-list");
         this.root.addEventListener("change", this.handleChange);
         if (this.list) {
             this.resizeObserver.observe(this.list);
@@ -19,7 +20,7 @@ export class Bloc extends BlocBehavior {
         this.queueIndicator();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.root?.removeEventListener("change", this.handleChange);
         this.resizeObserver.disconnect();
         this.root = null;
@@ -27,7 +28,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private handleChange = (event: Event): void => {
-        if (event.target instanceof HTMLInputElement && this.contains(event.target)) {
+        if (event.target instanceof HTMLInputElement && this.blocRoot.contains(event.target)) {
             this.queueIndicator();
         }
     };
@@ -40,9 +41,9 @@ export class Bloc extends BlocBehavior {
         if (!this.list) {
             return;
         }
-        const selected = this.queryBlocRoots("ulvia-official-segment").find((segment) =>
-            segment.hasAttribute("data-selected"),
-        );
+        const selected = this.scope
+            .queryBlocRoots("ulvia-official-segment")
+            .find((segment) => segment.hasAttribute("data-selected"));
         if (!selected) {
             this.list.style.setProperty("--ulvia-official-option-list-indicator-opacity", "0");
             return;
@@ -61,4 +62,12 @@ export class Bloc extends BlocBehavior {
         this.list.style.setProperty("--ulvia-official-option-list-indicator-height", `${selectedRect.height}px`);
         this.list.style.setProperty("--ulvia-official-option-list-indicator-opacity", "1");
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
+    };
 }

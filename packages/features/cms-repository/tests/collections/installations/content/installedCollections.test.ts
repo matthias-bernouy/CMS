@@ -215,7 +215,7 @@ test("installed Light DOM component is served with its scoped style runtime", as
     const store = new CollectionStore(new MemoryCollectionStorage());
     const style = compileBlocStyle(
         "test-card",
-        ':scope { color: var(--test-accent); background-image: url("data:image/svg+xml,%3Csvg/%3E"); }',
+        ':scope { color: var(--test-card-accent, #123456); background-image: url("data:image/svg+xml,%3Csvg/%3E"); }',
     );
     const runtime = await buildCollectionBloc({ tag: "test-card", style });
     const artifact = await store.importRelease(
@@ -230,7 +230,7 @@ test("installed Light DOM component is served with its scoped style runtime", as
                     id: "test-card",
                     label: "bloc.card.label",
                     template: '<article class="card"><slot name="body"></slot></article>',
-                    style: ":scope { color: var(--test-accent); }",
+                    style: ":scope { color: var(--test-card-accent, #123456); }",
                     runtime,
                     uses: [],
                     requires: [],
@@ -246,7 +246,7 @@ test("installed Light DOM component is served with its scoped style runtime", as
     const script = await reader.getBlocViewJS("test-card");
     expect(script).toContain("registerBloc");
     expect(script).toContain('@scope ([cms-bloc="test-card"]) to (:scope [cms-bloc])');
-    expect(script).toContain("var(--test-accent)");
+    expect(script).toContain("var(--test-card-accent, #123456)");
     expect(
         (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-card")?.compositionHTML,
     ).toBeUndefined();

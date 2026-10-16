@@ -200,6 +200,15 @@ describe("platform native HTML policy", () => {
         expect(nativeAttributeSetIssue("input", { type: "checkbox", role: "switch" })).toBeNull();
     });
 
+    test("requires fully sandboxed and titled native iframe previews", () => {
+        expect(nativeAttributeSetIssue("iframe", { sandbox: "", title: "Page preview" })).toBeNull();
+        expect(nativeAttributeSetIssue("iframe", { title: "Page preview" })).toContain("sandbox");
+        expect(nativeAttributeSetIssue("iframe", { sandbox: "", title: "" })).toContain("title");
+        expect(nativeAttributeSetIssue("iframe", { sandbox: "allow-scripts", title: "Page preview" })).toContain(
+            "sandbox",
+        );
+    });
+
     test("accepts the controlled informative and decorative media states", () => {
         expect(
             validateSiteBlocSnapshot(

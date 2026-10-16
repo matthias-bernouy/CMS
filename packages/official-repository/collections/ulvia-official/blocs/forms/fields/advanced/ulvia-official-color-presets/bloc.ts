@@ -1,4 +1,4 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
 const DEFAULT_COLOURS = "#086c55,#3157d5,#7c3aed,#be185d,#b42318,#c2410c,#ca8a04,#111827,#64748b,#ffffff";
 
@@ -23,7 +23,8 @@ function labelFor(input: HTMLInputElement): string {
     );
 }
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private input: HTMLInputElement | null = null;
     private trigger: HTMLButtonElement;
     private swatch: HTMLElement;
@@ -37,9 +38,9 @@ export class Bloc extends BlocBehavior {
         return ["colours", "action-label"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
-        const popover = this?.querySelector<HTMLElement>('[part="popover"]');
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
+        const popover = this.scope.querySelector<HTMLElement>('[part="popover"]');
         if (!popover) {
             throw new Error("Missing colour preset popover");
         }
@@ -56,35 +57,35 @@ export class Bloc extends BlocBehavior {
         this.value.setAttribute("part", "value");
         const action = document.createElement("span");
         action.setAttribute("part", "action");
-        action.textContent = this.getAttribute("action-label") || "Choose";
+        action.textContent = this.blocRoot.getAttribute("action-label") || "Choose";
         this.trigger.append(this.swatch, this.value, action);
-        this?.querySelector('[part="trigger-shell"]')?.append(this.trigger);
+        this.scope.querySelector('[part="trigger-shell"]')?.append(this.trigger);
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this.trigger.addEventListener("click", this.toggle);
         this.popover.addEventListener("click", this.choose);
-        this.ownerDocument.addEventListener("pointerdown", this.closeFromOutside);
+        this.blocRoot.ownerDocument.addEventListener("pointerdown", this.closeFromOutside);
         this.bindInput();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.trigger.removeEventListener("click", this.toggle);
         this.popover.removeEventListener("click", this.choose);
-        this.ownerDocument.removeEventListener("pointerdown", this.closeFromOutside);
+        this.blocRoot.ownerDocument.removeEventListener("pointerdown", this.closeFromOutside);
         this.input?.removeEventListener("input", this.sync);
         this.input?.removeEventListener("focus", this.redirectFocus);
         this.input?.removeEventListener("click", this.openFromSource);
         this.restoreSource();
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.renderOptions();
         this.sync();
     }
 
     private bindInput(): void {
-        this.input = this.querySelector<HTMLInputElement>('input[type="color"]');
+        this.input = this.scope.querySelector<HTMLInputElement>('input[type="color"]');
         if (!this.input) {
             return;
         }
@@ -98,12 +99,12 @@ export class Bloc extends BlocBehavior {
         this.input.addEventListener("focus", this.redirectFocus);
         this.input.addEventListener("click", this.openFromSource);
         this.renderOptions();
-        this.toggleAttribute("data-ready", true);
+        this.blocRoot.toggleAttribute("data-ready", true);
         this.sync();
     }
 
     private colours(): string[] {
-        const values = (this.getAttribute("colours") || DEFAULT_COLOURS).split(/[\s,;]+/);
+        const values = (this.blocRoot.getAttribute("colours") || DEFAULT_COLOURS).split(/[\s,;]+/);
         return [...new Set(values.map(normalizeHex).filter((value): value is string => Boolean(value)))];
     }
 
@@ -127,7 +128,7 @@ export class Bloc extends BlocBehavior {
             return;
         }
         const colour = normalizeHex(this.input.value) ?? "#000000";
-        this.style.setProperty("--ulvia-official-color-presets-selected-colour", colour);
+        this.blocRoot.style.setProperty("--ulvia-official-color-presets-selected-colour", colour);
         this.value.textContent = colour.toUpperCase();
         this.trigger.disabled = this.input.disabled;
         this.trigger.setAttribute("aria-label", labelFor(this.input));
@@ -135,7 +136,7 @@ export class Bloc extends BlocBehavior {
         this.popover.querySelectorAll<HTMLElement>("[data-colour]").forEach((option) => {
             option.setAttribute("aria-selected", String(option.dataset.colour === colour));
         });
-        this.toggleAttribute("data-disabled", this.input.disabled);
+        this.blocRoot.toggleAttribute("data-disabled", this.input.disabled);
     };
 
     private choose = (event: Event): void => {
@@ -156,11 +157,11 @@ export class Bloc extends BlocBehavior {
         const nextOpen = open && !this.input?.disabled;
         this.popover.toggleAttribute("hidden", !nextOpen);
         this.trigger.setAttribute("aria-expanded", String(nextOpen));
-        this.toggleAttribute("data-open", nextOpen);
+        this.blocRoot.toggleAttribute("data-open", nextOpen);
     }
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.contains(event.target) && !this?.contains(event.target)) {
+        if (event.target instanceof Node && !this.blocRoot.contains(event.target)) {
             this.setOpen(false);
         }
     };
@@ -185,4 +186,16 @@ export class Bloc extends BlocBehavior {
             ? this.input.removeAttribute("aria-hidden")
             : this.input.setAttribute("aria-hidden", this.sourceAriaHidden);
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

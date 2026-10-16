@@ -1,6 +1,7 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     static get observedAttributes(): string[] {
         return ["expanded", "count"];
     }
@@ -9,34 +10,34 @@ export class Bloc extends BlocBehavior {
     private region: HTMLElement | null = null;
     private labelObserver: MutationObserver | null = null;
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
-        this.trigger = this.querySelector("button");
-        this.region = this?.querySelector('[part="region"]') ?? null;
+    connect(): void {
+        this.trigger = this.scope.querySelector("button");
+        this.region = this.scope.querySelector('[part="region"]') ?? null;
         this.trigger?.addEventListener("click", this.toggle);
         this.labelObserver = new MutationObserver(this.sync);
         this.labelObserver.observe(this.blocRoot, { childList: true, characterData: true, subtree: true });
         this.sync();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.trigger?.removeEventListener("click", this.toggle);
         this.labelObserver?.disconnect();
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.sync();
     }
 
     private toggle = (): void => {
-        this.toggleAttribute("expanded");
+        this.blocRoot.toggleAttribute("expanded");
     };
 
     private sync(): void {
-        const expanded = this.hasAttribute("expanded");
+        const expanded = this.blocRoot.hasAttribute("expanded");
         this.trigger?.setAttribute("aria-expanded", String(expanded));
         const label = this.trigger?.textContent?.trim();
         if (label) {
@@ -47,11 +48,23 @@ export class Bloc extends BlocBehavior {
             this.region.inert = !expanded;
         }
 
-        const count = Number(this.getAttribute("count") || "0");
+        const count = Number(this.blocRoot.getAttribute("count") || "0");
         if (count > 0) {
             this.trigger?.setAttribute("data-count", String(count));
         } else {
             this.trigger?.removeAttribute("data-count");
         }
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

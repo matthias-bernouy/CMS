@@ -1,25 +1,26 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 
 let nextPanelId = 0;
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private trigger: HTMLButtonElement | null = null;
     private panel: HTMLElement | null = null;
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
-        this.trigger = this.querySelector<HTMLButtonElement>("button");
-        this.panel = this.queryBlocRoot("ulvia-official-field-help-panel");
+    connect(): void {
+        this.trigger = this.scope.querySelector<HTMLButtonElement>("button");
+        this.panel = this.scope.queryBlocRoot("ulvia-official-field-help-panel");
         this.prepareTrigger();
         this.trigger?.addEventListener("click", this.togglePanel);
         document.addEventListener("pointerdown", this.closeFromOutside);
         document.addEventListener("keydown", this.closeFromKeyboard);
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.trigger?.removeEventListener("click", this.togglePanel);
         document.removeEventListener("pointerdown", this.closeFromOutside);
         document.removeEventListener("keydown", this.closeFromKeyboard);
@@ -48,7 +49,7 @@ export class Bloc extends BlocBehavior {
     };
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.contains(event.target)) {
+        if (event.target instanceof Node && !this.blocRoot.contains(event.target)) {
             this.setOpen(false);
         }
     };
@@ -69,4 +70,12 @@ export class Bloc extends BlocBehavior {
             this.trigger?.removeAttribute("aria-describedby");
         }
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
+    };
 }

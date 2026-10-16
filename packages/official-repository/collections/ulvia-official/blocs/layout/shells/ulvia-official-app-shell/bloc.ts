@@ -1,8 +1,9 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 
 const COMPACT_BREAKPOINT_REM = 68;
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private backdrop: HTMLButtonElement | null = null;
     private compact = false;
     private readonly contextualPanel: HTMLElement | null;
@@ -13,40 +14,40 @@ export class Bloc extends BlocBehavior {
     private promotedContextualLayout = false;
     private readonly resizeObserver: ResizeObserver;
 
-    constructor(root: HTMLElement) {
-        super(root);
-        this.contextualPanel = this.querySelector('[part="secondary-sidebar"]');
-        this.footer = this.querySelector('[part="footer"]');
-        this.navigationPanel = this.querySelector('[part="secondary-navigation"]');
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
+        this.contextualPanel = this.scope.querySelector('[part="secondary-sidebar"]');
+        this.footer = this.scope.querySelector('[part="footer"]');
+        this.navigationPanel = this.scope.querySelector('[part="secondary-navigation"]');
         this.resizeObserver = new ResizeObserver(this.syncCompactMode);
     }
 
-    override connectedCallback(): void {
-        this.backdrop = this.querySelector("[data-mobile-toggle-close]");
-        this.contextualToggle = this.querySelector('[data-mobile-toggle="contextual"]');
-        this.navigationToggle = this.querySelector('[data-mobile-toggle="navigation"]');
+    connect(): void {
+        this.backdrop = this.scope.querySelector("[data-mobile-toggle-close]");
+        this.contextualToggle = this.scope.querySelector('[data-mobile-toggle="contextual"]');
+        this.navigationToggle = this.scope.querySelector('[data-mobile-toggle="navigation"]');
         this.backdrop?.addEventListener("click", this.closeFromControl);
         this.contextualToggle?.addEventListener("click", this.toggleContextualNavigation);
         this.navigationToggle?.addEventListener("click", this.toggleNavigation);
-        this.addEventListener("click", this.closeAfterNavigation);
-        this.addEventListener("keydown", this.closeOnEscape);
+        this.blocRoot.addEventListener("click", this.closeAfterNavigation);
+        this.blocRoot.addEventListener("keydown", this.closeOnEscape);
         this.resizeObserver.observe(this.blocRoot);
         this.syncFooter();
         this.syncNavigationAvailability();
         this.syncCompactMode();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.backdrop?.removeEventListener("click", this.closeFromControl);
         this.contextualToggle?.removeEventListener("click", this.toggleContextualNavigation);
         this.navigationToggle?.removeEventListener("click", this.toggleNavigation);
-        this.removeEventListener("click", this.closeAfterNavigation);
-        this.removeEventListener("keydown", this.closeOnEscape);
+        this.blocRoot.removeEventListener("click", this.closeAfterNavigation);
+        this.blocRoot.removeEventListener("keydown", this.closeOnEscape);
         this.resizeObserver.disconnect();
     }
 
     private closeAfterNavigation = (event: Event): void => {
-        if (!this.compact || !this.hasAttribute("mobile-panel")) {
+        if (!this.compact || !this.blocRoot.hasAttribute("mobile-panel")) {
             return;
         }
         const path = event.composedPath();
@@ -61,21 +62,21 @@ export class Bloc extends BlocBehavior {
         });
         if (isNavigationAction && !isDisclosure) {
             this.closePanel(false);
-            this?.querySelector<HTMLElement>('[part="content"]')?.focus();
+            this.scope.querySelector<HTMLElement>('[part="content"]')?.focus();
         }
     };
 
     private closeFromControl = (): void => this.closePanel(true);
     private closeOnEscape = (event: Event): void => {
-        if (event instanceof KeyboardEvent && event.key === "Escape" && this.hasAttribute("mobile-panel")) {
+        if (event instanceof KeyboardEvent && event.key === "Escape" && this.blocRoot.hasAttribute("mobile-panel")) {
             event.preventDefault();
             this.closePanel(true);
         }
     };
 
     private closePanel(restoreFocus: boolean): void {
-        const activePanel = this.getAttribute("mobile-panel");
-        this.removeAttribute("mobile-panel");
+        const activePanel = this.blocRoot.getAttribute("mobile-panel");
+        this.blocRoot.removeAttribute("mobile-panel");
         this.syncNavigationState();
         if (restoreFocus) {
             (activePanel === "navigation" ? this.navigationToggle : this.contextualToggle)?.focus();
@@ -95,10 +96,10 @@ export class Bloc extends BlocBehavior {
 
     private syncCompactMode = (): void => {
         const rootSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-        const compact = this.getBoundingClientRect().width <= COMPACT_BREAKPOINT_REM * rootSize;
+        const compact = this.blocRoot.getBoundingClientRect().width <= COMPACT_BREAKPOINT_REM * rootSize;
         if (this.compact !== compact) {
             this.compact = compact;
-            this.removeAttribute("mobile-panel");
+            this.blocRoot.removeAttribute("mobile-panel");
         }
         this.syncNavigationState();
     };
@@ -112,11 +113,11 @@ export class Bloc extends BlocBehavior {
     private syncNavigationAvailability = (): void => {
         const hasNavigation = this.hasContent(this.navigationPanel);
         const hasContextual = this.hasContent(this.contextualPanel);
-        if (hasContextual && this.getAttribute("layout") === "sidebar") {
-            this.setAttribute("layout", "dual-sidebar");
+        if (hasContextual && this.blocRoot.getAttribute("layout") === "sidebar") {
+            this.blocRoot.setAttribute("layout", "dual-sidebar");
             this.promotedContextualLayout = true;
         } else if (!hasContextual && this.promotedContextualLayout) {
-            this.setAttribute("layout", "sidebar");
+            this.blocRoot.setAttribute("layout", "sidebar");
             this.promotedContextualLayout = false;
         }
         if (this.navigationToggle) {
@@ -125,15 +126,15 @@ export class Bloc extends BlocBehavior {
         if (this.contextualToggle) {
             this.contextualToggle.hidden = !hasContextual;
         }
-        const activePanel = this.getAttribute("mobile-panel");
+        const activePanel = this.blocRoot.getAttribute("mobile-panel");
         if ((!hasNavigation && activePanel === "navigation") || (!hasContextual && activePanel === "contextual")) {
-            this.removeAttribute("mobile-panel");
+            this.blocRoot.removeAttribute("mobile-panel");
         }
         this.syncNavigationState();
     };
 
     private syncNavigationState(): void {
-        const activePanel = this.compact ? this.getAttribute("mobile-panel") : null;
+        const activePanel = this.compact ? this.blocRoot.getAttribute("mobile-panel") : null;
         const navigationOpen = activePanel === "navigation";
         const contextualOpen = activePanel === "contextual";
         this.navigationToggle?.setAttribute("aria-expanded", String(navigationOpen));
@@ -161,11 +162,19 @@ export class Bloc extends BlocBehavior {
     private toggleContextualNavigation = (): void => this.togglePanel("contextual");
     private toggleNavigation = (): void => this.togglePanel("navigation");
     private togglePanel(panel: "contextual" | "navigation"): void {
-        if (this.getAttribute("mobile-panel") === panel) {
-            this.removeAttribute("mobile-panel");
+        if (this.blocRoot.getAttribute("mobile-panel") === panel) {
+            this.blocRoot.removeAttribute("mobile-panel");
         } else {
-            this.setAttribute("mobile-panel", panel);
+            this.blocRoot.setAttribute("mobile-panel", panel);
         }
         this.syncNavigationState();
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
+    };
 }

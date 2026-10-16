@@ -11,8 +11,7 @@ export async function runCollectionBuildBenchmarks(): Promise<void> {
         await benchmark("compile minimal collection Bloc", () =>
             buildCollectionBloc({
                 tag: "performance-minimal",
-                viewSource:
-                    'export default class extends HTMLElement { connectedCallback() { this.dataset.ready = "true"; } }',
+                viewSource: 'export function mount(root) { root.dataset.ready = "true"; }',
             }),
         ),
         await benchmark("compile official color input Bloc", () => buildCollectionBloc(colorInput)),

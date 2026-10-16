@@ -197,6 +197,7 @@ const PLATFORM_NATIVE_CONTENT_TAG_SET = new Set<string>([
     ...MANAGED_NATIVE_ELEMENT_TAGS,
     "details",
     "fieldset",
+    "iframe",
     "legend",
     "label",
     "option",

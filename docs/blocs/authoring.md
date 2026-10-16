@@ -104,12 +104,13 @@ export function mount(root: HTMLElement): () => void {
 }
 ```
 
-For lifecycle-shaped code, a module may export a `Bloc` controller extending
-`BlocBehavior`. The build wrapper registers either form with the shared
-`bloc-runtime.js`; authored code never calls `customElements.define()`.
-Behavior mounts on the real native `cms-bloc` root and must return cleanup for
-listeners or observers. Shadow DOM APIs and direct Location mutation are
-rejected.
+`mount(root)` is the only behavior entrypoint. Shared functional helpers from
+`@bernouy/cms-content/browser` provide ownership-safe queries, bounded attribute
+observation and explicit native form-control connections. The build wrapper
+registers the function with `bloc-runtime.js`; authored code never calls
+`customElements.define()`. Behavior mounts on the real native `cms-bloc` root
+and must return cleanup for listeners or observers. Shadow DOM APIs and direct
+Location mutation are rejected.
 
 ## Page Boundary
 

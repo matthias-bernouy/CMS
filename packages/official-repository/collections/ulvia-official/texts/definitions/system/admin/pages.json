@@ -328,5 +328,137 @@
         "label": "text.ui-use-a-path-such-as-about-reserved-cms-paths-are-rejected.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-page-builder",
+        "label": "text.ui-page-builder.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-compose-the-page-from-the-blocs-installed-on-this-site",
+        "label": "text.ui-compose-the-page-from-the-blocs-installed-on-this-site.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-add-a-bloc",
+        "label": "text.ui-add-a-bloc.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-search-blocs",
+        "label": "text.ui-search-blocs.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-no-matching-blocs",
+        "label": "text.ui-no-matching-blocs.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-document-structure",
+        "label": "text.ui-document-structure.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-no-elements-yet-add-a-bloc-to-start",
+        "label": "text.ui-no-elements-yet-add-a-bloc-to-start.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-selected-element",
+        "label": "text.ui-selected-element.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-select-an-element-to-edit-it",
+        "label": "text.ui-select-an-element-to-edit-it.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-element-content",
+        "label": "text.ui-element-content.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-move-up",
+        "label": "text.ui-move-up.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-move-down",
+        "label": "text.ui-move-down.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-duplicate",
+        "label": "text.ui-duplicate.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-remove",
+        "label": "text.ui-remove.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-advanced-document-source",
+        "label": "text.ui-advanced-document-source.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-html-document",
+        "label": "text.ui-html-document.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-apply-source-to-draft",
+        "label": "text.ui-apply-source-to-draft.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-the-page-identity-is-missing",
+        "label": "text.ui-the-page-identity-is-missing.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-the-page-revision-is-missing",
+        "label": "text.ui-the-page-revision-is-missing.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-the-page-document-changed-reload-before-saving",
+        "label": "text.ui-the-page-document-changed-reload-before-saving.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-document-saved-reloading-the-page",
+        "label": "text.ui-document-saved-reloading-the-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-unsaved-document-changes",
+        "label": "text.ui-unsaved-document-changes.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
     }
 ]

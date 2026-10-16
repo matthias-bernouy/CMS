@@ -32,7 +32,7 @@
             </div>
             <div cms-case='"success"'>
                 <div cms-bloc="ulvia-official-stack" gap="xl">
-                    <div id="collection-overview" slot="items">
+                    <div id="collection-overview" role="tabpanel" slot="items">
                         <div cms-bloc="ulvia-official-stack" gap="lg">
                             <header slot="items">
                                 <p>{{ collection.data.publisherId }} {{ collection.data.version }}</p>
@@ -78,7 +78,7 @@
                         </div>
                     </div>
 
-                    <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="collection-blocks">
+                    <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="collection-blocks" role="tabpanel">
                         <div cms-bloc="ulvia-official-stack" gap="md" slot="content">
                             <h2 slot="items">{{ cms.i18n.ulvia-official.ui-blocks }}</h2>
                             <div cms-bloc="ulvia-official-grid" gap="md" columns="3" slot="items">
@@ -94,7 +94,7 @@
                         </div>
                     </div>
 
-                    <div id="collection-configuration" slot="items" cms-condition="collection.data.configurable">
+                    <div id="collection-configuration" role="tabpanel" slot="items" cms-condition="collection.data.configurable">
                         <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
                             <form
                                 slot="content"
@@ -148,10 +148,10 @@
                         </div>
                     </div>
 
-                    <div id="collection-theme" slot="items" cms-condition="collection.data.themeTokenCount > 0">
+                    <div id="collection-theme" role="tabpanel" slot="items" cms-condition="collection.data.themeTokenCount > 0">
                         <div cms-bloc="ulvia-official-collection-theme"></div>
                     </div>
-                    <div id="collection-texts" slot="items" cms-condition="collection.data.textCount > 0">
+                    <div id="collection-texts" role="tabpanel" slot="items" cms-condition="collection.data.textCount > 0">
                         <div cms-bloc="ulvia-official-collection-texts"></div>
                     </div>
                 </div>

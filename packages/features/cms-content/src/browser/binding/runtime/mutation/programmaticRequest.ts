@@ -34,11 +34,6 @@ export async function mutationFormRequest(
         throw new Error(`Invalid declarative mutation name: ${mutationName}`);
     }
     const candidates = mutationForms(host);
-    const root = host.getRootNode();
-    const parentHost = root instanceof ShadowRoot ? root.host : null;
-    if (parentHost) {
-        candidates.push(...mutationForms(parentHost));
-    }
     const matches = candidates.filter(
         (form) => parseMutation(form.getAttribute("cms-mutation") ?? "")?.name === mutationName,
     );

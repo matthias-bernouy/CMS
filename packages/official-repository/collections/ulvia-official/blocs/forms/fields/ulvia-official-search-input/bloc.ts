@@ -1,6 +1,11 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import {
+    CMS_BLOC_FORM_CONTROL_READY_EVENT,
+    createBlocScope,
+    observeBlocAttributes,
+} from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private input: HTMLInputElement | null = null;
     private clearButton: HTMLButtonElement | null = null;
     private root: Document | null = null;
@@ -10,30 +15,29 @@ export class Bloc extends BlocBehavior {
         return ["clear-label"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
-        this.input = this.querySelector<HTMLInputElement>("input");
-        this.clearButton = this.querySelector<HTMLButtonElement>("[data-search-clear]");
-        this.root = this.ownerDocument;
-        this.prepareInput();
-        this.input?.addEventListener("input", this.handleInput);
+    connect(): void {
+        this.clearButton = this.scope.querySelector<HTMLButtonElement>("[data-search-clear]");
+        this.root = this.blocRoot.ownerDocument;
+        this.blocRoot.addEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
         this.root.addEventListener("reset", this.handleReset);
         this.clearButton?.addEventListener("click", this.clearSearch);
-        this.syncValue();
+        this.bindInput();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.input?.removeEventListener("input", this.handleInput);
+        this.blocRoot.removeEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
         this.root?.removeEventListener("reset", this.handleReset);
         this.root = null;
         this.clearButton?.removeEventListener("click", this.clearSearch);
         window.clearTimeout(this.submitTimer);
     }
 
-    attributeChangedCallback(): void {
+    attributeChanged(): void {
         this.syncValue();
     }
 
@@ -48,13 +52,29 @@ export class Bloc extends BlocBehavior {
         }
     }
 
+    private bindInput(): void {
+        this.input?.removeEventListener("input", this.handleInput);
+        const controlRoot = this.scope.queryBlocRoot("ulvia-official-input");
+        const control = controlRoot ? this.scope.getFormControl(controlRoot) : this.scope.getFormControl(this.blocRoot);
+        this.input = control instanceof HTMLInputElement ? control : null;
+        this.prepareInput();
+        this.input?.addEventListener("input", this.handleInput);
+        this.syncValue();
+    }
+
+    private handleControlReady = (event: Event): void => {
+        if (event.target === this.scope.queryBlocRoot("ulvia-official-input")) {
+            this.bindInput();
+        }
+    };
+
     private handleInput = (): void => {
         this.syncValue();
-        if (!this.hasAttribute("auto-submit")) {
+        if (!this.blocRoot.hasAttribute("auto-submit")) {
             return;
         }
         window.clearTimeout(this.submitTimer);
-        const configuredDelay = Number(this.getAttribute("submit-delay") ?? "300");
+        const configuredDelay = Number(this.blocRoot.getAttribute("submit-delay") ?? "300");
         const delay = Number.isFinite(configuredDelay) ? Math.max(0, configuredDelay) : 300;
         this.submitTimer = window.setTimeout(() => this.input?.form?.requestSubmit(), delay);
     };
@@ -82,6 +102,18 @@ export class Bloc extends BlocBehavior {
 
     private syncValue(): void {
         this.clearButton?.toggleAttribute("hidden", !this.input?.value);
-        this.clearButton?.setAttribute("aria-label", this.getAttribute("clear-label") || "Clear search");
+        this.clearButton?.setAttribute("aria-label", this.blocRoot.getAttribute("clear-label") || "Clear search");
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

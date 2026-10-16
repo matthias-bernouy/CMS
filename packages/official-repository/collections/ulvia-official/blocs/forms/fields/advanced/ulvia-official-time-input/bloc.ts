@@ -1,4 +1,4 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/browser";
 
 type Part = "hours" | "minutes" | "seconds";
 const PART_CONFIG: Record<Part, { label: string; short: string; maximum: number }> = {
@@ -17,7 +17,8 @@ function labelFor(input: HTMLInputElement): string {
     );
 }
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private source: HTMLInputElement | null = null;
     private container: HTMLElement;
     private inputs = new Map<Part, HTMLInputElement>();
@@ -30,20 +31,20 @@ export class Bloc extends BlocBehavior {
         return ["parts"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
-        const container = this?.querySelector<HTMLElement>('[part="parts"]');
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
+        const container = this.scope.querySelector<HTMLElement>('[part="parts"]');
         if (!container) {
             throw new Error("Missing time parts container");
         }
         this.container = container;
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this.bindSource();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this.source?.removeEventListener("input", this.sync);
         this.source?.removeEventListener("change", this.sync);
         this.source?.removeEventListener("focus", this.redirectFocus);
@@ -52,15 +53,15 @@ export class Bloc extends BlocBehavior {
         this.restoreSource();
     }
 
-    attributeChangedCallback(): void {
-        if (this.isConnected) {
+    attributeChanged(): void {
+        if (this.blocRoot.isConnected) {
             this.render();
             this.sync();
         }
     }
 
     private configuredParts(): Part[] {
-        switch (this.getAttribute("parts")) {
+        switch (this.blocRoot.getAttribute("parts")) {
             case "hours":
                 return ["hours"];
             case "minutes":
@@ -73,7 +74,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private bindSource(): void {
-        this.source = this.querySelector<HTMLInputElement>('input[type="text"]');
+        this.source = this.scope.querySelector<HTMLInputElement>('input[type="text"]');
         if (!this.source) {
             return;
         }
@@ -92,7 +93,7 @@ export class Bloc extends BlocBehavior {
             attributeFilter: ["value", "disabled", "aria-invalid"],
         });
         this.render();
-        this.toggleAttribute("data-ready", true);
+        this.blocRoot.toggleAttribute("data-ready", true);
         this.sync();
     }
 
@@ -149,8 +150,8 @@ export class Bloc extends BlocBehavior {
             );
         });
         this.container.setAttribute("aria-label", labelFor(this.source));
-        this.toggleAttribute("data-disabled", this.source.disabled);
-        this.toggleAttribute("data-invalid", this.source.getAttribute("aria-invalid") === "true");
+        this.blocRoot.toggleAttribute("data-disabled", this.source.disabled);
+        this.blocRoot.toggleAttribute("data-invalid", this.source.getAttribute("aria-invalid") === "true");
     };
 
     private updateSource = (): void => this.writeSource(false);
@@ -200,4 +201,16 @@ export class Bloc extends BlocBehavior {
             ? this.source.removeAttribute("aria-hidden")
             : this.source.setAttribute("aria-hidden", this.sourceAriaHidden);
     }
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
+    };
 }

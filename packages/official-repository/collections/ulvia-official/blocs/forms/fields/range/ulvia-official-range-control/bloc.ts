@@ -1,12 +1,18 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import {
+    CMS_BLOC_FORM_CONTROL_READY_EVENT,
+    createBlocScope,
+    observeBlocAttributes,
+} from "@bernouy/cms-content/browser";
 
-export class Bloc extends BlocBehavior {
+const FIELD_VALUE_EVENT = "ulvia-official:field-value";
+
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private rangeInput: HTMLInputElement | null = null;
     private manualInput: HTMLInputElement | null = null;
     private manualComponent: HTMLElement | null = null;
     private manualLabel: HTMLElement | null = null;
     private rangeElement: HTMLElement | null = null;
-    private fieldValue: HTMLElement | null = null;
     private root: Document | null = null;
     private observer = new MutationObserver(() => this.sync());
 
@@ -14,24 +20,63 @@ export class Bloc extends BlocBehavior {
         return ["size", "value-label", "value-placement"];
     }
 
-    constructor(root: HTMLElement) {
-        super(root);
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
     }
 
-    override connectedCallback(): void {
-        this.rangeInput = this.querySelector<HTMLInputElement>('input[type="range"]');
-        this.manualInput = this.querySelector<HTMLInputElement>(
-            '[cms-bloc="ulvia-official-input"][part~="manual-input"] input',
-        );
-        this.manualComponent = this.querySelector<HTMLElement>(
-            '[cms-bloc="ulvia-official-input"][part~="manual-input"]',
-        );
-        this.manualLabel = this.querySelector<HTMLElement>("[data-range-label]");
-        this.rangeElement = this.querySelector<HTMLElement>('[cms-bloc="ulvia-official-range"]');
-        this.root = this.ownerDocument;
+    connect(): void {
+        this.manualLabel = this.scope.querySelector<HTMLElement>("[data-range-label]");
+        this.root = this.blocRoot.ownerDocument;
+        this.blocRoot.addEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
+        this.root.addEventListener("reset", this.handleReset);
+        this.bindControls();
+    }
+
+    disconnect(): void {
+        this.rangeInput?.removeEventListener("input", this.sync);
+        this.rangeInput?.removeEventListener("change", this.sync);
+        this.root?.removeEventListener("reset", this.handleReset);
+        this.root = null;
+        this.blocRoot.removeEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
+        this.manualInput?.removeEventListener("input", this.handleManualInput);
+        this.manualInput?.removeEventListener("change", this.handleManualChange);
+        this.observer.disconnect();
+        this.publishFieldValue("", true);
+    }
+
+    attributeChanged(): void {
+        this.sync();
+    }
+
+    private handleManualInput = (): void => {
+        this.commitManualValue("input");
+    };
+
+    private handleManualChange = (): void => {
+        this.commitManualValue("change");
+    };
+
+    private handleControlReady = (event: Event): void => {
+        if (event.target === this.rangeElement || event.target === this.manualComponent) {
+            this.bindControls();
+        }
+    };
+
+    private bindControls(): void {
+        this.rangeInput?.removeEventListener("input", this.sync);
+        this.rangeInput?.removeEventListener("change", this.sync);
+        this.manualInput?.removeEventListener("input", this.handleManualInput);
+        this.manualInput?.removeEventListener("change", this.handleManualChange);
+        this.observer.disconnect();
+        this.rangeElement = this.scope.queryBlocRoot("ulvia-official-range");
+        this.manualComponent = this.scope.queryBlocRoot("ulvia-official-input");
+        const rangeControl = this.rangeElement ? this.scope.getFormControl(this.rangeElement) : null;
+        const manualControl = this.manualComponent ? this.scope.getFormControl(this.manualComponent) : null;
+        this.rangeInput =
+            rangeControl instanceof HTMLInputElement && rangeControl.type === "range" ? rangeControl : null;
+        this.manualInput = manualControl instanceof HTMLInputElement ? manualControl : null;
         this.rangeInput?.addEventListener("input", this.sync);
         this.rangeInput?.addEventListener("change", this.sync);
-        this.root.addEventListener("reset", this.handleReset);
         this.manualInput?.addEventListener("input", this.handleManualInput);
         this.manualInput?.addEventListener("change", this.handleManualChange);
         if (this.rangeInput) {
@@ -48,29 +93,6 @@ export class Bloc extends BlocBehavior {
         }
         this.sync();
     }
-
-    disconnectedCallback(): void {
-        this.rangeInput?.removeEventListener("input", this.sync);
-        this.rangeInput?.removeEventListener("change", this.sync);
-        this.root?.removeEventListener("reset", this.handleReset);
-        this.root = null;
-        this.manualInput?.removeEventListener("input", this.handleManualInput);
-        this.manualInput?.removeEventListener("change", this.handleManualChange);
-        this.observer.disconnect();
-        this.clearFieldValue();
-    }
-
-    attributeChangedCallback(): void {
-        this.sync();
-    }
-
-    private handleManualInput = (): void => {
-        this.commitManualValue("input");
-    };
-
-    private handleManualChange = (): void => {
-        this.commitManualValue("change");
-    };
 
     private commitManualValue(type: "input" | "change"): void {
         if (!this.rangeInput || !this.manualInput || this.rangeInput.disabled) {
@@ -94,8 +116,8 @@ export class Bloc extends BlocBehavior {
         this.manualInput.step = this.rangeInput.step || "1";
         this.manualInput.value = this.rangeInput.value;
         this.manualInput.disabled = this.rangeInput.disabled;
-        this.manualComponent?.setAttribute("size", this.getAttribute("size") || "md");
-        const valueLabel = this.getAttribute("value-label") || "Value";
+        this.manualComponent?.setAttribute("size", this.blocRoot.getAttribute("size") || "md");
+        const valueLabel = this.blocRoot.getAttribute("value-label") || "Value";
         this.manualInput.setAttribute("aria-label", valueLabel);
         if (this.manualLabel) {
             this.manualLabel.textContent = valueLabel;
@@ -104,32 +126,20 @@ export class Bloc extends BlocBehavior {
     };
 
     private syncFieldValue(): void {
-        const placeInField = this.getAttribute("value-placement") === "field";
-        this.toggleAttribute("data-field-value", placeInField);
+        const placeInField = this.blocRoot.getAttribute("value-placement") === "field";
+        this.blocRoot.toggleAttribute("data-field-value", placeInField);
         if (!placeInField || !this.rangeInput || !this.rangeElement) {
-            this.clearFieldValue();
+            this.publishFieldValue("", true);
             return;
         }
-        const fieldValue = this.closest('[cms-bloc="ulvia-official-field"]')?.querySelector<HTMLElement>(
-            "[data-field-value]",
+        this.publishFieldValue(
+            `${this.rangeElement.getAttribute("value-prefix") ?? ""}${this.rangeInput.value}${this.rangeElement.getAttribute("value-suffix") ?? ""}`,
+            this.rangeElement.hasAttribute("hide-value"),
         );
-        if (!fieldValue) {
-            return;
-        }
-        if (this.fieldValue && this.fieldValue !== fieldValue) {
-            this.clearFieldValue();
-        }
-        this.fieldValue = fieldValue;
-        fieldValue.textContent = `${this.rangeElement.getAttribute("value-prefix") ?? ""}${this.rangeInput.value}${this.rangeElement.getAttribute("value-suffix") ?? ""}`;
-        fieldValue.toggleAttribute("hidden", this.rangeElement.hasAttribute("hide-value"));
     }
 
-    private clearFieldValue(): void {
-        if (this.fieldValue) {
-            this.fieldValue.hidden = true;
-            this.fieldValue.textContent = "";
-            this.fieldValue = null;
-        }
+    private publishFieldValue(text: string, hidden: boolean): void {
+        this.blocRoot.dispatchEvent(new CustomEvent(FIELD_VALUE_EVENT, { bubbles: true, detail: { hidden, text } }));
     }
 
     private handleReset = (event: Event): void => {
@@ -137,5 +147,17 @@ export class Bloc extends BlocBehavior {
             return;
         }
         window.setTimeout(this.sync);
+    };
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    const stopObserving = observeBlocAttributes(root, Controller.observedAttributes, () =>
+        controller.attributeChanged(),
+    );
+    return () => {
+        stopObserving();
+        controller.disconnect();
     };
 }

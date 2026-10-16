@@ -1,4 +1,4 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
+import { createBlocScope } from "@bernouy/cms-content/browser";
 
 let nextListboxId = 0;
 
@@ -46,7 +46,8 @@ function restoreAttribute(element: HTMLElement, name: string, value: string | nu
     element.setAttribute(name, value);
 }
 
-export class Bloc extends BlocBehavior {
+class Controller {
+    private readonly scope: ReturnType<typeof createBlocScope>;
     private select: HTMLSelectElement | null = null;
     private listbox: HTMLElement | null;
     private activeIndex = 0;
@@ -56,20 +57,20 @@ export class Bloc extends BlocBehavior {
     private root: Document | null = null;
     private observer = new MutationObserver(() => this.renderOptions());
 
-    constructor(root: HTMLElement) {
-        super(root);
-        this.listbox = this?.querySelector('[part="listbox"]') ?? null;
+    constructor(private readonly blocRoot: HTMLElement) {
+        this.scope = createBlocScope(this.blocRoot);
+        this.listbox = this.scope.querySelector('[part="listbox"]') ?? null;
     }
 
-    override connectedCallback(): void {
+    connect(): void {
         this?.addEventListener("click", this.handleClick);
         this.listbox?.addEventListener("keydown", this.handleKeydown);
-        this.root = this.ownerDocument;
+        this.root = this.blocRoot.ownerDocument;
         this.root.addEventListener("reset", this.queueRender);
         this.bindSelect();
     }
 
-    disconnectedCallback(): void {
+    disconnect(): void {
         this?.removeEventListener("click", this.handleClick);
         this.listbox?.removeEventListener("keydown", this.handleKeydown);
         this.root?.removeEventListener("reset", this.queueRender);
@@ -85,7 +86,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private bindSelect(): void {
-        this.select = this.querySelector<HTMLSelectElement>("select[multiple]");
+        this.select = this.scope.querySelector<HTMLSelectElement>("select[multiple]");
         if (!this.select || !this.listbox) {
             return;
         }
@@ -99,7 +100,7 @@ export class Bloc extends BlocBehavior {
         this.select.addEventListener("invalid", this.handleInvalid);
         this.observer.observe(this.select, { attributes: true, childList: true, subtree: true });
         this.listbox.id ||= `ulvia-multi-select-${++nextListboxId}`;
-        this.toggleAttribute("data-ready", true);
+        this.blocRoot.toggleAttribute("data-ready", true);
         this.renderOptions();
     }
 
@@ -130,7 +131,7 @@ export class Bloc extends BlocBehavior {
             }),
         );
         this.listbox.setAttribute("aria-activedescendant", `${this.listbox.id}-option-${this.activeIndex}`);
-        this.listbox.setAttribute("aria-label", resolveSelectLabel(this.select, this.ownerDocument));
+        this.listbox.setAttribute("aria-label", resolveSelectLabel(this.select, this.blocRoot.ownerDocument));
         copySelectAttribute(this.select, this.listbox, "aria-describedby");
         this.listbox.setAttribute("aria-disabled", String(this.select.disabled));
         this.listbox.setAttribute("aria-required", String(this.select.required));
@@ -139,8 +140,8 @@ export class Bloc extends BlocBehavior {
             String(this.select.matches(":user-invalid") || this.select.getAttribute("aria-invalid") === "true"),
         );
         this.listbox.tabIndex = this.select.disabled ? -1 : 0;
-        this.toggleAttribute("data-disabled", this.select.disabled);
-        this.toggleAttribute(
+        this.blocRoot.toggleAttribute("data-disabled", this.select.disabled);
+        this.blocRoot.toggleAttribute(
             "data-invalid",
             this.select.matches(":user-invalid") || this.select.getAttribute("aria-invalid") === "true",
         );
@@ -205,11 +206,19 @@ export class Bloc extends BlocBehavior {
 
     private handleInvalid = (event: Event): void => {
         event.preventDefault();
-        this.toggleAttribute("data-invalid", true);
+        this.blocRoot.toggleAttribute("data-invalid", true);
         this.listbox?.focus();
     };
 
     private queueRender = (): void => {
         window.setTimeout(this.renderOptions);
+    };
+}
+
+export function mount(root: HTMLElement): void | (() => void) {
+    const controller = new Controller(root);
+    controller.connect();
+    return () => {
+        controller.disconnect();
     };
 }
