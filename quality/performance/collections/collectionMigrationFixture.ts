@@ -66,9 +66,10 @@ export function migrationRelease(version: string, blocId: string): Record<string
         blocs: [
             {
                 kind: "component",
+                root: { accepts: ["div"] },
                 id: blocId,
                 label: "bloc.label",
-                shadowdom: "<div></div>",
+                template: "<div></div>",
                 uses: [],
                 requires: [],
                 slots: {},
@@ -83,7 +84,7 @@ function page(index: number, affectedPercent: 1 | 10 | 100): TPage {
         id,
         revision: 1,
         path: `/${id}`,
-        content: isAffected(index, affectedPercent) ? "<performance-migration-card></performance-migration-card>" : "",
+        content: isAffected(index, affectedPercent) ? '<div cms-bloc="performance-migration-card"></div>' : "",
         title: `Page ${index}`,
         description: "",
         visible: false,

@@ -95,9 +95,7 @@ async function inspectAdminRoutes(page: Page, kernelOrigin: string): Promise<voi
 
 async function mutateCollections(page: Page): Promise<void> {
     await adminPageLink(page, "collections").click();
-    await page.locator("#installed-collections").waitFor();
-    await page.locator('a[href="#repository-releases"]').click();
-    await page.waitForURL(/#repository-releases$/u);
+    await page.getByRole("heading", { name: /^(Explore collections|Explorer les Collections)$/u }).waitFor();
     const initialRelease = collectionReleaseCard(page, "ulvia.test 1.0.0");
     await initialRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
     const installResponse = page.waitForResponse((candidate) =>
@@ -107,18 +105,14 @@ async function mutateCollections(page: Page): Promise<void> {
     if (!(await installResponse).ok()) {
         throw new Error("Collection installation failed.");
     }
-    await page.locator('a[href="#installed-collections"]').click();
-    await page.waitForURL(/#installed-collections$/u);
-    const smokeCard = page.getByRole("heading", { name: "smoke-kit", exact: true }).locator("..");
-    await smokeCard.getByRole("link", { name: /^(Manage|Gérer)$/u }).click();
+    await installedCollectionLink(page, "smoke-kit").click();
     await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
     await page.locator('a[href="#collection-blocks"]').click();
     await page.waitForURL(/#collection-blocks$/u);
     await page.getByText("smoke-kit-card", { exact: true }).waitFor();
-    await page.getByRole("link", { name: /^(Back to Collections|Retour aux Collections)$/u }).click();
+    await page.getByRole("link", { name: /^(Explore collections|Explorer les Collections)$/u }).click();
     await exerciseCollectionUpgrades(page);
-    const officialCard = page.getByRole("heading", { name: "ulvia-official", exact: true }).locator("..");
-    await officialCard.getByRole("link", { name: /^(Manage|Gérer)$/u }).click();
+    await installedCollectionLink(page, "ulvia-official").click();
     await page.getByRole("heading", { name: "Ulvia Official", exact: true }).waitFor();
     await page.locator('a[href="#collection-theme"]').click();
     await page.locator("#collection-theme-search").waitFor();
@@ -157,7 +151,7 @@ async function mutateCollections(page: Page): Promise<void> {
     if (!textResponse.ok()) {
         throw new Error(`Collection text flow failed (${textResponse.status()}).`);
     }
-    await page.getByRole("link", { name: /^(Back to Collections|Retour aux Collections)$/u }).click();
+    await page.getByRole("link", { name: /^(Explore collections|Explorer les Collections)$/u }).click();
 }
 
 function collectionReleaseCard(page: Page, identity: string) {
@@ -166,9 +160,15 @@ function collectionReleaseCard(page: Page, identity: string) {
 
 async function verifyCollectionAfterRestart(page: Page): Promise<void> {
     await adminPageLink(page, "collections").click();
-    await page.getByRole("heading", { name: "smoke-kit", exact: true }).waitFor();
+    await installedCollectionLink(page, "smoke-kit").waitFor();
 }
 
 function adminPageLink(page: Page, pageId: string) {
     return page.locator(`a[href="/admin/${pageId}"]`).first();
+}
+
+function installedCollectionLink(page: Page, collectionId: string) {
+    return page.locator(
+        `a[href="/admin/collections/detail?ulvia-official-collection=${encodeURIComponent(collectionId)}"]`,
+    );
 }

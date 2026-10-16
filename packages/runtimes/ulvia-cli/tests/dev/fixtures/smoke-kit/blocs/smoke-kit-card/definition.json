@@ -7,9 +7,12 @@
     "order": 10,
     "uses": [],
     "requires": [],
+    "root": {
+        "accepts": ["div"]
+    },
     "slots": {
         "content": {
-            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "accepts": [{ "kind": "native-content", "profile": "prose" }],
             "max": 1
         }
     }

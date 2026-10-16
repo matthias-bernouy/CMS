@@ -20,14 +20,11 @@ test("accepts component-owned light-DOM bindings without a private core or style
     ).toEqual([]);
 });
 
-test("does not ban visual Shadow DOM with encapsulated CSS and a slot for light-DOM children", () => {
+test("accepts behavior that works directly against an authored Light DOM root", () => {
     expect(
-        inspect(`class VisualFrame extends HTMLElement {
-            constructor() {
-                super();
-                const root = this.attachShadow({ mode: "open" });
-                root.innerHTML = '<style>:host { display: block; }</style><slot></slot>';
-            }
+        inspect(`export function mount(root) {
+            const button = root.querySelector("button");
+            button?.addEventListener("click", () => root.toggleAttribute("open"));
         }`),
     ).toEqual([]);
 });

@@ -8,10 +8,11 @@ export function collectionFixture(blocCount: number, pageCount: number, version 
         messages[label] = `Performance card ${index}`;
         return {
             kind: "component",
+            root: { accepts: ["div"] },
             id,
             label,
-            shadowdom: '<article><slot name="body"></slot></article>',
-            slots: { body: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
+            template: '<article><slot name="body"></slot></article>',
+            slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
             uses: [],
             requires: [],
         };
@@ -24,7 +25,7 @@ export function collectionFixture(blocCount: number, pageCount: number, version 
             defaultPath: `/performance-${index}`,
             name,
             document: {
-                html: `<performance-suite-card-${index % blocCount}></performance-suite-card-${index % blocCount}>`,
+                html: `<div cms-bloc=\"performance-suite-card-${index % blocCount}\"></div>`,
             },
         };
     });

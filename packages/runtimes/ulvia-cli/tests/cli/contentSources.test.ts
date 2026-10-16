@@ -85,16 +85,13 @@ test("component runtime modules stay inside the Bloc source boundary", async () 
         requires: [],
         slots: {},
     });
-    await Bun.write(join(componentRoot, "shadowdom.html"), "<div></div>");
-    await Bun.write(join(componentRoot, "style.css"), ":host { display: block; }");
+    await Bun.write(join(componentRoot, "template.html"), "<div></div>");
+    await Bun.write(join(componentRoot, "style.css"), ":scope { display: block; }");
     await Bun.write(join(componentRoot, "runtime", "message.ts"), 'export const message = "modular-runtime";');
     await Bun.write(
         join(componentRoot, "bloc.ts"),
-        `import { Component } from "@bernouy/cms-content/browser";
-         import template from "./shadowdom.html" with { type: "text" };
-         import css from "./style.css" with { type: "text" };
-         import { message } from "./runtime/message";
-         export class Bloc extends Component { constructor() { super({ css, template }); this.dataset.message = message; } }`,
+        `import { message } from "./runtime/message";
+         export function mount(root) { root.dataset.message = message; }`,
     );
 
     const blocs = (await loadCollectionBlocs(root, "Example")) as { runtime: { viewJS: string } }[];

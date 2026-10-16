@@ -30,6 +30,7 @@ smoke(
         let output = "";
         let capture: Promise<void[]> | undefined;
         let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+        let browserErrors: string[] = [];
         try {
             await runCli(["release", smokeCollection], { environment, log: () => undefined });
             const compatibleUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "1.1.0");
@@ -54,8 +55,7 @@ smoke(
             browser = await chromium.launch({ headless: true });
             const page = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             page.setDefaultTimeout(15_000);
-            const browserErrors: string[] = [];
-            page.on("pageerror", (error) => browserErrors.push(error.message));
+            page.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
 
             await runKernelSmoke(page, credentials, `http://127.0.0.1:${PORTS.kernel}`);
             await verifySecondInstanceIsolation(data, credentials, `http://127.0.0.1:${PORTS.kernel}`);
@@ -92,7 +92,8 @@ smoke(
             const restartedPage = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             restartedPage.setDefaultTimeout(15_000);
             const restartErrors: string[] = [];
-            restartedPage.on("pageerror", (error) => restartErrors.push(error.message));
+            browserErrors = restartErrors;
+            restartedPage.on("pageerror", (error) => restartErrors.push(error.stack ?? error.message));
 
             await verifyKernelStateAfterRestart(restartedPage, credentials, `http://127.0.0.1:${PORTS.kernel}`);
             expect(restartErrors).toEqual([]);
@@ -103,7 +104,9 @@ smoke(
             await capture;
         } catch (error) {
             await writeFailureArtifacts(output, browser);
-            throw new Error(`${error instanceof Error ? error.message : String(error)}\n\nRuntime output:\n${output}`);
+            throw new Error(
+                `${error instanceof Error ? error.message : String(error)}\n\nBrowser errors:\n${browserErrors.join("\n") || "(none)"}\n\nRuntime output:\n${output}`,
+            );
         } finally {
             await browser?.close();
             runtime?.kill("SIGTERM");

@@ -12,7 +12,7 @@ const REPLACEMENT_IMAGE = Buffer.from(
 
 export async function mutateFiles(page: Page): Promise<void> {
     await filePageLink(page).click();
-    await page.locator("#file-library ulvia-official-cluster").first().waitFor();
+    await page.locator('#file-library [cms-bloc="ulvia-official-cluster"]').first().waitFor();
     const uploadDialog = page.locator("#upload-file-dialog");
     if (await uploadDialog.evaluate((dialog: HTMLDialogElement) => dialog.open)) {
         throw new Error("The upload dialog must be closed on initial render");
@@ -66,42 +66,44 @@ async function upload(page: Page, name: string, contents: Buffer): Promise<void>
             throw new Error("The upload dialog did not open");
         }
     });
-    const created = page.waitForResponse((candidate) => candidate.url().includes("workspace.upload.create"));
-    const written = page.waitForResponse(isRawUploadResponse);
-    const completed = page
-        .waitForResponse((candidate) => candidate.url().includes("workspace.upload.complete"))
-        .catch(() => null);
-    const refreshed = page.waitForResponse(isWorkspaceResponse);
-    await page.locator('ulvia-official-file-upload:not([file-id]) input[name="file"]').setInputFiles({
+    const flow = Promise.all([
+        page.waitForResponse((candidate) => candidate.url().includes("workspace.upload.create")),
+        page.waitForResponse(isRawUploadResponse),
+        page.waitForResponse((candidate) => candidate.url().includes("workspace.upload.complete")).catch(() => null),
+        page.waitForResponse(isWorkspaceResponse),
+    ]);
+    await page.locator('[cms-bloc="ulvia-official-file-upload"]:not([file-id]) input[name="file"]').setInputFiles({
         name,
         mimeType: "image/png",
         buffer: contents,
     });
-    await expectOk("workspace.upload.create", await created);
-    await expectOk("upload.write", await written);
-    await expectResponse("workspace.upload.complete", await completed);
-    await expectOk("workspace.get", await refreshed);
+    const [created, written, completed, refreshed] = await flow;
+    await expectOk("workspace.upload.create", created);
+    await expectOk("upload.write", written);
+    await expectResponse("workspace.upload.complete", completed);
+    await expectOk("workspace.get", refreshed);
     await uploadDialog.waitFor({ state: "hidden" });
     await page.waitForLoadState("networkidle");
     await fileCard(page, name).waitFor();
 }
 
 async function replace(page: Page, card: Locator, name: string, contents: Buffer): Promise<void> {
-    const created = page.waitForResponse((candidate) => candidate.url().includes("workspace.upload.create"));
-    const written = page.waitForResponse(isRawUploadResponse);
-    const completed = page
-        .waitForResponse((candidate) => candidate.url().includes("workspace.upload.complete"))
-        .catch(() => null);
-    const refreshed = page.waitForResponse(isWorkspaceResponse);
-    await card.locator('ulvia-official-file-upload[file-id] input[type="file"]').setInputFiles({
+    const flow = Promise.all([
+        page.waitForResponse((candidate) => candidate.url().includes("workspace.upload.create")),
+        page.waitForResponse(isRawUploadResponse),
+        page.waitForResponse((candidate) => candidate.url().includes("workspace.upload.complete")).catch(() => null),
+        page.waitForResponse(isWorkspaceResponse),
+    ]);
+    await card.locator('[cms-bloc="ulvia-official-file-upload"][file-id] input[type="file"]').setInputFiles({
         name,
         mimeType: "image/png",
         buffer: contents,
     });
-    await expectOk("workspace.upload.create", await created);
-    await expectOk("upload.write", await written);
-    await expectResponse("workspace.upload.complete", await completed);
-    await expectOk("workspace.get", await refreshed);
+    const [created, written, completed, refreshed] = await flow;
+    await expectOk("workspace.upload.create", created);
+    await expectOk("upload.write", written);
+    await expectResponse("workspace.upload.complete", completed);
+    await expectOk("workspace.get", refreshed);
     await fileCard(page, name).waitFor();
 }
 
@@ -117,7 +119,7 @@ async function expectOpenImage(page: Page, card: ReturnType<typeof fileCard>, ex
     const responsePromise = page.waitForResponse((candidate) =>
         candidate.url().includes("/.cms/call/ulvia.cms.files/files/"),
     );
-    await card.locator("ulvia-official-file-link[file-id] > button").click();
+    await card.locator('[cms-bloc="ulvia-official-file-link"][file-id] > button').click();
     const response = await responsePromise;
     expect(response.ok()).toBe(true);
     expect(response.url()).toMatch(/\/\.cms\/call\/ulvia\.cms\.files\/files\//u);
@@ -126,7 +128,7 @@ async function expectOpenImage(page: Page, card: ReturnType<typeof fileCard>, ex
     await image.waitFor();
     expect(await image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBe(expectedWidth);
     await page.goBack();
-    await page.locator("#file-library ulvia-official-cluster").first().waitFor();
+    await page.locator('#file-library [cms-bloc="ulvia-official-cluster"]').first().waitFor();
 }
 
 function fileCard(page: Page, name: string) {

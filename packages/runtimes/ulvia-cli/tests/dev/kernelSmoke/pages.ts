@@ -48,7 +48,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     const addHeading = page.getByRole("button", { name: "Add Heading", exact: true });
     await addHeading.waitFor();
     await waitUntilEnabled(addHeading, "Page editor did not become ready");
-    const editorError = page.locator("ulvia-official-page-editor [data-notice][data-error]");
+    const editorError = page.locator('[cms-bloc="ulvia-official-page-editor"] [data-notice][data-error]');
     if (await editorError.isVisible().catch(() => false)) {
         throw new Error(`Page editor failed to load at ${page.url()}: ${await editorError.textContent()}`);
     }

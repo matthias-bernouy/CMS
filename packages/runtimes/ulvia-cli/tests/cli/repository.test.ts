@@ -52,13 +52,14 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(action?.kind).toBe("component");
         if (action?.kind === "component") {
             expect(action.runtime?.viewJS).toContain("ulvia-official-action");
-            expect(action.nativeElement).toEqual({ accepts: ["button", "a"] });
+            expect(action.root).toEqual({ accepts: ["button", "a"], defaults: { type: "button" } });
             expect(action.lightdom).toBeUndefined();
-            expect(action.defaultContent).toContain('<button type="button">');
+            expect(action.defaultContent).toContain("<span>{{ cms.i18n.ulvia-official.ui-action-label }}</span>");
             expect(action.settings?.map((setting) => setting.id)).toEqual(["variant", "tone", "size", "wide"]);
         }
         const heading = release.blocs.find((bloc) => bloc.id === "ulvia-official-heading");
-        expect(heading?.kind === "component" ? heading.nativeElement?.accepts : undefined).toEqual([
+        expect(heading?.kind === "component" ? heading.root?.accepts : undefined).toEqual(["div"]);
+        expect(heading?.kind === "component" ? heading.content?.accepts : undefined).toEqual([
             "h1",
             "h2",
             "h3",
@@ -75,11 +76,10 @@ test("local repository lists immutable metadata and serves matching release byte
         });
         const textIds = new Set(release.texts?.map((entry) => entry.id));
         for (const bloc of release.blocs) {
-            if (!bloc.lightdom) {
-                continue;
-            }
-            for (const match of bloc.lightdom.matchAll(/cms\.i18n\.ulvia-official\.([a-z0-9-]+)/g)) {
-                expect(textIds.has(match[1]!)).toBeTrue();
+            for (const html of [bloc.lightdom, bloc.template, bloc.defaultContent]) {
+                for (const match of html?.matchAll(/cms\.i18n\.ulvia-official\.([a-z0-9-]+)/g) ?? []) {
+                    expect(textIds.has(match[1]!)).toBeTrue();
+                }
             }
         }
         expect((await fetch(`${server.url}/v1/collections/missing/test/${version}`)).status).toBe(404);
@@ -185,7 +185,14 @@ test("collection source assets keep their verified bytes through the repository 
             await mkdir(root, { recursive: true });
             await writeFile(
                 join(root, "definition.json"),
-                JSON.stringify({ id, kind: "composition", label: `bloc.${id}.label`, internal, slots: {} }),
+                JSON.stringify({
+                    id,
+                    kind: "composition",
+                    root: { accepts: ["div"] },
+                    label: `bloc.${id}.label`,
+                    internal,
+                    slots: {},
+                }),
             );
             await writeFile(join(root, "lightdom.html"), "<p>{{ example.name }}</p>");
         }

@@ -8,6 +8,7 @@ import { assertGrowth, assertMaximum, benchmark, printResults } from "../benchma
 const CARD: PageDocumentBlocContract = {
     id: "performance-card",
     kind: "component",
+    root: { accepts: ["div"] },
     slots: {},
 };
 
@@ -39,7 +40,7 @@ export async function runContentValidationBenchmarks(): Promise<void> {
 }
 
 function page(count: number): string {
-    return "<performance-card></performance-card>".repeat(count);
+    return '<div cms-bloc="performance-card"></div>'.repeat(count);
 }
 
 function nativeMarkup(count: number): string {

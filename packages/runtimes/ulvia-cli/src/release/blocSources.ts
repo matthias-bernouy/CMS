@@ -1,20 +1,8 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import { buildCollectionBloc } from "@bernouy/cms-repository/collections/build";
+import { buildCollectionBloc, compileBlocStyle, compileBlocTemplate } from "@bernouy/cms-repository/collections/build";
 import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery";
 import { readSourceEntries, scanFileSourceTree } from "./authored/sourceTree";
-
-const DEFAULT_BLOC_SOURCE = `
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
-
-export class Bloc extends Component {
-    constructor() {
-        super({ css, template });
-    }
-}
-`;
 
 /** Discover recursively grouped Bloc folders and compile them without path-derived identity. */
 export async function loadCollectionBlocs(directory: string): Promise<unknown[]> {
@@ -38,10 +26,10 @@ export async function loadCollectionBlocs(directory: string): Promise<unknown[]>
 
 async function compileBlocSource(source: BlocSource): Promise<unknown> {
     const { definition, id, root } = source;
-    if (["shadowdom", "lightdom", "style", "runtime", "defaultContent"].some((key) => Object.hasOwn(definition, key))) {
+    if (["template", "lightdom", "style", "runtime", "defaultContent"].some((key) => Object.hasOwn(definition, key))) {
         throw new Error(`Bloc ${id} must keep markup, CSS and JavaScript in separate files`);
     }
-    const shadow = Bun.file(join(root, "shadowdom.html"));
+    const templateFile = Bun.file(join(root, "template.html"));
     const light = Bun.file(join(root, "lightdom.html"));
     const style = Bun.file(join(root, "style.css"));
     const defaults = Bun.file(join(root, "default.html"));
@@ -64,7 +52,7 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
     if (definition.kind === "composition") {
         if (
             !(await light.exists()) ||
-            (await shadow.exists()) ||
+            (await templateFile.exists()) ||
             (await style.exists()) ||
             (await script.exists()) ||
             Object.keys(runtimeSources).length > 0 ||
@@ -74,24 +62,19 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
         }
         return { ...definition, lightdom: (await light.text()).trim(), ...(defaultContent ? { defaultContent } : {}) };
     }
-    if (definition.kind !== "component" || !(await shadow.exists())) {
-        throw new Error(`Component ${id} requires shadowdom.html`);
+    if (definition.kind !== "component" || !(await templateFile.exists())) {
+        throw new Error(`Component ${id} requires template.html`);
     }
-    if (definition.nativeElement !== undefined && (await light.exists())) {
-        throw new Error(`Managed native component ${id} cannot declare lightdom.html`);
-    }
-    if (definition.nativeElement !== undefined && !defaultContent) {
-        throw new Error(`Managed native component ${id} requires default.html`);
-    }
-    const shadowdom = (await shadow.text()).trim();
+    const shell = (await templateFile.text()).trim();
     const lightdom = (await light.exists()) ? (await light.text()).trim() : undefined;
     const css = (await style.exists()) ? (await style.text()).trim() : undefined;
+    const template = compileBlocTemplate(shell, lightdom);
+    const scopedStyle = compileBlocStyle(id, css ?? "");
     const compiled = await buildCollectionBloc({
         tag: id,
-        viewSource: (await script.exists()) ? await script.text() : DEFAULT_BLOC_SOURCE,
+        ...((await script.exists()) ? { viewSource: await script.text() } : {}),
+        style: scopedStyle,
         source: {
-            "shadowdom.html": Buffer.from(shadowdom).toString("base64"),
-            "style.css": Buffer.from(css ?? "").toString("base64"),
             ...runtimeSources,
         },
         viewPath: "bloc.ts",
@@ -99,8 +82,7 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
     return {
         ...definition,
         ...(hasSettingsDirectory ? { settings: await settingsFile.json() } : {}),
-        shadowdom,
-        ...(lightdom ? { lightdom } : {}),
+        template,
         ...(defaultContent ? { defaultContent } : {}),
         ...(css ? { style: css } : {}),
         runtime: { viewJS: compiled.viewJS },

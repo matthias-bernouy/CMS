@@ -48,14 +48,14 @@ test("discovery audits authored official collection blocs and their browser help
         const bloc = "packages/official-repository/collections/official/blocs/admin/example";
         await file(`${bloc}/bloc.ts`, 'import { load } from "./runtime/client"; load();');
         await file(`${bloc}/runtime/client.ts`, 'export const load = () => fetch("/.cms/call/example/list");');
-        await file(`${bloc}/shadowdom.html`, "<section></section>");
+        await file(`${bloc}/template.html`, "<section></section>");
 
         const sources = await discoverUiSources(root);
 
         expect(sources.map(({ path }) => path)).toEqual([
             `${bloc}/bloc.ts`,
             `${bloc}/runtime/client.ts`,
-            `${bloc}/shadowdom.html`,
+            `${bloc}/template.html`,
         ]);
         expect(sources.every(({ browser }) => browser)).toBe(true);
     } finally {

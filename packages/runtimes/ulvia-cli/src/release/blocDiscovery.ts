@@ -11,7 +11,7 @@ const BLOC_ENTRIES = new Set([
     "lightdom.html",
     "runtime",
     "settings",
-    "shadowdom.html",
+    "template.html",
     "style.css",
 ]);
 
