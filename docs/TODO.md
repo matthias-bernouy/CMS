@@ -8,8 +8,8 @@ implemented behavior.
 
 **Status:** deferred while every installable collection is official,
 first-party and reviewed with the CmsCore release. Collection JavaScript is
-currently trusted and may execute in the Kernel document. Shadow
-DOM and collection namespaces provide encapsulation, not a security boundary.
+currently trusted and may execute in the Kernel document. Scoped Light DOM and
+collection namespaces provide encapsulation, not a security boundary.
 
 Revisit this before admitting any third-party, remotely published or otherwise
 unreviewed collection. Do not solve it with one visible iframe per Bloc. The
@@ -45,17 +45,6 @@ Exit conditions:
   queries continue to work in the real document;
 - a crashed or non-responsive collection runtime can be terminated without
   making the rest of the page unusable.
-
-## Browser Host ABI
-
-**Status:** trusted official collections currently use the mutable
-`window.cmsRuntime` host object. This is an implementation seam, not yet a
-versioned compatibility contract.
-
-Before independently updating the host and installed collection releases,
-publish an explicit browser ABI version, reject unsupported ABI requirements at
-admission or activation, and retain compatibility fixtures for every supported
-version. Collections must not probe arbitrary globals as a fallback.
 
 ## Internal Persistence Migrations
 

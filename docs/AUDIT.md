@@ -1,6 +1,6 @@
 # Repository Audit
 
-This audit describes the CmsCore repository as reviewed on 2026-10-13. It is a
+This audit describes the CmsCore repository as reviewed on 2026-10-16. It is a
 source-backed engineering assessment, not a security certification or a claim
 that every production failure mode has been exercised.
 
@@ -31,12 +31,12 @@ The workspace contains 19 packages:
 
 The official repository currently contains:
 
-- eight `ulvia.cms.*` contracts with 61 capabilities;
+- eight `ulvia.cms.*` contracts with 70 capabilities;
 - one provider-only CMS-instance discovery contract with two capabilities that
   the `ulvia.official` data-plane manifest does not claim;
 - the `ulvia.official` provider manifest;
-- the `ulvia-official` collection with 87 Bloc definitions, 119 theme tokens
-  and seven administration Pages covering the eight CMS domains.
+- the `ulvia-official` collection with 166 Bloc definitions, 119 theme tokens
+  and eleven Pages, including login and ten administration routes.
 
 The supported package dependency direction is:
 
@@ -54,8 +54,8 @@ The final review run completed with:
 
 - all nine `check:all` diagnostics passing;
 - the complete workspace build passing;
-- 2,188 tests passing, no failure and one explicitly opt-in fresh-install
-  browser smoke test skipped by the standard suite;
+- the complete workspace test suite passing with no failure and the explicitly
+  opt-in fresh-install browser smoke kept as a separate environment journey;
 - that fresh-install browser smoke passing separately against a new local stack,
   including administration mutations, a second isolated instance and restart;
 - all tracked relative Markdown links resolving;
@@ -110,7 +110,9 @@ advisory audit because it requires current registry access.
   Pages, CSS variables and imported resources.
 - Wildcard exports are expanded to exact IDs during compilation; dependency
   imports remain exact.
-- Internal Blocs used transitively by public Blocs are delivered without being
+- Browser behavior bundles declare the `v1` host ABI. Build, release admission
+  and runtime registration all reject incompatible artifacts.
+- Hidden Blocs used transitively by listed Blocs are delivered without being
   exposed in the author catalogue.
 - Collection migration plans use adjacent versions, maintenance mode, revision
   checks, write fencing, batches, cursors, durable progress and restart-safe
@@ -169,13 +171,10 @@ penetration testing, dependency monitoring or deployment review.
 
 ### Compatibility
 
-1. Collection browser code currently binds to the mutable
-   `window.cmsRuntime` object. There is no explicit ABI version negotiation or
-   compatibility fixture matrix.
-2. Internal MongoDB document schemas do not share one feature-owned migration
+1. Internal MongoDB document schemas do not share one feature-owned migration
    registry. Collection data migrations do not solve internal application
    schema evolution.
-3. Pages have a concurrency revision but no retained author history, rollback
+2. Pages have a concurrency revision but no retained author history, rollback
    or compatibility pruning across historical Page versions.
 
 ### Operations
@@ -208,8 +207,9 @@ penetration testing, dependency monitoring or deployment review.
 1. The new administration UI covers the official management areas, including per-page
    route/SEO mutation and an operational diagnostics Page. Several deeper
    administration journeys still need dedicated product flows.
-2. There is no active visual Page editor. The shared Page/Bloc authoring model
-   is ready for one, but the editor itself is intentionally deferred.
+2. The active visual Page editor supports top-level Bloc insertion, settings,
+   ordering, duplication and removal. Nested visual editing, history and richer
+   authoring feedback remain incomplete.
 3. Conformance suites can run against injected disposable environments and
    immutable output-free evidence can be published and read remotely. Production
    environment provisioning, approval policy and operator-visible evidence
@@ -219,13 +219,15 @@ penetration testing, dependency monitoring or deployment review.
    credentials and idempotent installation of the official profile. Backup,
    restore, runtime upgrades and production process orchestration remain
    incomplete and are not `ulvia.cms.*` data-plane capabilities.
-5. Package licensing metadata is not yet fully reconciled between the workspace
-   and direct products.
+5. Package licensing metadata is consistently declared as MIT across the
+   workspace; release packaging still needs its own distribution check.
 
 ### Trust Boundaries
 
 1. Collection JavaScript is trusted because only reviewed official collections
-   are admitted. Scoped Light DOM and namespaces are encapsulation, not isolation.
+   are admitted. The versioned ABI and admission policy reject incompatible or
+   explicitly forbidden behavior, but scoped Light DOM and namespaces remain
+   encapsulation rather than isolation.
 2. OIDC code exists but is not part of the current official local bootstrap.
    Discovery, token and JWKS networking must receive Gateway-equivalent SSRF,
    timeout, redirect and size protections before production activation.
@@ -281,22 +283,20 @@ changing a constant.
 
 ## Recommended Order Of Work
 
-1. **Version the browser ABI.** Define the host/collection compatibility
-   handshake before collection and CMS upgrades can move independently.
-2. **Introduce internal persistence migrations.** Give every durable feature an
+1. **Introduce internal persistence migrations.** Give every durable feature an
    ordered, idempotent, fenced and restart-safe schema evolution path.
-3. **Complete operational proof.** Add backup/restore, KEK recovery, publication
+2. **Complete operational proof.** Add backup/restore, KEK recovery, publication
    interruption, proxy/TLS, shutdown and fault-injection journeys with durable
    audit events and useful metrics.
-4. **Materialize resource references and stream release work.** Remove remaining
+3. **Materialize resource references and stream release work.** Remove remaining
    all-Page scans and make large transfers restartable before volume forces an
    emergency redesign.
-5. **Finish administration product flows, then build the shared Page editor.** Keep
+4. **Finish administration product flows and deepen the shared Page editor.** Keep
    administration and public rendering on the one Page/Bloc model.
-6. **Operationalize live provider conformance.** Compose disposable provider
+5. **Operationalize live provider conformance.** Compose disposable provider
    environments, surface evidence history to operators and require current
    passing evidence where approval policy demands it.
-7. **Harden deferred trust boundaries before enabling them.** In particular,
+6. **Harden deferred trust boundaries before enabling them.** In particular,
    isolate unreviewed collection JavaScript and harden OIDC networking before
    those features are exposed.
 

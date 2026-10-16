@@ -246,8 +246,10 @@ models and validation for CMS-owned installations and site selections.
 - Reject inline style attributes in all authored markup. Structural classes are
   valid only in fixed templates, while binding expressions live in Light DOM.
   CSS is parsed and wrapped in a Bloc-owned `@scope`; Shadow DOM selectors and
-  APIs are forbidden. Compiled behavior remains executable source trust, not
-  proof that admission has audited every semantic effect.
+  APIs are forbidden. Compiled behavior declares the exact browser ABI and is
+  rechecked for syntax and forbidden APIs during admission. It remains
+  executable source trust, not proof that admission has audited every semantic
+  effect.
 - Configuration/defaults use bounded, nonnullable object schemas with only
   JSON-representable leaves. Keep page-owned initial content separate from a
   bloc's fixed light-DOM assembly.
