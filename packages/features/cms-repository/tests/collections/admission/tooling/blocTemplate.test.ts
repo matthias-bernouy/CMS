@@ -45,23 +45,24 @@ describe("collection Bloc style tooling", () => {
     test("closes authored CSS at nested Bloc boundaries", () => {
         expect(compileBlocStyle("example-card", ".title { color: red; }")).toBe(
             `@layer ulvia.blocks {
-@scope ([cms-bloc="example-card"]) to (:scope [cms-bloc] *) {
+@scope ([cms-bloc="example-card"]) to (:scope [cms-bloc]) {
 .title { color: red; }
 }
 }`,
         );
     });
 
-    test("allows an explicitly identified nested Bloc root", () => {
-        expect(() =>
-            compileBlocStyle("example-card", '[cms-bloc="example-action"] { inline-size: 100%; }'),
-        ).not.toThrow();
+    test("rejects selectors that reach a nested Bloc root", () => {
+        expect(() => compileBlocStyle("example-card", '[cms-bloc="example-action"] { inline-size: 100%; }')).toThrow(
+            "must stay inside its Light DOM boundary",
+        );
     });
 
     test.each([
         [":host { display: block; }", "Shadow DOM selectors"],
         ["body { margin: 0; }", "document selectors"],
         ["[cms-bloc] .title { color: red; }", "unbounded nested Bloc selectors"],
+        ['[cms-bloc="example-action"] { color: red; }', "exact nested Bloc selectors"],
         ["@scope (.card) { :scope { display: block; } }", "authored scope boundaries"],
     ])("rejects %s", (source, _reason) => {
         expect(() => compileBlocStyle("example-card", source)).toThrow();

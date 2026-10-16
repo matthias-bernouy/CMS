@@ -10,6 +10,8 @@ export type ValidateBlocInput = {
     tag: string;
     /** User's view source (typically `Bloc.ts`). */
     viewSource?: string;
+    /** Blocs whose public CSS inputs may be written by this Bloc runtime. */
+    uses?: readonly string[];
 };
 
 export type ValidateBlocResult = {
@@ -43,8 +45,30 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
         errors.push(...checkNoCustomElementRegistration(input.viewSource, "Bloc"));
         errors.push(...checkNoShadowDom(input.viewSource, "Bloc"));
         errors.push(...checkNoLocationMutation(input.viewSource, "Bloc"));
+        errors.push(...checkStyleVariableWrites(input.viewSource, input.tag, input.uses ?? [], "Bloc"));
     }
     return { errors };
+}
+
+function checkStyleVariableWrites(source: string, tag: string, uses: readonly string[], fileLabel: string): string[] {
+    const calls = source.match(/\.style\s*\.\s*setProperty\s*\(/gu) ?? [];
+    const literalCalls = [...source.matchAll(/\.style\s*\.\s*setProperty\s*\(\s*(["'])(--[a-z][a-z0-9-]*)\1/gu)];
+    const errors: string[] = [];
+    if (literalCalls.length !== calls.length) {
+        errors.push(
+            `${fileLabel}: CSS variables written with style.setProperty(…) must use a static lowercase literal name.`,
+        );
+    }
+    const owners = [tag, ...uses];
+    for (const match of literalCalls) {
+        const variable = match[2]!;
+        if (!owners.some((owner) => variable.startsWith(`--${owner}-`))) {
+            errors.push(
+                `${fileLabel}: CSS variable ${variable} must belong to Bloc ${tag} or a Bloc declared in uses.`,
+            );
+        }
+    }
+    return errors;
 }
 
 function checkNoShadowDom(source: string, fileLabel: string): string[] {

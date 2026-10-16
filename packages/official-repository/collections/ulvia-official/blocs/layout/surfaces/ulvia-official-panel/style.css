@@ -1,19 +1,19 @@
 :scope {
-    --panel-padding: var(--ulvia-official-spacing-lg, 1.5rem);
-    --panel-background: var(--ulvia-official-background-base, #fff);
-    --panel-border: var(--ulvia-official-border-default, #c9d5d0);
-    --panel-shadow: none;
+    --ulvia-official-panel-padding: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-panel-background: var(--ulvia-official-background-base, #fff);
+    --ulvia-official-panel-border: var(--ulvia-official-border-default, #c9d5d0);
+    --ulvia-official-panel-shadow: none;
     display: block;
 }
 
 [part="panel"] {
     display: grid;
     min-width: 0;
-    border: var(--ulvia-official-border-width, 1px) solid var(--panel-border);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-panel-border);
     border-radius: var(--ulvia-official-radius-lg, 0.75rem);
     overflow: clip;
-    background: var(--panel-background);
-    box-shadow: var(--panel-shadow);
+    background: var(--ulvia-official-panel-background);
+    box-shadow: var(--ulvia-official-panel-shadow);
 }
 
 [part="header"],
@@ -22,7 +22,7 @@
     gap: var(--ulvia-official-spacing-md, 1rem);
     align-items: center;
     justify-content: space-between;
-    padding: var(--panel-padding);
+    padding: var(--ulvia-official-panel-padding);
 }
 [part="header"] {
     border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
@@ -32,21 +32,21 @@
 }
 [part="content"] {
     min-width: 0;
-    padding: var(--panel-padding);
+    padding: var(--ulvia-official-panel-padding);
 }
 :scope[appearance="plain"] {
-    --panel-border: transparent;
-    --panel-background: transparent;
+    --ulvia-official-panel-border: transparent;
+    --ulvia-official-panel-background: transparent;
 }
 :scope[appearance="elevated"] {
-    --panel-border: var(--ulvia-official-border-subtle, #e2e9e6);
-    --panel-shadow: var(--ulvia-official-shadow-md, 0 8px 24px rgb(20 40 32 / 10%));
+    --ulvia-official-panel-border: var(--ulvia-official-border-subtle, #e2e9e6);
+    --ulvia-official-panel-shadow: var(--ulvia-official-shadow-md, 0 8px 24px rgb(20 40 32 / 10%));
 }
 :scope[density="compact"] {
-    --panel-padding: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-panel-padding: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 :scope[density="comfortable"] {
-    --panel-padding: var(--ulvia-official-spacing-xl, 2rem);
+    --ulvia-official-panel-padding: var(--ulvia-official-spacing-xl, 2rem);
 }
 :scope[contained] [part="panel"] {
     max-height: min(70svh, 44rem);

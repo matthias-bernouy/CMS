@@ -64,7 +64,7 @@ initial Page-owned children that must satisfy the Bloc slot contract.
 scope:
 
 ```css
-@scope ([cms-bloc="example-card"]) {
+@scope ([cms-bloc="example-card"]) to (:scope [cms-bloc]) {
     :scope {
         display: grid;
     }
@@ -79,6 +79,16 @@ Authors write the inner rules; the compiler owns the outer `@scope`. Global
 selectors, document selectors, Shadow DOM selectors and unsafe external CSS
 are rejected. Consumed named slots become `part` tokens after projection so
 the scoped stylesheet can target the resulting Light DOM structure.
+
+CSS custom properties are part of the collection contract rather than an
+unrestricted global namespace. A component can declare and consume variables
+prefixed by its complete Bloc ID, for example
+`--example-card-title-color`. It can consume or assign another Bloc's variables
+only when that Bloc is declared in `uses`. Theme variables must resolve to a
+local or explicitly imported theme token. Unknown, unqualified and foreign
+variables are rejected when the release is admitted. Runtime
+`style.setProperty()` calls follow the same ownership rule and require a static
+literal variable name.
 
 ## Optional Behavior
 

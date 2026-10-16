@@ -1,15 +1,15 @@
 :scope {
-    --option-list-columns: none;
-    --option-list-rows: auto;
-    --option-list-flow: column;
-    --option-list-auto-columns: minmax(7rem, auto);
-    --option-list-gap: var(--ulvia-official-spacing-3xs, 0.25rem);
-    --option-list-padding: var(--ulvia-official-spacing-3xs, 0.25rem);
-    --option-list-radius: var(--ulvia-official-radius-lg, 0.75rem);
-    --option-list-background: var(--ulvia-official-background-subtle, #eef1f0);
-    --segment-min-height: var(--ulvia-official-control-height-md, 2.875rem);
-    --segment-padding-inline: var(--ulvia-official-spacing-md, 1rem);
-    --segment-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --ulvia-official-option-list-columns: none;
+    --ulvia-official-option-list-rows: auto;
+    --ulvia-official-option-list-flow: column;
+    --ulvia-official-option-list-auto-columns: minmax(7rem, auto);
+    --ulvia-official-option-list-gap: var(--ulvia-official-spacing-3xs, 0.25rem);
+    --ulvia-official-option-list-padding: var(--ulvia-official-spacing-3xs, 0.25rem);
+    --ulvia-official-option-list-radius: var(--ulvia-official-radius-lg, 0.75rem);
+    --ulvia-official-option-list-background: var(--ulvia-official-background-subtle, #eef1f0);
+    --ulvia-official-segment-min-height: var(--ulvia-official-control-height-md, 2.875rem);
+    --ulvia-official-segment-padding-inline: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-segment-font-size: var(--ulvia-official-font-size-md, 1rem);
     display: block;
     min-width: 0;
     color: var(--ulvia-official-text-primary, CanvasText);
@@ -35,14 +35,14 @@ fieldset[part~="segmented-control"] {
 }
 
 :scope[orientation="vertical"] {
-    --option-list-columns: minmax(0, 1fr);
-    --option-list-rows: none;
-    --option-list-flow: row;
-    --option-list-auto-columns: auto;
+    --ulvia-official-option-list-columns: minmax(0, 1fr);
+    --ulvia-official-option-list-rows: none;
+    --ulvia-official-option-list-flow: row;
+    --ulvia-official-option-list-auto-columns: auto;
 }
 
 :scope[wide] {
-    --option-list-auto-columns: minmax(0, 1fr);
+    --ulvia-official-option-list-auto-columns: minmax(0, 1fr);
 }
 
 :scope[wide] fieldset[part~="segmented-control"] {
@@ -50,15 +50,15 @@ fieldset[part~="segmented-control"] {
 }
 
 :scope[size="sm"] {
-    --segment-min-height: var(--ulvia-official-control-height-sm, 2.25rem);
-    --segment-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
-    --segment-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-segment-min-height: var(--ulvia-official-control-height-sm, 2.25rem);
+    --ulvia-official-segment-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-segment-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
 
 :scope[size="lg"] {
-    --segment-min-height: var(--ulvia-official-control-height-lg, 3.25rem);
-    --segment-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);
-    --segment-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
+    --ulvia-official-segment-min-height: var(--ulvia-official-control-height-lg, 3.25rem);
+    --ulvia-official-segment-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-segment-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
 }
 
 @container (max-width: 28rem) {
@@ -67,9 +67,9 @@ fieldset[part~="segmented-control"] {
     }
 
     :scope {
-        --option-list-columns: minmax(0, 1fr);
-        --option-list-rows: none;
-        --option-list-flow: row;
-        --option-list-auto-columns: auto;
+        --ulvia-official-option-list-columns: minmax(0, 1fr);
+        --ulvia-official-option-list-rows: none;
+        --ulvia-official-option-list-flow: row;
+        --ulvia-official-option-list-auto-columns: auto;
     }
 }

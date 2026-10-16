@@ -6,7 +6,6 @@ import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalog
 import { loadCollectionBlocs } from "./blocSources";
 import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
-import { assertCollectionSourceQuality } from "./quality";
 import { loadCollectionMigrations } from "./migrationSources";
 import { scanFileSourceTree } from "./authored/sourceTree";
 
@@ -44,7 +43,6 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         ...(theme === undefined ? {} : { theme }),
     };
     const artifact = await admitCollectionRelease(candidate, assets.bundle, { contracts });
-    assertCollectionSourceQuality(artifact.release);
     if (artifact.release.collectionId !== collectionId) {
         throw new Error(`Collection folder ${collectionId} does not match its definition`);
     }

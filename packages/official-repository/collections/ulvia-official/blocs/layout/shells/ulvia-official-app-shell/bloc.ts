@@ -15,9 +15,9 @@ export class Bloc extends BlocBehavior {
 
     constructor(root: HTMLElement) {
         super(root);
-        this.contextualPanel = root.querySelector('[part="secondary-sidebar"]');
-        this.footer = root.querySelector('[part="footer"]');
-        this.navigationPanel = root.querySelector('[part="secondary-navigation"]');
+        this.contextualPanel = this.querySelector('[part="secondary-sidebar"]');
+        this.footer = this.querySelector('[part="footer"]');
+        this.navigationPanel = this.querySelector('[part="secondary-navigation"]');
         this.resizeObserver = new ResizeObserver(this.syncCompactMode);
     }
 

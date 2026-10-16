@@ -5,7 +5,7 @@
     "description": "bloc.control-group.description",
     "category": "bloc.category.forms",
     "order": 140,
-    "uses": ["ulvia-official-action", "ulvia-official-input"],
+    "uses": ["ulvia-official-action", "ulvia-official-input", "ulvia-official-select"],
     "requires": [],
     "slots": {
         "leading": {

@@ -1,6 +1,11 @@
 :scope {
-    --route-tab-block-padding: var(--ulvia-official-spacing-xs, 0.5rem);
-    --route-tab-inline-padding: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-route-tab-block-padding: var(--ulvia-official-spacing-xs, 0.5rem);
+    --ulvia-official-route-tab-inline-padding: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-route-tab-active-color: var(--ulvia-official-primary, #3157d5);
+    --ulvia-official-route-tab-active-background: transparent;
+    --ulvia-official-route-tab-indicator-display: block;
+    --ulvia-official-route-tab-radius: 0rem;
+    --ulvia-official-route-tab-flex: 0 0 auto;
     display: block;
     min-width: 0;
     text-align: inherit;
@@ -21,19 +26,11 @@
     gap: var(--ulvia-official-spacing-md, 1rem);
     border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c9d5d0);
 }
-[cms-bloc="ulvia-official-route-tab"] {
-    --route-tab-block-padding: var(--route-tab-block-padding);
-    --route-tab-inline-padding: var(--route-tab-inline-padding);
-    --route-tab-active-color: var(--ulvia-official-primary, #3157d5);
-    --route-tab-active-background: transparent;
-    --route-tab-indicator-display: block;
-    --route-tab-radius: 0rem;
-}
 :scope[align="center"] [part="tabs"] {
     justify-content: center;
 }
-:scope[align="stretch"] [cms-bloc="ulvia-official-route-tab"] {
-    flex: 1 0 auto;
+:scope[align="stretch"] {
+    --ulvia-official-route-tab-flex: 1 0 auto;
 }
 :scope[appearance="pills"] [part="tabs"] {
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
@@ -42,19 +39,19 @@
     border-radius: var(--ulvia-official-radius-lg, 0.75rem);
     background: var(--ulvia-official-background-subtle, #f3f7f5);
 }
-:scope[appearance="pills"] [cms-bloc="ulvia-official-route-tab"] {
-    --route-tab-active-color: var(--ulvia-official-on-primary, #fff);
-    --route-tab-active-background: var(--ulvia-official-primary, #3157d5);
-    --route-tab-indicator-display: none;
-    --route-tab-radius: var(--ulvia-official-radius-md, 0.5rem);
+:scope[appearance="pills"] {
+    --ulvia-official-route-tab-active-color: var(--ulvia-official-on-primary, #fff);
+    --ulvia-official-route-tab-active-background: var(--ulvia-official-primary, #3157d5);
+    --ulvia-official-route-tab-indicator-display: none;
+    --ulvia-official-route-tab-radius: var(--ulvia-official-radius-md, 0.5rem);
 }
 :scope[size="sm"] {
-    --route-tab-block-padding: var(--ulvia-official-spacing-xs, 0.5rem);
-    --route-tab-inline-padding: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-route-tab-block-padding: var(--ulvia-official-spacing-xs, 0.5rem);
+    --ulvia-official-route-tab-inline-padding: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 :scope[size="lg"] {
-    --route-tab-block-padding: var(--ulvia-official-spacing-md, 1rem);
-    --route-tab-inline-padding: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-route-tab-block-padding: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-route-tab-inline-padding: var(--ulvia-official-spacing-lg, 1.5rem);
 }
 
 @media (max-width: 40rem) {
@@ -67,7 +64,7 @@
         flex-wrap: wrap;
     }
 
-    :scope[appearance="pills"] [cms-bloc="ulvia-official-route-tab"] {
-        flex: 1 1 auto;
+    :scope[appearance="pills"] {
+        --ulvia-official-route-tab-flex: 1 1 auto;
     }
 }

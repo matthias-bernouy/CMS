@@ -78,6 +78,7 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
             ...runtimeSources,
         },
         viewPath: "bloc.ts",
+        uses: Array.isArray(definition.uses) ? (definition.uses as string[]) : [],
     });
     return {
         ...definition,

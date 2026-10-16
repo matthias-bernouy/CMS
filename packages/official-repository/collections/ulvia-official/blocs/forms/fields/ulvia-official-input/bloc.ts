@@ -368,7 +368,7 @@ export class Bloc extends BlocBehavior {
         this.observer.disconnect();
         this.datePicker?.disconnect();
         this.datePicker = null;
-        this.input = this.querySelector<HTMLInputElement>(":scope > input");
+        this.input = this.querySelector<HTMLInputElement>("input");
         if (this.input) {
             this.observer.observe(this.input, {
                 attributes: true,

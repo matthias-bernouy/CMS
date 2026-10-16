@@ -1,5 +1,6 @@
 :scope {
     --ulvia-official-content-width-sm: 31rem;
+    --ulvia-official-cover-inherited-height: 100svh;
     display: block;
     min-height: 100svh;
     color: var(--ulvia-official-text-primary, #17211d);
@@ -26,8 +27,5 @@
 }
 
 [part="page"] {
-    min-height: 100svh;
-}
-[cms-bloc="ulvia-official-cover"] {
     min-height: 100svh;
 }

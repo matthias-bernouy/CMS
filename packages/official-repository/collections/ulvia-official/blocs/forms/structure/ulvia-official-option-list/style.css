@@ -5,30 +5,30 @@
 [part="items"] {
     position: relative;
     display: grid;
-    grid-template-columns: var(--option-list-columns, minmax(0, 1fr));
-    grid-template-rows: var(--option-list-rows, none);
-    grid-auto-flow: var(--option-list-flow, row);
-    grid-auto-columns: var(--option-list-auto-columns, auto);
+    grid-template-columns: var(--ulvia-official-option-list-columns, minmax(0, 1fr));
+    grid-template-rows: var(--ulvia-official-option-list-rows, none);
+    grid-auto-flow: var(--ulvia-official-option-list-flow, row);
+    grid-auto-columns: var(--ulvia-official-option-list-auto-columns, auto);
     box-sizing: border-box;
-    padding: var(--option-list-padding, 0);
-    border: var(--option-list-border, 0);
-    border-radius: var(--option-list-radius, 0);
-    gap: var(--option-list-gap, var(--ulvia-official-spacing-2xs, 0.375rem));
-    background: var(--option-list-background, transparent);
+    padding: var(--ulvia-official-option-list-padding, 0);
+    border: var(--ulvia-official-option-list-border, 0);
+    border-radius: var(--ulvia-official-option-list-radius, 0);
+    gap: var(--ulvia-official-option-list-gap, var(--ulvia-official-spacing-2xs, 0.375rem));
+    background: var(--ulvia-official-option-list-background, transparent);
 }
 
 [part="items"]::before {
     position: absolute;
     z-index: 0;
-    inset-block-start: var(--option-list-indicator-block-start, 0);
-    inset-inline-start: var(--option-list-indicator-inline-start, 0);
-    width: var(--option-list-indicator-width, 0);
-    height: var(--option-list-indicator-height, 0);
+    inset-block-start: var(--ulvia-official-option-list-indicator-block-start, 0);
+    inset-inline-start: var(--ulvia-official-option-list-indicator-inline-start, 0);
+    width: var(--ulvia-official-option-list-indicator-width, 0);
+    height: var(--ulvia-official-option-list-indicator-height, 0);
     border-radius: calc(var(--ulvia-official-radius-md, 0.5rem) - var(--ulvia-official-spacing-3xs, 0.25rem));
     content: "";
-    background: var(--option-list-indicator-background, var(--ulvia-official-primary, #086c55));
+    background: var(--ulvia-official-option-list-indicator-background, var(--ulvia-official-primary, #086c55));
     box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(0 0 0 / 8%));
-    opacity: var(--option-list-indicator-opacity, 0);
+    opacity: var(--ulvia-official-option-list-indicator-opacity, 0);
     transition:
         inset-inline-start var(--ulvia-official-duration-normal, 180ms),
         inset-block-start var(--ulvia-official-duration-normal, 180ms),

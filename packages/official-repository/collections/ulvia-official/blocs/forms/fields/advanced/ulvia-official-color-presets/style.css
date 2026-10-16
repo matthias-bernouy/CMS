@@ -1,7 +1,7 @@
 :scope {
-    --preset-height: var(--ulvia-official-control-height-md, 2.875rem);
-    --preset-font-size: var(--ulvia-official-font-size-md, 1rem);
-    --preset-swatch-size: 2rem;
+    --ulvia-official-color-presets-preset-height: var(--ulvia-official-control-height-md, 2.875rem);
+    --ulvia-official-color-presets-preset-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --ulvia-official-color-presets-preset-swatch-size: 2rem;
     position: relative;
     display: block;
     min-width: 0;
@@ -14,7 +14,7 @@
 }
 input {
     width: 100%;
-    min-height: var(--preset-height);
+    min-height: var(--ulvia-official-color-presets-preset-height);
 }
 :scope[data-ready] input {
     position: absolute;
@@ -26,30 +26,30 @@ input {
 [part="trigger"] {
     display: grid;
     width: 100%;
-    height: var(--preset-height);
-    grid-template-columns: var(--preset-swatch-size) minmax(0, 1fr) auto;
+    height: var(--ulvia-official-color-presets-preset-height);
+    grid-template-columns: var(--ulvia-official-color-presets-preset-swatch-size) minmax(0, 1fr) auto;
     align-items: center;
     box-sizing: border-box;
     padding: 0.25rem var(--ulvia-official-spacing-sm, 0.75rem) 0.25rem 0.25rem;
-    border: var(--form-control-border-width, var(--ulvia-official-border-width, 1px)) solid
-        var(--form-control-border-color, var(--ulvia-official-border-default, #c8d1cd));
+    border: var(--ulvia-official-border-width, var(--ulvia-official-border-width, 1px)) solid
+        var(--ulvia-official-border-default, var(--ulvia-official-border-default, #c8d1cd));
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
     color: inherit;
     background: var(--ulvia-official-background-surface, Canvas);
-    box-shadow: var(--form-control-invalid-shadow, 0 1px 2px rgb(23 33 30 / 5%));
+    box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(23 33 30 / 5%));
     font: inherit;
-    font-size: var(--preset-font-size);
+    font-size: var(--ulvia-official-color-presets-preset-font-size);
     text-align: start;
     cursor: pointer;
 }
 [part="selected-swatch"] {
-    width: var(--preset-swatch-size);
-    height: var(--preset-swatch-size);
+    width: var(--ulvia-official-color-presets-preset-swatch-size);
+    height: var(--ulvia-official-color-presets-preset-swatch-size);
     box-sizing: border-box;
     border: 0.1875rem solid var(--ulvia-official-background-surface, Canvas);
     border-radius: var(--ulvia-official-radius-sm, 0.375rem);
-    background: var(--selected-colour);
+    background: var(--ulvia-official-color-presets-selected-colour, transparent);
     box-shadow: 0 0 0 1px var(--ulvia-official-border-default, #c8d1cd);
 }
 [part="value"] {
@@ -92,7 +92,7 @@ input {
     padding: 0;
     border: 0.1875rem solid var(--ulvia-official-background-surface, Canvas);
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
-    background: var(--preset-colour);
+    background: var(--ulvia-official-color-presets-preset-colour, transparent);
     box-shadow: 0 0 0 1px var(--ulvia-official-border-default, #c8d1cd);
     cursor: pointer;
     transition: transform var(--ulvia-official-duration-fast, 120ms);
@@ -110,12 +110,12 @@ input {
     cursor: not-allowed;
 }
 :scope[size="sm"] {
-    --preset-height: var(--ulvia-official-control-height-sm, 2.25rem);
-    --preset-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
-    --preset-swatch-size: 1.625rem;
+    --ulvia-official-color-presets-preset-height: var(--ulvia-official-control-height-sm, 2.25rem);
+    --ulvia-official-color-presets-preset-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-color-presets-preset-swatch-size: 1.625rem;
 }
 :scope[size="lg"] {
-    --preset-height: var(--ulvia-official-control-height-lg, 3.25rem);
-    --preset-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
-    --preset-swatch-size: 2.25rem;
+    --ulvia-official-color-presets-preset-height: var(--ulvia-official-control-height-lg, 3.25rem);
+    --ulvia-official-color-presets-preset-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
+    --ulvia-official-color-presets-preset-swatch-size: 2.25rem;
 }

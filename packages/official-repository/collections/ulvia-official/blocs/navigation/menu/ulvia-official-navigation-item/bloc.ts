@@ -18,7 +18,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private sync(): void {
-        const control = this.querySelector<HTMLElement>(":scope > a, :scope > button");
+        const control = this.blocRoot.matches("a, button") ? this.blocRoot : null;
         if (!control) {
             return;
         }

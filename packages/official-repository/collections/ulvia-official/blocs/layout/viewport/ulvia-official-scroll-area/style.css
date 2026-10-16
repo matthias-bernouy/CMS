@@ -1,10 +1,10 @@
 :scope {
-    --scroll-area-height: 20rem;
+    --ulvia-official-scroll-area-height: 20rem;
     display: block;
 }
 
 [part="scroll-area"] {
-    max-height: var(--scroll-area-height);
+    max-height: var(--ulvia-official-scroll-area-height);
     overflow: auto;
     overscroll-behavior: contain;
     scrollbar-color: var(--ulvia-official-border-strong, #899b94) transparent;
@@ -14,13 +14,13 @@
     outline-offset: 3px;
 }
 :scope[height="sm"] {
-    --scroll-area-height: 12rem;
+    --ulvia-official-scroll-area-height: 12rem;
 }
 :scope[height="lg"] {
-    --scroll-area-height: 32rem;
+    --ulvia-official-scroll-area-height: 32rem;
 }
 :scope[height="viewport"] {
-    --scroll-area-height: 100svh;
+    --ulvia-official-scroll-area-height: 100svh;
 }
 :scope[scrollbar="thin"] [part="scroll-area"] {
     scrollbar-width: thin;

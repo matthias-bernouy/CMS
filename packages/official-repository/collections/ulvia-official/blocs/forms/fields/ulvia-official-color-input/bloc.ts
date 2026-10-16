@@ -371,8 +371,8 @@ export class Bloc extends BlocBehavior {
             return;
         }
         const colour = normalizeHex(this.input.value) ?? "#000000";
-        this.style.setProperty("--selected-color", colour);
-        this.style.setProperty("--selected-hue", String(rgbToHsl(hexToRgb(colour))[0]));
+        this.style.setProperty("--ulvia-official-color-input-selected-color", colour);
+        this.style.setProperty("--ulvia-official-color-input-selected-hue", String(rgbToHsl(hexToRgb(colour))[0]));
         this.value.textContent = colour.toUpperCase();
         this.preview.setAttribute("aria-label", colour.toUpperCase());
         this.action.textContent = this.getAttribute("action-label") || "Compose";

@@ -245,7 +245,7 @@ test("installed Light DOM component is served with its scoped style runtime", as
     const reader = createContentReader(repository);
     const script = await reader.getBlocViewJS("test-card");
     expect(script).toContain("registerBloc");
-    expect(script).toContain('@scope ([cms-bloc="test-card"]) to (:scope [cms-bloc] *)');
+    expect(script).toContain('@scope ([cms-bloc="test-card"]) to (:scope [cms-bloc])');
     expect(script).toContain("var(--test-accent)");
     expect(
         (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-card")?.compositionHTML,

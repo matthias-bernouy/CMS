@@ -1,14 +1,14 @@
 :scope {
-    --sidebar-width: 15rem;
-    --sidebar-gap: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-sidebar-width: 15rem;
+    --ulvia-official-sidebar-gap: var(--ulvia-official-spacing-lg, 1.5rem);
     display: block;
     container-type: inline-size;
 }
 
 [part="layout"] {
     display: grid;
-    grid-template-columns: minmax(0, var(--sidebar-width)) minmax(0, 1fr);
-    gap: var(--sidebar-gap);
+    grid-template-columns: minmax(0, var(--ulvia-official-sidebar-width)) minmax(0, 1fr);
+    gap: var(--ulvia-official-sidebar-gap);
     align-items: start;
 }
 
@@ -17,25 +17,25 @@
     min-width: 0;
 }
 :scope[side="end"] [part="layout"] {
-    grid-template-columns: minmax(0, 1fr) minmax(0, var(--sidebar-width));
+    grid-template-columns: minmax(0, 1fr) minmax(0, var(--ulvia-official-sidebar-width));
 }
 :scope[side="end"] [part="sidebar"] {
     order: 2;
 }
 :scope[sidebar-width="sm"] {
-    --sidebar-width: 11rem;
+    --ulvia-official-sidebar-width: 11rem;
 }
 :scope[sidebar-width="lg"] {
-    --sidebar-width: 20rem;
+    --ulvia-official-sidebar-width: 20rem;
 }
 :scope[gap="sm"] {
-    --sidebar-gap: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-sidebar-gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 :scope[gap="md"] {
-    --sidebar-gap: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-sidebar-gap: var(--ulvia-official-spacing-md, 1rem);
 }
 :scope[gap="xl"] {
-    --sidebar-gap: var(--ulvia-official-spacing-xl, 2rem);
+    --ulvia-official-sidebar-gap: var(--ulvia-official-spacing-xl, 2rem);
 }
 
 @container (max-width: 44rem) {

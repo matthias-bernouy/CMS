@@ -41,7 +41,7 @@ export class Bloc extends BlocBehavior {
         this.input?.removeEventListener("input", this.sync);
         this.input?.removeEventListener("change", this.sync);
         this.observer.disconnect();
-        this.input = this.querySelector<HTMLInputElement>(':scope > input[type="range"]');
+        this.input = this.querySelector<HTMLInputElement>('input[type="range"]');
         this.input?.addEventListener("input", this.sync);
         this.input?.addEventListener("change", this.sync);
         if (this.input) {
@@ -61,8 +61,11 @@ export class Bloc extends BlocBehavior {
         const maximum = Number(this.input.max || "100");
         const value = Number(this.input.value);
         const fraction = maximum === minimum ? 0 : Math.min(1, Math.max(0, (value - minimum) / (maximum - minimum)));
-        this.style.setProperty("--range-progress", `${fraction * 100}%`);
-        this.style.setProperty("--range-thumb-position", `calc(${fraction * 100}% + ${0.625 - fraction * 1.25}rem)`);
+        this.style.setProperty("--ulvia-official-range-progress", `${fraction * 100}%`);
+        this.style.setProperty(
+            "--ulvia-official-range-thumb-position",
+            `calc(${fraction * 100}% + ${0.625 - fraction * 1.25}rem)`,
+        );
         if (this.current) {
             this.current.textContent = this.formatValue(this.input.value);
         }

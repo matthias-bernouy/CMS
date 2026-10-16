@@ -4,7 +4,7 @@ import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError, invalid, translateCollectionError } from "../errors";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
 import { identifier, integer, keys, record, string } from "../values";
-import { parseCollectionNamespace } from "../namespace";
+import { collectionThemeTokenId, parseCollectionNamespace } from "../namespace";
 import { parseCollectionTheme } from "./theme";
 import { parseCollectionTexts } from "../texts/parseCollectionTexts";
 import { parseAssets } from "./assets";
@@ -21,6 +21,7 @@ import { parseCollectionMigrations } from "../admission/releaseMigrations";
 import { validateCollectionAssetReferences } from "../validation/markup/assets";
 import { parseCollectionStates } from "./states";
 import { validateCollectionStateBindings } from "../validation/markup/state";
+import { validateBlocStyles } from "../validation/blocStyles";
 
 export function parseCollectionRelease(
     value: unknown,
@@ -82,13 +83,26 @@ export function parseCollectionRelease(
             source.dependencies === undefined
                 ? undefined
                 : parseCollectionDependencies(source.dependencies, collectionId, limits);
+        const theme =
+            source.theme === undefined
+                ? undefined
+                : parseCollectionTheme(source.theme, collectionId, limits, dependencies ?? []);
         const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits);
-        validateBlocs(
-            blocs,
-            new Set(assets.map((asset) => asset.id)),
-            limits,
-            new Set(dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? []),
+        const importedBlocs = new Set(
+            dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? [],
         );
+        validateBlocs(blocs, new Set(assets.map((asset) => asset.id)), limits, importedBlocs);
+        validateBlocStyles(blocs, {
+            importedBlocs,
+            themeVariables: new Set([
+                ...(theme?.categories.flatMap((category) =>
+                    category.tokens.map((token) => collectionThemeTokenId(collectionId, token.id)),
+                ) ?? []),
+                ...(dependencies?.flatMap((dependency) =>
+                    dependency.imports.themeTokens.map(({ id }) => collectionThemeTokenId(dependency.collectionId, id)),
+                ) ?? []),
+            ]),
+        });
         const availableBlocIds = new Set([
             ...blocs.map((bloc) => bloc.id),
             ...(dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? []),
@@ -121,10 +135,6 @@ export function parseCollectionRelease(
             ),
             pages,
         );
-        const theme =
-            source.theme === undefined
-                ? undefined
-                : parseCollectionTheme(source.theme, collectionId, limits, dependencies ?? []);
         const exports =
             source.exports === undefined ? undefined : parseCollectionExports(source.exports, collectionId, limits);
         if (exports) {

@@ -17,7 +17,7 @@
     justify-content: flex-end;
 }
 :scope[wide] * {
-    --action-width: 100%;
+    --ulvia-official-action-width: 100%;
     flex: 1 1 12rem;
 }
 @container (max-width: 24rem) {
@@ -26,7 +26,7 @@
         flex-direction: column;
     }
     :scope:not([responsive-layout="wrap"]) * {
-        --action-width: 100%;
+        --ulvia-official-action-width: 100%;
         width: 100%;
     }
 }

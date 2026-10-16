@@ -1,6 +1,11 @@
 :scope {
-    --list-border: var(--ulvia-official-border-subtle, #e2e9e6);
-    --list-radius: var(--ulvia-official-radius-lg, 0.75rem);
+    --ulvia-official-list-border: var(--ulvia-official-border-subtle, #e2e9e6);
+    --ulvia-official-list-radius: var(--ulvia-official-radius-lg, 0.75rem);
+    --ulvia-official-list-item-divider: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-list-border);
+    --ulvia-official-list-item-border: 0;
+    --ulvia-official-list-item-radius: 0;
+    --ulvia-official-list-item-background: transparent;
+    --ulvia-official-list-item-gap: 0;
     display: block;
     min-width: 0;
 }
@@ -9,14 +14,14 @@
     display: grid;
     min-width: 0;
     overflow: clip;
-    border: var(--ulvia-official-border-width, 1px) solid var(--list-border);
-    border-radius: var(--list-radius);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-list-border);
+    border-radius: var(--ulvia-official-list-radius);
     background: var(--ulvia-official-background-base, #fff);
     box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(20 40 32 / 5%));
 }
 [part="header"] {
     padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
-    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--list-border);
+    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-list-border);
     color: var(--ulvia-official-text-muted, #68766f);
     font-size: 0.6875rem;
     font-weight: var(--ulvia-official-font-weight-bold, 700);
@@ -25,10 +30,6 @@
 }
 [part="header"]:has(slot:not(:has-slotted)) {
     display: none;
-}
-
-[cms-bloc="ulvia-official-list-item"]:not(:last-child) {
-    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--list-border);
 }
 
 :scope[appearance="plain"] [part="list"] {
@@ -41,13 +42,10 @@
 :scope[appearance="plain"] [part="header"] {
     display: none;
 }
-
-:scope[appearance="plain"] [cms-bloc="ulvia-official-list-item"] {
-    border: var(--ulvia-official-border-width, 1px) solid var(--list-border);
-    border-radius: var(--list-radius);
-    background: var(--ulvia-official-background-base, #fff);
-}
-
-:scope[appearance="plain"] [cms-bloc="ulvia-official-list-item"]:not(:last-child) {
-    margin-block-end: var(--ulvia-official-spacing-sm, 0.75rem);
+:scope[appearance="plain"] {
+    --ulvia-official-list-item-divider: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-list-border);
+    --ulvia-official-list-item-border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-list-border);
+    --ulvia-official-list-item-radius: var(--ulvia-official-list-radius);
+    --ulvia-official-list-item-background: var(--ulvia-official-background-base, #fff);
+    --ulvia-official-list-item-gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }

@@ -19,11 +19,11 @@ fieldset[part~="choice-group"] {
     font: inherit;
 }
 :scope[orientation="horizontal"] {
-    --option-list-columns: none;
-    --option-list-rows: auto;
-    --option-list-flow: column;
-    --option-list-auto-columns: minmax(11rem, auto);
-    --option-list-gap: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-option-list-columns: none;
+    --ulvia-official-option-list-rows: auto;
+    --ulvia-official-option-list-flow: column;
+    --ulvia-official-option-list-auto-columns: minmax(11rem, auto);
+    --ulvia-official-option-list-gap: var(--ulvia-official-spacing-md, 1rem);
 }
 :scope[orientation="horizontal"] fieldset[part~="choice-group"] {
     width: fit-content;
@@ -32,9 +32,9 @@ fieldset[part~="choice-group"] {
 @container (max-width: 28rem) {
     :scope[orientation="horizontal"] fieldset[part~="choice-group"] {
         width: 100%;
-        --option-list-columns: minmax(0, 1fr);
-        --option-list-rows: none;
-        --option-list-flow: row;
-        --option-list-auto-columns: auto;
+        --ulvia-official-option-list-columns: minmax(0, 1fr);
+        --ulvia-official-option-list-rows: none;
+        --ulvia-official-option-list-flow: row;
+        --ulvia-official-option-list-auto-columns: auto;
     }
 }

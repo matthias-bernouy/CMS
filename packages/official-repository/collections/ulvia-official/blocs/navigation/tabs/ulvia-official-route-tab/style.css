@@ -1,6 +1,7 @@
 :scope {
     display: block;
     min-width: max-content;
+    flex: var(--ulvia-official-route-tab-flex, 0 0 auto);
 }
 :scope[hidden] {
     display: none;
@@ -8,15 +9,16 @@
 [part="tab"] {
     display: contents;
 }
-a {
+:scope {
     position: relative;
     display: flex;
     min-height: 2.25rem;
     align-items: center;
-    justify-content: var(--route-tab-justify-content, center);
+    justify-content: var(--ulvia-official-route-tab-justify-content, center);
     box-sizing: border-box;
-    padding: var(--route-tab-block-padding, 0.75rem) var(--route-tab-inline-padding, 0.75rem);
-    border-radius: var(--route-tab-radius, 0rem);
+    padding: var(--ulvia-official-route-tab-block-padding, 0.75rem)
+        var(--ulvia-official-route-tab-inline-padding, 0.75rem);
+    border-radius: var(--ulvia-official-route-tab-radius, 0rem);
     color: var(--ulvia-official-text-secondary, #4f625a);
     background: transparent;
     font: inherit;
@@ -24,29 +26,29 @@ a {
     font-weight: var(--ulvia-official-font-weight-medium, 500);
     line-height: var(--ulvia-official-line-height-tight, 1.15);
     text-decoration: none;
-    white-space: var(--route-tab-white-space, nowrap);
+    white-space: var(--ulvia-official-route-tab-white-space, nowrap);
     transition:
         color var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease),
         background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
 }
-a:hover {
+:scope:hover {
     color: var(--ulvia-official-text-primary, #17211d);
 }
-a:focus-visible {
+:scope:focus-visible {
     border-radius: var(--ulvia-official-radius-sm, 0.25rem);
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: -3px;
 }
-:scope[active] a {
-    color: var(--route-tab-active-color, var(--ulvia-official-primary, #3157d5));
-    background: var(--route-tab-active-background, transparent);
+:scope[active] {
+    color: var(--ulvia-official-route-tab-active-color, var(--ulvia-official-primary, #3157d5));
+    background: var(--ulvia-official-route-tab-active-background, transparent);
 }
-:scope[active] a::after {
+:scope[active]::after {
     position: absolute;
-    right: var(--route-tab-inline-padding, 0.75rem);
+    right: var(--ulvia-official-route-tab-inline-padding, 0.75rem);
     bottom: -1px;
-    left: var(--route-tab-inline-padding, 0.75rem);
-    display: var(--route-tab-indicator-display, block);
+    left: var(--ulvia-official-route-tab-inline-padding, 0.75rem);
+    display: var(--ulvia-official-route-tab-indicator-display, block);
     height: 3px;
     border-radius: 999px 999px 0 0;
     background: var(--ulvia-official-primary, #3157d5);

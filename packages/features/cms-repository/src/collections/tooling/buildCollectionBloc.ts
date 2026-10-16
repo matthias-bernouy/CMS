@@ -17,6 +17,8 @@ export interface CollectionBlocBuildInput {
     readonly source?: Readonly<Record<string, string>>;
     /** Relative entry path inside the supplied source bundle. */
     readonly viewPath?: string;
+    /** Declared Bloc dependencies whose CSS inputs may be written by this runtime. */
+    readonly uses?: readonly string[];
 }
 
 export interface CollectionBlocBuildArtifact {
@@ -25,7 +27,11 @@ export interface CollectionBlocBuildArtifact {
 
 /** Compile one collection component's browser runtime without admitting or persisting it. */
 export async function buildCollectionBloc(input: CollectionBlocBuildInput): Promise<CollectionBlocBuildArtifact> {
-    const validation = validateBloc({ tag: input.tag, ...(input.viewSource ? { viewSource: input.viewSource } : {}) });
+    const validation = validateBloc({
+        tag: input.tag,
+        ...(input.viewSource ? { viewSource: input.viewSource } : {}),
+        ...(input.uses ? { uses: input.uses } : {}),
+    });
     if (validation.errors.length > 0) {
         throw new Error(validation.errors.join("\n"));
     }

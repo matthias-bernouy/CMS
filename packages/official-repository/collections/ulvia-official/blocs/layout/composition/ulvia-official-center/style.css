@@ -1,20 +1,20 @@
 :scope {
-    --center-width: var(--ulvia-official-content-width-md, 56rem);
+    --ulvia-official-center-width: var(--ulvia-official-content-width-md, 56rem);
     display: block;
 }
 
 [part="center"] {
-    width: min(100%, var(--center-width));
+    width: min(100%, var(--ulvia-official-center-width));
     box-sizing: border-box;
     margin-inline: auto;
     text-align: start;
 }
 
 :scope[width="sm"] {
-    --center-width: var(--ulvia-official-content-width-sm, 40rem);
+    --ulvia-official-center-width: var(--ulvia-official-content-width-sm, 40rem);
 }
 :scope[width="lg"] {
-    --center-width: var(--ulvia-official-content-width-lg, 72rem);
+    --ulvia-official-center-width: var(--ulvia-official-content-width-lg, 72rem);
 }
 :scope[text-align="center"] [part="center"] {
     text-align: center;

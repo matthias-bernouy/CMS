@@ -1,11 +1,17 @@
 :scope {
     display: block;
     min-width: 0;
+    border: var(--ulvia-official-list-item-border, 0);
+    border-radius: var(--ulvia-official-list-item-radius, 0);
     color: var(--ulvia-official-text-primary, #17211d);
-    background: transparent;
+    background: var(--ulvia-official-list-item-background, transparent);
     container-type: inline-size;
     font-family: var(--ulvia-official-font-family-main, inherit);
     transition: background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
+}
+:scope:not(:last-child) {
+    margin-block-end: var(--ulvia-official-list-item-gap, 0);
+    border-bottom: var(--ulvia-official-list-item-divider, 0);
 }
 
 :scope:hover {
@@ -19,7 +25,10 @@
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: var(--ulvia-official-spacing-md, 1rem);
     align-items: center;
-    padding: var(--list-item-padding, var(--ulvia-official-spacing-md, 1rem) var(--ulvia-official-spacing-lg, 1.5rem));
+    padding: var(
+        --ulvia-official-list-item-padding,
+        var(--ulvia-official-spacing-md, 1rem) var(--ulvia-official-spacing-lg, 1.5rem)
+    );
 }
 [part="leading"] {
     grid-area: leading;
@@ -88,7 +97,7 @@
 }
 
 :scope[density="compact"] {
-    --list-item-padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-list-item-padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
 }
 :scope[layout="columns"] [part="item"] {
     grid-template-areas: "content body actions";

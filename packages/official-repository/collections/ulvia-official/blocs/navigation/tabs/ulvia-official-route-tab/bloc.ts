@@ -18,7 +18,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private syncCurrentPage(): void {
-        const link = this.querySelector<HTMLAnchorElement>(":scope > a");
+        const link = this.blocRoot instanceof HTMLAnchorElement ? this.blocRoot : null;
         if (!link) {
             return;
         }

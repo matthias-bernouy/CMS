@@ -2,76 +2,10 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
 import { validatePageDocument } from "@bernouy/cms-content/page-document";
 import { buildOfficialBootstrapArtifacts, writeOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
-import { assertCollectionSourceQuality } from "../../src/release/quality";
 import { prepareCollectionRelease } from "../../src/release/source";
 import { officialContractCatalogue } from "../officialContractCatalogue";
-
-function release(style: string) {
-    return parseCollectionRelease({
-        kind: "collection",
-        protocol: "ulvia-collection/v1",
-        schemaDialect: "ulvia-schema/v1",
-        collectionId: "example",
-        publisherId: "example.official",
-        version: "1.0.0",
-        name: "collection.name",
-        locale: "en",
-        translations: {
-            en: {
-                "bloc.card.label": "Card",
-                "collection.name": "Example",
-                "theme.category.colors.label": "Colors",
-                "theme.label": "Theme",
-                "theme.token.primary.label": "Primary",
-            },
-        },
-        theme: {
-            label: "theme.label",
-            categories: [
-                {
-                    id: "colors",
-                    label: "theme.category.colors.label",
-                    tokens: [
-                        {
-                            id: "primary",
-                            label: "theme.token.primary.label",
-                            type: "color",
-                            defaults: { light: "#123456" },
-                        },
-                    ],
-                },
-            ],
-        },
-        assets: [],
-        blocs: [
-            {
-                kind: "component",
-                root: { accepts: ["div"] },
-                id: "example-card",
-                label: "bloc.card.label",
-                template: "<div></div>",
-                style,
-                slots: {},
-                uses: [],
-                requires: [],
-            },
-        ],
-    });
-}
-
-test("collection source quality accepts theme tokens and declared Bloc properties", () => {
-    expect(() =>
-        assertCollectionSourceQuality(
-            release(":scope { --example-card-color: var(--example-primary); color: var(--example-card-color); }"),
-        ),
-    ).not.toThrow();
-    expect(() => assertCollectionSourceQuality(release(":scope { color: var(--example-prmary); }"))).toThrow(
-        "unknown or unimported",
-    );
-});
 
 test("the official collection passes its source quality contract", async () => {
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");

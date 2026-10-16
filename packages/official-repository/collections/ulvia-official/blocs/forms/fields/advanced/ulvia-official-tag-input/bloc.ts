@@ -32,7 +32,7 @@ export class Bloc extends BlocBehavior {
     }
 
     override connectedCallback(): void {
-        this.source = this.querySelector<HTMLInputElement>(":scope > input");
+        this.source = this.querySelector<HTMLInputElement>("input");
         this.hideSourceFromAccessibilityTree();
         this.tags = this.parseTags(this.source?.value ?? "");
         this.input?.addEventListener("keydown", this.handleKeydown);

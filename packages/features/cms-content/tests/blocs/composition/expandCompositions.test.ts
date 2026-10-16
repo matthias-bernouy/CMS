@@ -47,6 +47,27 @@ describe("expandCompositions", () => {
         expect(host.textContent).toBe("Page titleShared copy");
     });
 
+    test("keeps repeated component ids and accessibility references unique", () => {
+        const document = body('<div cms-bloc="test-tabs"></div><div cms-bloc="test-tabs"></div>');
+
+        expandCompositions(document.body, [
+            {
+                id: "test-tabs",
+                templateHTML:
+                    '<a id="details-tab" href="#details" aria-controls="details">Details</a><section id="details" aria-labelledby="details-tab"></section>',
+            },
+        ]);
+
+        const ids = Array.from(document.querySelectorAll<HTMLElement>("[id]"), (element) => element.id);
+        expect(new Set(ids).size).toBe(ids.length);
+        expect(ids).toEqual(["details-tab", "details", "details-tab--cms-2", "details--cms-2"]);
+        const repeatedLink = document.querySelector<HTMLAnchorElement>("#details-tab--cms-2")!;
+        const repeatedPanel = document.querySelector<HTMLElement>("#details--cms-2")!;
+        expect(repeatedLink.getAttribute("href")).toBe("#details--cms-2");
+        expect(repeatedLink.getAttribute("aria-controls")).toBe("details--cms-2");
+        expect(repeatedPanel.getAttribute("aria-labelledby")).toBe("details-tab--cms-2");
+    });
+
     test("renders a changed shared composition for every page while preserving each page slot", () => {
         const document = body(
             '<div cms-bloc=\"test-banner\"><span slot="message">First</span></div><div cms-bloc=\"test-banner\"><span slot="message">Second</span></div>',

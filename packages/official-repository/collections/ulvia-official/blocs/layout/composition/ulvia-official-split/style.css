@@ -1,5 +1,5 @@
 :scope {
-    --split-gap: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-split-gap: var(--ulvia-official-spacing-lg, 1.5rem);
     display: block;
     container-type: inline-size;
     text-align: inherit;
@@ -8,7 +8,7 @@
 [part="split"] {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--split-gap);
+    gap: var(--ulvia-official-split-gap);
     align-items: center;
 }
 
@@ -23,13 +23,13 @@
     grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
 }
 :scope[gap="sm"] {
-    --split-gap: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-split-gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 :scope[gap="md"] {
-    --split-gap: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-split-gap: var(--ulvia-official-spacing-md, 1rem);
 }
 :scope[gap="xl"] {
-    --split-gap: var(--ulvia-official-spacing-xl, 2rem);
+    --ulvia-official-split-gap: var(--ulvia-official-spacing-xl, 2rem);
 }
 :scope[align="start"] [part="split"] {
     align-items: start;

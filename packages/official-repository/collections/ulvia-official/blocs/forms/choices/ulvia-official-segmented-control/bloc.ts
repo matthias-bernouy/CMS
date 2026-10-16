@@ -11,7 +11,7 @@ export class Bloc extends BlocBehavior {
 
     override connectedCallback(): void {
         this.root = this.ownerDocument;
-        this.list = this.querySelector<HTMLElement>('[cms-bloc="ulvia-official-option-list"]');
+        this.list = this.queryBlocRoot("ulvia-official-option-list");
         this.root.addEventListener("change", this.handleChange);
         if (this.list) {
             this.resizeObserver.observe(this.list);
@@ -40,19 +40,25 @@ export class Bloc extends BlocBehavior {
         if (!this.list) {
             return;
         }
-        const selected = Array.from(this.querySelectorAll<HTMLElement>('[cms-bloc="ulvia-official-segment"]')).find(
-            (segment) => segment.querySelector<HTMLInputElement>('input[type="radio"]')?.checked,
+        const selected = this.queryBlocRoots("ulvia-official-segment").find((segment) =>
+            segment.hasAttribute("data-selected"),
         );
         if (!selected) {
-            this.list.style.setProperty("--option-list-indicator-opacity", "0");
+            this.list.style.setProperty("--ulvia-official-option-list-indicator-opacity", "0");
             return;
         }
         const listRect = this.list.getBoundingClientRect();
         const selectedRect = selected.getBoundingClientRect();
-        this.list.style.setProperty("--option-list-indicator-inline-start", `${selectedRect.left - listRect.left}px`);
-        this.list.style.setProperty("--option-list-indicator-block-start", `${selectedRect.top - listRect.top}px`);
-        this.list.style.setProperty("--option-list-indicator-width", `${selectedRect.width}px`);
-        this.list.style.setProperty("--option-list-indicator-height", `${selectedRect.height}px`);
-        this.list.style.setProperty("--option-list-indicator-opacity", "1");
+        this.list.style.setProperty(
+            "--ulvia-official-option-list-indicator-inline-start",
+            `${selectedRect.left - listRect.left}px`,
+        );
+        this.list.style.setProperty(
+            "--ulvia-official-option-list-indicator-block-start",
+            `${selectedRect.top - listRect.top}px`,
+        );
+        this.list.style.setProperty("--ulvia-official-option-list-indicator-width", `${selectedRect.width}px`);
+        this.list.style.setProperty("--ulvia-official-option-list-indicator-height", `${selectedRect.height}px`);
+        this.list.style.setProperty("--ulvia-official-option-list-indicator-opacity", "1");
     }
 }

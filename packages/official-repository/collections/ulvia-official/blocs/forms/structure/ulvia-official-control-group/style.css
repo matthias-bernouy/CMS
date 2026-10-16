@@ -35,9 +35,10 @@
     gap: 0;
 }
 :scope[joined] {
-    --form-input-radius: 0;
-    --form-select-radius: 0;
-    --form-action-radius: 0 var(--ulvia-official-radius-md, 0.5rem) var(--ulvia-official-radius-md, 0.5rem) 0;
+    --ulvia-official-input-form-radius: 0;
+    --ulvia-official-select-form-radius: 0;
+    --ulvia-official-action-form-radius: 0 var(--ulvia-official-radius-md, 0.5rem)
+        var(--ulvia-official-radius-md, 0.5rem) 0;
 }
 :scope[joined] * {
     position: relative;
@@ -59,16 +60,16 @@
         display: block;
     }
     :scope[joined] {
-        --form-input-radius: var(--ulvia-official-radius-md, 0.5rem);
-        --form-select-radius: var(--ulvia-official-radius-md, 0.5rem);
-        --form-action-radius: var(--ulvia-official-radius-md, 0.5rem);
+        --ulvia-official-input-form-radius: var(--ulvia-official-radius-md, 0.5rem);
+        --ulvia-official-select-form-radius: var(--ulvia-official-radius-md, 0.5rem);
+        --ulvia-official-action-form-radius: var(--ulvia-official-radius-md, 0.5rem);
     }
     :scope[joined] [part~="leading"] {
         border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
         border-radius: var(--ulvia-official-radius-md, 0.5rem);
     }
     [part~="trailing"] {
-        --action-width: 100%;
+        --ulvia-official-action-width: 100%;
         width: 100%;
     }
 }

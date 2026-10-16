@@ -23,9 +23,12 @@ loading, empty, error, and long-content states.
 builds the browser runtime bundle. Identity validation rejects unnamespaced,
 reserved or malformed Bloc IDs.
 Source validation detects selected registration and navigation patterns; it is
-not a complete JavaScript safety analysis. Bundling enforces supported imports
-and validates emitted syntax. The collection import path additionally checks source
-bundles, default content and managed native-child structure.
+not a complete JavaScript safety analysis. It also rejects dynamic or foreign
+CSS custom-property writes. Bundling enforces supported imports and validates
+emitted syntax. Release admission parses every Bloc stylesheet and validates
+custom-property ownership, declared Bloc dependencies, theme-token imports and
+fallbacks for optional values. The collection import path additionally checks
+source bundles, default content and managed native-child structure.
 
 When changing compiler behavior, add a focused test beside
 `packages/features/cms-repository/tests/collections/admission/tooling/`.

@@ -1,16 +1,16 @@
 :scope {
-    --cover-height: 50svh;
-    --cover-spacing: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-cover-height: var(--ulvia-official-cover-inherited-height, 50svh);
+    --ulvia-official-cover-spacing: var(--ulvia-official-spacing-lg, 1.5rem);
     display: block;
     text-align: inherit;
 }
 
 [part="cover"] {
     display: flex;
-    min-height: var(--cover-height);
+    min-height: var(--ulvia-official-cover-height);
     box-sizing: border-box;
     flex-direction: column;
-    padding: var(--cover-spacing);
+    padding: var(--ulvia-official-cover-spacing);
 }
 
 [part="content"] {
@@ -19,10 +19,10 @@
     align-items: center;
 }
 :scope[height="content"] {
-    --cover-height: auto;
+    --ulvia-official-cover-height: auto;
 }
 :scope[height="viewport"] {
-    --cover-height: 100svh;
+    --ulvia-official-cover-height: 100svh;
 }
 :scope[align="start"] [part="content"] {
     align-items: start;
@@ -31,8 +31,8 @@
     align-items: end;
 }
 :scope[spacing="sm"] {
-    --cover-spacing: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-cover-spacing: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 :scope[spacing="md"] {
-    --cover-spacing: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-cover-spacing: var(--ulvia-official-spacing-md, 1rem);
 }

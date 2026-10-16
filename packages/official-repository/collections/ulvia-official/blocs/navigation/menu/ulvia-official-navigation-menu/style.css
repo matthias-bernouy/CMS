@@ -1,10 +1,11 @@
 :scope {
-    --navigation-menu-padding: var(--ulvia-official-spacing-sm, 0.75rem);
-    --navigation-item-height: 2.25rem;
-    --navigation-item-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-navigation-menu-padding: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-navigation-item-height: 2.25rem;
+    --ulvia-official-navigation-item-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-navigation-section-flex: 0 0 auto;
     display: block;
     min-width: 0;
-    height: var(--navigation-menu-height, 100%);
+    height: var(--ulvia-official-navigation-menu-height, 100%);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 
@@ -13,11 +14,11 @@
     min-height: 100%;
     box-sizing: border-box;
     flex-direction: column;
-    padding: var(--navigation-menu-padding);
+    padding: var(--ulvia-official-navigation-menu-padding);
     background: transparent;
 }
 [part="header"] {
-    display: var(--navigation-menu-header-display, block);
+    display: var(--ulvia-official-navigation-menu-header-display, block);
     padding: 0.125rem var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-sm, 0.75rem);
     color: var(--ulvia-official-text-muted, #6d7e77);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
@@ -27,14 +28,12 @@
 }
 [part="sections"] {
     display: flex;
-    flex-flow: var(--navigation-menu-sections-flow, column) var(--navigation-menu-sections-wrap, nowrap);
+    flex-flow: var(--ulvia-official-navigation-menu-sections-flow, column)
+        var(--ulvia-official-navigation-menu-sections-wrap, nowrap);
     gap: var(--ulvia-official-spacing-md, 1rem);
 }
-[cms-bloc="ulvia-official-navigation-section"] {
-    flex: 0 0 auto;
-}
 [part="footer"] {
-    display: var(--navigation-menu-footer-display, grid);
+    display: var(--ulvia-official-navigation-menu-footer-display, grid);
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
     margin-block-start: auto;
     padding-block-start: var(--ulvia-official-spacing-md, 1rem);
@@ -44,12 +43,12 @@
     background: var(--ulvia-official-background-subtle, #f3f7f5);
 }
 :scope[density="compact"] {
-    --navigation-menu-padding: var(--ulvia-official-spacing-xs, 0.5rem);
-    --navigation-item-height: 2rem;
-    --navigation-item-font-size: var(--ulvia-official-font-size-xs, 0.75rem);
+    --ulvia-official-navigation-menu-padding: var(--ulvia-official-spacing-xs, 0.5rem);
+    --ulvia-official-navigation-item-height: 2rem;
+    --ulvia-official-navigation-item-font-size: var(--ulvia-official-font-size-xs, 0.75rem);
 }
 :scope[density="comfortable"] {
-    --navigation-menu-padding: var(--ulvia-official-spacing-md, 1rem);
-    --navigation-item-height: 2.75rem;
-    --navigation-item-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --ulvia-official-navigation-menu-padding: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-navigation-item-height: 2.75rem;
+    --ulvia-official-navigation-item-font-size: var(--ulvia-official-font-size-md, 1rem);
 }

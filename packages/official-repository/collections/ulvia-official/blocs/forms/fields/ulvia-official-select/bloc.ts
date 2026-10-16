@@ -65,7 +65,7 @@ export class Bloc extends BlocBehavior {
     }
 
     private bindSelect(): void {
-        this.select = this.querySelector<HTMLSelectElement>(":scope > select:not([multiple])");
+        this.select = this.querySelector<HTMLSelectElement>("select:not([multiple])");
         if (!this.select || !this.listbox) {
             return;
         }

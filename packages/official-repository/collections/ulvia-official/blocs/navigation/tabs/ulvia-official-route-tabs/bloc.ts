@@ -128,9 +128,9 @@ export class Bloc extends BlocBehavior {
     }
 
     private localLinks(): HTMLAnchorElement[] {
-        return Array.from(
-            this.querySelectorAll<HTMLAnchorElement>(':scope > [cms-bloc="ulvia-official-route-tab"] > a[href]'),
-        ).filter((link) => Boolean(this.targetId(link)));
+        return this.queryBlocRoots<HTMLAnchorElement>("ulvia-official-route-tab").filter(
+            (link) => link.hasAttribute("href") && Boolean(this.targetId(link)),
+        );
     }
 
     private targetId(link: HTMLAnchorElement): string | null {

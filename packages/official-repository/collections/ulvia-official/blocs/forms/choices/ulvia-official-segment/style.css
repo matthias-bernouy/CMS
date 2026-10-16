@@ -1,8 +1,8 @@
 :scope {
-    --radio-host-position: absolute;
-    --radio-host-size: 1px;
-    --radio-host-overflow: hidden;
-    --radio-host-clip: inset(50%);
+    --ulvia-official-radio-host-position: absolute;
+    --ulvia-official-radio-host-size: 1px;
+    --ulvia-official-radio-host-overflow: hidden;
+    --ulvia-official-radio-host-clip: inset(50%);
     display: block;
     min-width: 0;
     box-sizing: border-box;
@@ -18,16 +18,16 @@
 }
 label[part~="segment"] {
     display: flex;
-    min-height: var(--segment-min-height, var(--ulvia-official-control-height-md, 2.875rem));
+    min-height: var(--ulvia-official-segment-min-height, var(--ulvia-official-control-height-md, 2.875rem));
     box-sizing: border-box;
     padding: var(--ulvia-official-spacing-xs, 0.5rem)
-        var(--segment-padding-inline, var(--ulvia-official-spacing-md, 1rem));
+        var(--ulvia-official-segment-padding-inline, var(--ulvia-official-spacing-md, 1rem));
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
     align-items: center;
     justify-content: center;
     color: inherit;
     background: transparent;
-    font-size: var(--segment-font-size, var(--ulvia-official-font-size-md, 1rem));
+    font-size: var(--ulvia-official-segment-font-size, var(--ulvia-official-font-size-md, 1rem));
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     line-height: var(--ulvia-official-line-height-snug, 1.35);
     text-align: center;

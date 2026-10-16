@@ -116,7 +116,7 @@ export class Bloc extends BlocBehavior {
                 button.setAttribute("part", "preset");
                 button.setAttribute("role", "option");
                 button.setAttribute("aria-label", colour.toUpperCase());
-                button.style.setProperty("--preset-colour", colour);
+                button.style.setProperty("--ulvia-official-color-presets-preset-colour", colour);
                 return button;
             }),
         );
@@ -127,7 +127,7 @@ export class Bloc extends BlocBehavior {
             return;
         }
         const colour = normalizeHex(this.input.value) ?? "#000000";
-        this.style.setProperty("--selected-colour", colour);
+        this.style.setProperty("--ulvia-official-color-presets-selected-colour", colour);
         this.value.textContent = colour.toUpperCase();
         this.trigger.disabled = this.input.disabled;
         this.trigger.setAttribute("aria-label", labelFor(this.input));

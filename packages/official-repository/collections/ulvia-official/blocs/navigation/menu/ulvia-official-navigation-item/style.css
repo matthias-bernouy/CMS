@@ -1,29 +1,29 @@
 :scope {
     display: block;
     min-width: 0;
+    flex: var(--ulvia-official-navigation-item-flex, 0 1 auto);
     color: var(--ulvia-official-text-secondary, #4f625a);
 }
 
 [part="item"] {
     display: contents;
 }
-a,
-button {
+:scope {
     position: relative;
     display: flex;
     width: 100%;
     min-width: 0;
-    min-height: var(--navigation-item-height, 2.25rem);
+    min-height: var(--ulvia-official-navigation-item-height, 2.25rem);
     align-items: center;
     box-sizing: border-box;
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
-    padding: var(--navigation-item-padding, 0.5rem 0.625rem);
+    padding: var(--ulvia-official-navigation-item-padding, 0.5rem 0.625rem);
     border: 0;
     border-radius: var(--ulvia-official-radius-sm, 0.25rem);
     color: inherit;
     background: transparent;
     font: inherit;
-    font-size: var(--navigation-item-font-size, 0.875rem);
+    font-size: var(--ulvia-official-navigation-item-font-size, 0.875rem);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
     line-height: var(--ulvia-official-line-height-tight, 1.15);
     text-align: start;
@@ -33,13 +33,11 @@ button {
         color var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease),
         background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
 }
-a:hover,
-button:hover:not(:disabled) {
+:scope:hover:not(:disabled) {
     color: var(--ulvia-official-text-primary, #17211d);
     background: var(--ulvia-official-background-subtle, #f3f7f5);
 }
-a:focus-visible,
-button:focus-visible {
+:scope:focus-visible {
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: 2px;
 }
@@ -47,18 +45,14 @@ button:focus-visible {
 :scope[data-current] {
     color: var(--ulvia-official-primary, #3157d5);
 }
-:scope[active] a,
-:scope[active] button,
-:scope[data-current] a,
-:scope[data-current] button {
+:scope[active],
+:scope[data-current] {
     background: var(--ulvia-official-primary-subtle, #e9edff);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
     box-shadow: none;
 }
-:scope[active] a::before,
-:scope[active] button::before,
-:scope[data-current] a::before,
-:scope[data-current] button::before {
+:scope[active]::before,
+:scope[data-current]::before {
     position: absolute;
     top: 0.55rem;
     bottom: 0.55rem;
@@ -71,7 +65,7 @@ button:focus-visible {
 :scope[emphasis="muted"] {
     color: var(--ulvia-official-text-muted, #6d7e77);
 }
-button:disabled {
+:scope:disabled {
     opacity: 0.55;
     cursor: not-allowed;
 }

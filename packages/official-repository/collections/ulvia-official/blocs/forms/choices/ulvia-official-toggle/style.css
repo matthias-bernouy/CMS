@@ -1,17 +1,17 @@
 :scope {
-    --toggle-hit-width: 3.25rem;
-    --toggle-hit-height: 2rem;
-    --toggle-track-width: 2.625rem;
-    --toggle-track-height: 1rem;
-    --toggle-thumb-size: 1.5rem;
+    --ulvia-official-toggle-hit-width: 3.25rem;
+    --ulvia-official-toggle-hit-height: 2rem;
+    --ulvia-official-toggle-track-width: 2.625rem;
+    --ulvia-official-toggle-track-height: 1rem;
+    --ulvia-official-toggle-thumb-size: 1.5rem;
     display: inline-block;
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 [part="control"] {
     position: relative;
     display: inline-grid;
-    width: var(--toggle-hit-width);
-    min-height: var(--toggle-hit-height);
+    width: var(--ulvia-official-toggle-hit-width);
+    min-height: var(--ulvia-official-toggle-hit-height);
     place-items: center;
 }
 input {
@@ -27,8 +27,8 @@ input {
 [part="track"] {
     position: relative;
     display: block;
-    width: var(--toggle-track-width);
-    height: var(--toggle-track-height);
+    width: var(--ulvia-official-toggle-track-width);
+    height: var(--ulvia-official-toggle-track-height);
     box-sizing: border-box;
     border: 1px solid var(--ulvia-official-border-strong, #737985);
     border-radius: var(--ulvia-official-radius-full, 999px);
@@ -43,8 +43,8 @@ input {
     inset-block-start: 50%;
     inset-inline-start: -0.1875rem;
     display: block;
-    width: var(--toggle-thumb-size);
-    height: var(--toggle-thumb-size);
+    width: var(--ulvia-official-toggle-thumb-size);
+    height: var(--ulvia-official-toggle-thumb-size);
     border: 1px solid var(--ulvia-official-border-default, #c8d1cd);
     border-radius: 50%;
     background: var(--ulvia-official-background-surface, #fff);
@@ -60,7 +60,7 @@ input {
     background: var(--ulvia-official-primary, #086c55);
 }
 :scope[data-checked] [part="thumb"] {
-    inset-inline-start: calc(100% - var(--toggle-thumb-size) + 0.1875rem);
+    inset-inline-start: calc(100% - var(--ulvia-official-toggle-thumb-size) + 0.1875rem);
     border-color: color-mix(
         in srgb,
         var(--ulvia-official-primary, #086c55) 28%,
@@ -86,16 +86,16 @@ input {
     cursor: not-allowed;
 }
 :scope[size="sm"] {
-    --toggle-hit-width: 2.75rem;
-    --toggle-hit-height: 1.75rem;
-    --toggle-track-width: 2.25rem;
-    --toggle-track-height: 0.875rem;
-    --toggle-thumb-size: 1.25rem;
+    --ulvia-official-toggle-hit-width: 2.75rem;
+    --ulvia-official-toggle-hit-height: 1.75rem;
+    --ulvia-official-toggle-track-width: 2.25rem;
+    --ulvia-official-toggle-track-height: 0.875rem;
+    --ulvia-official-toggle-thumb-size: 1.25rem;
 }
 :scope[size="lg"] {
-    --toggle-hit-width: 3.75rem;
-    --toggle-hit-height: 2.5rem;
-    --toggle-track-width: 3.125rem;
-    --toggle-track-height: 1.25rem;
-    --toggle-thumb-size: 1.75rem;
+    --ulvia-official-toggle-hit-width: 3.75rem;
+    --ulvia-official-toggle-hit-height: 2.5rem;
+    --ulvia-official-toggle-track-width: 3.125rem;
+    --ulvia-official-toggle-track-height: 1.25rem;
+    --ulvia-official-toggle-thumb-size: 1.75rem;
 }

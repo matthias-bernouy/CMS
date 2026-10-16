@@ -15,6 +15,7 @@ export const blocRuntimeExternalsPlugin: BunPlugin = {
                 return {
                     contents: [
                         "export const BlocBehavior = window.cmsRuntime.BlocBehavior;",
+                        "export const CMS_BLOC_FORM_CONTROL_READY_EVENT = window.cmsRuntime.CMS_BLOC_FORM_CONTROL_READY_EVENT;",
                         "export const mountBlocBehavior = window.cmsRuntime.mountBlocBehavior;",
                         "export const registerBloc = window.cmsRuntime.registerBloc;",
                         "export const mutationFormRequest = window.cmsRuntime.mutationFormRequest;",

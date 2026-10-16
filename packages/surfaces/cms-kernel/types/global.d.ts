@@ -1,5 +1,6 @@
 import type {
     BlocBehavior,
+    CMS_BLOC_FORM_CONTROL_READY_EVENT,
     mountBlocBehavior,
     mutationFormRequest,
     MutationFormError,
@@ -14,6 +15,7 @@ import type {
 declare global {
     var cmsRuntime: {
         readonly BlocBehavior: typeof BlocBehavior;
+        readonly CMS_BLOC_FORM_CONTROL_READY_EVENT: typeof CMS_BLOC_FORM_CONTROL_READY_EVENT;
         readonly mountBlocBehavior: typeof mountBlocBehavior;
         readonly registerBloc: typeof registerBloc;
         readonly mutationFormRequest: typeof mutationFormRequest;

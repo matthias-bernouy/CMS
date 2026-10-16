@@ -1,7 +1,16 @@
 :scope {
-    --select-height: var(--form-control-height, var(--ulvia-official-control-height-md, 2.875rem));
-    --select-font-size: var(--form-control-font-size, var(--ulvia-official-font-size-md, 1rem));
-    --select-padding-inline: var(--form-control-padding-inline, var(--ulvia-official-spacing-md, 1rem));
+    --ulvia-official-select-height: var(
+        --ulvia-official-select-form-control-height,
+        var(--ulvia-official-control-height-md, 2.875rem)
+    );
+    --ulvia-official-select-font-size: var(
+        --ulvia-official-select-form-control-font-size,
+        var(--ulvia-official-font-size-md, 1rem)
+    );
+    --ulvia-official-select-padding-inline: var(
+        --ulvia-official-select-form-control-padding-inline,
+        var(--ulvia-official-spacing-md, 1rem)
+    );
     position: relative;
     display: block;
     min-width: 0;
@@ -15,15 +24,15 @@
 select {
     width: 100%;
     min-width: 0;
-    min-height: var(--select-height);
+    min-height: var(--ulvia-official-select-height);
     box-sizing: border-box;
-    padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--select-padding-inline);
+    padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-select-padding-inline);
     border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
-    border-radius: var(--form-select-radius, var(--ulvia-official-radius-md, 0.5rem));
+    border-radius: var(--ulvia-official-select-form-radius, var(--ulvia-official-radius-md, 0.5rem));
     color: inherit;
     background: var(--ulvia-official-background-surface, Canvas);
     font: inherit;
-    font-size: var(--select-font-size);
+    font-size: var(--ulvia-official-select-font-size);
 }
 :scope[data-ready] select {
     position: absolute;
@@ -35,19 +44,19 @@ select {
 [part="trigger"] {
     display: grid;
     width: 100%;
-    height: var(--select-height);
+    height: var(--ulvia-official-select-height);
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     box-sizing: border-box;
-    padding-inline: var(--select-padding-inline) var(--ulvia-official-spacing-sm, 0.75rem);
+    padding-inline: var(--ulvia-official-select-padding-inline) var(--ulvia-official-spacing-sm, 0.75rem);
     border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
-    border-radius: var(--form-select-radius, var(--ulvia-official-radius-md, 0.5rem));
+    border-radius: var(--ulvia-official-select-form-radius, var(--ulvia-official-radius-md, 0.5rem));
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
     color: inherit;
     background: var(--ulvia-official-background-surface, Canvas);
     box-shadow: 0 1px 2px rgb(23 33 30 / 5%);
     font: inherit;
-    font-size: var(--select-font-size);
+    font-size: var(--ulvia-official-select-font-size);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
     text-align: start;
     cursor: pointer;
@@ -106,16 +115,16 @@ select {
 [part="option"] {
     display: flex;
     width: 100%;
-    min-height: var(--select-height);
+    min-height: var(--ulvia-official-select-height);
     align-items: center;
     box-sizing: border-box;
-    padding-inline: var(--select-padding-inline);
+    padding-inline: var(--ulvia-official-select-padding-inline);
     border: 0;
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
     color: inherit;
     background: transparent;
     font: inherit;
-    font-size: var(--select-font-size);
+    font-size: var(--ulvia-official-select-font-size);
     text-align: start;
     cursor: pointer;
 }
@@ -151,12 +160,12 @@ select {
     cursor: not-allowed;
 }
 :scope[size="sm"] {
-    --select-height: var(--ulvia-official-control-height-sm, 2.25rem);
-    --select-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
-    --select-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-select-height: var(--ulvia-official-control-height-sm, 2.25rem);
+    --ulvia-official-select-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-select-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 :scope[size="lg"] {
-    --select-height: var(--ulvia-official-control-height-lg, 3.25rem);
-    --select-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
-    --select-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-select-height: var(--ulvia-official-control-height-lg, 3.25rem);
+    --ulvia-official-select-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
+    --ulvia-official-select-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);
 }

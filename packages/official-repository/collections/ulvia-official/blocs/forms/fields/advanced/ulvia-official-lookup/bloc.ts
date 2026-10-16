@@ -43,7 +43,7 @@ export class Bloc extends BlocBehavior {
     }
 
     override connectedCallback(): void {
-        this.select = this.querySelector<HTMLSelectElement>(":scope > select");
+        this.select = this.querySelector<HTMLSelectElement>("select");
         this.input?.addEventListener("input", this.handleInput);
         this.input?.addEventListener("focus", this.open);
         this.input?.addEventListener("keydown", this.handleKeydown);

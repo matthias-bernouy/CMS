@@ -107,6 +107,34 @@ describe("validateBloc — Location mutations (#6)", () => {
     });
 });
 
+describe("validateBloc — CSS variable writes", () => {
+    test("accepts owned variables and variables owned by declared dependencies", () => {
+        const result = validateBloc({
+            tag: "atlas-tabs",
+            uses: ["atlas-tab"],
+            viewSource: `export function mount(root) {
+                root.style.setProperty("--atlas-tabs-offset", "1px");
+                root.style.setProperty("--atlas-tab-color", "red");
+            }`,
+        });
+        expect(result.errors).toHaveLength(0);
+    });
+
+    test("rejects arbitrary, foreign and dynamically named variables", () => {
+        const result = validateBloc({
+            tag: "atlas-tabs",
+            viewSource: `export function mount(root, name) {
+                root.style.setProperty("--random-color", "red");
+                root.style.setProperty(name, "red");
+            }`,
+        });
+        expect(result.errors).toEqual([
+            expect.stringContaining("static lowercase literal name"),
+            expect.stringContaining("must belong to Bloc atlas-tabs"),
+        ]);
+    });
+});
+
 describe("validateBloc — graceful degradation", () => {
     test("only tag → only tag check runs, no errors when valid", () => {
         const r = validateBloc({ tag: "my-bloc" });

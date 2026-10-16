@@ -1,8 +1,8 @@
 :scope {
-    --color-control-height: var(--ulvia-official-control-height-md, 2.875rem);
-    --color-font-size: var(--ulvia-official-font-size-md, 1rem);
-    --color-swatch-size: 2rem;
-    --color-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-color-input-color-control-height: var(--ulvia-official-control-height-md, 2.875rem);
+    --ulvia-official-color-input-color-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --ulvia-official-color-input-color-swatch-size: 2rem;
+    --ulvia-official-color-input-color-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
     position: relative;
     display: block;
     min-width: 0;
@@ -15,7 +15,7 @@
 }
 input {
     width: 100%;
-    min-height: var(--color-control-height);
+    min-height: var(--ulvia-official-color-input-color-control-height);
 }
 :scope[data-ready] input {
     position: absolute;
@@ -27,20 +27,20 @@ input {
 [part="trigger"] {
     display: grid;
     width: 100%;
-    height: var(--color-control-height);
-    grid-template-columns: var(--color-swatch-size) minmax(0, 1fr) auto 1rem;
+    height: var(--ulvia-official-color-input-color-control-height);
+    grid-template-columns: var(--ulvia-official-color-input-color-swatch-size) minmax(0, 1fr) auto 1rem;
     align-items: center;
     box-sizing: border-box;
-    padding: 0.25rem var(--color-padding-inline) 0.25rem 0.25rem;
-    border: var(--form-control-border-width, var(--ulvia-official-border-width, 1px)) solid
-        var(--form-control-border-color, var(--ulvia-official-border-default, #c8d1cd));
+    padding: 0.25rem var(--ulvia-official-color-input-color-padding-inline) 0.25rem 0.25rem;
+    border: var(--ulvia-official-border-width, var(--ulvia-official-border-width, 1px)) solid
+        var(--ulvia-official-border-default, var(--ulvia-official-border-default, #c8d1cd));
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
     color: inherit;
     background: var(--ulvia-official-background-surface, Canvas);
-    box-shadow: var(--form-control-invalid-shadow, 0 1px 2px rgb(23 33 30 / 5%));
+    box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(23 33 30 / 5%));
     font: inherit;
-    font-size: var(--color-font-size);
+    font-size: var(--ulvia-official-color-input-color-font-size);
     text-align: start;
     cursor: pointer;
 }
@@ -49,12 +49,12 @@ input {
     box-sizing: border-box;
     border: 0.1875rem solid var(--ulvia-official-background-surface, Canvas);
     border-radius: var(--ulvia-official-radius-sm, 0.375rem);
-    background: var(--selected-color, #3157d5);
+    background: var(--ulvia-official-color-input-selected-color, #3157d5);
     box-shadow: 0 0 0 1px var(--ulvia-official-border-default, #c8d1cd);
 }
 [part="trigger-swatch"] {
-    width: var(--color-swatch-size);
-    height: var(--color-swatch-size);
+    width: var(--ulvia-official-color-input-color-swatch-size);
+    height: var(--ulvia-official-color-input-color-swatch-size);
 }
 [part="value"] {
     overflow: hidden;
@@ -209,7 +209,7 @@ input {
     border: 0.1875rem solid white;
     border-radius: 50%;
     appearance: none;
-    background: hsl(var(--selected-hue, 0) 100% 50%);
+    background: hsl(var(--ulvia-official-color-input-selected-hue, 0) 100% 50%);
     box-shadow: 0 0 0 1px var(--ulvia-official-border-strong, #737985);
 }
 :scope[data-disabled] [part="trigger"] {
@@ -218,14 +218,14 @@ input {
     cursor: not-allowed;
 }
 :scope[size="sm"] {
-    --color-control-height: var(--ulvia-official-control-height-sm, 2.25rem);
-    --color-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
-    --color-swatch-size: 1.625rem;
-    --color-padding-inline: var(--ulvia-official-spacing-xs, 0.5rem);
+    --ulvia-official-color-input-color-control-height: var(--ulvia-official-control-height-sm, 2.25rem);
+    --ulvia-official-color-input-color-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-color-input-color-swatch-size: 1.625rem;
+    --ulvia-official-color-input-color-padding-inline: var(--ulvia-official-spacing-xs, 0.5rem);
 }
 :scope[size="lg"] {
-    --color-control-height: var(--ulvia-official-control-height-lg, 3.25rem);
-    --color-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
-    --color-swatch-size: 2.25rem;
-    --color-padding-inline: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-color-input-color-control-height: var(--ulvia-official-control-height-lg, 3.25rem);
+    --ulvia-official-color-input-color-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
+    --ulvia-official-color-input-color-swatch-size: 2.25rem;
+    --ulvia-official-color-input-color-padding-inline: var(--ulvia-official-spacing-md, 1rem);
 }

@@ -1,7 +1,7 @@
 :scope {
-    --range-track-height: 0.5rem;
-    --range-thumb-size: 1.375rem;
-    --range-hit-height: 2.5rem;
+    --ulvia-official-range-track-height: 0.5rem;
+    --ulvia-official-range-thumb-size: 1.375rem;
+    --ulvia-official-range-hit-height: 2.5rem;
     display: block;
     min-width: 0;
     font-family: var(--ulvia-official-font-family-main, inherit);
@@ -18,6 +18,7 @@
     min-width: 0;
 }
 [part="manual"] {
+    --ulvia-official-input-root-width: 6rem;
     display: none;
     align-items: center;
     justify-content: flex-end;
@@ -33,17 +34,13 @@
     inset-inline-end: 0;
 }
 :scope[editable-value]:not([layout="inline"]:not([layout="stacked"])) [part~="range-shell"] {
-    --range-value-row-padding-end: 11rem;
+    --ulvia-official-range-value-row-padding-end: 11rem;
 }
 [part~="manual-label"] {
     color: var(--ulvia-official-text-secondary, #42504a);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
 }
-[cms-bloc="ulvia-official-input"][part~="manual-input"] {
-    width: 6rem;
-}
-
 :scope[layout="inline"] [part="control"] {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
@@ -58,7 +55,7 @@
 }
 
 :scope[data-field-value] [part~="range-shell"] {
-    --range-value-row-display: none;
+    --ulvia-official-range-value-row-display: none;
 }
 :scope[data-field-value][editable-value]:not([layout="inline"]:not([layout="stacked"])) [part="control"] {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -69,18 +66,18 @@
     position: static;
 }
 :scope[data-field-value][editable-value]:not([layout="inline"]:not([layout="stacked"])) [part~="range-shell"] {
-    --range-value-row-padding-end: 0;
+    --ulvia-official-range-value-row-padding-end: 0;
 }
 
 :scope[size="sm"] {
-    --range-track-height: 0.375rem;
-    --range-thumb-size: 1.125rem;
-    --range-hit-height: 2.25rem;
+    --ulvia-official-range-track-height: 0.375rem;
+    --ulvia-official-range-thumb-size: 1.125rem;
+    --ulvia-official-range-hit-height: 2.25rem;
 }
 :scope[size="lg"] {
-    --range-track-height: 0.625rem;
-    --range-thumb-size: 1.625rem;
-    --range-hit-height: 3rem;
+    --ulvia-official-range-track-height: 0.625rem;
+    --ulvia-official-range-thumb-size: 1.625rem;
+    --ulvia-official-range-hit-height: 3rem;
 }
 
 @container (max-width: 24rem) {
@@ -89,7 +86,7 @@
         justify-content: space-between;
     }
     :scope[editable-value]:not([layout="inline"]:not([layout="stacked"])) [part~="range-shell"] {
-        --range-value-row-padding-end: 0;
+        --ulvia-official-range-value-row-padding-end: 0;
     }
 }
 

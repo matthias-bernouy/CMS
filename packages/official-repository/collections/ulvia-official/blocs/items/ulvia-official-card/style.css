@@ -21,6 +21,8 @@
     box-shadow: var(--ulvia-official-card-shadow);
 }
 [part="media"] {
+    --ulvia-official-icon-inherited-size: 3rem;
+    --ulvia-official-icon-inherited-margin: auto;
     margin: 0;
 }
 [part="content"] {
@@ -40,10 +42,6 @@
 [part~="media"] {
     display: block;
     width: 100%;
-}
-[cms-bloc="ulvia-official-icon"][part~="media"] {
-    width: 3rem;
-    margin: auto;
 }
 [part~="eyebrow"] {
     color: var(--ulvia-official-primary, #3157d5);

@@ -1,6 +1,6 @@
 :scope {
-    --time-height: var(--ulvia-official-control-height-md, 2.875rem);
-    --time-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --ulvia-official-time-input-time-height: var(--ulvia-official-control-height-md, 2.875rem);
+    --ulvia-official-time-input-time-font-size: var(--ulvia-official-font-size-md, 1rem);
     display: block;
     min-width: 0;
     color: var(--ulvia-official-text-primary, CanvasText);
@@ -12,7 +12,7 @@
 }
 input {
     width: 100%;
-    min-height: var(--time-height);
+    min-height: var(--ulvia-official-time-input-time-height);
 }
 :scope[data-ready] input {
     position: absolute;
@@ -25,16 +25,16 @@ input {
     display: flex;
     width: fit-content;
     min-width: 4.5rem;
-    height: var(--time-height);
+    height: var(--ulvia-official-time-input-time-height);
     align-items: stretch;
     box-sizing: border-box;
     padding-inline: var(--ulvia-official-spacing-xs, 0.5rem);
-    border: var(--form-control-border-width, var(--ulvia-official-border-width, 1px)) solid
-        var(--form-control-border-color, var(--ulvia-official-border-default, #c8d1cd));
+    border: var(--ulvia-official-border-width, var(--ulvia-official-border-width, 1px)) solid
+        var(--ulvia-official-border-default, var(--ulvia-official-border-default, #c8d1cd));
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
     color: inherit;
     background: var(--ulvia-official-background-surface, Canvas);
-    box-shadow: var(--form-control-invalid-shadow, 0 1px 2px rgb(23 33 30 / 5%));
+    box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(23 33 30 / 5%));
     overflow: hidden;
 }
 [part="time-part"] {
@@ -56,7 +56,7 @@ input {
     appearance: textfield;
     background: transparent;
     font: inherit;
-    font-size: var(--time-font-size);
+    font-size: var(--ulvia-official-time-input-time-font-size);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     font-variant-numeric: tabular-nums;
     text-align: center;
@@ -74,7 +74,7 @@ input {
     width: 0.75rem;
     place-items: center;
     color: var(--ulvia-official-text-muted, #68766f);
-    font-size: var(--time-font-size);
+    font-size: var(--ulvia-official-time-input-time-font-size);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
 }
 :scope:not([show-units]) [part="unit"] {
@@ -94,16 +94,16 @@ input {
     background: var(--ulvia-official-background-subtle, #f4f5f7);
 }
 :scope[size="sm"] {
-    --time-height: var(--ulvia-official-control-height-sm, 2.25rem);
-    --time-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-time-input-time-height: var(--ulvia-official-control-height-sm, 2.25rem);
+    --ulvia-official-time-input-time-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
 :scope[size="sm"] [part="time-part"] {
     min-width: 2.5rem;
     padding-inline: 0;
 }
 :scope[size="lg"] {
-    --time-height: var(--ulvia-official-control-height-lg, 3.25rem);
-    --time-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
+    --ulvia-official-time-input-time-height: var(--ulvia-official-control-height-lg, 3.25rem);
+    --ulvia-official-time-input-time-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
 }
 :scope[size="lg"] [part="time-part"] {
     min-width: 3.5rem;

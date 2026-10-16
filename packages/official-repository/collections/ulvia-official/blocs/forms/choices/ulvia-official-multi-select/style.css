@@ -1,7 +1,7 @@
 :scope {
-    --multi-select-option-height: 2.25rem;
-    --multi-select-option-padding: var(--ulvia-official-spacing-sm, 0.75rem);
-    --multi-select-option-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-multi-select-option-height: 2.25rem;
+    --ulvia-official-multi-select-option-padding: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-multi-select-option-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     display: block;
     min-width: 0;
     font-family: var(--ulvia-official-font-family-main, inherit);
@@ -54,15 +54,15 @@ select {
 
 [part="option"] {
     display: inline-flex;
-    min-height: var(--multi-select-option-height);
+    min-height: var(--ulvia-official-multi-select-option-height);
     align-items: center;
-    padding-inline: var(--multi-select-option-padding);
+    padding-inline: var(--ulvia-official-multi-select-option-padding);
     border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
     border-radius: var(--ulvia-official-radius-full, 999px);
     color: var(--ulvia-official-text-secondary, #42504a);
     background: var(--ulvia-official-background-surface, Canvas);
     font: inherit;
-    font-size: var(--multi-select-option-font-size);
+    font-size: var(--ulvia-official-multi-select-option-font-size);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
     cursor: pointer;
 }
@@ -103,12 +103,12 @@ select {
     opacity: 0.6;
 }
 :scope[size="sm"] {
-    --multi-select-option-height: 2rem;
-    --multi-select-option-padding: var(--ulvia-official-spacing-xs, 0.5rem);
-    --multi-select-option-font-size: var(--ulvia-official-font-size-xs, 0.75rem);
+    --ulvia-official-multi-select-option-height: 2rem;
+    --ulvia-official-multi-select-option-padding: var(--ulvia-official-spacing-xs, 0.5rem);
+    --ulvia-official-multi-select-option-font-size: var(--ulvia-official-font-size-xs, 0.75rem);
 }
 :scope[size="lg"] {
-    --multi-select-option-height: 2.75rem;
-    --multi-select-option-padding: var(--ulvia-official-spacing-md, 1rem);
-    --multi-select-option-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --ulvia-official-multi-select-option-height: 2.75rem;
+    --ulvia-official-multi-select-option-padding: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-multi-select-option-font-size: var(--ulvia-official-font-size-md, 1rem);
 }

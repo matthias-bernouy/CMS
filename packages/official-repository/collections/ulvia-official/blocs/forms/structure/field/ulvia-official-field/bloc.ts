@@ -1,6 +1,4 @@
-import { BlocBehavior } from "@bernouy/cms-content/browser";
-
-let nextControlId = 0;
+import { BlocBehavior, CMS_BLOC_FORM_CONTROL_READY_EVENT } from "@bernouy/cms-content/browser";
 
 export class Bloc extends BlocBehavior {
     constructor(root: HTMLElement) {
@@ -8,30 +6,30 @@ export class Bloc extends BlocBehavior {
     }
 
     override connectedCallback(): void {
-        const control = this.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-            "input, select, textarea",
-        );
-        const label = this.querySelector<HTMLLabelElement>('label[part~="field-label"]');
-        if (!control || !label) {
-            return;
+        this.addEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
+        this.connectControl(this.blocRoot);
+        for (const root of this.queryBlocRoots()) {
+            this.connectControl(root);
         }
-        control.id ||= `ulvia-field-control-${++nextControlId}`;
-        label.htmlFor = control.id;
-        this.connectDescription(control, "field-description");
-        this.connectDescription(control, "field-error");
     }
 
-    private connectDescription(
-        control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
-        slotName: string,
-    ): void {
-        const description = this.querySelector<HTMLElement>(`[part~="${slotName}"]`);
-        if (!description?.textContent?.trim()) {
+    override disconnectedCallback(): void {
+        this.removeEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
+    }
+
+    private handleControlReady = (event: Event): void => {
+        const root = event.target;
+        if (root instanceof HTMLElement && root.parentElement?.closest("[cms-bloc]") === this.blocRoot) {
+            this.connectControl(root);
+        }
+    };
+
+    private connectControl(root: HTMLElement): void {
+        const label = this.querySelector<HTMLLabelElement>('label[part~="field-label"]');
+        if (!label) {
             return;
         }
-        description.id ||= `${control.id}-${slotName}`;
-        const references = new Set((control.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean));
-        references.add(description.id);
-        control.setAttribute("aria-describedby", Array.from(references).join(" "));
+        const descriptions = this.querySelectorAll<HTMLElement>('[part~="field-description"], [part~="field-error"]');
+        this.connectBlocFormControl(root, { label, descriptions });
     }
 }

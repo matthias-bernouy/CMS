@@ -1,10 +1,11 @@
 :scope {
-    --icon-size: 1.125rem;
+    --ulvia-official-icon-size: var(--ulvia-official-icon-inherited-size, 1.125rem);
     display: inline-flex;
-    width: var(--icon-size);
-    height: var(--icon-size);
-    flex: 0 0 var(--icon-size);
+    width: var(--ulvia-official-icon-size);
+    height: var(--ulvia-official-icon-size);
+    flex: 0 0 var(--ulvia-official-icon-size);
     color: currentcolor;
+    margin: var(--ulvia-official-icon-inherited-margin, 0);
     vertical-align: -0.16em;
 }
 
@@ -22,10 +23,10 @@
     stroke-width: 1.9;
 }
 :scope[size="sm"] {
-    --icon-size: 0.875rem;
+    --ulvia-official-icon-size: 0.875rem;
 }
 :scope[size="lg"] {
-    --icon-size: 1.5rem;
+    --ulvia-official-icon-size: 1.5rem;
 }
 :scope[tone="primary"] {
     color: var(--ulvia-official-primary, #3157d5);

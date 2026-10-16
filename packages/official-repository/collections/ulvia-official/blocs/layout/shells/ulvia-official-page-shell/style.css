@@ -1,16 +1,16 @@
 :scope {
-    --page-width: var(--ulvia-official-content-width-lg, 72rem);
-    --page-spacing: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-page-shell-page-width: var(--ulvia-official-content-width-lg, 72rem);
+    --ulvia-official-page-shell-page-spacing: var(--ulvia-official-spacing-lg, 1.5rem);
     display: block;
     container-type: inline-size;
 }
 
 [part="page"] {
     display: grid;
-    width: min(100%, var(--page-width));
+    width: min(100%, var(--ulvia-official-page-shell-page-width));
     box-sizing: border-box;
     margin-inline: auto;
-    gap: var(--page-spacing);
+    gap: var(--ulvia-official-page-shell-page-spacing);
 }
 [part="header"] {
     display: grid;
@@ -38,33 +38,33 @@
     min-width: 0;
 }
 [part="footer"] {
-    padding-block-start: var(--page-spacing);
+    padding-block-start: var(--ulvia-official-page-shell-page-spacing);
     border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
 }
 :scope[width="sm"] {
-    --page-width: var(--ulvia-official-content-width-sm, 40rem);
+    --ulvia-official-page-shell-page-width: var(--ulvia-official-content-width-sm, 40rem);
 }
 :scope[width="md"] {
-    --page-width: var(--ulvia-official-content-width-md, 56rem);
+    --ulvia-official-page-shell-page-width: var(--ulvia-official-content-width-md, 56rem);
 }
 :scope[width="xl"] {
-    --page-width: var(--ulvia-official-content-width-xl, 88rem);
+    --ulvia-official-page-shell-page-width: var(--ulvia-official-content-width-xl, 88rem);
 }
 :scope[width="full"] {
-    --page-width: 100%;
+    --ulvia-official-page-shell-page-width: 100%;
 }
 :scope[appearance="surface"] [part="page"] {
-    padding: var(--page-spacing);
+    padding: var(--ulvia-official-page-shell-page-spacing);
     border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
     border-radius: var(--ulvia-official-radius-xl, 1rem);
     background: var(--ulvia-official-background-base, #fff);
     box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(0 0 0 / 8%));
 }
 :scope[density="compact"] {
-    --page-spacing: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-page-shell-page-spacing: var(--ulvia-official-spacing-md, 1rem);
 }
 :scope[density="comfortable"] {
-    --page-spacing: var(--ulvia-official-spacing-xl, 2rem);
+    --ulvia-official-page-shell-page-spacing: var(--ulvia-official-spacing-xl, 2rem);
 }
 
 @container (max-width: 34rem) {

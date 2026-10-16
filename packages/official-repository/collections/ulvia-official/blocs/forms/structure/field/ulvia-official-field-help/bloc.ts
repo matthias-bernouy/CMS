@@ -12,7 +12,7 @@ export class Bloc extends BlocBehavior {
 
     override connectedCallback(): void {
         this.trigger = this.querySelector<HTMLButtonElement>("button");
-        this.panel = this.querySelector<HTMLElement>('[cms-bloc="ulvia-official-field-help-panel"]');
+        this.panel = this.queryBlocRoot("ulvia-official-field-help-panel");
         this.prepareTrigger();
         this.trigger?.addEventListener("click", this.togglePanel);
         document.addEventListener("pointerdown", this.closeFromOutside);

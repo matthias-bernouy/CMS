@@ -1,7 +1,7 @@
 :scope {
-    --shell-width: var(--ulvia-official-content-width-xl, 88rem);
-    --shell-sidebar-width: 14rem;
-    --shell-secondary-sidebar-width: 15.5rem;
+    --ulvia-official-app-shell-shell-width: var(--ulvia-official-content-width-xl, 88rem);
+    --ulvia-official-app-shell-shell-sidebar-width: 14rem;
+    --ulvia-official-app-shell-shell-secondary-sidebar-width: 15.5rem;
     display: block;
     min-height: 100svh;
     color: var(--ulvia-official-text-primary, #17211d);
@@ -25,7 +25,7 @@
     gap: var(--ulvia-official-spacing-lg, 1.5rem);
     align-items: center;
     padding: var(--ulvia-official-spacing-md, 1rem)
-        max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--shell-width)) / 2));
+        max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--ulvia-official-app-shell-shell-width)) / 2));
     border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
     background: color-mix(in srgb, var(--ulvia-official-background-base, #fff) 94%, transparent);
     backdrop-filter: blur(16px);
@@ -57,7 +57,7 @@
 [part="secondary-navigation"] {
     grid-area: secondary;
     padding: var(--ulvia-official-spacing-sm, 0.75rem)
-        max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--shell-width)) / 2));
+        max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--ulvia-official-app-shell-shell-width)) / 2));
     border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
     background: var(--ulvia-official-background-base, #fff);
 }
@@ -73,7 +73,7 @@
 [part="content"] {
     grid-area: content;
     min-width: 0;
-    width: min(100%, var(--shell-width));
+    width: min(100%, var(--ulvia-official-app-shell-shell-width));
     box-sizing: border-box;
     margin-inline: auto;
     padding: var(--ulvia-official-spacing-xl, 2rem) var(--ulvia-official-page-gutter, 1rem);
@@ -85,17 +85,17 @@
 [part="footer"] {
     grid-area: footer;
     padding: var(--ulvia-official-spacing-lg, 1.5rem)
-        max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--shell-width)) / 2));
+        max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--ulvia-official-app-shell-shell-width)) / 2));
     border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
 }
 [part="footer"][hidden] {
     display: none;
 }
 :scope[width="contained"] {
-    --shell-width: var(--ulvia-official-content-width-lg, 72rem);
+    --ulvia-official-app-shell-shell-width: var(--ulvia-official-content-width-lg, 72rem);
 }
 :scope[width="full"] {
-    --shell-width: 100%;
+    --ulvia-official-app-shell-shell-width: 100%;
 }
 :scope[sticky-header] [part="header"] {
     position: sticky;
@@ -103,14 +103,14 @@
 }
 
 :scope[layout="hybrid"] [part="shell"] {
-    grid-template-columns: var(--shell-sidebar-width) minmax(0, 1fr);
+    grid-template-columns: var(--ulvia-official-app-shell-shell-sidebar-width) minmax(0, 1fr);
     grid-template-areas: "header header" "secondary content" "footer footer";
     grid-template-rows: auto minmax(0, 1fr) auto;
 }
 :scope[layout="sidebar"] [part="shell"] {
     height: 100svh;
     max-height: 100svh;
-    grid-template-columns: var(--shell-sidebar-width) minmax(0, 1fr);
+    grid-template-columns: var(--ulvia-official-app-shell-shell-sidebar-width) minmax(0, 1fr);
     grid-template-areas: "header content" "secondary content" "footer content";
     grid-template-rows: auto minmax(0, 1fr) auto;
     overflow: hidden;
@@ -118,7 +118,9 @@
 :scope[layout="dual-sidebar"] [part="shell"] {
     height: 100svh;
     max-height: 100svh;
-    grid-template-columns: var(--shell-sidebar-width) var(--shell-secondary-sidebar-width) minmax(0, 1fr);
+    grid-template-columns: var(--ulvia-official-app-shell-shell-sidebar-width) var(
+            --ulvia-official-app-shell-shell-secondary-sidebar-width
+        ) minmax(0, 1fr);
     grid-template-areas: "header contextual content" "secondary contextual content" "footer contextual content";
     grid-template-rows: auto minmax(0, 1fr) auto;
     overflow: hidden;

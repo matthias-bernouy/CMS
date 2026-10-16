@@ -1,3 +1,5 @@
+import { createTemplateIdScope, scopeTemplateIds, type TemplateIdScope } from "./scopeTemplateIds";
+
 export const COMPOSITION_RUNTIME_ATTRIBUTE = "data-cms-composition";
 export const COMPOSITION_INPUT_ATTRIBUTE = "data-cms-composition-input";
 export const COMPOSITION_OUTPUT_ATTRIBUTE = "data-cms-composition-output";
@@ -40,6 +42,7 @@ export function expandCompositions(
     }
 
     const expanded = new WeakSet<Element>();
+    const idScope = createTemplateIdScope(root);
     const expansionLimit = templates.size * 100 + 1_000;
     for (let count = 0; count < expansionLimit; count++) {
         const host = nextComposition(root, templates, expanded);
@@ -47,7 +50,7 @@ export function expandCompositions(
             return;
         }
         expanded.add(host);
-        expandHost(host, templates.get(host.getAttribute("cms-bloc")!)!, mode);
+        expandHost(host, templates.get(host.getAttribute("cms-bloc")!)!, mode, idScope);
     }
     throw new Error("Composition expansion exceeded its safety limit; check for a recursive composition dependency");
 }
@@ -66,7 +69,12 @@ function nextComposition(
     return null;
 }
 
-function expandHost(host: Element, definition: Template, mode: CompositionExpansionMode): void {
+function expandHost(
+    host: Element,
+    definition: Template,
+    mode: CompositionExpansionMode,
+    idScope: TemplateIdScope,
+): void {
     const document = host.ownerDocument;
     const authored = Array.from(host.childNodes);
     const input = mode === "preview" ? document.createElement("template") : null;
@@ -76,6 +84,7 @@ function expandHost(host: Element, definition: Template, mode: CompositionExpans
     }
     const template = document.createElement("template");
     template.innerHTML = definition.html;
+    scopeTemplateIds(template.content, idScope);
     const forwarding = projectSlots(template.content, authored, mode);
     if (input) {
         input.setAttribute("data-cms-composition-slot-forwarding", JSON.stringify(forwarding));

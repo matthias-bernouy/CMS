@@ -14,7 +14,7 @@ export class Bloc extends BlocBehavior {
     }
 
     override connectedCallback(): void {
-        this.trigger = this.querySelector(":scope > button");
+        this.trigger = this.querySelector("button");
         this.region = this?.querySelector('[part="region"]') ?? null;
         this.trigger?.addEventListener("click", this.toggle);
         this.labelObserver = new MutationObserver(this.sync);

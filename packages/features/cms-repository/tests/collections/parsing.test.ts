@@ -284,6 +284,67 @@ describe("collection release parsing", () => {
         ).toThrow("cyclic theme token");
     });
 
+    test("enforces ownership of Bloc CSS variables", () => {
+        const source = collectionDocument({
+            "theme.category.colors.label": "Colors",
+            "theme.label": "Atlas theme",
+            "theme.token.accent.label": "Accent",
+        });
+        source.theme = {
+            label: "theme.label",
+            categories: [
+                {
+                    id: "colors",
+                    label: "theme.category.colors.label",
+                    tokens: [
+                        {
+                            id: "accent",
+                            label: "theme.token.accent.label",
+                            type: "color",
+                            defaults: { light: "#123456" },
+                        },
+                    ],
+                },
+            ],
+        };
+        const panel = (source.blocs as Record<string, unknown>[])[0]!;
+
+        panel.style = ":scope { --random-color: red; }";
+        expect(() => parseCollectionRelease(source)).toThrow(/must belong to Bloc atlas-panel/);
+
+        panel.style = ":scope { color: var(--atlas-missing, red); }";
+        expect(() => parseCollectionRelease(source)).toThrow(
+            /must belong to this Bloc, a Bloc declared in uses, or the theme/,
+        );
+
+        panel.style = ":scope { color: var(--atlas-panel-color); }";
+        expect(() => parseCollectionRelease(source)).toThrow(/neither declared nor provided with a fallback/);
+
+        panel.style = ":scope { --atlas-panel-color: var(--atlas-accent); color: var(--atlas-panel-color); }";
+        expect(parseCollectionRelease(source).blocs).toHaveLength(2);
+    });
+
+    test("allows a Bloc to configure only dependencies declared in uses", () => {
+        const source = collectionDocument();
+        const panel = (source.blocs as Record<string, unknown>[])[0]!;
+        const child = {
+            kind: "component",
+            id: "atlas-action",
+            label: "bloc.panel.label",
+            template: '<section><slot name="body"></slot></section>',
+            root: { accepts: ["div"] },
+            slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
+            uses: [],
+            requires: [],
+        };
+        (source.blocs as Record<string, unknown>[]).push(child);
+        panel.style = ":scope { --atlas-action-color: red; color: var(--atlas-action-color); }";
+        expect(() => parseCollectionRelease(source)).toThrow(/declared in uses/);
+
+        panel.uses = ["atlas-action"];
+        expect(parseCollectionRelease(source).blocs).toHaveLength(3);
+    });
+
     test("rejects every undeclared theme variable", () => {
         const input = collectionDocument({
             "theme.label": "Theme",

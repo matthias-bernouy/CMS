@@ -27,7 +27,7 @@ export class Bloc extends BlocBehavior {
     private bindTextarea = (): void => {
         this.textarea?.removeEventListener("input", this.sync);
         this.observer.disconnect();
-        this.textarea = this.querySelector<HTMLTextAreaElement>(":scope > textarea");
+        this.textarea = this.querySelector<HTMLTextAreaElement>("textarea");
         this.textarea?.addEventListener("input", this.sync);
         if (this.textarea) {
             this.observer.observe(this.textarea, {

@@ -1,11 +1,11 @@
 :scope {
-    --lookup-control-height: var(--ulvia-official-control-height-md, 2.875rem);
-    --lookup-font-size: var(--ulvia-official-font-size-md, 1rem);
-    --lookup-input-height: 2rem;
-    --lookup-chip-height: 1.875rem;
-    --lookup-chip-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
-    --lookup-chip-action-size: 1.5rem;
-    --lookup-option-height: 2.75rem;
+    --ulvia-official-lookup-control-height: var(--ulvia-official-control-height-md, 2.875rem);
+    --ulvia-official-lookup-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --ulvia-official-lookup-input-height: 2rem;
+    --ulvia-official-lookup-chip-height: 1.875rem;
+    --ulvia-official-lookup-chip-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-lookup-chip-action-size: 1.5rem;
+    --ulvia-official-lookup-option-height: 2.75rem;
     position: relative;
     display: grid;
     min-width: 0;
@@ -17,12 +17,12 @@
 [part="control"] {
     position: relative;
     display: flex;
-    height: var(--lookup-control-height);
+    height: var(--ulvia-official-lookup-control-height);
     align-items: center;
     box-sizing: border-box;
     padding: 0.375rem 2.75rem 0.375rem 2.625rem;
     border: var(--ulvia-official-border-width, 1px) solid
-        var(--form-control-border-color, var(--ulvia-official-border-default, #c8d1cd));
+        var(--ulvia-official-border-default, var(--ulvia-official-border-default, #c8d1cd));
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
     background: var(--ulvia-official-background-surface, Canvas);
     box-shadow: 0 1px 2px rgb(23 33 30 / 5%);
@@ -37,7 +37,7 @@
 [part="input"] {
     width: 100%;
     min-width: 0;
-    height: var(--lookup-input-height);
+    height: var(--ulvia-official-lookup-input-height);
     box-sizing: border-box;
     padding: 0;
     border: 0;
@@ -45,7 +45,7 @@
     color: inherit;
     background: transparent;
     font: inherit;
-    font-size: var(--lookup-font-size);
+    font-size: var(--ulvia-official-lookup-font-size);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
 
@@ -70,7 +70,7 @@
 [part="chip"] {
     display: inline-flex;
     max-width: 100%;
-    min-height: var(--lookup-chip-height);
+    min-height: var(--ulvia-official-lookup-chip-height);
     align-items: center;
     box-sizing: border-box;
     padding: 0 var(--ulvia-official-spacing-3xs, 0.25rem) 0 var(--ulvia-official-spacing-sm, 0.75rem);
@@ -80,7 +80,7 @@
     gap: var(--ulvia-official-spacing-3xs, 0.25rem);
     color: var(--ulvia-official-on-primary-subtle, #075642);
     background: var(--ulvia-official-primary-subtle, #dff3ed);
-    font-size: var(--lookup-chip-font-size);
+    font-size: var(--ulvia-official-lookup-chip-font-size);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
 }
 
@@ -92,8 +92,8 @@
 
 [part="chip-remove"] {
     position: relative;
-    width: var(--lookup-chip-action-size);
-    height: var(--lookup-chip-action-size);
+    width: var(--ulvia-official-lookup-chip-action-size);
+    height: var(--ulvia-official-lookup-chip-action-size);
     flex: 0 0 auto;
     padding: 0;
     border: 0;
@@ -224,7 +224,7 @@ select {
 [part="popover"] {
     position: absolute;
     z-index: 30;
-    inset-block-start: calc(var(--lookup-control-height) + var(--ulvia-official-spacing-xs, 0.5rem));
+    inset-block-start: calc(var(--ulvia-official-lookup-control-height) + var(--ulvia-official-spacing-xs, 0.5rem));
     inset-inline: 0;
     display: block;
     max-height: 18rem;
@@ -245,7 +245,7 @@ select {
 [part~="option"] {
     display: flex;
     width: 100%;
-    min-height: var(--lookup-option-height);
+    min-height: var(--ulvia-official-lookup-option-height);
     align-items: center;
     box-sizing: border-box;
     padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem);
@@ -254,7 +254,7 @@ select {
     color: var(--ulvia-official-text-primary, CanvasText);
     background: transparent;
     font: inherit;
-    font-size: var(--lookup-font-size);
+    font-size: var(--ulvia-official-lookup-font-size);
     text-align: start;
     cursor: pointer;
 }
@@ -290,21 +290,21 @@ select {
 }
 
 :scope[size="sm"] {
-    --lookup-control-height: var(--ulvia-official-control-height-sm, 2.25rem);
-    --lookup-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
-    --lookup-input-height: 1.75rem;
-    --lookup-chip-height: 1.625rem;
-    --lookup-chip-font-size: var(--ulvia-official-font-size-xs, 0.75rem);
-    --lookup-chip-action-size: 1.5rem;
-    --lookup-option-height: 2.25rem;
+    --ulvia-official-lookup-control-height: var(--ulvia-official-control-height-sm, 2.25rem);
+    --ulvia-official-lookup-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    --ulvia-official-lookup-input-height: 1.75rem;
+    --ulvia-official-lookup-chip-height: 1.625rem;
+    --ulvia-official-lookup-chip-font-size: var(--ulvia-official-font-size-xs, 0.75rem);
+    --ulvia-official-lookup-chip-action-size: 1.5rem;
+    --ulvia-official-lookup-option-height: 2.25rem;
 }
 
 :scope[size="lg"] {
-    --lookup-control-height: var(--ulvia-official-control-height-lg, 3.25rem);
-    --lookup-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
-    --lookup-input-height: 2.25rem;
-    --lookup-chip-height: 2.125rem;
-    --lookup-chip-font-size: var(--ulvia-official-font-size-md, 1rem);
-    --lookup-chip-action-size: 1.75rem;
-    --lookup-option-height: 3.25rem;
+    --ulvia-official-lookup-control-height: var(--ulvia-official-control-height-lg, 3.25rem);
+    --ulvia-official-lookup-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
+    --ulvia-official-lookup-input-height: 2.25rem;
+    --ulvia-official-lookup-chip-height: 2.125rem;
+    --ulvia-official-lookup-chip-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --ulvia-official-lookup-chip-action-size: 1.75rem;
+    --ulvia-official-lookup-option-height: 3.25rem;
 }

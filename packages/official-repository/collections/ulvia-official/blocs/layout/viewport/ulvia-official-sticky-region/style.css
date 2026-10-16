@@ -1,5 +1,5 @@
 :scope {
-    --sticky-offset: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-sticky-region-sticky-offset: var(--ulvia-official-spacing-md, 1rem);
     display: block;
     align-self: start;
 }
@@ -7,18 +7,18 @@
 [part="sticky"] {
     position: sticky;
     z-index: 2;
-    top: var(--sticky-offset);
+    top: var(--ulvia-official-sticky-region-sticky-offset);
 }
 :scope[position="bottom"] [part="sticky"] {
     top: auto;
-    bottom: var(--sticky-offset);
+    bottom: var(--ulvia-official-sticky-region-sticky-offset);
 }
 :scope[offset="none"] {
-    --sticky-offset: 0rem;
+    --ulvia-official-sticky-region-sticky-offset: 0rem;
 }
 :scope[offset="sm"] {
-    --sticky-offset: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-sticky-region-sticky-offset: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 :scope[offset="lg"] {
-    --sticky-offset: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-sticky-region-sticky-offset: var(--ulvia-official-spacing-lg, 1.5rem);
 }

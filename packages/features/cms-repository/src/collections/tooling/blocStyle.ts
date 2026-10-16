@@ -1,7 +1,7 @@
 import { parse, walk } from "css-tree";
 
 const FORBIDDEN = /:host\b|::slotted\b|:global\b/u;
-const UNSAFE_BLOC_SELECTOR = /\[cms-bloc(?!="[a-z][a-z0-9-]*"\])/u;
+const NESTED_BLOC_SELECTOR = /\[cms-bloc\b/u;
 
 /** Validate authored CSS and close it around one Light DOM Bloc boundary. */
 export function compileBlocStyle(id: string, source: string): string {
@@ -11,8 +11,8 @@ export function compileBlocStyle(id: string, source: string): string {
     } catch (error) {
         throw new Error(`Invalid CSS for Bloc ${id}: ${error instanceof Error ? error.message : String(error)}`);
     }
-    if (FORBIDDEN.test(source) || UNSAFE_BLOC_SELECTOR.test(source)) {
-        throw new Error(`Bloc ${id} CSS must use scoped Light DOM selectors and exact nested cms-bloc identities`);
+    if (FORBIDDEN.test(source) || NESTED_BLOC_SELECTOR.test(source)) {
+        throw new Error(`Bloc ${id} CSS must stay inside its Light DOM boundary`);
     }
     walk(ast, (node) => {
         if (node.type === "Atrule") {
@@ -35,6 +35,6 @@ export function compileBlocStyle(id: string, source: string): string {
         }
     });
     return source.trim()
-        ? `@layer ulvia.blocks {\n@scope ([cms-bloc="${id}"]) to (:scope [cms-bloc] *) {\n${source.trim()}\n}\n}`
+        ? `@layer ulvia.blocks {\n@scope ([cms-bloc="${id}"]) to (:scope [cms-bloc]) {\n${source.trim()}\n}\n}`
         : "";
 }
