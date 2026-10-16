@@ -143,6 +143,7 @@
                 "packages/features/cms-content/src/application/core/ValidatingCmsRepository.ts",
                 "packages/features/cms-content/src/application/core/cacheKeys.ts",
                 "packages/features/cms-content/src/application/core/createContentReader.ts",
+                "packages/features/cms-content/src/application/core/validation/bindingCapabilities.ts",
                 "packages/features/cms-content/src/application/core/validation/blocArtifact.ts",
                 "packages/features/cms-content/src/application/core/validation/errors.ts",
                 "packages/features/cms-content/src/application/core/validation/fields.ts",
@@ -168,6 +169,7 @@
                 "packages/features/cms-content/src/application/default-implementation/mongo/repositories/siteBlocPublication/publication.ts",
                 "packages/features/cms-content/src/application/default-implementation/mongo/repositories/siteBlocPublication/state.ts",
                 "packages/features/cms-content/src/blocs/core/assets/blocGroupManifest.ts",
+                "packages/features/cms-content/src/blocs/core/assets/generateBlocStyleGroupEntry.ts",
                 "packages/features/cms-content/src/blocs/core/assets/groupBlocsBySignature.ts",
                 "packages/features/cms-content/src/blocs/core/assets/resolvePageAssets.ts",
                 "packages/features/cms-content/src/blocs/core/catalogue/ownership.ts",
@@ -175,33 +177,50 @@
                 "packages/features/cms-content/src/blocs/core/catalogue/siteBlocGroups.ts",
                 "packages/features/cms-content/src/blocs/core/catalogue/timestamps.ts",
                 "packages/features/cms-content/src/blocs/core/composition/buildBlocEntries.ts",
-                "packages/features/cms-content/src/blocs/core/composition/buildBlocFoucShellCss.ts",
                 "packages/features/cms-content/src/blocs/core/composition/expandCompositions.ts",
+                "packages/features/cms-content/src/blocs/core/composition/scopeTemplateIds.ts",
                 "packages/features/cms-content/src/blocs/core/markup/bindingRoot.ts",
                 "packages/features/cms-content/src/blocs/core/markup/bindings/conditions.ts",
                 "packages/features/cms-content/src/blocs/core/markup/bindings/index.ts",
+                "packages/features/cms-content/src/blocs/core/markup/bindings/operation/index.ts",
+                "packages/features/cms-content/src/blocs/core/markup/bindings/operation/input.ts",
+                "packages/features/cms-content/src/blocs/core/markup/bindings/operation/query.ts",
+                "packages/features/cms-content/src/blocs/core/markup/bindings/operation/stateGraph.ts",
                 "packages/features/cms-content/src/blocs/core/markup/bindings/queryParams.ts",
                 "packages/features/cms-content/src/blocs/core/markup/bindings/repeat.ts",
-                "packages/features/cms-content/src/blocs/core/markup/bindings/runtime.ts",
-                "packages/features/cms-content/src/blocs/core/markup/bindings/source.ts",
-                "packages/features/cms-content/src/blocs/core/markup/bindings/sourceStatus.ts",
+                "packages/features/cms-content/src/blocs/core/markup/bindings/sync.ts",
                 "packages/features/cms-content/src/blocs/core/markup/bindings/types.ts",
                 "packages/features/cms-content/src/blocs/core/markup/contentRefs.ts",
+                "packages/features/cms-content/src/blocs/core/markup/expression/inspect.ts",
+                "packages/features/cms-content/src/blocs/core/markup/expression/parser.ts",
+                "packages/features/cms-content/src/blocs/core/markup/expression/tokenizer.ts",
                 "packages/features/cms-content/src/blocs/core/markup/security/hardenStoredHtml.ts",
                 "packages/features/cms-content/src/blocs/core/markup/security/safeUrl.ts",
                 "packages/features/cms-content/src/blocs/core/markup/security/sanitizeDomTree.ts",
                 "packages/features/cms-content/src/blocs/core/markup/security/sanitizeSvgTree.ts",
                 "packages/features/cms-content/src/blocs/core/markup/security/storedMarkupIssue.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/assertContentRefsExist.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/coverage.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/document.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/expressions.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/index.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/model.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/paths.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/syncProducer/index.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/syncProducer/projection.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/syncProducer/snapshots.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/contracts/accessibilityAttributes.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/contracts/accessibilityRoles.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/contracts/attributeBindings.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/contracts/hostAttributes.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/contracts/managedNativePolicy.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/contracts/nativeAttributes.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/contracts/pageSlotContracts.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/contracts/settings.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/documents/blocBudgets.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/documents/blocDependencyGraph.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/documents/blocDocument.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/documents/nativeReferences.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/documents/pageDocument.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/managedNativeElements.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/nativeContent.ts",
@@ -217,14 +236,15 @@
                 "packages/features/cms-content/src/blocs/core/validation/definition.ts",
                 "packages/features/cms-content/src/blocs/core/validation/index.ts",
                 "packages/features/cms-content/src/blocs/core/validation/nativeAttributeValues.ts",
+                "packages/features/cms-content/src/blocs/core/validation/nativeBindings/bindingInput.ts",
                 "packages/features/cms-content/src/blocs/core/validation/nativeBindings/formValues.ts",
                 "packages/features/cms-content/src/blocs/core/validation/nativeBindings/index.ts",
-                "packages/features/cms-content/src/blocs/core/validation/nativeBindings/sourceBody.ts",
                 "packages/features/cms-content/src/blocs/core/validation/nativeDom.ts",
                 "packages/features/cms-content/src/blocs/core/validation/nativeHtml.ts",
                 "packages/features/cms-content/src/blocs/core/validation/nativeStructure.ts",
                 "packages/features/cms-content/src/blocs/core/validation/snapshot.ts",
                 "packages/features/cms-content/src/blocs/http/serveBlocSet.ts",
+                "packages/features/cms-content/src/blocs/http/serveBlocStyles.ts",
                 "packages/features/cms-content/src/browser/binding/bindingCore.ts",
                 "packages/features/cms-content/src/browser/binding/core/attrs.ts",
                 "packages/features/cms-content/src/browser/binding/core/cloak.ts",
@@ -232,68 +252,69 @@
                 "packages/features/cms-content/src/browser/binding/core/networkBindingModel.ts",
                 "packages/features/cms-content/src/browser/binding/core/networkBindings.ts",
                 "packages/features/cms-content/src/browser/binding/core/scope.ts",
-                "packages/features/cms-content/src/browser/binding/params/PageStateSync.ts",
-                "packages/features/cms-content/src/browser/binding/params/ParamSync.ts",
-                "packages/features/cms-content/src/browser/binding/params/index.ts",
+                "packages/features/cms-content/src/browser/binding/form/formControls.ts",
+                "packages/features/cms-content/src/browser/binding/form/formSerialization.ts",
+                "packages/features/cms-content/src/browser/binding/form/formSubmit.ts",
+                "packages/features/cms-content/src/browser/binding/form/nestedFormData.ts",
+                "packages/features/cms-content/src/browser/binding/form/submitRequest.ts",
+                "packages/features/cms-content/src/browser/binding/form/typed/controls.ts",
+                "packages/features/cms-content/src/browser/binding/form/typed/serialize.ts",
                 "packages/features/cms-content/src/browser/binding/reactive/CompiledTemplate.ts",
                 "packages/features/cms-content/src/browser/binding/reactive/MountedRegion.ts",
-                "packages/features/cms-content/src/browser/binding/reactive/compiler/submitOwnership.ts",
+                "packages/features/cms-content/src/browser/binding/reactive/compiler/mutationOwnership.ts",
                 "packages/features/cms-content/src/browser/binding/reactive/compiler/templateBindings.ts",
                 "packages/features/cms-content/src/browser/binding/reactive/compiler/templateCompiler.ts",
                 "packages/features/cms-content/src/browser/binding/reactive/compiler/templateStructures.ts",
                 "packages/features/cms-content/src/browser/binding/reactive/controls/value.ts",
+                "packages/features/cms-content/src/browser/binding/reactive/renderer/BindingRenderer.ts",
+                "packages/features/cms-content/src/browser/binding/reactive/renderer/bindingContent.ts",
                 "packages/features/cms-content/src/browser/binding/reactive/templateInstantiation.ts",
                 "packages/features/cms-content/src/browser/binding/reactive/templateSites.ts",
                 "packages/features/cms-content/src/browser/binding/render/condition.ts",
                 "packages/features/cms-content/src/browser/binding/render/condition/evaluate.ts",
-                "packages/features/cms-content/src/browser/binding/render/condition/parser.ts",
-                "packages/features/cms-content/src/browser/binding/render/condition/references.ts",
-                "packages/features/cms-content/src/browser/binding/render/condition/tokenizer.ts",
+                "packages/features/cms-content/src/browser/binding/render/expression.ts",
                 "packages/features/cms-content/src/browser/binding/render/repeat.ts",
                 "packages/features/cms-content/src/browser/binding/runtime/BindingDiscovery.ts",
                 "packages/features/cms-content/src/browser/binding/runtime/BindingRegistry.ts",
                 "packages/features/cms-content/src/browser/binding/runtime/BindingRuntime.ts",
                 "packages/features/cms-content/src/browser/binding/runtime/FixedRangeRuntime.ts",
                 "packages/features/cms-content/src/browser/binding/runtime/discovery.ts",
-                "packages/features/cms-content/src/browser/binding/runtime/revealSources.ts",
-                "packages/features/cms-content/src/browser/binding/runtime/sourceStatusScope.ts",
-                "packages/features/cms-content/src/browser/binding/source/Source.ts",
-                "packages/features/cms-content/src/browser/binding/source/fetcher.ts",
-                "packages/features/cms-content/src/browser/binding/source/presentation/sourceBody.ts",
-                "packages/features/cms-content/src/browser/binding/source/presentation/sourceContent.ts",
-                "packages/features/cms-content/src/browser/binding/source/presentation/sourceContext.ts",
-                "packages/features/cms-content/src/browser/binding/source/presentation/sourcePresenter.ts",
-                "packages/features/cms-content/src/browser/binding/source/presentation/sourceRenderer.ts",
-                "packages/features/cms-content/src/browser/binding/source/presentation/sourceStatus.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/formRequest.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/observation.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/reactiveUrl.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/readRequests.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/refresh/reconcile.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/refresh/registry.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/runtimeStamps.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/sourceSpec.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/submission/acknowledgement.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/submission/lock.ts",
-                "packages/features/cms-content/src/browser/binding/source/runtime/submission/transaction.ts",
-                "packages/features/cms-content/src/browser/binding/source/sourceEvents.ts",
-                "packages/features/cms-content/src/browser/binding/source/submission.ts",
-                "packages/features/cms-content/src/browser/binding/source/submissionEvents.ts",
-                "packages/features/cms-content/src/browser/binding/source/values.ts",
-                "packages/features/cms-content/src/browser/binding/submit/formControls.ts",
-                "packages/features/cms-content/src/browser/binding/submit/formSerialization.ts",
-                "packages/features/cms-content/src/browser/binding/submit/formSubmit.ts",
-                "packages/features/cms-content/src/browser/binding/submit/nestedFormData.ts",
-                "packages/features/cms-content/src/browser/binding/submit/submitRequest.ts",
-                "packages/features/cms-content/src/browser/binding/submit/typed/controls.ts",
-                "packages/features/cms-content/src/browser/binding/submit/typed/paths.ts",
-                "packages/features/cms-content/src/browser/binding/submit/typed/serialize.ts",
-                "packages/features/cms-content/src/browser/component/Component.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/mutation/FormMutation.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/mutation/MutationCompletion.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/mutation/MutationPresenter.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/mutation/MutationRequest.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/mutation/formSync.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/mutation/mutationState.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/mutation/programmaticRequest.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/mutation/transaction/MutationTransaction.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/mutation/transaction/editingLock.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/query/Query.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/query/QueryImports.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/query/formAcknowledgement.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/query/queryFetch.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/query/queryRefresh.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/query/queryRequest.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/query/queryState.ts",
+                "packages/features/cms-content/src/browser/binding/runtime/query/reconcile.ts",
+                "packages/features/cms-content/src/browser/binding/state/SyncControl.ts",
+                "packages/features/cms-content/src/browser/binding/state/SyncState.ts",
+                "packages/features/cms-content/src/browser/binding/state/bindingInput.ts",
+                "packages/features/cms-content/src/browser/binding/state/jsonValue.ts",
+                "packages/features/cms-content/src/browser/binding/state/selectSyncValue.ts",
+                "packages/features/cms-content/src/browser/binding/state/structuredData.ts",
+                "packages/features/cms-content/src/browser/binding/state/syncDiagnostics.ts",
+                "packages/features/cms-content/src/browser/component/Bloc.ts",
+                "packages/features/cms-content/src/browser/component/BlocFormControl.ts",
+                "packages/features/cms-content/src/browser/component/BlocRuntime.ts",
                 "packages/features/cms-content/src/browser/index.ts",
+                "packages/features/cms-content/src/browser/runtimeAbi.ts",
+                "packages/features/cms-content/src/browser/runtimeGlobal.ts",
                 "packages/features/cms-content/src/exports/bindings.ts",
                 "packages/features/cms-content/src/exports/index.ts",
                 "packages/features/cms-content/src/exports/mongo.ts",
+                "packages/features/cms-content/src/exports/pages/document.ts",
                 "packages/features/cms-content/src/exports/rendering.ts",
+                "packages/features/cms-content/src/exports/runtime/abi.ts",
                 "packages/features/cms-content/src/exports/runtime/assets-build.ts",
                 "packages/features/cms-content/src/exports/runtime/assets.ts",
                 "packages/features/cms-content/src/exports/runtime/http.ts",
@@ -305,8 +326,8 @@
                 "packages/features/cms-content/src/pages/core/contracts/presentation.ts",
                 "packages/features/cms-content/src/pages/core/contracts/renamePage.ts",
                 "packages/features/cms-content/src/pages/core/indexing/detection.ts",
+                "packages/features/cms-content/src/pages/core/indexing/operationBindings.ts",
                 "packages/features/cms-content/src/pages/core/indexing/projection.ts",
-                "packages/features/cms-content/src/pages/core/indexing/sourceBindings.ts",
                 "packages/features/cms-content/src/pages/core/lifecycle/pagePaths.ts",
                 "packages/features/cms-content/src/pages/core/lifecycle/pageSeo.ts",
                 "packages/features/cms-content/src/pages/core/lifecycle/publication.ts",
@@ -340,7 +361,7 @@
                 "packages/features/cms-content/src/pages/interfaces/pages.ts",
                 "packages/features/cms-content/src/runtime-assets/build.ts",
                 "packages/features/cms-content/src/runtime-assets/http/serveBindingCoreRuntime.ts",
-                "packages/features/cms-content/src/runtime-assets/http/serveComponentRuntime.ts",
+                "packages/features/cms-content/src/runtime-assets/http/serveBlocRuntime.ts",
                 "packages/features/cms-content/src/runtime-assets/runtimeAssets.ts",
                 "packages/features/cms-content/src/settings/core/publicOrganization.ts",
                 "packages/features/cms-content/src/settings/core/readSystemSnapshot.ts",
@@ -364,13 +385,14 @@
             "uncoveredSourceFiles": [
                 "packages/features/cms-content/src/application/interfaces/CmsRepository.ts",
                 "packages/features/cms-content/src/application/interfaces/ContentReader.ts",
+                "packages/features/cms-content/src/blocs/core/markup/expression/types.ts",
+                "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/types.ts",
                 "packages/features/cms-content/src/blocs/interfaces/blocs.ts",
                 "packages/features/cms-content/src/browser/binding/render/condition/types.ts",
                 "packages/features/cms-content/src/browser/dom.ts",
                 "packages/features/cms-content/src/browser/entries/bindingCore.entry.ts",
-                "packages/features/cms-content/src/browser/entries/component.entry.ts",
+                "packages/features/cms-content/src/browser/entries/blocRuntime.entry.ts",
                 "packages/features/cms-content/src/exports/kernel.ts",
-                "packages/features/cms-content/src/exports/pages/document.ts",
                 "packages/features/cms-content/src/exports/pages/path.ts",
                 "packages/features/cms-content/src/exports/runtime/browser-dom.ts",
                 "packages/features/cms-content/src/exports/runtime/browser.ts",
@@ -378,21 +400,21 @@
                 "packages/features/cms-content/src/pages/interfaces/document.ts",
                 "packages/features/cms-content/src/pages/interfaces/routing.ts",
                 "packages/features/cms-content/src/runtime-assets/generated/binding-core.js",
-                "packages/features/cms-content/src/runtime-assets/generated/component.js",
+                "packages/features/cms-content/src/runtime-assets/generated/bloc-runtime.js",
                 "packages/features/cms-content/src/settings/interfaces/settings.ts",
                 "packages/features/cms-content/src/theme/interfaces/theme.ts"
             ],
             "files": {
-                "covered": 220,
-                "total": 239
+                "covered": 241,
+                "total": 261
             },
             "functions": {
-                "covered": 1307,
-                "total": 1466
+                "covered": 1467,
+                "total": 1657
             },
             "lines": {
-                "covered": 11584,
-                "total": 13310
+                "covered": 13538,
+                "total": 15593
             }
         },
         "@bernouy/cms-files": {
@@ -421,12 +443,12 @@
                 "total": 15
             },
             "functions": {
-                "covered": 143,
-                "total": 158
+                "covered": 148,
+                "total": 164
             },
             "lines": {
-                "covered": 792,
-                "total": 902
+                "covered": 823,
+                "total": 927
             }
         },
         "@bernouy/cms-gateway": {
@@ -501,12 +523,12 @@
                 "total": 61
             },
             "functions": {
-                "covered": 265,
-                "total": 317
+                "covered": 272,
+                "total": 324
             },
             "lines": {
-                "covered": 2707,
-                "total": 3108
+                "covered": 2800,
+                "total": 3213
             }
         },
         "@bernouy/cms-kernel": {
@@ -522,7 +544,6 @@
                 "packages/surfaces/cms-kernel/src/html/runtimeContext.ts",
                 "packages/surfaces/cms-kernel/src/http/assets/favicon.ts",
                 "packages/surfaces/cms-kernel/src/http/assets/serveFavicon.ts",
-                "packages/surfaces/cms-kernel/src/http/auth/loginPage.ts",
                 "packages/surfaces/cms-kernel/src/http/auth/mountAuthRoutes.ts",
                 "packages/surfaces/cms-kernel/src/http/mountKernelRoutes.ts",
                 "packages/surfaces/cms-kernel/src/http/pages/access/preflightPageGatewayAccess.ts",
@@ -537,20 +558,19 @@
             "uncoveredSourceFiles": [
                 "packages/surfaces/cms-kernel/src/KernelCmsConfig.ts",
                 "packages/surfaces/cms-kernel/src/html/RenderContext.ts",
-                "packages/surfaces/cms-kernel/src/index.ts",
-                "packages/surfaces/cms-kernel/types/HTMLElements.ts"
+                "packages/surfaces/cms-kernel/src/index.ts"
             ],
             "files": {
-                "covered": 21,
-                "total": 25
+                "covered": 20,
+                "total": 23
             },
             "functions": {
-                "covered": 75,
-                "total": 94
+                "covered": 74,
+                "total": 98
             },
             "lines": {
-                "covered": 717,
-                "total": 798
+                "covered": 703,
+                "total": 784
             }
         },
         "@bernouy/cms-kernel-server": {
@@ -559,25 +579,25 @@
                 "packages/runtimes/cms-kernel-server/src/runtime/gateway/fetchProviderReport.ts",
                 "packages/runtimes/cms-kernel-server/src/runtime/kernelRuntime.ts",
                 "packages/runtimes/cms-kernel-server/src/runtime/mountKernel.ts",
+                "packages/runtimes/cms-kernel-server/src/runtime/provider/ProviderKernelClient.ts",
                 "packages/runtimes/cms-kernel-server/src/runtime/provider/ProviderKernelTransport.ts",
                 "packages/runtimes/cms-kernel-server/src/runtimeEnv.ts",
                 "packages/runtimes/cms-kernel-server/src/runtimeEnvParsing.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/runtimes/cms-kernel-server/src/index.ts",
-                "packages/runtimes/cms-kernel-server/src/runtime/provider/ProviderKernelClient.ts"
+                "packages/runtimes/cms-kernel-server/src/index.ts"
             ],
             "files": {
-                "covered": 6,
+                "covered": 7,
                 "total": 8
             },
             "functions": {
-                "covered": 20,
-                "total": 20
+                "covered": 89,
+                "total": 89
             },
             "lines": {
-                "covered": 233,
-                "total": 244
+                "covered": 429,
+                "total": 440
             }
         },
         "@bernouy/cms-repository": {
@@ -589,7 +609,9 @@
                 "packages/features/cms-repository/src/collections/core/admission/evolution.ts",
                 "packages/features/cms-repository/src/collections/core/admission/pageRequirements.ts",
                 "packages/features/cms-repository/src/collections/core/admission/releaseMigrations.ts",
-                "packages/features/cms-repository/src/collections/core/admission/requirements.ts",
+                "packages/features/cms-repository/src/collections/core/admission/requirements/index.ts",
+                "packages/features/cms-repository/src/collections/core/admission/requirements/mergeCapabilities.ts",
+                "packages/features/cms-repository/src/collections/core/admission/requirements/syncProducers.ts",
                 "packages/features/cms-repository/src/collections/core/admission/resourceDescriptors.ts",
                 "packages/features/cms-repository/src/collections/core/errors.ts",
                 "packages/features/cms-repository/src/collections/core/limits.ts",
@@ -609,6 +631,7 @@
                 "packages/features/cms-repository/src/collections/core/parsing/pages/references.ts",
                 "packages/features/cms-repository/src/collections/core/parsing/parseCollectionRelease.ts",
                 "packages/features/cms-repository/src/collections/core/parsing/requirements.ts",
+                "packages/features/cms-repository/src/collections/core/parsing/states.ts",
                 "packages/features/cms-repository/src/collections/core/parsing/theme.ts",
                 "packages/features/cms-repository/src/collections/core/texts/expressions.ts",
                 "packages/features/cms-repository/src/collections/core/texts/parseCollectionTexts.ts",
@@ -617,10 +640,16 @@
                 "packages/features/cms-repository/src/collections/core/texts/translationReferences.ts",
                 "packages/features/cms-repository/src/collections/core/texts/userFacingAttributes.ts",
                 "packages/features/cms-repository/src/collections/core/texts/validation.ts",
+                "packages/features/cms-repository/src/collections/core/validation/blocBehaviorPolicy.ts",
+                "packages/features/cms-repository/src/collections/core/validation/blocStyleCompilation.ts",
+                "packages/features/cms-repository/src/collections/core/validation/blocStyles.ts",
                 "packages/features/cms-repository/src/collections/core/validation/markup/assets.ts",
                 "packages/features/cms-repository/src/collections/core/validation/markup/managedNative.ts",
                 "packages/features/cms-repository/src/collections/core/validation/markup/shell.ts",
                 "packages/features/cms-repository/src/collections/core/validation/markup/slots.ts",
+                "packages/features/cms-repository/src/collections/core/validation/markup/state/cycles.ts",
+                "packages/features/cms-repository/src/collections/core/validation/markup/state/index.ts",
+                "packages/features/cms-repository/src/collections/core/validation/markup/state/input.ts",
                 "packages/features/cms-repository/src/collections/core/validation/markup/texts.ts",
                 "packages/features/cms-repository/src/collections/core/validation/markup/tree.ts",
                 "packages/features/cms-repository/src/collections/core/validation/markup/validateMarkup.ts",
@@ -669,7 +698,6 @@
                 "packages/features/cms-repository/src/collections/installations/migrations/transforms/siteData.ts",
                 "packages/features/cms-repository/src/collections/installations/migrations/transforms/themeTokenReferences.ts",
                 "packages/features/cms-repository/src/collections/integration/assets/installedAssets.ts",
-                "packages/features/cms-repository/src/collections/integration/content/compiledComponent.ts",
                 "packages/features/cms-repository/src/collections/integration/content/installedRepository.ts",
                 "packages/features/cms-repository/src/collections/integration/content/installedSnapshot.ts",
                 "packages/features/cms-repository/src/collections/integration/content/routeMutationValidation.ts",
@@ -678,9 +706,10 @@
                 "packages/features/cms-repository/src/collections/integration/content/theme.ts",
                 "packages/features/cms-repository/src/collections/sources/http.ts",
                 "packages/features/cms-repository/src/collections/sources/parseCatalogue.ts",
+                "packages/features/cms-repository/src/collections/tooling/blocRuntimeExternalsPlugin.ts",
+                "packages/features/cms-repository/src/collections/tooling/blocTemplate.ts",
                 "packages/features/cms-repository/src/collections/tooling/buildCollectionBloc.ts",
                 "packages/features/cms-repository/src/collections/tooling/buildFiles.ts",
-                "packages/features/cms-repository/src/collections/tooling/hostRuntimeExternalsPlugin.ts",
                 "packages/features/cms-repository/src/collections/tooling/validateBloc.ts",
                 "packages/features/cms-repository/src/collections/tooling/viewRegistrationEntry.ts",
                 "packages/features/cms-repository/src/contracts/core/admission/admitConformanceSuite.ts",
@@ -781,6 +810,7 @@
                 "packages/features/cms-repository/src/exports/providers/compatibility.ts",
                 "packages/features/cms-repository/src/exports/providers/index.ts",
                 "packages/features/cms-repository/src/exports/providers/installations.ts",
+                "packages/features/cms-repository/src/exports/providers/management.ts",
                 "packages/features/cms-repository/src/exports/providers/mongo.ts",
                 "packages/features/cms-repository/src/exports/providers/selections.ts",
                 "packages/features/cms-repository/src/exports/providers/sources.ts",
@@ -808,6 +838,10 @@
                 "packages/features/cms-repository/src/providers/installations/default-implementation/mongo/MongoProviderInstallationStore.ts",
                 "packages/features/cms-repository/src/providers/installations/default-implementation/mongo/record.ts",
                 "packages/features/cms-repository/src/providers/installations/default-implementation/mongo/selectionMetadata.ts",
+                "packages/features/cms-repository/src/providers/management/ProviderConnectionWorkflow.ts",
+                "packages/features/cms-repository/src/providers/management/ProviderManagement.ts",
+                "packages/features/cms-repository/src/providers/management/activateProviderContract.ts",
+                "packages/features/cms-repository/src/providers/management/connectionSupport.ts",
                 "packages/features/cms-repository/src/providers/manifests/core/admission/admitProviderManifest.ts",
                 "packages/features/cms-repository/src/providers/manifests/core/admission/implementationGraph.ts",
                 "packages/features/cms-repository/src/providers/manifests/core/admission/normalizeManifestYank.ts",
@@ -882,6 +916,7 @@
                 "packages/features/cms-repository/src/collections/interfaces/CollectionBloc.ts",
                 "packages/features/cms-repository/src/collections/interfaces/CollectionPage.ts",
                 "packages/features/cms-repository/src/collections/interfaces/CollectionRelease.ts",
+                "packages/features/cms-repository/src/collections/interfaces/CollectionState.ts",
                 "packages/features/cms-repository/src/collections/interfaces/CollectionText.ts",
                 "packages/features/cms-repository/src/collections/interfaces/CollectionTheme.ts",
                 "packages/features/cms-repository/src/collections/sources/interfaces.ts",
@@ -894,16 +929,11 @@
                 "packages/features/cms-repository/src/contracts/interfaces/UlviaSchema.ts",
                 "packages/features/cms-repository/src/exports/collections/sources.ts",
                 "packages/features/cms-repository/src/exports/providers/http.ts",
-                "packages/features/cms-repository/src/exports/providers/management.ts",
                 "packages/features/cms-repository/src/providers/installations/interfaces/ProviderConnection.ts",
                 "packages/features/cms-repository/src/providers/installations/interfaces/ProviderInstallation.ts",
                 "packages/features/cms-repository/src/providers/installations/interfaces/ProviderInstallationPreparation.ts",
                 "packages/features/cms-repository/src/providers/installations/interfaces/ProviderInstallationStore.ts",
                 "packages/features/cms-repository/src/providers/installations/interfaces/ProviderRuntimeReport.ts",
-                "packages/features/cms-repository/src/providers/management/ProviderConnectionWorkflow.ts",
-                "packages/features/cms-repository/src/providers/management/ProviderManagement.ts",
-                "packages/features/cms-repository/src/providers/management/activateProviderContract.ts",
-                "packages/features/cms-repository/src/providers/management/connectionSupport.ts",
                 "packages/features/cms-repository/src/providers/management/connectionTypes.ts",
                 "packages/features/cms-repository/src/providers/management/types.ts",
                 "packages/features/cms-repository/src/providers/manifests/interfaces/ProviderManifest.ts",
@@ -917,16 +947,16 @@
                 "packages/features/cms-repository/src/repository/publication/types.ts"
             ],
             "files": {
-                "covered": 290,
-                "total": 330
+                "covered": 304,
+                "total": 340
             },
             "functions": {
-                "covered": 2201,
-                "total": 2429
+                "covered": 2299,
+                "total": 2557
             },
             "lines": {
-                "covered": 17829,
-                "total": 20167
+                "covered": 18707,
+                "total": 21215
             }
         },
         "@bernouy/cms-seo": {
@@ -958,12 +988,12 @@
                 "total": 19
             },
             "functions": {
-                "covered": 105,
-                "total": 115
+                "covered": 106,
+                "total": 116
             },
             "lines": {
-                "covered": 963,
-                "total": 1078
+                "covered": 977,
+                "total": 1102
             }
         },
         "@bernouy/envelope-crypto": {
@@ -1041,7 +1071,7 @@
             },
             "lines": {
                 "covered": 724,
-                "total": 794
+                "total": 790
             }
         },
         "@bernouy/image-processing": {
@@ -1154,6 +1184,7 @@
                 "packages/runtimes/ulvia-cli/src/cli.ts",
                 "packages/runtimes/ulvia-cli/src/commands/bootstrap.ts",
                 "packages/runtimes/ulvia-cli/src/commands/dev.ts",
+                "packages/runtimes/ulvia-cli/src/commands/devData.ts",
                 "packages/runtimes/ulvia-cli/src/commands/prune.ts",
                 "packages/runtimes/ulvia-cli/src/commands/release.ts",
                 "packages/runtimes/ulvia-cli/src/commands/remote.ts",
@@ -1168,11 +1199,12 @@
                 "packages/runtimes/ulvia-cli/src/release/blocSources.ts",
                 "packages/runtimes/ulvia-cli/src/release/metadataSources.ts",
                 "packages/runtimes/ulvia-cli/src/release/migrationSources.ts",
-                "packages/runtimes/ulvia-cli/src/release/quality.ts",
                 "packages/runtimes/ulvia-cli/src/release/source.ts",
                 "packages/runtimes/ulvia-cli/src/release/textSources.ts",
                 "packages/runtimes/ulvia-cli/src/runtime/cms.ts",
                 "packages/runtimes/ulvia-cli/src/runtime/config.ts",
+                "packages/runtimes/ulvia-cli/src/runtime/dev/ports.ts",
+                "packages/runtimes/ulvia-cli/src/runtime/dev/supervisor.ts",
                 "packages/runtimes/ulvia-cli/src/runtime/instance.ts",
                 "packages/runtimes/ulvia-cli/src/runtime/mongo.ts",
                 "packages/runtimes/ulvia-cli/src/runtime/paths.ts",
@@ -1183,16 +1215,16 @@
                 "packages/runtimes/ulvia-cli/src/index.ts"
             ],
             "files": {
-                "covered": 28,
-                "total": 29
+                "covered": 30,
+                "total": 31
             },
             "functions": {
-                "covered": 198,
-                "total": 234
+                "covered": 230,
+                "total": 269
             },
             "lines": {
-                "covered": 1423,
-                "total": 1909
+                "covered": 1565,
+                "total": 2149
             }
         },
         "@bernouy/ulvia-provider": {
@@ -1214,6 +1246,7 @@
                 "packages/surfaces/ulvia-provider/src/capabilities/site-configuration/projection.ts",
                 "packages/surfaces/ulvia-provider/src/capabilities/site-configuration/support.ts",
                 "packages/surfaces/ulvia-provider/src/capabilities/site-configuration/theme.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/site-configuration/themeProjection.ts",
                 "packages/surfaces/ulvia-provider/src/dispatch/registry.ts",
                 "packages/surfaces/ulvia-provider/src/index.ts",
                 "packages/surfaces/ulvia-provider/src/instances/lifecycle.ts",
@@ -1240,16 +1273,16 @@
                 "packages/surfaces/ulvia-provider/src/ports/index.ts"
             ],
             "files": {
-                "covered": 35,
-                "total": 38
+                "covered": 36,
+                "total": 39
             },
             "functions": {
-                "covered": 226,
-                "total": 352
+                "covered": 235,
+                "total": 377
             },
             "lines": {
-                "covered": 1654,
-                "total": 2727
+                "covered": 1714,
+                "total": 3034
             }
         },
         "@bernouy/ulvia-provider-server": {
@@ -1257,10 +1290,13 @@
             "coveredSourceFiles": [
                 "packages/runtimes/ulvia-provider-server/src/runtime/authentication/ProviderInstanceAuthenticator.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/instances/InstanceResourcePool.ts",
+                "packages/runtimes/ulvia-provider-server/src/runtime/instances/OfficialProviderObservation.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/instances/instanceInitialization.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/instances/instanceProvisioning.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/instances/officialArtifacts.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/recovery/RecoverySupervisor.ts",
+                "packages/runtimes/ulvia-provider-server/src/runtime/stores/CmsFileWorkspace.ts",
+                "packages/runtimes/ulvia-provider-server/src/runtime/stores/selectedQueryCapabilities.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtimeEnv.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtimeEnvKek.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtimeEnvParsing.ts"
@@ -1286,16 +1322,16 @@
                 "packages/runtimes/ulvia-provider-server/src/runtime/stores/storageRoots.ts"
             ],
             "files": {
-                "covered": 9,
-                "total": 27
+                "covered": 12,
+                "total": 30
             },
             "functions": {
-                "covered": 62,
-                "total": 75
+                "covered": 110,
+                "total": 122
             },
             "lines": {
-                "covered": 393,
-                "total": 555
+                "covered": 680,
+                "total": 853
             }
         }
     }
