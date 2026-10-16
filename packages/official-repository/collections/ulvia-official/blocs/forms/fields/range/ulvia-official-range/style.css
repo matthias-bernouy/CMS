@@ -1,4 +1,4 @@
-:host {
+:scope {
     --range-progress: 50%;
     display: block;
     min-width: 0;
@@ -68,7 +68,7 @@
         0 0.125rem 0.375rem rgb(23 33 30 / 20%);
     pointer-events: none;
 }
-::slotted(input) {
+input {
     position: relative;
     z-index: 1;
     width: 100%;
@@ -78,7 +78,7 @@
     opacity: 0;
     cursor: pointer;
 }
-:host(:focus-within) [part="thumb"] {
+:scope:focus-within [part="thumb"] {
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: 2px;
 }
@@ -91,38 +91,38 @@
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     line-height: var(--ulvia-official-line-height-snug, 1.35);
 }
-:host([hide-value]) [part="value-row"],
-:host([hide-bounds]) [part="bounds"] {
+:scope[hide-value] [part="value-row"],
+:scope[hide-bounds] [part="bounds"] {
     display: none;
 }
-:host([data-disabled]) {
+:scope[data-disabled] {
     opacity: 0.55;
 }
-:host([data-disabled]) ::slotted(input) {
+:scope[data-disabled] input {
     cursor: not-allowed;
 }
 
-:host([bounds-layout="inline"]) [part="control"] {
+:scope[bounds-layout="inline"] [part="control"] {
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas: "value value value" "minimum slider maximum";
     align-items: center;
     column-gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([bounds-layout="inline"]) [part="value-row"] {
+:scope[bounds-layout="inline"] [part="value-row"] {
     grid-area: value;
 }
-:host([bounds-layout="inline"]) [part="slider"] {
+:scope[bounds-layout="inline"] [part="slider"] {
     grid-area: slider;
 }
-:host([bounds-layout="inline"]) [part="bounds"] {
+:scope[bounds-layout="inline"] [part="bounds"] {
     display: contents;
 }
-:host([bounds-layout="inline"]) [part="minimum"] {
+:scope[bounds-layout="inline"] [part="minimum"] {
     grid-area: minimum;
 }
-:host([bounds-layout="inline"]) [part="maximum"] {
+:scope[bounds-layout="inline"] [part="maximum"] {
     grid-area: maximum;
 }
-:host([bounds-layout="inline"][hide-bounds]) [part="slider"] {
+:scope[bounds-layout="inline"][hide-bounds] [part="slider"] {
     grid-column: 1 / -1;
 }

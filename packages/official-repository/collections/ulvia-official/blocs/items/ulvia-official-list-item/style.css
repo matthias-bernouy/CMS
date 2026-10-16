@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     min-width: 0;
     color: var(--ulvia-official-text-primary, #17211d);
@@ -8,7 +8,7 @@
     transition: background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
 }
 
-:host(:hover) {
+:scope:hover {
     background: color-mix(in srgb, var(--ulvia-official-background-subtle, #f3f7f5) 62%, transparent);
 }
 
@@ -87,24 +87,24 @@
     justify-content: flex-end;
 }
 
-:host([density="compact"]) {
+:scope[density="compact"] {
     --list-item-padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
 }
-:host([layout="columns"]) [part="item"] {
+:scope[layout="columns"] [part="item"] {
     grid-template-areas: "content body actions";
     grid-template-columns: minmax(10rem, 1fr) minmax(10rem, 0.85fr) minmax(16rem, 1.35fr);
     align-items: start;
     padding: var(--ulvia-official-spacing-md, 1rem);
 }
-:host([layout="columns"]) [part="leading"] {
+:scope[layout="columns"] [part="leading"] {
     display: none;
 }
-:host([layout="columns"]) [part="body"] {
+:scope[layout="columns"] [part="body"] {
     padding-block-start: 0;
     color: var(--ulvia-official-text-secondary, #42504a);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
-:host([layout="columns"]) [part="actions"] {
+:scope[layout="columns"] [part="actions"] {
     display: grid;
     justify-content: stretch;
 }
@@ -115,7 +115,7 @@
         grid-template-columns: auto minmax(0, 1fr);
         align-items: start;
     }
-    :host([layout="columns"]) [part="item"] {
+    :scope[layout="columns"] [part="item"] {
         grid-template-areas: "content" "body" "actions";
         grid-template-columns: minmax(0, 1fr);
     }

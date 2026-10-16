@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: inline-flex;
     width: fit-content;
     color: var(--ulvia-official-text-secondary, #53645d);
@@ -18,31 +18,31 @@
     line-height: 1;
 }
 
-:host([tone="info"]) [part="badge"] {
+:scope[tone="info"] [part="badge"] {
     border-color: var(--ulvia-official-info-border, #a7c9e8);
     color: var(--ulvia-official-on-info-subtle, #235f94);
     background: var(--ulvia-official-info-subtle, #eef7ff);
 }
 
-:host([tone="success"]) [part="badge"] {
+:scope[tone="success"] [part="badge"] {
     border-color: var(--ulvia-official-success-border, #9cd4bd);
     color: var(--ulvia-official-on-success-subtle, #176b4d);
     background: var(--ulvia-official-success-subtle, #effaf5);
 }
 
-:host([tone="warning"]) [part="badge"] {
+:scope[tone="warning"] [part="badge"] {
     border-color: var(--ulvia-official-warning-border, #e6c56a);
     color: var(--ulvia-official-on-warning-subtle, #765600);
     background: var(--ulvia-official-warning-subtle, #fff8df);
 }
 
-:host([tone="danger"]) [part="badge"] {
+:scope[tone="danger"] [part="badge"] {
     border-color: var(--ulvia-official-danger-border, #efb0aa);
     color: var(--ulvia-official-on-danger-subtle, #8a1c13);
     background: var(--ulvia-official-danger-subtle, #fff1f0);
 }
 
-:host([size="sm"]) [part="badge"] {
+:scope[size="sm"] [part="badge"] {
     min-height: 1.5rem;
     padding-inline: 0.5rem;
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);

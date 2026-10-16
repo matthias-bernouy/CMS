@@ -1,4 +1,4 @@
-:host {
+:scope {
     --frame-ratio: 16 / 10;
     --frame-fit: cover;
     --frame-radius: var(--ulvia-official-radius-lg, 0.75rem);
@@ -11,27 +11,27 @@
     overflow: clip;
     background: var(--ulvia-official-background-subtle, #f3f7f5);
 }
-::slotted(*) {
+* {
     width: 100%;
     height: 100%;
     display: block;
     object-fit: var(--frame-fit);
 }
-:host([ratio="square"]) {
+:scope[ratio="square"] {
     --frame-ratio: 1 / 1;
 }
-:host([ratio="portrait"]) {
+:scope[ratio="portrait"] {
     --frame-ratio: 4 / 5;
 }
-:host([ratio="wide"]) {
+:scope[ratio="wide"] {
     --frame-ratio: 21 / 9;
 }
-:host([fit="contain"]) {
+:scope[fit="contain"] {
     --frame-fit: contain;
 }
-:host([radius="none"]) {
+:scope[radius="none"] {
     --frame-radius: 0rem;
 }
-:host([radius="md"]) {
+:scope[radius="md"] {
     --frame-radius: var(--ulvia-official-radius-md, 0.5rem);
 }

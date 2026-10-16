@@ -1,10 +1,7 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private input: HTMLInputElement | null = null;
-    private slotElement: HTMLSlotElement | null;
     private emptyState: HTMLElement | null = null;
     private fileName: HTMLOutputElement | null = null;
     private preview: HTMLElement | null;
@@ -12,7 +9,7 @@ export class Bloc extends Component {
     private cardActions: HTMLElement | null;
     private replaceButton: HTMLButtonElement | null = null;
     private removeButton: HTMLButtonElement | null = null;
-    private root: Document | ShadowRoot | null = null;
+    private root: Document | null = null;
     private previewUrls: string[] = [];
     private observer = new MutationObserver(() => this.sync());
 
@@ -20,23 +17,21 @@ export class Bloc extends Component {
         return ["variant"];
     }
 
-    constructor() {
-        super({ css, template });
-        this.slotElement = this.shadowRoot?.querySelector('slot[name="file-control"]') ?? null;
-        this.preview = this.shadowRoot?.querySelector('[part="preview"]') ?? null;
-        this.cardPreview = this.shadowRoot?.querySelector('[part="card-preview"]') ?? null;
-        this.cardActions = this.shadowRoot?.querySelector('[part="card-actions"]') ?? null;
+    constructor(root: HTMLElement) {
+        super(root);
+        this.preview = this?.querySelector('[part="preview"]') ?? null;
+        this.cardPreview = this?.querySelector('[part="card-preview"]') ?? null;
+        this.cardActions = this?.querySelector('[part="card-actions"]') ?? null;
     }
 
     override connectedCallback(): void {
-        this.slotElement?.addEventListener("slotchange", this.bindInput);
-        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.root = this.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
         this.addEventListener("dragenter", this.handleDragEnter);
         this.addEventListener("dragover", this.handleDragOver);
         this.addEventListener("dragleave", this.handleDragLeave);
         this.addEventListener("drop", this.handleDrop);
-        this.emptyState = this.querySelector<HTMLElement>('[slot="empty-state"]');
+        this.emptyState = this.querySelector<HTMLElement>("[data-file-empty-state]");
         this.fileName = this.querySelector<HTMLOutputElement>("[data-file-name]");
         this.replaceButton = this.querySelector<HTMLButtonElement>("[data-file-replace]");
         this.removeButton = this.querySelector<HTMLButtonElement>("[data-file-remove]");
@@ -46,7 +41,6 @@ export class Bloc extends Component {
     }
 
     disconnectedCallback(): void {
-        this.slotElement?.removeEventListener("slotchange", this.bindInput);
         this.removeEventListener("dragenter", this.handleDragEnter);
         this.removeEventListener("dragover", this.handleDragOver);
         this.removeEventListener("dragleave", this.handleDragLeave);

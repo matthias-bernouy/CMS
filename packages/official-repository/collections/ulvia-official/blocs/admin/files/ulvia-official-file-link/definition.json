@@ -8,13 +8,29 @@
     "internal": true,
     "uses": [],
     "requires": [
-        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.sign", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.files", "capabilityId": "files.read", "versionRange": "^1.0.0" }
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.files.sign",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "files.read",
+            "versionRange": "^1.0.0"
+        }
     ],
     "slots": {
         "content": {
-            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
             "min": 1
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

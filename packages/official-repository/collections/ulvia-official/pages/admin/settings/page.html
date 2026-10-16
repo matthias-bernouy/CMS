@@ -1,9 +1,9 @@
-<ulvia-official-admin-workspace>
+<div cms-bloc="ulvia-official-admin-workspace">
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-settings }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-configure-the-site-identity-availability-and-languages }}</p>
-    <ulvia-official-route-tabs slot="page-navigation" label="{{ cms.i18n.ulvia-official.ui-settings }}" size="sm">
-        <ulvia-official-route-tab slot="items"><a href="#settings-general">{{ cms.i18n.ulvia-official.ui-general-settings }}</a></ulvia-official-route-tab>
-        <ulvia-official-route-tab slot="items"><a href="#settings-languages">{{ cms.i18n.ulvia-official.ui-languages }}</a></ulvia-official-route-tab>
-    </ulvia-official-route-tabs>
-    <ulvia-official-settings-manager slot="content"></ulvia-official-settings-manager>
-</ulvia-official-admin-workspace>
+    <div cms-bloc="ulvia-official-route-tabs" size="sm" label="{{ cms.i18n.ulvia-official.ui-settings }}" slot="page-navigation">
+        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#settings-general"><span>{{ cms.i18n.ulvia-official.ui-general-settings }}</span></a>
+        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#settings-languages"><span>{{ cms.i18n.ulvia-official.ui-languages }}</span></a>
+    </div>
+    <div cms-bloc="ulvia-official-settings-manager" slot="content"></div>
+</div>

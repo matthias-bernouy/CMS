@@ -1,4 +1,4 @@
-:host {
+:scope {
     --color-control-height: var(--ulvia-official-control-height-md, 2.875rem);
     --color-font-size: var(--ulvia-official-font-size-md, 1rem);
     --color-swatch-size: 2rem;
@@ -13,11 +13,11 @@
     position: relative;
     display: block;
 }
-::slotted(input) {
+input {
     width: 100%;
     min-height: var(--color-control-height);
 }
-:host([data-ready]) ::slotted(input) {
+:scope[data-ready] input {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -82,7 +82,7 @@
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.5 7.75 4.5 4.5 4.5-4.5'/%3E%3C/svg%3E")
         center / contain no-repeat;
 }
-:host([data-open]) [part="indicator"] {
+:scope[data-open] [part="indicator"] {
     transform: rotate(180deg);
 }
 [part="trigger"]:hover:not(:disabled) {
@@ -212,18 +212,18 @@
     background: hsl(var(--selected-hue, 0) 100% 50%);
     box-shadow: 0 0 0 1px var(--ulvia-official-border-strong, #737985);
 }
-:host([data-disabled]) [part="trigger"] {
+:scope[data-disabled] [part="trigger"] {
     color: var(--ulvia-official-text-disabled, #858b95);
     background: var(--ulvia-official-background-subtle, #f4f5f7);
     cursor: not-allowed;
 }
-:host([size="sm"]) {
+:scope[size="sm"] {
     --color-control-height: var(--ulvia-official-control-height-sm, 2.25rem);
     --color-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     --color-swatch-size: 1.625rem;
     --color-padding-inline: var(--ulvia-official-spacing-xs, 0.5rem);
 }
-:host([size="lg"]) {
+:scope[size="lg"] {
     --color-control-height: var(--ulvia-official-control-height-lg, 3.25rem);
     --color-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
     --color-swatch-size: 2.25rem;

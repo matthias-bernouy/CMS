@@ -1,4 +1,4 @@
-:host {
+:scope {
     --detail-navigation-width: 12rem;
     --detail-aside-width: 18rem;
     --detail-gap: var(--ulvia-official-spacing-lg, 1.5rem);
@@ -17,22 +17,22 @@
 [part="aside"] {
     min-width: 0;
 }
-:host([navigation-width="sm"]) {
+:scope[navigation-width="sm"] {
     --detail-navigation-width: 9rem;
 }
-:host([navigation-width="lg"]) {
+:scope[navigation-width="lg"] {
     --detail-navigation-width: 15rem;
 }
-:host([aside-width="sm"]) {
+:scope[aside-width="sm"] {
     --detail-aside-width: 14rem;
 }
-:host([aside-width="lg"]) {
+:scope[aside-width="lg"] {
     --detail-aside-width: 22rem;
 }
-:host([gap="md"]) {
+:scope[gap="md"] {
     --detail-gap: var(--ulvia-official-spacing-md, 1rem);
 }
-:host([gap="xl"]) {
+:scope[gap="xl"] {
     --detail-gap: var(--ulvia-official-spacing-xl, 2rem);
 }
 
@@ -59,7 +59,7 @@
     [part="navigation"] {
         order: 3;
     }
-    :host([narrow-layout="navigation-first"]) [part="navigation"] {
+    :scope[narrow-layout="navigation-first"] [part="navigation"] {
         order: 0;
     }
 }

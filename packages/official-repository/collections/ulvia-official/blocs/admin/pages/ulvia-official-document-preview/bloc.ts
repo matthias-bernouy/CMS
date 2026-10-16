@@ -1,21 +1,19 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     static get observedAttributes(): string[] {
         return ["document"];
     }
 
     private readonly frame: HTMLIFrameElement;
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
         this.frame = document.createElement("iframe");
         this.frame.setAttribute("part", "frame");
         this.frame.setAttribute("sandbox", "");
         this.frame.title = "Page document preview";
-        const preview = this.shadowRoot?.querySelector<HTMLElement>('[part="preview"]');
+        const preview = this?.querySelector<HTMLElement>('[part="preview"]');
         if (!preview) {
             throw new Error("Missing document preview surface.");
         }

@@ -1,4 +1,4 @@
-:host {
+:scope {
     --reel-item-width: 18rem;
     --reel-gap: var(--ulvia-official-spacing-md, 1rem);
     display: block;
@@ -17,24 +17,24 @@
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: 3px;
 }
-::slotted(*) {
+* {
     flex: 0 0 min(var(--reel-item-width), 85cqi);
 }
-:host([item-width="sm"]) {
+:scope[item-width="sm"] {
     --reel-item-width: 13rem;
 }
-:host([item-width="lg"]) {
+:scope[item-width="lg"] {
     --reel-item-width: 26rem;
 }
-:host([gap="sm"]) {
+:scope[gap="sm"] {
     --reel-gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([gap="lg"]) {
+:scope[gap="lg"] {
     --reel-gap: var(--ulvia-official-spacing-lg, 1.5rem);
 }
-:host([snap]) [part="reel"] {
+:scope[snap] [part="reel"] {
     scroll-snap-type: inline mandatory;
 }
-:host([snap]) ::slotted(*) {
+:scope[snap] * {
     scroll-snap-align: start;
 }

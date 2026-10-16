@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
@@ -6,9 +6,9 @@
 [part="item"] {
     border-block-end: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #dfe2e7);
 }
-::slotted(details) {
+details {
     padding-block: var(--ulvia-official-spacing-md, 1rem);
 }
-::slotted(details[open]) {
+details[open] {
     padding-block-end: var(--ulvia-official-spacing-lg, 1.5rem);
 }

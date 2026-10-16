@@ -5,8 +5,17 @@
     "description": "bloc.textarea.description",
     "category": "bloc.category.forms",
     "order": 20,
-    "nativeElement": { "accepts": ["textarea"] },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["textarea"],
+        "defaults": {
+            "name": "message",
+            "rows": "5"
+        }
+    }
 }

@@ -1,203 +1,185 @@
-<ulvia-official-app-shell layout="dual-sidebar" width="full" sticky-header>
-    <ulvia-official-icon slot="brand" name="layout" size="lg" tone="primary"></ulvia-official-icon>
+<div sticky-header="" width="full" layout="dual-sidebar" cms-bloc="ulvia-official-app-shell">
+    <span tone="primary" size="lg" name="layout" slot="brand" cms-bloc="ulvia-official-icon"></span>
     <strong slot="brand">Ulvia Console</strong>
     <span slot="primary-mobile-label">Layouts</span>
     <span slot="secondary-mobile-label">Components</span>
-    <ulvia-official-navigation-menu slot="secondary-navigation" appearance="plain" density="compact" label="Workspace navigation">
+    <div label="Workspace navigation" density="compact" appearance="plain" slot="secondary-navigation" cms-bloc="ulvia-official-navigation-menu">
         <strong slot="header">Administration</strong>
-        <ulvia-official-navigation-section slot="sections" divider>
+        <div divider="" slot="sections" cms-bloc="ulvia-official-navigation-section">
             <span slot="label">Content</span>
-            <ulvia-official-navigation-item slot="items" active emphasis="default"
-                ><a href="/layouts/catalogue"
-                    ><ulvia-official-icon name="layout" size="md" tone="current"></ulvia-official-icon><span>Layouts</span></a
-                ></ulvia-official-navigation-item
+            <a emphasis="default" active="" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/catalogue"
+                ><span slot="content" tone="current" size="md" name="layout" cms-bloc="ulvia-official-icon"></span><span slot="content">Layouts</span></a
             >
-            <ulvia-official-navigation-item slot="items" emphasis="default"
-                ><a href="/forms/catalogue"
-                    ><ulvia-official-icon name="pages" size="md" tone="current"></ulvia-official-icon><span>Forms</span></a
-                ></ulvia-official-navigation-item
+            <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/forms/catalogue"
+                ><span slot="content" tone="current" size="md" name="pages" cms-bloc="ulvia-official-icon"></span><span slot="content">Forms</span></a
             >
-            <ulvia-official-navigation-item slot="items" emphasis="default"
-                ><a href="/forms/contact"
-                    ><ulvia-official-icon name="users" size="md" tone="current"></ulvia-official-icon><span>Contact</span></a
-                ></ulvia-official-navigation-item
+            <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/forms/contact"
+                ><span slot="content" tone="current" size="md" name="users" cms-bloc="ulvia-official-icon"></span><span slot="content">Contact</span></a
             >
-        </ulvia-official-navigation-section>
-        <ulvia-official-navigation-section slot="sections">
+        </div>
+        <div slot="sections" cms-bloc="ulvia-official-navigation-section">
             <span slot="label">Workspace</span>
-            <ulvia-official-navigation-group slot="items" expanded count="4">
-                <ulvia-official-icon slot="icon" name="collections" size="md" tone="current"></ulvia-official-icon>
+            <div count="4" expanded="" slot="items" cms-bloc="ulvia-official-navigation-group">
+                <span tone="current" size="md" name="collections" slot="icon" cms-bloc="ulvia-official-icon"></span>
                 <span slot="label">Collection tools</span>
-                <ulvia-official-navigation-item slot="items" emphasis="default"
-                    ><a href="/layouts/catalogue"><span>Release</span></a></ulvia-official-navigation-item
+                <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/catalogue"><span slot="content">Release</span></a>
+                <a emphasis="default" active="" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/components"
+                    ><span slot="content">Components</span></a
                 >
-                <ulvia-official-navigation-item slot="items" active emphasis="default"
-                    ><a href="/layouts/components"><span>Components</span></a></ulvia-official-navigation-item
+                <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/theme"><span slot="content">Theme tokens</span></a>
+                <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/details"
+                    ><span slot="content">Detail views</span></a
                 >
-                <ulvia-official-navigation-item slot="items" emphasis="default"
-                    ><a href="/layouts/theme"><span>Theme tokens</span></a></ulvia-official-navigation-item
-                >
-                <ulvia-official-navigation-item slot="items" emphasis="default"
-                    ><a href="/layouts/details"><span>Detail views</span></a></ulvia-official-navigation-item
-                >
-            </ulvia-official-navigation-group>
-        </ulvia-official-navigation-section>
-    </ulvia-official-navigation-menu>
-    <ulvia-official-navigation-menu slot="secondary-sidebar" appearance="subtle" density="compact" label="Collection navigation">
+            </div>
+        </div>
+    </div>
+    <div label="Collection navigation" density="compact" appearance="subtle" slot="secondary-sidebar" cms-bloc="ulvia-official-navigation-menu">
         <strong slot="header">Ulvia Official</strong>
-        <ulvia-official-navigation-section slot="sections">
+        <div slot="sections" cms-bloc="ulvia-official-navigation-section">
             <span slot="label">Collection</span>
-            <ulvia-official-navigation-item slot="items" emphasis="default"
-                ><a href="/layouts/catalogue"
-                    ><ulvia-official-icon name="dashboard" size="md" tone="current"></ulvia-official-icon><span>Overview</span></a
-                ></ulvia-official-navigation-item
+            <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/catalogue"
+                ><span slot="content" tone="current" size="md" name="dashboard" cms-bloc="ulvia-official-icon"></span><span slot="content">Overview</span></a
             >
-            <ulvia-official-navigation-group slot="items" expanded count="3">
-                <ulvia-official-icon slot="icon" name="layout" size="md" tone="current"></ulvia-official-icon>
+            <div count="3" expanded="" slot="items" cms-bloc="ulvia-official-navigation-group">
+                <span tone="current" size="md" name="layout" slot="icon" cms-bloc="ulvia-official-icon"></span>
                 <span slot="label">Resources</span>
-                <ulvia-official-navigation-item slot="items" active emphasis="default"
-                    ><a href="/layouts/components"><span>Blocks</span></a></ulvia-official-navigation-item
+                <a emphasis="default" active="" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/components"
+                    ><span slot="content">Blocks</span></a
                 >
-                <ulvia-official-navigation-item slot="items" emphasis="default"
-                    ><a href="/layouts/theme"><span>Theme tokens</span></a></ulvia-official-navigation-item
+                <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/theme"><span slot="content">Theme tokens</span></a>
+                <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/details"
+                    ><span slot="content">Detail views</span></a
                 >
-                <ulvia-official-navigation-item slot="items" emphasis="default"
-                    ><a href="/layouts/details"><span>Detail views</span></a></ulvia-official-navigation-item
-                >
-            </ulvia-official-navigation-group>
-        </ulvia-official-navigation-section>
-    </ulvia-official-navigation-menu>
+            </div>
+        </div>
+    </div>
 
-    <ulvia-official-page-shell slot="content" width="xl" appearance="plain" density="default">
-        <ulvia-official-cluster slot="breadcrumb" gap="sm" align="center" justify="start">
-            <ulvia-official-icon slot="items" name="layout" size="sm" tone="muted"></ulvia-official-icon>
-            <ulvia-official-prose slot="items" measure="wide" size="sm"><span slot="content">Collections / Ulvia Official / Blocks</span></ulvia-official-prose>
-        </ulvia-official-cluster>
-        <ulvia-official-heading slot="title" size="xl" align="start"><h1>Composition components</h1></ulvia-official-heading>
-        <ulvia-official-prose slot="description" measure="wide" size="lg"
-            ><p slot="content">
+    <div density="default" appearance="plain" width="xl" slot="content" cms-bloc="ulvia-official-page-shell">
+        <div justify="start" align="center" gap="sm" slot="breadcrumb" cms-bloc="ulvia-official-cluster">
+            <span tone="muted" size="sm" name="layout" slot="items" cms-bloc="ulvia-official-icon"></span>
+            <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><span slot="content">Collections / Ulvia Official / Blocks</span></div>
+        </div>
+        <div align="start" size="xl" slot="title" cms-bloc="ulvia-official-heading"><h1>Composition components</h1></div>
+        <div size="lg" measure="wide" slot="description" cms-bloc="ulvia-official-prose">
+            <p slot="content">
                 A compact vocabulary for editorial pages, product screens and embedded experiences. Each primitive owns one layout responsibility and accepts
                 compatible blocks from other collections.
-            </p></ulvia-official-prose
-        >
-        <ulvia-official-route-tabs slot="navigation" appearance="underline" align="start" size="md" label="Layout catalogue sections">
-            <ulvia-official-route-tab slot="items"><a href="/layouts/catalogue">Overview</a></ulvia-official-route-tab>
-            <ulvia-official-route-tab slot="items" active><a href="/layouts/components">Components</a></ulvia-official-route-tab>
-            <ulvia-official-route-tab slot="items"><a href="/layouts/theme">Theme tokens</a></ulvia-official-route-tab>
-            <ulvia-official-route-tab slot="items"><a href="/layouts/details">Detail views</a></ulvia-official-route-tab>
-        </ulvia-official-route-tabs>
+            </p>
+        </div>
+        <div label="Layout catalogue sections" size="md" align="start" appearance="underline" slot="navigation" cms-bloc="ulvia-official-route-tabs">
+            <a slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/catalogue"><span>Overview</span></a>
+            <a active="" slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/components"><span>Components</span></a>
+            <a slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/theme"><span>Theme tokens</span></a>
+            <a slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/details"><span>Detail views</span></a>
+        </div>
 
-        <ulvia-official-stack slot="content" gap="xl" align="stretch">
-            <ulvia-official-panel slot="items" appearance="outlined" density="default">
-                <ulvia-official-prose slot="header" measure="wide" size="sm"><strong slot="content">SPLIT + FRAME</strong></ulvia-official-prose>
-                <ulvia-official-split slot="content" ratio="primary-wide" gap="xl" align="center" narrow-order="primary-first">
-                    <ulvia-official-stack slot="primary" gap="md" align="start">
-                        <ulvia-official-heading slot="items" size="lg" align="start"><h2>Compose stories without page-specific CSS</h2></ulvia-official-heading>
-                        <ulvia-official-prose slot="items" measure="default" size="md"
-                            ><p slot="content">
+        <div align="stretch" gap="xl" slot="content" cms-bloc="ulvia-official-stack">
+            <div density="default" appearance="outlined" slot="items" cms-bloc="ulvia-official-panel">
+                <div size="sm" measure="wide" slot="header" cms-bloc="ulvia-official-prose"><strong slot="content">SPLIT + FRAME</strong></div>
+                <div narrow-order="primary-first" align="center" gap="xl" ratio="primary-wide" slot="content" cms-bloc="ulvia-official-split">
+                    <div align="start" gap="md" slot="primary" cms-bloc="ulvia-official-stack">
+                        <div align="start" size="lg" slot="items" cms-bloc="ulvia-official-heading"><h2>Compose stories without page-specific CSS</h2></div>
+                        <div size="md" measure="default" slot="items" cms-bloc="ulvia-official-prose">
+                            <p slot="content">
                                 The split controls proportion and stacking order. The frame controls media ratio and cropping. Each responsibility remains
                                 explicit and reusable.
-                            </p></ulvia-official-prose
+                            </p>
+                        </div>
+                        <a size="md" tone="primary" variant="filled" slot="items" cms-bloc="ulvia-official-action" href="/layouts/details"
+                            ><span
+                                ><span tone="current" size="sm" name="layout" cms-bloc="ulvia-official-icon"></span><span>See a full composition</span></span
+                            ></a
                         >
-                        <ulvia-official-action slot="items" variant="filled" tone="primary" size="md"
-                            ><a href="/layouts/details"
-                                ><ulvia-official-icon name="layout" size="sm" tone="current"></ulvia-official-icon><span>See a full composition</span></a
-                            ></ulvia-official-action
-                        >
-                    </ulvia-official-stack>
-                    <ulvia-official-frame slot="secondary" ratio="landscape" fit="cover" radius="lg">
-                        <ulvia-official-surface slot="content" appearance="inverse" padding="xl" radius="none">
-                            <ulvia-official-center slot="content" width="sm" text-align="center" intrinsic>
-                                <ulvia-official-stack slot="content" gap="sm" align="center">
-                                    <ulvia-official-icon slot="items" name="media" size="lg" tone="current"></ulvia-official-icon>
-                                    <ulvia-official-heading slot="items" size="xl" align="center"><h3>3 × 2</h3></ulvia-official-heading>
-                                    <ulvia-official-prose slot="items" measure="wide" size="sm"
-                                        ><span slot="content">Stable media frame</span></ulvia-official-prose
-                                    >
-                                </ulvia-official-stack>
-                            </ulvia-official-center>
-                        </ulvia-official-surface>
-                    </ulvia-official-frame>
-                </ulvia-official-split>
-            </ulvia-official-panel>
+                    </div>
+                    <div radius="lg" fit="cover" ratio="landscape" slot="secondary" cms-bloc="ulvia-official-frame">
+                        <div radius="none" padding="xl" appearance="inverse" slot="content" cms-bloc="ulvia-official-surface">
+                            <div intrinsic="" text-align="center" width="sm" slot="content" cms-bloc="ulvia-official-center">
+                                <div align="center" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                                    <span tone="current" size="lg" name="media" slot="items" cms-bloc="ulvia-official-icon"></span>
+                                    <div align="center" size="xl" slot="items" cms-bloc="ulvia-official-heading"><h3>3 × 2</h3></div>
+                                    <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
+                                        <span slot="content">Stable media frame</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <ulvia-official-panel slot="items" appearance="outlined" density="default">
-                <ulvia-official-prose slot="header" measure="wide" size="sm"
-                    ><strong slot="content">COVER + SIDEBAR + SCROLL AREA</strong></ulvia-official-prose
-                >
-                <ulvia-official-cover slot="content" height="content" align="center" spacing="lg">
-                    <ulvia-official-heading slot="header" size="md" align="start"><h2>Container-aware workspace</h2></ulvia-official-heading>
-                    <ulvia-official-sidebar slot="content" side="end" sidebar-width="md" gap="lg" collapse="automatic">
-                        <ulvia-official-panel slot="content" appearance="elevated" density="compact" contained>
-                            <ulvia-official-heading slot="header" size="sm" align="start"><h3>Activity stream</h3></ulvia-official-heading>
-                            <ulvia-official-scroll-area slot="content" height="sm" scrollbar="thin">
-                                <ulvia-official-stack slot="content" gap="sm" align="stretch">
-                                    <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="md"
-                                        ><span slot="content">Grid validation completed</span></ulvia-official-surface
-                                    >
-                                    <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="md"
-                                        ><span slot="content">Theme references resolved</span></ulvia-official-surface
-                                    >
-                                    <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="md"
-                                        ><span slot="content">Route tabs keyboard checked</span></ulvia-official-surface
-                                    >
-                                    <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="md"
-                                        ><span slot="content">Narrow container reviewed</span></ulvia-official-surface
-                                    >
-                                    <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="md"
-                                        ><span slot="content">Release artifact generated</span></ulvia-official-surface
-                                    >
-                                </ulvia-official-stack>
-                            </ulvia-official-scroll-area>
-                        </ulvia-official-panel>
-                        <ulvia-official-surface slot="sidebar" appearance="subtle" padding="md" radius="lg">
-                            <ulvia-official-stack slot="content" gap="sm" align="stretch">
-                                <ulvia-official-prose slot="items" measure="wide" size="sm"
-                                    ><strong slot="content">Local decisions</strong></ulvia-official-prose
-                                >
-                                <ulvia-official-prose slot="items" measure="wide" size="sm"
-                                    ><span slot="content"
+            <div density="default" appearance="outlined" slot="items" cms-bloc="ulvia-official-panel">
+                <div size="sm" measure="wide" slot="header" cms-bloc="ulvia-official-prose"><strong slot="content">COVER + SIDEBAR + SCROLL AREA</strong></div>
+                <div spacing="lg" align="center" height="content" slot="content" cms-bloc="ulvia-official-cover">
+                    <div align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Container-aware workspace</h2></div>
+                    <div collapse="automatic" gap="lg" sidebar-width="md" side="end" slot="content" cms-bloc="ulvia-official-sidebar">
+                        <div contained="" density="compact" appearance="elevated" slot="content" cms-bloc="ulvia-official-panel">
+                            <div align="start" size="sm" slot="header" cms-bloc="ulvia-official-heading"><h3>Activity stream</h3></div>
+                            <div scrollbar="thin" height="sm" slot="content" cms-bloc="ulvia-official-scroll-area">
+                                <div align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                                    <div radius="md" padding="sm" appearance="subtle" slot="items" cms-bloc="ulvia-official-surface">
+                                        <span slot="content">Grid validation completed</span>
+                                    </div>
+                                    <div radius="md" padding="sm" appearance="subtle" slot="items" cms-bloc="ulvia-official-surface">
+                                        <span slot="content">Theme references resolved</span>
+                                    </div>
+                                    <div radius="md" padding="sm" appearance="subtle" slot="items" cms-bloc="ulvia-official-surface">
+                                        <span slot="content">Route tabs keyboard checked</span>
+                                    </div>
+                                    <div radius="md" padding="sm" appearance="subtle" slot="items" cms-bloc="ulvia-official-surface">
+                                        <span slot="content">Narrow container reviewed</span>
+                                    </div>
+                                    <div radius="md" padding="sm" appearance="subtle" slot="items" cms-bloc="ulvia-official-surface">
+                                        <span slot="content">Release artifact generated</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div radius="lg" padding="md" appearance="subtle" slot="sidebar" cms-bloc="ulvia-official-surface">
+                            <div align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                                <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Local decisions</strong></div>
+                                <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
+                                    <span slot="content"
                                         >This composition adapts to the space it receives, whether placed on a full page or in a narrow column.</span
-                                    ></ulvia-official-prose
-                                >
-                            </ulvia-official-stack>
-                        </ulvia-official-surface>
-                    </ulvia-official-sidebar>
-                    <ulvia-official-prose slot="footer" measure="wide" size="sm"
-                        ><span slot="content">No viewport media query is required by these blocks.</span></ulvia-official-prose
-                    >
-                </ulvia-official-cover>
-            </ulvia-official-panel>
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div size="sm" measure="wide" slot="footer" cms-bloc="ulvia-official-prose">
+                        <span slot="content">No viewport media query is required by these blocks.</span>
+                    </div>
+                </div>
+            </div>
 
-            <ulvia-official-stack slot="items" gap="md" align="stretch">
-                <ulvia-official-cluster slot="items" gap="md" align="end" justify="between">
-                    <ulvia-official-heading slot="items" size="md" align="start"><h2>Horizontal reel</h2></ulvia-official-heading>
-                    <ulvia-official-prose slot="items" measure="wide" size="sm"
-                        ><span slot="content">Keyboard focusable · scroll snapping enabled</span></ulvia-official-prose
-                    >
-                </ulvia-official-cluster>
-                <ulvia-official-reel slot="items" item-width="md" gap="md" snap>
-                    <ulvia-official-card slot="items" surface="raised" padding="md"
-                        ><span slot="eyebrow">Foundation</span><strong slot="title">Portable slots</strong>
-                        <p slot="body">Accept blocks from dependent collections without coupling.</p></ulvia-official-card
-                    >
-                    <ulvia-official-card slot="items" surface="raised" padding="md"
-                        ><span slot="eyebrow">Responsive</span><strong slot="title">Local decisions</strong>
-                        <p slot="body">Each composition responds to its own container.</p></ulvia-official-card
-                    >
-                    <ulvia-official-card slot="items" surface="raised" padding="md"
-                        ><span slot="eyebrow">Authoring</span><strong slot="title">Clear presets</strong>
-                        <p slot="body">Editors choose intent instead of low-level CSS values.</p></ulvia-official-card
-                    >
-                    <ulvia-official-card slot="items" surface="raised" padding="md"
-                        ><span slot="eyebrow">Navigation</span><strong slot="title">Real links</strong>
-                        <p slot="body">Route tabs retain native link behavior and accessibility.</p></ulvia-official-card
-                    >
-                </ulvia-official-reel>
-            </ulvia-official-stack>
-        </ulvia-official-stack>
-        <ulvia-official-prose slot="footer" measure="wide" size="sm"
-            ><span slot="content">Ulvia Official layout catalogue · Components</span></ulvia-official-prose
-        >
-    </ulvia-official-page-shell>
-</ulvia-official-app-shell>
+            <div align="stretch" gap="md" slot="items" cms-bloc="ulvia-official-stack">
+                <div justify="between" align="end" gap="md" slot="items" cms-bloc="ulvia-official-cluster">
+                    <div align="start" size="md" slot="items" cms-bloc="ulvia-official-heading"><h2>Horizontal reel</h2></div>
+                    <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
+                        <span slot="content">Keyboard focusable · scroll snapping enabled</span>
+                    </div>
+                </div>
+                <div snap="" gap="md" item-width="md" slot="items" cms-bloc="ulvia-official-reel">
+                    <div padding="md" surface="raised" slot="items" cms-bloc="ulvia-official-card">
+                        <span slot="eyebrow">Foundation</span><strong slot="title">Portable slots</strong>
+                        <p slot="body">Accept blocks from dependent collections without coupling.</p>
+                    </div>
+                    <div padding="md" surface="raised" slot="items" cms-bloc="ulvia-official-card">
+                        <span slot="eyebrow">Responsive</span><strong slot="title">Local decisions</strong>
+                        <p slot="body">Each composition responds to its own container.</p>
+                    </div>
+                    <div padding="md" surface="raised" slot="items" cms-bloc="ulvia-official-card">
+                        <span slot="eyebrow">Authoring</span><strong slot="title">Clear presets</strong>
+                        <p slot="body">Editors choose intent instead of low-level CSS values.</p>
+                    </div>
+                    <div padding="md" surface="raised" slot="items" cms-bloc="ulvia-official-card">
+                        <span slot="eyebrow">Navigation</span><strong slot="title">Real links</strong>
+                        <p slot="body">Route tabs retain native link behavior and accessibility.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div size="sm" measure="wide" slot="footer" cms-bloc="ulvia-official-prose">
+            <span slot="content">Ulvia Official layout catalogue · Components</span>
+        </div>
+    </div>
+</div>

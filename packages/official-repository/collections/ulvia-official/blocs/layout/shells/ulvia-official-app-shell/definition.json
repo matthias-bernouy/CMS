@@ -9,33 +9,98 @@
     "requires": [],
     "slots": {
         "brand": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ]
         },
         "primary-navigation": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
         },
         "primary-mobile-label": {
-            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "max": 1
         },
         "secondary-mobile-label": {
-            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "max": 1
         },
         "secondary-navigation": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
         },
         "secondary-sidebar": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
         },
         "actions": {
-            "accepts": [{ "kind": "any-component" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ]
         },
         "content": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
         },
         "footer": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

@@ -1,4 +1,4 @@
-:host {
+:scope {
     --multi-select-option-height: 2.25rem;
     --multi-select-option-padding: var(--ulvia-official-spacing-sm, 0.75rem);
     --multi-select-option-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
@@ -15,7 +15,7 @@
     display: none;
 }
 
-::slotted(select) {
+select {
     width: 100%;
     min-width: 0;
     min-height: 9rem;
@@ -29,7 +29,7 @@
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
 
-:host([data-ready]) ::slotted(select) {
+:scope[data-ready] select {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -38,7 +38,7 @@
     clip-path: inset(50%);
 }
 
-:host([data-ready]) [part="listbox"] {
+:scope[data-ready] [part="listbox"] {
     display: flex;
     min-height: 0;
     align-content: flex-start;
@@ -94,20 +94,20 @@
 [part="listbox"]:focus {
     outline: none;
 }
-:host([data-invalid]) [part="listbox"] {
+:scope[data-invalid] [part="listbox"] {
     border-inline-start: var(--ulvia-official-border-width-strong, 2px) solid
         var(--ulvia-official-danger-border, #b42318);
     padding-inline-start: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([data-disabled]) [part="listbox"] {
+:scope[data-disabled] [part="listbox"] {
     opacity: 0.6;
 }
-:host([size="sm"]) {
+:scope[size="sm"] {
     --multi-select-option-height: 2rem;
     --multi-select-option-padding: var(--ulvia-official-spacing-xs, 0.5rem);
     --multi-select-option-font-size: var(--ulvia-official-font-size-xs, 0.75rem);
 }
-:host([size="lg"]) {
+:scope[size="lg"] {
     --multi-select-option-height: 2.75rem;
     --multi-select-option-padding: var(--ulvia-official-spacing-md, 1rem);
     --multi-select-option-font-size: var(--ulvia-official-font-size-md, 1rem);

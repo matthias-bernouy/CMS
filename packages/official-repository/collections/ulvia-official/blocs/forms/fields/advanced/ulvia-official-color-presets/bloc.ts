@@ -1,6 +1,4 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 const DEFAULT_COLOURS = "#086c55,#3157d5,#7c3aed,#be185d,#b42318,#c2410c,#ca8a04,#111827,#64748b,#ffffff";
 
@@ -25,7 +23,7 @@ function labelFor(input: HTMLInputElement): string {
     );
 }
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private input: HTMLInputElement | null = null;
     private trigger: HTMLButtonElement;
     private swatch: HTMLElement;
@@ -39,9 +37,9 @@ export class Bloc extends Component {
         return ["colours", "action-label"];
     }
 
-    constructor() {
-        super({ css, template });
-        const popover = this.shadowRoot?.querySelector<HTMLElement>('[part="popover"]');
+    constructor(root: HTMLElement) {
+        super(root);
+        const popover = this?.querySelector<HTMLElement>('[part="popover"]');
         if (!popover) {
             throw new Error("Missing colour preset popover");
         }
@@ -60,7 +58,7 @@ export class Bloc extends Component {
         action.setAttribute("part", "action");
         action.textContent = this.getAttribute("action-label") || "Choose";
         this.trigger.append(this.swatch, this.value, action);
-        this.shadowRoot?.querySelector('[part="trigger-shell"]')?.append(this.trigger);
+        this?.querySelector('[part="trigger-shell"]')?.append(this.trigger);
     }
 
     override connectedCallback(): void {
@@ -162,7 +160,7 @@ export class Bloc extends Component {
     }
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.contains(event.target) && !this.shadowRoot?.contains(event.target)) {
+        if (event.target instanceof Node && !this.contains(event.target) && !this?.contains(event.target)) {
             this.setOpen(false);
         }
     };

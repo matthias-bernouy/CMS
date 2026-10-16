@@ -1,12 +1,10 @@
-import { Component, mutationFormRequest } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior, mutationFormRequest } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private button: HTMLButtonElement | null = null;
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
@@ -31,7 +29,10 @@ export class Bloc extends Component {
             if (target.origin !== location.origin || !target.pathname.startsWith("/.cms/call/ulvia.cms.files/files/")) {
                 throw new Error();
             }
-            location.assign(target.href);
+            const anchor = document.createElement("a");
+            anchor.href = target.href;
+            anchor.rel = "noopener";
+            anchor.click();
         } catch {
             this.showError(true);
         } finally {
@@ -45,7 +46,7 @@ export class Bloc extends Component {
         if (!fileId || !generation) {
             throw new Error();
         }
-        const result = (await mutationFormRequest(this, "privateFileSign", {
+        const result = (await mutationFormRequest(this.blocRoot, "privateFileSign", {
             fileId,
             generation,
             expiresIn: 300,

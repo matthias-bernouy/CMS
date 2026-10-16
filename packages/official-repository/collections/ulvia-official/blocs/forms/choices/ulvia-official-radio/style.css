@@ -1,4 +1,4 @@
-:host {
+:scope {
     --choice-hit-size: 2rem;
     --choice-indicator-size: 1.375rem;
     --radio-selected-border: 0.4rem;
@@ -17,7 +17,7 @@
     align-items: center;
     justify-content: center;
 }
-::slotted(input) {
+input {
     width: var(--choice-indicator-size);
     height: var(--choice-indicator-size);
     box-sizing: border-box;
@@ -28,30 +28,30 @@
     background: var(--ulvia-official-background-surface, Canvas);
     cursor: pointer;
 }
-::slotted(input:checked) {
+input:checked {
     border: var(--radio-selected-border) solid var(--ulvia-official-primary, #086c55);
 }
-::slotted(input:hover:not(:disabled)) {
+input:hover:not(:disabled) {
     border-color: var(--ulvia-official-primary, #086c55);
 }
-::slotted(input:focus-visible) {
+input:focus-visible {
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: 3px;
 }
-::slotted(input[aria-invalid="true"]) {
+input[aria-invalid="true"] {
     outline: 2px solid var(--ulvia-official-danger-border, #b42318);
     outline-offset: 2px;
 }
-::slotted(input:disabled) {
+input:disabled {
     cursor: not-allowed;
     opacity: 0.55;
 }
-:host([size="sm"]) {
+:scope[size="sm"] {
     --choice-hit-size: 1.75rem;
     --choice-indicator-size: 1.125rem;
     --radio-selected-border: 0.325rem;
 }
-:host([size="lg"]) {
+:scope[size="lg"] {
     --choice-hit-size: 2.5rem;
     --choice-indicator-size: 1.625rem;
     --radio-selected-border: 0.475rem;

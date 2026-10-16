@@ -1,4 +1,4 @@
-:host {
+:scope {
     --shell-width: var(--ulvia-official-content-width-xl, 88rem);
     --shell-sidebar-width: 14rem;
     --shell-secondary-sidebar-width: 15.5rem;
@@ -37,7 +37,7 @@
     align-items: center;
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-::slotted([slot="brand"]) {
+[part~="brand"] {
     color: var(--ulvia-official-text-primary, #17211d);
     font-size: var(--ulvia-official-font-size-xl, 1.25rem);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
@@ -91,23 +91,23 @@
 [part="footer"][hidden] {
     display: none;
 }
-:host([width="contained"]) {
+:scope[width="contained"] {
     --shell-width: var(--ulvia-official-content-width-lg, 72rem);
 }
-:host([width="full"]) {
+:scope[width="full"] {
     --shell-width: 100%;
 }
-:host([sticky-header]) [part="header"] {
+:scope[sticky-header] [part="header"] {
     position: sticky;
     top: 0;
 }
 
-:host([layout="hybrid"]) [part="shell"] {
+:scope[layout="hybrid"] [part="shell"] {
     grid-template-columns: var(--shell-sidebar-width) minmax(0, 1fr);
     grid-template-areas: "header header" "secondary content" "footer footer";
     grid-template-rows: auto minmax(0, 1fr) auto;
 }
-:host([layout="sidebar"]) [part="shell"] {
+:scope[layout="sidebar"] [part="shell"] {
     height: 100svh;
     max-height: 100svh;
     grid-template-columns: var(--shell-sidebar-width) minmax(0, 1fr);
@@ -115,7 +115,7 @@
     grid-template-rows: auto minmax(0, 1fr) auto;
     overflow: hidden;
 }
-:host([layout="dual-sidebar"]) [part="shell"] {
+:scope[layout="dual-sidebar"] [part="shell"] {
     height: 100svh;
     max-height: 100svh;
     grid-template-columns: var(--shell-sidebar-width) var(--shell-secondary-sidebar-width) minmax(0, 1fr);
@@ -123,16 +123,16 @@
     grid-template-rows: auto minmax(0, 1fr) auto;
     overflow: hidden;
 }
-:host([layout="dual-sidebar"]) [part="secondary-sidebar"] {
+:scope[layout="dual-sidebar"] [part="secondary-sidebar"] {
     display: block;
     border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
 }
-:host([layout="sidebar"]) [part="primary-navigation"],
-:host([layout="dual-sidebar"]) [part="primary-navigation"] {
+:scope[layout="sidebar"] [part="primary-navigation"],
+:scope[layout="dual-sidebar"] [part="primary-navigation"] {
     display: none;
 }
-:host([layout="sidebar"]) [part="header"],
-:host([layout="dual-sidebar"]) [part="header"] {
+:scope[layout="sidebar"] [part="header"],
+:scope[layout="dual-sidebar"] [part="header"] {
     grid-template-columns: minmax(0, 1fr);
     padding: 0.875rem 1rem;
     border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
@@ -140,12 +140,12 @@
     background: var(--ulvia-official-background-surface, #fff);
     backdrop-filter: none;
 }
-:host([layout="sidebar"]) [part="actions"],
-:host([layout="dual-sidebar"]) [part="actions"] {
+:scope[layout="sidebar"] [part="actions"],
+:scope[layout="dual-sidebar"] [part="actions"] {
     display: none;
 }
-:host([layout="sidebar"]) [part="secondary-navigation"],
-:host([layout="dual-sidebar"]) [part="secondary-navigation"] {
+:scope[layout="sidebar"] [part="secondary-navigation"],
+:scope[layout="dual-sidebar"] [part="secondary-navigation"] {
     min-height: 0;
     overflow: auto;
     padding: 0;
@@ -153,22 +153,22 @@
     border-bottom: 0;
     background: var(--ulvia-official-background-surface, #fff);
 }
-:host([layout="sidebar"]) [part="content"],
-:host([layout="dual-sidebar"]) [part="content"] {
+:scope[layout="sidebar"] [part="content"],
+:scope[layout="dual-sidebar"] [part="content"] {
     height: 100%;
     min-height: 0;
     overflow: auto;
     scrollbar-gutter: stable;
     padding: 1.75rem clamp(1.25rem, 2.5vw, 2rem);
 }
-:host([layout="sidebar"]) [part="footer"],
-:host([layout="dual-sidebar"]) [part="footer"] {
+:scope[layout="sidebar"] [part="footer"],
+:scope[layout="dual-sidebar"] [part="footer"] {
     padding: var(--ulvia-official-spacing-md, 1rem);
     border-top: 0;
     border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
     background: var(--ulvia-official-background-base, #fff);
 }
-:host([layout="hybrid"]) [part="secondary-navigation"] {
+:scope[layout="hybrid"] [part="secondary-navigation"] {
     padding: var(--ulvia-official-spacing-lg, 1.5rem) var(--ulvia-official-spacing-md, 1rem);
     border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
     border-bottom: 0;
@@ -176,9 +176,9 @@
 
 @container (max-width: 68rem) {
     [part="shell"],
-    :host([layout="sidebar"]) [part="shell"],
-    :host([layout="dual-sidebar"]) [part="shell"],
-    :host([layout="hybrid"]) [part="shell"] {
+    :scope[layout="sidebar"] [part="shell"],
+    :scope[layout="dual-sidebar"] [part="shell"],
+    :scope[layout="hybrid"] [part="shell"] {
         height: 100svh;
         max-height: 100svh;
         grid-template-columns: minmax(0, 1fr);
@@ -187,8 +187,8 @@
         overflow: hidden;
     }
     [part="header"],
-    :host([layout="sidebar"]) [part="header"],
-    :host([layout="dual-sidebar"]) [part="header"] {
+    :scope[layout="sidebar"] [part="header"],
+    :scope[layout="dual-sidebar"] [part="header"] {
         position: relative;
         grid-template-columns: minmax(0, 1fr) auto;
         padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-page-gutter, 1rem);
@@ -214,8 +214,8 @@
     [part="mobile-navigation"] > slot {
         display: contents;
     }
-    ::slotted(button[slot="mobile-navigation-toggle"]),
-    ::slotted(button[slot="mobile-contextual-toggle"]) {
+    button[part~="mobile-navigation-toggle"],
+    button[part~="mobile-contextual-toggle"] {
         display: grid;
         min-width: 0;
         min-height: 2.75rem;
@@ -239,8 +239,8 @@
             background var(--ulvia-official-duration-fast, 120ms),
             box-shadow var(--ulvia-official-duration-fast, 120ms);
     }
-    ::slotted(button[slot="mobile-navigation-toggle"])::before,
-    ::slotted(button[slot="mobile-contextual-toggle"])::before {
+    button[part~="mobile-navigation-toggle"]::before,
+    button[part~="mobile-contextual-toggle"]::before {
         content: "";
         width: 1.125rem;
         height: 1rem;
@@ -249,7 +249,7 @@
             linear-gradient(currentcolor 0 0) 0 50% / 100% 1.5px no-repeat,
             linear-gradient(currentcolor 0 0) 0 calc(100% - 1px) / 100% 1.5px no-repeat;
     }
-    ::slotted(button[slot="mobile-contextual-toggle"])::before {
+    button[part~="mobile-contextual-toggle"]::before {
         width: 1rem;
         border: 1.5px solid currentcolor;
         border-radius: 0.2rem;
@@ -258,8 +258,8 @@
             linear-gradient(currentcolor 0 0) 0.65rem 0.25rem / 0.15rem 0.25rem no-repeat,
             linear-gradient(currentcolor 0 0) 0.2rem 0.65rem / 0.6rem 1.5px no-repeat;
     }
-    ::slotted(button[slot="mobile-navigation-toggle"])::after,
-    ::slotted(button[slot="mobile-contextual-toggle"])::after {
+    button[part~="mobile-navigation-toggle"]::after,
+    button[part~="mobile-contextual-toggle"]::after {
         content: "";
         width: 0.45rem;
         height: 0.45rem;
@@ -268,28 +268,28 @@
         border-bottom: 1.5px solid currentcolor;
         transition: transform var(--ulvia-official-duration-fast, 120ms);
     }
-    ::slotted(button[slot="mobile-navigation-toggle"]:hover),
-    ::slotted(button[slot="mobile-contextual-toggle"]:hover) {
+    button[part~="mobile-navigation-toggle"]:hover,
+    button[part~="mobile-contextual-toggle"]:hover {
         border-color: var(--ulvia-official-border-strong, #89968f);
         background: var(--ulvia-official-background-subtle, #f3f7f5);
     }
-    ::slotted(button[slot="mobile-navigation-toggle"][aria-expanded="true"]),
-    ::slotted(button[slot="mobile-contextual-toggle"][aria-expanded="true"]) {
+    button[part~="mobile-navigation-toggle"][aria-expanded="true"],
+    button[part~="mobile-contextual-toggle"][aria-expanded="true"] {
         border-color: var(--ulvia-official-primary, #0f7b5d);
         background: var(--ulvia-official-primary-subtle, #e4f4ee);
         box-shadow: 0 0 0 1px var(--ulvia-official-primary, #0f7b5d);
     }
-    ::slotted(button[slot="mobile-navigation-toggle"][aria-expanded="true"])::after,
-    ::slotted(button[slot="mobile-contextual-toggle"][aria-expanded="true"])::after {
+    button[part~="mobile-navigation-toggle"][aria-expanded="true"]::after,
+    button[part~="mobile-contextual-toggle"][aria-expanded="true"]::after {
         transform: translateY(0.15rem) rotate(225deg);
     }
-    ::slotted(button[slot="mobile-navigation-toggle"]:focus-visible),
-    ::slotted(button[slot="mobile-contextual-toggle"]:focus-visible) {
+    button[part~="mobile-navigation-toggle"]:focus-visible,
+    button[part~="mobile-contextual-toggle"]:focus-visible {
         outline: 3px solid var(--ulvia-official-focus-ring, #0f7b5d);
         outline-offset: 2px;
     }
-    ::slotted(button[slot="mobile-navigation-toggle"][hidden]),
-    ::slotted(button[slot="mobile-contextual-toggle"][hidden]) {
+    button[part~="mobile-navigation-toggle"][hidden],
+    button[part~="mobile-contextual-toggle"][hidden] {
         display: none;
     }
     [part="mobile-backdrop"] {
@@ -299,10 +299,10 @@
         height: 100%;
         background: rgb(14 30 25 / 42%);
     }
-    :host(:not([mobile-panel])) [part="mobile-backdrop"] {
+    :scope:not([mobile-panel]) [part="mobile-backdrop"] {
         display: none;
     }
-    ::slotted(button[slot="mobile-backdrop"]) {
+    button[part~="mobile-backdrop"] {
         width: 100%;
         height: 100%;
         padding: 0;
@@ -311,11 +311,11 @@
         cursor: default;
     }
     [part="secondary-navigation"],
-    :host([layout="sidebar"]) [part="secondary-navigation"],
-    :host([layout="dual-sidebar"]) [part="secondary-navigation"],
-    :host([layout="hybrid"]) [part="secondary-navigation"],
+    :scope[layout="sidebar"] [part="secondary-navigation"],
+    :scope[layout="dual-sidebar"] [part="secondary-navigation"],
+    :scope[layout="hybrid"] [part="secondary-navigation"],
     [part="secondary-sidebar"],
-    :host([layout="dual-sidebar"]) [part="secondary-sidebar"] {
+    :scope[layout="dual-sidebar"] [part="secondary-sidebar"] {
         z-index: 20;
         grid-area: body;
         display: block;
@@ -342,15 +342,15 @@
         padding: var(--ulvia-official-spacing-md, 1rem) var(--ulvia-official-spacing-sm, 0.75rem);
         background: var(--ulvia-official-background-subtle, #f3f7f5);
     }
-    :host([mobile-panel="navigation"]) [part="secondary-navigation"],
-    :host([mobile-panel="contextual"]) [part="secondary-sidebar"] {
+    :scope[mobile-panel="navigation"] [part="secondary-navigation"],
+    :scope[mobile-panel="contextual"] [part="secondary-sidebar"] {
         visibility: visible;
         transform: translateX(0);
         pointer-events: auto;
     }
     [part="content"],
-    :host([layout="sidebar"]) [part="content"],
-    :host([layout="dual-sidebar"]) [part="content"] {
+    :scope[layout="sidebar"] [part="content"],
+    :scope[layout="dual-sidebar"] [part="content"] {
         grid-area: body;
         width: 100%;
         height: 100%;
@@ -361,8 +361,8 @@
         scrollbar-gutter: auto;
     }
     [part="footer"],
-    :host([layout="sidebar"]) [part="footer"],
-    :host([layout="dual-sidebar"]) [part="footer"] {
+    :scope[layout="sidebar"] [part="footer"],
+    :scope[layout="dual-sidebar"] [part="footer"] {
         padding: var(--ulvia-official-spacing-md, 1rem);
         border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
         border-right: 0;

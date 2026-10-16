@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     font-family: var(--ulvia-official-font-family-main, inherit);
     text-align: inherit;
@@ -10,22 +10,22 @@
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
     align-items: center;
 }
-:host([align="center"]) [part="actions"] {
+:scope[align="center"] [part="actions"] {
     justify-content: center;
 }
-:host([align="end"]) [part="actions"] {
+:scope[align="end"] [part="actions"] {
     justify-content: flex-end;
 }
-:host([wide]) ::slotted(*) {
+:scope[wide] * {
     --action-width: 100%;
     flex: 1 1 12rem;
 }
 @container (max-width: 24rem) {
-    :host(:not([responsive-layout="wrap"])) [part="actions"] {
+    :scope:not([responsive-layout="wrap"]) [part="actions"] {
         align-items: stretch;
         flex-direction: column;
     }
-    :host(:not([responsive-layout="wrap"])) ::slotted(*) {
+    :scope:not([responsive-layout="wrap"]) * {
         --action-width: 100%;
         width: 100%;
     }

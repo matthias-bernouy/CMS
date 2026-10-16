@@ -1,16 +1,14 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
-    private root: Document | ShadowRoot | null = null;
+export class Bloc extends BlocBehavior {
+    private root: Document | null = null;
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
-        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.root = this.ownerDocument;
         this.root.addEventListener("change", this.syncFromGroup);
         this.root.addEventListener("reset", this.queueSync);
         this.syncState();

@@ -1,16 +1,14 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 let nextHintId = 0;
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private source: HTMLInputElement | null = null;
     private input: HTMLInputElement | null;
     private tagsContainer: HTMLElement | null;
     private hint: HTMLElement | null;
     private status: HTMLElement | null;
-    private root: Document | ShadowRoot | null = null;
+    private root: Document | null = null;
     private sourceAriaHidden: string | null = null;
     private sourceTabIndex: string | null = null;
     private sourcePrepared = false;
@@ -21,16 +19,16 @@ export class Bloc extends Component {
         return ["placeholder", "hint", "separator", "serialization", "max-tags", "add-on-blur"];
     }
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
         this.input = document.createElement("input");
         this.input.type = "text";
         this.input.autocomplete = "off";
         this.input.setAttribute("part", "input");
-        this.shadowRoot?.querySelector('[part="draft"]')?.append(this.input);
-        this.tagsContainer = this.shadowRoot?.querySelector('[part="tags"]') ?? null;
-        this.hint = this.shadowRoot?.querySelector('[part="hint"]') ?? null;
-        this.status = this.shadowRoot?.querySelector('[part="status"]') ?? null;
+        this?.querySelector('[part="draft"]')?.append(this.input);
+        this.tagsContainer = this?.querySelector('[part="tags"]') ?? null;
+        this.hint = this?.querySelector('[part="hint"]') ?? null;
+        this.status = this?.querySelector('[part="status"]') ?? null;
     }
 
     override connectedCallback(): void {
@@ -40,9 +38,9 @@ export class Bloc extends Component {
         this.input?.addEventListener("keydown", this.handleKeydown);
         this.input?.addEventListener("blur", this.handleBlur);
         this.source?.addEventListener("focus", this.redirectFocus);
-        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.root = this.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
-        this.shadowRoot?.querySelector('[part="control"]')?.addEventListener("click", this.focusInput);
+        this?.querySelector('[part="control"]')?.addEventListener("click", this.focusInput);
         this.tagsContainer?.addEventListener("click", this.removeTag);
         if (this.source) {
             this.observer.observe(this.source, {
@@ -60,7 +58,7 @@ export class Bloc extends Component {
         this.source?.removeEventListener("focus", this.redirectFocus);
         this.root?.removeEventListener("reset", this.handleReset);
         this.root = null;
-        this.shadowRoot?.querySelector('[part="control"]')?.removeEventListener("click", this.focusInput);
+        this?.querySelector('[part="control"]')?.removeEventListener("click", this.focusInput);
         this.tagsContainer?.removeEventListener("click", this.removeTag);
         this.observer.disconnect();
         this.restoreSourceAccessibility();

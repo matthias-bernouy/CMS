@@ -5,11 +5,24 @@
     "description": "bloc.color-input.description",
     "category": "bloc.category.forms",
     "order": 60,
-    "nativeElement": {
-        "accepts": ["input"],
-        "attributes": { "type": { "required": true, "values": ["color"] } }
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["input"],
+        "attributes": {
+            "type": {
+                "required": true,
+                "values": ["color"]
+            }
+        },
+        "defaults": {
+            "type": "color",
+            "name": "color",
+            "value": "#3157d5"
+        }
+    }
 }

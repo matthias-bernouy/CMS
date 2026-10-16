@@ -1,10 +1,8 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 let nextListboxId = 0;
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private select: HTMLSelectElement | null = null;
     private input: HTMLInputElement | null;
     private listbox: HTMLElement | null;
@@ -18,30 +16,30 @@ export class Bloc extends Component {
     private sourceTabIndex: string | null = null;
     private sourcePrepared = false;
     private observer = new MutationObserver(() => this.syncSelection());
-    private root: Document | ShadowRoot | null = null;
+    private root: Document | null = null;
 
     static get observedAttributes(): string[] {
         return ["placeholder", "no-results-label", "clear-label", "remove-label"];
     }
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
         this.input = document.createElement("input");
         this.input.type = "text";
         this.input.autocomplete = "off";
         this.input.setAttribute("part", "input");
         this.input.setAttribute("role", "combobox");
         this.input.setAttribute("aria-autocomplete", "list");
-        this.shadowRoot?.querySelector('[part="query"]')?.append(this.input);
-        this.listbox = this.shadowRoot?.querySelector('[part="listbox"]') ?? null;
-        this.popover = this.shadowRoot?.querySelector('[part="popover"]') ?? null;
-        this.empty = this.shadowRoot?.querySelector('[part="empty"]') ?? null;
-        this.chips = this.shadowRoot?.querySelector('[part="chips"]') ?? null;
+        this?.querySelector('[part="query"]')?.append(this.input);
+        this.listbox = this?.querySelector('[part="listbox"]') ?? null;
+        this.popover = this?.querySelector('[part="popover"]') ?? null;
+        this.empty = this?.querySelector('[part="empty"]') ?? null;
+        this.chips = this?.querySelector('[part="chips"]') ?? null;
         this.clearButton = document.createElement("button");
         this.clearButton.type = "button";
         this.clearButton.hidden = true;
         this.clearButton.setAttribute("part", "clear");
-        this.shadowRoot?.querySelector('[part="clear-shell"]')?.append(this.clearButton);
+        this?.querySelector('[part="clear-shell"]')?.append(this.clearButton);
     }
 
     override connectedCallback(): void {
@@ -55,7 +53,7 @@ export class Bloc extends Component {
         this.select?.addEventListener("change", this.syncSelection);
         this.select?.addEventListener("focus", this.redirectFocus);
         document.addEventListener("pointerdown", this.closeFromOutside);
-        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.root = this.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
         if (this.select) {
             this.hideSourceFromAccessibilityTree();
@@ -301,7 +299,7 @@ export class Bloc extends Component {
     }
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.contains(event.target) && !this.shadowRoot?.contains(event.target)) {
+        if (event.target instanceof Node && !this.contains(event.target) && !this?.contains(event.target)) {
             this.setOpen(false);
         }
     };

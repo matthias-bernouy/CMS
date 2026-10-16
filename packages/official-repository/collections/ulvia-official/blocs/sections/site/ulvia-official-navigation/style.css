@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     color: var(--ulvia-official-text-primary, CanvasText);
     background: var(--ulvia-official-background-base, Canvas);
@@ -31,17 +31,17 @@
     display: flex;
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-::slotted([slot="links"]) {
+[part~="links"] {
     margin: 0;
 }
-:host([surface="subtle"]) {
+:scope[surface="subtle"] {
     background: var(--ulvia-official-background-subtle, #f4f5f7);
 }
-:host([surface="inverse"]) {
+:scope[surface="inverse"] {
     color: var(--ulvia-official-text-inverse, #ffffff);
     background: var(--ulvia-official-background-inverse, #17191c);
 }
-:host([sticky]) {
+:scope[sticky] {
     position: sticky;
     z-index: 10;
     top: 0;

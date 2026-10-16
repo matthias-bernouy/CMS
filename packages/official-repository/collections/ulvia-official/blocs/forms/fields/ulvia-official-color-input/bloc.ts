@@ -1,6 +1,4 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 type Rgb = { red: number; green: number; blue: number };
 type ColourMode = "hex" | "rgb" | "hsl" | "hsv" | "cmyk";
@@ -152,7 +150,7 @@ function labelFor(input: HTMLInputElement): string {
     );
 }
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private input: HTMLInputElement | null = null;
     private trigger: HTMLButtonElement;
     private swatch: HTMLElement;
@@ -172,8 +170,8 @@ export class Bloc extends Component {
         return ["action-label", "default-mode"];
     }
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
         this.popover = this.requiredPart("popover");
         this.popover.setAttribute("role", "dialog");
         this.popover.setAttribute("aria-label", "Compose colour");
@@ -204,7 +202,7 @@ export class Bloc extends Component {
         indicator.setAttribute("part", "indicator");
         indicator.setAttribute("aria-hidden", "true");
         this.trigger.append(this.swatch, this.value, this.action, indicator);
-        this.shadowRoot?.querySelector('[part="trigger-shell"]')?.append(this.trigger);
+        this?.querySelector('[part="trigger-shell"]')?.append(this.trigger);
         this.renderModes();
     }
 
@@ -240,7 +238,7 @@ export class Bloc extends Component {
     }
 
     private requiredPart(part: string): HTMLElement {
-        const element = this.shadowRoot?.querySelector<HTMLElement>(`[part="${part}"]`);
+        const element = this?.querySelector<HTMLElement>(`[part="${part}"]`);
         if (!element) {
             throw new Error(`Missing ${part} part`);
         }
@@ -451,7 +449,7 @@ export class Bloc extends Component {
     }
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.contains(event.target) && !this.shadowRoot?.contains(event.target)) {
+        if (event.target instanceof Node && !this.contains(event.target) && !this?.contains(event.target)) {
             this.setOpen(false);
         }
     };

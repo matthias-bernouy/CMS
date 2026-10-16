@@ -1,19 +1,19 @@
-<ulvia-official-cover slot="page" height="viewport" spacing="md">
-    <ulvia-official-prose slot="header" size="sm"
-        ><p slot="content"><strong>{{ cms.i18n.ulvia-official.ui-ulvia-admin }}</strong></p></ulvia-official-prose
-    >
-    <ulvia-official-center slot="content" width="sm" text-align="start">
-        <ulvia-official-surface slot="content" appearance="elevated" padding="xl" radius="lg">
-            <ulvia-official-stack slot="content" gap="lg">
-                <ulvia-official-stack slot="items" gap="sm">
-                    <ulvia-official-badge slot="items" tone="info"
-                        ><span slot="label">{{ cms.i18n.ulvia-official.ui-site-administration }}</span></ulvia-official-badge
-                    >
-                    <ulvia-official-heading slot="items" size="lg"><h1>{{ cms.i18n.ulvia-official.ui-welcome-back }}</h1></ulvia-official-heading>
-                    <ulvia-official-prose slot="items"
-                        ><p slot="content">{{ cms.i18n.ulvia-official.ui-sign-in-to-continue-to-your-administration-workspace }}</p></ulvia-official-prose
-                    >
-                </ulvia-official-stack>
+<div cms-bloc="ulvia-official-cover" spacing="md" height="viewport" slot="page">
+    <div cms-bloc="ulvia-official-prose" size="sm" slot="header">
+        <p slot="content"><strong>{{ cms.i18n.ulvia-official.ui-ulvia-admin }}</strong></p>
+    </div>
+    <div cms-bloc="ulvia-official-center" text-align="start" width="sm" slot="content">
+        <div cms-bloc="ulvia-official-surface" radius="lg" padding="xl" appearance="elevated" slot="content">
+            <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
+                <div cms-bloc="ulvia-official-stack" gap="sm" slot="items">
+                    <div cms-bloc="ulvia-official-badge" tone="info" slot="items">
+                        <span slot="label">{{ cms.i18n.ulvia-official.ui-site-administration }}</span>
+                    </div>
+                    <div cms-bloc="ulvia-official-heading" size="lg" slot="items"><h1>{{ cms.i18n.ulvia-official.ui-welcome-back }}</h1></div>
+                    <div cms-bloc="ulvia-official-prose" slot="items">
+                        <p slot="content">{{ cms.i18n.ulvia-official.ui-sign-in-to-continue-to-your-administration-workspace }}</p>
+                    </div>
+                </div>
                 <section slot="items" cms-query="kernel.auth:methods as methods">
                     <p role="status" aria-live="polite" cms-condition="methods.activity === 'fetching'">
                         {{ cms.i18n.ulvia-official.ui-loading-sign-in-methods }}
@@ -31,48 +31,54 @@
                                 cms-mutation-redirect="/admin"
                                 cms-mutation-redirect-param="returnTo"
                             >
-                                <ulvia-official-stack gap="md">
-                                    <ulvia-official-field slot="items" label-position="top">
+                                <div cms-bloc="ulvia-official-stack" gap="md">
+                                    <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                                         <span slot="label">{{ cms.i18n.ulvia-official.ui-email-address }}</span>
-                                        <ulvia-official-input slot="control"
-                                            ><input type="email" name="email" autocomplete="username" inputmode="email" required></ulvia-official-input
-                                        >
-                                    </ulvia-official-field>
-                                    <ulvia-official-field slot="items" label-position="top">
+                                        <div cms-bloc="ulvia-official-input" slot="control">
+                                            <input type="email" name="email" autocomplete="username" inputmode="email" required>
+                                        </div>
+                                    </div>
+                                    <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                                         <span slot="label">{{ cms.i18n.ulvia-official.ui-password }}</span>
-                                        <ulvia-official-input slot="control"
-                                            ><input type="password" name="password" autocomplete="current-password" required></ulvia-official-input
-                                        >
-                                    </ulvia-official-field>
-                                    <ulvia-official-form-actions slot="items" wide>
-                                        <ulvia-official-action slot="actions"
-                                            ><button type="submit">{{ cms.i18n.ulvia-official.ui-sign-in }}</button></ulvia-official-action
-                                        >
-                                    </ulvia-official-form-actions>
+                                        <div cms-bloc="ulvia-official-input" slot="control">
+                                            <input type="password" name="password" autocomplete="current-password" required>
+                                        </div>
+                                    </div>
+                                    <div cms-bloc="ulvia-official-form-actions" wide="" slot="items">
+                                        <button cms-bloc="ulvia-official-action" slot="actions" type="submit">
+                                            <span>{{ cms.i18n.ulvia-official.ui-sign-in }}</span>
+                                        </button>
+                                    </div>
                                     <p
                                         slot="items"
                                         role="alert"
-                                        cms-condition="(session.outcome.kind === 'error' || session.outcome.kind === 'failure') &amp;&amp; session.outcome.status !== 429"
+                                        cms-condition="(session.outcome.kind === 'error' || session.outcome.kind === 'failure') && session.outcome.status !== 429"
                                     >
                                         {{ cms.i18n.ulvia-official.ui-invalid-email-or-password }}
                                     </p>
                                     <p slot="items" role="alert" cms-condition="session.outcome.status === 429">
                                         {{ cms.i18n.ulvia-official.ui-too-many-attempts-please-wait-and-try-again }}
                                     </p>
-                                </ulvia-official-stack>
+                                </div>
                             </form>
                             <p cms-repeat="methods.data as method" cms-condition="method.loginUrl">{{ cms.i18n.ulvia-official.ui-continue-with }}</p>
-                            <ulvia-official-login-method cms-repeat="methods.data as method" cms-condition="method.loginUrl" login-url="{{ method.loginUrl }}"
-                                ><button type="button">{{ method.displayName }}</button></ulvia-official-login-method
+                            <button
+                                cms-bloc="ulvia-official-login-method"
+                                login-url="{{ method.loginUrl }}"
+                                cms-condition="method.loginUrl"
+                                cms-repeat="methods.data as method"
+                                type="button"
                             >
+                                <span>{{ method.displayName }}</span>
+                            </button>
                         </div>
                         <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-sign-in-methods-unavailable }}</p>
                     </div>
                 </section>
-            </ulvia-official-stack>
-        </ulvia-official-surface>
-    </ulvia-official-center>
-    <ulvia-official-prose slot="footer" size="sm"
-        ><p slot="content">{{ cms.i18n.ulvia-official.ui-administration-access-is-restricted-to-approved-accounts }}</p></ulvia-official-prose
-    >
-</ulvia-official-cover>
+            </div>
+        </div>
+    </div>
+    <div cms-bloc="ulvia-official-prose" size="sm" slot="footer">
+        <p slot="content">{{ cms.i18n.ulvia-official.ui-administration-access-is-restricted-to-approved-accounts }}</p>
+    </div>
+</div>

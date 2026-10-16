@@ -9,11 +9,27 @@
     "requires": [],
     "slots": {
         "header": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "max": 1
         },
         "items": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-list-item" }]
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-list-item"
+                }
+            ]
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

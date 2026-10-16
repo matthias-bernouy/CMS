@@ -1,32 +1,34 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private rangeInput: HTMLInputElement | null = null;
     private manualInput: HTMLInputElement | null = null;
     private manualComponent: HTMLElement | null = null;
     private manualLabel: HTMLElement | null = null;
     private rangeElement: HTMLElement | null = null;
     private fieldValue: HTMLElement | null = null;
-    private root: Document | ShadowRoot | null = null;
+    private root: Document | null = null;
     private observer = new MutationObserver(() => this.sync());
 
     static get observedAttributes(): string[] {
         return ["size", "value-label", "value-placement"];
     }
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
         this.rangeInput = this.querySelector<HTMLInputElement>('input[type="range"]');
-        this.manualInput = this.querySelector<HTMLInputElement>('ulvia-official-input[slot="manual-input"] input');
-        this.manualComponent = this.querySelector<HTMLElement>('ulvia-official-input[slot="manual-input"]');
+        this.manualInput = this.querySelector<HTMLInputElement>(
+            '[cms-bloc="ulvia-official-input"][part~="manual-input"] input',
+        );
+        this.manualComponent = this.querySelector<HTMLElement>(
+            '[cms-bloc="ulvia-official-input"][part~="manual-input"]',
+        );
         this.manualLabel = this.querySelector<HTMLElement>("[data-range-label]");
-        this.rangeElement = this.querySelector<HTMLElement>("ulvia-official-range");
-        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.rangeElement = this.querySelector<HTMLElement>('[cms-bloc="ulvia-official-range"]');
+        this.root = this.ownerDocument;
         this.rangeInput?.addEventListener("input", this.sync);
         this.rangeInput?.addEventListener("change", this.sync);
         this.root.addEventListener("reset", this.handleReset);
@@ -108,7 +110,9 @@ export class Bloc extends Component {
             this.clearFieldValue();
             return;
         }
-        const fieldValue = this.closest("ulvia-official-field")?.querySelector<HTMLElement>("[data-field-value]");
+        const fieldValue = this.closest('[cms-bloc="ulvia-official-field"]')?.querySelector<HTMLElement>(
+            "[data-field-value]",
+        );
         if (!fieldValue) {
             return;
         }

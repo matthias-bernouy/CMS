@@ -1,4 +1,4 @@
-:host {
+:scope {
     --ulvia-official-grid-gap: var(--ulvia-official-spacing-lg, 1.5rem);
     display: block;
     container-type: inline-size;
@@ -10,59 +10,59 @@
     gap: var(--ulvia-official-grid-gap);
     align-items: stretch;
 }
-:host([columns="1"]) [part="grid"] {
+:scope[columns="1"] [part="grid"] {
     grid-template-columns: minmax(0, 1fr);
 }
-:host([columns="2"]) [part="grid"] {
+:scope[columns="2"] [part="grid"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-:host([columns="3"]) [part="grid"] {
+:scope[columns="3"] [part="grid"] {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-:host([columns="4"]) [part="grid"] {
+:scope[columns="4"] [part="grid"] {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
-:host([columns="5"]) [part="grid"] {
+:scope[columns="5"] [part="grid"] {
     grid-template-columns: repeat(5, minmax(0, 1fr));
 }
-:host([columns="6"]) [part="grid"] {
+:scope[columns="6"] [part="grid"] {
     grid-template-columns: repeat(6, minmax(0, 1fr));
 }
-:host([align="start"]) [part="grid"] {
+:scope[align="start"] [part="grid"] {
     align-items: start;
 }
-:host([align="center"]) [part="grid"] {
+:scope[align="center"] [part="grid"] {
     align-items: center;
 }
-:host([align="end"]) [part="grid"] {
+:scope[align="end"] [part="grid"] {
     align-items: end;
 }
-:host([gap="none"]) {
+:scope[gap="none"] {
     --ulvia-official-grid-gap: 0rem;
 }
-:host([gap="sm"]) {
+:scope[gap="sm"] {
     --ulvia-official-grid-gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([gap="md"]) {
+:scope[gap="md"] {
     --ulvia-official-grid-gap: var(--ulvia-official-spacing-md, 1rem);
 }
-:host([gap="xl"]) {
+:scope[gap="xl"] {
     --ulvia-official-grid-gap: var(--ulvia-official-spacing-xl, 2rem);
 }
 
 @container (max-width: 48rem) {
-    :host([columns]:not([columns="1"])) [part="grid"] {
+    :scope[columns]:not([columns="1"]) [part="grid"] {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 @container (max-width: 30rem) {
-    :host([columns]) [part="grid"] {
+    :scope[columns] [part="grid"] {
         grid-template-columns: minmax(0, 1fr);
     }
 }
 
 @media (max-width: 40rem) {
-    :host([columns]) [part="grid"] {
+    :scope[columns] [part="grid"] {
         grid-template-columns: minmax(0, 1fr);
     }
 }

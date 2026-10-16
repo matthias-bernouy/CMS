@@ -1,4 +1,4 @@
-:host {
+:scope {
     --ulvia-official-input-height: var(--form-control-height, var(--ulvia-official-control-height-md, 2.875rem));
     --ulvia-official-input-font-size: var(--form-control-font-size, var(--ulvia-official-font-size-md, 1rem));
     --ulvia-official-input-padding-inline: var(--form-control-padding-inline, var(--ulvia-official-spacing-md, 1rem));
@@ -17,7 +17,7 @@
 [part="date-ui"][hidden] {
     display: none;
 }
-::slotted(input) {
+input {
     width: 100%;
     min-width: 0;
     height: var(--ulvia-official-input-height);
@@ -38,36 +38,36 @@
         border-color var(--ulvia-official-duration-fast, 120ms),
         box-shadow var(--ulvia-official-duration-fast, 120ms);
 }
-::slotted(input[type="search"]) {
+input[type="search"] {
     appearance: none;
     -webkit-appearance: none;
 }
-::slotted(input[type="search"])::-webkit-search-cancel-button,
-::slotted(input[type="search"])::-webkit-search-decoration {
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
     display: none;
     -webkit-appearance: none;
 }
-:host([data-custom-date]) ::slotted(input[type="date"]) {
+:scope[data-custom-date] input[type="date"] {
     position: absolute;
     width: 1px;
     height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
 }
-::slotted(input:hover:not(:disabled)) {
+input:hover:not(:disabled) {
     border-color: var(--ulvia-official-border-strong, #89968f);
 }
-::slotted(input:focus-visible) {
+input:focus-visible {
     border-color: var(--ulvia-official-primary, #086c55);
     outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring, #167c5e) 28%, transparent);
     outline-offset: 1px;
     box-shadow: 0 0 0 1px var(--ulvia-official-primary, #086c55);
 }
-::slotted(input:user-invalid),
-::slotted(input[aria-invalid="true"]) {
+input:user-invalid,
+input[aria-invalid="true"] {
     border-color: var(--ulvia-official-danger-border, #b42318);
 }
-::slotted(input:disabled) {
+input:disabled {
     color: var(--ulvia-official-text-disabled, #858b95);
     background: var(--ulvia-official-background-subtle, #f4f5f7);
     cursor: not-allowed;
@@ -265,20 +265,20 @@
     color: var(--ulvia-official-text-disabled, #858b95);
     cursor: not-allowed;
 }
-:host([data-invalid]) [part="date-trigger"] {
+:scope[data-invalid] [part="date-trigger"] {
     border-color: var(--ulvia-official-danger-border, #b42318);
 }
-:host([data-disabled]) [part="date-trigger"] {
+:scope[data-disabled] [part="date-trigger"] {
     color: var(--ulvia-official-text-disabled, #858b95);
     background: var(--ulvia-official-background-subtle, #f4f5f7);
     cursor: not-allowed;
 }
-:host([size="sm"]) {
+:scope[size="sm"] {
     --ulvia-official-input-height: var(--ulvia-official-control-height-sm, 2.25rem);
     --ulvia-official-input-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     --ulvia-official-input-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([size="lg"]) {
+:scope[size="lg"] {
     --ulvia-official-input-height: var(--ulvia-official-control-height-lg, 3.25rem);
     --ulvia-official-input-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
     --ulvia-official-input-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);

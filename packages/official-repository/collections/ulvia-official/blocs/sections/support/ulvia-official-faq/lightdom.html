@@ -1,7 +1,8 @@
-<ulvia-official-section width="md"
-    ><ulvia-official-stack slot="content" gap="xl"
-        ><ulvia-official-heading slot="items" size="xl"
-            ><h2><slot name="heading"></slot></h2></ulvia-official-heading
-        ><ulvia-official-stack slot="items" gap="none"><slot name="items" slot="items"></slot></ulvia-official-stack></ulvia-official-stack
-    ></ulvia-official-section
->
+<div cms-bloc="ulvia-official-section" width="md">
+    <div cms-bloc="ulvia-official-stack" gap="xl" slot="content">
+        <div cms-bloc="ulvia-official-heading" size="xl" slot="items">
+            <h2><slot name="heading"></slot></h2>
+        </div>
+        <div cms-bloc="ulvia-official-stack" gap="none" slot="items"><slot name="items" slot="items"></slot></div>
+    </div>
+</div>

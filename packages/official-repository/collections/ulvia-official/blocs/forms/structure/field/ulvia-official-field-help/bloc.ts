@@ -1,20 +1,18 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 let nextPanelId = 0;
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private trigger: HTMLButtonElement | null = null;
     private panel: HTMLElement | null = null;
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
         this.trigger = this.querySelector<HTMLButtonElement>("button");
-        this.panel = this.querySelector<HTMLElement>("ulvia-official-field-help-panel");
+        this.panel = this.querySelector<HTMLElement>('[cms-bloc="ulvia-official-field-help-panel"]');
         this.prepareTrigger();
         this.trigger?.addEventListener("click", this.togglePanel);
         document.addEventListener("pointerdown", this.closeFromOutside);

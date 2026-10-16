@@ -1,4 +1,4 @@
-:host {
+:scope {
     --cluster-gap: var(--ulvia-official-spacing-md, 1rem);
     display: block;
     text-align: inherit;
@@ -12,30 +12,30 @@
     justify-content: flex-start;
 }
 
-:host([gap="none"]) {
+:scope[gap="none"] {
     --cluster-gap: 0rem;
 }
-:host([gap="sm"]) {
+:scope[gap="sm"] {
     --cluster-gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([gap="lg"]) {
+:scope[gap="lg"] {
     --cluster-gap: var(--ulvia-official-spacing-lg, 1.5rem);
 }
-:host([align="start"]) [part="cluster"] {
+:scope[align="start"] [part="cluster"] {
     align-items: flex-start;
 }
-:host([align="end"]) [part="cluster"] {
+:scope[align="end"] [part="cluster"] {
     align-items: flex-end;
 }
-:host([align="stretch"]) [part="cluster"] {
+:scope[align="stretch"] [part="cluster"] {
     align-items: stretch;
 }
-:host([justify="center"]) [part="cluster"] {
+:scope[justify="center"] [part="cluster"] {
     justify-content: center;
 }
-:host([justify="end"]) [part="cluster"] {
+:scope[justify="end"] [part="cluster"] {
     justify-content: flex-end;
 }
-:host([justify="between"]) [part="cluster"] {
+:scope[justify="between"] [part="cluster"] {
     justify-content: space-between;
 }

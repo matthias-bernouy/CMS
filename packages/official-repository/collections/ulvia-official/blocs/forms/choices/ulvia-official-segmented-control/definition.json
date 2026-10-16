@@ -13,7 +13,26 @@
     ],
     "requires": [],
     "slots": {
-        "legend": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 },
-        "items": { "accepts": [{ "kind": "any-component" }], "min": 2 }
+        "legend": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        },
+        "items": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "min": 2
+        }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

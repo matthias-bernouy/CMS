@@ -7,6 +7,16 @@
     "uses": [],
     "requires": [],
     "slots": {
-        "items": { "accepts": [{ "kind": "any-component" }], "min": 1 }
+        "items": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

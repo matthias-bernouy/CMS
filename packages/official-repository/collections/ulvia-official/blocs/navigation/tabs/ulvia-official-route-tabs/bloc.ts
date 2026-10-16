@@ -1,8 +1,6 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private readonly observer: MutationObserver;
     private syncQueued = false;
 
@@ -10,8 +8,8 @@ export class Bloc extends Component {
         return ["label"];
     }
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
         this.observer = new MutationObserver(this.scheduleSync);
         this.syncLabel();
     }
@@ -36,9 +34,7 @@ export class Bloc extends Component {
     }
 
     private syncLabel(): void {
-        this.shadowRoot
-            ?.querySelector("nav")
-            ?.setAttribute("aria-label", this.getAttribute("label") || "Page navigation");
+        this?.querySelector("nav")?.setAttribute("aria-label", this.getAttribute("label") || "Page navigation");
     }
 
     private handleClick = (event: Event): void => {
@@ -52,7 +48,9 @@ export class Bloc extends Component {
         if (!(event instanceof KeyboardEvent) || !(event.target instanceof HTMLAnchorElement)) {
             return;
         }
-        const links = this.localLinks().filter((link) => !link.closest("ulvia-official-route-tab")?.hidden);
+        const links = this.localLinks().filter(
+            (link) => !link.closest('[cms-bloc="ulvia-official-route-tab"]')?.hasAttribute("hidden"),
+        );
         const current = links.indexOf(event.target);
         if (current < 0) {
             return;
@@ -89,7 +87,7 @@ export class Bloc extends Component {
                     entry?.panel instanceof HTMLElement,
             );
         for (const link of localLinks) {
-            link.closest("ulvia-official-route-tab")?.toggleAttribute(
+            link.closest('[cms-bloc="ulvia-official-route-tab"]')?.toggleAttribute(
                 "hidden",
                 !entries.some((entry) => entry.link === link),
             );
@@ -100,7 +98,7 @@ export class Bloc extends Component {
         const selected = entries.find(({ panel }) => `#${panel.id}` === window.location.hash) ?? entries[0];
         for (const { link, panel } of entries) {
             const active = panel === selected.panel;
-            const tab = link.closest("ulvia-official-route-tab");
+            const tab = link.closest('[cms-bloc="ulvia-official-route-tab"]');
             tab?.toggleAttribute("active", active);
             link.id ||= `${panel.id}-tab`;
             link.setAttribute("aria-controls", panel.id);
@@ -131,7 +129,7 @@ export class Bloc extends Component {
 
     private localLinks(): HTMLAnchorElement[] {
         return Array.from(
-            this.querySelectorAll<HTMLAnchorElement>(":scope > ulvia-official-route-tab > a[href]"),
+            this.querySelectorAll<HTMLAnchorElement>(':scope > [cms-bloc="ulvia-official-route-tab"] > a[href]'),
         ).filter((link) => Boolean(this.targetId(link)));
     }
 

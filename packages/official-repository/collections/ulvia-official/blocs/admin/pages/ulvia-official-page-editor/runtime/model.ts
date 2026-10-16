@@ -25,8 +25,11 @@ export type PageUpdate = {
 
 export type AuthoringContract = {
     settings?: EditorSetting[];
-    nativeElement?: { accepts?: string[] };
+    root?: EditorNativeElement;
+    content?: EditorNativeElement;
 };
+
+export type EditorNativeElement = { accepts?: string[]; defaults?: Record<string, string> };
 
 export type EditorSetting = {
     id: string;

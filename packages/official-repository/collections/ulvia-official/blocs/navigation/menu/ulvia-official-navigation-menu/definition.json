@@ -14,15 +14,36 @@
     "requires": [],
     "slots": {
         "header": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "max": 1
         },
         "sections": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-navigation-section" }],
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-navigation-section"
+                }
+            ],
             "min": 1
         },
         "footer": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-navigation-item" }]
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-navigation-item"
+                }
+            ]
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

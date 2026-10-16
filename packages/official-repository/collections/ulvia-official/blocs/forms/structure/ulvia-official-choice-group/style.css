@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     min-width: 0;
     color: var(--ulvia-official-text-primary, CanvasText);
@@ -8,7 +8,7 @@
 [part="group"] {
     min-width: 0;
 }
-::slotted(fieldset[slot="choice-group"]) {
+fieldset[part~="choice-group"] {
     display: grid;
     min-width: 0;
     margin: 0;
@@ -18,19 +18,19 @@
     color: inherit;
     font: inherit;
 }
-:host([orientation="horizontal"]) {
+:scope[orientation="horizontal"] {
     --option-list-columns: none;
     --option-list-rows: auto;
     --option-list-flow: column;
     --option-list-auto-columns: minmax(11rem, auto);
     --option-list-gap: var(--ulvia-official-spacing-md, 1rem);
 }
-:host([orientation="horizontal"]) ::slotted(fieldset[slot="choice-group"]) {
+:scope[orientation="horizontal"] fieldset[part~="choice-group"] {
     width: fit-content;
     max-width: 100%;
 }
 @container (max-width: 28rem) {
-    :host([orientation="horizontal"]) ::slotted(fieldset[slot="choice-group"]) {
+    :scope[orientation="horizontal"] fieldset[part~="choice-group"] {
         width: 100%;
         --option-list-columns: minmax(0, 1fr);
         --option-list-rows: none;

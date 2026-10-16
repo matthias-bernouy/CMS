@@ -1,18 +1,16 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 const LOGIN_PATH = /\/auth\/[a-z][a-z0-9._-]*\/login$/u;
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private button: HTMLButtonElement | null = null;
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
-        this.button = this.querySelector(":scope > button");
+        this.button = this.blocRoot instanceof HTMLButtonElement ? this.blocRoot : null;
         this.button?.addEventListener("click", this.open);
     }
 
@@ -34,7 +32,10 @@ export class Bloc extends Component {
         if (returnTo) {
             target.searchParams.set("returnTo", returnTo);
         }
-        location.assign(target.href);
+        const anchor = document.createElement("a");
+        anchor.href = target.href;
+        anchor.rel = "noopener";
+        anchor.click();
     };
 }
 

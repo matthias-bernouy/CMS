@@ -1,6 +1,4 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 const paths: Record<string, string> = {
     alert: "M12 3 2.7 20h18.6L12 3Zm0 6v5m0 3h.01",
@@ -19,21 +17,21 @@ const paths: Record<string, string> = {
     users: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.9",
 };
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     static get observedAttributes(): string[] {
         return ["name"];
     }
 
     private readonly path: SVGPathElement;
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("viewBox", "0 0 24 24");
         svg.setAttribute("aria-hidden", "true");
         this.path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         svg.append(this.path);
-        this.shadowRoot?.querySelector('[part="icon"]')?.append(svg);
+        this?.querySelector('[part="icon"]')?.append(svg);
         this.sync();
     }
 

@@ -9,27 +9,55 @@
     "requires": [],
     "slots": {
         "name": {
-            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "min": 1,
             "max": 1
         },
         "price": {
-            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "min": 1,
             "max": 1
         },
         "description": {
-            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
             "max": 1
         },
         "features": {
-            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
             "max": 1
         },
         "action": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-action" }],
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-action"
+                }
+            ],
             "min": 1,
             "max": 1
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

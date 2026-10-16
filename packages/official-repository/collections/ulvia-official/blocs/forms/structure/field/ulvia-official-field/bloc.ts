@@ -1,19 +1,17 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 let nextControlId = 0;
 
-export class Bloc extends Component {
-    constructor() {
-        super({ css, template });
+export class Bloc extends BlocBehavior {
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
         const control = this.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
             "input, select, textarea",
         );
-        const label = this.querySelector<HTMLLabelElement>('label[slot="field-label"]');
+        const label = this.querySelector<HTMLLabelElement>('label[part~="field-label"]');
         if (!control || !label) {
             return;
         }
@@ -27,7 +25,7 @@ export class Bloc extends Component {
         control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
         slotName: string,
     ): void {
-        const description = this.querySelector<HTMLElement>(`[slot="${slotName}"]`);
+        const description = this.querySelector<HTMLElement>(`[part~="${slotName}"]`);
         if (!description?.textContent?.trim()) {
             return;
         }

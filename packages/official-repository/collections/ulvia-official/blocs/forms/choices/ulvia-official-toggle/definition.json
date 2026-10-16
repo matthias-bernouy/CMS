@@ -5,14 +5,29 @@
     "description": "bloc.toggle.description",
     "category": "bloc.category.forms",
     "order": 100,
-    "nativeElement": {
-        "accepts": ["input"],
-        "attributes": {
-            "type": { "required": true, "values": ["checkbox"] },
-            "role": { "required": true, "values": ["switch"] }
-        }
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["input"],
+        "attributes": {
+            "type": {
+                "required": true,
+                "values": ["checkbox"]
+            },
+            "role": {
+                "required": true,
+                "values": ["switch"]
+            }
+        },
+        "defaults": {
+            "type": "checkbox",
+            "role": "switch",
+            "name": "enabled",
+            "value": "yes"
+        }
+    }
 }

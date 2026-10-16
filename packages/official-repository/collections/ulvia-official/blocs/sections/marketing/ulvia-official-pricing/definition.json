@@ -17,17 +17,35 @@
     "requires": [],
     "slots": {
         "heading": {
-            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "min": 1,
             "max": 1
         },
         "intro": {
-            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
             "max": 1
         },
         "plans": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-pricing-plan" }],
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-pricing-plan"
+                }
+            ],
             "min": 1
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

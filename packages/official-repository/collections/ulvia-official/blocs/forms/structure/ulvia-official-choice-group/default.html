@@ -1,8 +1,9 @@
-<span slot="legend">{{ cms.i18n.ulvia-official.ui-preferred-contact-method }}</span><span slot="help">{{ cms.i18n.ulvia-official.ui-choose-one-option }}</span
-><ulvia-official-choice-field slot="items"
-    ><ulvia-official-radio size="md" slot="control"><input type="radio" name="contact" value="email" checked></ulvia-official-radio
-    ><span slot="label">{{ cms.i18n.ulvia-official.ui-email }}</span></ulvia-official-choice-field
-><ulvia-official-choice-field slot="items"
-    ><ulvia-official-radio size="md" slot="control"><input type="radio" name="contact" value="phone"></ulvia-official-radio
-    ><span slot="label">{{ cms.i18n.ulvia-official.ui-phone }}</span></ulvia-official-choice-field
->
+<span slot="legend">{{ cms.i18n.ulvia-official.ui-preferred-contact-method }}</span><span slot="help">{{ cms.i18n.ulvia-official.ui-choose-one-option }}</span>
+<div cms-bloc="ulvia-official-choice-field" slot="items">
+    <div cms-bloc="ulvia-official-radio" slot="control" size="md"><input type="radio" name="contact" value="email" checked></div>
+    <span slot="label">{{ cms.i18n.ulvia-official.ui-email }}</span>
+</div>
+<div cms-bloc="ulvia-official-choice-field" slot="items">
+    <div cms-bloc="ulvia-official-radio" slot="control" size="md"><input type="radio" name="contact" value="phone"></div>
+    <span slot="label">{{ cms.i18n.ulvia-official.ui-phone }}</span>
+</div>

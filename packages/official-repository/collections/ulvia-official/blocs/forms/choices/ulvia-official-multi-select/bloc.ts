@@ -1,6 +1,4 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 let nextListboxId = 0;
 
@@ -48,31 +46,31 @@ function restoreAttribute(element: HTMLElement, name: string, value: string | nu
     element.setAttribute(name, value);
 }
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private select: HTMLSelectElement | null = null;
     private listbox: HTMLElement | null;
     private activeIndex = 0;
     private selectWasHidden = false;
     private selectTabIndex: string | null = null;
     private selectAriaHidden: string | null = null;
-    private root: Document | ShadowRoot | null = null;
+    private root: Document | null = null;
     private observer = new MutationObserver(() => this.renderOptions());
 
-    constructor() {
-        super({ css, template });
-        this.listbox = this.shadowRoot?.querySelector('[part="listbox"]') ?? null;
+    constructor(root: HTMLElement) {
+        super(root);
+        this.listbox = this?.querySelector('[part="listbox"]') ?? null;
     }
 
     override connectedCallback(): void {
-        this.shadowRoot?.addEventListener("click", this.handleClick);
+        this?.addEventListener("click", this.handleClick);
         this.listbox?.addEventListener("keydown", this.handleKeydown);
-        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.root = this.ownerDocument;
         this.root.addEventListener("reset", this.queueRender);
         this.bindSelect();
     }
 
     disconnectedCallback(): void {
-        this.shadowRoot?.removeEventListener("click", this.handleClick);
+        this?.removeEventListener("click", this.handleClick);
         this.listbox?.removeEventListener("keydown", this.handleKeydown);
         this.root?.removeEventListener("reset", this.queueRender);
         this.root = null;

@@ -1,4 +1,4 @@
-:host {
+:scope {
     --panel-padding: var(--ulvia-official-spacing-lg, 1.5rem);
     --panel-background: var(--ulvia-official-background-base, #fff);
     --panel-border: var(--ulvia-official-border-default, #c9d5d0);
@@ -34,25 +34,25 @@
     min-width: 0;
     padding: var(--panel-padding);
 }
-:host([appearance="plain"]) {
+:scope[appearance="plain"] {
     --panel-border: transparent;
     --panel-background: transparent;
 }
-:host([appearance="elevated"]) {
+:scope[appearance="elevated"] {
     --panel-border: var(--ulvia-official-border-subtle, #e2e9e6);
     --panel-shadow: var(--ulvia-official-shadow-md, 0 8px 24px rgb(20 40 32 / 10%));
 }
-:host([density="compact"]) {
+:scope[density="compact"] {
     --panel-padding: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([density="comfortable"]) {
+:scope[density="comfortable"] {
     --panel-padding: var(--ulvia-official-spacing-xl, 2rem);
 }
-:host([contained]) [part="panel"] {
+:scope[contained] [part="panel"] {
     max-height: min(70svh, 44rem);
     grid-template-rows: auto minmax(0, 1fr) auto;
 }
-:host([contained]) [part="content"] {
+:scope[contained] [part="content"] {
     overflow: auto;
     overscroll-behavior: contain;
 }

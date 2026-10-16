@@ -1,4 +1,4 @@
-:host {
+:scope {
     --textarea-font-size: var(--ulvia-official-font-size-md, 1rem);
     --textarea-padding-block: var(--ulvia-official-spacing-sm, 0.75rem);
     --textarea-padding-inline: var(--ulvia-official-spacing-md, 1rem);
@@ -10,7 +10,7 @@
     display: grid;
     gap: var(--ulvia-official-spacing-2xs, 0.375rem);
 }
-::slotted(textarea) {
+textarea {
     width: 100%;
     min-width: 0;
     min-height: 8rem;
@@ -26,29 +26,29 @@
     line-height: var(--ulvia-official-line-height-relaxed, 1.65);
     resize: vertical;
 }
-::slotted(textarea:hover:not(:disabled)) {
+textarea:hover:not(:disabled) {
     border-color: var(--ulvia-official-border-strong, #737985);
 }
-::slotted(textarea:focus-visible) {
+textarea:focus-visible {
     border-color: var(--ulvia-official-primary, #086c55);
     outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring, #167c5e) 28%, transparent);
     outline-offset: 1px;
     box-shadow: 0 0 0 1px var(--ulvia-official-primary, #086c55);
 }
-::slotted(textarea:user-invalid),
-::slotted(textarea[aria-invalid="true"]) {
+textarea:user-invalid,
+textarea[aria-invalid="true"] {
     border-color: var(--ulvia-official-danger-border, #b42318);
 }
-::slotted(textarea:disabled) {
+textarea:disabled {
     color: var(--ulvia-official-text-disabled, #858b95);
     background: var(--ulvia-official-background-subtle, #f4f5f7);
     cursor: not-allowed;
     opacity: 1;
 }
-:host([resize="none"]) ::slotted(textarea) {
+:scope[resize="none"] textarea {
     resize: none;
 }
-:host([resize="both"]) ::slotted(textarea) {
+:scope[resize="both"] textarea {
     resize: both;
 }
 [part="count"] {
@@ -59,15 +59,15 @@
     font-variant-numeric: tabular-nums;
     line-height: var(--ulvia-official-line-height-snug, 1.35);
 }
-:host([show-count][data-count-ready]) [part="count"] {
+:scope[show-count][data-count-ready] [part="count"] {
     display: block;
 }
-:host([size="sm"]) {
+:scope[size="sm"] {
     --textarea-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     --textarea-padding-block: var(--ulvia-official-spacing-xs, 0.5rem);
     --textarea-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([size="lg"]) {
+:scope[size="lg"] {
     --textarea-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
     --textarea-padding-block: var(--ulvia-official-spacing-md, 1rem);
     --textarea-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);

@@ -5,11 +5,24 @@
     "description": "bloc.color-presets.description",
     "category": "bloc.category.forms",
     "order": 61,
-    "nativeElement": {
-        "accepts": ["input"],
-        "attributes": { "type": { "required": true, "values": ["color"] } }
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["input"],
+        "attributes": {
+            "type": {
+                "required": true,
+                "values": ["color"]
+            }
+        },
+        "defaults": {
+            "type": "color",
+            "name": "paletteColour",
+            "value": "#3157d5"
+        }
+    }
 }

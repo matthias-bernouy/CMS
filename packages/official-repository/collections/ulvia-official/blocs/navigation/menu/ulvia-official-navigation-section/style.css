@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     min-width: 0;
 }
@@ -19,7 +19,7 @@
     line-height: 1;
     text-transform: uppercase;
 }
-:host([divider]) [part="label"]::after {
+:scope[divider] [part="label"]::after {
     height: var(--ulvia-official-border-width, 1px);
     flex: 1;
     background: var(--ulvia-official-border-subtle, #e2e9e6);
@@ -31,7 +31,7 @@
     flex-wrap: var(--navigation-section-wrap, nowrap);
     gap: var(--navigation-section-gap, 0.125rem);
 }
-::slotted(ulvia-official-navigation-group),
-::slotted(ulvia-official-navigation-item) {
+[cms-bloc="ulvia-official-navigation-group"],
+[cms-bloc="ulvia-official-navigation-item"] {
     flex: var(--navigation-item-flex, 0 1 auto);
 }

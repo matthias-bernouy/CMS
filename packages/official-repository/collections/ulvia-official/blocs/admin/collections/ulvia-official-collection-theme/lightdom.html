@@ -13,18 +13,18 @@
                 {{ cms.i18n.ulvia-official.ui-request-failed }}
             </p>
         </div>
-        <ulvia-official-stack cms-case='"success"' gap="lg">
+        <div cms-bloc="ulvia-official-stack" gap="lg" cms-case='"success"'>
             <header slot="items">
                 <h3>{{ cms.i18n.ulvia-official.ui-collection-theme-editor }}</h3>
                 <p>{{ cms.i18n.ulvia-official.ui-edit-collection-theme-help }}</p>
             </header>
-            <ulvia-official-surface slot="items" appearance="subtle" padding="lg">
-                <ulvia-official-grid slot="content" columns="3" align="end" gap="md">
-                    <ulvia-official-field slot="items" label-position="top">
+            <div cms-bloc="ulvia-official-surface" padding="lg" appearance="subtle" slot="items">
+                <div cms-bloc="ulvia-official-grid" gap="md" align="end" columns="3" slot="content">
+                    <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                         <label slot="label" for="collection-theme-profile">
                             {{ cms.i18n.ulvia-official.ui-theme-profile }}
                         </label>
-                        <ulvia-official-select slot="control">
+                        <div cms-bloc="ulvia-official-select" slot="control">
                             <select id="collection-theme-profile" cms-sync="@param:ulvia-official-theme-profile">
                                 <option
                                     cms-repeat="collectionTheme.data.profiles as profile"
@@ -34,13 +34,13 @@
                                     {{ profile.name }}
                                 </option>
                             </select>
-                        </ulvia-official-select>
-                    </ulvia-official-field>
-                    <ulvia-official-field slot="items" label-position="top">
+                        </div>
+                    </div>
+                    <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                         <label slot="label" for="collection-theme-mode">
                             {{ cms.i18n.ulvia-official.ui-theme-mode }}
                         </label>
-                        <ulvia-official-select slot="control">
+                        <div cms-bloc="ulvia-official-select" slot="control">
                             <select id="collection-theme-mode" cms-sync="@param:ulvia-official-theme-mode">
                                 <option value="light" selected="{{ collectionTheme.data.mode === 'light' }}">
                                     {{ cms.i18n.ulvia-official.ui-light }}
@@ -49,13 +49,13 @@
                                     {{ cms.i18n.ulvia-official.ui-dark }}
                                 </option>
                             </select>
-                        </ulvia-official-select>
-                    </ulvia-official-field>
-                    <ulvia-official-field slot="items" label-position="top">
+                        </div>
+                    </div>
+                    <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                         <label slot="label" for="collection-theme-search">
                             {{ cms.i18n.ulvia-official.ui-search-tokens }}
                         </label>
-                        <ulvia-official-input slot="control">
+                        <div cms-bloc="ulvia-official-input" slot="control">
                             <input
                                 id="collection-theme-search"
                                 type="search"
@@ -63,17 +63,17 @@
                                 value="{{ collectionTheme.data.search }}"
                                 placeholder="{{ cms.i18n.ulvia-official.ui-search-theme-tokens }}"
                             >
-                        </ulvia-official-input>
-                    </ulvia-official-field>
-                </ulvia-official-grid>
-            </ulvia-official-surface>
-            <ulvia-official-cluster slot="items" align="center" justify="between">
-                <ulvia-official-badge slot="items" tone="success" cms-condition="collectionTheme.data.profileActive">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div cms-bloc="ulvia-official-cluster" justify="between" align="center" slot="items">
+                <div cms-bloc="ulvia-official-badge" cms-condition="collectionTheme.data.profileActive" tone="success" slot="items">
                     <span slot="label">{{ cms.i18n.ulvia-official.ui-active-theme }}</span>
-                </ulvia-official-badge>
-                <ulvia-official-badge slot="items" tone="neutral" cms-condition="collectionTheme.data.profileActive === false">
+                </div>
+                <div cms-bloc="ulvia-official-badge" cms-condition="collectionTheme.data.profileActive === false" tone="neutral" slot="items">
                     <span slot="label">{{ cms.i18n.ulvia-official.ui-draft-theme }}</span>
-                </ulvia-official-badge>
+                </div>
                 <form
                     slot="items"
                     cms-condition="collectionTheme.data.profileActive === false"
@@ -83,9 +83,9 @@
                 >
                     <input type="hidden" name="expectedRevision" value="{{ collectionTheme.data.revision }}" cms-form-value-type="number">
                     <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
-                    <ulvia-official-action variant="outline" tone="secondary">
-                        <button type="submit">{{ cms.i18n.ulvia-official.ui-activate-theme }}</button>
-                    </ulvia-official-action>
+                    <button cms-bloc="ulvia-official-action" tone="secondary" variant="outline" type="submit">
+                        <span>{{ cms.i18n.ulvia-official.ui-activate-theme }}</span>
+                    </button>
                     <p role="alert" cms-condition="(activatedTheme.outcome.kind === 'error' || activatedTheme.outcome.kind === 'failure')">
                         {{ cms.i18n.ulvia-official.ui-request-failed }}
                     </p>
@@ -102,15 +102,15 @@
                         <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                     </div>
                 </form>
-            </ulvia-official-cluster>
+            </div>
             <p slot="items" cms-condition="collectionTheme.data.sourceFound === false">
                 {{ cms.i18n.ulvia-official.ui-this-collection-publishes-no-theme-catalogue }}
             </p>
-            <p slot="items" cms-condition="collectionTheme.data.sourceFound &amp;&amp; collectionTheme.data.tokens.length === 0">
+            <p slot="items" cms-condition="collectionTheme.data.sourceFound && collectionTheme.data.tokens.length === 0">
                 {{ cms.i18n.ulvia-official.ui-no-theme-token-matches-current-search }}
             </p>
-            <ulvia-official-surface slot="items" appearance="outlined" padding="md" radius="sm" cms-condition="collectionTheme.data.hasToken">
-                <ulvia-official-stack slot="content" gap="md">
+            <div cms-bloc="ulvia-official-surface" cms-condition="collectionTheme.data.hasToken" radius="sm" padding="md" appearance="outlined" slot="items">
+                <div cms-bloc="ulvia-official-stack" gap="md" slot="content">
                     <header slot="items">
                         <p>{{ collectionTheme.data.token.categoryLabel }}</p>
                         <h4>{{ collectionTheme.data.token.label }}</h4>
@@ -128,12 +128,12 @@
                         <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
                         <input type="hidden" name="mode" value="{{ collectionTheme.data.mode }}">
                         <input type="hidden" name="tokenId" value="{{ collectionTheme.data.token.id }}">
-                        <ulvia-official-stack gap="md">
-                            <ulvia-official-field slot="items" label-position="top">
+                        <div cms-bloc="ulvia-official-stack" gap="md">
+                            <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                                 <label slot="label" for="collection-theme-token-value">
                                     {{ cms.i18n.ulvia-official.ui-token-value }}
                                 </label>
-                                <ulvia-official-input slot="control">
+                                <div cms-bloc="ulvia-official-input" slot="control">
                                     <input
                                         id="collection-theme-token-value"
                                         type="text"
@@ -142,9 +142,9 @@
                                         maxlength="4096"
                                         required
                                     >
-                                </ulvia-official-input>
-                            </ulvia-official-field>
-                            <ulvia-official-form-actions slot="items" align="end">
+                                </div>
+                            </div>
+                            <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
                                 <p slot="actions" role="status" aria-live="polite" cms-condition="savedThemeToken.outcome.kind === 'success'">
                                     {{ cms.i18n.ulvia-official.ui-theme-value-saved }}
                                 </p>
@@ -155,11 +155,11 @@
                                 >
                                     {{ cms.i18n.ulvia-official.ui-request-failed }}
                                 </p>
-                                <ulvia-official-action slot="actions" variant="filled" tone="primary">
-                                    <button type="submit">{{ cms.i18n.ulvia-official.ui-save-value }}</button>
-                                </ulvia-official-action>
-                            </ulvia-official-form-actions>
-                        </ulvia-official-stack>
+                                <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" type="submit">
+                                    <span>{{ cms.i18n.ulvia-official.ui-save-value }}</span>
+                                </button>
+                            </div>
+                        </div>
 
                         <div cms-match="savedThemeToken.outcome.kind">
                             <span cms-case='"none"' hidden></span>
@@ -184,9 +184,9 @@
                         <input type="hidden" name="themeId" value="{{ collectionTheme.data.profileId }}">
                         <input type="hidden" name="mode" value="{{ collectionTheme.data.mode }}">
                         <input type="hidden" name="tokenId" value="{{ collectionTheme.data.token.id }}">
-                        <ulvia-official-action variant="outline" tone="secondary">
-                            <button type="submit">{{ cms.i18n.ulvia-official.ui-reset-to-collection-value }}</button>
-                        </ulvia-official-action>
+                        <button cms-bloc="ulvia-official-action" tone="secondary" variant="outline" type="submit">
+                            <span>{{ cms.i18n.ulvia-official.ui-reset-to-collection-value }}</span>
+                        </button>
                         <p role="alert" cms-condition="(resetThemeToken.outcome.kind === 'error' || resetThemeToken.outcome.kind === 'failure')">
                             {{ cms.i18n.ulvia-official.ui-request-failed }}
                         </p>
@@ -203,30 +203,31 @@
                             <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                         </div>
                     </form>
-                </ulvia-official-stack>
-            </ulvia-official-surface>
-            <ulvia-official-list slot="items" cms-condition="collectionTheme.data.tokens.length">
-                <ulvia-official-list-item slot="items" cms-repeat="collectionTheme.data.tokens as token" density="compact">
+                </div>
+            </div>
+            <div cms-bloc="ulvia-official-list" cms-condition="collectionTheme.data.tokens.length" slot="items">
+                <div cms-bloc="ulvia-official-list-item" density="compact" cms-repeat="collectionTheme.data.tokens as token" slot="items">
                     <strong slot="title">{{ token.label }}</strong>
                     <span slot="meta">{{ token.categoryLabel }}</span>
                     <code slot="description">{{ token.variable }}</code>
-                    <ulvia-official-cluster slot="body" align="center" gap="sm">
+                    <div cms-bloc="ulvia-official-cluster" gap="sm" align="center" slot="body">
                         <code slot="items">{{ token.value }}</code>
-                        <ulvia-official-badge slot="items" tone="info" cms-condition="token.overridden">
+                        <div cms-bloc="ulvia-official-badge" cms-condition="token.overridden" tone="info" slot="items">
                             <span slot="label">{{ cms.i18n.ulvia-official.ui-overridden }}</span>
-                        </ulvia-official-badge>
-                    </ulvia-official-cluster>
-                    <ulvia-official-action slot="actions" variant="ghost" tone="secondary" size="sm">
-                        <a
-                            href="/admin/collections/detail?ulvia-official-collection={{ collectionTheme.data.collectionId | urlencode }}&amp;ulvia-official-theme-profile={{ collectionTheme.data.profileId | urlencode }}&amp;ulvia-official-theme-mode={{ collectionTheme.data.mode | urlencode }}&amp;ulvia-official-theme-token={{ token.id | urlencode }}#collection-theme"
-                            >{{
-                                cms.i18n.ulvia-official.ui-edit-token
-                            }}</a
-                        >
-                    </ulvia-official-action>
-                </ulvia-official-list-item>
-            </ulvia-official-list>
-        </ulvia-official-stack>
+                        </div>
+                    </div>
+                    <a
+                        cms-bloc="ulvia-official-action"
+                        size="sm"
+                        tone="secondary"
+                        variant="ghost"
+                        slot="actions"
+                        href="/admin/collections/detail?ulvia-official-collection={{ collectionTheme.data.collectionId | urlencode }}&ulvia-official-theme-profile={{ collectionTheme.data.profileId | urlencode }}&ulvia-official-theme-mode={{ collectionTheme.data.mode | urlencode }}&ulvia-official-theme-token={{ token.id | urlencode }}#collection-theme"
+                        ><span>{{ cms.i18n.ulvia-official.ui-edit-token }}</span></a
+                    >
+                </div>
+            </div>
+        </div>
         <p role="alert" cms-case='"failure"'>
             {{ cms.i18n.ulvia-official.ui-request-failed }}
         </p>

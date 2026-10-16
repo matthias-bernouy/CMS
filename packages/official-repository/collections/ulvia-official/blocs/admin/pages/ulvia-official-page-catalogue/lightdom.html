@@ -1,4 +1,4 @@
-<ulvia-official-admin-workspace>
+<div cms-bloc="ulvia-official-admin-workspace">
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-pages-9046da16 }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-create-and-manage-site-pages-through-the-selected-ulvia-provider }}</p>
     <section
@@ -21,120 +21,140 @@
                     <p>{{ cms.i18n.ulvia-official.ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again }}</p>
                 </div>
             </div>
-            <ulvia-official-stack cms-case='"success"' gap="md">
-                <ulvia-official-cluster slot="items" align="center" justify="between">
+            <div cms-bloc="ulvia-official-stack" gap="md" cms-case='"success"'>
+                <div cms-bloc="ulvia-official-cluster" justify="between" align="center" slot="items">
                     <h2 id="page-catalogue-title" slot="items">{{ cms.i18n.ulvia-official.ui-page-catalogue }}</h2>
                     <p slot="items">{{ pages.data.items.length }} {{ cms.i18n.ulvia-official.ui-pages-in-this-batch }}</p>
-                </ulvia-official-cluster>
-                <ulvia-official-list slot="items" cms-condition="pages.data.items.length" role="list">
-                    <ulvia-official-list-item slot="items" cms-repeat="pages.data.items as page" role="listitem">
+                </div>
+                <div cms-bloc="ulvia-official-list" role="list" cms-condition="pages.data.items.length" slot="items">
+                    <div cms-bloc="ulvia-official-list-item" role="listitem" cms-repeat="pages.data.items as page" slot="items">
                         <h3 slot="title">{{ page.title }}</h3>
                         <span slot="description"><code>{{ page.path }}</code> <span>{{ cms.i18n.ulvia-official.ui-revision }} {{ page.revision }}</span></span>
-                        <ulvia-official-badge slot="meta" cms-condition="page.visible" tone="success"
-                            ><span slot="label">{{ cms.i18n.ulvia-official.ui-published }}</span></ulvia-official-badge
+                        <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="page.visible" slot="meta">
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-published }}</span>
+                        </div>
+                        <div cms-bloc="ulvia-official-badge" tone="neutral" cms-condition="page.visible === false" slot="meta">
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-draft }}</span>
+                        </div>
+                        <a
+                            cms-bloc="ulvia-official-action"
+                            size="sm"
+                            tone="secondary"
+                            variant="outline"
+                            slot="actions"
+                            href="/admin/pages?ulvia-official-page-id={{ page.id | urlencode }}"
+                            ><span>{{ cms.i18n.ulvia-official.ui-open-page }}</span></a
                         >
-                        <ulvia-official-badge slot="meta" cms-condition="page.visible === false" tone="neutral"
-                            ><span slot="label">{{ cms.i18n.ulvia-official.ui-draft }}</span></ulvia-official-badge
-                        >
-                        <ulvia-official-action slot="actions" variant="outline" tone="secondary" size="sm"
-                            ><a href="/admin/pages?ulvia-official-page-id={{ page.id | urlencode }}">{{
-                                cms.i18n.ulvia-official.ui-open-page
-                            }}</a></ulvia-official-action
-                        >
-                    </ulvia-official-list-item>
-                </ulvia-official-list>
-                <ulvia-official-surface slot="items" cms-condition="pages.data.items.length === 0" appearance="subtle" padding="lg">
+                    </div>
+                </div>
+                <div cms-bloc="ulvia-official-surface" padding="lg" appearance="subtle" cms-condition="pages.data.items.length === 0" slot="items">
                     <h3 slot="content">{{ cms.i18n.ulvia-official.ui-no-pages-yet }}</h3>
                     <p slot="content">{{ cms.i18n.ulvia-official.ui-create-the-first-page-to-start-building-the-site }}</p>
-                </ulvia-official-surface>
-            </ulvia-official-stack>
+                </div>
+            </div>
             <div role="alert" cms-case='"failure"'>
                 <h2>{{ cms.i18n.ulvia-official.ui-pages-unavailable }}</h2>
                 <p>{{ cms.i18n.ulvia-official.ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again }}</p>
             </div>
         </div>
     </section>
-    <ulvia-official-action slot="actions" variant="filled" tone="primary"
-        ><button type="button" command="show-modal" commandfor="create-page-dialog" aria-haspopup="dialog">
-            {{ cms.i18n.ulvia-official.ui-create-page }}
-        </button></ulvia-official-action
+    <button
+        cms-bloc="ulvia-official-action"
+        tone="primary"
+        variant="filled"
+        slot="actions"
+        aria-haspopup="dialog"
+        commandfor="create-page-dialog"
+        command="show-modal"
+        type="button"
     >
-    <ulvia-official-dialog slot="content">
-        <dialog id="create-page-dialog" aria-labelledby="create-page-dialog-title">
-            <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
-                <ulvia-official-stack slot="content" gap="lg">
-                    <ulvia-official-cluster slot="items" align="start" justify="between">
-                        <h2 id="create-page-dialog-title" slot="items">{{ cms.i18n.ulvia-official.ui-create-a-page }}</h2>
-                        <ulvia-official-action slot="items" variant="ghost" tone="secondary" size="sm"
-                            ><button type="button" command="close" commandfor="create-page-dialog">
-                                {{ cms.i18n.ulvia-official.ui-close }}
-                            </button></ulvia-official-action
-                        >
-                    </ulvia-official-cluster>
-                    <p slot="items">{{ cms.i18n.ulvia-official.ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it }}</p>
-                    <form
+        <span>
+            {{ cms.i18n.ulvia-official.ui-create-page }}
+        </span>
+    </button>
+    <dialog cms-bloc="ulvia-official-dialog" slot="content" aria-labelledby="create-page-dialog-title" id="create-page-dialog">
+        <div slot="content" cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
+            <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
+                <div cms-bloc="ulvia-official-cluster" justify="between" align="start" slot="items">
+                    <h2 id="create-page-dialog-title" slot="items">{{ cms.i18n.ulvia-official.ui-create-a-page }}</h2>
+                    <button
+                        cms-bloc="ulvia-official-action"
+                        size="sm"
+                        tone="secondary"
+                        variant="ghost"
                         slot="items"
-                        cms-mutation="ulvia.cms.pages:create as created"
-                        cms-sync="@page:ulvia-official-pages-mutation"
-                        cms-sync-select="lastSuccess.requestId"
-                        cms-mutation-redirect="/admin/pages?ulvia-official-page-id={{ created.data.id | urlencode }}"
+                        commandfor="create-page-dialog"
+                        command="close"
+                        type="button"
                     >
-                        <ulvia-official-stack gap="md">
-                            <ulvia-official-field slot="items" label-position="top">
-                                <label slot="label" for="new-page-title">{{ cms.i18n.ulvia-official.ui-title }}</label>
-                                <ulvia-official-input slot="control">
-                                    <input
-                                        id="new-page-title"
-                                        type="text"
-                                        name="title"
-                                        maxlength="70"
-                                        autocomplete="off"
-                                        placeholder="{{ cms.i18n.ulvia-official.ui-about-us }}"
-                                        required
-                                    >
-                                </ulvia-official-input>
-                            </ulvia-official-field>
-                            <ulvia-official-field slot="items" label-position="top">
-                                <label slot="label" for="new-page-path">{{ cms.i18n.ulvia-official.ui-public-path }}</label>
-                                <span slot="description">{{ cms.i18n.ulvia-official.ui-use-a-path-such-as-about-reserved-cms-paths-are-rejected }}</span>
-                                <ulvia-official-input slot="control">
-                                    <input
-                                        id="new-page-path"
-                                        type="text"
-                                        name="path"
-                                        maxlength="2048"
-                                        autocomplete="off"
-                                        placeholder="{{ cms.i18n.ulvia-official.ui-about-979bddc4 }}"
-                                        required
-                                    >
-                                </ulvia-official-input>
-                            </ulvia-official-field>
-                            <ulvia-official-form-actions slot="items" align="end">
-                                <p slot="actions" role="status" aria-live="polite" cms-condition="created.activity === 'submitting'">
-                                    {{ cms.i18n.ulvia-official.ui-creating }}
-                                </p>
-                                <ulvia-official-action slot="actions" variant="filled" tone="primary"
-                                    ><button type="submit">{{ cms.i18n.ulvia-official.ui-create-page }}</button></ulvia-official-action
+                        <span>
+                            {{ cms.i18n.ulvia-official.ui-close }}
+                        </span>
+                    </button>
+                </div>
+                <p slot="items">{{ cms.i18n.ulvia-official.ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it }}</p>
+                <form
+                    slot="items"
+                    cms-mutation="ulvia.cms.pages:create as created"
+                    cms-sync="@page:ulvia-official-pages-mutation"
+                    cms-sync-select="lastSuccess.requestId"
+                    cms-mutation-redirect="/admin/pages?ulvia-official-page-id={{ created.data.id | urlencode }}"
+                >
+                    <div cms-bloc="ulvia-official-stack" gap="md">
+                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
+                            <label slot="label" for="new-page-title">{{ cms.i18n.ulvia-official.ui-title }}</label>
+                            <div cms-bloc="ulvia-official-input" slot="control">
+                                <input
+                                    id="new-page-title"
+                                    type="text"
+                                    name="title"
+                                    maxlength="70"
+                                    autocomplete="off"
+                                    placeholder="{{ cms.i18n.ulvia-official.ui-about-us }}"
+                                    required
                                 >
-                            </ulvia-official-form-actions>
-                            <div slot="items" cms-match="created.outcome.kind">
-                                <span cms-case='"none"' hidden></span>
-                                <span cms-case='"success"' hidden></span>
-                                <div cms-case='"error"' cms-match="created.outcome.code">
-                                    <p role="alert" cms-case='"PATH_CONFLICT"'>
-                                        {{ cms.i18n.ulvia-official.ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid }}
-                                    </p>
-                                    <p role="alert" cms-case='"INVALID_PAGE"'>
-                                        {{ cms.i18n.ulvia-official.ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid }}
-                                    </p>
-                                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                </div>
-                                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                             </div>
-                        </ulvia-official-stack>
-                    </form>
-                </ulvia-official-stack>
-            </ulvia-official-surface>
-        </dialog>
-    </ulvia-official-dialog>
-</ulvia-official-admin-workspace>
+                        </div>
+                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
+                            <label slot="label" for="new-page-path">{{ cms.i18n.ulvia-official.ui-public-path }}</label>
+                            <span slot="description">{{ cms.i18n.ulvia-official.ui-use-a-path-such-as-about-reserved-cms-paths-are-rejected }}</span>
+                            <div cms-bloc="ulvia-official-input" slot="control">
+                                <input
+                                    id="new-page-path"
+                                    type="text"
+                                    name="path"
+                                    maxlength="2048"
+                                    autocomplete="off"
+                                    placeholder="{{ cms.i18n.ulvia-official.ui-about-979bddc4 }}"
+                                    required
+                                >
+                            </div>
+                        </div>
+                        <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
+                            <p slot="actions" role="status" aria-live="polite" cms-condition="created.activity === 'submitting'">
+                                {{ cms.i18n.ulvia-official.ui-creating }}
+                            </p>
+                            <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" type="submit">
+                                <span>{{ cms.i18n.ulvia-official.ui-create-page }}</span>
+                            </button>
+                        </div>
+                        <div slot="items" cms-match="created.outcome.kind">
+                            <span cms-case='"none"' hidden></span>
+                            <span cms-case='"success"' hidden></span>
+                            <div cms-case='"error"' cms-match="created.outcome.code">
+                                <p role="alert" cms-case='"PATH_CONFLICT"'>
+                                    {{ cms.i18n.ulvia-official.ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid }}
+                                </p>
+                                <p role="alert" cms-case='"INVALID_PAGE"'>
+                                    {{ cms.i18n.ulvia-official.ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid }}
+                                </p>
+                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            </div>
+                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </dialog>
+</div>

@@ -19,9 +19,24 @@
         "ulvia-official-surface"
     ],
     "requires": [
-        { "contractId": "ulvia.cms.providers", "capabilityId": "list", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.providers", "capabilityId": "replace-selections", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.providers", "capabilityId": "set-status", "versionRange": "^1.0.0" }
+        {
+            "contractId": "ulvia.cms.providers",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.providers",
+            "capabilityId": "replace-selections",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.providers",
+            "capabilityId": "set-status",
+            "versionRange": "^1.0.0"
+        }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

@@ -1,4 +1,4 @@
-:host {
+:scope {
     --navigation-menu-padding: var(--ulvia-official-spacing-sm, 0.75rem);
     --navigation-item-height: 2.25rem;
     --navigation-item-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
@@ -30,7 +30,7 @@
     flex-flow: var(--navigation-menu-sections-flow, column) var(--navigation-menu-sections-wrap, nowrap);
     gap: var(--ulvia-official-spacing-md, 1rem);
 }
-::slotted(ulvia-official-navigation-section) {
+[cms-bloc="ulvia-official-navigation-section"] {
     flex: 0 0 auto;
 }
 [part="footer"] {
@@ -40,15 +40,15 @@
     padding-block-start: var(--ulvia-official-spacing-md, 1rem);
     border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
 }
-:host([appearance="subtle"]) [part="menu"] {
+:scope[appearance="subtle"] [part="menu"] {
     background: var(--ulvia-official-background-subtle, #f3f7f5);
 }
-:host([density="compact"]) {
+:scope[density="compact"] {
     --navigation-menu-padding: var(--ulvia-official-spacing-xs, 0.5rem);
     --navigation-item-height: 2rem;
     --navigation-item-font-size: var(--ulvia-official-font-size-xs, 0.75rem);
 }
-:host([density="comfortable"]) {
+:scope[density="comfortable"] {
     --navigation-menu-padding: var(--ulvia-official-spacing-md, 1rem);
     --navigation-item-height: 2.75rem;
     --navigation-item-font-size: var(--ulvia-official-font-size-md, 1rem);

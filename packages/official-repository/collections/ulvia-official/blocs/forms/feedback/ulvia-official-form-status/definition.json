@@ -5,11 +5,22 @@
     "description": "bloc.form-status.description",
     "category": "bloc.category.forms",
     "order": 170,
-    "nativeElement": {
-        "accepts": ["output"],
-        "attributes": { "aria-live": { "required": true, "values": ["polite", "assertive"] } }
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["output"],
+        "attributes": {
+            "aria-live": {
+                "required": true,
+                "values": ["polite", "assertive"]
+            }
+        },
+        "defaults": {
+            "aria-live": "polite"
+        }
+    }
 }

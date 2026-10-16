@@ -1,4 +1,4 @@
-:host {
+:scope {
     --ulvia-official-form-status-color: var(--ulvia-official-on-info-subtle, #123e5a);
     --ulvia-official-form-status-background: var(--ulvia-official-info-subtle, #eaf6ff);
     --ulvia-official-form-status-border: var(--ulvia-official-info-border, #5aa8d6);
@@ -8,7 +8,7 @@
 [part="status"] {
     display: contents;
 }
-::slotted(output) {
+output {
     display: block;
     padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
     border-inline-start: 0.25rem solid var(--ulvia-official-form-status-border);
@@ -18,17 +18,17 @@
     font-weight: var(--ulvia-official-font-weight-medium, 500);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
-:host([tone="success"]) {
+:scope[tone="success"] {
     --ulvia-official-form-status-color: var(--ulvia-official-on-success-subtle, #174b2b);
     --ulvia-official-form-status-background: var(--ulvia-official-success-subtle, #eaf8ef);
     --ulvia-official-form-status-border: var(--ulvia-official-success-border, #4aa56c);
 }
-:host([tone="warning"]) {
+:scope[tone="warning"] {
     --ulvia-official-form-status-color: var(--ulvia-official-on-warning-subtle, #5b3b00);
     --ulvia-official-form-status-background: var(--ulvia-official-warning-subtle, #fff7df);
     --ulvia-official-form-status-border: var(--ulvia-official-warning-border, #c98b16);
 }
-:host([tone="danger"]) {
+:scope[tone="danger"] {
     --ulvia-official-form-status-color: var(--ulvia-official-on-danger-subtle, #60150f);
     --ulvia-official-form-status-background: var(--ulvia-official-danger-subtle, #fff0ee);
     --ulvia-official-form-status-border: var(--ulvia-official-danger-border, #b42318);

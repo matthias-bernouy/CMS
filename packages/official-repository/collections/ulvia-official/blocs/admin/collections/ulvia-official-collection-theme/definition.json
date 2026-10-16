@@ -21,10 +21,29 @@
         "ulvia-official-surface"
     ],
     "requires": [
-        { "contractId": "ulvia.cms.theme", "capabilityId": "get", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.theme", "capabilityId": "activate", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.theme", "capabilityId": "save-token", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.theme", "capabilityId": "reset-token", "versionRange": "^1.0.0" }
+        {
+            "contractId": "ulvia.cms.theme",
+            "capabilityId": "get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.theme",
+            "capabilityId": "activate",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.theme",
+            "capabilityId": "save-token",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.theme",
+            "capabilityId": "reset-token",
+            "versionRange": "^1.0.0"
+        }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

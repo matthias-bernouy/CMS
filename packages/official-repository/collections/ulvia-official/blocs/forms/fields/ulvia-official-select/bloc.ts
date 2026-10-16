@@ -1,6 +1,4 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 let nextListboxId = 0;
 
@@ -14,7 +12,7 @@ function labelFor(select: HTMLSelectElement): string {
     );
 }
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private select: HTMLSelectElement | null = null;
     private trigger: HTMLButtonElement;
     private value: HTMLElement;
@@ -25,8 +23,8 @@ export class Bloc extends Component {
     private sourceAriaHidden: string | null = null;
     private observer = new MutationObserver(() => this.sync());
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
         this.trigger = document.createElement("button");
         this.trigger.type = "button";
         this.trigger.setAttribute("part", "trigger");
@@ -38,9 +36,9 @@ export class Bloc extends Component {
         indicator.setAttribute("part", "indicator");
         indicator.setAttribute("aria-hidden", "true");
         this.trigger.append(this.value, indicator);
-        this.shadowRoot?.querySelector('[part="trigger-shell"]')?.append(this.trigger);
-        this.listbox = this.shadowRoot?.querySelector('[part="listbox"]') ?? null;
-        this.popover = this.shadowRoot?.querySelector('[part="popover"]') ?? null;
+        this?.querySelector('[part="trigger-shell"]')?.append(this.trigger);
+        this.listbox = this?.querySelector('[part="listbox"]') ?? null;
+        this.popover = this?.querySelector('[part="popover"]') ?? null;
     }
 
     override connectedCallback(): void {
@@ -210,7 +208,7 @@ export class Bloc extends Component {
     };
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.contains(event.target) && !this.shadowRoot?.contains(event.target)) {
+        if (event.target instanceof Node && !this.contains(event.target) && !this?.contains(event.target)) {
             this.setOpen(false);
         }
     };

@@ -1,12 +1,12 @@
-<ulvia-official-admin-workspace>
+<div cms-bloc="ulvia-official-admin-workspace">
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-diagnostics }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-live-operational-signals-from-the-selected-cms-contracts }}</p>
-    <ulvia-official-route-tabs slot="page-navigation" label="{{ cms.i18n.ulvia-official.ui-diagnostics }}" size="sm">
-        <ulvia-official-route-tab slot="items"><a href="#migration-health">{{ cms.i18n.ulvia-official.ui-content-maintenance }}</a></ulvia-official-route-tab>
-        <ulvia-official-route-tab slot="items"><a href="#job-health">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</a></ulvia-official-route-tab>
-        <ulvia-official-route-tab slot="items"><a href="#provider-health">{{ cms.i18n.ulvia-official.ui-provider-installations }}</a></ulvia-official-route-tab>
-    </ulvia-official-route-tabs>
-    <ulvia-official-stack slot="content" gap="lg">
+    <div cms-bloc="ulvia-official-route-tabs" size="sm" label="{{ cms.i18n.ulvia-official.ui-diagnostics }}" slot="page-navigation">
+        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#migration-health"><span>{{ cms.i18n.ulvia-official.ui-content-maintenance }}</span></a>
+        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#job-health"><span>{{ cms.i18n.ulvia-official.ui-durable-jobs }}</span></a>
+        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#provider-health"><span>{{ cms.i18n.ulvia-official.ui-provider-installations }}</span></a>
+    </div>
+    <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
         <section
             id="migration-health"
             slot="items"
@@ -14,16 +14,16 @@
             cms-query="ulvia.cms.collections:migration-status as migrations"
             cms-query-input='{"limit":{"from":"literal","value":20}}'
         >
-            <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
+            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
                 <h2 slot="content" id="migration-health-title">{{ cms.i18n.ulvia-official.ui-content-maintenance }}</h2>
                 <p slot="content" role="status" cms-condition="migrations.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-migration-state }}</p>
-                <ulvia-official-stack slot="content" cms-match="migrations.outcome.kind" gap="sm">
-                    <span slot="items" cms-case='"none"' hidden></span>
-                    <ulvia-official-stack slot="items" cms-case='"error"' cms-match="migrations.outcome.code" gap="sm">
-                        <p slot="items" role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-migration-diagnostics-are-unavailable }}</p>
-                    </ulvia-official-stack>
-                    <ulvia-official-stack slot="items" cms-case='"success"' gap="sm">
-                        <ulvia-official-cluster slot="items" align="center" justify="between">
+                <div cms-match="migrations.outcome.kind" slot="content">
+                    <span cms-case='"none"' hidden></span>
+                    <div cms-match="migrations.outcome.code" cms-case='"error"'>
+                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-migration-diagnostics-are-unavailable }}</p>
+                    </div>
+                    <div cms-bloc="ulvia-official-stack" gap="sm" cms-case='"success"'>
+                        <div cms-bloc="ulvia-official-cluster" justify="between" align="center" slot="items">
                             <div slot="items">
                                 <strong cms-condition="migrations.data.maintenance">{{ cms.i18n.ulvia-official.ui-maintenance-mode-is-active }}</strong>
                                 <strong cms-condition="migrations.data.maintenance === false">{{
@@ -31,14 +31,14 @@
                                 }}</strong>
                                 <p>{{ migrations.data.migrations.length }} {{ cms.i18n.ulvia-official.ui-retained-migration-records }}</p>
                             </div>
-                            <ulvia-official-badge slot="items" cms-condition="migrations.data.maintenance" tone="warning"
-                                ><span slot="label">{{ cms.i18n.ulvia-official.ui-maintenance }}</span></ulvia-official-badge
-                            >
-                            <ulvia-official-badge slot="items" cms-condition="migrations.data.maintenance === false" tone="success"
-                                ><span slot="label">{{ cms.i18n.ulvia-official.ui-ready }}</span></ulvia-official-badge
-                            >
-                        </ulvia-official-cluster>
-                        <ulvia-official-stack slot="items" gap="sm" role="list">
+                            <div cms-bloc="ulvia-official-badge" tone="warning" cms-condition="migrations.data.maintenance" slot="items">
+                                <span slot="label">{{ cms.i18n.ulvia-official.ui-maintenance }}</span>
+                            </div>
+                            <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="migrations.data.maintenance === false" slot="items">
+                                <span slot="label">{{ cms.i18n.ulvia-official.ui-ready }}</span>
+                            </div>
+                        </div>
+                        <div cms-bloc="ulvia-official-stack" role="list" gap="sm" slot="items">
                             <article slot="items" cms-repeat="migrations.data.migrations as migration" role="listitem">
                                 <strong>{{ migration.status }} {{ cms.i18n.ulvia-official.ui-copy-a137f17a }} {{ migration.id }}</strong>
                                 <p>
@@ -46,11 +46,11 @@
                                     {{ cms.i18n.ulvia-official.ui-operations-9b1b6f78 }} {{ migration.updatedAt | dateLong }}
                                 </p>
                             </article>
-                        </ulvia-official-stack>
-                    </ulvia-official-stack>
-                    <p slot="items" role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-migration-diagnostics-are-unavailable }}</p>
-                </ulvia-official-stack>
-            </ulvia-official-surface>
+                        </div>
+                    </div>
+                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-migration-diagnostics-are-unavailable }}</p>
+                </div>
+            </div>
         </section>
         <section
             id="job-health"
@@ -59,55 +59,55 @@
             cms-query="ulvia.cms.jobs:list as jobs"
             cms-query-input='{"limit":{"from":"literal","value":50}}'
         >
-            <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
+            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
                 <h2 slot="content" id="job-health-title">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</h2>
                 <p slot="content" role="status" cms-condition="jobs.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-durable-jobs }}</p>
-                <ulvia-official-stack slot="content" cms-match="jobs.outcome.kind" gap="sm">
-                    <span slot="items" cms-case='"none"' hidden></span>
-                    <ulvia-official-stack slot="items" cms-case='"error"' cms-match="jobs.outcome.code" gap="sm">
-                        <p slot="items" role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
-                    </ulvia-official-stack>
-                    <ulvia-official-stack slot="items" cms-case='"success"' gap="sm">
+                <div cms-match="jobs.outcome.kind" slot="content">
+                    <span cms-case='"none"' hidden></span>
+                    <div cms-match="jobs.outcome.code" cms-case='"error"'>
+                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
+                    </div>
+                    <div cms-bloc="ulvia-official-stack" gap="sm" cms-case='"success"'>
                         <p slot="items" cms-condition="jobs.data.items.length === 0">{{ cms.i18n.ulvia-official.ui-no-durable-jobs }}</p>
-                        <ulvia-official-stack slot="items" cms-condition="jobs.data.items.length > 0" gap="sm" role="list">
+                        <div cms-bloc="ulvia-official-stack" role="list" gap="sm" cms-condition="jobs.data.items.length > 0" slot="items">
                             <article slot="items" cms-repeat="jobs.data.items as job" role="listitem">
-                                <ulvia-official-cluster align="center" justify="between">
+                                <div cms-bloc="ulvia-official-cluster" justify="between" align="center">
                                     <div slot="items">
                                         <strong>{{ job.contractId }} {{ cms.i18n.ulvia-official.ui-copy }} {{ job.capabilityId }}</strong>
                                         <p>{{ job.updatedAt | dateLong }}</p>
                                     </div>
-                                    <ulvia-official-badge slot="items" tone="neutral"><span slot="label">{{ job.status }}</span></ulvia-official-badge>
-                                </ulvia-official-cluster>
+                                    <div cms-bloc="ulvia-official-badge" tone="neutral" slot="items"><span slot="label">{{ job.status }}</span></div>
+                                </div>
                             </article>
-                        </ulvia-official-stack>
-                    </ulvia-official-stack>
-                    <p slot="items" role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
-                </ulvia-official-stack>
-            </ulvia-official-surface>
+                        </div>
+                    </div>
+                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
+                </div>
+            </div>
         </section>
         <section id="provider-health" slot="items" aria-labelledby="provider-health-title" cms-query="ulvia.cms.providers:list as providers">
-            <ulvia-official-surface appearance="outlined" padding="md" radius="sm">
+            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
                 <h2 slot="content" id="provider-health-title">{{ cms.i18n.ulvia-official.ui-provider-installations }}</h2>
                 <p slot="content" role="status" cms-condition="providers.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-provider-state }}</p>
-                <ulvia-official-stack slot="content" cms-match="providers.outcome.kind" gap="sm">
-                    <span slot="items" cms-case='"none"' hidden></span>
-                    <ulvia-official-stack slot="items" cms-case='"error"' cms-match="providers.outcome.code" gap="sm">
-                        <p slot="items" role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-provider-diagnostics-are-unavailable }}</p>
-                    </ulvia-official-stack>
-                    <ulvia-official-stack slot="items" cms-case='"success"' gap="sm" role="list">
+                <div cms-match="providers.outcome.kind" slot="content">
+                    <span cms-case='"none"' hidden></span>
+                    <div cms-match="providers.outcome.code" cms-case='"error"'>
+                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-provider-diagnostics-are-unavailable }}</p>
+                    </div>
+                    <div cms-bloc="ulvia-official-stack" role="list" gap="sm" cms-case='"success"'>
                         <article slot="items" cms-repeat="providers.data.installations as provider" role="listitem">
-                            <ulvia-official-cluster align="center" justify="between">
+                            <div cms-bloc="ulvia-official-cluster" justify="between" align="center">
                                 <div slot="items">
                                     <strong>{{ provider.providerId }}</strong>
                                     <p>{{ provider.endpoint }} {{ cms.i18n.ulvia-official.ui-manifest }} {{ provider.manifestVersion }}</p>
                                 </div>
-                                <ulvia-official-badge slot="items" tone="neutral"><span slot="label">{{ provider.status }}</span></ulvia-official-badge>
-                            </ulvia-official-cluster>
+                                <div cms-bloc="ulvia-official-badge" tone="neutral" slot="items"><span slot="label">{{ provider.status }}</span></div>
+                            </div>
                         </article>
-                    </ulvia-official-stack>
-                    <p slot="items" role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-provider-diagnostics-are-unavailable }}</p>
-                </ulvia-official-stack>
-            </ulvia-official-surface>
+                    </div>
+                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-provider-diagnostics-are-unavailable }}</p>
+                </div>
+            </div>
         </section>
-    </ulvia-official-stack>
-</ulvia-official-admin-workspace>
+    </div>
+</div>

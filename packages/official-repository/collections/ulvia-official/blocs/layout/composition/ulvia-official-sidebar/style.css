@@ -1,4 +1,4 @@
-:host {
+:scope {
     --sidebar-width: 15rem;
     --sidebar-gap: var(--ulvia-official-spacing-lg, 1.5rem);
     display: block;
@@ -16,30 +16,30 @@
 [part="content"] {
     min-width: 0;
 }
-:host([side="end"]) [part="layout"] {
+:scope[side="end"] [part="layout"] {
     grid-template-columns: minmax(0, 1fr) minmax(0, var(--sidebar-width));
 }
-:host([side="end"]) [part="sidebar"] {
+:scope[side="end"] [part="sidebar"] {
     order: 2;
 }
-:host([sidebar-width="sm"]) {
+:scope[sidebar-width="sm"] {
     --sidebar-width: 11rem;
 }
-:host([sidebar-width="lg"]) {
+:scope[sidebar-width="lg"] {
     --sidebar-width: 20rem;
 }
-:host([gap="sm"]) {
+:scope[gap="sm"] {
     --sidebar-gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([gap="md"]) {
+:scope[gap="md"] {
     --sidebar-gap: var(--ulvia-official-spacing-md, 1rem);
 }
-:host([gap="xl"]) {
+:scope[gap="xl"] {
     --sidebar-gap: var(--ulvia-official-spacing-xl, 2rem);
 }
 
 @container (max-width: 44rem) {
-    :host(:not([collapse="never"])) [part="layout"] {
+    :scope:not([collapse="never"]) [part="layout"] {
         grid-template-columns: minmax(0, 1fr);
     }
 }

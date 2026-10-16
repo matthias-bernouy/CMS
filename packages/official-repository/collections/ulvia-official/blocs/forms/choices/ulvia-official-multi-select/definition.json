@@ -5,11 +5,24 @@
     "description": "bloc.multi-select.description",
     "category": "bloc.category.forms",
     "order": 70,
-    "nativeElement": {
-        "accepts": ["select"],
-        "attributes": { "multiple": { "required": true, "values": [""] } }
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["select"],
+        "attributes": {
+            "multiple": {
+                "required": true,
+                "values": [""]
+            }
+        },
+        "defaults": {
+            "name": "choices",
+            "multiple": "",
+            "size": "5"
+        }
+    }
 }

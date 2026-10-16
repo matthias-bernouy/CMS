@@ -5,10 +5,16 @@
     "description": "bloc.action.description",
     "category": "bloc.category.actions",
     "order": 10,
-    "nativeElement": {
-        "accepts": ["button", "a"]
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["button", "a"],
+        "defaults": {
+            "type": "button"
+        }
+    },
+    "content": {
+        "accepts": ["span"]
+    }
 }

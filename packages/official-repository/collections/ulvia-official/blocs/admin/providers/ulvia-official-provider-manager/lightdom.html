@@ -10,7 +10,7 @@
                 <p>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
             </div>
         </div>
-        <ulvia-official-stack cms-case='"success"' gap="lg">
+        <div cms-bloc="ulvia-official-stack" gap="lg" cms-case='"success"'>
             <div id="provider-installations" slot="items">
                 <header>
                     <h2>{{ cms.i18n.ulvia-official.ui-provider-installations }}</h2>
@@ -22,19 +22,19 @@
                     </p>
                 </header>
 
-                <ulvia-official-list cms-condition="providers.data.installations.length" role="list">
-                    <ulvia-official-list-item slot="items" cms-repeat="providers.data.installations as installation" role="listitem">
+                <div cms-bloc="ulvia-official-list" role="list" cms-condition="providers.data.installations.length">
+                    <div cms-bloc="ulvia-official-list-item" role="listitem" cms-repeat="providers.data.installations as installation" slot="items">
                         <h3 slot="title">{{ installation.providerId }}</h3>
                         <p slot="description">{{ installation.accountId }}</p>
-                        <ulvia-official-badge slot="meta" cms-condition="installation.status === 'enabled'" tone="success">
+                        <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="installation.status === 'enabled'" slot="meta">
                             <span slot="label">{{ cms.i18n.ulvia-official.ui-enabled }}</span>
-                        </ulvia-official-badge>
-                        <ulvia-official-badge slot="meta" cms-condition="installation.status === 'disabled'" tone="neutral">
+                        </div>
+                        <div cms-bloc="ulvia-official-badge" tone="neutral" cms-condition="installation.status === 'disabled'" slot="meta">
                             <span slot="label">{{ cms.i18n.ulvia-official.ui-disabled }}</span>
-                        </ulvia-official-badge>
-                        <ulvia-official-badge slot="meta" cms-condition="installation.status === 'revoked'" tone="danger">
+                        </div>
+                        <div cms-bloc="ulvia-official-badge" tone="danger" cms-condition="installation.status === 'revoked'" slot="meta">
                             <span slot="label">{{ cms.i18n.ulvia-official.ui-revoke }}</span>
-                        </ulvia-official-badge>
+                        </div>
                         <span slot="meta"> {{ installation.selectionCount }} {{ cms.i18n.ulvia-official.ui-selected-contracts }} </span>
                         <details slot="body">
                             <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
@@ -49,7 +49,7 @@
                         <p slot="body" role="alert" cms-condition="installation.selectionCount > 0">
                             {{ cms.i18n.ulvia-official.ui-reroute-selected-contracts-before-changing-this-provider }}
                         </p>
-                        <ulvia-official-cluster slot="actions" align="center" justify="end">
+                        <div cms-bloc="ulvia-official-cluster" justify="end" align="center" slot="actions">
                             <form
                                 slot="items"
                                 cms-condition="installation.status === 'enabled'"
@@ -60,11 +60,18 @@
                                 <input type="hidden" name="installationId" value="{{ installation.id }}">
                                 <input type="hidden" name="expectedRevision" value="{{ installation.revision }}" cms-form-value-type="number">
                                 <input type="hidden" name="action" value="disable">
-                                <ulvia-official-action variant="outline" tone="secondary" size="sm">
-                                    <button type="submit" disabled="{{ installation.selectionCount > 0 }}">
+                                <button
+                                    cms-bloc="ulvia-official-action"
+                                    size="sm"
+                                    tone="secondary"
+                                    variant="outline"
+                                    disabled="{{ installation.selectionCount > 0 }}"
+                                    type="submit"
+                                >
+                                    <span>
                                         {{ cms.i18n.ulvia-official.ui-disable }}
-                                    </button>
-                                </ulvia-official-action>
+                                    </span>
+                                </button>
 
                                 <div cms-match="mutation.outcome.kind">
                                     <span cms-case='"none"' hidden></span>
@@ -89,9 +96,9 @@
                                 <input type="hidden" name="installationId" value="{{ installation.id }}">
                                 <input type="hidden" name="expectedRevision" value="{{ installation.revision }}" cms-form-value-type="number">
                                 <input type="hidden" name="action" value="enable">
-                                <ulvia-official-action variant="filled" tone="primary" size="sm">
-                                    <button type="submit">{{ cms.i18n.ulvia-official.ui-enable }}</button>
-                                </ulvia-official-action>
+                                <button cms-bloc="ulvia-official-action" size="sm" tone="primary" variant="filled" type="submit">
+                                    <span>{{ cms.i18n.ulvia-official.ui-enable }}</span>
+                                </button>
 
                                 <div cms-match="mutation.outcome.kind">
                                     <span cms-case='"none"' hidden></span>
@@ -106,7 +113,7 @@
                                     <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                 </div>
                             </form>
-                        </ulvia-official-cluster>
+                        </div>
                         <details slot="body" cms-condition="installation.status !== 'revoked'">
                             <summary>{{ cms.i18n.ulvia-official.ui-revoke }}</summary>
                             <p>{{ cms.i18n.ulvia-official.ui-revocation-is-terminal-and-deletes-stored-credentials }}</p>
@@ -118,11 +125,18 @@
                                 <input type="hidden" name="installationId" value="{{ installation.id }}">
                                 <input type="hidden" name="expectedRevision" value="{{ installation.revision }}" cms-form-value-type="number">
                                 <input type="hidden" name="action" value="revoke">
-                                <ulvia-official-action variant="filled" tone="danger" size="sm">
-                                    <button type="submit" disabled="{{ installation.selectionCount > 0 }}">
+                                <button
+                                    cms-bloc="ulvia-official-action"
+                                    size="sm"
+                                    tone="danger"
+                                    variant="filled"
+                                    disabled="{{ installation.selectionCount > 0 }}"
+                                    type="submit"
+                                >
+                                    <span>
                                         {{ cms.i18n.ulvia-official.ui-revoke }}
-                                    </button>
-                                </ulvia-official-action>
+                                    </span>
+                                </button>
 
                                 <div cms-match="mutation.outcome.kind">
                                     <span cms-case='"none"' hidden></span>
@@ -138,14 +152,14 @@
                                 </div>
                             </form>
                         </details>
-                    </ulvia-official-list-item>
-                </ulvia-official-list>
-                <ulvia-official-surface cms-condition="providers.data.installations.length === 0" appearance="subtle" padding="lg">
+                    </div>
+                </div>
+                <div cms-bloc="ulvia-official-surface" padding="lg" appearance="subtle" cms-condition="providers.data.installations.length === 0">
                     <p slot="content">{{ cms.i18n.ulvia-official.ui-no-provider-installation-has-been-approved }}</p>
-                </ulvia-official-surface>
+                </div>
             </div>
 
-            <ulvia-official-surface id="contract-routing" slot="items" appearance="outlined" padding="md" radius="sm">
+            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="contract-routing">
                 <form
                     slot="content"
                     cms-mutation="ulvia.cms.providers:replace-selections as mutation"
@@ -154,16 +168,16 @@
                     cms-mutation-reset="false"
                 >
                     <input type="hidden" name="expectedRevision" value="{{ providers.data.selectionRevision }}" cms-form-value-type="number">
-                    <ulvia-official-stack gap="lg">
+                    <div cms-bloc="ulvia-official-stack" gap="lg">
                         <header slot="items">
                             <h3>{{ cms.i18n.ulvia-official.ui-contract-routing }}</h3>
                         </header>
-                        <ulvia-official-field slot="items" cms-repeat="providers.data.routes as route" label-position="top">
+                        <div cms-bloc="ulvia-official-field" label-position="top" cms-repeat="providers.data.routes as route" slot="items">
                             <label slot="label" for="provider-route-{{ route.contractId }}">{{ route.contractId }}</label>
                             <span slot="description">
                                 {{ cms.i18n.ulvia-official.ui-choose-an-exact-immutable-release }}
                             </span>
-                            <ulvia-official-select slot="control">
+                            <div cms-bloc="ulvia-official-select" slot="control">
                                 <select id="provider-route-{{ route.contractId }}" name="selections[]" cms-form-value-type="json" cms-form-empty="omit">
                                     <option value="" selected="{{ !route.selectedDigest }}">
                                         {{ cms.i18n.ulvia-official.ui-not-selected }}
@@ -177,23 +191,23 @@
                                         {{ option.providerId }} {{ option.accountId }} {{ option.selection.version }}
                                     </option>
                                 </select>
-                            </ulvia-official-select>
-                        </ulvia-official-field>
+                            </div>
+                        </div>
                         <p slot="items" cms-condition="providers.data.routes.length === 0">
                             {{ cms.i18n.ulvia-official.ui-no-contract-route-is-available }}
                         </p>
-                        <ulvia-official-form-actions slot="items" align="end">
+                        <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
                             <p slot="actions" role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">
                                 {{ cms.i18n.ulvia-official.ui-saving }}
                             </p>
                             <p slot="actions" role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
                                 {{ cms.i18n.ulvia-official.ui-request-failed }}
                             </p>
-                            <ulvia-official-action slot="actions" variant="filled" tone="primary">
-                                <button type="submit">{{ cms.i18n.ulvia-official.ui-save-contract-routing }}</button>
-                            </ulvia-official-action>
-                        </ulvia-official-form-actions>
-                    </ulvia-official-stack>
+                            <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" type="submit">
+                                <span>{{ cms.i18n.ulvia-official.ui-save-contract-routing }}</span>
+                            </button>
+                        </div>
+                    </div>
 
                     <div cms-match="mutation.outcome.kind">
                         <span cms-case='"none"' hidden></span>
@@ -207,8 +221,8 @@
                         <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                     </div>
                 </form>
-            </ulvia-official-surface>
-        </ulvia-official-stack>
+            </div>
+        </div>
         <div role="alert" cms-case='"failure"'>
             <h2>{{ cms.i18n.ulvia-official.ui-provider-configuration-unavailable }}</h2>
             <p>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>

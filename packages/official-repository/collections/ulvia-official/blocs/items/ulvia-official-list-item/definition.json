@@ -9,26 +9,73 @@
     "requires": [],
     "slots": {
         "leading": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "max": 1
         },
         "title": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "min": 1,
             "max": 1
         },
         "meta": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ]
         },
         "description": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }],
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
             "max": 1
         },
         "body": {
-            "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ]
         },
         "actions": {
-            "accepts": [{ "kind": "any-component" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ]
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

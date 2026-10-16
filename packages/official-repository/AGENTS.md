@@ -31,7 +31,6 @@
 - Keep admitted collection exports explicit. Authored sources may use the CLI's
   `"*"` shorthand, but the admitted release must show exactly which public Blocs,
   tokens, texts and assets form its API. Never use wildcard dependency imports.
-- A managed native component declares `nativeElement.accepts`, has exactly one
-  unnamed Shadow DOM slot, no named page slots or fixed Light DOM, and one
-  accepted native root in `default.html`. Keep wrapper settings separate from
-  native child attributes; do not duplicate the selected tag in an `as` setting.
+- Every Bloc declares a native `root` contract and Pages identify it with
+  `cms-bloc`. Wrapper Blocs may declare exactly one Page-owned native `content`
+  child. All structure is Light DOM; Shadow DOM is forbidden.

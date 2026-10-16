@@ -5,9 +5,6 @@
     "description": "bloc.image.description",
     "category": "bloc.category.media",
     "order": 5,
-    "nativeElement": {
-        "accepts": ["img"]
-    },
     "uses": [],
     "requires": [
         {
@@ -16,5 +13,16 @@
             "versionRange": "^1.0.0"
         }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["img"],
+        "defaults": {
+            "alt": "",
+            "loading": "lazy",
+            "decoding": "async"
+        }
+    }
 }

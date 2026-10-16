@@ -1,6 +1,4 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -61,7 +59,7 @@ class DatePicker {
     constructor(
         private host: HTMLElement,
         private input: HTMLInputElement,
-        private shadow: ShadowRoot,
+        private root: HTMLElement,
     ) {
         this.popover = this.requiredPart("popover");
         this.monthLabel = this.requiredPart("month-label");
@@ -77,7 +75,7 @@ class DatePicker {
         icon.setAttribute("part", "date-icon");
         icon.setAttribute("aria-hidden", "true");
         this.trigger.append(this.value, icon);
-        this.shadow.querySelector('[part="trigger-shell"]')?.append(this.trigger);
+        this.root.querySelector('[part="trigger-shell"]')?.append(this.trigger);
         this.previous = this.createAction("previous-shell", "previous-month");
         this.next = this.createAction("next-shell", "next-month");
         this.today = this.createAction("today-shell", "today");
@@ -296,7 +294,7 @@ class DatePicker {
     };
 
     private closeFromOutside = (event: Event): void => {
-        if (event.target instanceof Node && !this.host.contains(event.target) && !this.shadow.contains(event.target)) {
+        if (event.target instanceof Node && !this.host.contains(event.target) && !this.root.contains(event.target)) {
             this.setOpen(false);
         }
     };
@@ -311,12 +309,12 @@ class DatePicker {
         const button = document.createElement("button");
         button.type = "button";
         button.setAttribute("part", part);
-        this.shadow.querySelector(`[part="${shellPart}"]`)?.append(button);
+        this.root.querySelector(`[part="${shellPart}"]`)?.append(button);
         return button;
     }
 
     private requiredPart(part: string): HTMLElement {
-        const element = this.shadow.querySelector<HTMLElement>(`[part="${part}"]`);
+        const element = this.root.querySelector<HTMLElement>(`[part="${part}"]`);
         if (!element) {
             throw new Error(`Missing date picker part: ${part}`);
         }
@@ -337,9 +335,8 @@ class DatePicker {
     }
 }
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private input: HTMLInputElement | null = null;
-    private slotElement: HTMLSlotElement | null;
     private dateUi: HTMLElement | null;
     private datePicker: DatePicker | null = null;
     private observer = new MutationObserver(() => this.syncState());
@@ -348,19 +345,16 @@ export class Bloc extends Component {
         return ["locale", "today-label", "clear-label", "previous-month-label", "next-month-label"];
     }
 
-    constructor() {
-        super({ css, template });
-        this.slotElement = this.shadowRoot?.querySelector("slot") ?? null;
-        this.dateUi = this.shadowRoot?.querySelector('[part="date-ui"]') ?? null;
+    constructor(root: HTMLElement) {
+        super(root);
+        this.dateUi = this?.querySelector('[part="date-ui"]') ?? null;
     }
 
     override connectedCallback(): void {
-        this.slotElement?.addEventListener("slotchange", this.bindInput);
         this.bindInput();
     }
 
     disconnectedCallback(): void {
-        this.slotElement?.removeEventListener("slotchange", this.bindInput);
         this.observer.disconnect();
         this.datePicker?.disconnect();
         this.datePicker = null;
@@ -395,8 +389,8 @@ export class Bloc extends Component {
 
     private syncState(): void {
         const customDate = this.input?.type === "date";
-        if (customDate && this.input && this.shadowRoot && !this.datePicker) {
-            this.datePicker = new DatePicker(this, this.input, this.shadowRoot);
+        if (customDate && this.input && this && !this.datePicker) {
+            this.datePicker = new DatePicker(this.blocRoot, this.input, this.blocRoot);
             this.datePicker.connect();
         } else if (!customDate && this.datePicker) {
             this.datePicker.disconnect();

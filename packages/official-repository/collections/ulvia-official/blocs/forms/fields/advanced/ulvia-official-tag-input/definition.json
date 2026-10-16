@@ -5,14 +5,28 @@
     "description": "bloc.tag-input.description",
     "category": "bloc.category.forms",
     "order": 75,
-    "nativeElement": {
-        "accepts": ["input"],
-        "attributes": {
-            "type": { "required": true, "values": ["text"] },
-            "aria-description": { "required": false }
-        }
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["input"],
+        "attributes": {
+            "type": {
+                "required": true,
+                "values": ["text"]
+            },
+            "aria-description": {
+                "required": false
+            }
+        },
+        "defaults": {
+            "type": "text",
+            "name": "tags",
+            "value": "research,design",
+            "autocomplete": "off"
+        }
+    }
 }

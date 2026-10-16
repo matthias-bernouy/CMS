@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     min-width: 0;
     color: var(--ulvia-official-text-secondary, #4f625a);
@@ -17,7 +17,7 @@
 [part="trigger"] {
     display: contents;
 }
-::slotted(button[slot="trigger"]) {
+button[part~="trigger"] {
     position: relative;
     display: flex;
     width: 100%;
@@ -40,15 +40,15 @@
         color var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease),
         background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
 }
-::slotted(button[slot="trigger"]:hover) {
+button[part~="trigger"]:hover {
     color: var(--ulvia-official-text-primary, #17211d);
     background: var(--ulvia-official-background-subtle, #f3f7f5);
 }
-::slotted(button[slot="trigger"]:focus-visible) {
+button[part~="trigger"]:focus-visible {
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: 2px;
 }
-::slotted(button[slot="trigger"])::before {
+button[part~="trigger"]::before {
     order: 2;
     min-width: 1.5rem;
     margin-inline-start: auto;
@@ -61,10 +61,10 @@
     font-variant-numeric: tabular-nums;
     text-align: center;
 }
-::slotted(button[slot="trigger"]:not([data-count]))::before {
+button[part~="trigger"]:not([data-count])::before {
     display: none;
 }
-::slotted(button[slot="trigger"])::after {
+button[part~="trigger"]::after {
     order: 3;
     width: 0.5rem;
     height: 0.5rem;
@@ -76,7 +76,7 @@
     transform-origin: center;
     transition: transform var(--ulvia-official-duration-normal, 180ms) var(--ulvia-official-easing-emphasized, ease);
 }
-:host([expanded]) ::slotted(button[slot="trigger"])::after {
+:scope[expanded] button[part~="trigger"]::after {
     transform: rotate(225deg) translate(-0.1rem, -0.1rem);
 }
 [part="region"] {
@@ -87,10 +87,10 @@
         grid-template-rows var(--ulvia-official-duration-normal, 180ms) var(--ulvia-official-easing-emphasized, ease),
         opacity var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
 }
-:host(:not([expanded])) [part="region"] {
+:scope:not([expanded]) [part="region"] {
     display: var(--navigation-group-collapsed-display, grid);
 }
-:host([expanded]) [part="region"] {
+:scope[expanded] [part="region"] {
     grid-template-rows: 1fr;
     opacity: 1;
 }
@@ -108,8 +108,8 @@
     height: var(--ulvia-official-spacing-2xs, 0.25rem);
     content: "";
 }
-::slotted(ulvia-official-navigation-item),
-::slotted(ulvia-official-navigation-group) {
+[cms-bloc="ulvia-official-navigation-item"],
+[cms-bloc="ulvia-official-navigation-group"] {
     min-width: 0;
     flex: var(--navigation-group-item-flex, initial);
 }

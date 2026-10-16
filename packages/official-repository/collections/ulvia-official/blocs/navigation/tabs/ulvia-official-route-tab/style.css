@@ -1,14 +1,14 @@
-:host {
+:scope {
     display: block;
     min-width: max-content;
 }
-:host([hidden]) {
+:scope[hidden] {
     display: none;
 }
 [part="tab"] {
     display: contents;
 }
-::slotted(a) {
+a {
     position: relative;
     display: flex;
     min-height: 2.25rem;
@@ -29,19 +29,19 @@
         color var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease),
         background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
 }
-::slotted(a:hover) {
+a:hover {
     color: var(--ulvia-official-text-primary, #17211d);
 }
-::slotted(a:focus-visible) {
+a:focus-visible {
     border-radius: var(--ulvia-official-radius-sm, 0.25rem);
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: -3px;
 }
-:host([active]) ::slotted(a) {
+:scope[active] a {
     color: var(--route-tab-active-color, var(--ulvia-official-primary, #3157d5));
     background: var(--route-tab-active-background, transparent);
 }
-:host([active]) ::slotted(a)::after {
+:scope[active] a::after {
     position: absolute;
     right: var(--route-tab-inline-padding, 0.75rem);
     bottom: -1px;

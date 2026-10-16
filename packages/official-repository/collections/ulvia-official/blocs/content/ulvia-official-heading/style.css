@@ -1,4 +1,4 @@
-:host {
+:scope {
     --ulvia-official-heading-color: var(--ulvia-official-text-primary, CanvasText);
     --ulvia-official-heading-size: var(--ulvia-official-font-size-3xl, 2rem);
     --ulvia-official-heading-line-height: var(--ulvia-official-line-height-tight, 1.15);
@@ -10,7 +10,7 @@
 [part="header"] {
     text-align: start;
 }
-::slotted(*) {
+* {
     margin: 0;
     color: inherit;
     font: inherit;
@@ -19,18 +19,18 @@
     line-height: var(--ulvia-official-heading-line-height);
     letter-spacing: var(--ulvia-official-letter-spacing-tight, -0.025em);
 }
-:host([size="sm"]) {
+:scope[size="sm"] {
     --ulvia-official-heading-size: var(--ulvia-official-font-size-xl, 1.5rem);
 }
-:host([size="md"]) {
+:scope[size="md"] {
     --ulvia-official-heading-size: var(--ulvia-official-font-size-2xl, 1.75rem);
 }
-:host([size="xl"]) {
+:scope[size="xl"] {
     --ulvia-official-heading-size: var(--ulvia-official-font-size-5xl, 3rem);
 }
-:host([align="center"]) [part="header"] {
+:scope[align="center"] [part="header"] {
     text-align: center;
 }
-:host([align="end"]) [part="header"] {
+:scope[align="end"] [part="header"] {
     text-align: end;
 }

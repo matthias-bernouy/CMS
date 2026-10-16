@@ -5,8 +5,16 @@
     "description": "bloc.select.description",
     "category": "bloc.category.forms",
     "order": 30,
-    "nativeElement": { "accepts": ["select"] },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["select"],
+        "defaults": {
+            "name": "choice"
+        }
+    }
 }

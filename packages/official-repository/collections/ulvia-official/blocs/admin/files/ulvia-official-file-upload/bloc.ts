@@ -1,16 +1,14 @@
-import { Component, mutationFormRequest } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior, mutationFormRequest } from "@bernouy/cms-content/browser";
 import { writeWorkspaceUpload } from "./runtime/upload";
 
 type UploadTicket = Readonly<{ uploadId: string; uploadToken: string }>;
 type UploadState = "idle" | "uploading" | "uploaded" | "replaced" | "upload-error" | "replacement-error";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private lifecycle = new AbortController();
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
@@ -40,7 +38,7 @@ export class Bloc extends Component {
         input.disabled = true;
         this.show("uploading");
         try {
-            const ticket = (await mutationFormRequest(this, "fileUploadCreate", {
+            const ticket = (await mutationFormRequest(this.blocRoot, "fileUploadCreate", {
                 filename: file.name,
                 contentType: file.type || null,
                 size: file.size,
@@ -48,7 +46,7 @@ export class Bloc extends Component {
                 ...(fileId ? { fileId } : {}),
             })) as UploadTicket;
             await writeWorkspaceUpload(ticket, file, this.lifecycle.signal);
-            await mutationFormRequest(this, "fileUploadComplete", { uploadId: ticket.uploadId });
+            await mutationFormRequest(this.blocRoot, "fileUploadComplete", { uploadId: ticket.uploadId });
             input.value = "";
             this.show(fileId ? "replaced" : "uploaded");
             if (!fileId) {

@@ -1,37 +1,31 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private input: HTMLInputElement | null = null;
-    private slotElement: HTMLSlotElement | null;
     private current: HTMLElement | null;
     private minimum: HTMLElement | null;
     private maximum: HTMLElement | null;
-    private root: Document | ShadowRoot | null = null;
+    private root: Document | null = null;
     private observer = new MutationObserver(() => this.sync());
 
     static get observedAttributes(): string[] {
         return ["value-prefix", "value-suffix"];
     }
 
-    constructor() {
-        super({ css, template });
-        this.slotElement = this.shadowRoot?.querySelector("slot") ?? null;
-        this.current = this.shadowRoot?.querySelector('[part="current"]') ?? null;
-        this.minimum = this.shadowRoot?.querySelector('[part="minimum"]') ?? null;
-        this.maximum = this.shadowRoot?.querySelector('[part="maximum"]') ?? null;
+    constructor(root: HTMLElement) {
+        super(root);
+        this.current = this?.querySelector('[part="current"]') ?? null;
+        this.minimum = this?.querySelector('[part="minimum"]') ?? null;
+        this.maximum = this?.querySelector('[part="maximum"]') ?? null;
     }
 
     override connectedCallback(): void {
-        this.slotElement?.addEventListener("slotchange", this.bindInput);
-        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.root = this.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
         this.bindInput();
     }
 
     disconnectedCallback(): void {
-        this.slotElement?.removeEventListener("slotchange", this.bindInput);
         this.input?.removeEventListener("input", this.sync);
         this.input?.removeEventListener("change", this.sync);
         this.root?.removeEventListener("reset", this.handleReset);

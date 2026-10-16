@@ -5,10 +5,25 @@
     "description": "bloc.navigation-item.description",
     "category": "bloc.category.navigation",
     "order": 50,
-    "nativeElement": {
-        "accepts": ["a", "button"]
-    },
     "uses": ["ulvia-official-icon"],
     "requires": [],
-    "slots": {}
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["a", "button"],
+        "defaults": {
+            "href": ""
+        }
+    }
 }

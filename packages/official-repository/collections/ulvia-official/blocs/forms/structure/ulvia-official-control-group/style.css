@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     min-width: 0;
     font-family: var(--ulvia-official-font-family-main, inherit);
@@ -19,7 +19,7 @@
 [part="control"] {
     min-width: 0;
 }
-::slotted([slot="leading"]) {
+[part~="leading"] {
     display: inline-flex;
     min-height: var(--ulvia-official-control-height-md, 2.875rem);
     align-items: center;
@@ -31,23 +31,23 @@
     background: var(--ulvia-official-background-subtle, #eef1f0);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
 }
-:host([joined]) [part="group"] {
+:scope[joined] [part="group"] {
     gap: 0;
 }
-:host([joined]) {
+:scope[joined] {
     --form-input-radius: 0;
     --form-select-radius: 0;
     --form-action-radius: 0 var(--ulvia-official-radius-md, 0.5rem) var(--ulvia-official-radius-md, 0.5rem) 0;
 }
-:host([joined]) ::slotted(*) {
+:scope[joined] * {
     position: relative;
 }
-:host([joined]) ::slotted([slot="leading"]) {
+:scope[joined] [part~="leading"] {
     border-inline-end: 0;
     border-start-end-radius: 0;
     border-end-end-radius: 0;
 }
-:host([joined]) ::slotted(*:focus-within) {
+:scope[joined] *:focus-within {
     z-index: 1;
 }
 @container (max-width: 24rem) {
@@ -58,16 +58,16 @@
     [part="trailing"] {
         display: block;
     }
-    :host([joined]) {
+    :scope[joined] {
         --form-input-radius: var(--ulvia-official-radius-md, 0.5rem);
         --form-select-radius: var(--ulvia-official-radius-md, 0.5rem);
         --form-action-radius: var(--ulvia-official-radius-md, 0.5rem);
     }
-    :host([joined]) ::slotted([slot="leading"]) {
+    :scope[joined] [part~="leading"] {
         border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
         border-radius: var(--ulvia-official-radius-md, 0.5rem);
     }
-    ::slotted([slot="trailing"]) {
+    [part~="trailing"] {
         --action-width: 100%;
         width: 100%;
     }

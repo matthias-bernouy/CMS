@@ -1,29 +1,23 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private textarea: HTMLTextAreaElement | null = null;
     private counter: HTMLElement | null;
-    private slotElement: HTMLSlotElement | null;
-    private root: Document | ShadowRoot | null = null;
+    private root: Document | null = null;
     private observer = new MutationObserver(() => this.sync());
 
-    constructor() {
-        super({ css, template });
-        this.counter = this.shadowRoot?.querySelector('[part="count"]') ?? null;
-        this.slotElement = this.shadowRoot?.querySelector("slot") ?? null;
+    constructor(root: HTMLElement) {
+        super(root);
+        this.counter = this?.querySelector('[part="count"]') ?? null;
     }
 
     override connectedCallback(): void {
-        this.slotElement?.addEventListener("slotchange", this.bindTextarea);
-        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.root = this.ownerDocument;
         this.root.addEventListener("reset", this.handleReset);
         this.bindTextarea();
     }
 
     disconnectedCallback(): void {
-        this.slotElement?.removeEventListener("slotchange", this.bindTextarea);
         this.textarea?.removeEventListener("input", this.sync);
         this.root?.removeEventListener("reset", this.handleReset);
         this.root = null;

@@ -3,7 +3,7 @@ import { CapabilityError } from "./client";
 export class EditorStatus {
     private busy = false;
 
-    constructor(private readonly root: ShadowRoot) {}
+    constructor(private readonly root: HTMLElement) {}
 
     async run(task: () => Promise<void>): Promise<void> {
         if (this.busy) {

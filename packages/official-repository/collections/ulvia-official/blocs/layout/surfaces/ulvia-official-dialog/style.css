@@ -1,8 +1,4 @@
-:host {
-    display: contents;
-}
-
-::slotted(dialog) {
+:scope {
     width: min(calc(100vw - 2rem), 40rem);
     max-height: min(calc(100svh - 2rem), 48rem);
     box-sizing: border-box;
@@ -15,17 +11,17 @@
     overflow: hidden;
 }
 
-::slotted(dialog[open]) {
+:scope[open] {
     display: block;
 }
 
-::slotted(dialog)::backdrop {
+:scope::backdrop {
     background: rgb(15 29 24 / 48%);
     backdrop-filter: blur(0.125rem);
 }
 
 @media (max-width: 40rem) {
-    ::slotted(dialog) {
+    :scope {
         width: 100vw;
         max-width: none;
         max-height: calc(100svh - 1rem);

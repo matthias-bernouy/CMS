@@ -1,8 +1,6 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     static get observedAttributes(): string[] {
         return ["expanded", "count"];
     }
@@ -11,16 +9,16 @@ export class Bloc extends Component {
     private region: HTMLElement | null = null;
     private labelObserver: MutationObserver | null = null;
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
         this.trigger = this.querySelector(":scope > button");
-        this.region = this.shadowRoot?.querySelector('[part="region"]') ?? null;
+        this.region = this?.querySelector('[part="region"]') ?? null;
         this.trigger?.addEventListener("click", this.toggle);
         this.labelObserver = new MutationObserver(this.sync);
-        this.labelObserver.observe(this, { childList: true, characterData: true, subtree: true });
+        this.labelObserver.observe(this.blocRoot, { childList: true, characterData: true, subtree: true });
         this.sync();
     }
 

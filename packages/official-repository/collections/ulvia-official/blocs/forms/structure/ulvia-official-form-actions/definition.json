@@ -8,6 +8,16 @@
     "uses": ["ulvia-official-action"],
     "requires": [],
     "slots": {
-        "actions": { "accepts": [{ "kind": "any-component" }], "min": 1 }
+        "actions": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

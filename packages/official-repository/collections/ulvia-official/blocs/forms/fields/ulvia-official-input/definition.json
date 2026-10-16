@@ -5,7 +5,13 @@
     "description": "bloc.input.description",
     "category": "bloc.category.forms",
     "order": 10,
-    "nativeElement": {
+    "uses": [],
+    "requires": [],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
         "accepts": ["input"],
         "attributes": {
             "type": {
@@ -25,9 +31,11 @@
                     "week"
                 ]
             }
+        },
+        "defaults": {
+            "type": "text",
+            "name": "field",
+            "autocomplete": "off"
         }
-    },
-    "uses": [],
-    "requires": [],
-    "slots": {}
+    }
 }

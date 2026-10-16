@@ -1,19 +1,17 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
-    private root: Document | ShadowRoot | null = null;
+export class Bloc extends BlocBehavior {
+    private root: Document | null = null;
     private list: HTMLElement | null = null;
     private resizeObserver = new ResizeObserver(() => this.queueIndicator());
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
-        this.root = this.getRootNode() as Document | ShadowRoot;
-        this.list = this.querySelector<HTMLElement>("ulvia-official-option-list");
+        this.root = this.ownerDocument;
+        this.list = this.querySelector<HTMLElement>('[cms-bloc="ulvia-official-option-list"]');
         this.root.addEventListener("change", this.handleChange);
         if (this.list) {
             this.resizeObserver.observe(this.list);
@@ -42,7 +40,7 @@ export class Bloc extends Component {
         if (!this.list) {
             return;
         }
-        const selected = Array.from(this.querySelectorAll<HTMLElement>("ulvia-official-segment")).find(
+        const selected = Array.from(this.querySelectorAll<HTMLElement>('[cms-bloc="ulvia-official-segment"]')).find(
             (segment) => segment.querySelector<HTMLInputElement>('input[type="radio"]')?.checked,
         );
         if (!selected) {

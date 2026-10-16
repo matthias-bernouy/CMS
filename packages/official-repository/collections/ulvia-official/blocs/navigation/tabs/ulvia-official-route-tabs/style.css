@@ -1,4 +1,4 @@
-:host {
+:scope {
     --route-tab-block-padding: var(--ulvia-official-spacing-xs, 0.5rem);
     --route-tab-inline-padding: var(--ulvia-official-spacing-sm, 0.75rem);
     display: block;
@@ -21,7 +21,7 @@
     gap: var(--ulvia-official-spacing-md, 1rem);
     border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c9d5d0);
 }
-::slotted(ulvia-official-route-tab) {
+[cms-bloc="ulvia-official-route-tab"] {
     --route-tab-block-padding: var(--route-tab-block-padding);
     --route-tab-inline-padding: var(--route-tab-inline-padding);
     --route-tab-active-color: var(--ulvia-official-primary, #3157d5);
@@ -29,45 +29,45 @@
     --route-tab-indicator-display: block;
     --route-tab-radius: 0rem;
 }
-:host([align="center"]) [part="tabs"] {
+:scope[align="center"] [part="tabs"] {
     justify-content: center;
 }
-:host([align="stretch"]) ::slotted(ulvia-official-route-tab) {
+:scope[align="stretch"] [cms-bloc="ulvia-official-route-tab"] {
     flex: 1 0 auto;
 }
-:host([appearance="pills"]) [part="tabs"] {
+:scope[appearance="pills"] [part="tabs"] {
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
     padding: var(--ulvia-official-spacing-xs, 0.5rem);
     border: 0;
     border-radius: var(--ulvia-official-radius-lg, 0.75rem);
     background: var(--ulvia-official-background-subtle, #f3f7f5);
 }
-:host([appearance="pills"]) ::slotted(ulvia-official-route-tab) {
+:scope[appearance="pills"] [cms-bloc="ulvia-official-route-tab"] {
     --route-tab-active-color: var(--ulvia-official-on-primary, #fff);
     --route-tab-active-background: var(--ulvia-official-primary, #3157d5);
     --route-tab-indicator-display: none;
     --route-tab-radius: var(--ulvia-official-radius-md, 0.5rem);
 }
-:host([size="sm"]) {
+:scope[size="sm"] {
     --route-tab-block-padding: var(--ulvia-official-spacing-xs, 0.5rem);
     --route-tab-inline-padding: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([size="lg"]) {
+:scope[size="lg"] {
     --route-tab-block-padding: var(--ulvia-official-spacing-md, 1rem);
     --route-tab-inline-padding: var(--ulvia-official-spacing-lg, 1.5rem);
 }
 
 @media (max-width: 40rem) {
-    :host([appearance="pills"]) [part="navigation"] {
+    :scope[appearance="pills"] [part="navigation"] {
         overflow-x: visible;
     }
 
-    :host([appearance="pills"]) [part="tabs"] {
+    :scope[appearance="pills"] [part="tabs"] {
         width: 100%;
         flex-wrap: wrap;
     }
 
-    :host([appearance="pills"]) ::slotted(ulvia-official-route-tab) {
+    :scope[appearance="pills"] [cms-bloc="ulvia-official-route-tab"] {
         flex: 1 1 auto;
     }
 }

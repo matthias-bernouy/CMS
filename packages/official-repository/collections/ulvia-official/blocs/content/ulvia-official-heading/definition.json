@@ -5,10 +5,13 @@
     "description": "bloc.heading.description",
     "category": "bloc.category.content",
     "order": 10,
-    "nativeElement": {
-        "accepts": ["h1", "h2", "h3", "h4", "h5", "h6"]
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["h1", "h2", "h3", "h4", "h5", "h6"]
+    }
 }

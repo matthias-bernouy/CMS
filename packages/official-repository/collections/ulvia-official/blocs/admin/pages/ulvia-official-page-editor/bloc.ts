@@ -1,6 +1,4 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 import { callCapability } from "./runtime/client";
 import { EditablePageDocument } from "./runtime/document";
 import type { EditorCatalogue, EditorCatalogueItem, PageUpdate } from "./runtime/model";
@@ -10,7 +8,7 @@ import { initializePageEditor } from "./runtime/workspace";
 
 const PAGE_ID_PARAM = "ulvia-official-page-id";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private pageDocument = new EditablePageDocument("");
     private catalogue: EditorCatalogueItem[] = [];
     private selected = -1;
@@ -19,16 +17,16 @@ export class Bloc extends Component {
     private loadedContent = "";
     private readonly status: EditorStatus;
 
-    constructor() {
-        super({ css, template });
-        initializePageEditor(this.shadowRoot!);
-        this.status = new EditorStatus(this.shadowRoot!);
+    constructor(root: HTMLElement) {
+        super(root);
+        initializePageEditor(this.blocRoot);
+        this.status = new EditorStatus(this.blocRoot);
     }
 
     override connectedCallback(): void {
-        this.shadowRoot?.addEventListener("click", this.handleClick);
-        this.shadowRoot?.addEventListener("input", this.handleInput);
-        this.shadowRoot?.addEventListener("change", this.handleChange);
+        this?.addEventListener("click", this.handleClick);
+        this?.addEventListener("input", this.handleInput);
+        this?.addEventListener("change", this.handleChange);
         this.render();
         void this.load();
     }
@@ -50,9 +48,9 @@ export class Bloc extends Component {
     }
 
     disconnectedCallback(): void {
-        this.shadowRoot?.removeEventListener("click", this.handleClick);
-        this.shadowRoot?.removeEventListener("input", this.handleInput);
-        this.shadowRoot?.removeEventListener("change", this.handleChange);
+        this?.removeEventListener("click", this.handleClick);
+        this?.removeEventListener("input", this.handleInput);
+        this?.removeEventListener("change", this.handleChange);
     }
 
     private async loadCatalogue(): Promise<void> {
@@ -183,7 +181,7 @@ export class Bloc extends Component {
     }
 
     private required<T extends Element = HTMLElement>(selector: string): T {
-        const element = this.shadowRoot?.querySelector<T>(selector);
+        const element = this?.querySelector<T>(selector);
         if (!element) {
             throw new Error(`Missing Page editor element: ${selector}`);
         }

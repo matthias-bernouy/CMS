@@ -5,10 +5,16 @@
     "description": "bloc.link.description",
     "category": "bloc.category.actions",
     "order": 20,
-    "nativeElement": {
-        "accepts": ["a"]
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["a"],
+        "defaults": {
+            "href": ""
+        }
+    },
+    "content": {
+        "accepts": ["span"]
+    }
 }

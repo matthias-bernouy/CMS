@@ -9,12 +9,25 @@
     "requires": [],
     "slots": {
         "media": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-image" }],
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-image"
+                }
+            ],
             "max": 1
         },
         "caption": {
-            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
             "max": 1
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

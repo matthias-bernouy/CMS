@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     color: var(--ulvia-official-text-inverse, #ffffff);
     background: var(--ulvia-official-background-inverse, #17191c);
@@ -32,16 +32,16 @@
     border-block-start: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-strong, #737b88);
     color: var(--ulvia-official-text-muted, #737b88);
 }
-::slotted([slot="navigation"]),
-::slotted([slot="social"]),
-::slotted([slot="legal"]) {
+[part~="navigation"],
+[part~="social"],
+[part~="legal"] {
     margin: 0;
 }
-:host([surface="base"]) {
+:scope[surface="base"] {
     color: var(--ulvia-official-text-primary, CanvasText);
     background: var(--ulvia-official-background-base, Canvas);
 }
-:host([surface="subtle"]) {
+:scope[surface="subtle"] {
     color: var(--ulvia-official-text-primary, CanvasText);
     background: var(--ulvia-official-background-subtle, #f4f5f7);
 }

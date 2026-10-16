@@ -51,10 +51,7 @@ export function itemForElement(
     element: HTMLElement,
     catalogue: EditorCatalogueItem[],
 ): EditorCatalogueItem | undefined {
-    return catalogue.find((item) => {
-        const nativeTags = authoringContract(item).nativeElement?.accepts ?? [];
-        return item.id === element.localName || nativeTags.includes(element.localName);
-    });
+    return catalogue.find((item) => element.getAttribute("cms-bloc") === item.id);
 }
 
 function matches(item: EditorCatalogueItem, query: string): boolean {

@@ -1,4 +1,4 @@
-:host {
+:scope {
     --ulvia-official-content-width-sm: 31rem;
     display: block;
     min-height: 100svh;
@@ -28,6 +28,6 @@
 [part="page"] {
     min-height: 100svh;
 }
-::slotted(ulvia-official-cover) {
+[cms-bloc="ulvia-official-cover"] {
     min-height: 100svh;
 }

@@ -1,32 +1,23 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 const COMPACT_BREAKPOINT_REM = 68;
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private backdrop: HTMLButtonElement | null = null;
     private compact = false;
     private readonly contextualPanel: HTMLElement | null;
-    private readonly contextualSlot: HTMLSlotElement | null;
     private contextualToggle: HTMLButtonElement | null = null;
     private readonly footer: HTMLElement | null;
-    private readonly footerSlot: HTMLSlotElement | null;
     private readonly navigationPanel: HTMLElement | null;
-    private readonly navigationSlot: HTMLSlotElement | null;
     private navigationToggle: HTMLButtonElement | null = null;
     private promotedContextualLayout = false;
     private readonly resizeObserver: ResizeObserver;
 
-    constructor() {
-        super({ css, template });
-        const root = this.shadowRoot;
-        this.contextualPanel = root?.querySelector('[part="secondary-sidebar"]') ?? null;
-        this.contextualSlot = root?.querySelector('slot[name="secondary-sidebar"]') ?? null;
-        this.footer = root?.querySelector('[part="footer"]') ?? null;
-        this.footerSlot = root?.querySelector('slot[name="footer"]') ?? null;
-        this.navigationPanel = root?.querySelector('[part="secondary-navigation"]') ?? null;
-        this.navigationSlot = root?.querySelector('slot[name="secondary-navigation"]') ?? null;
+    constructor(root: HTMLElement) {
+        super(root);
+        this.contextualPanel = root.querySelector('[part="secondary-sidebar"]');
+        this.footer = root.querySelector('[part="footer"]');
+        this.navigationPanel = root.querySelector('[part="secondary-navigation"]');
         this.resizeObserver = new ResizeObserver(this.syncCompactMode);
     }
 
@@ -35,14 +26,11 @@ export class Bloc extends Component {
         this.contextualToggle = this.querySelector('[data-mobile-toggle="contextual"]');
         this.navigationToggle = this.querySelector('[data-mobile-toggle="navigation"]');
         this.backdrop?.addEventListener("click", this.closeFromControl);
-        this.contextualSlot?.addEventListener("slotchange", this.syncNavigationAvailability);
         this.contextualToggle?.addEventListener("click", this.toggleContextualNavigation);
-        this.footerSlot?.addEventListener("slotchange", this.syncFooter);
-        this.navigationSlot?.addEventListener("slotchange", this.syncNavigationAvailability);
         this.navigationToggle?.addEventListener("click", this.toggleNavigation);
         this.addEventListener("click", this.closeAfterNavigation);
         this.addEventListener("keydown", this.closeOnEscape);
-        this.resizeObserver.observe(this);
+        this.resizeObserver.observe(this.blocRoot);
         this.syncFooter();
         this.syncNavigationAvailability();
         this.syncCompactMode();
@@ -50,10 +38,7 @@ export class Bloc extends Component {
 
     disconnectedCallback(): void {
         this.backdrop?.removeEventListener("click", this.closeFromControl);
-        this.contextualSlot?.removeEventListener("slotchange", this.syncNavigationAvailability);
         this.contextualToggle?.removeEventListener("click", this.toggleContextualNavigation);
-        this.footerSlot?.removeEventListener("slotchange", this.syncFooter);
-        this.navigationSlot?.removeEventListener("slotchange", this.syncNavigationAvailability);
         this.navigationToggle?.removeEventListener("click", this.toggleNavigation);
         this.removeEventListener("click", this.closeAfterNavigation);
         this.removeEventListener("keydown", this.closeOnEscape);
@@ -66,17 +51,17 @@ export class Bloc extends Component {
         }
         const path = event.composedPath();
         const isDisclosure = path.some((target) => {
-            return target instanceof Element && target.localName === "ulvia-official-navigation-group";
+            return target instanceof Element && target.getAttribute("cms-bloc") === "ulvia-official-navigation-group";
         });
         const isNavigationAction = path.some((target) => {
             return (
                 target instanceof Element &&
-                (target.matches("a[href]") || target.localName === "ulvia-official-navigation-item")
+                (target.matches("a[href]") || target.getAttribute("cms-bloc") === "ulvia-official-navigation-item")
             );
         });
         if (isNavigationAction && !isDisclosure) {
             this.closePanel(false);
-            this.shadowRoot?.querySelector<HTMLElement>('[part="content"]')?.focus();
+            this?.querySelector<HTMLElement>('[part="content"]')?.focus();
         }
     };
 
@@ -97,14 +82,11 @@ export class Bloc extends Component {
         }
     }
 
-    private hasContent(slot: HTMLSlotElement | null): boolean {
-        return slot?.assignedNodes({ flatten: true }).some(this.isMeaningfulNode) ?? false;
+    private hasContent(region: HTMLElement | null): boolean {
+        return Array.from(region?.childNodes ?? []).some(this.isMeaningfulNode);
     }
 
     private isMeaningfulNode = (node: Node): boolean => {
-        if (node instanceof HTMLSlotElement) {
-            return node.assignedNodes({ flatten: true }).some(this.isMeaningfulNode);
-        }
         if (node instanceof HTMLElement && node.hidden) {
             return false;
         }
@@ -123,13 +105,13 @@ export class Bloc extends Component {
 
     private syncFooter = (): void => {
         if (this.footer) {
-            this.footer.hidden = !this.hasContent(this.footerSlot);
+            this.footer.hidden = !this.hasContent(this.footer);
         }
     };
 
     private syncNavigationAvailability = (): void => {
-        const hasNavigation = this.hasContent(this.navigationSlot);
-        const hasContextual = this.hasContent(this.contextualSlot);
+        const hasNavigation = this.hasContent(this.navigationPanel);
+        const hasContextual = this.hasContent(this.contextualPanel);
         if (hasContextual && this.getAttribute("layout") === "sidebar") {
             this.setAttribute("layout", "dual-sidebar");
             this.promotedContextualLayout = true;

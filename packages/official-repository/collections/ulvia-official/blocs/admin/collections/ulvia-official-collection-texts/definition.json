@@ -21,8 +21,19 @@
         "ulvia-official-textarea"
     ],
     "requires": [
-        { "contractId": "ulvia.cms.localization", "capabilityId": "get-texts", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.localization", "capabilityId": "save-text", "versionRange": "^1.0.0" }
+        {
+            "contractId": "ulvia.cms.localization",
+            "capabilityId": "get-texts",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.localization",
+            "capabilityId": "save-text",
+            "versionRange": "^1.0.0"
+        }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

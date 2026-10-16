@@ -1,10 +1,10 @@
-:host {
+button {
     display: block;
 }
 [part="wrapper"] {
     display: contents;
 }
-::slotted(button) {
+:scope {
     display: inline-flex;
     width: 100%;
     min-height: var(--ulvia-official-control-height-md, 2.75rem);
@@ -19,11 +19,11 @@
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     cursor: pointer;
 }
-::slotted(button:hover) {
+button:hover {
     border-color: var(--ulvia-official-border-strong, #879990);
     background: var(--ulvia-official-background-subtle, #f8faf9);
 }
-::slotted(button:focus-visible) {
+button:focus-visible {
     outline: 3px solid var(--ulvia-official-focus-ring, #74c6a6);
     outline-offset: 3px;
 }

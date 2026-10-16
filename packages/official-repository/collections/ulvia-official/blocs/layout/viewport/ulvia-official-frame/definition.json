@@ -9,7 +9,14 @@
     "requires": [],
     "slots": {
         "content": {
-            "accepts": [{ "kind": "any-component" }]
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ]
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

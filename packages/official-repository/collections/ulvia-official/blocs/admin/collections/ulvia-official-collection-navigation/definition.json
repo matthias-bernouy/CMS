@@ -12,6 +12,15 @@
         "ulvia-official-navigation-menu",
         "ulvia-official-navigation-section"
     ],
-    "requires": [{ "contractId": "ulvia.cms.collections", "capabilityId": "catalogue", "versionRange": "^1.0.0" }],
-    "slots": {}
+    "requires": [
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "catalogue",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

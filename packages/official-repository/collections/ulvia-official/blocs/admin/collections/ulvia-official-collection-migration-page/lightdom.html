@@ -1,11 +1,11 @@
-<ulvia-official-admin-workspace>
+<div cms-bloc="ulvia-official-admin-workspace">
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-migration-preview }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-review-the-plan-before-applying-the-migration }}</p>
-    <ulvia-official-action slot="actions" variant="outline" tone="secondary">
-        <a href="/admin/collections">{{ cms.i18n.ulvia-official.ui-back-to-collections }}</a>
-    </ulvia-official-action>
+    <a cms-bloc="ulvia-official-action" tone="secondary" variant="outline" slot="actions" href="/admin/collections"
+        ><span>{{ cms.i18n.ulvia-official.ui-back-to-collections }}</span></a
+    >
     <span slot="secondary-label">{{ cms.i18n.ulvia-official.ui-collections }}</span>
-    <ulvia-official-collection-navigation slot="secondary-navigation"></ulvia-official-collection-navigation>
+    <div cms-bloc="ulvia-official-collection-navigation" slot="secondary-navigation"></div>
     <section
         slot="content"
         cms-query="ulvia.cms.collections:plan-migration as plan"
@@ -22,9 +22,9 @@
                 <div cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
             </div>
             <div cms-case='"success"'>
-                <ulvia-official-stack gap="lg">
-                    <ulvia-official-surface slot="items" appearance="outlined" padding="md" radius="sm">
-                        <ulvia-official-stack slot="content" gap="md">
+                <div cms-bloc="ulvia-official-stack" gap="lg">
+                    <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items">
+                        <div cms-bloc="ulvia-official-stack" gap="md" slot="content">
                             <h2 slot="items">{{ cms.i18n.ulvia-official.ui-plan-summary }}</h2>
                             <p slot="items">
                                 {{ plan.data.totalPages }} {{ cms.i18n.ulvia-official.ui-pages-9046da16 }}
@@ -45,17 +45,17 @@
                                 <input type="hidden" name="targets[0][collectionId]" value="{{ plan.data.references.0.collectionId }}">
                                 <input type="hidden" name="targets[0][version]" value="{{ plan.data.references.0.version }}">
                                 <input type="hidden" name="targets[0][digest]" value="{{ plan.data.references.0.digest }}">
-                                <ulvia-official-form-actions align="end">
+                                <div cms-bloc="ulvia-official-form-actions" align="end">
                                     <div slot="actions" cms-condition="mutation.activity === 'submitting'">
                                         {{ cms.i18n.ulvia-official.ui-starting-migration }}
                                     </div>
                                     <div slot="actions" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
                                         {{ cms.i18n.ulvia-official.ui-request-failed }}
                                     </div>
-                                    <ulvia-official-action slot="actions" variant="filled" tone="primary">
-                                        <button type="submit">{{ cms.i18n.ulvia-official.ui-apply-migration }}</button>
-                                    </ulvia-official-action>
-                                </ulvia-official-form-actions>
+                                    <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" type="submit">
+                                        <span>{{ cms.i18n.ulvia-official.ui-apply-migration }}</span>
+                                    </button>
+                                </div>
 
                                 <div cms-match="mutation.outcome.kind">
                                     <span cms-case='"none"' hidden></span>
@@ -72,11 +72,11 @@
                                     <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                 </div>
                             </form>
-                        </ulvia-official-stack>
-                    </ulvia-official-surface>
-                </ulvia-official-stack>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
         </div>
     </section>
-</ulvia-official-admin-workspace>
+</div>

@@ -1,4 +1,4 @@
-:host {
+:scope {
     --range-track-height: 0.5rem;
     --range-thumb-size: 1.375rem;
     --range-hit-height: 2.5rem;
@@ -13,7 +13,7 @@
     min-width: 0;
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-::slotted([slot="range-shell"]) {
+[part~="range-shell"] {
     display: block;
     min-width: 0;
 }
@@ -23,91 +23,90 @@
     justify-content: flex-end;
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([editable-value]) [part="manual"] {
+:scope[editable-value] [part="manual"] {
     display: flex;
 }
-:host([editable-value]:not([layout="inline"]):not([layout="stacked"])) [part="manual"] {
+:scope[editable-value]:not([layout="inline"]:not([layout="stacked"])) [part="manual"] {
     position: absolute;
     z-index: 1;
     inset-block-start: 0;
     inset-inline-end: 0;
 }
-:host([editable-value]:not([layout="inline"]):not([layout="stacked"])) ::slotted([slot="range-shell"]) {
+:scope[editable-value]:not([layout="inline"]:not([layout="stacked"])) [part~="range-shell"] {
     --range-value-row-padding-end: 11rem;
 }
-::slotted([slot="manual-label"]) {
+[part~="manual-label"] {
     color: var(--ulvia-official-text-secondary, #42504a);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
 }
-::slotted(ulvia-official-input[slot="manual-input"]) {
+[cms-bloc="ulvia-official-input"][part~="manual-input"] {
     width: 6rem;
 }
 
-:host([layout="inline"]) [part="control"] {
+:scope[layout="inline"] [part="control"] {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
     gap: var(--ulvia-official-spacing-lg, 1.5rem);
 }
-:host([layout="inline"]) [part="manual"] {
+:scope[layout="inline"] [part="manual"] {
     padding-block-end: calc(var(--ulvia-official-font-size-xs, 0.75rem) * 1.35);
 }
 
-:host([layout="stacked"]) [part="manual"] {
+:scope[layout="stacked"] [part="manual"] {
     justify-content: flex-start;
 }
 
-:host([data-field-value]) ::slotted([slot="range-shell"]) {
+:scope[data-field-value] [part~="range-shell"] {
     --range-value-row-display: none;
 }
-:host([data-field-value][editable-value]:not([layout="inline"]):not([layout="stacked"])) [part="control"] {
+:scope[data-field-value][editable-value]:not([layout="inline"]:not([layout="stacked"])) [part="control"] {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--ulvia-official-spacing-lg, 1.5rem);
 }
-:host([data-field-value][editable-value]:not([layout="inline"]):not([layout="stacked"])) [part="manual"] {
+:scope[data-field-value][editable-value]:not([layout="inline"]:not([layout="stacked"])) [part="manual"] {
     position: static;
 }
-:host([data-field-value][editable-value]:not([layout="inline"]):not([layout="stacked"]))
-    ::slotted([slot="range-shell"]) {
+:scope[data-field-value][editable-value]:not([layout="inline"]:not([layout="stacked"])) [part~="range-shell"] {
     --range-value-row-padding-end: 0;
 }
 
-:host([size="sm"]) {
+:scope[size="sm"] {
     --range-track-height: 0.375rem;
     --range-thumb-size: 1.125rem;
     --range-hit-height: 2.25rem;
 }
-:host([size="lg"]) {
+:scope[size="lg"] {
     --range-track-height: 0.625rem;
     --range-thumb-size: 1.625rem;
     --range-hit-height: 3rem;
 }
 
 @container (max-width: 24rem) {
-    :host([editable-value]:not([layout="inline"]):not([layout="stacked"])) [part="manual"] {
+    :scope[editable-value]:not([layout="inline"]:not([layout="stacked"])) [part="manual"] {
         position: static;
         justify-content: space-between;
     }
-    :host([editable-value]:not([layout="inline"]):not([layout="stacked"])) ::slotted([slot="range-shell"]) {
+    :scope[editable-value]:not([layout="inline"]:not([layout="stacked"])) [part~="range-shell"] {
         --range-value-row-padding-end: 0;
     }
 }
 
 @container (max-width: 32rem) {
-    :host([layout="inline"]) [part="control"] {
+    :scope[layout="inline"] [part="control"] {
         grid-template-columns: minmax(0, 1fr);
         gap: var(--ulvia-official-spacing-sm, 0.75rem);
     }
-    :host([layout="inline"]) [part="manual"] {
+    :scope[layout="inline"] [part="manual"] {
         justify-content: space-between;
         padding-block-end: 0;
     }
-    :host([data-field-value][editable-value]:not([layout="inline"]):not([layout="stacked"])) [part="control"] {
+    :scope[data-field-value][editable-value]:not([layout="inline"]:not([layout="stacked"])) [part="control"] {
         grid-template-columns: minmax(0, 1fr);
         gap: var(--ulvia-official-spacing-sm, 0.75rem);
     }
-    :host([data-field-value][editable-value]:not([layout="inline"]):not([layout="stacked"])) [part="manual"] {
+    :scope[data-field-value][editable-value]:not([layout="inline"]:not([layout="stacked"])) [part="manual"] {
         justify-content: space-between;
     }
 }

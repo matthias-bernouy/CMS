@@ -1,4 +1,4 @@
-:host {
+:scope {
     position: absolute;
     z-index: 20;
     inset-block-start: calc(100% + var(--ulvia-official-spacing-xs, 0.5rem));
@@ -8,10 +8,10 @@
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-:host([hidden]) {
+:scope[hidden] {
     display: none;
 }
-::slotted([slot="panel"]) {
+[part~="panel"] {
     display: block;
     box-sizing: border-box;
     padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);

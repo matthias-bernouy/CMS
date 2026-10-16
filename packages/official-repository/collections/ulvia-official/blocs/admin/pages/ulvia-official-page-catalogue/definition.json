@@ -20,8 +20,19 @@
         "ulvia-official-surface"
     ],
     "requires": [
-        { "contractId": "ulvia.cms.pages", "capabilityId": "list", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.pages", "capabilityId": "create", "versionRange": "^1.0.0" }
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "create",
+            "versionRange": "^1.0.0"
+        }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

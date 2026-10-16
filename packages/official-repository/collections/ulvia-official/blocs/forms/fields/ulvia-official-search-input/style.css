@@ -1,4 +1,4 @@
-:host {
+:scope {
     --form-control-height: var(--ulvia-official-control-height-md, 2.875rem);
     --form-control-font-size: var(--ulvia-official-font-size-md, 1rem);
     --input-padding-start: 2.75rem;
@@ -37,14 +37,14 @@
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='8.5' cy='8.5' r='5.25'/%3E%3Cpath d='m12.5 12.5 4 4'/%3E%3C/svg%3E")
         center / contain no-repeat;
 }
-:host(:focus-within) [part="icon-shell"] {
+:scope:focus-within [part="icon-shell"] {
     color: var(--ulvia-official-primary, #086c55);
 }
-::slotted([slot="search-control"]) {
+[part~="search-control"] {
     display: block;
     min-width: 0;
 }
-::slotted(button[slot="clear"]) {
+button[part~="clear"] {
     position: absolute;
     z-index: 1;
     inset-block-start: 50%;
@@ -65,18 +65,18 @@
     color: var(--ulvia-official-text-secondary, #5b6472);
     cursor: pointer;
 }
-::slotted(button[slot="clear"][hidden]) {
+button[part~="clear"][hidden] {
     display: none;
 }
-::slotted(button[slot="clear"]:hover) {
+button[part~="clear"]:hover {
     color: var(--ulvia-official-text-primary, CanvasText);
     background-color: var(--ulvia-official-background-subtle, #f4f5f7);
 }
-::slotted(button[slot="clear"]:focus-visible) {
+button[part~="clear"]:focus-visible {
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: 1px;
 }
-:host([size="sm"]) {
+:scope[size="sm"] {
     --form-control-height: var(--ulvia-official-control-height-sm, 2.25rem);
     --form-control-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     --input-padding-start: 2.25rem;
@@ -84,7 +84,7 @@
     --search-icon-size: 1rem;
     --search-action-size: 1.75rem;
 }
-:host([size="lg"]) {
+:scope[size="lg"] {
     --form-control-height: var(--ulvia-official-control-height-lg, 3.25rem);
     --form-control-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
     --input-padding-start: 3rem;

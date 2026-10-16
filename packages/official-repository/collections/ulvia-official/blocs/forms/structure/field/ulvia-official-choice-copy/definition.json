@@ -7,7 +7,26 @@
     "uses": [],
     "requires": [],
     "slots": {
-        "label": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 },
-        "help": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 }
+        "label": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "help": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

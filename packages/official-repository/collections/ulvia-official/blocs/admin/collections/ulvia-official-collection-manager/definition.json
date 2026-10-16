@@ -17,9 +17,24 @@
         "ulvia-official-surface"
     ],
     "requires": [
-        { "contractId": "ulvia.cms.collections", "capabilityId": "catalogue", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.collections", "capabilityId": "install", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.collections", "capabilityId": "upgrade", "versionRange": "^1.0.0" }
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "catalogue",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "install",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "upgrade",
+            "versionRange": "^1.0.0"
+        }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

@@ -10,18 +10,40 @@
     "slots": {
         "brand": {
             "accepts": [
-                { "kind": "rich-text", "profile": "inline" },
-                { "kind": "component", "tag": "ulvia-official-image" }
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                },
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-image"
+                }
             ],
             "min": 1,
             "max": 1
         },
         "links": {
-            "accepts": [{ "kind": "rich-text", "profile": "inline" }, { "kind": "any-component" }]
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                },
+                {
+                    "kind": "any-component"
+                }
+            ]
         },
         "actions": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-action" }],
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-action"
+                }
+            ],
             "max": 2
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

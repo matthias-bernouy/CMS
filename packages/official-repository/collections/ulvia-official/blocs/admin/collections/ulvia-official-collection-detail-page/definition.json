@@ -24,12 +24,19 @@
         "ulvia-official-textarea"
     ],
     "requires": [
-        { "contractId": "ulvia.cms.collections", "capabilityId": "get", "versionRange": "^1.0.0" },
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "get",
+            "versionRange": "^1.0.0"
+        },
         {
             "contractId": "ulvia.cms.collections",
             "capabilityId": "update-configuration",
             "versionRange": "^1.0.0"
         }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

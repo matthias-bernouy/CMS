@@ -1,4 +1,4 @@
-:host {
+:scope {
     position: relative;
     display: inline-block;
     color: var(--ulvia-official-text-secondary, #5b6472);
@@ -8,7 +8,7 @@
     position: relative;
     display: inline-block;
 }
-::slotted([slot="help-shell"]) {
+[part~="help-shell"] {
     position: relative;
     display: inline-block;
 }

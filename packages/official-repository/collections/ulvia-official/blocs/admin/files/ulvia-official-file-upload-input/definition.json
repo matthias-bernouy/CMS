@@ -6,11 +6,23 @@
     "category": "bloc.category.administration",
     "order": 30,
     "internal": true,
-    "nativeElement": {
-        "accepts": ["input"],
-        "attributes": { "type": { "required": true, "values": ["file"] } }
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["input"],
+        "attributes": {
+            "type": {
+                "required": true,
+                "values": ["file"]
+            }
+        },
+        "defaults": {
+            "type": "file",
+            "name": "file"
+        }
+    }
 }

@@ -5,11 +5,25 @@
     "description": "bloc.time-input.description",
     "category": "bloc.category.forms",
     "order": 62,
-    "nativeElement": {
-        "accepts": ["input"],
-        "attributes": { "type": { "required": true, "values": ["text"] } }
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["input"],
+        "attributes": {
+            "type": {
+                "required": true,
+                "values": ["text"]
+            }
+        },
+        "defaults": {
+            "type": "text",
+            "name": "time",
+            "value": "09:30",
+            "inputmode": "numeric"
+        }
+    }
 }

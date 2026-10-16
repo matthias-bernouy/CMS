@@ -5,10 +5,19 @@
     "description": "bloc.dialog.description",
     "category": "bloc.category.layout",
     "order": 105,
-    "nativeElement": {
-        "accepts": ["dialog"]
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["dialog"]
+    }
 }

@@ -1,6 +1,4 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
 type Part = "hours" | "minutes" | "seconds";
 const PART_CONFIG: Record<Part, { label: string; short: string; maximum: number }> = {
@@ -19,7 +17,7 @@ function labelFor(input: HTMLInputElement): string {
     );
 }
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private source: HTMLInputElement | null = null;
     private container: HTMLElement;
     private inputs = new Map<Part, HTMLInputElement>();
@@ -32,9 +30,9 @@ export class Bloc extends Component {
         return ["parts"];
     }
 
-    constructor() {
-        super({ css, template });
-        const container = this.shadowRoot?.querySelector<HTMLElement>('[part="parts"]');
+    constructor(root: HTMLElement) {
+        super(root);
+        const container = this?.querySelector<HTMLElement>('[part="parts"]');
         if (!container) {
             throw new Error("Missing time parts container");
         }

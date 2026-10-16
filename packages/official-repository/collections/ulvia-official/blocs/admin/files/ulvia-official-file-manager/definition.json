@@ -22,14 +22,49 @@
         "ulvia-official-surface"
     ],
     "requires": [
-        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.get", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.upload.create", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.files", "capabilityId": "upload.write", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.upload.complete", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.update", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.set-visibility", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.sign", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.files", "capabilityId": "workspace.files.delete", "versionRange": "^1.0.0" }
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.upload.create",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "upload.write",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.upload.complete",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.files.update",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.files.set-visibility",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.files.sign",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.files.delete",
+            "versionRange": "^1.0.0"
+        }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

@@ -22,8 +22,28 @@ export class EditablePageDocument {
     }
 
     add(item: EditorCatalogueItem): number {
-        const element = document.createElement(item.id);
+        const contract = authoringContract(item);
+        const tag = contract.root?.accepts?.[0];
+        if (!tag) {
+            throw new Error(`Bloc ${item.id} does not declare an authoring root`);
+        }
+        const element = document.createElement(tag);
+        element.setAttribute("cms-bloc", item.id);
+        for (const [name, value] of Object.entries(contract.root.defaults ?? {})) {
+            element.setAttribute(name, value);
+        }
         element.innerHTML = item.defaultContent;
+        if (contract.content && !this.managedContent(element)) {
+            const contentTag = contract.content.accepts?.[0];
+            if (!contentTag) {
+                throw new Error(`Bloc ${item.id} does not declare an authoring content element`);
+            }
+            const content = document.createElement(contentTag);
+            for (const [name, value] of Object.entries(contract.content.defaults ?? {})) {
+                content.setAttribute(name, value);
+            }
+            element.append(content);
+        }
         this.applyDefaults(element, item);
         this.template.content.append(element);
         return this.elements().length - 1;
@@ -60,19 +80,22 @@ export class EditablePageDocument {
 
     editableContent(index: number, item?: EditorCatalogueItem): string {
         const element = this.elements()[index];
-        const nativeRoot = item && authoringContract(item).nativeElement ? element?.firstElementChild : undefined;
-        return nativeRoot?.innerHTML ?? element?.innerHTML ?? "";
+        if (!element) {
+            return "";
+        }
+        return item && authoringContract(item).content
+            ? (this.managedContent(element)?.innerHTML ?? "")
+            : element.innerHTML;
     }
 
     updateContent(index: number, content: string, item?: EditorCatalogueItem): void {
         const element = this.elements()[index];
-        if (element) {
-            const nativeRoot = item && authoringContract(item).nativeElement ? element.firstElementChild : undefined;
-            if (nativeRoot) {
-                nativeRoot.innerHTML = content;
-            } else {
-                element.innerHTML = content;
-            }
+        if (!element) {
+            return;
+        }
+        const target = item && authoringContract(item).content ? this.managedContent(element) : element;
+        if (target) {
+            target.innerHTML = content;
         }
     }
 
@@ -99,14 +122,17 @@ export class EditablePageDocument {
             }
         }
     }
+
+    private managedContent(element: HTMLElement): HTMLElement | undefined {
+        return Array.from(element.children).find(
+            (child): child is HTMLElement => child instanceof HTMLElement && !child.hasAttribute("cms-bloc"),
+        );
+    }
 }
 
 export function catalogueItemFor(
     element: HTMLElement,
     catalogue: EditorCatalogueItem[],
 ): EditorCatalogueItem | undefined {
-    return catalogue.find((item) => {
-        const nativeTags = authoringContract(item).nativeElement?.accepts ?? [];
-        return item.id === element.localName || nativeTags.includes(element.localName);
-    });
+    return catalogue.find((item) => element.getAttribute("cms-bloc") === item.id);
 }

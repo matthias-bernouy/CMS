@@ -20,5 +20,8 @@
         "ulvia-official-surface"
     ],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

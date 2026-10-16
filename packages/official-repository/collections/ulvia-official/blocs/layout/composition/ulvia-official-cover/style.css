@@ -1,4 +1,4 @@
-:host {
+:scope {
     --cover-height: 50svh;
     --cover-spacing: var(--ulvia-official-spacing-lg, 1.5rem);
     display: block;
@@ -18,21 +18,21 @@
     flex: 1;
     align-items: center;
 }
-:host([height="content"]) {
+:scope[height="content"] {
     --cover-height: auto;
 }
-:host([height="viewport"]) {
+:scope[height="viewport"] {
     --cover-height: 100svh;
 }
-:host([align="start"]) [part="content"] {
+:scope[align="start"] [part="content"] {
     align-items: start;
 }
-:host([align="end"]) [part="content"] {
+:scope[align="end"] [part="content"] {
     align-items: end;
 }
-:host([spacing="sm"]) {
+:scope[spacing="sm"] {
     --cover-spacing: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-:host([spacing="md"]) {
+:scope[spacing="md"] {
     --cover-spacing: var(--ulvia-official-spacing-md, 1rem);
 }

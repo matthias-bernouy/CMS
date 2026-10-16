@@ -1,4 +1,4 @@
-<ulvia-official-stack gap="lg">
+<div cms-bloc="ulvia-official-stack" gap="lg">
     <section
         id="settings-general"
         slot="items"
@@ -16,7 +16,7 @@
                     {{ cms.i18n.ulvia-official.ui-request-failed }}
                 </p>
             </div>
-            <ulvia-official-surface cms-case='"success"' appearance="outlined" padding="md" radius="sm">
+            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" cms-case='"success"'>
                 <form
                     slot="content"
                     cms-mutation="ulvia.cms.access:update-site as savedSite"
@@ -25,17 +25,17 @@
                     cms-mutation-reset="false"
                 >
                     <input type="hidden" name="expectedRevision" value="{{ settingsAccess.data.site.revision }}" cms-form-value-type="number">
-                    <ulvia-official-stack gap="lg">
+                    <div cms-bloc="ulvia-official-stack" gap="lg">
                         <header slot="items">
                             <p>{{ cms.i18n.ulvia-official.ui-site }}</p>
                             <h3>{{ cms.i18n.ulvia-official.ui-general-settings }}</h3>
                         </header>
-                        <ulvia-official-field slot="items" label-position="top">
+                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                             <label slot="label" for="settings-site-name">
                                 {{ cms.i18n.ulvia-official.ui-site-name }}
                             </label>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-site-name-help }}</span>
-                            <ulvia-official-input slot="control">
+                            <div cms-bloc="ulvia-official-input" slot="control">
                                 <input
                                     id="settings-site-name"
                                     type="text"
@@ -45,14 +45,14 @@
                                     autocomplete="organization"
                                     required
                                 >
-                            </ulvia-official-input>
-                        </ulvia-official-field>
-                        <ulvia-official-field slot="items" label-position="top">
+                            </div>
+                        </div>
+                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                             <label slot="label" for="settings-public-host">
                                 {{ cms.i18n.ulvia-official.ui-public-host }}
                             </label>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-public-host-help }}</span>
-                            <ulvia-official-input slot="control">
+                            <div cms-bloc="ulvia-official-input" slot="control">
                                 <input
                                     id="settings-public-host"
                                     type="text"
@@ -62,14 +62,14 @@
                                     maxlength="2048"
                                     inputmode="url"
                                 >
-                            </ulvia-official-input>
-                        </ulvia-official-field>
-                        <ulvia-official-field slot="items" label-position="top">
+                            </div>
+                        </div>
+                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                             <label slot="label" for="settings-site-visibility">
                                 {{ cms.i18n.ulvia-official.ui-site-availability }}
                             </label>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-site-availability-help }}</span>
-                            <ulvia-official-select slot="control">
+                            <div cms-bloc="ulvia-official-select" slot="control">
                                 <select id="settings-site-visibility" name="visible" cms-form-value-type="boolean">
                                     <option value="true" selected="{{ settingsAccess.data.site.visible }}">
                                         {{ cms.i18n.ulvia-official.ui-public }}
@@ -78,9 +78,9 @@
                                         {{ cms.i18n.ulvia-official.ui-private }}
                                     </option>
                                 </select>
-                            </ulvia-official-select>
-                        </ulvia-official-field>
-                        <ulvia-official-form-actions slot="items" align="end">
+                            </div>
+                        </div>
+                        <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
                             <p slot="actions" role="status" aria-live="polite" cms-condition="savedSite.activity === 'submitting'">
                                 {{ cms.i18n.ulvia-official.ui-working }}
                             </p>
@@ -90,11 +90,11 @@
                             <p slot="actions" role="alert" cms-condition="(savedSite.outcome.kind === 'error' || savedSite.outcome.kind === 'failure')">
                                 {{ cms.i18n.ulvia-official.ui-request-failed }}
                             </p>
-                            <ulvia-official-action slot="actions" variant="filled" tone="primary">
-                                <button type="submit">{{ cms.i18n.ulvia-official.ui-save-general-settings }}</button>
-                            </ulvia-official-action>
-                        </ulvia-official-form-actions>
-                    </ulvia-official-stack>
+                            <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" type="submit">
+                                <span>{{ cms.i18n.ulvia-official.ui-save-general-settings }}</span>
+                            </button>
+                        </div>
+                    </div>
 
                     <div cms-match="savedSite.outcome.kind">
                         <span cms-case='"none"' hidden></span>
@@ -107,7 +107,7 @@
                         <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                     </div>
                 </form>
-            </ulvia-official-surface>
+            </div>
             <p role="alert" cms-case='"failure"'>
                 {{ cms.i18n.ulvia-official.ui-request-failed }}
             </p>
@@ -130,7 +130,7 @@
                     {{ cms.i18n.ulvia-official.ui-request-failed }}
                 </p>
             </div>
-            <ulvia-official-surface cms-case='"success"' appearance="outlined" padding="md" radius="sm">
+            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" cms-case='"success"'>
                 <form
                     slot="content"
                     cms-mutation="ulvia.cms.localization:update-languages as savedLanguages"
@@ -139,18 +139,18 @@
                     cms-mutation-reset="false"
                 >
                     <input type="hidden" name="expectedRevision" value="{{ settingsLocalization.data.revision }}" cms-form-value-type="number">
-                    <ulvia-official-stack gap="lg">
+                    <div cms-bloc="ulvia-official-stack" gap="lg">
                         <header slot="items">
                             <p>{{ cms.i18n.ulvia-official.ui-localization }}</p>
                             <h3>{{ cms.i18n.ulvia-official.ui-languages }}</h3>
                             <p>{{ cms.i18n.ulvia-official.ui-site-languages-help }}</p>
                         </header>
-                        <ulvia-official-field slot="items" label-position="top">
+                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                             <label slot="label" for="settings-default-language">
                                 {{ cms.i18n.ulvia-official.ui-default-language }}
                             </label>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-default-language-help }}</span>
-                            <ulvia-official-input slot="control">
+                            <div cms-bloc="ulvia-official-input" slot="control">
                                 <input
                                     id="settings-default-language"
                                     type="text"
@@ -160,14 +160,14 @@
                                     autocomplete="off"
                                     required
                                 >
-                            </ulvia-official-input>
-                        </ulvia-official-field>
-                        <ulvia-official-field slot="items" label-position="top">
+                            </div>
+                        </div>
+                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                             <label slot="label" for="settings-available-languages">
                                 {{ cms.i18n.ulvia-official.ui-available-languages }}
                             </label>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-available-languages-help }}</span>
-                            <ulvia-official-tag-input slot="control" serialization="json" separator="," max-tags="100" add-on-blur>
+                            <div cms-bloc="ulvia-official-tag-input" add-on-blur="" max-tags="100" separator="," serialization="json" slot="control">
                                 <input
                                     id="settings-available-languages"
                                     type="text"
@@ -178,14 +178,14 @@
                                     placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
                                     aria-description="{{ cms.i18n.ulvia-official.ui-available-languages-help }}"
                                 >
-                            </ulvia-official-tag-input>
-                        </ulvia-official-field>
-                        <ulvia-official-field slot="items" label-position="top">
+                            </div>
+                        </div>
+                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                             <label slot="label" for="settings-active-languages">
                                 {{ cms.i18n.ulvia-official.ui-active-languages }}
                             </label>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-active-languages-help }}</span>
-                            <ulvia-official-tag-input slot="control" serialization="json" separator="," max-tags="100" add-on-blur>
+                            <div cms-bloc="ulvia-official-tag-input" add-on-blur="" max-tags="100" separator="," serialization="json" slot="control">
                                 <input
                                     id="settings-active-languages"
                                     type="text"
@@ -196,9 +196,9 @@
                                     placeholder="{{ cms.i18n.ulvia-official.ui-language-list-placeholder }}"
                                     aria-description="{{ cms.i18n.ulvia-official.ui-active-languages-help }}"
                                 >
-                            </ulvia-official-tag-input>
-                        </ulvia-official-field>
-                        <ulvia-official-form-actions slot="items" align="end">
+                            </div>
+                        </div>
+                        <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
                             <p slot="actions" role="status" aria-live="polite" cms-condition="savedLanguages.activity === 'submitting'">
                                 {{ cms.i18n.ulvia-official.ui-working }}
                             </p>
@@ -212,11 +212,11 @@
                             >
                                 {{ cms.i18n.ulvia-official.ui-request-failed }}
                             </p>
-                            <ulvia-official-action slot="actions" variant="filled" tone="primary">
-                                <button type="submit">{{ cms.i18n.ulvia-official.ui-save-languages }}</button>
-                            </ulvia-official-action>
-                        </ulvia-official-form-actions>
-                    </ulvia-official-stack>
+                            <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" type="submit">
+                                <span>{{ cms.i18n.ulvia-official.ui-save-languages }}</span>
+                            </button>
+                        </div>
+                    </div>
 
                     <div cms-match="savedLanguages.outcome.kind">
                         <span cms-case='"none"' hidden></span>
@@ -230,10 +230,10 @@
                         <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                     </div>
                 </form>
-            </ulvia-official-surface>
+            </div>
             <p role="alert" cms-case='"failure"'>
                 {{ cms.i18n.ulvia-official.ui-request-failed }}
             </p>
         </div>
     </section>
-</ulvia-official-stack>
+</div>

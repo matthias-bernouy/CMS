@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     height: 100%;
     color: var(--ulvia-official-text-primary, CanvasText);
@@ -26,18 +26,18 @@
 [part="action"] {
     margin-block-start: auto;
 }
-::slotted([slot="name"]),
-::slotted([slot="price"]),
-::slotted([slot="description"]),
-::slotted([slot="features"]) {
+[part~="name"],
+[part~="price"],
+[part~="description"],
+[part~="features"] {
     margin: 0;
 }
-::slotted([slot="price"]) {
+[part~="price"] {
     font-family: var(--ulvia-official-font-family-secondary, inherit);
     font-size: var(--ulvia-official-font-size-3xl, 2rem);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
 }
-:host([featured]) [part="plan"] {
+:scope[featured] [part="plan"] {
     border-color: var(--ulvia-official-primary, #3157d5);
     box-shadow: var(--ulvia-official-shadow-lg, 0 12px 32px rgb(0 0 0 / 16%));
 }

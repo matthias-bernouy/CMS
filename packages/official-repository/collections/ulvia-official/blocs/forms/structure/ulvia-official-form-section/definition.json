@@ -14,8 +14,35 @@
     ],
     "requires": [],
     "slots": {
-        "legend": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 },
-        "description": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 },
-        "content": { "accepts": [{ "kind": "any-component" }], "min": 1 }
+        "legend": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        },
+        "description": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "content": {
+            "accepts": [
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["div", "form"]
     }
 }

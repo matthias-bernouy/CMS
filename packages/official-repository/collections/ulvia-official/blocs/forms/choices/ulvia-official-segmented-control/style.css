@@ -1,4 +1,4 @@
-:host {
+:scope {
     --option-list-columns: none;
     --option-list-rows: auto;
     --option-list-flow: column;
@@ -21,7 +21,7 @@
     min-width: 0;
 }
 
-::slotted(fieldset[slot="segmented-control"]) {
+fieldset[part~="segmented-control"] {
     display: grid;
     width: fit-content;
     max-width: 100%;
@@ -34,39 +34,39 @@
     font: inherit;
 }
 
-:host([orientation="vertical"]) {
+:scope[orientation="vertical"] {
     --option-list-columns: minmax(0, 1fr);
     --option-list-rows: none;
     --option-list-flow: row;
     --option-list-auto-columns: auto;
 }
 
-:host([wide]) {
+:scope[wide] {
     --option-list-auto-columns: minmax(0, 1fr);
 }
 
-:host([wide]) ::slotted(fieldset[slot="segmented-control"]) {
+:scope[wide] fieldset[part~="segmented-control"] {
     width: 100%;
 }
 
-:host([size="sm"]) {
+:scope[size="sm"] {
     --segment-min-height: var(--ulvia-official-control-height-sm, 2.25rem);
     --segment-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
     --segment-font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
 
-:host([size="lg"]) {
+:scope[size="lg"] {
     --segment-min-height: var(--ulvia-official-control-height-lg, 3.25rem);
     --segment-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);
     --segment-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
 }
 
 @container (max-width: 28rem) {
-    ::slotted(fieldset[slot="segmented-control"]) {
+    fieldset[part~="segmented-control"] {
         width: 100%;
     }
 
-    :host {
+    :scope {
         --option-list-columns: minmax(0, 1fr);
         --option-list-rows: none;
         --option-list-flow: row;

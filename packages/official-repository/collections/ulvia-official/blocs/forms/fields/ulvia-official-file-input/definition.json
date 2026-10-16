@@ -9,9 +9,17 @@
     "requires": [],
     "slots": {
         "control": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-file-upload-input" }],
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-file-upload-input"
+                }
+            ],
             "min": 1,
             "max": 1
         }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

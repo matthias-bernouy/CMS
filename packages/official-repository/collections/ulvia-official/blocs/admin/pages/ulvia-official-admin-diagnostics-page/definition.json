@@ -31,5 +31,8 @@
             "versionRange": "^1.0.0"
         }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

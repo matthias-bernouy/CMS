@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     min-width: 0;
 }
@@ -37,7 +37,7 @@
         opacity var(--ulvia-official-duration-fast, 120ms);
 }
 
-::slotted(*) {
+* {
     position: relative;
     z-index: 1;
 }

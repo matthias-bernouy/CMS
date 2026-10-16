@@ -17,10 +17,29 @@
         "ulvia-official-tag-input"
     ],
     "requires": [
-        { "contractId": "ulvia.cms.access", "capabilityId": "overview", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.access", "capabilityId": "update-site", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.localization", "capabilityId": "overview", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.localization", "capabilityId": "update-languages", "versionRange": "^1.0.0" }
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "overview",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "update-site",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.localization",
+            "capabilityId": "overview",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.localization",
+            "capabilityId": "update-languages",
+            "versionRange": "^1.0.0"
+        }
     ],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
 }

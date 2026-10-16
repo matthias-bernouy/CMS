@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
@@ -21,21 +21,21 @@
 [part="description"] {
     color: var(--ulvia-official-text-secondary, #5b6472);
 }
-::slotted(*) {
+* {
     margin: 0;
 }
-:host([align="center"]) [part="stat"] {
+:scope[align="center"] [part="stat"] {
     text-align: center;
 }
-:host([align="end"]) [part="stat"] {
+:scope[align="end"] [part="stat"] {
     text-align: end;
 }
-:host([size="sm"]) [part="stat"] {
+:scope[size="sm"] [part="stat"] {
     gap: var(--ulvia-official-spacing-2xs, 0.25rem);
 }
-:host([size="sm"]) [part="value"] {
+:scope[size="sm"] [part="value"] {
     font-size: var(--ulvia-official-font-size-2xl, 1.5rem);
 }
-:host([size="sm"]) [part="label"] {
+:scope[size="sm"] [part="label"] {
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }

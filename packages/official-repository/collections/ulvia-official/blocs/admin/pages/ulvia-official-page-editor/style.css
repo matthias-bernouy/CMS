@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     min-width: 0;
     color: var(--ulvia-official-text-primary, #17211d);

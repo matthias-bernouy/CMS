@@ -5,11 +5,26 @@
     "description": "bloc.range.description",
     "category": "bloc.category.forms",
     "order": 40,
-    "nativeElement": {
-        "accepts": ["input"],
-        "attributes": { "type": { "required": true, "values": ["range"] } }
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    },
+    "content": {
+        "accepts": ["input"],
+        "attributes": {
+            "type": {
+                "required": true,
+                "values": ["range"]
+            }
+        },
+        "defaults": {
+            "type": "range",
+            "name": "amount",
+            "min": "0",
+            "max": "100",
+            "value": "50"
+        }
+    }
 }

@@ -5,10 +5,16 @@
     "description": "bloc.login-method.description",
     "category": "bloc.category.administration",
     "internal": true,
-    "nativeElement": {
-        "accepts": ["button"]
-    },
     "uses": [],
     "requires": [],
-    "slots": {}
+    "slots": {},
+    "root": {
+        "accepts": ["button"],
+        "defaults": {
+            "type": "button"
+        }
+    },
+    "content": {
+        "accepts": ["span"]
+    }
 }

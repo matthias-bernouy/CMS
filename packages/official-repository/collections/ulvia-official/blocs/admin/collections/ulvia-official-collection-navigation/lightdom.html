@@ -1,29 +1,30 @@
 <div
-    data-navigation-root
+    data-navigation-root=""
     cms-query="ulvia.cms.collections:catalogue as catalogue"
     cms-query-listen="@page:ulvia-official-collection-catalogue-mutation/lastSuccess/requestId"
     cms-query-refresh="focus reconnect"
 >
-    <ulvia-official-navigation-menu label="{{ cms.i18n.ulvia-official.ui-collections }}">
+    <div cms-bloc="ulvia-official-navigation-menu" label="{{ cms.i18n.ulvia-official.ui-collections }}">
         <span slot="header">{{ cms.i18n.ulvia-official.ui-collections }}</span>
-        <ulvia-official-navigation-section slot="sections">
+        <div cms-bloc="ulvia-official-navigation-section" slot="sections">
             <span slot="label">{{ cms.i18n.ulvia-official.ui-collection-catalogue }}</span>
-            <ulvia-official-navigation-item slot="items">
-                <a href="/admin/collections">
-                    <ulvia-official-icon name="collections" size="sm" tone="current"></ulvia-official-icon>
-                    <span>{{ cms.i18n.ulvia-official.ui-explore-collections }}</span>
-                </a>
-            </ulvia-official-navigation-item>
-        </ulvia-official-navigation-section>
-        <ulvia-official-navigation-section slot="sections" cms-condition="catalogue.outcome.kind === 'success'">
+            <a cms-bloc="ulvia-official-navigation-item" slot="items" href="/admin/collections">
+                <span slot="content" cms-bloc="ulvia-official-icon" tone="current" size="sm" name="collections"></span>
+                <span slot="content">{{ cms.i18n.ulvia-official.ui-explore-collections }}</span>
+            </a>
+        </div>
+        <div cms-bloc="ulvia-official-navigation-section" cms-condition="catalogue.outcome.kind === 'success'" slot="sections">
             <span slot="label">{{ cms.i18n.ulvia-official.ui-installed-collections }}</span>
-            <ulvia-official-navigation-item slot="items" cms-repeat="catalogue.data.installed as installed">
-                <a href="/admin/collections/detail?ulvia-official-collection={{ installed.collectionId | urlencode }}">
-                    <span>{{ installed.collectionId }}</span>
-                </a>
-            </ulvia-official-navigation-item>
-        </ulvia-official-navigation-section>
-    </ulvia-official-navigation-menu>
+            <a
+                cms-bloc="ulvia-official-navigation-item"
+                cms-repeat="catalogue.data.installed as installed"
+                slot="items"
+                href="/admin/collections/detail?ulvia-official-collection={{ installed.collectionId | urlencode }}"
+            >
+                <span slot="content">{{ installed.collectionId }}</span>
+            </a>
+        </div>
+    </div>
     <p role="status" cms-condition="catalogue.activity === 'fetching'">
         {{ cms.i18n.ulvia-official.ui-reading-collection-catalogue }}
     </p>

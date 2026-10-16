@@ -8,6 +8,18 @@
     "uses": ["ulvia-official-input"],
     "requires": [],
     "slots": {
-        "control": { "accepts": [{ "kind": "component", "tag": "ulvia-official-input" }], "min": 1, "max": 1 }
+        "control": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-input"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

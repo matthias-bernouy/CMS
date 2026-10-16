@@ -1,4 +1,4 @@
-:host {
+:scope {
     display: block;
     min-width: 0;
     color: var(--ulvia-official-text-secondary, #4f625a);
@@ -7,8 +7,8 @@
 [part="item"] {
     display: contents;
 }
-::slotted(a),
-::slotted(button) {
+a,
+button {
     position: relative;
     display: flex;
     width: 100%;
@@ -33,32 +33,32 @@
         color var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease),
         background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
 }
-::slotted(a:hover),
-::slotted(button:hover:not(:disabled)) {
+a:hover,
+button:hover:not(:disabled) {
     color: var(--ulvia-official-text-primary, #17211d);
     background: var(--ulvia-official-background-subtle, #f3f7f5);
 }
-::slotted(a:focus-visible),
-::slotted(button:focus-visible) {
+a:focus-visible,
+button:focus-visible {
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: 2px;
 }
-:host([active]),
-:host([data-current]) {
+:scope[active],
+:scope[data-current] {
     color: var(--ulvia-official-primary, #3157d5);
 }
-:host([active]) ::slotted(a),
-:host([active]) ::slotted(button),
-:host([data-current]) ::slotted(a),
-:host([data-current]) ::slotted(button) {
+:scope[active] a,
+:scope[active] button,
+:scope[data-current] a,
+:scope[data-current] button {
     background: var(--ulvia-official-primary-subtle, #e9edff);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
     box-shadow: none;
 }
-:host([active]) ::slotted(a)::before,
-:host([active]) ::slotted(button)::before,
-:host([data-current]) ::slotted(a)::before,
-:host([data-current]) ::slotted(button)::before {
+:scope[active] a::before,
+:scope[active] button::before,
+:scope[data-current] a::before,
+:scope[data-current] button::before {
     position: absolute;
     top: 0.55rem;
     bottom: 0.55rem;
@@ -68,10 +68,10 @@
     background: currentcolor;
     content: "";
 }
-:host([emphasis="muted"]) {
+:scope[emphasis="muted"] {
     color: var(--ulvia-official-text-muted, #6d7e77);
 }
-::slotted(button:disabled) {
+button:disabled {
     opacity: 0.55;
     cursor: not-allowed;
 }

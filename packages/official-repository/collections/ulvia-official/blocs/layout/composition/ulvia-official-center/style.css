@@ -1,4 +1,4 @@
-:host {
+:scope {
     --center-width: var(--ulvia-official-content-width-md, 56rem);
     display: block;
 }
@@ -10,19 +10,19 @@
     text-align: start;
 }
 
-:host([width="sm"]) {
+:scope[width="sm"] {
     --center-width: var(--ulvia-official-content-width-sm, 40rem);
 }
-:host([width="lg"]) {
+:scope[width="lg"] {
     --center-width: var(--ulvia-official-content-width-lg, 72rem);
 }
-:host([text-align="center"]) [part="center"] {
+:scope[text-align="center"] [part="center"] {
     text-align: center;
 }
-:host([text-align="end"]) [part="center"] {
+:scope[text-align="end"] [part="center"] {
     text-align: end;
 }
-:host([intrinsic]) [part="center"] {
+:scope[intrinsic] [part="center"] {
     display: flex;
     flex-direction: column;
     align-items: center;

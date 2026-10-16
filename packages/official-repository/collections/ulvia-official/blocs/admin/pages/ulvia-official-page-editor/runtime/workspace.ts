@@ -1,4 +1,4 @@
-export function initializePageEditor(root: ShadowRoot): void {
+export function initializePageEditor(root: HTMLElement): void {
     const mount = root.querySelector<HTMLElement>("[data-workspace]");
     if (!mount) {
         throw new Error("Missing Page editor workspace mount");

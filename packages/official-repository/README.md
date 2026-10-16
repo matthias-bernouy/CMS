@@ -45,10 +45,9 @@ dependencies through `uses`; selective collection dependencies may import explic
 exported Blocs, theme tokens, server texts and immutable assets. Authored content remains page-owned through typed
 slots instead of being embedded in collection settings.
 
-Managed native components declare an accepted tag set in `nativeElement`, expose
-one unnamed Shadow DOM slot, and supply one concrete native root in
-`default.html`; they never add fixed `lightdom.html`. The official action accepts
-`button` and `a`, the neutral official link accepts `a`, and the official heading
-accepts `h1` through `h6`. The link can wrap a non-interactive card without
-JavaScript while preserving native navigation. Wrapper settings remain separate
-from native child attributes.
+Every official Bloc declares the native `root` elements that may carry its
+`cms-bloc` identity. Wrapper Blocs may also declare one Page-owned native
+`content` child, for example an enriched input or select. All structure remains
+in Light DOM; styles are validated and scoped by the release build. Optional
+behavior mounts on the real native root and cannot register custom elements or
+create Shadow Roots.

@@ -7,6 +7,18 @@
     "uses": [],
     "requires": [],
     "slots": {
-        "panel": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 }
+        "panel": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div"]
     }
 }

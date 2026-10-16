@@ -1,25 +1,23 @@
-import { Component } from "@bernouy/cms-content/browser";
-import template from "./shadowdom.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { BlocBehavior } from "@bernouy/cms-content/browser";
 
-export class Bloc extends Component {
+export class Bloc extends BlocBehavior {
     private input: HTMLInputElement | null = null;
     private clearButton: HTMLButtonElement | null = null;
-    private root: Document | ShadowRoot | null = null;
+    private root: Document | null = null;
     private submitTimer: number | undefined;
 
     static get observedAttributes(): string[] {
         return ["clear-label"];
     }
 
-    constructor() {
-        super({ css, template });
+    constructor(root: HTMLElement) {
+        super(root);
     }
 
     override connectedCallback(): void {
         this.input = this.querySelector<HTMLInputElement>("input");
         this.clearButton = this.querySelector<HTMLButtonElement>("[data-search-clear]");
-        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.root = this.ownerDocument;
         this.prepareInput();
         this.input?.addEventListener("input", this.handleInput);
         this.root.addEventListener("reset", this.handleReset);

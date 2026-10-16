@@ -1,6 +1,5 @@
 <span slot="label">{{ cms.i18n.ulvia-official.ui-section }}</span
-><ulvia-official-navigation-item slot="items"
-    ><a href=""
-        ><ulvia-official-icon name="layout" size="md" tone="current"></ulvia-official-icon><span>{{ cms.i18n.ulvia-official.ui-overview }}</span></a
-    ></ulvia-official-navigation-item
+><a cms-bloc="ulvia-official-navigation-item" slot="items" href=""
+    ><span slot="content" cms-bloc="ulvia-official-icon" tone="current" size="md" name="layout"></span
+    ><span slot="content">{{ cms.i18n.ulvia-official.ui-overview }}</span></a
 >

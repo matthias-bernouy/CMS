@@ -1,7 +1,8 @@
 <fieldset slot="choice-group">
     <legend>
-        <ulvia-official-choice-copy><slot name="legend" slot="label"></slot></ulvia-official-choice-copy>
+        <div cms-bloc="ulvia-official-choice-copy"><slot name="legend" slot="label"></slot></div>
     </legend>
-    <ulvia-official-choice-copy><slot name="help" slot="help"></slot></ulvia-official-choice-copy
-    ><ulvia-official-option-list><slot name="items" slot="items"></slot></ulvia-official-option-list><span role="alert"><slot name="error"></slot></span>
+    <div cms-bloc="ulvia-official-choice-copy"><slot name="help" slot="help"></slot></div>
+    <div cms-bloc="ulvia-official-option-list"><slot name="items" slot="items"></slot></div>
+    <span role="alert"><slot name="error"></slot></span>
 </fieldset>
