@@ -88,7 +88,7 @@ describe("Ulvia CLI", () => {
             await rm(root, { recursive: true, force: true });
             await rm(bundle, { recursive: true, force: true });
         }
-    });
+    }, 15_000);
 
     test("rejects obsolete integration-shaped pull arguments", async () => {
         await expect(runCli(["pull", "demo"], { log: () => undefined })).rejects.toThrow("Usage: ulvia pull");

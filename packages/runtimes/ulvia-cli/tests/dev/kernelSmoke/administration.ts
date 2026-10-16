@@ -1,5 +1,56 @@
 import type { Page } from "playwright";
 
+export async function inspectResponsiveAdministration(page: Page, kernelOrigin: string): Promise<void> {
+    await page.setViewportSize({ width: 390, height: 844 });
+    try {
+        await page.goto(`${kernelOrigin}/admin/collections`);
+        const shell = page.locator('[cms-bloc="ulvia-official-app-shell"]');
+        const navigation = shell.locator('[part="secondary-navigation"]');
+        const navigationToggle = shell.locator('[data-mobile-toggle="navigation"]');
+        const contextual = shell.locator('[part="secondary-sidebar"]');
+        const contextualToggle = shell.locator('[data-mobile-toggle="contextual"]');
+        await navigationToggle.waitFor({ state: "visible" });
+        await contextualToggle.waitFor({ state: "visible" });
+        await navigationToggle.click();
+        await navigationToggle.waitFor({ state: "visible" });
+        if ((await navigation.getAttribute("aria-hidden")) !== "false" || (await navigation.getAttribute("inert"))) {
+            throw new Error("Primary navigation did not become accessible in compact mode.");
+        }
+        await page.keyboard.press("Escape");
+        if ((await navigationToggle.getAttribute("aria-expanded")) !== "false") {
+            throw new Error("Escape did not close compact navigation.");
+        }
+        await contextualToggle.click();
+        if ((await contextual.getAttribute("aria-hidden")) !== "false" || (await contextual.getAttribute("inert"))) {
+            throw new Error("Contextual navigation did not become accessible in compact mode.");
+        }
+        const overflow = await page.evaluate(
+            () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        );
+        if (overflow > 1) {
+            throw new Error(`Compact administration overflows horizontally by ${overflow}px.`);
+        }
+        await page.goto(`${kernelOrigin}/admin/files`);
+        const upload = page.getByRole("button", { name: /^(Upload a file|Téléverser un fichier)$/u });
+        await upload.click();
+        const dialog = page.locator("#upload-file-dialog");
+        await dialog.waitFor({ state: "visible" });
+        const fitsViewport = await dialog.evaluate((element) => {
+            const bounds = element.getBoundingClientRect();
+            return bounds.left >= 0 && bounds.right <= innerWidth && bounds.top >= 0 && bounds.bottom <= innerHeight;
+        });
+        if (!fitsViewport) {
+            throw new Error("The upload dialog exceeds the compact viewport.");
+        }
+        await page.keyboard.press("Escape");
+        if (!(await upload.evaluate((element) => element === document.activeElement))) {
+            throw new Error("Closing the upload dialog did not restore focus to its trigger.");
+        }
+    } finally {
+        await page.setViewportSize({ width: 1440, height: 1000 });
+    }
+}
+
 export async function mutateSettings(page: Page): Promise<void> {
     await adminPageLink(page, "settings").click();
     const generalSubmit = 'form[cms-mutation^="ulvia.cms.access:update-site "] button[type="submit"]';

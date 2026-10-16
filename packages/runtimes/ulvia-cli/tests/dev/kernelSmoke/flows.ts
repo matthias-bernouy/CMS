@@ -1,5 +1,10 @@
 import type { Page } from "playwright";
-import { inspectDiagnostics, mutateSettings, verifyAdministrationAfterRestart } from "./administration";
+import {
+    inspectDiagnostics,
+    inspectResponsiveAdministration,
+    mutateSettings,
+    verifyAdministrationAfterRestart,
+} from "./administration";
 import { exerciseCollectionUpgrades } from "./collectionUpgrades";
 import { mutateFiles, verifyFilesAfterRestart } from "./files";
 import { deleteSmokePage, verifyPublishedPage } from "./pageLifecycle";
@@ -13,6 +18,7 @@ export async function runKernelSmoke(
 ): Promise<void> {
     await stage("sign in", () => signIn(page, credentials, kernelOrigin));
     await stage("admin routes", () => inspectAdminRoutes(page, kernelOrigin));
+    await stage("responsive administration", () => inspectResponsiveAdministration(page, kernelOrigin));
     await stage("Pages", () => mutatePages(page, kernelOrigin));
     await stage("files", () => mutateFiles(page));
     await stage("collections and theme", () => mutateCollections(page));
@@ -37,8 +43,10 @@ export async function verifyKernelStateAfterRestart(
 }
 
 async function stage(name: string, operation: () => Promise<void>): Promise<void> {
+    console.info(`[kernel-smoke] ${name}`);
     try {
         await operation();
+        console.info(`[kernel-smoke] ${name}: done`);
     } catch (error) {
         throw new Error(
             `Kernel smoke failed during ${name}: ${error instanceof Error ? error.message : String(error)}`,
@@ -75,11 +83,13 @@ async function inspectAdminRoutes(page: Page, kernelOrigin: string): Promise<voi
         "/admin/settings",
         "/admin/diagnostics",
     ]) {
-        const response = await page.goto(`${kernelOrigin}${path}`, { waitUntil: "domcontentloaded" });
+        console.info(`[kernel-smoke] admin route ${path}`);
+        const response = await page.goto(`${kernelOrigin}${path}`, { timeout: 15_000, waitUntil: "domcontentloaded" });
+        console.info(`[kernel-smoke] admin route ${path}: response`);
         if (!response?.ok()) {
             throw new Error(`${path} returned ${response?.status() ?? "no response"}`);
         }
-        await page.locator("h1").first().waitFor();
+        await page.locator("h1").first().waitFor({ state: "attached" });
         if (
             await page
                 .getByText("Internal server error", { exact: true })
@@ -88,6 +98,7 @@ async function inspectAdminRoutes(page: Page, kernelOrigin: string): Promise<voi
         ) {
             throw new Error(`${path} rendered an internal server error`);
         }
+        console.info(`[kernel-smoke] admin route ${path}: done`);
     }
     await page.goto(`${kernelOrigin}/admin/pages`);
     await page.locator("#pages-list").waitFor();

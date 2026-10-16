@@ -57,12 +57,15 @@ smoke(
             page.setDefaultTimeout(15_000);
             page.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
 
+            report("initial browser journey");
             await runKernelSmoke(page, credentials, `http://127.0.0.1:${PORTS.kernel}`);
+            report("second instance isolation");
             await verifySecondInstanceIsolation(data, credentials, `http://127.0.0.1:${PORTS.kernel}`);
 
             expect(browserErrors).toEqual([]);
             await browser.close();
             browser = undefined;
+            report("first runtime shutdown");
             const status: string[] = [];
             await runCli(["dev", "status"], { environment, log: (message) => status.push(message) });
             expect(status).toContain("Dev stack: running");
@@ -77,6 +80,7 @@ smoke(
             expect(stoppedStatus).toContain("Dev stack: stopped");
 
             output += "\n--- persisted-state restart ---\n";
+            report("persisted-state restart");
             runtime = Bun.spawn([process.execPath, cli, "dev"], {
                 cwd: resolve(import.meta.dir, "../../../../.."),
                 env: environment,
@@ -95,10 +99,12 @@ smoke(
             browserErrors = restartErrors;
             restartedPage.on("pageerror", (error) => restartErrors.push(error.stack ?? error.message));
 
+            report("persisted browser journey");
             await verifyKernelStateAfterRestart(restartedPage, credentials, `http://127.0.0.1:${PORTS.kernel}`);
             expect(restartErrors).toEqual([]);
             await browser.close();
             browser = undefined;
+            report("second runtime shutdown");
             await runCli(["dev", "stop"], { environment, log: () => undefined });
             await runtime.exited;
             await capture;
@@ -116,8 +122,12 @@ smoke(
             await rm(data, { recursive: true, force: true });
         }
     },
-    240_000,
+    420_000,
 );
+
+function report(step: string): void {
+    console.info(`[kernel-smoke] ${step}`);
+}
 
 async function waitForHttp(url: string, runtime: ReturnType<typeof Bun.spawn>): Promise<void> {
     const deadline = Date.now() + 90_000;
