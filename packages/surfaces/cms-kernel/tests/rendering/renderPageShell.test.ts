@@ -56,22 +56,31 @@ async function htmlOf(context = makeCtx()): Promise<string> {
 }
 
 describe("renderPage — binding core wrapper", () => {
-    test("wraps content in <cms-binding-core> and injects the system-bloc script", async () => {
+    test("keeps the document boundary without loading the binding runtime for static content", async () => {
         const html = await htmlOf(makeCtx("https://example.test"));
         expect(html).toContain("HELLO_BODY");
         expect(html).toContain("<cms-binding-core");
-        expect(html).toContain(`<link href="${BINDING_CORE_URL}" as="script" rel="preload">`);
-        expect(html).toContain('id="cms-binding-cloak"');
-        expect(html).toContain("cms-binding-core:not(:defined) :is([cms-mutation],[cms-query]){visibility:hidden}");
+        expect(html).not.toContain(`<link href="${BINDING_CORE_URL}" as="script" rel="preload">`);
+        expect(html).not.toContain('id="cms-binding-cloak"');
         expect(html).not.toContain("body{visibility:hidden}");
-        expect(html).toContain(BINDING_CORE_URL);
+        expect(html).not.toContain(BINDING_CORE_URL);
         const { document } = parseHTML(html);
         expect(document.querySelector('script[type="application/ld+json"]')).not.toBeNull();
         expect(Array.from(document.querySelectorAll("script[src]"), (script) => script.getAttribute("src"))).toEqual([
             "/.cms/assets/bloc-runtime.js?v=c",
-            BINDING_CORE_URL,
             "/.cms/blocs/example.js?v=b",
         ]);
+    });
+
+    test("loads and cloaks the binding runtime for live declarative content", async () => {
+        const staticHtml = await htmlOf();
+        const bound = await renderPage({ ...page, content: "<p>{{ state.title }}</p>" }, makeCtx());
+        const output = new TextDecoder().decode(bound.raw);
+
+        expect(staticHtml).not.toContain(BINDING_CORE_URL);
+        expect(output).toContain(`<link href="${BINDING_CORE_URL}" as="script" rel="preload">`);
+        expect(output).toContain('id="cms-binding-cloak"');
+        expect(output).toContain(BINDING_CORE_URL);
     });
 
     test("passes transitive composition dependencies to asset resolution", async () => {
@@ -91,9 +100,9 @@ describe("renderPage — binding core wrapper", () => {
             })[tag] ?? null;
         let resolvedTags: string[] = [];
         const resolveAssets = ctx.resolveAssets;
-        ctx.resolveAssets = async (tags) => {
+        ctx.resolveAssets = async (tags, blocs) => {
             resolvedTags = tags;
-            return resolveAssets(tags);
+            return resolveAssets(tags, blocs);
         };
 
         await renderPage({ ...page, content: '<header cms-bloc="site-header"></header>' }, ctx);

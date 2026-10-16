@@ -62,6 +62,23 @@ async function resolveAssets(content: ContentReader, tags: string[]) {
 }
 
 describe("resolvePageAssets", () => {
+    test("reads the renderable Bloc catalogue once on a cold resolution", async () => {
+        const content = repositoryWith({
+            pageContent: '<section cms-bloc="collection-card"></section>',
+            blocTags: ["collection-card"],
+        });
+        const read = content.getRenderableBlocs;
+        let reads = 0;
+        content.getRenderableBlocs = async () => {
+            reads += 1;
+            return read();
+        };
+
+        await resolveAssets(content, ["collection-card"]);
+
+        expect(reads).toBe(1);
+    });
+
     test("does not emit a blocset script for native-only blocs without viewJS", async () => {
         const assets = await resolveAssets(
             repositoryWith({

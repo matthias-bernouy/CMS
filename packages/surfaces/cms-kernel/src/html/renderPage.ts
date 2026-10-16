@@ -53,8 +53,8 @@ export async function renderPage(
         },
     });
     const usedTags = [...rendered.usedTags];
-    const assets = await ctx.resolveAssets(usedTags);
-    const hasBindingCore = rendered.hasBindingCore;
+    const assets = await ctx.resolveAssets(usedTags, rendered.renderableBlocs);
+    const requiresBindingRuntime = rendered.requiresBindingRuntime;
 
     // Whitelist asset hosts in CSP. When the build pipeline pre-uploads CSS
     // / JS to a public CDN whose host differs from the page's serving host
@@ -63,7 +63,10 @@ export async function renderPage(
     // `default-src 'self'`. Same-origin assets contribute nothing — the
     // unique-host set naturally drops them via Set semantics.
     const styleHosts = uniqueOrigins([assets.styleUrl, ...assets.blocStyleUrls]);
-    const scriptHosts = uniqueOrigins([...assets.scriptUrls, ...(hasBindingCore ? [assets.bindingCoreUrl] : [])]);
+    const scriptHosts = uniqueOrigins([
+        ...assets.scriptUrls,
+        ...(requiresBindingRuntime ? [assets.bindingCoreUrl] : []),
+    ]);
     const cspExtras = {
         connectExtras: [...settings.security.connectExtras],
         mediaExtras: [...settings.security.mediaExtras],
@@ -80,8 +83,8 @@ export async function renderPage(
     if (ctx.enforceCsp !== false) {
         buildMetaCsp(document, head, cspExtras);
     }
-    buildAssetPreloads(document, head, assets, { includeBindingCore: hasBindingCore });
-    buildBindingCloak(document, head, hasBindingCore);
+    buildAssetPreloads(document, head, assets, { includeBindingCore: requiresBindingRuntime });
+    buildBindingCloak(document, head, requiresBindingRuntime);
     defineMetaTags(
         document,
         head,
@@ -93,7 +96,7 @@ export async function renderPage(
     );
     definePageStructuredData(document, head, settings, metadata);
     buildStylesheetLink(document, head, assets);
-    buildScriptTags(document, head, assets, { includeBindingCore: hasBindingCore });
+    buildScriptTags(document, head, assets, { includeBindingCore: requiresBindingRuntime });
     projectKnownFileImages(document);
 
     return compress(document.toString(), "text/html");

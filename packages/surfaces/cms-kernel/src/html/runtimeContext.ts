@@ -17,7 +17,7 @@ export function makeRuntimeRenderContext(kernel: KernelCms): RenderContext {
         resolveContributedAssets: (input) =>
             resolveInstalledCollectionAssets(input, kernel.collectionAssets, kernel.basePath),
         prepareBody: (body) => resolvePageLinks(body, kernel),
-        resolveAssets: (usedTags) =>
+        resolveAssets: (usedTags, renderableBlocs) =>
             resolvePageAssets(
                 {
                     content: kernel.content,
@@ -27,6 +27,7 @@ export function makeRuntimeRenderContext(kernel: KernelCms): RenderContext {
                         resolveInstalledCollectionAssets(input, kernel.collectionAssets, kernel.basePath),
                 },
                 usedTags,
+                renderableBlocs,
             ),
         faviconUrl: `${kernel.basePath}${FAVICON_ROUTE}`,
         enforceCsp: kernel.enforcePageCsp,

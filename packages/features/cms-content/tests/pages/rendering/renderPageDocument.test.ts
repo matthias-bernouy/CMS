@@ -37,7 +37,27 @@ describe("renderPageDocument", () => {
         expect(rendered.html).not.toContain("script");
         expect(rendered.html).not.toContain("onclick");
         expect(rendered.usedTags).toEqual(["atlas-action", "atlas-card"]);
-        expect(rendered.hasBindingCore).toBe(true);
+        expect(rendered.requiresBindingRuntime).toBe(false);
+        expect(rendered.renderableBlocs.map(({ id }) => id)).toEqual(["atlas-card", "atlas-action"]);
         expect(document.body.hasAttribute("data-prepared")).toBe(true);
+    });
+
+    test("detects declarative attributes and interpolation that need the binding runtime", async () => {
+        for (const html of ['<p cms-condition="state.ready">Ready</p>', "<p>{{ state.title }}</p>"]) {
+            const { document } = parseHTML("<html><body></body></html>");
+            const rendered = await renderPageDocument(
+                document.body,
+                { html },
+                {
+                    language: "en",
+                    repository: {
+                        getRenderableBlocs: async () => [],
+                        getBlocViewJS: async () => null,
+                    },
+                },
+            );
+
+            expect(rendered.requiresBindingRuntime).toBe(true);
+        }
     });
 });

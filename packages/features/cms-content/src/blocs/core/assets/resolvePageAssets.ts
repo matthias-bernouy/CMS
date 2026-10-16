@@ -1,5 +1,5 @@
 import { getOrGenerateEntryAsync, type Cache } from "@bernouy/http-runner";
-import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
+import type { ContentReader, RenderableBloc } from "cms-content/application/interfaces/ContentReader";
 import { generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 import { generateStyleEntry } from "cms-content/theme/core/generateStyleEntry";
 import {
@@ -65,7 +65,11 @@ export type PageAssetContext = {
     resolveContributedAssets(input: string): Promise<string>;
 };
 
-export async function resolvePageAssets(context: PageAssetContext, usedTags: string[]): Promise<AssetsManifest> {
+export async function resolvePageAssets(
+    context: PageAssetContext,
+    usedTags: string[],
+    renderableBlocSnapshot?: readonly RenderableBloc[],
+): Promise<AssetsManifest> {
     const prefix = context.cmsPathPrefix;
     const blocRuntimeJsUrl = `${prefix}/assets/bloc-runtime.js`;
     const blocRuntimeCacheEntryKey = blocRuntimeCacheKey(blocRuntimeJsUrl);
@@ -80,10 +84,8 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
         },
     };
 
-    const [manifest, renderableBlocs] = await Promise.all([
-        getBlocGroupManifest(context.content, collectionRevision),
-        context.content.getRenderableBlocs(),
-    ]);
+    const renderableBlocs = renderableBlocSnapshot ?? (await context.content.getRenderableBlocs());
+    const manifest = await getBlocGroupManifest(context.content, collectionRevision, renderableBlocs);
     const blocsById = new Map(renderableBlocs.map((bloc) => [bloc.id, bloc]));
 
     // Partition the page's blocs into the stable signature groups that cover

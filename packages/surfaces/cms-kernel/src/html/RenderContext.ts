@@ -1,4 +1,4 @@
-import type { ContentReader } from "@bernouy/cms-content/rendering";
+import type { ContentReader, RenderableBloc } from "@bernouy/cms-content/rendering";
 import type { AssetsManifest } from "@bernouy/cms-content/rendering";
 
 /**
@@ -15,7 +15,7 @@ export type RenderContext = {
     content: ContentReader;
     resolveContributedAssets?: (input: string) => Promise<string>;
     prepareBody?: (body: Element) => void | Promise<void>;
-    resolveAssets: (usedTags: string[]) => Promise<AssetsManifest>;
+    resolveAssets: (usedTags: string[], renderableBlocs: readonly RenderableBloc[]) => Promise<AssetsManifest>;
     /** Public stable URL emitted as `<link rel="icon">`. */
     faviconUrl: string;
     enforceCsp?: boolean;
