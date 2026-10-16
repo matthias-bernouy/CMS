@@ -19,13 +19,14 @@ test("a published Page renders and invokes only its exact capability plan", asyn
         name: "Product catalogue",
         group: "catalogue",
         description: "Displays products returned by the catalogue provider.",
-        viewJS: "customElements.define('catalog-products', class extends HTMLElement {})",
-        componentHTML:
+        viewJS: "cmsRuntime.registerBloc('catalog-products', { mount() {} })",
+        root: { accepts: ["div"] },
+        templateHTML:
             '<section cms-query="shop:list-products as products" cms-query-input=\'{"category":{"from":"literal","value":"shoes"}}\'></section>',
         ownership: { kind: "code-managed" },
         slots: {},
     });
-    await repository.insertPage("/products", "Products", "<catalog-products></catalog-products>");
+    await repository.insertPage("/products", "Products", '<div cms-bloc="catalog-products"></div>');
     const draft = await repository.getPage("/products");
     const published = await repository.updatePage({ id: draft!.id, visible: true }, draft!.revision);
     repository.getPageRequirements = async () => [
@@ -62,9 +63,9 @@ test("a published Page renders and invokes only its exact capability plan", asyn
     const pageResponse = await runner.defaultHandler("GET", "/")(new Request("https://site.test/products"));
     const html = await pageResponse.text();
     expect(pageResponse.status).toBe(200);
-    expect(html).toContain("<catalog-products");
+    expect(html).toContain('cms-bloc="catalog-products"');
     expect(html).toContain("shop:list-products as products");
-    expect(html).toContain("/.cms/assets/component.js?v=");
+    expect(html).toContain("/.cms/assets/bloc-runtime.js?v=");
 
     const callResponse = await runner.defaultHandler(
         "QUERY",

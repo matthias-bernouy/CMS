@@ -1,7 +1,7 @@
 import type KernelCms from "cms-kernel/KernelCms";
 import { serveBlocSet } from "@bernouy/cms-content/http";
 import serveFavicon from "cms-kernel/http/assets/serveFavicon";
-import { serveBindingCoreRuntime, serveComponentRuntime } from "@bernouy/cms-content/http";
+import { serveBindingCoreRuntime, serveBlocRuntime } from "@bernouy/cms-content/http";
 import {
     generateStyleEntry,
     CMS_CACHE_KEYS,
@@ -51,7 +51,7 @@ export function mountKernelRoutes(kernel: KernelCms) {
         publicRuntimePaths: [
             `${kernel.cmsPathPrefix}/style`,
             `${kernel.cmsPathPrefix}/blocset`,
-            `${kernel.cmsPathPrefix}/assets/component.js`,
+            `${kernel.cmsPathPrefix}/assets/bloc-runtime.js`,
             `${kernel.cmsPathPrefix}/assets/cms-binding-core.js`,
         ],
         capabilityCallsEnabled: !!(kernel.capabilityGateway || kernel.capabilityHandler),
@@ -86,7 +86,7 @@ export function mountKernelRoutes(kernel: KernelCms) {
                 resolveInstalledCollectionAssets(input, kernel.collectionAssets, kernel.basePath),
         }),
     );
-    runner.addEndpoint("GET", "/.cms/assets/component.js", (request) => serveComponentRuntime(request, kernel.cache));
+    runner.addEndpoint("GET", "/.cms/assets/bloc-runtime.js", (request) => serveBlocRuntime(request, kernel.cache));
     runner.addEndpoint("GET", "/.cms/assets/cms-binding-core.js", (request) =>
         serveBindingCoreRuntime(request, kernel.cache),
     );

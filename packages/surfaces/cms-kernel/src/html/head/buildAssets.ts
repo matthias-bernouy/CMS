@@ -1,5 +1,4 @@
 import type { AssetsManifest } from "@bernouy/cms-content/rendering";
-import { buildBlocFoucShellCss } from "@bernouy/cms-content/rendering";
 
 /**
  * Preload the stylesheet + every bloc/runtime script as early as possible.
@@ -19,9 +18,9 @@ export function buildAssetPreloads(
     stylePreload.setAttribute("href", assets.styleUrl);
     head.appendChild(stylePreload);
 
-    const [componentUrl, ...blocUrls] = assets.scriptUrls;
+    const [blocRuntimeUrl, ...blocUrls] = assets.scriptUrls;
     const scriptUrls = options.includeBindingCore
-        ? [...(componentUrl ? [componentUrl] : []), assets.bindingCoreUrl, ...blocUrls]
+        ? [...(blocRuntimeUrl ? [blocRuntimeUrl] : []), assets.bindingCoreUrl, ...blocUrls]
         : assets.scriptUrls;
     for (const src of new Set(scriptUrls)) {
         const preload = document.createElement("link");
@@ -41,23 +40,6 @@ export function buildBindingCloak(document: Document, head: HTMLElement, enabled
     style.id = "cms-binding-cloak";
     style.textContent =
         "cms-binding-core{display:contents}cms-binding-core:not(:defined) :is([cms-mutation],[cms-query]){visibility:hidden}";
-    head.appendChild(style);
-}
-
-/**
- * Anti-FOUC shell: while any Bloc used by the page is still undefined, hide
- * the body and paint a neutral background. The server-rendered Light DOM stays
- * in the document for crawlers and becomes visible in its final layout once
- * every required custom element has registered.
- */
-export function buildFoucShell(document: Document, head: HTMLElement, usedTags: string[]): void {
-    const css = buildBlocFoucShellCss(usedTags);
-    if (!css) {
-        return;
-    }
-
-    const style = document.createElement("style");
-    style.textContent = css;
     head.appendChild(style);
 }
 

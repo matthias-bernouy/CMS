@@ -34,7 +34,7 @@ describe("Kernel robots", () => {
         for (const path of [
             "/site/.cms/style",
             "/site/.cms/blocset",
-            "/site/.cms/assets/component.js",
+            "/site/.cms/assets/bloc-runtime.js",
             "/site/.cms/assets/cms-binding-core.js",
         ]) {
             expect(body).toContain(`Allow: ${path}$\n`);

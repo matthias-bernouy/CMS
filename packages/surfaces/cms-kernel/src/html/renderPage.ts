@@ -7,12 +7,7 @@ import { projectKnownFileImages } from "cms-kernel/html/fileImages";
 import { prepareNetworkInertBindings } from "@bernouy/cms-content/browser/dom";
 import { buildHtmlBasics } from "cms-kernel/html/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-kernel/html/head/buildMetaCsp";
-import {
-    buildAssetPreloads,
-    buildBindingCloak,
-    buildFoucShell,
-    buildStylesheetLink,
-} from "cms-kernel/html/head/buildAssets";
+import { buildAssetPreloads, buildBindingCloak, buildStylesheetLink } from "cms-kernel/html/head/buildAssets";
 import { buildScriptTags } from "cms-kernel/html/head/buildScriptTags";
 import { defineMetaTags, definePageStructuredData } from "@bernouy/cms-seo";
 import type { RenderContext } from "cms-kernel/html/RenderContext";
@@ -26,7 +21,7 @@ import { resolvePageMetadata, type PageRenderMetadata } from "@bernouy/cms-seo";
  * <head> layout: preloads are emitted early so the browser starts
  * downloading the runtime + theme before reaching the deferred `<script>`
  * tags at the bottom. All scripts use `defer`, which keeps execution in
- * document order: `component.js` runs before any bloc IIFE, and the parser
+ * document order: `bloc-runtime.js` runs before any Bloc bundle, and the parser
  * is never blocked.
  *
  * `ctx.resolveAssets` is the strategy seam — runtime serves through the
@@ -87,7 +82,6 @@ export async function renderPage(
     }
     buildAssetPreloads(document, head, assets, { includeBindingCore: hasBindingCore });
     buildBindingCloak(document, head, hasBindingCore);
-    buildFoucShell(document, head, usedTags);
     defineMetaTags(
         document,
         head,

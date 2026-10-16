@@ -9,7 +9,7 @@ type FileImageReference = {
 
 /** Project concrete FileReferences before HTML serialization; unresolved bindings stay client-driven. */
 export function projectKnownFileImages(document: Document): void {
-    for (const host of document.querySelectorAll<HTMLElement>("ulvia-official-image[file]")) {
+    for (const host of document.querySelectorAll<HTMLElement>('[cms-bloc="ulvia-official-image"][file]')) {
         const reference = parseReference(host.getAttribute("file"));
         const image = host.querySelector<HTMLImageElement>(":scope > img");
         if (!reference || !image || !reference.url) {

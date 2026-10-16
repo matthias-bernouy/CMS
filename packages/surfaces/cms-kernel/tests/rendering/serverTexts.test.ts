@@ -18,7 +18,7 @@ const ctx: RenderContext = {
         ],
     } as unknown as ContentReader,
     resolveAssets: async () => ({
-        componentUrl: "/component.js",
+        blocRuntimeUrl: "/bloc-runtime.js",
         bindingCoreUrl: "/binding.js",
         styleUrl: "/style.css",
         blocUrls: [],

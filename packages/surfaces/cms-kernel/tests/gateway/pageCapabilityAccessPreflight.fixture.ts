@@ -89,7 +89,7 @@ export async function mountPage(options: {
 }): Promise<{ handler: RouteHandler }> {
     const runner = new CaptureRunner();
     const cache = new InMemoryCache();
-    cache.set(CMS_CACHE_KEYS.js("/.cms/assets/component.js"), compress("component", "text/javascript"));
+    cache.set(CMS_CACHE_KEYS.js("/.cms/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
     const repository = pageRepository(

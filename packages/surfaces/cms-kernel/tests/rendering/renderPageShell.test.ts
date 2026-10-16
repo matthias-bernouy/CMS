@@ -30,11 +30,11 @@ function makeCtx(siteHost = ""): RenderContext {
             getRenderableBlocs: async () => [],
         } as unknown as ContentReader,
         resolveAssets: async () => ({
-            componentUrl: "/.cms/assets/component.js?v=c",
+            blocRuntimeUrl: "/.cms/assets/bloc-runtime.js?v=c",
             bindingCoreUrl: BINDING_CORE_URL,
             styleUrl: "/.cms/style?v=s",
             blocUrls: ["/.cms/blocs/example.js?v=b"],
-            scriptUrls: ["/.cms/assets/component.js?v=c", "/.cms/blocs/example.js?v=b"],
+            scriptUrls: ["/.cms/assets/bloc-runtime.js?v=c", "/.cms/blocs/example.js?v=b"],
         }),
         faviconUrl: "/favicon.ico",
     };
@@ -67,7 +67,7 @@ describe("renderPage — binding core wrapper", () => {
         const { document } = parseHTML(html);
         expect(document.querySelector('script[type="application/ld+json"]')).not.toBeNull();
         expect(Array.from(document.querySelectorAll("script[src]"), (script) => script.getAttribute("src"))).toEqual([
-            "/.cms/assets/component.js?v=c",
+            "/.cms/assets/bloc-runtime.js?v=c",
             BINDING_CORE_URL,
             "/.cms/blocs/example.js?v=b",
         ]);
@@ -84,8 +84,8 @@ describe("renderPage — binding core wrapper", () => {
         };
         repository.getBlocViewJS = async (tag) =>
             ({
-                "site-header": "const t = `<base-nav></base-nav>`;",
-                "base-nav": "const t = `<base-link></base-link>`;",
+                "site-header": 'const t = `<nav cms-bloc="base-nav"></nav>`;',
+                "base-nav": 'const t = `<a cms-bloc="base-link"></a>`;',
                 "base-link": "LINK();",
             })[tag] ?? null;
         let resolvedTags: string[] = [];
@@ -95,7 +95,7 @@ describe("renderPage — binding core wrapper", () => {
             return resolveAssets(tags);
         };
 
-        await renderPage({ ...page, content: "<site-header></site-header>" }, ctx);
+        await renderPage({ ...page, content: '<header cms-bloc="site-header"></header>' }, ctx);
 
         expect(resolvedTags).toEqual(["base-link", "base-nav", "site-header"]);
     });
@@ -135,12 +135,12 @@ describe("renderPage — binding core wrapper", () => {
         const entry = await renderPage(
             {
                 ...page,
-                content: `<ulvia-official-image file='${reference}' alt="Product"><img></ulvia-official-image>`,
+                content: `<figure cms-bloc="ulvia-official-image" file='${reference}' alt="Product"><img></figure>`,
             },
             makeCtx(),
         );
         const { document } = parseHTML(new TextDecoder().decode(entry.raw));
-        const image = document.querySelector("ulvia-official-image > img");
+        const image = document.querySelector('[cms-bloc="ulvia-official-image"] > img');
         expect(image?.getAttribute("src")).toContain("/files/file-1/generation-1");
         expect(image?.getAttribute("srcset")).toContain("/representations/responsive/640.webp 640w");
         expect(image?.getAttribute("alt")).toBe("Product");
