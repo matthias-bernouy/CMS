@@ -21,6 +21,20 @@ const proposal = {
 };
 
 describe("marketplace notification public contracts", () => {
+    test("retains the published template preview envelope for every lifecycle sample", async () => {
+        const definition = await loadIntegrationDefinition<Definition>(
+            new URL("../../../definition.json", import.meta.url),
+        );
+        const source = definition.artifacts.find((artifact) => artifact.type === "source")?.source;
+        const shape = source?.endpoints.find((endpoint) => endpoint.endpointId === "listDefaultNotificationTemplates")
+            ?.output?.[0]?.body;
+        if (!shape) {
+            throw new Error("Notification template output shape is missing");
+        }
+        const payload = await notificationTemplates().json();
+        expect(() => projectStrictDataShape(payload, shape, "response")).not.toThrow();
+    });
+
     test("preserves offer and proposal snapshots through strict source projection without an order", async () => {
         const definition = await loadIntegrationDefinition<Definition>(
             new URL("../../../definition.json", import.meta.url),

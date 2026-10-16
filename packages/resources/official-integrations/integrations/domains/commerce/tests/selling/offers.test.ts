@@ -10,12 +10,14 @@ import { publicOfferDetailReadModel } from "./offer/publicReadModelFixtures";
 installCommerceTestEnvironment();
 
 describe("commerce offer requests", () => {
-    test("routes the migration health probe through both Commerce function slugs", async () => {
+    test("routes the migration health probe through current and historical Commerce function slugs", async () => {
         const stable = await requestCommerce("/health");
-        const candidate = await requestCommerce("/health", { functionSlug: "cms-commerce-v1-1" });
+        const previous = await requestCommerce("/health", { functionSlug: "cms-commerce-v1-1" });
+        const candidate = await requestCommerce("/health", { functionSlug: "cms-commerce-v2-1" });
 
-        expect([stable.status, candidate.status]).toEqual([200, 200]);
+        expect([stable.status, previous.status, candidate.status]).toEqual([200, 200, 200]);
         expect(await stable.json()).toEqual({ ok: true });
+        expect(await previous.json()).toEqual({ ok: true });
         expect(await candidate.json()).toEqual({ ok: true });
     });
 

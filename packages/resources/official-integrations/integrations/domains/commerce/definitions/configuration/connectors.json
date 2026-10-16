@@ -41,6 +41,19 @@
                         "$include": "compatibility/http.json"
                     }
                 }
+            },
+            {
+                "name": "cms-commerce-v2-1",
+                "directory": "functions/cms-commerce",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_COMMERCE_API_KEY": "{{generated.cmsApiKey}}"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/http.json"
+                    }
+                }
             }
         ],
         "connectorKey": "commerce",
@@ -49,7 +62,7 @@
         "migration": {
             "install": {
                 "revision": 0,
-                "digest": "sha256:cba3751b31702bb821e198fb092fa0d3ecab4f67a48806a298546b1df77622cc",
+                "digest": "sha256:b94c531a2a45a4aa256be23838a7851f5c991ca0bdd19efea998e60fc44e823a",
                 "coveredMigrations": []
             },
             "migrations": [],
@@ -58,6 +71,16 @@
                     "id": "commerce-1-1-runtime",
                     "checksum": "sha256:450c7944ff2a297ee9d7146c106e510bfceaf450c7b14a749134183fa0b4d3f2",
                     "path": "repeatables/commerce-1.1.0.sql"
+                },
+                {
+                    "id": "commerce-1-1-shipping-review",
+                    "checksum": "sha256:b7bf560035853e562b2e2bbec3d390bba5947b76c78964a63bdd726243c66b17",
+                    "path": "repeatables/commerce-1.1.1-shipping-review.sql"
+                },
+                {
+                    "id": "commerce-2-heif-media",
+                    "checksum": "sha256:816575f7a3ebfd7f854f5573207002aec60811905fde51f8279664b36815a785",
+                    "path": "repeatables/commerce-2.0.0-heif-media.sql"
                 },
                 {
                     "id": "commerce-marketplace-notifications",
@@ -80,6 +103,22 @@
                         "observedSchemaDigest": "3b164124d1ba28ed1637cb3b9c146d8b1614ebefc2b40314aac5562d38445c37",
                         "coveredMigrations": []
                     }
+                },
+                {
+                    "range": "1.1.0",
+                    "migrationRevision": 0
+                },
+                {
+                    "range": "1.1.1",
+                    "migrationRevision": 0
+                },
+                {
+                    "range": "2.0.0",
+                    "migrationRevision": 0
+                },
+                {
+                    "range": "2.0.1",
+                    "migrationRevision": 0
                 }
             ],
             "equivalence": {
@@ -192,6 +231,7 @@
                     }
                 ]
             },
+            "pointOfNoReturn": "before-contract",
             "cmsMediated": {
                 "strategy": "binding-switch",
                 "drainSeconds": 1,
@@ -202,8 +242,7 @@
                         "ok": true
                     }
                 }
-            },
-            "pointOfNoReturn": "before-contract"
+            }
         }
     }
 ]

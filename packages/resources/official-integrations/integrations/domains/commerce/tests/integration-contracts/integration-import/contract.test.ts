@@ -29,7 +29,7 @@ import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { connectorDeployer, installedConsent } from "./setup";
 import { installCommerceTestEnvironment, supabaseUrl } from "../../harness";
 installCommerceTestEnvironment();
-describe("commerce 1.1.0 contract", () => {
+describe("commerce 2.1.0 contract", () => {
     test("loads and imports the official Commerce contract", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const catalog = await repository.list();
@@ -88,7 +88,7 @@ describe("commerce 1.1.0 contract", () => {
         const functionSecrets = deployment?.functions[0]?.secrets ?? {};
 
         expect(catalog.map((entry) => entry.kind)).toContain("commerce");
-        expect(definition).toMatchObject({ kind: "commerce", version: "1.1.0", type: "source" });
+        expect(definition).toMatchObject({ kind: "commerce", version: "2.1.0", type: "source" });
         expect(definition.dependencies).toEqual([
             { name: "emailer", kind: "emailer", optional: true, versionRange: "^1.0.0" },
             { name: "consent", kind: "consent", versionRange: "^1.0.0" },
@@ -120,41 +120,41 @@ describe("commerce 1.1.0 contract", () => {
         );
         expect(endpointUrns).toEqual(expect.arrayContaining(expectedEndpointUrns));
         expect(endpointTargets).toMatchObject({
-            "urn:commerce:productVariants": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/admin/product/variants`,
-            "urn:commerce:productVariant": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/admin/product/variant`,
-            "urn:commerce:productImage": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/admin/product/image`,
-            "urn:commerce:reorderProductImages": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/admin/product/images/reorder`,
-            "urn:commerce:offerImage": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/admin/offer/image`,
-            "urn:commerce:createMyOffer": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/me/offers`,
-            "urn:commerce:publicOfferImage": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/offer/image`,
-            "urn:commerce:myOrderImage": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/me/order/image`,
-            "urn:commerce:submitMyOfferPrice": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/me/offer/price`,
-            "urn:commerce:verifyPendingSellerPayoutEligibility": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/seller/payout-eligibility`,
-            "urn:commerce:getProtectedCheckoutSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/protected-checkout/seller-context`,
-            "urn:commerce:getProtectedPaymentSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/protected-payment/seller-context`,
-            "urn:commerce:getOfferNegotiationContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/offer/negotiation-context`,
-            "urn:commerce:getPaymentOrderContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/order/payment-context`,
-            "urn:commerce:getOrderFulfillmentBuyerContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/order/payment-context`,
-            "urn:commerce:getOrderFulfillmentSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/order/fulfillment/seller-context`,
-            "urn:commerce:getOrderShipmentCreationSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/order/shipment-creation/seller-context`,
-            "urn:commerce:getOrderLabelSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/order/label/seller-context`,
-            "urn:commerce:getOrderShippingActionsSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/order/shipping/actions/seller-context`,
-            "urn:commerce:reopenOrderShippingWindow": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/admin/order/shipping-window/reopen`,
-            "urn:commerce:getOrderDeliverySetupContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/order/delivery-setup-context`,
-            "urn:commerce:getOrderDeliverySelectionContext": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/system/order/delivery-selection-context`,
-            "urn:commerce:createOrder": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/me/orders`,
-            "urn:commerce:mySales": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/me/sales`,
-            "urn:commerce:mySale": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/me/sale`,
-            "urn:commerce:reviewOffer": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/admin/offer/review`,
-            "urn:commerce:offerCustomFields": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/configuration/offer-custom-fields`,
-            "urn:commerce:entityCustomFields": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/configuration/custom-fields`,
-            "urn:commerce:getMyNotificationPreferences": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/notifications/preferences`,
-            "urn:commerce:claimNotifications": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/notifications/system/claim`,
-            "urn:commerce:listDefaultNotificationTemplates": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/notifications/templates`,
-            "urn:commerce:submitMyMarketplaceServiceWithdrawalRequest": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/me/order/service-withdrawal-requests`,
-            "urn:commerce:myMarketplaceServiceWithdrawalRequests": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/me/order/service-withdrawal-requests`,
-            "urn:commerce:marketplaceServiceWithdrawalRequests": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/admin/service-withdrawal-requests`,
-            "urn:commerce:reviewMarketplaceServiceWithdrawalRequest": `${supabaseUrl}/functions/v1/cms-commerce-v1-1/admin/service-withdrawal-request/review`,
+            "urn:commerce:productVariants": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/admin/product/variants`,
+            "urn:commerce:productVariant": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/admin/product/variant`,
+            "urn:commerce:productImage": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/admin/product/image`,
+            "urn:commerce:reorderProductImages": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/admin/product/images/reorder`,
+            "urn:commerce:offerImage": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/admin/offer/image`,
+            "urn:commerce:createMyOffer": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/me/offers`,
+            "urn:commerce:publicOfferImage": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/offer/image`,
+            "urn:commerce:myOrderImage": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/me/order/image`,
+            "urn:commerce:submitMyOfferPrice": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/me/offer/price`,
+            "urn:commerce:verifyPendingSellerPayoutEligibility": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/seller/payout-eligibility`,
+            "urn:commerce:getProtectedCheckoutSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/protected-checkout/seller-context`,
+            "urn:commerce:getProtectedPaymentSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/protected-payment/seller-context`,
+            "urn:commerce:getOfferNegotiationContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/offer/negotiation-context`,
+            "urn:commerce:getPaymentOrderContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/order/payment-context`,
+            "urn:commerce:getOrderFulfillmentBuyerContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/order/payment-context`,
+            "urn:commerce:getOrderFulfillmentSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/order/fulfillment/seller-context`,
+            "urn:commerce:getOrderShipmentCreationSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/order/shipment-creation/seller-context`,
+            "urn:commerce:getOrderLabelSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/order/label/seller-context`,
+            "urn:commerce:getOrderShippingActionsSellerContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/order/shipping/actions/seller-context`,
+            "urn:commerce:reopenOrderShippingWindow": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/admin/order/shipping-window/reopen`,
+            "urn:commerce:getOrderDeliverySetupContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/order/delivery-setup-context`,
+            "urn:commerce:getOrderDeliverySelectionContext": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/system/order/delivery-selection-context`,
+            "urn:commerce:createOrder": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/me/orders`,
+            "urn:commerce:mySales": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/me/sales`,
+            "urn:commerce:mySale": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/me/sale`,
+            "urn:commerce:reviewOffer": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/admin/offer/review`,
+            "urn:commerce:offerCustomFields": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/configuration/offer-custom-fields`,
+            "urn:commerce:entityCustomFields": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/configuration/custom-fields`,
+            "urn:commerce:getMyNotificationPreferences": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/notifications/preferences`,
+            "urn:commerce:claimNotifications": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/notifications/system/claim`,
+            "urn:commerce:listDefaultNotificationTemplates": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/notifications/templates`,
+            "urn:commerce:submitMyMarketplaceServiceWithdrawalRequest": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/me/order/service-withdrawal-requests`,
+            "urn:commerce:myMarketplaceServiceWithdrawalRequests": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/me/order/service-withdrawal-requests`,
+            "urn:commerce:marketplaceServiceWithdrawalRequests": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/admin/service-withdrawal-requests`,
+            "urn:commerce:reviewMarketplaceServiceWithdrawalRequest": `${supabaseUrl}/functions/v1/cms-commerce-v2-1/admin/service-withdrawal-request/review`,
         });
         expect(
             source?.endpoints.find((endpoint) => endpoint.urn === "urn:commerce:entityCustomFields")?.access,
@@ -361,7 +361,11 @@ describe("commerce 1.1.0 contract", () => {
         }
         expect(await dashboardViews.getView("commerce-dashboard")).toBeNull();
         expect(deployment?.dataApiSchemas).toEqual(["commerce"]);
-        expect(deployment?.functions.map((fn) => fn.name)).toEqual(["cms-commerce", "cms-commerce-v1-1"]);
+        expect(deployment?.functions.map((fn) => fn.name)).toEqual([
+            "cms-commerce",
+            "cms-commerce-v1-1",
+            "cms-commerce-v2-1",
+        ]);
         expect(String(functionSecrets.CMS_COMMERCE_API_KEY)).toStartWith("cms_co_");
     });
 });

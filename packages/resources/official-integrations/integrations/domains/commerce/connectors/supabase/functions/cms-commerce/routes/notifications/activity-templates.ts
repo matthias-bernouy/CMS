@@ -86,6 +86,14 @@ export function marketplaceNotificationTemplates() {
             ],
             sampleData: {
                 recipient: { email: "recipient@example.com" },
+                // Preserve the preview envelope; actual offer/proposal snapshots have no order.
+                order: {
+                    id: "00000000-0000-0000-0000-000000000001",
+                    number: "ORDER-PENDING",
+                    status: "not_created",
+                    currency: "EUR",
+                    totalAmountMinor: 0,
+                },
                 offer: { id: 91, slug: "sample-product", title: "Sample product" },
                 delivery: { status: "updated", label },
                 action: {

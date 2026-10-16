@@ -42,7 +42,7 @@ export async function handleCommerceRequest(request: Request): Promise<Response>
 
 function routePath(request: Request): string {
     const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
-    const marker = ["/cms-commerce-v1-1", "/cms-commerce"].find(
+    const marker = ["/cms-commerce-v2-1", "/cms-commerce-v1-1", "/cms-commerce"].find(
         (candidate) => pathname === candidate || pathname.includes(`${candidate}/`),
     );
     if (!marker) {

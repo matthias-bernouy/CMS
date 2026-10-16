@@ -164,6 +164,7 @@
     },
     "required": [
         "recipient",
+        "order",
         "delivery",
         "action"
     ]

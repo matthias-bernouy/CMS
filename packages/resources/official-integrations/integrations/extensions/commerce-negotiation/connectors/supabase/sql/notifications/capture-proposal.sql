@@ -13,6 +13,13 @@ declare
     v_role text;
     v_recipient text;
 begin
+    -- Older Commerce versions retain their existing acceptance notifications.
+    -- The new producer becomes active as soon as Commerce installs its capability.
+    if pg_catalog.to_regprocedure(
+        'commerce.enqueue_marketplace_notification(text,bigint,text,bigint,timestamptz,jsonb,text[])'
+    ) is null then
+        return new;
+    end if;
     select * into strict v_proposal from commerce_negotiation.proposals where id = new.proposal_id;
     v_types := case new.event_type
         when 'created' then array['commerce.seller.proposal.received']
