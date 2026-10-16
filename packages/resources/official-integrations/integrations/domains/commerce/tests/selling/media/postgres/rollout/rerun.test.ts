@@ -93,7 +93,7 @@ describe("Commerce media connector rerun", () => {
         });
         const schemaIndex = requests.findIndex((request) => schemaQuery(request)?.includes("attach_offer_media_v2"));
         const functionIndex = requests.findIndex((request) =>
-            request.url.includes("/functions/deploy?slug=cms-commerce-v1-1"),
+            request.url.includes("/functions/deploy?slug=cms-commerce-v2-1"),
         );
         const schema = schemaQuery(requests[schemaIndex]);
         const functionFiles = await deployedFiles(requests[functionIndex]);
@@ -119,6 +119,9 @@ describe("Commerce media connector rerun", () => {
             "config",
             "config",
             "config",
+            "secret",
+            "config",
+            "function",
             "secret",
             "config",
             "function",

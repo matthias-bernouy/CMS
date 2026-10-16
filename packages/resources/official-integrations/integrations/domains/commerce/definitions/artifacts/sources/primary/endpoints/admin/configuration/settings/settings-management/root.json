@@ -2,7 +2,7 @@
     {
         "endpointId": "settings",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/settings",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v2-1/admin/settings",
         "params": [],
         "headers": [
             {

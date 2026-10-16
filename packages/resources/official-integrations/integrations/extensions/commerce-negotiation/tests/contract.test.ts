@@ -18,8 +18,8 @@ import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository, validateSource, type Source } from "@bernouy/cms-sources";
 
-describe("commerce negotiation 1.0.0", () => {
-    test("installs its Commerce-backed source and connector", async () => {
+describe("commerce negotiation 1.2.0", () => {
+    test.each(["1.0.0", "1.1.0", "2.1.0"])("installs on Commerce %s", async (version) => {
         const sources = new InMemorySourceRepository();
         const dashboards = new InMemoryDashboardRepository();
         const dashboardViews = new InMemoryDashboardViewRepository();
@@ -31,7 +31,7 @@ describe("commerce negotiation 1.0.0", () => {
         await installations.create({
             id: "commerce",
             label: "Commerce",
-            definitionVersion: "1.0.0",
+            definitionVersion: version,
             status: "success",
             answersSnapshot: { id: "commerce" },
             secretRefs: { cmsApiKey: "COMMERCE_KEY" },

@@ -62,7 +62,7 @@ export async function requestCommerce(
         userId?: string;
         userRole?: string | null;
         correlationId?: string;
-        functionSlug?: "cms-commerce" | "cms-commerce-v1-1";
+        functionSlug?: "cms-commerce" | "cms-commerce-v1-1" | "cms-commerce-v2-1";
         body?: JsonRecord;
         formData?: FormData;
     } = {},
@@ -120,7 +120,7 @@ function commerceRequest(
         userId?: string;
         userRole?: string | null;
         correlationId?: string;
-        functionSlug?: "cms-commerce" | "cms-commerce-v1-1";
+        functionSlug?: "cms-commerce" | "cms-commerce-v1-1" | "cms-commerce-v2-1";
         body?: JsonRecord;
         formData?: FormData;
     },

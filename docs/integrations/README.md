@@ -11,6 +11,8 @@ This section documents the supported workflow:
 - [Dashboard detail forms](./dashboard-views.md) defines shared saves, independent
   operations and related-resource panels; [Commerce media](./commerce-media.md)
   documents staging and attachment at Save.
+- [Commerce notifications](./commerce-notifications.md) documents marketplace
+  lifecycle emails, version compatibility, recipients, and upgrade order.
 - [Settings and Health](./management.md) defines zero-input installation,
   integration-owned configuration, scoped references, declared actions, and
   the versioned Health report and observation contracts.

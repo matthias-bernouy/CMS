@@ -16,6 +16,7 @@
         { "file": "commands/decide-proposal.sql" },
         { "file": "commands/withdraw-proposal.sql" },
         { "file": "commands/moderate-proposal.sql" },
+        { "file": "notifications/capture-proposal.sql" },
         { "file": "access/row-level-security.sql" },
         { "file": "access/schema-access.sql" },
         { "file": "access/database-contract-comments.sql" }
