@@ -16,10 +16,8 @@ export type TBloc = {
     description: string;
     /** Optional authored image under the immutable package's assets/ directory. */
     thumbnail?: PresentationImage;
-    /** Inactive contributed resources remain renderable but are hidden from the authoring catalogue. */
-    catalogue?: "active" | "inactive";
-    /** Internal behavior component omitted from the authoring catalogue. */
-    internal?: boolean;
+    /** Hidden resources remain renderable but are omitted from the authoring catalogue. */
+    catalogue?: "listed" | "hidden";
     /** Explicit dependency closure seed for immutable contributed Blocs. */
     uses?: readonly string[];
     /** Allowed native tags for the element carrying `cms-bloc`. */

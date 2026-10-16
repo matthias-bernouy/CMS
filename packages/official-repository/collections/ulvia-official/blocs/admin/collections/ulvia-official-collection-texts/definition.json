@@ -5,7 +5,7 @@
     "description": "bloc.collection-texts.description",
     "category": "bloc.category.administration",
     "order": 40,
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-cluster",

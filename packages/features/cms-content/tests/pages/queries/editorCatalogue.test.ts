@@ -4,14 +4,6 @@ import { getCmsEditorCatalogue } from "@bernouy/cms-content";
 test("editor catalogue projects deterministic authoring contracts", async () => {
     const getBlocsList = async () => [
         {
-            id: "sample-hidden",
-            name: "Hidden",
-            group: "Internal",
-            description: "",
-            internal: true,
-            ownership: { kind: "code-managed" as const },
-        },
-        {
             id: "sample-table",
             name: "Table",
             group: "Administration",

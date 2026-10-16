@@ -17,7 +17,7 @@ const common = [
     "description",
     "category",
     "order",
-    "internal",
+    "catalogue",
     "thumbnail",
     "uses",
     "requires",
@@ -52,8 +52,8 @@ function parseBloc(
         path,
     );
     const id = parseCollectionBlocTag(source.id, collectionId, `${path}.id`);
-    if (source.internal !== undefined && typeof source.internal !== "boolean") {
-        invalid("must be a boolean", `${path}.internal`);
+    if (source.catalogue !== undefined && source.catalogue !== "listed" && source.catalogue !== "hidden") {
+        invalid("must be listed or hidden", `${path}.catalogue`);
     }
     const base = {
         id,
@@ -69,7 +69,7 @@ function parseBloc(
         ...(source.order === undefined
             ? {}
             : { order: integer(source.order, 0, Number.MAX_SAFE_INTEGER, `${path}.order`) }),
-        ...(source.internal === undefined ? {} : { internal: source.internal as boolean }),
+        ...(source.catalogue === undefined ? {} : { catalogue: source.catalogue as "listed" | "hidden" }),
         ...(source.thumbnail === undefined ? {} : { thumbnail: identifier(source.thumbnail, `${path}.thumbnail`) }),
         uses: blocReferences(source.uses === undefined ? [] : source.uses, `${path}.uses`, limits),
         requires: parseRequirements(source.requires === undefined ? [] : source.requires, `${path}.requires`, limits),

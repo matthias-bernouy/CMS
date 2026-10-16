@@ -118,7 +118,7 @@ test("collection details expose translated metadata and the installed bloc catal
                                     label: "bloc.card.label",
                                     description: "bloc.card.description",
                                     generation: 2,
-                                    internal: false,
+                                    catalogue: "listed",
                                 },
                             ],
                         },
@@ -140,7 +140,7 @@ test("collection details expose translated metadata and the installed bloc catal
                 label: "Card",
                 description: "A reusable card.",
                 generation: 2,
-                internal: false,
+                catalogue: "listed",
             },
         ],
     });

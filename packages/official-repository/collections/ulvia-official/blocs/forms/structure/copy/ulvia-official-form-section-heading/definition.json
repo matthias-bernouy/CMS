@@ -3,7 +3,7 @@
     "id": "ulvia-official-form-section-heading",
     "label": "bloc.form-section.label",
     "description": "bloc.form-section.description",
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [],
     "requires": [],
     "slots": {

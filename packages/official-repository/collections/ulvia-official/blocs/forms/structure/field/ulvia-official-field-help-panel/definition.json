@@ -3,7 +3,7 @@
     "id": "ulvia-official-field-help-panel",
     "label": "bloc.field-help-panel.label",
     "description": "bloc.field-help-panel.description",
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [],
     "requires": [],
     "slots": {

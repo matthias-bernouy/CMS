@@ -139,7 +139,7 @@ function requirementBreaks(previous: CollectionRelease, next: CollectionRelease)
         const replacement = nextBlocs.get(bloc.id);
         if (replacement) {
             compare(`bloc:${bloc.id}`, bloc.requires, replacement.requires);
-            if (!bloc.internal && replacement.internal) {
+            if (bloc.catalogue !== "hidden" && replacement.catalogue === "hidden") {
                 breaks.push(`bloc:${bloc.id}`);
             }
         }

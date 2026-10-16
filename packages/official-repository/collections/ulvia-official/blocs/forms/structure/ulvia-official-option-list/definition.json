@@ -3,7 +3,7 @@
     "id": "ulvia-official-option-list",
     "label": "bloc.option-list.label",
     "description": "bloc.option-list.description",
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [],
     "requires": [],
     "slots": {

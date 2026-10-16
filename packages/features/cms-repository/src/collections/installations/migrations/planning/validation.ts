@@ -41,7 +41,7 @@ export async function validateTargetPages(
             .filter(({ release }) => targetIds.has(release.collectionId))
             .flatMap(({ release }) => release.blocs.map((bloc) => bloc.id)),
     );
-    const current = await repository.getBlocsList({ includeInactive: true });
+    const current = await repository.getBlocsList({ includeHidden: true });
     const targetBlocs = targets.flatMap(({ artifact }) =>
         artifact.release.blocs.map((bloc) => ({
             id: bloc.id,

@@ -41,7 +41,7 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
             id: bloc.id,
             generation: bloc.generation ?? 1,
             kind: bloc.kind,
-            internal: bloc.internal ?? false,
+            catalogue: bloc.catalogue ?? "listed",
             uses: bloc.uses,
             requires: bloc.requires,
             slots: bloc.slots,

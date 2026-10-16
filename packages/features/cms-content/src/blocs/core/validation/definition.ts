@@ -21,8 +21,8 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (bloc.thumbnail !== undefined) {
         bloc.thumbnail = parsePresentationImage(bloc.thumbnail);
     }
-    if (bloc.catalogue !== undefined && bloc.catalogue !== "active" && bloc.catalogue !== "inactive") {
-        throw new ContentValidationError("catalogue", "expected active or inactive");
+    if (bloc.catalogue !== undefined && bloc.catalogue !== "listed" && bloc.catalogue !== "hidden") {
+        throw new ContentValidationError("catalogue", "expected listed or hidden");
     }
     if (!isValidCustomElementTag(bloc.id)) {
         throw new ContentValidationError("id", "valid lower-case namespaced Bloc identifier expected");
@@ -50,9 +50,6 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     }
     if (bloc.compositionHTML !== undefined && bloc.viewJS.trim()) {
         throw new ContentValidationError("bloc", "viewJS and compositionHTML are mutually exclusive");
-    }
-    if (bloc.internal && (bloc.compositionHTML !== undefined || !bloc.viewJS.trim())) {
-        throw new ContentValidationError("internal", "internal blocs must provide a behavior runtime");
     }
     validateManagedNativeElement(bloc.root, "root");
     if (bloc.content !== undefined) {

@@ -4,7 +4,7 @@
     "label": "bloc.login-page.label",
     "description": "bloc.login-page.description",
     "category": "bloc.category.administration",
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-badge",

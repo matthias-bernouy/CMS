@@ -3,7 +3,7 @@
     "id": "ulvia-official-segmented-caption",
     "label": "bloc.segmented-control.label",
     "description": "bloc.segmented-control.description",
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [],
     "requires": [],
     "slots": {

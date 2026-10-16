@@ -12,7 +12,7 @@ import {
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {
-    getBlocsList(options?: { includeInactive?: boolean }): Promise<
+    getBlocsList(options?: { includeHidden?: boolean }): Promise<
         Array<{
             id: string;
             compositionHTML?: TBloc["compositionHTML"];

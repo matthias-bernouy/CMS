@@ -20,7 +20,8 @@ describe("site bloc validation", () => {
         expect(() => validateBlocWrite({ ...artifact, viewJS: "", compositionHTML: "  " })).toThrow(
             ContentValidationError,
         );
-        expect(() => validateBlocWrite({ ...artifact, internal: true, viewJS: "" })).toThrow(ContentValidationError);
+        expect(validateBlocWrite({ ...artifact, catalogue: "hidden", viewJS: "" }).catalogue).toBe("hidden");
+        expect(() => validateBlocWrite({ ...artifact, catalogue: "private" as never })).toThrow(ContentValidationError);
         expect(() => validateBlocWrite({ ...artifact, id: "p" })).toThrow(/namespaced Bloc identifier/);
         expect(validateBlocWrite({ ...artifact, root: { accepts: ["button", "a"] } }).root).toEqual({
             accepts: ["button", "a"],

@@ -53,7 +53,7 @@ export function validatePageDocument(
     if (missing.length > 0) {
         throw new ContentValidationError(
             "content",
-            `unknown or inactive reference(s): ${missing.map((tag) => `bloc "${tag}"`).join(", ")}`,
+            `unknown or hidden reference(s): ${missing.map((tag) => `bloc "${tag}"`).join(", ")}`,
         );
     }
 
@@ -87,7 +87,7 @@ function validateHosts(
             if (allowUnknown) {
                 continue;
             }
-            throw new ContentValidationError("content", `unknown or inactive reference: bloc "${tag}"`);
+            throw new ContentValidationError("content", `unknown or hidden reference: bloc "${tag}"`);
         }
         const issue = pageBlocHostAttributesIssue(
             Object.fromEntries(element.getAttributeNames().map((name) => [name, element.getAttribute(name) ?? ""])),

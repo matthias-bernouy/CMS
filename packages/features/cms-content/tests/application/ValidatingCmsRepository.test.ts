@@ -151,10 +151,10 @@ describe("ValidatingCmsRepository — pages", () => {
         await repo.createBloc(bloc);
         await repo.insertPage("/draft", "Draft", '<div cms-bloc="fixture-card"></div>');
         const page = (await repo.getPage("/draft"))!;
-        await repo.replaceBloc({ ...bloc, catalogue: "inactive" });
+        await repo.replaceBloc({ ...bloc, catalogue: "hidden" });
 
         await expect(repo.updatePage({ id: page.id, visible: true }, page.revision)).rejects.toThrow(
-            "unknown or inactive",
+            "unknown or hidden",
         );
     });
 

@@ -139,7 +139,7 @@ test("installed Page aliases redirect to their effective collection route", asyn
     });
 });
 
-test("installed internal blocs stay out of the authoring catalogue but remain available to rendering", async () => {
+test("installed hidden blocs stay out of the authoring catalogue but remain available to rendering", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease({
         ...release,
@@ -155,7 +155,7 @@ test("installed internal blocs stay out of the authoring catalogue but remain av
                 root: { accepts: ["div"] },
                 id: "test-helper",
                 label: "bloc.helper.label",
-                internal: true,
+                catalogue: "hidden",
                 template: "<div></div>",
                 uses: [],
                 requires: [],
@@ -167,7 +167,7 @@ test("installed internal blocs stay out of the authoring catalogue but remain av
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
 
     expect((await repository.getBlocsList()).map(({ id }) => id)).toEqual([]);
-    expect((await repository.getBlocsList({ includeInactive: true })).map(({ id }) => id)).toEqual(["test-helper"]);
+    expect((await repository.getBlocsList({ includeHidden: true })).map(({ id }) => id)).toEqual(["test-helper"]);
     expect((await createContentReader(repository).getRenderableBlocs()).map(({ id }) => id)).toEqual(["test-helper"]);
 });
 

@@ -120,7 +120,7 @@ export class InMemoryBlocRepository {
     async getBlocsList(options: BlocListOptions = {}): Promise<BlocListItemResponse[]> {
         return [...this.blocs.values()].flatMap((record) => {
             const bloc = record.artifact;
-            return bloc && (options.includeInactive || bloc.catalogue !== "inactive")
+            return bloc && (options.includeHidden || bloc.catalogue !== "hidden")
                 ? [
                       {
                           id: record.tag,
@@ -133,7 +133,7 @@ export class InMemoryBlocRepository {
                           ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
                           ...(bloc.slots ? { slots: structuredClone(bloc.slots) } : {}),
                           ...(bloc.settings ? { settings: structuredClone(bloc.settings) } : {}),
-                          ...(bloc.internal ? { internal: true } : {}),
+                          ...(bloc.catalogue ? { catalogue: bloc.catalogue } : {}),
                           ...(bloc.uses ? { uses: [...bloc.uses] } : {}),
                           root: bloc.root,
                           ...(bloc.content ? { content: structuredClone(bloc.content) } : {}),

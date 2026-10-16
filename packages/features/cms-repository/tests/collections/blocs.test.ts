@@ -114,9 +114,9 @@ describe("collection bloc admission", () => {
         expect(() => check([component({ [key]: null })])).toThrow();
     });
 
-    test("enforces IDs, booleans, finite lists and markup bounds", () => {
+    test("enforces IDs, catalogue visibility, finite lists and markup bounds", () => {
         expect(() => check([component({ id: "foreign-card" })])).toThrow("collection namespace");
-        expect(() => check([component({ internal: "true" })])).toThrow("boolean");
+        expect(() => check([component({ catalogue: "private" })])).toThrow("listed or hidden");
         expect(() => parseBlocs([component(), component()], "demo", { ...limits, maxBlocs: 1 })).toThrow("at most 1");
         expect(() => parseBlocs([component()], "demo", { ...limits, maxMarkupLength: 2 })).toThrow("at most 2");
     });

@@ -70,7 +70,7 @@ export function projectInstalled(
                           ? resolveCollectionTranslation(release, bloc.description, release.locale)
                           : "",
                       generation: bloc.generation ?? 1,
-                      internal: bloc.internal ?? false,
+                      catalogue: bloc.catalogue ?? "listed",
                   })),
               }
             : {}),

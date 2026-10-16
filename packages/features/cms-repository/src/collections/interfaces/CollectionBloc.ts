@@ -40,7 +40,8 @@ interface CollectionBlocBase {
     readonly category?: CollectionTranslationKey;
     /** Stable ascending position inside the category. */
     readonly order?: number;
-    readonly internal?: boolean;
+    /** Hidden Blocs remain usable by Pages and other Blocs but are omitted from authoring catalogues. */
+    readonly catalogue?: "listed" | "hidden";
     readonly thumbnail?: string;
     readonly uses: readonly string[];
     readonly requires: readonly CollectionCapabilityRequirement[];

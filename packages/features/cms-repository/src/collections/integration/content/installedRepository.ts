@@ -14,7 +14,7 @@ import {
     createBlocUsageResolver,
     type PageRouteRegistry,
     type RenderablePage,
-    type TBloc,
+    validateBlocWrite,
 } from "@bernouy/cms-content";
 import { createInstalledSnapshotReader } from "./installedSnapshot";
 import { composeCollectionThemes } from "./theme";
@@ -69,44 +69,45 @@ export function withInstalledCollections(
                             thumbnailPath && presentationImageContentType(thumbnailPath) === thumbnail?.mediaType
                                 ? await store.getReleaseAsset(digest, thumbnail!.id)
                                 : null;
+                        const artifact = validateBlocWrite({
+                            id: bloc.id,
+                            name: resolveCollectionTranslation(release, bloc.label),
+                            group: resolveCollectionTranslation(release, bloc.category ?? release.name),
+                            ...(bloc.order === undefined ? {} : { catalogueOrder: bloc.order }),
+                            description: bloc.description
+                                ? resolveCollectionTranslation(release, bloc.description)
+                                : "",
+                            ownership: { kind: "code-managed" },
+                            uses: bloc.uses,
+                            viewJS: bloc.kind === "component" ? (bloc.runtime?.viewJS ?? "") : "",
+                            catalogue: bloc.catalogue,
+                            root: bloc.root,
+                            ...(bloc.content ? { content: bloc.content } : {}),
+                            ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
+                            ...(bloc.kind === "component" ? { templateHTML: bloc.template } : {}),
+                            ...(bloc.kind === "component" && bloc.runtime?.styleCSS
+                                ? {
+                                      styleCSS: bloc.runtime.styleCSS,
+                                      styleCollectionId: collectionId,
+                                  }
+                                : {}),
+                            ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
+                            slots: bloc.slots,
+                            ...(bloc.kind === "component" && bloc.settings
+                                ? { settings: localizeSettings(release, bloc.settings) }
+                                : {}),
+                            ...(thumbnailPath && thumbnailBytes
+                                ? {
+                                      thumbnail: { path: thumbnailPath },
+                                      source: { [thumbnailPath]: Buffer.from(thumbnailBytes).toString("base64") },
+                                  }
+                                : {}),
+                        });
                         return {
                             tag: bloc.id,
                             contributionId: collectionId,
                             ownership: { kind: "code-managed" as const },
-                            artifact: {
-                                id: bloc.id,
-                                name: resolveCollectionTranslation(release, bloc.label),
-                                group: resolveCollectionTranslation(release, bloc.category ?? release.name),
-                                ...(bloc.order === undefined ? {} : { catalogueOrder: bloc.order }),
-                                description: bloc.description
-                                    ? resolveCollectionTranslation(release, bloc.description)
-                                    : "",
-                                ownership: { kind: "code-managed" },
-                                uses: bloc.uses,
-                                viewJS: bloc.kind === "component" ? (bloc.runtime?.viewJS ?? "") : "",
-                                internal: bloc.internal,
-                                root: bloc.root,
-                                ...(bloc.content ? { content: bloc.content } : {}),
-                                ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
-                                ...(bloc.kind === "component" ? { templateHTML: bloc.template } : {}),
-                                ...(bloc.kind === "component" && bloc.runtime?.styleCSS
-                                    ? {
-                                          styleCSS: bloc.runtime.styleCSS,
-                                          styleCollectionId: collectionId,
-                                      }
-                                    : {}),
-                                ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
-                                slots: bloc.slots,
-                                ...(bloc.kind === "component" && bloc.settings
-                                    ? { settings: localizeSettings(release, bloc.settings) }
-                                    : {}),
-                                ...(thumbnailPath && thumbnailBytes
-                                    ? {
-                                          thumbnail: { path: thumbnailPath },
-                                          source: { [thumbnailPath]: Buffer.from(thumbnailBytes).toString("base64") },
-                                      }
-                                    : {}),
-                            } as TBloc,
+                            artifact,
                         };
                     }),
                 ),
@@ -212,7 +213,7 @@ export function withInstalledCollections(
         },
         getPageRequirements: async (page) => {
             const [local, installed] = await Promise.all([
-                repository.getBlocsList({ includeInactive: true }),
+                repository.getBlocsList({ includeHidden: true }),
                 installedState(),
             ]);
             const resources = installed.records.map((record) => structuredClone(record.artifact!));
@@ -235,7 +236,7 @@ export function withInstalledCollections(
                 ...structuredClone(record.artifact!),
                 hasBehavior: Boolean(record.artifact?.viewJS),
             }));
-            return [...local, ...resources.filter((bloc) => options?.includeInactive || !bloc.internal)];
+            return [...local, ...resources.filter((bloc) => options?.includeHidden || bloc.catalogue !== "hidden")];
         },
         getBlocViewJS: async (tag) => {
             const record = (await installedState()).byTag.get(tag);

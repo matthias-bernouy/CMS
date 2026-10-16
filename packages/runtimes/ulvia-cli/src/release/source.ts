@@ -25,7 +25,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     const migrations = await loadCollectionMigrations(join(collectionRoot, "migrations"));
     const assets = await loadAssets(join(collectionRoot, "assets"), definition.assets);
     const exports = expandCollectionSourceExports(definition.exports, {
-        blocs: ids(blocs, (bloc) => bloc.internal !== true),
+        blocs: ids(blocs, (bloc) => bloc.catalogue !== "hidden"),
         themeTokens: themeTokenIds(theme),
         texts: ids(texts),
         assets: ids(assets.definitions),

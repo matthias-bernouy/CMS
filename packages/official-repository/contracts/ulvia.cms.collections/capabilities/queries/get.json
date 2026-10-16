@@ -117,11 +117,13 @@
                             "minimum": 1,
                             "maximum": 9007199254740991
                         },
-                        "internal": {
-                            "type": "boolean"
+                        "catalogue": {
+                            "type": "string",
+                            "maxLength": 6,
+                            "enum": ["listed", "hidden"]
                         }
                     },
-                    "required": ["id", "label", "description", "generation", "internal"]
+                    "required": ["id", "label", "description", "generation", "catalogue"]
                 }
             }
         },

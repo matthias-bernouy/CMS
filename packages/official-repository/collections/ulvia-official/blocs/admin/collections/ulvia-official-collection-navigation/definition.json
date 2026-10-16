@@ -5,7 +5,7 @@
     "description": "bloc.collection-navigation.description",
     "category": "bloc.category.administration",
     "order": 9,
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [
         "ulvia-official-icon",
         "ulvia-official-navigation-item",

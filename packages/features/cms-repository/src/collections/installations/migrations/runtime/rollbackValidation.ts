@@ -106,7 +106,7 @@ async function assertProspectivePagesValid(
             .filter(({ release }) => targetIds.has(release.collectionId))
             .flatMap(({ release }) => release.blocs.map((bloc) => bloc.id)),
     );
-    const currentBlocs = await context.repository.getBlocsList({ includeInactive: true });
+    const currentBlocs = await context.repository.getBlocsList({ includeHidden: true });
     const previousBlocs = previousReleases.flatMap((release) =>
         release.blocs.map((bloc) => ({
             id: bloc.id,

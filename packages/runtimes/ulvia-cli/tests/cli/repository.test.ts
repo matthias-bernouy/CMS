@@ -41,7 +41,7 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(entries[0]?.blocCount).toBe(release.blocs.length);
         expect(release.exports?.blocs).toEqual(
             release.blocs
-                .filter((bloc) => !bloc.internal)
+                .filter((bloc) => bloc.catalogue !== "hidden")
                 .map((bloc) => bloc.id)
                 .sort(),
         );
@@ -178,9 +178,9 @@ test("collection source assets keep their verified bytes through the repository 
         };
         const definitionPath = join(sourceRoot, "definition.json");
         await writeFile(definitionPath, JSON.stringify(definition));
-        for (const [id, internal] of [
-            ["asset-example-card", false],
-            ["asset-example-card-frame", true],
+        for (const [id, catalogue] of [
+            ["asset-example-card", "listed"],
+            ["asset-example-card-frame", "hidden"],
         ] as const) {
             const root = join(sourceRoot, "blocs", id);
             await mkdir(root, { recursive: true });
@@ -191,7 +191,7 @@ test("collection source assets keep their verified bytes through the repository 
                     kind: "composition",
                     root: { accepts: ["div"] },
                     label: `bloc.${id}.label`,
-                    internal,
+                    catalogue,
                     slots: {},
                 }),
             );

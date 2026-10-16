@@ -20,7 +20,7 @@ test("the official collection passes its source quality contract", async () => {
             throw new Error(`${name}: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-    const visible = artifact.release.blocs.filter((bloc) => !bloc.internal);
+    const visible = artifact.release.blocs.filter((bloc) => bloc.catalogue !== "hidden");
     expect(visible.every((bloc) => bloc.category !== undefined && bloc.order !== undefined)).toBeTrue();
     expect(new Set(visible.map((bloc) => `${bloc.category}:${bloc.order}`)).size).toBe(visible.length);
     expect(

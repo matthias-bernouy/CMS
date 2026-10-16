@@ -4,7 +4,7 @@
     "label": "bloc.login-method.label",
     "description": "bloc.login-method.description",
     "category": "bloc.category.administration",
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [],
     "requires": [],
     "slots": {},

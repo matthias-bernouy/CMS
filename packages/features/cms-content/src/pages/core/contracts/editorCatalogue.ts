@@ -18,26 +18,24 @@ export async function getCmsEditorCatalogue(
     repository: Pick<CmsRepository, "getBlocsList">,
 ): Promise<CmsEditorCatalogue> {
     const blocs = await repository.getBlocsList();
-    const items = blocs
-        .filter(({ internal }) => !internal)
-        .map(
-            (bloc): CmsEditorBloc => ({
-                id: bloc.id,
-                name: bloc.name,
-                group: bloc.group,
-                description: bloc.description,
-                kind: bloc.compositionHTML ? "composition" : "component",
-                ownership: bloc.ownership.kind,
-                order: bloc.catalogueOrder ?? 0,
-                defaultContent: bloc.defaultContent ?? "",
-                authoringJson: canonicalJson({
-                    slots: bloc.slots ?? {},
-                    settings: bloc.settings ?? [],
-                    ...(bloc.root ? { root: bloc.root } : {}),
-                    ...(bloc.content ? { content: bloc.content } : {}),
-                }),
+    const items = blocs.map(
+        (bloc): CmsEditorBloc => ({
+            id: bloc.id,
+            name: bloc.name,
+            group: bloc.group,
+            description: bloc.description,
+            kind: bloc.compositionHTML ? "composition" : "component",
+            ownership: bloc.ownership.kind,
+            order: bloc.catalogueOrder ?? 0,
+            defaultContent: bloc.defaultContent ?? "",
+            authoringJson: canonicalJson({
+                slots: bloc.slots ?? {},
+                settings: bloc.settings ?? [],
+                ...(bloc.root ? { root: bloc.root } : {}),
+                ...(bloc.content ? { content: bloc.content } : {}),
             }),
-        );
+        }),
+    );
     items.sort(compareEditorBlocs);
     return { items };
 }

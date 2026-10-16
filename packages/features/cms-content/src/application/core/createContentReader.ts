@@ -142,7 +142,7 @@ export function createContentReader(repository: CmsRepository, options: ContentR
             return page ? { ...resolved, page } : { kind: "unavailable" };
         },
         getRenderableBlocs: async () =>
-            (await repository.getBlocsList({ includeInactive: true })).map((bloc) => ({
+            (await repository.getBlocsList({ includeHidden: true })).map((bloc) => ({
                 id: bloc.id,
                 ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
                 ...(bloc.templateHTML ? { templateHTML: bloc.templateHTML } : {}),

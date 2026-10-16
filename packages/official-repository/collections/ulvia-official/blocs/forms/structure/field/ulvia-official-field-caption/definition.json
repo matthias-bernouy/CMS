@@ -3,7 +3,7 @@
     "id": "ulvia-official-field-caption",
     "label": "bloc.field-caption.label",
     "description": "bloc.field-caption.description",
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [],
     "requires": [],
     "slots": {

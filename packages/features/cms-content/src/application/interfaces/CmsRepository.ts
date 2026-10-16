@@ -31,7 +31,7 @@ export type BlocListItemResponse = {
     defaultContent?: string;
     slots?: TBloc["slots"];
     settings?: TBloc["settings"];
-    internal?: boolean;
+    catalogue?: TBloc["catalogue"];
     uses?: TBloc["uses"];
     root: TBloc["root"];
     content?: TBloc["content"];
@@ -42,8 +42,8 @@ export type BlocListItemResponse = {
 };
 
 export type BlocListOptions = {
-    /** Include installed blocs hidden from the authoring catalogue. */
-    includeInactive?: boolean;
+    /** Include Blocs hidden from the authoring catalogue. */
+    includeHidden?: boolean;
 };
 
 export type PageLink = {

@@ -21,9 +21,7 @@ export async function validateBlocArtifact(
     bindingOptions: ContentBindingValidationOptions = {},
 ): Promise<TBloc> {
     const bloc = validateBlocWrite(value);
-    const catalogueBlocs = (await repository.getBlocsList({ includeInactive: true })).filter(
-        ({ id }) => id !== bloc.id,
-    );
+    const catalogueBlocs = (await repository.getBlocsList({ includeHidden: true })).filter(({ id }) => id !== bloc.id);
     const catalogue = catalogueBlocs.map(pageDocumentContract);
     const contract = pageDocumentContract(bloc);
     const validated = validateBlocDocument(

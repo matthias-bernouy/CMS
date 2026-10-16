@@ -32,25 +32,25 @@ describe("assertContentRefsExist", () => {
         await assertContentRefsExist(cms, `<div cms-bloc=\"fixture-card\"></div>`);
     });
 
-    test("rejects inactive Blocs outside the authoring catalogue", async () => {
-        let includeInactive = false;
+    test("rejects hidden Blocs outside the authoring catalogue", async () => {
+        let includeHidden = false;
         const cms = {
-            getBlocsList: async (options?: { includeInactive?: boolean }) => {
-                includeInactive = options?.includeInactive === true;
-                return includeInactive ? [{ id: "basic-button" }] : [];
+            getBlocsList: async (options?: { includeHidden?: boolean }) => {
+                includeHidden = options?.includeHidden === true;
+                return includeHidden ? [{ id: "basic-button" }] : [];
             },
         };
 
         await expect(assertContentRefsExist(cms, '<div cms-bloc="basic-button"></div>')).rejects.toThrow(
-            "unknown or inactive",
+            "unknown or hidden",
         );
-        expect(includeInactive).toBeFalse();
+        expect(includeHidden).toBeFalse();
     });
 
     test("rejects unknown bloc tag", async () => {
         const cms = makeSystem({ blocs: ["fixture-card"] });
         await expect(assertContentRefsExist(cms, `<div cms-bloc=\"fixture-mystery\"></div>`)).rejects.toThrow(
-            /unknown or inactive reference\(s\): bloc "fixture-mystery"/,
+            /unknown or hidden reference\(s\): bloc "fixture-mystery"/,
         );
     });
 

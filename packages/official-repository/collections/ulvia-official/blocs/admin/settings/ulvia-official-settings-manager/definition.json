@@ -5,7 +5,7 @@
     "description": "bloc.settings-manager.description",
     "category": "bloc.category.administration",
     "order": 20,
-    "internal": true,
+    "catalogue": "hidden",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-field",

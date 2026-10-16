@@ -83,11 +83,11 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
         expect((await reader.getRenderingSettings()).site.host).not.toBe("https://mutated.test");
     });
 
-    test("public reader retains inactive rendering artifacts without authoring fields", async () => {
-        let includeInactive = false;
+    test("public reader retains hidden rendering artifacts without authoring fields", async () => {
+        let includeHidden = false;
         const reader = createContentReader({
             getBlocsList: async (options) => {
-                includeInactive = options?.includeInactive === true;
+                includeHidden = options?.includeHidden === true;
                 return [
                     {
                         id: "archived-layout",
@@ -111,7 +111,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
                 root: { accepts: ["a"] },
             },
         ]);
-        expect(includeInactive).toBe(true);
+        expect(includeHidden).toBe(true);
     });
 
     test("defaults to title asc, all pages", async () => {
