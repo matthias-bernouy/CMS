@@ -9,8 +9,7 @@
             "kind": "segmented",
             "options": [
                 { "value": "underline", "label": "setting.option.underline" },
-                { "value": "pills", "label": "setting.option.pills" },
-                { "value": "sidebar", "label": "setting.option.sidebar" }
+                { "value": "pills", "label": "setting.option.pills" }
             ]
         }
     },

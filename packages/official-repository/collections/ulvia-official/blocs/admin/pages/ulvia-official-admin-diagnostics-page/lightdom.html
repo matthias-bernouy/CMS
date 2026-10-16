@@ -1,8 +1,7 @@
 <ulvia-official-admin-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-diagnostics }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-live-operational-signals-from-the-selected-cms-contracts }}</p>
-    <span slot="contextual-label">{{ cms.i18n.ulvia-official.ui-diagnostics }}</span>
-    <ulvia-official-route-tabs slot="contextual-navigation" label="{{ cms.i18n.ulvia-official.ui-diagnostics }}" appearance="sidebar" size="sm">
+    <ulvia-official-route-tabs slot="page-navigation" label="{{ cms.i18n.ulvia-official.ui-diagnostics }}" size="sm">
         <ulvia-official-route-tab slot="items"><a href="#migration-health">{{ cms.i18n.ulvia-official.ui-content-maintenance }}</a></ulvia-official-route-tab>
         <ulvia-official-route-tab slot="items"><a href="#job-health">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</a></ulvia-official-route-tab>
         <ulvia-official-route-tab slot="items"><a href="#provider-health">{{ cms.i18n.ulvia-official.ui-provider-installations }}</a></ulvia-official-route-tab>

@@ -4,6 +4,8 @@
     <ulvia-official-action slot="actions" variant="outline" tone="secondary">
         <a href="/admin/collections">{{ cms.i18n.ulvia-official.ui-back-to-collections }}</a>
     </ulvia-official-action>
+    <span slot="secondary-label">{{ cms.i18n.ulvia-official.ui-collections }}</span>
+    <ulvia-official-collection-navigation slot="secondary-navigation"></ulvia-official-collection-navigation>
     <section
         slot="content"
         cms-query="ulvia.cms.collections:plan-migration as plan"

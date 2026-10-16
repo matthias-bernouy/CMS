@@ -1,12 +1,9 @@
 <ulvia-official-admin-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-collection-details }}</h1>
-    <p slot="description">{{ cms.i18n.ulvia-official.ui-review-the-installed-collection-and-its-resources }}</p>
-    <ulvia-official-action slot="actions" variant="outline" tone="secondary">
-        <a href="/admin/collections">{{ cms.i18n.ulvia-official.ui-back-to-collections }}</a>
-    </ulvia-official-action>
-    <span slot="contextual-label">{{ cms.i18n.ulvia-official.ui-collection-details }}</span>
-    <ulvia-official-route-tabs slot="contextual-navigation" label="{{ cms.i18n.ulvia-official.ui-collection-details }}" appearance="sidebar" size="sm">
-        <ulvia-official-route-tab slot="items"><a href="#collection-overview">{{ cms.i18n.ulvia-official.ui-collection-details }}</a></ulvia-official-route-tab>
+    <span slot="secondary-label">{{ cms.i18n.ulvia-official.ui-collections }}</span>
+    <ulvia-official-collection-navigation slot="secondary-navigation"></ulvia-official-collection-navigation>
+    <ulvia-official-route-tabs slot="page-navigation" label="{{ cms.i18n.ulvia-official.ui-collection-details }}" size="sm">
+        <ulvia-official-route-tab slot="items"><a href="#collection-overview">{{ cms.i18n.ulvia-official.ui-overview }}</a></ulvia-official-route-tab>
         <ulvia-official-route-tab slot="items"><a href="#collection-blocks">{{ cms.i18n.ulvia-official.ui-blocks }}</a></ulvia-official-route-tab>
         <ulvia-official-route-tab slot="items"
             ><a href="#collection-configuration">{{ cms.i18n.ulvia-official.ui-collection-configuration }}</a></ulvia-official-route-tab
@@ -41,7 +38,10 @@
                                 <p>{{ collection.data.publisherId }} {{ collection.data.version }}</p>
                                 <h2>{{ collection.data.name }}</h2>
                                 <p>{{ collection.data.description }}</p>
-                                <code>{{ collection.data.digest }}</code>
+                                <details>
+                                    <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
+                                    <code>{{ collection.data.digest }}</code>
+                                </details>
                             </header>
                             <ulvia-official-grid slot="items" gap="md">
                                 <ulvia-official-surface slot="items" appearance="subtle" padding="sm" radius="sm">

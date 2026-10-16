@@ -18,6 +18,7 @@ export class Bloc extends Component {
 
     override connectedCallback(): void {
         this.addEventListener("click", this.handleClick);
+        this.addEventListener("keydown", this.handleKeydown);
         window.addEventListener("hashchange", this.scheduleSync);
         this.observer.observe(this.getRootNode(), { childList: true, subtree: true });
         this.scheduleSync();
@@ -25,6 +26,7 @@ export class Bloc extends Component {
 
     disconnectedCallback(): void {
         this.removeEventListener("click", this.handleClick);
+        this.removeEventListener("keydown", this.handleKeydown);
         window.removeEventListener("hashchange", this.scheduleSync);
         this.observer.disconnect();
     }
@@ -46,6 +48,24 @@ export class Bloc extends Component {
         }
     };
 
+    private handleKeydown = (event: Event): void => {
+        if (!(event instanceof KeyboardEvent) || !(event.target instanceof HTMLAnchorElement)) {
+            return;
+        }
+        const links = this.localLinks().filter((link) => !link.closest("ulvia-official-route-tab")?.hidden);
+        const current = links.indexOf(event.target);
+        if (current < 0) {
+            return;
+        }
+        const next = this.keyboardTarget(event.key, current, links);
+        if (!next) {
+            return;
+        }
+        event.preventDefault();
+        next.focus();
+        next.click();
+    };
+
     private scheduleSync = (): void => {
         if (this.syncQueued) {
             return;
@@ -58,9 +78,7 @@ export class Bloc extends Component {
     };
 
     private syncPanels(): void {
-        const localLinks = Array.from(
-            this.querySelectorAll<HTMLAnchorElement>(":scope > ulvia-official-route-tab > a[href]"),
-        ).filter((link) => this.targetId(link));
+        const localLinks = this.localLinks();
         const entries = localLinks
             .map((link) => {
                 const id = this.targetId(link);
@@ -84,11 +102,37 @@ export class Bloc extends Component {
             const active = panel === selected.panel;
             const tab = link.closest("ulvia-official-route-tab");
             tab?.toggleAttribute("active", active);
+            link.id ||= `${panel.id}-tab`;
+            link.setAttribute("aria-controls", panel.id);
             link.setAttribute("aria-selected", String(active));
             link.setAttribute("role", "tab");
+            link.tabIndex = active ? 0 : -1;
             panel.hidden = !active;
+            panel.setAttribute("aria-labelledby", link.id);
             panel.setAttribute("role", "tabpanel");
         }
+    }
+
+    private keyboardTarget(key: string, current: number, links: HTMLAnchorElement[]): HTMLAnchorElement | null {
+        if (key === "Home") {
+            return links[0] ?? null;
+        }
+        if (key === "End") {
+            return links.at(-1) ?? null;
+        }
+        if (key === "ArrowRight") {
+            return links[(current + 1) % links.length] ?? null;
+        }
+        if (key === "ArrowLeft") {
+            return links[(current - 1 + links.length) % links.length] ?? null;
+        }
+        return null;
+    }
+
+    private localLinks(): HTMLAnchorElement[] {
+        return Array.from(
+            this.querySelectorAll<HTMLAnchorElement>(":scope > ulvia-official-route-tab > a[href]"),
+        ).filter((link) => Boolean(this.targetId(link)));
     }
 
     private targetId(link: HTMLAnchorElement): string | null {

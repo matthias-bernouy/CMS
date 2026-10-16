@@ -19,6 +19,8 @@
     "bloc.container.label": "Container",
     "bloc.collection-manager.description": "Manage installed collections, repository releases and safe migrations",
     "bloc.collection-manager.label": "Collection manager",
+    "bloc.collection-navigation.description": "Navigate the collection catalogue and installed collections",
+    "bloc.collection-navigation.label": "Collection navigation",
     "bloc.collection-detail-page.description": "Inspect and configure one installed collection",
     "bloc.collection-detail-page.label": "Collection detail page",
     "bloc.collection-migration-page.description": "Review and apply one collection migration plan",

@@ -9,6 +9,7 @@
     "uses": [
         "ulvia-official-action",
         "ulvia-official-admin-workspace",
+        "ulvia-official-collection-navigation",
         "ulvia-official-form-actions",
         "ulvia-official-stack",
         "ulvia-official-surface"

@@ -1,0 +1,45 @@
+<div
+    data-navigation-root
+    cms-query="ulvia.cms.collections:catalogue as catalogue"
+    cms-query-listen="@page:ulvia-official-collection-catalogue-mutation/lastSuccess/requestId"
+    cms-query-refresh="focus reconnect"
+>
+    <ulvia-official-navigation-menu label="{{ cms.i18n.ulvia-official.ui-collections }}">
+        <span slot="header">{{ cms.i18n.ulvia-official.ui-collections }}</span>
+        <ulvia-official-navigation-section slot="sections">
+            <span slot="label">{{ cms.i18n.ulvia-official.ui-collection-catalogue }}</span>
+            <ulvia-official-navigation-item slot="items">
+                <a href="/admin/collections">
+                    <ulvia-official-icon name="collections" size="sm" tone="current"></ulvia-official-icon>
+                    <span>{{ cms.i18n.ulvia-official.ui-explore-collections }}</span>
+                </a>
+            </ulvia-official-navigation-item>
+        </ulvia-official-navigation-section>
+        <ulvia-official-navigation-section slot="sections" cms-condition="catalogue.outcome.kind === 'success'">
+            <span slot="label">{{ cms.i18n.ulvia-official.ui-installed-collections }}</span>
+            <ulvia-official-navigation-item slot="items" cms-repeat="catalogue.data.installed as installed">
+                <a href="/admin/collections/detail?ulvia-official-collection={{ installed.collectionId | urlencode }}">
+                    <span>{{ installed.collectionId }}</span>
+                </a>
+            </ulvia-official-navigation-item>
+        </ulvia-official-navigation-section>
+    </ulvia-official-navigation-menu>
+    <p role="status" cms-condition="catalogue.activity === 'fetching'">
+        {{ cms.i18n.ulvia-official.ui-reading-collection-catalogue }}
+    </p>
+    <div cms-match="catalogue.outcome.kind">
+        <span cms-case='"none"' hidden></span>
+        <span cms-case='"success"' hidden></span>
+        <div cms-case='"error"' cms-match="catalogue.outcome.code">
+            <p role="alert" cms-case='"CATALOGUE_TOO_LARGE"'>
+                {{ cms.i18n.ulvia-official.ui-collection-catalogue-unavailable }}
+            </p>
+            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                {{ cms.i18n.ulvia-official.ui-collection-catalogue-unavailable }}
+            </p>
+        </div>
+        <p role="alert" cms-case='"failure"'>
+            {{ cms.i18n.ulvia-official.ui-collection-catalogue-unavailable }}
+        </p>
+    </div>
+</div>

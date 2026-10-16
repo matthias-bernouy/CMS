@@ -107,6 +107,26 @@ test("the official collection passes its source quality contract", async () => {
     expect(fileInput?.settings?.map((setting) => setting.id)).toEqual(["variant"]);
     expect(fileInput?.runtime?.viewJS).not.toMatch(/(?:button|drop|empty|remove|replace)-label/);
     expect(fileInput?.runtime?.viewJS).not.toMatch(/Choose a file|No file selected|Replace|Remove/);
+
+    const adminWorkspace = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-admin-workspace");
+    expect(adminWorkspace?.lightdom).toContain('<slot name="secondary-navigation" slot="secondary-sidebar"></slot>');
+    expect(adminWorkspace?.lightdom).toContain('<slot name="page-navigation" slot="navigation"></slot>');
+
+    const routeTabs = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-route-tabs");
+    const appearance = routeTabs?.settings?.find((setting) => setting.id === "appearance");
+    expect(appearance?.control?.options?.map((option) => option.value)).toEqual(["underline", "pills"]);
+    expect(routeTabs?.shadowdom).toContain('role="tablist" aria-orientation="horizontal"');
+    expect(routeTabs?.runtime?.viewJS).toContain("ArrowRight");
+    expect(routeTabs?.runtime?.viewJS).toContain(".tabIndex=");
+    expect(routeTabs?.runtime?.viewJS).toContain("aria-labelledby");
+
+    expect(
+        artifact.release.blocs.some((bloc) =>
+            [bloc.defaultContent, bloc.lightdom].some(
+                (html) => html?.includes('appearance="sidebar"') || html?.includes('slot="contextual-navigation"'),
+            ),
+        ),
+    ).toBeFalse();
 });
 
 test("the generated local bootstrap bundle matches official authored releases", async () => {

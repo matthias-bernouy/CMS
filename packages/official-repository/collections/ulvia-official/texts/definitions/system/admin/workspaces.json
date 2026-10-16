@@ -132,8 +132,20 @@
         "group": "text.group.admin.workspaces"
     },
     {
+        "id": "ui-collection-catalogue",
+        "label": "text.ui-collection-catalogue.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
         "id": "ui-collection-catalogue-unavailable",
         "label": "text.ui-collection-catalogue-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-explore-collections",
+        "label": "text.ui-explore-collections.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },

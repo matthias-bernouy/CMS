@@ -38,9 +38,11 @@ export class Bloc extends Component {
             return false;
         }
         const target = new URL(control.href, window.location.href);
+        const current = new URL(window.location.href);
         return (
-            target.origin === window.location.origin &&
-            normalizePath(target.pathname) === normalizePath(location.pathname)
+            target.origin === current.origin &&
+            normalizePath(target.pathname) === normalizePath(current.pathname) &&
+            Array.from(target.searchParams).every(([name, value]) => current.searchParams.getAll(name).includes(value))
         );
     }
 }

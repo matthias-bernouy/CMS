@@ -19,6 +19,8 @@
     "bloc.container.label": "Conteneur",
     "bloc.collection-manager.description": "Gérez les Collections installées, les releases du repository et les migrations sûres",
     "bloc.collection-manager.label": "Gestionnaire de Collections",
+    "bloc.collection-navigation.description": "Parcourez le catalogue et les Collections installées",
+    "bloc.collection-navigation.label": "Navigation des Collections",
     "bloc.collection-detail-page.description": "Consultez et configurez une Collection installée",
     "bloc.collection-detail-page.label": "Page de détail d’une Collection",
     "bloc.collection-migration-page.description": "Vérifiez et appliquez un plan de migration de Collection",

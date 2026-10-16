@@ -22,8 +22,9 @@
             "max": 1
         },
         "actions": { "accepts": [{ "kind": "any-component" }] },
-        "contextual-label": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 },
-        "contextual-navigation": { "accepts": [{ "kind": "any-component" }] },
+        "secondary-label": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 },
+        "secondary-navigation": { "accepts": [{ "kind": "any-component" }], "max": 1 },
+        "page-navigation": { "accepts": [{ "kind": "any-component" }], "max": 1 },
         "content": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] },
         "footer": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] }
     }

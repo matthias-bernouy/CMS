@@ -48,22 +48,6 @@
     --route-tab-indicator-display: none;
     --route-tab-radius: var(--ulvia-official-radius-md, 0.5rem);
 }
-:host([appearance="sidebar"]) [part="tabs"] {
-    width: 100%;
-    min-width: 0;
-    flex-direction: column;
-    gap: 0.125rem;
-    border: 0;
-}
-:host([appearance="sidebar"]) ::slotted(ulvia-official-route-tab) {
-    --route-tab-active-color: var(--ulvia-official-primary, #086c55);
-    --route-tab-active-background: var(--ulvia-official-primary-subtle, #dff3ed);
-    --route-tab-indicator-display: none;
-    --route-tab-justify-content: flex-start;
-    --route-tab-radius: var(--ulvia-official-radius-sm, 0.25rem);
-    --route-tab-white-space: normal;
-    min-width: 0;
-}
 :host([size="sm"]) {
     --route-tab-block-padding: var(--ulvia-official-spacing-xs, 0.5rem);
     --route-tab-inline-padding: var(--ulvia-official-spacing-sm, 0.75rem);

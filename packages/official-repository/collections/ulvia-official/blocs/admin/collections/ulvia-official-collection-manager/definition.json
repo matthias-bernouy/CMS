@@ -13,17 +13,13 @@
         "ulvia-official-cluster",
         "ulvia-official-grid",
         "ulvia-official-icon",
-        "ulvia-official-list",
-        "ulvia-official-list-item",
         "ulvia-official-stack",
         "ulvia-official-surface"
     ],
     "requires": [
         { "contractId": "ulvia.cms.collections", "capabilityId": "catalogue", "versionRange": "^1.0.0" },
         { "contractId": "ulvia.cms.collections", "capabilityId": "install", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.collections", "capabilityId": "upgrade", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.collections", "capabilityId": "migration-status", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.jobs", "capabilityId": "list", "versionRange": "^1.0.0" }
+        { "contractId": "ulvia.cms.collections", "capabilityId": "upgrade", "versionRange": "^1.0.0" }
     ],
     "slots": {}
 }

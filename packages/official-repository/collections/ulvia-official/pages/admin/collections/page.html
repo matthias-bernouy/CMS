@@ -1,16 +1,6 @@
 <ulvia-official-admin-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-collections }}</h1>
-    <p slot="description">{{ cms.i18n.ulvia-official.ui-install-immutable-releases-configure-collections-and-preview-migrations-before-applying-them }}</p>
-    <span slot="contextual-label">{{ cms.i18n.ulvia-official.ui-collections }}</span>
-    <ulvia-official-route-tabs slot="contextual-navigation" label="{{ cms.i18n.ulvia-official.ui-collections }}" appearance="sidebar" size="sm">
-        <ulvia-official-route-tab slot="items"
-            ><a href="#installed-collections">{{ cms.i18n.ulvia-official.ui-installed-collections }}</a></ulvia-official-route-tab
-        >
-        <ulvia-official-route-tab slot="items"
-            ><a href="#repository-releases">{{ cms.i18n.ulvia-official.ui-repository-releases }}</a></ulvia-official-route-tab
-        >
-        <ulvia-official-route-tab slot="items"><a href="#migration-status">{{ cms.i18n.ulvia-official.ui-migration-status }}</a></ulvia-official-route-tab>
-        <ulvia-official-route-tab slot="items"><a href="#collection-activity">{{ cms.i18n.ulvia-official.ui-recent-activity }}</a></ulvia-official-route-tab>
-    </ulvia-official-route-tabs>
+    <span slot="secondary-label">{{ cms.i18n.ulvia-official.ui-collections }}</span>
+    <ulvia-official-collection-navigation slot="secondary-navigation"></ulvia-official-collection-navigation>
     <ulvia-official-collection-manager slot="content"></ulvia-official-collection-manager>
 </ulvia-official-admin-workspace>
