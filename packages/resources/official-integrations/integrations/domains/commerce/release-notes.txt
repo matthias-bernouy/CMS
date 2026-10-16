@@ -1,1 +1,2 @@
 1.1.0: publish authoritative seller shipping actions, block labels and handoff while fulfillment or settlement is under review, and add an audited administrator command for reopening eligible shipping windows.
+Add offer review and proposal lifecycle email notifications, snapshot contexts, idempotent private event producers, and an upgrade repeatable.

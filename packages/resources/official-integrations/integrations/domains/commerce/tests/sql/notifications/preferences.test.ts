@@ -78,7 +78,7 @@ describe("native Commerce notifications", () => {
             items: Array<Record<string, unknown>>;
         };
         expect(templatePayload.contractVersion).toBe(1);
-        expect(templatePayload.items).toHaveLength(28);
+        expect(templatePayload.items).toHaveLength(42);
         expect(templatePayload.items[0]).toMatchObject({
             key: "commerce.price_agreement.accepted",
             metadata: { owner: "commerce", contractVersion: 1 },

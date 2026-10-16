@@ -1,1 +1,2 @@
 Initial Commerce Negotiation release: publish the negotiation contracts and reusable operator views on top of Commerce.
+Capture proposal creation, refusal, withdrawal, expiry, supersession, and administrator cancellation into Commerce notifications; require Commerce 1.1.0 or later.

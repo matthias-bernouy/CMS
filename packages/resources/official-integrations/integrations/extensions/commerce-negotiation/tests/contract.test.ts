@@ -31,7 +31,7 @@ describe("commerce negotiation 1.0.0", () => {
         await installations.create({
             id: "commerce",
             label: "Commerce",
-            definitionVersion: "1.0.0",
+            definitionVersion: "1.1.0",
             status: "success",
             answersSnapshot: { id: "commerce" },
             secretRefs: { cmsApiKey: "COMMERCE_KEY" },

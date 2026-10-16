@@ -128,11 +128,42 @@
             "required": [
                 "path"
             ]
+        },
+        "proposal": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "previousStatus": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "amountMinor": {
+                    "type": "number"
+                },
+                "amountFormatted": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "status",
+                "previousStatus",
+                "amountMinor",
+                "amountFormatted",
+                "currency"
+            ]
         }
     },
     "required": [
         "recipient",
-        "order",
         "delivery",
         "action"
     ]

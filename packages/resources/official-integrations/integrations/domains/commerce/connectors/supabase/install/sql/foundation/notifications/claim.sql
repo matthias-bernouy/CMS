@@ -143,6 +143,8 @@ begin
             ),
             'source', event.payload
         ) || case event.aggregate_type
+            when 'offer' then event.payload->'context'
+            when 'proposal' then event.payload->'context'
             when 'price_agreement' then jsonb_build_object(
                 'agreement', jsonb_build_object(
                     'id', agreement.public_id,
@@ -222,6 +224,7 @@ begin
         on event.aggregate_type = 'price_agreement'
        and agreement.id = event.aggregate_id::bigint
     left join commerce.offers offer on offer.id = agreement.offer_id
-    where orders.id is not null or agreement.id is not null;
+    where orders.id is not null or agreement.id is not null
+       or event.aggregate_type in ('offer', 'proposal');
 end;
 $$;

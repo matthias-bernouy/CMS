@@ -1,4 +1,5 @@
 import { json } from "../../core/http.ts";
+import { marketplaceNotificationTemplates } from "./activity-templates.ts";
 
 const seeds = [
     [
@@ -260,6 +261,7 @@ export function notificationTemplates(): Response {
                 },
                 metadata: { owner: "commerce", contractVersion: 1 },
             },
+            ...marketplaceNotificationTemplates(),
             ...seeds.map(([key, label, subject, introduction]) => ({
                 key,
                 name: `Commerce - ${label}`,

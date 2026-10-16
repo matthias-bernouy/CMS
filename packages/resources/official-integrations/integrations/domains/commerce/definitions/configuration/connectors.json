@@ -49,7 +49,7 @@
         "migration": {
             "install": {
                 "revision": 0,
-                "digest": "sha256:e7d870c22fed1e5064658472c80e1b7a7f1231901323552714a9395b5bc28ff9",
+                "digest": "sha256:cba3751b31702bb821e198fb092fa0d3ecab4f67a48806a298546b1df77622cc",
                 "coveredMigrations": []
             },
             "migrations": [],
@@ -58,6 +58,11 @@
                     "id": "commerce-1-1-runtime",
                     "checksum": "sha256:450c7944ff2a297ee9d7146c106e510bfceaf450c7b14a749134183fa0b4d3f2",
                     "path": "repeatables/commerce-1.1.0.sql"
+                },
+                {
+                    "id": "commerce-marketplace-notifications",
+                    "checksum": "sha256:332b017c80e70b8ee8c39ebfff4307d68408d453fb0c0b3bf6fdaa8e3ec34201",
+                    "path": "repeatables/marketplace-notifications.sql"
                 }
             ],
             "supportedSources": [
