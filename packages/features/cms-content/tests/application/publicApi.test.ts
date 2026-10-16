@@ -1,6 +1,11 @@
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import * as rendering from "@bernouy/cms-content/rendering";
+import { CMS_BROWSER_RUNTIME_ABI } from "@bernouy/cms-content/runtime-abi";
+
+test("publishes the browser behavior ABI through its dedicated entrypoint", () => {
+    expect(CMS_BROWSER_RUNTIME_ABI).toBe("v1");
+});
 
 test("rendering entrypoints omit authoring mutations and concrete stores", () => {
     expect(rendering.createContentReader).toBeFunction();
