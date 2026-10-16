@@ -1,4 +1,5 @@
 import { tmpdir } from "node:os";
+import { existsSync, readFileSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
 
 type CommandResult = {
@@ -52,36 +53,60 @@ async function unusedTypeScriptDeclarations(): Promise<CommandResult> {
 }
 
 async function unusedFilesExportsAndDependencies(): Promise<CommandResult> {
-    const workspaces = packageConfigs.flatMap((config) => [
-        "--workspace",
-        relative(repositoryRoot, resolve(config, "..")),
-    ]);
     console.log("[dead-code][knip]");
-    const child = Bun.spawn(
-        [
-            process.execPath,
-            resolve(repositoryRoot, "node_modules/knip/bin/knip-bun.js"),
-            "--config",
-            "knip.json",
-            ...workspaces,
-            "--no-progress",
-            "--reporter",
-            "compact",
-        ],
-        {
-            cwd: repositoryRoot,
-            env: { ...process.env, NO_COLOR: "1" },
-            stdout: "inherit",
-            stderr: "inherit",
-        },
-    );
+    const knip = resolve(repositoryRoot, "node_modules/knip/bin/knip-bun.js");
+    const shared = ["--no-progress", "--reporter", "compact"];
+    const child = Bun.spawn([process.execPath, knip, "--config", "knip.json", ...shared], {
+        cwd: repositoryRoot,
+        env: { ...process.env, NO_COLOR: "1" },
+        stdout: "inherit",
+        stderr: "inherit",
+    });
     return {
         exitCode: await child.exited,
         output: "",
     };
 }
 
-const results = [await unusedFilesExportsAndDependencies(), await unusedTypeScriptDeclarations()];
+function officialRepositoryUnusedFiles(): CommandResult {
+    const root = resolve(repositoryRoot, "packages/official-repository");
+    const files = [...new Bun.Glob("**/*.{js,ts}").scanSync({ cwd: root, absolute: true })].sort();
+    const known = new Set(files);
+    const visited = new Set<string>();
+    const pending = files.filter((file) => file.endsWith("/bloc.ts") || /\.(?:test|spec)\.[jt]s$/.test(file));
+    const importPattern = /\b(?:import|export)\s+(?:[^"']*?\s+from\s+)?["']([^"']+)["']/g;
+    while (pending.length) {
+        const file = pending.pop();
+        if (!file || visited.has(file)) {
+            continue;
+        }
+        visited.add(file);
+        for (const match of readFileSync(file, "utf8").matchAll(importPattern)) {
+            const specifier = match[1];
+            if (!specifier?.startsWith(".")) {
+                continue;
+            }
+            const base = resolve(file, "..", specifier);
+            const imported = [base, `${base}.ts`, `${base}.js`, join(base, "index.ts"), join(base, "index.js")].find(
+                existsSync,
+            );
+            if (imported && known.has(imported)) {
+                pending.push(imported);
+            }
+        }
+    }
+    const unused = files.filter((file) => !visited.has(file));
+    return {
+        exitCode: unused.length ? 1 : 0,
+        output: unused.map((file) => `[dead-code][official-repository] ${relative(repositoryRoot, file)}`).join("\n"),
+    };
+}
+
+const results = [
+    await unusedFilesExportsAndDependencies(),
+    officialRepositoryUnusedFiles(),
+    await unusedTypeScriptDeclarations(),
+];
 for (const output of results.map(({ output }) => output).filter(Boolean)) {
     console.log(output);
 }

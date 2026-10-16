@@ -129,10 +129,3 @@ export class EditablePageDocument {
         );
     }
 }
-
-export function catalogueItemFor(
-    element: HTMLElement,
-    catalogue: EditorCatalogueItem[],
-): EditorCatalogueItem | undefined {
-    return catalogue.find((item) => element.getAttribute("cms-bloc") === item.id);
-}

@@ -10,26 +10,13 @@ export type EditorCatalogueItem = {
     authoringJson: string;
 };
 
-export type EditorCatalogue = { items: EditorCatalogueItem[] };
-
-export type PageUpdate = {
-    id: string;
-    revision: number;
-    path: string;
-    title: string;
-    description: string;
-    content: string;
-    tags: string[];
-    visible: boolean;
-};
-
 export type AuthoringContract = {
     settings?: EditorSetting[];
     root?: EditorNativeElement;
     content?: EditorNativeElement;
 };
 
-export type EditorNativeElement = { accepts?: string[]; defaults?: Record<string, string> };
+type EditorNativeElement = { accepts?: string[]; defaults?: Record<string, string> };
 
 export type EditorSetting = {
     id: string;

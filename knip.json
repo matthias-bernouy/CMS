@@ -1,10 +1,51 @@
 {
     "$schema": "./node_modules/knip/schema.json",
-    "include": ["dependencies", "devDependencies", "optionalPeerDependencies", "exports", "types"],
-    "ignoreFiles": ["**/dist/**"],
+    "include": ["files", "dependencies", "devDependencies", "optionalPeerDependencies", "exports", "types"],
+    "entry": [
+        "build.ts",
+        "infra/images/cms/infra/mongo/*.js"
+    ],
+    "project": [
+        "*.ts",
+        "infra/**/*.js",
+        "quality/**/*.ts"
+    ],
+    "ignoreDependencies": [
+        "@bernouy/binary-media",
+        "@bernouy/cms-auth",
+        "@bernouy/cms-files",
+        "@bernouy/cms-kernel",
+        "@bernouy/envelope-crypto",
+        "@bernouy/image-processing",
+        "@bernouy/official-repository-server",
+        "@bernouy/rate-limiter",
+        "@bernouy/secret-store",
+        "@bernouy/ulvia-cli",
+        "image-size",
+        "sharp"
+    ],
+    "workspaces": {
+        "packages/features/cms-content": {
+            "entry": [
+                "src/index.ts",
+                "src/browser/entries/*.ts",
+                "src/runtime-assets/build.ts"
+            ],
+            "ignoreFiles": ["src/runtime-assets/generated/*.js"]
+        },
+        "packages/surfaces/cms-kernel": {
+            "entry": ["src/index.ts", "tests/contracts/publicReader.fixture.ts"]
+        }
+    },
+    "ignoreFiles": [
+        "**/dist/**",
+        "infra/images/cms/infra/mongo/*.js",
+        "packages/official-repository/**"
+    ],
     "ignoreIssues": {
         "**/tests/**": ["exports", "types"],
         "infra/**": ["exports", "types"],
-        "quality/**": ["exports", "types"]
+        "quality/**": ["exports", "types"],
+        "packages/official-repository/**": ["files", "exports", "types"]
     }
 }
