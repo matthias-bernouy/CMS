@@ -83,3 +83,12 @@ test("indexes installed Blocs once per collection revision", async () => {
     expect(storage.metadataReads).toBe(1);
     expect(storage.assetReads).toBe(1);
 });
+
+test("rejects repository methods that have not been classified by the installed-resource boundary", () => {
+    const local = Object.assign(new InMemoryCmsRepository(), { accidentalMutation: () => undefined });
+    const repository = withInstalledCollections(local, new CollectionStore(new MemoryCollectionStorage()), "site");
+
+    expect(() => (repository as typeof repository & typeof local).accidentalMutation()).toThrow(
+        "Unclassified CmsRepository method",
+    );
+});

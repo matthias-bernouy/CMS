@@ -20,6 +20,53 @@ import { createInstalledSnapshotReader } from "./installedSnapshot";
 import { composeCollectionThemes } from "./theme";
 import { projectCollectionTextSource } from "./texts";
 
+type CmsRepositoryMethod = {
+    [Key in keyof CmsRepository]-?: NonNullable<CmsRepository[Key]> extends (...args: never[]) => unknown ? Key : never;
+}[keyof CmsRepository];
+
+type CmsRepositoryMethodPolicy = "delegate" | "guard-bloc" | "override";
+
+const CMS_REPOSITORY_METHOD_POLICY = {
+    getContentContributions: "override",
+    getPageRequirements: "override",
+    getSiteBlocGroups: "delegate",
+    updateSiteBlocGroup: "delegate",
+    createSiteBlocGroup: "delegate",
+    createBloc: "guard-bloc",
+    replaceBloc: "guard-bloc",
+    getBlocRecord: "override",
+    getBlocRecords: "override",
+    createSiteBloc: "guard-bloc",
+    saveSiteBlocDraft: "guard-bloc",
+    publishSiteBloc: "guard-bloc",
+    archiveSiteBloc: "guard-bloc",
+    restoreSiteBloc: "guard-bloc",
+    withSiteBlocPublicationLock: "delegate",
+    getBlocsList: "override",
+    getBlocViewJS: "override",
+    getBlocSource: "override",
+    getPage: "delegate",
+    getPageById: "delegate",
+    getAllPages: "delegate",
+    scanPages: "delegate",
+    scanPagesByContentReference: "delegate",
+    getPublishedPage: "delegate",
+    getPublishedPageById: "delegate",
+    getPublishedPages: "delegate",
+    getPageRoute: "delegate",
+    insertPage: "delegate",
+    updatePage: "delegate",
+    deletePage: "delegate",
+    setPagePaths: "delegate",
+    deletePageWithAlternative: "delegate",
+    getLinks: "delegate",
+    getPagesMetadata: "delegate",
+    getTagCounts: "delegate",
+    getSystem: "override",
+    getSystemRevision: "delegate",
+    updateSystem: "override",
+} as const satisfies Record<CmsRepositoryMethod, CmsRepositoryMethodPolicy>;
+
 /** Installed resources are projected from their immutable release, never copied into editable bloc storage. */
 export function withInstalledCollections(
     repository: CmsRepository,
@@ -244,26 +291,24 @@ export function withInstalledCollections(
         },
         getBlocSource: async (tag) => ((await installedState()).byTag.has(tag) ? null : repository.getBlocSource(tag)),
     };
-    // Bind original methods to their adapter; prevent all tag-writing paths from claiming installed resources.
-    const guarded = new Set([
-        "createBloc",
-        "replaceBloc",
-        "createSiteBloc",
-        "saveSiteBlocDraft",
-        "publishSiteBloc",
-        "archiveSiteBloc",
-        "restoreSiteBloc",
-    ]);
     return new Proxy(repository, {
         get(target, key) {
-            if (key in overrides) {
-                return overrides[key as keyof CmsRepository];
+            const policy = CMS_REPOSITORY_METHOD_POLICY[key as CmsRepositoryMethod];
+            if (policy === "override") {
+                const override = overrides[key as keyof CmsRepository];
+                if (typeof override !== "function") {
+                    throw new Error(`Missing installed collection override: ${String(key)}`);
+                }
+                return override;
             }
             const value = Reflect.get(target, key);
             if (typeof value !== "function") {
                 return value;
             }
-            if (!guarded.has(String(key))) {
+            if (!policy) {
+                throw new Error(`Unclassified CmsRepository method: ${String(key)}`);
+            }
+            if (policy === "delegate") {
                 return value.bind(target);
             }
             return async (...args: unknown[]) => {
