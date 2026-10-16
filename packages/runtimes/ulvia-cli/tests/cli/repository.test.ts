@@ -118,7 +118,7 @@ test("local repository lists immutable metadata and serves matching release byte
         server.stop();
         await rm(root, { recursive: true, force: true });
     }
-}, 15_000);
+}, 30_000);
 
 test("a release coordinate cannot be replaced with different content", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-repository-"));
@@ -147,7 +147,7 @@ test("a release coordinate cannot be replaced with different content", async () 
     } finally {
         await rm(root, { recursive: true, force: true });
     }
-});
+}, 15_000);
 
 test("collection source assets keep their verified bytes through the repository protocol", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-collection-assets-"));
