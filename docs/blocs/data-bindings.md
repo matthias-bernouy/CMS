@@ -270,13 +270,13 @@ only for the boolean value `true`. ARIA boolean values become the strings
 `"true"` and `"false"`. The `string` filter explicitly converts safe scalar
 values and rejects objects and arrays.
 
-Custom-element attributes must correspond to declared Bloc settings. Their
-types, native boolean attributes, ARIA attributes, and dynamic URL destinations
-are checked when a Page or Bloc is validated, before the browser runtime sees
-them.
+Attributes on a `cms-bloc` root must correspond to declared Bloc settings,
+admitted native root attributes or platform binding attributes. Their types,
+native booleans, ARIA values and dynamic URL destinations are checked when a
+Page or Bloc is validated, before the browser runtime sees them.
 
-Shadow DOM contains only a component's internal structure and styles. Visible
-and crawlable content, bindings, conditions, and repetitions stay in Light DOM.
+All rendered structure is Light DOM. Visible and crawlable content, bindings,
+conditions and repetitions remain present without a Shadow Root.
 
 ## JavaScript boundary
 

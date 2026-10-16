@@ -48,32 +48,17 @@ The ownership rule is a **CMS application policy**, not a restriction of the
 foundation engine. The engine supports isolated nested cores; that capability and
 its tests remain valid.
 
-## Component composition and styles
+## Bloc composition and styles
 
-A custom element may own and compose children in **light DOM**. Those children
-remain discoverable by the existing document core, so their `cms-mutation`,
-`cms-query`, `cms-repeat`, and `cms-condition` bindings are valid. The markup does not all
-have to be inlined into the page file. Reusable component composition is an
-accepted architecture; being a custom element is not a binding boundary.
+Collection Blocs render only Light DOM. A native element carries the stable
+Bloc identity in `cms-bloc`, so its query, mutation, repeat and condition
+bindings remain discoverable by the document core. Optional behavior mounts on
+that native root.
 
-Light-DOM composition components must not inject their own CSS into the
-document: no component `<style>`, stylesheet link, document-level adopted
-stylesheet, or imperative inline styling to recreate their presentation. They
-use official components and the admin's centrally owned shared styles and
-theme tokens. Prefixing selectors does not turn an injected stylesheet into
-encapsulated CSS or make it acceptable under this policy.
-
-Visual components may encapsulate their internal structure and CSS in Shadow
-DOM and expose slots for light-DOM content. Slotted content remains light DOM.
-Keep document-owned bindings there: the binding discovery code walks ordinary
-DOM descendants and does not enter a component's shadow root. Do not move
-those bindings behind Shadow DOM and add a private core to reactivate them.
-
-These composition and CSS rules guide review. The current scanner checks core
-creation, but does not prove light/shadow placement or detect every stylesheet
-injection or JSON handoff. Negative fixtures verify that valid light-DOM
-composition and encapsulated visual components are not rejected by the core
-ownership check.
+Bloc CSS is compiled and scoped by the collection build. Authored behavior must
+not inject styles, register custom elements or create Shadow Roots. The
+collection validators enforce those rules; this workspace scanner additionally
+guards document-core ownership and direct network use.
 
 ## Exceptions and review
 

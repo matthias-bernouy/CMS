@@ -1,151 +1,120 @@
 # Create A Collection Bloc
 
-Blocs are authored inside an immutable collection release. The Kernel does not
-mount a private `/api/bloc` importer and no visual editor is
-present. `ulvia release` is the supported compilation path; site-owned Bloc
-persistence remains a feature API for a future editor, not a second public
-authoring format.
+Blocs are authored inside immutable collection releases. `ulvia release` is
+the supported compilation path; the Kernel never imports an authored folder at
+runtime.
 
 ## Source Tree
 
-Bloc folders are discovered recursively below a collection's `blocs/` tree.
-Grouping folders contain directories only and never contribute to stable IDs.
-A folder becomes a Bloc when it contains `definition.json`; its basename must
-equal the definition's `id`, and discovery stops at that folder.
+Bloc folders are discovered recursively below `blocs/`. A folder becomes a
+Bloc at `definition.json`; its basename must equal the definition `id`.
 
 ```text
-blocs/
-└── content/
-    └── example-card/
-        ├── definition.json
-        ├── shadowdom.html
-        ├── style.css
-        ├── bloc.ts
-        ├── default.html
-        ├── lightdom.html
-        ├── settings/
-        │   └── definition.json
-        └── runtime/
-            └── helpers.ts
+blocs/content/example-card/
+├── definition.json
+├── template.html       # optional fixed Light DOM for retained Blocs
+├── lightdom.html       # required for server-expanded compositions
+├── default.html        # optional initial Page-owned content
+├── style.css           # optional, compiled into a scoped stylesheet
+├── bloc.ts             # optional behavior
+├── settings/definition.json
+└── runtime/helpers.ts
 ```
 
-Only files that serve the Bloc contract are accepted. `runtime/` is recursive
-and TypeScript-only. `settings/` contains exactly one `definition.json`.
-Markup, CSS, settings and runtime code stay out of the root definition so each
-responsibility can be reviewed independently.
+Grouping folders contain directories only. A component Bloc requires
+`template.html`; a composition requires `lightdom.html`. Compositions cannot
+have styles, settings, behavior or fixed component content.
 
-## Components And Compositions
+## Native Roots
 
-A `component` requires `shadowdom.html`. `style.css`, `lightdom.html`,
-`default.html`, `bloc.ts`, settings and runtime helpers are optional unless a
-more specific rule requires them. When `bloc.ts` is absent, the CLI supplies a
-minimal `Component` subclass that imports the Shadow DOM and stylesheet.
+Every Bloc declares which native element may carry its identity:
 
-```ts
-import { Component } from "@bernouy/cms-content/browser";
-import css from "./style.css" with { type: "text" };
-import template from "./shadowdom.html" with { type: "text" };
+```json
+{
+    "id": "example-card",
+    "kind": "component",
+    "root": { "accepts": ["article", "div"] },
+    "slots": {}
+}
+```
 
-export class Bloc extends Component {
-    constructor() {
-        super({ css, template });
+A Page instance is ordinary semantic HTML:
+
+```html
+<article cms-bloc="example-card"></article>
+```
+
+Collection custom-element tags are forbidden. The Bloc ID remains a stable,
+namespaced identity, but it is stored in `cms-bloc` instead of becoming the DOM
+tag name. Pages therefore stay crawlable and accessible without JavaScript.
+
+A wrapper Bloc may declare `content` to manage exactly one Page-owned native
+child, for example an enriched `<input>` or `<select>`. The wrapper root and
+managed child have separate native contracts. Native links require a real
+`href`; interactive descendants are rejected.
+
+## Light DOM And CSS
+
+All visible content lives in Light DOM. Shadow DOM, `attachShadow`,
+`shadowRoot`, `:host`, `::part` and `::slotted` are not part of the Bloc model.
+`template.html` owns fixed structural Light DOM; `default.html` supplies
+initial Page-owned children that must satisfy the Bloc slot contract.
+
+`style.css` is parsed during the build and wrapped in a collection-owned native
+scope:
+
+```css
+@scope ([cms-bloc="example-card"]) {
+    :scope {
+        display: grid;
+    }
+
+    [part~="title"] {
+        font-weight: 700;
     }
 }
 ```
 
-Export one component class. The build wrapper owns `customElements.define()`
-for the declared tag. The emitted `runtime.viewJS` field is the immutable
-browser artifact name; it is unrelated to the removed collection View model.
+Authors write the inner rules; the compiler owns the outer `@scope`. Global
+selectors, document selectors, Shadow DOM selectors and unsafe external CSS
+are rejected. Consumed named slots become `part` tokens after projection so
+the scoped stylesheet can target the resulting Light DOM structure.
 
-A `composition` has only `definition.json`, `lightdom.html` and optional
-`default.html`. It has no Shadow DOM, stylesheet, settings or JavaScript. The
-server expands it before rendering and loads the transitive component runtimes
-used by its markup.
+## Optional Behavior
 
-`default.html` supplies initial editable Page content and therefore follows the
-same strict grammar as a stored Page: every child targets a declared slot and
-matches its acceptance and cardinality contract. `lightdom.html` is a fixed,
-code-owned reusable assembly, so it may contain the native semantic structure
-needed by the Bloc. Changing either in a later release does not silently rewrite
-arbitrary site-owned Page content; collection migrations describe breaking
-stored-data changes.
+Most Blocs need no JavaScript. When native HTML and bindings are insufficient,
+export a mount function:
 
-## Runtime Rules
-
-Bloc code is a browser bundle shared by every Page that uses it. It imports
-browser-safe public entries such as
-`@bernouy/cms-content/browser`; it must not import Node, Bun, databases,
-secrets, runtimes or Kernel internals.
-
-Keep element lifecycle explicit and release listeners when disconnected.
-Prefer native same-site `<a href>` navigation over direct browser navigation. The
-quality checks reject arbitrary browser HTTP calls in official collection code;
-CMS data access uses literal same-origin `/.cms/call/...` bindings backed by
-declared capability requirements.
-
-The current browser host is `window.cmsRuntime`. Its public methods still need
-a versioned ABI before immutable third-party releases can be supported. Until
-collection JavaScript isolation exists, installable executable code is limited
-to reviewed official collections.
-
-## Managed Native Elements
-
-A component can own one editable native Light DOM child through:
-
-```json
-{
-    "nativeElement": { "accepts": ["button", "a"] }
+```ts
+export function mount(root: HTMLElement): () => void {
+    const button = root.querySelector("button");
+    const onClick = () => root.toggleAttribute("open");
+    button?.addEventListener("click", onClick);
+    return () => button?.removeEventListener("click", onClick);
 }
 ```
 
-Such a component has exactly one unnamed Shadow DOM slot, no fixed
-`lightdom.html`, and one direct accepted native child in `default.html`. The
-real child tag remains the source of truth. Wrapper settings and native-child
-attributes are separate targets even when their names coincide. Managed anchors
-require `href` and reject nested interactive descendants.
-
-The admitted vocabulary is deliberately bounded. Links, buttons, headings,
-paragraphs, images and SVGs use typed platform policies; arbitrary `class`,
-`style`, event handlers, free-form `data-*` and unvalidated navigation are not
-author settings. Rich text remains Page-owned HTML in a declared slot rather
-than an HTML string setting.
-
-An editorial image is therefore an image Bloc containing its managed `<img>`,
-not a raw `<img>` accepted by a parent slot. The child owns the file URL,
-alternative text and native loading attributes. The host owns only declared
-presentation settings such as ratio and fit. `media-picker` controls remain
-valid for non-editorial configuration values, but slots accept Blocs or bounded
-text profiles only.
+For lifecycle-shaped code, a module may export a `Bloc` controller extending
+`BlocBehavior`. The build wrapper registers either form with the shared
+`bloc-runtime.js`; authored code never calls `customElements.define()`.
+Behavior mounts on the real native `cms-bloc` root and must return cleanup for
+listeners or observers. Shadow DOM APIs and direct Location mutation are
+rejected.
 
 ## Page Boundary
 
-The CMS supplies no implicit Page wrapper or native editorial vocabulary. An
-empty Page contains an empty document. Every non-empty root must be an active
-Bloc available from the site's installed catalogue. Native elements such as
-headings, paragraphs, sections, forms and images enter editable Page content
-only through a Bloc's managed-native or named-slot contract.
+An empty Page is empty. Every non-empty Page root must carry `cms-bloc` and
+reference an active installed Bloc. Native children are admitted only through
+that Bloc's `content` or named-slot contract. Slot acceptance, cardinality,
+native attributes, accessibility, bindings, links and transitive Bloc
+references are checked for collection Pages, defaults, Page writes,
+publication and migrations.
 
-Named slots enforce `accepts`, `min` and `max` when a default is admitted, a
-Page is created or updated, and an existing draft is published. `any-component`
-accepts components, not compositions. An inactive or uninstalled Bloc is not
-valid for a new save or publication; migrate dependent Pages before removing
-it. Native markup remains available to Bloc authors inside fixed Light DOM and
-Shadow DOM, subject to the corresponding collection safety rules.
-
-The Page boundary is closed for attributes as well as elements. Bloc hosts may
-carry only declared settings and platform-owned placement or binding
-attributes. Managed native children use a per-tag allowlist and finite semantic
-values. Persisted links and buttons require an accessible name; image and SVG
-states, ARIA current/live values and switch roles are validated before storage.
+`any-component` accepts retained Blocs, not compositions. Bounded native text
+uses `plain-text` or `native-content` with the `inline` or `prose` profile.
+Media remains a dedicated Bloc with a managed native media element.
 
 ## Build And Validation
-
-`@bernouy/cms-repository/collections/build` validates the source bundle,
-constrains imports and emits the runtime artifact. The CLI then assembles the
-collection, admits every Bloc and resource reference, verifies capability
-witnesses and computes the immutable release digest.
-
-From the repository root:
 
 ```bash
 bun run ulvia -- release packages/official-repository/collections/ulvia-official
@@ -153,6 +122,9 @@ bun run build
 bun run verify
 ```
 
-See [collection admission](collections.md), [bindings](data-bindings.md),
-[theming](theming.md) and [validation](validation.md) for the surrounding
-contracts.
+The build validates source shape, CSS scope safety, Light DOM, settings,
+runtime imports and behavior patterns. Admission then validates the complete
+collection graph and immutable release digest.
+
+See [collections](collections.md), [bindings](data-bindings.md),
+[theming](theming.md) and [validation](validation.md).

@@ -20,8 +20,8 @@ loading, empty, error, and long-content states.
 ## Compiler checks
 
 `@bernouy/cms-repository/collections/build` validates collection Bloc source and
-builds the browser runtime bundle. Tag validation rejects native roots and
-reserved or invalid custom-element names.
+builds the browser runtime bundle. Identity validation rejects unnamespaced,
+reserved or malformed Bloc IDs.
 Source validation detects selected registration and navigation patterns; it is
 not a complete JavaScript safety analysis. Bundling enforces supported imports
 and validates emitted syntax. The collection import path additionally checks source

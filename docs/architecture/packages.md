@@ -35,7 +35,7 @@ already been published to a registry.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/cms-content` | Provider-neutral Pages, routes, Blocs, settings, themes, closed document grammar, browser Component/binding runtimes, render asset derivation and generic contribution inputs. |
+| `@bernouy/cms-content` | Provider-neutral Pages, routes, Blocs, settings, themes, closed document grammar, Light DOM behavior/binding runtimes, render asset derivation and generic contribution inputs. |
 | `@bernouy/cms-files` | Official provider implementation for namespaces, credentials, uploads, immutable files, private signatures and image representations. |
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues, authored collection admission, content projections, migrations and the explicit collection build toolchain. |
 | `@bernouy/cms-gateway` | Authorized provider-neutral capability invocation, identities and streaming binary transport. |

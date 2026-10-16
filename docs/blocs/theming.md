@@ -1,190 +1,93 @@
 # Make A Bloc Themeable
 
-CmsCore separates site-wide theme decisions from per-Bloc presentation:
-
-1. a non-visual document foundation establishes sizing and page geometry;
-2. the active structured theme supplies stable global design tokens;
-3. a Bloc maps global tokens to its own public custom properties;
-4. semantic attributes select finite variants;
-5. `::part` and Light DOM slots provide deliberate override points.
-
-This allows one Bloc implementation to follow several site themes without
-turning every CSS declaration into an editor setting.
+CmsCore separates site-wide design tokens from per-Bloc presentation. The
+active structured theme provides namespaced CSS variables; a Bloc consumes
+them inside its validated scoped stylesheet.
 
 ## Site Themes
 
-Structured theme settings contain token sources, named value sets, and one
-active theme. A new site's `defaultThemeSettings()` creates an empty **Site
-variables** source and one **Default theme** with empty light/dark values.
-It does not install a built-in Ulvia token catalogue.
+Theme settings contain token sources, named value sets and one active theme.
+Site-owned tokens use `--site-variable-*`. Installed collections may contribute
+immutable namespaced tokens, for example `--ulvia-official-primary`.
 
-Authors can create `--site-variable-*` tokens through the theme editor. Existing
-collection releases can contribute immutable token catalogues when installed.
-The collection namespace prefixes every resulting CSS variable, so the local
-`primary` token from `ulvia-official` becomes `--ulvia-official-primary`.
-Use only tokens contributed by installed collections or created in the site's
-settings. Neither `--ctx-*` nor an unnamespaced `--ulvia-*` is an automatically
-available cross-collection API.
-
-Administration Pages edit structured theme values. The Kernel serves the document foundation
-and the active structured values through `/.cms/style`. The foundation does not
-restyle headings, links, controls, lists, media, or focus states: a collection
-that manages a native element owns its complete presentation. Arbitrary site CSS
-is not part of the settings contract; site-specific values are created as
-`--site-variable-*` tokens by the theme editor.
-
-When an active theme defines dark values, they apply through
-`prefers-color-scheme: dark` and may be forced with
-`data-theme-mode="dark"` on the root element. A configured contribution may
-provide both light and dark defaults for a token.
+The Kernel serves the document foundation and active values through
+`/.cms/style`. The foundation does not restyle native controls, headings,
+links, media or focus states: the Bloc managing a native element owns its
+presentation. Dark values follow `prefers-color-scheme` and may be forced with
+`data-theme-mode="dark"` on the document root.
 
 ## Collection Theme Sources
 
-Collection authors keep theme metadata in `theme/definition.json`. Its
-`categories` array orders recursively discovered category files without putting
-the full token catalogue in one document:
+`theme/definition.json` orders recursively discovered category files. Token
+defaults may reference local tokens or tokens explicitly imported from a
+collection dependency. Admission rejects unknown variables, type-incompatible
+aliases and cycles. Labels and descriptions are translation keys resolved from
+the collection's administration translations.
 
-```json
-{
-  "label": "theme.label",
-  "categories": ["colors", "spacing"]
-}
-```
+The release command also scans Bloc styles. Variables in a collection or
+dependency namespace must be declared theme tokens or explicit Bloc custom
+properties, so misspellings fail before publication.
 
-Each category file may live anywhere below `theme/`, for example
-`theme/colors/colors.json` or `theme/foundations/spacing.json`. Its filename and
-internal `id` must equal the manifest ID. The recursive scan rejects duplicate
-IDs and files absent from the manifest; the manifest remains the only source of
-category order.
+## Scoped Bloc Styles
 
-Token defaults may reference another local token or a token explicitly imported
-from a collection dependency. Admission rejects missing local/imported
-references, including arbitrary ambient CSS variables, cycles between local
-tokens, and exact aliases whose token types do not match. There is no external
-variable escape hatch in theme values: a cross-collection reference must be an
-explicit token import. The local release command also scans Bloc styles: a variable in the
-collection or dependency namespace must be a declared Bloc custom property or a
-known theme token, so misspelled `var(--...)` references fail before publication.
-
-Theme, category and token labels and descriptions are reusable keys resolved
-from all JSON fragments below `translations/<locale>/`, the same immutable
-catalogue used by other collection metadata. Duplicate keys within one locale
-reject. Admission requires every key in the collection's default locale;
-partial additional locale directories fall back to it. This administration
-copy is deliberately separate from site-owned, overridable collection texts.
-
-## Bloc-Level Contract
-
-Map configured site tokens to names owned by the Bloc, and always provide a
-sensible fallback. The `--site-variable-*` names below are illustrative tokens
-to create in the site; they are not built-in defaults:
+Authors write rules relative to the Bloc root. The build wraps them in
+`@scope ([cms-bloc="<id>"])`:
 
 ```css
-:host {
-  --example-card-background: var(--site-variable-surface-background, Canvas);
-  --example-card-color: var(--site-variable-surface-text, CanvasText);
-  --_example-card-muted-color: var(--site-variable-surface-muted-text, currentColor);
-  --_example-card-border-color: var(--site-variable-surface-border, currentColor);
-  --_example-card-radius: var(--site-variable-radius-card, 0.5rem);
-  --_example-card-padding: var(--site-variable-space-md, 1rem);
+:scope {
+    --example-card-background: var(--site-variable-surface-background, Canvas);
+    --example-card-color: var(--site-variable-surface-text, CanvasText);
+    --_example-card-padding: var(--site-variable-space-md, 1rem);
 
-  display: block;
-  color: var(--example-card-color);
-  font: inherit;
+    display: grid;
+    padding: var(--_example-card-padding);
+    color: var(--example-card-color);
+    background: var(--example-card-background);
 }
 
-[part="card"] {
-  display: grid;
-  padding: var(--_example-card-padding);
-  border: 1px solid var(--_example-card-border-color);
-  border-radius: var(--_example-card-radius);
-  background: var(--example-card-background);
+:scope[appearance="plain"] {
+    border-color: transparent;
+    box-shadow: none;
 }
 
-[part="description"] {
-  color: var(--_example-card-muted-color);
+[part~="description"] {
+    color: var(--site-variable-surface-muted-text, currentColor);
 }
 ```
 
-A site may now tune the component without reaching into its Shadow DOM:
+Use documented public variables for supported theme knobs. Prefix private
+implementation variables with `--_<collection>-*`. `part` tokens identify
+projected Light DOM structures that the owning scoped stylesheet needs to
+target; they are not Shadow DOM parts.
+
+Global selectors, document selectors, `:host`, `::part`, `::slotted`, imports
+and other scope escapes are rejected. A Bloc cannot style outside its scoped
+root. Nested Bloc scopes remain independently owned.
+
+## Settings And Behavior
+
+Finite semantic variants belong in declared settings and become validated root
+attributes. CSS can select them directly with `:scope[attribute="value"]`.
+Behavior is unnecessary for ordinary color or layout variants; use JavaScript
+only when an interaction cannot be expressed by native HTML, bindings and CSS.
+
+## Responsive And Accessible By Construction
+
+Use container queries when layout depends on the space allocated to a Bloc:
 
 ```css
-example-card {
-  --example-card-background: var(--site-variable-subtle-background);
-}
-```
-
-Use documented collection variables for supported knobs. Prefix private
-implementation variables with `--_<collection>-*`; sites and other collections
-must not depend on them. Avoid hardcoded brand colours in a reusable Bloc.
-
-## Attributes, Color Settings, Parts, And Slots
-
-Use attributes for finite semantic choices:
-
-```css
-:host([appearance="plain"]) [part="card"] {
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
+:scope {
+    container-type: inline-size;
 }
 
-:host([appearance="elevated"]) [part="card"] {
-  box-shadow: var(--example-card-shadow, var(--site-variable-shadow-soft, 0 0.5rem 1.5rem rgb(0 0 0 / 12%)));
-}
-```
-
-An editor `color` setting also writes an attribute. If that value controls a
-Shadow DOM declaration, the view must map it explicitly to a custom property:
-
-```ts
-static observedAttributes = ["background-color"];
-
-attributeChangedCallback(): void {
-    const value = this.getAttribute("background-color")?.trim();
-    if (value) {
-        this.style.setProperty("--example-card-background", value);
-    } else {
-        this.style.removeProperty("--example-card-background");
+@container (min-width: 40rem) {
+    :scope {
+        grid-template-columns: minmax(0, 2fr) minmax(12rem, 1fr);
     }
 }
 ```
 
-Expose `part="..."` only on structural nodes a site may reasonably target.
-`example-card::part(card)` can then override that node, but cannot pierce deeper
-Shadow DOM. `::slotted(...)` styles only the first distributed Light DOM
-level—all elements directly assigned to the slot—not their descendants. Theme
-rich authored content through
-inherited properties and collection-owned composition Blocs rather than
-fragile deep selectors.
-Treat published custom-property, part, and slot names as public contracts:
-renaming one can break site themes or already-authored content.
-
-## Responsive And Accessible By Construction
-
-A Bloc may occupy a narrow grid cell or the full page. Use container queries
-for layout changes driven by its allocated width instead of viewport-only media
-queries:
-
-```css
-:host {
-  container-type: inline-size;
-}
-
-@container (min-width: 40rem) {
-  [part="card"] {
-    grid-template-columns: minmax(0, 2fr) minmax(12rem, 1fr);
-  }
-}
-```
-
-The Bloc author owns these rules; a site editor should choose content and
-semantic variants, not maintain breakpoint values. Preserve focus indicators,
-colour contrast, logical reading order, and native element semantics. Gate
+Preserve focus indicators, contrast, reading order and native semantics. Gate
 non-essential motion with `prefers-reduced-motion`.
 
-For image candidate selection inside fluid layouts, follow
-[Files And Responsive Images](../images/README.md).
-
-The implementation is in [theme defaults](../../packages/features/cms-content/src/theme/core/defaults.ts)
-and [CSS generation](../../packages/features/cms-content/src/theme/core/generateStyleEntry.ts).
+For responsive media, see [Files And Responsive Images](../images/README.md).

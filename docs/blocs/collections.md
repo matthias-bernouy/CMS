@@ -1,391 +1,117 @@
 # Collections
 
-Administration Pages expose private site collections, compiled code Blocs, and immutable
-collections installed from a repository. Private compositions are editable;
-installed blocs are read-only and can be placed on pages.
+Collections are immutable, provider-neutral release artifacts. They contribute
+Blocs, Pages, texts, theme tokens and assets to a site. The repository admits
+and stores releases; installation projects their resources into Content.
 
-## Local collection releases
-
-Author a declarative collection folder such as
-`packages/official-repository/collections/ulvia-official/`. It is not a Bun workspace package.
+## Authored Layout
 
 ```text
-packages/official-repository/collections/ulvia-official/
-├── definition.json          # collection identity, version, locale and metadata
-├── blocs/**/<bloc>/definition.json
-├── blocs/**/<bloc>/shadowdom.html  # required for components
-├── blocs/**/<bloc>/lightdom.html   # required for compositions, optional for components
-├── blocs/**/<bloc>/default.html    # optional initial page-owned slot content
-├── blocs/**/<bloc>/settings/definition.json  # optional component settings
-├── blocs/**/<bloc>/style.css    # optional for shadow components
-├── blocs/**/<bloc>/bloc.ts      # optional browser behavior
-├── texts/definitions/**/*.json  # text IDs and administration metadata
-├── texts/locales/<locale>/**/*.json  # site-overridable content defaults
-├── translations/<locale>/**/*.json  # reusable administration copy fragments
-├── migrations/**/<from>-to-<to>.json  # adjacent declarative data transitions
-├── theme/definition.json    # ordered theme category IDs
-├── theme/**/*.json          # recursively organized category/token defaults
-├── definitions/             # reserved for later collection definitions
-├── pages/**/<page>/definition.json  # Page identity, default route and requirements
-└── pages/**/<page>/page.html   # immutable collection Page document
+collection/
+├── definition.json
+├── blocs/**/<bloc>/
+│   ├── definition.json
+│   ├── template.html
+│   ├── lightdom.html
+│   ├── default.html
+│   ├── style.css
+│   ├── bloc.ts
+│   ├── settings/definition.json
+│   └── runtime/**/*.ts
+├── pages/**/<page>/definition.json
+├── pages/**/<page>/page.html
+├── texts/definitions/**/*.json
+├── texts/locales/<locale>/**/*.json
+├── translations/<locale>/**/*.json
+├── theme/definition.json
+├── theme/**/*.json
+├── assets/**/*
+└── migrations/**/<from>-to-<to>.json
 ```
 
-`definition.json` may publish a selective `exports` surface containing Bloc
-tags and collection-local theme token IDs. Its `dependencies` entries identify
-one collection and publisher, constrain its version, and list only the exported
-Blocs, tokens, texts, assets and Pages this release imports. External Bloc references in `uses`, slot
-acceptance or authored markup must be present in that import list. The site
-single-release installer requires dependencies first and revalidates the complete
-acyclic graph on install and upgrade. The core installation store can also commit
-an exact multi-release dependency graph atomically when a caller has already
-selected every release.
+Bloc folders may be grouped recursively. The folder basename is the Bloc ID;
+grouping paths never become identities. A retained component uses
+`template.html`; a server-expanded composition uses `lightdom.html`.
+`default.html`, `style.css` and `bloc.ts` are optional where the Bloc kind
+allows them. There is no `shadowdom.html` source.
 
-`bun run ulvia -- release packages/official-repository/collections/ulvia-official` assembles the
-supported files into one `ulvia-collection/v1` release, validates it, and
-stores immutable canonical bytes in the user's local repository. That repository
-lives at `ULVIA_DATA_DIR/repository`, or below `$XDG_DATA_HOME/ulvia/repository`
-or `~/.local/share/ulvia/repository` by default. `bun run ulvia -- dev` serves
-only stored releases on loopback port 5102 (`ULVIA_DEV_REPOSITORY_PORT` can
-change it); it never scans authored folders. Run `release` again after editing
-the source and increment its version. Contracts required by Blocs or Pages must
-already exist in the local repository. `bun run ulvia -- prune` empties the
-local repository without deleting the separate dev CMS data. Pull and push
-transfer one exact release between the local store and an HTTPS repository:
+## Bloc Documents
 
-```bash
-ULVIA_REPOSITORY_TOKEN=... bun run ulvia -- push collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
-bun run ulvia -- pull collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
-```
-
-Contracts and provider manifests use the same commands and must be transferred
-before dependants. Remote writes are timestamped, nonce-bound and HMAC-signed;
-the receiving repository re-runs admission, dependency and SemVer/generation
-checks while holding its write lock. `yank` hides a release from new catalogue
-resolution without deleting historical bytes, and `restore` reverses it. The
-current release format does not install the `definitions/` directory. No direct
-collection JSON upload is available in the administration UI.
-
-### Collection admission limits
-
-Limits are enforced when every collection release is admitted, whether it is
-created locally, pulled from a repository or received by the official
-repository server:
-
-| Resource | Maximum per release |
-| --- | ---: |
-| Canonical collection document | 8 MiB |
-| Blocs | 512 |
-| Assets | 1,024 |
-| Content texts | 4,096 |
-| Pages | 256 |
-| Collection dependencies | 128 |
-| Theme categories | 64 |
-| Theme tokens across all categories | 4,096 |
-
-Structural sub-resources remain bounded as well: 512 adjacent migration files
-with 512 operations each, 256 settings and 32 slots per Bloc, and 32 capability
-requirements per Bloc or Page.
-
-One asset remains limited to 10 MiB and all asset bytes in one release remain
-limited to 50 MiB. These are hard collection limits: a release exceeding any
-one of them is rejected. The publication transport accepts larger generic
-repository artifacts, but that transport ceiling does not override collection
-admission. Collection assets are therefore intended for immutable resources
-shipped with the release, such as icons, fonts, images and small documents.
-Larger videos, audio files or documents belong in the CMS media/file system.
-
-Import and export lists use the limit of their resource kind rather than the
-Bloc limit. Authored sources may use `"*"` for an entire `exports` object or one
-of its `blocs`, `themeTokens`, `texts`, `assets` or `pages` selections. The release
-command expands that shorthand before admission, excludes internal Blocs from
-a wildcard Bloc selection and stores an explicit sorted list in the immutable
-release. Dependency imports never accept wildcards.
-
-Components use `shadowdom.html`, optional fixed `lightdom.html`, optional
-`style.css`, and optional `bloc.ts`.
-Bloc folders may be grouped at any supported depth below `blocs/`. A directory
-containing `definition.json` is a Bloc root and stops recursive discovery; its
-basename must equal the Bloc ID. Parent grouping directories contain only
-directories and never contribute to the Bloc ID, label or runtime bundle.
-An optional translated `category` and nonnegative integer `order` in the Bloc
-definition control its author-facing catalogue group and position. Source folder
-names remain organizational only.
-The release command generates a default component runtime when `bloc.ts`
-is absent. Compositions use `lightdom.html` without a browser component class.
-Their template is shared across every page using the installed release; an
-upgrade changes every rendering. Named `<slot>` elements in `lightdom.html`
-accept page-owned children, optionally initialized from `default.html`.
-For a component with both DOM layers, its host remains and its fixed Light DOM
-children project into the Shadow DOM slots. For a composition alone, the Kernel
-replaces the temporary host with the expanded template.
-Admission forbids inline `style` attributes everywhere, permits `class` only
-inside Shadow DOM, and permits bindings only inside Light DOM. Shadow shells
-also reject visible text, links, headings and images, so crawlable content stays
-in Light DOM.
-
-### Page document grammar
-
-CmsCore does not inject a default Page Bloc or wrapper. A blank Page has an
-empty document. Every non-empty Page root must be a Bloc from the active
-installed catalogue; native roots such as `<main>`, `<section>` or `<div>` are
-invalid. Collection `page.html` files follow the same rule and may root only in
-a Bloc admitted with the collection or imported explicitly.
-
-Editable native HTML is admitted only below a Bloc contract:
-
-- `plain-text` and `rich-text` accept their bounded native profiles;
-- `component` accepts the declared component tag;
-- `any-component` accepts components, never compositions;
-- `min` and `max` apply to direct assigned children.
-
-These rules are checked for `default.html`, collection Pages, Page creation and
-updates, publication of an existing draft, and collection migration planning
-and rollback. Inactive and uninstalled Blocs are excluded from the authoring
-grammar. Existing content must be migrated before its Bloc is deactivated or
-removed.
-
-This editable boundary does not prohibit native structure authored inside a
-Bloc. Fixed `lightdom.html` may contain semantic native HTML and bindings;
-`shadowdom.html` remains a static encapsulated shell. Fixed nested component
-placements still target declared slots, and capability forms in fixed Light DOM
-remain subject to controlled transport validation.
-
-A component may instead declare one page-owned managed native child:
-
-```json
-{
-    "kind": "component",
-    "id": "example-action",
-    "nativeElement": {
-        "accepts": ["button", "a"]
-    },
-    "slots": {}
-}
-```
-
-Such a component cannot have `lightdom.html`. Its `shadowdom.html` must expose
-exactly one unnamed `<slot>`, `default.html` must contain exactly one direct,
-un-slotted accepted native root, and `slots` must remain empty. The native child
-is the structural source of truth: `<button>` and `<a>` are two valid instances
-of the example contract, without a duplicate `as` attribute on the wrapper.
-An accepted `<a>` must declare a real `href`. It cannot contain another link,
-form control or other interactive descendant. A link wrapper may therefore
-contain a non-interactive component such as a card while preserving native
-navigation, focus, context-menu and browser history behavior.
+Every Bloc declares a native `root` contract. Instances use a native element
+with the Bloc identity in `cms-bloc`:
 
 ```html
-<example-link>
-    <a href="/products/example">
-        <example-card>
-            <h2 slot="title">Example product</h2>
-            <p slot="body">Product description</p>
-        </example-card>
-    </a>
-</example-link>
+<section cms-bloc="example-hero"></section>
 ```
 
-The accepted list is also sufficient for a future editor to offer a structural
-element selector. Changing that selector replaces the real native child rather
-than changing only presentation metadata.
+The fixed template, Page-owned defaults and Page documents are all Light DOM.
+Nested Blocs use the same representation. Named slots declare exact accepted
+Blocs, `any-component`, `plain-text`, or bounded `native-content` profiles.
+Cardinality is enforced at every write boundary. Compositions are expanded on
+the server and are not accepted by `any-component`.
 
-Settings always target the custom-element wrapper. Native attributes and text
-belong to the child. Therefore the wrapper and its child may safely carry an
-attribute with the same name; they are validated and edited as separate DOM
-targets. Components embedded in another collection template must still contain
-a concrete accepted child. A composition may place its own editable slot inside
-that child, for example `<example-heading><h2><slot
-name="heading"></slot></h2></example-heading>`.
+A retained Bloc may declare `content` for exactly one Page-owned native child,
+such as an input or select enhanced by behavior. Root and child contracts each
+declare accepted native tags and constrained native attributes.
 
-Slot acceptance distinguishes components from editorial content.
-`plain-text` describes an unformatted page-owned text region. `rich-text`
-requires the closed `inline` or `prose` profile and is intended to drive a
-future bounded rich-text editor. In both cases the stored value remains real
-page HTML assigned to the slot; it is not collection configuration, an encoded
-HTML attribute or an EditorJS document.
+CSS is parsed, checked, and wrapped in `@scope ([cms-bloc="<id>"])` by the
+build. Shadow DOM selectors and global selectors are rejected. Named template
+slots become Light DOM `part` tokens after projection.
 
-Media content is always represented by a component Bloc, never by a raw native
-element admitted directly by a slot. For example, an image Bloc declares
-`nativeElement.accepts: ["img"]`; a specialized image position accepts that
-Bloc with `{ "kind": "component", "tag": "example-image" }`, while a generic
-layout position may accept it through `any-component`. The file reference,
-alternative text and loading attributes belong to the managed `<img>` child.
-Presentation settings such as ratio or fit belong to the Bloc host. Future
-video and audio support follows the same dedicated-Bloc model.
+Behavior is optional. `bloc.ts` exports `mount(root)` or a `BlocBehavior`
+controller. The build owns registration with `bloc-runtime.js`; collection code
+cannot define custom elements or create Shadow Roots.
 
-Component attributes may be declared in the bloc's `definition.json` under
-`settings`, or in a separate `settings/definition.json`. The release command
-rejects using both locations for one bloc. Settings are an ordered JSON array;
-each item has an `id`, `label`, `type` and `default`, plus an optional `group`.
-String items may set `minLength` and `maxLength`; an omitted `maxLength`
-defaults to 256. Finite numbers and safe integers may set `minimum` and
-`maximum`. Every item has a declarative `control`. String controls are `text`,
-`select`, `segmented`, `color`, `media-picker` and
-`theme-token-picker`; booleans use `toggle`; numeric settings use `number` or a
-bounded `range`. Select and segmented options carry stable string values and
-author-facing labels. The same items supply insertion defaults and the
-server-side value schema. Numeric HTML attributes must use JSON number syntax;
-empty strings, hexadecimal forms, `NaN` and infinities reject.
-An item may add `visibleWhen: { "setting": "tone", "equals": "accent" }`;
-`notEquals` and arrays of accepted values are supported. Multiple rules form
-an AND condition. Conditions may reference a boolean item or a string item
-with finite select or segmented options, including items in another group.
-Admission rejects unknown references, incompatible values, self references and
-cycles. Visibility affects only the authoring control: hidden attributes remain
-stored and are still validated.
-Changing a controlling value does not clear other attributes.
-Inserting a bloc writes its default attributes onto that page's host, and page
-saves validate changed values against the installed schema. `bloc.ts` remains
-optional behavior code; it is not required to describe the settings panel.
-Long or formatted editorial content does not belong in a string setting. Use a
-page-owned rich-text slot instead. `media-picker` remains a setting control for
-configuration such as a background or poster; it is not a Page slot contract.
+## Page Grammar
 
-The Kernel uses the shared capability transport for collection administration:
-`ulvia.cms.collections/catalogue` lists configured sources and immutable release
-metadata, while `install`, `upgrade` and `update-configuration` perform
-revision-checked mutations. The Ulvia Provider fetches releases server-side, validates
-their exact identity and digest, then installs or upgrades them. Immutable
-release bytes and mutable per-site state are stored separately. An upgrade
-retains site text overrides and checks revision and compatible resource IDs.
+The CMS injects no default Page wrapper. Every non-empty Page root must be an
+active installed Bloc on a valid native root. Native elements can appear only
+where a Bloc contract owns them. The same grammar validates collection Pages,
+defaults, local Page writes, publication, installation, upgrade and rollback.
 
-## Release evolution and migrations
+Host attributes are limited to declared settings, admitted native root
+attributes and platform binding/placement attributes. Native descendants use
+tag-specific policies for semantics, accessibility, URL safety and controlled
+forms. Hardcoded user-facing collection copy is rejected in favor of collection
+texts.
 
-The collection SemVer remains the publication version. Each Bloc, theme token,
-configuration, text and Page also has a positive `generation`
-(default `1`) and deterministic contract and implementation digests. An
-implementation-only change leaves the contract digest stable. A compatible
-contract extension may change the contract digest without changing the resource
-generation; a breaking contract requires a generation increment.
+## Settings, Imports And Exports
 
-The local repository enforces that policy before storing a publication. A patch
-may change resource implementations only. A minor may add resources and make
-compatible contract extensions without changing existing resource generations.
-A major may break contracts or remove exports, but each changed surviving
-resource increments its generation and the collection advances its
-`dataGeneration`. One publication advances that data generation by at most one.
+Settings are ordered typed items. They define insertion defaults, finite
+editor controls and the persisted host-attribute schema. A release may export
+exact Blocs, tokens, texts, assets and Pages. Dependencies import only resources
+exported by an exact publisher/collection version constraint. The CLI may
+expand authored `"*"` exports into explicit sorted IDs; imports never accept
+wildcards.
 
-`dataGeneration` describes the format of site-owned data. It increments only
-when pages, collection configuration, text overrides or site theme overrides
-need a transition. A release at generation `N` contains the complete adjacent
-chain `1→2`, `2→3`, …, `N-1→N`; a site at generation `X` executes each retained
-step through `Y`. This avoids direct `X→Y` migration files while keeping old
-sites upgradeable.
+All local and imported references, cycles, capability requirements and theme
+token references are checked before the release becomes visible.
 
-Migration files contain only bounded declarative operations. They can rename a
-Bloc, rename/add/remove/map a setting, rename a theme token, move/add/remove/map
-a configuration value, and rename or remove a text override. Arbitrary
-JavaScript migration code is not accepted.
+## Releases And Installation
 
-Administration Pages expose administrator-only `plan-migration`, `apply-migration`,
-`get-migration`, `migration-status`, `resume-migration` and `rollback-migration`
-capabilities through `ulvia.cms.collections`. Durable asynchronous work is
-listed and inspected through `ulvia.cms.jobs`. Planning validates the complete target collection graph,
-transformed pages, configuration, text overrides and theme references without
-changing the installed site state. Page
-planning and snapshot verification use stable ID cursors in batches of at most
-500 pages; neither path loads every page body through `getAllPages()`. The plan
-response returns at most 500 affected-page previews plus `totalPages`; its digest
-still covers every exact affected-page snapshot. Only pages whose content
-actually changes are retained for rollback.
-Execution then:
+```bash
+bun run ulvia -- release packages/official-repository/collections/ulvia-official
+bun run ulvia -- dev
+```
 
-1. enters maintenance and drains writes already in flight;
-2. scans the final stable snapshot and stages rollback pages in bounded batches;
-3. activates the technical journal and rechecks collection, page and feature digests;
-4. atomically commits all target collection pins;
-5. rewrites affected pages with compare-and-swap revisions;
-6. validates the result and commits the transformed site theme.
+`release` assembles, compiles and admits canonical bytes into the local
+repository. `dev` serves stored releases only; it never scans source folders.
+Push and pull transfer exact immutable releases and the receiving repository
+re-runs admission. A yank hides a release from new selection without deleting
+historical bytes.
 
-The Kernel returns `503` with `Retry-After` while a migration is active. Administration Pages
-keeps reads and migration recovery available, but ordinary writes return `423`.
-A failed run stays in maintenance until it is resumed or rolled back. Rollback
-is rejected if committed collections or migrated pages changed afterward. Page
-revisions always increase, including rollback; they are concurrency tokens, not
-page-version history.
+Collections use adjacent generation migrations named `<from>-to-<to>.json`.
+Installation and upgrade validate the entire selected dependency graph and
+content compatibility before committing. Breaking stored content changes must
+be represented by explicit migration operations.
 
-Mongo stores the journal header and each affected page snapshot separately, so
-the journal does not hit one aggregate document-size ceiling. Planning, forward
-execution, validation, resume and rollback consume those snapshots in bounded
-batches. Incomplete staging rows have a TTL and are removed when activation
-fails. Public maintenance checks read only the lightweight active state and
-never hydrate page snapshots. A renewable token fences each worker: heartbeat
-failure or lease replacement stops further journal and content writes, and a
-stale worker cannot release its successor's lease.
+## Admission Limits
 
-## Workspace
+The principal current limits are 8 MiB for the canonical collection document,
+512 Blocs, 1,024 assets, 4,096 texts, 256 Pages, 128 dependencies, 64 theme
+categories and 4,096 theme tokens. One asset is limited to 10 MiB and the
+release asset total to 50 MiB. Slots, settings, requirements, migrations and
+operations have their own bounded counts.
 
-The admin entry point is `<basePath>/admin/collections`. The collection key is
-encoded in these routes:
-
-- `<basePath>/admin/collections/<collection>/overview`
-- `<basePath>/admin/collections/<collection>/theme`
-- `<basePath>/admin/collections/<collection>/blocs`
-- `<basePath>/admin/collections/<collection>/texts`
-
-The theme workspace projects installed collection tokens into the shared site
-theme. The collection owns token definitions and defaults; the site may edit
-token values. The Kernel includes the resulting CSS variables in its public
-stylesheet. The Texts workspace groups translations by category and group and
-persists site overrides. Each text definition must provide translated `label`,
-`category` and `group` metadata; release admission rejects missing fields or
-default-locale catalogue entries. The Kernel replaces `cms.i18n` expressions on the server
-after expanding installed compositions. Catalogue values are static; dynamic
-parameters and plural forms are not collection text features.
-Collection admission rejects hardcoded visible and accessible copy in Bloc
-defaults, fixed Light DOM and Page documents. Authors use exact collection text
-references for reusable copy and ordinary bindings for provider-owned data;
-routes, IDs, roles, field names and other technical attributes stay literal.
-
-`ulvia.cms.collections/list` and `get` provide installed release and site state.
-`ulvia.cms.localization/overview`, `get-texts` and `save-texts` expose languages
-and revision-checked collection text overrides. `ulvia.cms.theme/get` and `save`
-expose the composed site theme and its revision-checked values. All calls use
-`POST <basePath>/.cms/call/<contract>/<capability>` from an activated administration Page
-execution plan.
-
-## Site-Owned Blocs
-
-`cms-content` retains revisioned site-owned Bloc and Bloc-group domain
-APIs because a future editor will need them. The Kernel does not currently mount a
-private Bloc catalogue, import or editing transport. They must not be treated as
-an alternative collection publication path: installable reusable Blocs come
-from exact immutable collection releases.
-
-## Current limits
-
-The installed-collection bridge renders compositions and Shadow components,
-including fixed Light DOM, named slots and initial page content. Verified asset
-bytes and revision-checked collection configuration are implemented. The store
-can remove a collection after checking installed dependants, but the administration UI does not
-expose removal until it can also report affected pages, private Blocs, theme
-references and collection Pages. Remote repository transfer and authenticated
-publication are implemented by the CLI and filesystem reference repository.
-The production repository is currently a single-active-replica filesystem
-service; key rotation and multi-publisher authorization remain deployment work.
-JavaScript trust scanning is also separate; migration files
-themselves are data-only. Collection Pages can contain local or explicitly
-imported Blocs, and the renderer can expand compositions, load transitive
-component runtimes, resolve collection texts and public assets, and apply the
-site theme. The Kernel mounts their navigation and route activation flow. The
-execution-plan API pins the collection digest, Page generation,
-provider-selection revision, contract release digest and installation for each
-call. A source adapter exists
-for multiple repositories, while the dev runtime configures one local source.
-Repository catalogue responses use opaque cursor pagination with at most 256
-releases per page. Clients consume every page, reject cursor loops and duplicate
-coordinates across pages, and cap one listing at 262,144 releases. The official
-filesystem runtime builds a metadata-only in-process index at startup and
-invalidates it after every publication or yank. Exact-coordinate reads do not use
-the catalogue index and never load unrelated binary assets.
-The current first-party JavaScript trust decision and the intended sandbox
-boundary for future third-party collections are recorded in
-[deferred platform work](../TODO.md#collection-javascript-isolation).
-
-Mongo stores collection assets in independently checksummed 256 KiB chunks.
-Full reads still verify the declared whole-asset SHA-256 and media signature;
-HTTP byte ranges fetch and verify only the chunks they cover. Release, chunk and
-site-state writes calculate their BSON size before contacting MongoDB and reject
-documents above its 16 MiB limit with a domain-readable error.
-
-See the [collection release format](../../packages/features/cms-repository/src/collections/README.md)
-for admission constraints.
+See [Create A Collection Bloc](authoring.md) for the source contract and
+[Validation](validation.md) for the full validation path.

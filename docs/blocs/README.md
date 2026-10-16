@@ -4,47 +4,32 @@ CmsCore Blocs separate four concerns:
 
 | Concern | Owner | Purpose |
 | --- | --- | --- |
-| Page content | Site author | The Light DOM stored in a Page document. |
-| Browser runtime | Bloc author | Optional component behavior and Shadow DOM. |
-| Authoring contract | Collection | Settings, slots, defaults and native-element policy. |
-| Theme | Site and collection | Shared tokens plus deliberate component extension points. |
+| Page content | Site author | Semantic Light DOM stored in a Page. |
+| Structure and style | Bloc author | Fixed Light DOM and validated scoped CSS. |
+| Optional behavior | Bloc author | A mount function on the native `cms-bloc` root. |
+| Authoring contract | Collection | Native roots, slots, defaults and settings. |
 
-One Page document and one rendering pipeline serve every Page. Pages and Blocs
-do not declare a surface. The Kernel derives Page access from the capabilities
-used by the Page and its transitive Blocs. There is no collection View or
-Dashboard renderer. Administration Pages expose the active installed Bloc
-catalogue through the visual Page editor.
+Blocs do not create custom elements or Shadow Roots. Their stable identity is
+the value of `cms-bloc` on a native element. One Page document and one Kernel
+rendering pipeline serve public and administration Pages.
 
 ## Guides
 
-- [Collection API](collections.md): immutable resources, imports/exports,
-  generations, installation and migrations.
-- [Collection texts](texts.md): recursive definitions/locales, fallback and
-  server interpolation.
-- [Create a Bloc](authoring.md): recursive folders, components, compositions,
-  native elements and compilation.
-- [Bindings](data-bindings.md): declarative sources, repetition and forms.
-- [Theming](theming.md): tokens, CSS variables, slots and container-aware
-  layout.
-- [Validation](validation.md): release, workspace and runtime checks.
+- [Collections](collections.md): immutable resources, dependencies and installation.
+- [Collection texts](texts.md): definitions, locales and fallback.
+- [Create a Bloc](authoring.md): source layout, native roots, CSS and behavior.
+- [Bindings](data-bindings.md): declarative queries, rendering and forms.
+- [Theming](theming.md): tokens, scoped styles and responsive layout.
+- [Validation](validation.md): release, document and runtime checks.
 
-## Current Execution Path
+## Execution Path
 
 ```text
 authored collection sources
-  -> ulvia release + collection build toolchain
+  -> ulvia release + Bloc build
   -> strict admission + immutable digest
   -> repository publication
-  -> site installation and exact execution plans
-  -> shared Kernel Page renderer
+  -> site installation and execution plans
+  -> Kernel server composition
+  -> native Light DOM + optional bloc-runtime.js behavior
 ```
-
-Collection components and compositions are fully renderable. Administration
-Pages are mounted from installed collections and call official CMS contracts
-through `/.cms/call`; public Pages use the same Bloc artifacts. The
-browser host remains presentation-free and visual components live in
-collections.
-
-Starting `ulvia dev` launches the local stack and bootstraps the admitted
-official resources. It does not watch arbitrary source folders: release an
-authored directory explicitly when its contents change.

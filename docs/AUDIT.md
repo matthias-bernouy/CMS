@@ -225,7 +225,7 @@ penetration testing, dependency monitoring or deployment review.
 ### Trust Boundaries
 
 1. Collection JavaScript is trusted because only reviewed official collections
-   are admitted. Shadow DOM and namespaces are encapsulation, not isolation.
+   are admitted. Scoped Light DOM and namespaces are encapsulation, not isolation.
 2. OIDC code exists but is not part of the current official local bootstrap.
    Discovery, token and JWKS networking must receive Gateway-equivalent SSRF,
    timeout, redirect and size protections before production activation.
