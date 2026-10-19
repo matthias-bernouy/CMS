@@ -5,20 +5,24 @@
  */
 export class ContentValidationError extends Error {
     status = 400;
+    readonly publicMessage: string;
     constructor(
         readonly field: string,
         message: string,
     ) {
         super(`Invalid ${field}: ${message}`);
         this.name = "ContentValidationError";
+        this.publicMessage = this.message;
     }
 }
 
 export class ContentConflictError extends Error {
     status = 409;
+    readonly publicMessage: string;
     constructor(message: string) {
         super(message);
         this.name = "ContentConflictError";
+        this.publicMessage = message;
     }
 }
 
