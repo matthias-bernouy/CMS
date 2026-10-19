@@ -4,6 +4,7 @@ import type { LocalInstanceConnection } from "./config";
 import type { LocalMongo } from "./mongo";
 import type { UlviaPaths } from "./paths";
 import { spawnCommand } from "./process";
+import { join } from "node:path";
 
 export type DevPorts = Readonly<{
     kernel: number;
@@ -44,6 +45,7 @@ export async function startLocalProvider(
             ULVIA_PROVIDER_HOST: "127.0.0.1",
             ULVIA_PROVIDER_PUBLIC_URL: providerUrl,
             ULVIA_PROVIDER_OPERATOR_TOKEN: options.operatorToken,
+            ULVIA_LOG_FILE: join(paths.logs, "provider.ndjson"),
         },
     });
     try {
@@ -61,7 +63,7 @@ export async function startLocalProvider(
 }
 
 export async function startLocalKernel(
-    _paths: UlviaPaths,
+    paths: UlviaPaths,
     _mongo: LocalMongo,
     ports: DevPorts,
     instance: LocalInstanceConnection,
@@ -81,6 +83,7 @@ export async function startLocalKernel(
             KERNEL_PUBLIC_URL: kernelUrl,
             ULVIA_PROVIDER_URL: `http://127.0.0.1:${ports.provider}`,
             ULVIA_INSTANCE_TOKEN: instance.token,
+            ULVIA_LOG_FILE: join(paths.logs, "kernel.ndjson"),
         },
     });
     try {

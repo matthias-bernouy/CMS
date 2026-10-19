@@ -10,6 +10,7 @@ import { runCli } from "../../src/cli";
 import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
 import { startLocalRepository } from "../../src/runtime/repository";
 import { writeAuthoredContractFixture } from "../authoredContractFixture";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 test("contract and provider releases use explicit kinds and exact local contract references", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-artifacts-"));
@@ -65,7 +66,7 @@ test("contract and provider releases use explicit kinds and exact local contract
         await runCli(["release", providerFolder], options);
         await runCli(["release", providerFolder], options);
         expect(await new LocalArtifactFiles(join(data, "repository")).list("providers")).toHaveLength(1);
-        const server = startLocalRepository(0, join(data, "repository"));
+        const server = startLocalRepository(0, join(data, "repository"), NOOP_LOGGER);
         try {
             const remote = new HttpProviderRepository("local", server.url);
             const importedContracts = new InMemoryReleaseCatalogue();

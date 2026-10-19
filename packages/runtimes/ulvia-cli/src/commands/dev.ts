@@ -13,6 +13,7 @@ import {
     type DevPorts,
 } from "../runtime/cms";
 import { resolveDevPorts } from "../runtime/dev/ports";
+import { createDevLoggers } from "../runtime/dev/loggers";
 import {
     inspectDevSupervisor,
     probeDevServices,
@@ -24,6 +25,7 @@ import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mo
 import type { UlviaPaths } from "../runtime/paths";
 import { bootstrapOfficialRepository } from "./bootstrap";
 import { resetCurrentDevEnvironment, runFreshDevEnvironment } from "./devData";
+import { showDevLogs } from "../runtime/dev/logs";
 
 export async function devCommand(
     args: readonly string[],
@@ -48,6 +50,10 @@ export async function devCommand(
         log(`Email: ${config.adminEmail}`);
         log(`Password: ${config.adminPassword}`);
         log(`Technical tokens remain in the private runtime directory: ${paths.dev}`);
+        return;
+    }
+    if (action === "logs") {
+        await showDevLogs(args.slice(1), paths, log);
         return;
     }
     if (action === "stop") {
@@ -100,6 +106,9 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
 }
 
 async function runDevStack(paths: UlviaPaths, log: (message: string) => void, ports: DevPorts): Promise<void> {
+    const loggers = createDevLoggers(paths);
+    const supervisorLogger = loggers.supervisor;
+    supervisorLogger.info("dev.starting", { dataDirectory: paths.data, ports });
     log("Preparing bundled official resources...");
     await bootstrapOfficialRepository(paths.repository);
     log("Starting persistent local MongoDB...");
@@ -108,6 +117,7 @@ async function runDevStack(paths: UlviaPaths, log: (message: string) => void, po
     const repository = startLocalRepository(
         ports.repository,
         paths.repository,
+        loggers.repository,
         await loadOrCreateRepositoryToken(paths.dev),
     );
     const operatorToken = await loadOrCreateProviderOperatorToken(paths.dev);
@@ -143,6 +153,7 @@ async function runDevStack(paths: UlviaPaths, log: (message: string) => void, po
     try {
         await superviseServers(kernel, provider);
     } finally {
+        supervisorLogger.info("dev.stopping");
         repository.stop();
     }
 }

@@ -5,12 +5,13 @@ import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 import { startLocalRepository } from "../../src/runtime/repository";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 test("remote publication is signed, immutable, atomic, and reversibly yankable", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-publication-source-"));
     const remoteRoot = await mkdtemp(join(tmpdir(), "ulvia-publication-target-"));
     const token = "a".repeat(43);
-    const server = startLocalRepository(0, remoteRoot, token);
+    const server = startLocalRepository(0, remoteRoot, NOOP_LOGGER, token);
     const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.cms.jobs");
     try {
         await runCli(["release", source], { environment: { ULVIA_DATA_DIR: data }, log: () => undefined });

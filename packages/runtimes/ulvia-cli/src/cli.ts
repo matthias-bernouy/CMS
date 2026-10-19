@@ -9,6 +9,7 @@ const HELP = `Ulvia local CMS CLI
 
 Usage:
   ulvia dev [status | credentials | stop]
+  ulvia dev logs [all | kernel | provider | repository | supervisor] [filters] [--json] [--stack] [--follow]
   ulvia dev new <absolute-data-directory>
   ulvia dev reset --yes
   ulvia release <resource-directory>
@@ -34,6 +35,9 @@ Environment:
   ULVIA_DEV_REPOSITORY_PORT Local collection repository port
   ULVIA_REPOSITORY_URL      Default remote repository URL
   ULVIA_REPOSITORY_TOKEN    Remote repository write token
+  ULVIA_LOG_LEVEL           Runtime log threshold (trace through fatal)
+  ULVIA_LOG_CONSOLE_LEVEL   Development terminal threshold (trace through fatal)
+  ULVIA_LOG_FORMAT          Runtime terminal format (pretty or json)
 `;
 
 export type CliOptions = Readonly<{

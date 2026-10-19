@@ -8,15 +8,19 @@ import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/fi
 import { prepareCollectionRelease } from "../../src/release/source";
 import { startLocalRepository } from "../../src/runtime/repository";
 import { officialContractCatalogue } from "../officialContractCatalogue";
+import { NOOP_LOGGER } from "@bernouy/logging";
+import { isValidRequestId, REQUEST_ID_HEADER } from "@bernouy/http-runner/observability";
 
 test("local repository lists immutable metadata and serves matching release bytes", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-repository-"));
     const repository = new LocalCollectionRepository(root);
-    const server = startLocalRepository(0, root);
+    const server = startLocalRepository(0, root, NOOP_LOGGER);
     try {
         const contracts = await officialContractCatalogue();
         const source = new HttpCollectionRepository("local", server.url);
         expect(await source.list()).toEqual([]);
+        const missing = await fetch(`${server.url}/v1/collections/missing/test/1.0.0`);
+        expect(isValidRequestId(missing.headers.get(REQUEST_ID_HEADER) ?? "")).toBe(true);
         const artifact = await prepareCollectionRelease(
             resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
             contracts,
@@ -91,6 +95,9 @@ test("local repository lists immutable metadata and serves matching release byte
         await repository.store(build);
         const firstPage = await fetch(`${server.url}/v1/collections?limit=1`);
         expect(firstPage.status).toBe(200);
+        expect(firstPage.headers.get("x-request-id")).toMatch(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+        );
         const firstPageBody = (await firstPage.json()) as { releases: unknown[]; nextCursor?: string };
         expect(firstPageBody.releases).toHaveLength(1);
         expect(firstPageBody.nextCursor).toBeString();
@@ -224,7 +231,7 @@ test("collection source assets keep their verified bytes through the repository 
 
         const repository = new LocalCollectionRepository(repositoryRoot);
         await repository.store(artifact);
-        const server = startLocalRepository(0, repositoryRoot);
+        const server = startLocalRepository(0, repositoryRoot, NOOP_LOGGER);
         try {
             const remote = new HttpCollectionRepository("local", server.url);
             const bundle = await remote.get((await remote.list())[0]!);

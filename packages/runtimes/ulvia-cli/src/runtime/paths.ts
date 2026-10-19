@@ -8,6 +8,7 @@ export type UlviaPaths = Readonly<{
     dev: string;
     mongo: string;
     cmsFiles: string;
+    logs: string;
 }>;
 
 export function resolveUlviaPaths(
@@ -26,6 +27,7 @@ export function resolveUlviaPaths(
         dev,
         mongo: join(dev, "mongo"),
         cmsFiles: join(dev, "cms-files"),
+        logs: join(dev, "logs"),
     });
 }
 

@@ -5,13 +5,14 @@ import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { startLocalRepository } from "../../src/runtime/repository";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 test("CLI push and pull preserve every official artifact kind through a remote repository", async () => {
     const sourceData = await mkdtemp(join(tmpdir(), "ulvia-push-source-"));
     const targetData = await mkdtemp(join(tmpdir(), "ulvia-pull-target-"));
     const remoteRoot = await mkdtemp(join(tmpdir(), "ulvia-push-target-"));
     const token = "b".repeat(43);
-    const server = startLocalRepository(0, remoteRoot, token);
+    const server = startLocalRepository(0, remoteRoot, NOOP_LOGGER, token);
     const repositoryRoot = resolve(import.meta.dir, "../../../../official-repository");
     const providerDirectory = join(repositoryRoot, "providers", "ulvia.official");
     const providerDefinition = (await Bun.file(join(providerDirectory, "definition.json")).json()) as {

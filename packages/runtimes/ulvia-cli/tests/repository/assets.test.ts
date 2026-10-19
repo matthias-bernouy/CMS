@@ -6,6 +6,7 @@ import { runCli } from "../../src/cli";
 import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
 import { startLocalRepository } from "../../src/runtime/repository";
 import { writeAuthoredContractFixture } from "../authoredContractFixture";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 test("remote contract transfer preserves and re-verifies declared fixture bytes", async () => {
     const sourceData = await mkdtemp(join(tmpdir(), "ulvia-assets-source-"));
@@ -14,7 +15,7 @@ test("remote contract transfer preserves and re-verifies declared fixture bytes"
     const authoredRoot = await mkdtemp(join(tmpdir(), "ulvia-assets-authored-"));
     const directory = join(authoredRoot, "communication.receipt");
     const token = "c".repeat(43);
-    const server = startLocalRepository(0, remoteRoot, token);
+    const server = startLocalRepository(0, remoteRoot, NOOP_LOGGER, token);
     try {
         await mkdir(join(directory, "fixtures"), { recursive: true });
         const fixtureRoot = resolve(
