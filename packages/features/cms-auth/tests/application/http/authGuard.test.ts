@@ -1,13 +1,15 @@
-import { describe, expect, mock, spyOn, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import { resolveRequestSubject } from "@bernouy/cms-auth";
 import { createAuthGuard } from "@bernouy/cms-auth/http";
 import { requestTimingSnapshot } from "@bernouy/http-runner/observability";
 import { TestAuthentication } from "../subjects/requestSubjectSupport";
+import { NOOP_LOGGER } from "@bernouy/logging";
+import { createMemoryLogger } from "@bernouy/logging/testing";
 
 describe("createAuthGuard", () => {
     test("allows authenticated subjects", async () => {
         const authentication = new TestAuthentication(async () => ({ identifier: "member-1" }));
-        const guard = createAuthGuard({ basePath: "/cms", auth: authentication });
+        const guard = createAuthGuard({ basePath: "/cms", auth: authentication, logger: NOOP_LOGGER });
         const request = new Request("http://localhost/cms/api/status");
 
         const response = await guard(request, async () =>
@@ -21,27 +23,25 @@ describe("createAuthGuard", () => {
     });
 
     test("keeps authentication failures unauthenticated", async () => {
-        const debug = spyOn(console, "debug").mockImplementation(() => undefined);
+        const memory = createMemoryLogger({ service: "auth-test", level: "debug" });
         const next = mock(async () => new Response("unexpected"));
         const authentication = new TestAuthentication(async () => {
             throw new Error("authentication unavailable");
         });
-        const guard = createAuthGuard({ basePath: "/cms", auth: authentication });
+        const guard = createAuthGuard({ basePath: "/cms", auth: authentication, logger: memory.logger });
 
-        try {
-            const response = await guard(new Request("http://localhost/cms/api/status"), next);
-            expect(response.status).toBe(302);
-            expect(response.headers.get("location")).toBe("/login?returnTo=%2Fcms%2Fapi%2Fstatus");
-            expect(next).not.toHaveBeenCalled();
-        } finally {
-            debug.mockRestore();
-        }
+        const response = await guard(new Request("http://localhost/cms/api/status"), next);
+        expect(response.status).toBe(302);
+        expect(response.headers.get("location")).toBe("/login?returnTo=%2Fcms%2Fapi%2Fstatus");
+        expect(next).not.toHaveBeenCalled();
+        expect(memory.records[0]).toMatchObject({ level: "warn", event: "auth.subject.resolve.failed" });
     });
 
     test("lets API surfaces replace the browser login redirect", async () => {
         const guard = createAuthGuard({
             basePath: "/.cms/management",
             auth: new TestAuthentication(async () => null),
+            logger: NOOP_LOGGER,
             onUnauthenticated: (_request, context) =>
                 Response.json({ code: "unauthorized", loginUrl: context.loginUrl }, { status: 401 }),
         });
@@ -59,7 +59,7 @@ describe("createAuthGuard", () => {
 
     test("still lets downstream failures escape the guard", async () => {
         const authentication = new TestAuthentication(async () => ({ identifier: "member-1" }));
-        const guard = createAuthGuard({ basePath: "/cms", auth: authentication });
+        const guard = createAuthGuard({ basePath: "/cms", auth: authentication, logger: NOOP_LOGGER });
 
         await expect(
             guard(new Request("http://localhost/cms/api/status"), async () => {

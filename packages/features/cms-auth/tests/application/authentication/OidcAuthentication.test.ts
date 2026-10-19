@@ -12,10 +12,28 @@ import {
     oidcRequest,
     setupOidc,
 } from "./oidcFixtures";
+import { createMemoryLogger } from "@bernouy/logging/testing";
 
 installOidcTestHooks();
 
 describe("OidcAuthentication", () => {
+    test("reports a rejected issuer at the authentication boundary", async () => {
+        const memory = createMemoryLogger({ service: "auth-test" });
+        const { auth, providers } = await setupOidc(undefined, memory.logger);
+        await providers.update("sso", { issuer: "http://issuer.example" });
+
+        const response = await auth.login(oidcRequest(`${ISSUER_PATH}/login`));
+
+        expect(response.status).toBe(404);
+        expect(memory.records).toMatchObject([
+            {
+                level: "warn",
+                event: "auth.oidc.issuer.rejected",
+                attributes: { providerId: "sso", issuer: "http://issuer.example" },
+            },
+        ]);
+    });
+
     test("rejects discovery metadata with non-https endpoints", async () => {
         const { auth } = await setupOidc();
         mockFetch(async (url) => {
@@ -111,17 +129,8 @@ describe("OidcAuthentication", () => {
     });
 
     test("token exchange failure redirects without logging the provider body", async () => {
-        const { auth, codec } = await setupOidc();
-        const warnings: string[] = [];
-        const originalWarn = console.warn;
-        console.warn = (...args: unknown[]) => {
-            const message = args.join(" ");
-            if (message.startsWith("[oidc:sso]")) {
-                warnings.push(message);
-            } else {
-                originalWarn(...args);
-            }
-        };
+        const memory = createMemoryLogger({ service: "auth-test" });
+        const { auth, codec } = await setupOidc(undefined, memory.logger);
         mockFetch(async (url) => {
             if (url === `${ISSUER}/.well-known/openid-configuration`) {
                 return discovery();
@@ -133,16 +142,17 @@ describe("OidcAuthentication", () => {
         });
         const cookie = await flightCookie(codec, { state: "state", nonce: "nonce" });
 
-        let response: Response;
-        try {
-            response = await auth.callback(oidcRequest(`${ISSUER_PATH}/callback?state=state&code=code`, cookie));
-        } finally {
-            console.warn = originalWarn;
-        }
+        const response = await auth.callback(oidcRequest(`${ISSUER_PATH}/callback?state=state&code=code`, cookie));
 
         expect(response.status).toBe(302);
         expect(response.headers.get("location")).toBe("/login?error=oidc");
-        expect(warnings).toEqual(["[oidc:sso] login failed: token_exchange_400"]);
-        expect(warnings.join(" ")).not.toContain("provider-secret-detail");
+        expect(memory.records).toMatchObject([
+            {
+                level: "warn",
+                event: "auth.oidc.login.failed",
+                attributes: { providerId: "sso", reason: "token_exchange_400" },
+            },
+        ]);
+        expect(JSON.stringify(memory.records)).not.toContain("provider-secret-detail");
     });
 });

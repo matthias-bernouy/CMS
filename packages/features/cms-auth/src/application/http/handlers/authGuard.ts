@@ -2,6 +2,7 @@ import type { Authentication } from "cms-auth/application/interfaces/Authenticat
 import { resolveRequestSubject } from "cms-auth/application/core/authentication/requestSubject";
 import type { Middleware } from "@bernouy/http-runner";
 import { measureRequestTiming } from "@bernouy/http-runner/observability";
+import type { Logger } from "@bernouy/logging";
 
 /**
  * What `createAuthGuard` needs from the host runtime. Authorization is resolved
@@ -11,6 +12,7 @@ export interface AuthGuardContext {
     basePath: string;
     auth: Authentication;
     onUnauthenticated?: (req: Request, ctx: { loginUrl: string }) => Response | Promise<Response>;
+    logger: Logger;
 }
 
 export const createAuthGuard = (ctx: AuthGuardContext): Middleware => {
@@ -53,7 +55,7 @@ export const createAuthGuard = (ctx: AuthGuardContext): Middleware => {
         // CSP/redirect error and hides the real cause.
         const subject = await measureRequestTiming(req, "cms_auth", () => resolveRequestSubject(ctx.auth, req)).catch(
             (error) => {
-                console.debug(error);
+                ctx.logger.warn("auth.subject.resolve.failed", {}, error);
                 return null;
             },
         );

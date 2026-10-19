@@ -10,6 +10,7 @@ import { OidcMetadataCache } from "cms-auth/providers/default-implementation/oid
 import { readIdentityClaims } from "cms-auth/providers/core/oidc/identityClaims";
 import { buildAuthorizationUrl, createLoginFlight, type FlightPayload } from "cms-auth/providers/core/oidc/loginFlight";
 import { resolveOidcProvider } from "cms-auth/providers/core/oidc/providerResolver";
+import type { Logger } from "@bernouy/logging";
 
 export type OidcAuthConfig = {
     /** Absolute base for callback URLs: `<appBaseUrl><pathPrefix>/auth`. */
@@ -27,6 +28,7 @@ export type OidcAuthConfig = {
      *  non-https issuer makes discovery/token/JWKS MITM-forgeable, so it must
      *  never be enabled in production. */
     allowInsecureIssuer?: boolean;
+    logger: Logger;
 };
 
 /**
@@ -60,13 +62,11 @@ export class OidcAuthentication {
 
     /** `GET <basePath>/:provider/login` handler — mounted by the surface. */
     async login(req: Request): Promise<Response> {
-        const r = await resolveOidcProvider(req, this.cfg.providers, this.cfg.secrets, (issuer) =>
-            this.metadata.acceptsIssuer(issuer),
-        );
-        if (!r) {
+        const resolution = await this._resolveProvider(req);
+        if (resolution.kind !== "resolved") {
             return privateAuthResponse("Unknown provider", { status: 404 });
         }
-        const { p } = r;
+        const p = resolution.provider;
         const meta = await this.metadata.discover(p.issuer!);
         const returnTo = new URL(req.url).searchParams.get("returnTo") ?? "";
 
@@ -84,13 +84,11 @@ export class OidcAuthentication {
 
     /** `GET <basePath>/:provider/callback` handler — mounted by the surface. */
     async callback(req: Request): Promise<Response> {
-        const r = await resolveOidcProvider(req, this.cfg.providers, this.cfg.secrets, (issuer) =>
-            this.metadata.acceptsIssuer(issuer),
-        );
-        if (!r) {
+        const resolution = await this._resolveProvider(req);
+        if (resolution.kind !== "resolved") {
             return privateAuthResponse("Unknown provider", { status: 404 });
         }
-        const { p, secret } = r;
+        const { provider: p, secret } = resolution;
         const q = new URL(req.url).searchParams;
 
         const raw = readCookie(req, this._flightCookie(p.id));
@@ -155,8 +153,21 @@ export class OidcAuthentication {
         return privateAuthResponse(null, { status: 302, headers });
     }
 
+    private async _resolveProvider(req: Request) {
+        const resolution = await resolveOidcProvider(req, this.cfg.providers, this.cfg.secrets, (issuer) =>
+            this.metadata.acceptsIssuer(issuer),
+        );
+        if (resolution.kind === "issuer-rejected") {
+            this.cfg.logger.warn("auth.oidc.issuer.rejected", {
+                providerId: resolution.providerId,
+                issuer: resolution.issuer,
+            });
+        }
+        return resolution;
+    }
+
     private _fail(providerId: string, reason: string): Response {
-        console.warn(`[oidc:${providerId}] login failed: ${reason}`);
+        this.cfg.logger.warn("auth.oidc.login.failed", { providerId, reason });
         return privateAuthResponse(null, {
             status: 302,
             headers: { Location: `${this.cfg.loginPagePath}?error=oidc` },

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { NOOP_LOGGER } from "@bernouy/logging";
 import type { Runner, RouteHandler } from "@bernouy/http-runner";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import {
@@ -89,6 +90,7 @@ describe("authentication endpoint cache policy", () => {
             cookieName: "cms-session",
             loginPagePath: "/login",
             defaultHome: "/admin",
+            logger: NOOP_LOGGER,
         });
         const unknown = await oidc.login(new Request("https://site.test/auth/missing/login"));
         expect(unknown.status).toBe(404);

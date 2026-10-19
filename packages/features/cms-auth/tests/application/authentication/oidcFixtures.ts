@@ -6,6 +6,7 @@ import { OidcAuthentication } from "cms-auth/application/core/authentication/Oid
 import { InMemoryIdentityProviderRepository } from "cms-auth/providers/default-implementation/memory/InMemoryIdentityProviderRepository";
 import { InMemoryUsersRepository } from "cms-auth/accounts/default-implementation/memory/InMemoryUsersRepository";
 import { InMemorySecretStore } from "@bernouy/secret-store";
+import { NOOP_LOGGER, type Logger } from "@bernouy/logging";
 
 export const ISSUER = "https://issuer.example";
 export const ISSUER_PATH = "https://cms.example/auth/sso";
@@ -35,7 +36,7 @@ export function installOidcTestHooks(): void {
     });
 }
 
-export async function setupOidc(sessionTtlSeconds?: number) {
+export async function setupOidc(sessionTtlSeconds?: number, logger?: Logger) {
     const providers = new InMemoryIdentityProviderRepository();
     await providers.create({
         id: "sso",
@@ -61,8 +62,9 @@ export async function setupOidc(sessionTtlSeconds?: number) {
         loginPagePath: "/login",
         defaultHome: "/admin",
         sessionTtlSeconds,
+        logger: logger ?? NOOP_LOGGER,
     });
-    return { auth, codec: signedCookieCodec, users };
+    return { auth, codec: signedCookieCodec, users, providers };
 }
 
 export function oidcRequest(url: string, cookie?: string): Request {

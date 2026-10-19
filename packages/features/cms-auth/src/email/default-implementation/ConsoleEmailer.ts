@@ -1,12 +1,10 @@
 import type { Emailer, OutboundEmail } from "cms-auth/email/interfaces/Emailer";
 
-type Logger = Pick<Console, "log">;
-
 export class ConsoleEmailer implements Emailer {
-    constructor(private readonly logger: Logger = console) {}
+    constructor(private readonly output: (message: string) => void) {}
 
     async send(input: OutboundEmail): Promise<void> {
-        this.logger.log(`[cms-auth] ${input.subject} for ${input.to.email}`);
-        this.logger.log(input.text);
+        this.output(`[cms-auth] ${input.subject} for ${input.to.email}`);
+        this.output(input.text);
     }
 }
