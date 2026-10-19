@@ -19,6 +19,7 @@ export const REPOSITORY_ROOT = resolve(import.meta.dir, "../..");
 export const ALL_CHECKS: CheckDefinition[] = [
     { id: "architecture", label: "Workspace architecture", args: ["run", "check:architecture"] },
     { id: "ui-contracts", label: "UI binding contracts", args: ["run", "check:ui-contracts"] },
+    { id: "logging", label: "Structured server logging", args: ["run", "check:logging"] },
     { id: "repository-shape", label: "Repository shape guidance", args: ["run", "check:repository-shape"] },
     { id: "style", label: "Code style", args: ["run", "check:style"] },
     { id: "typecheck", label: "Workspace typecheck", args: ["run", "typecheck"] },

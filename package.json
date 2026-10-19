@@ -22,6 +22,7 @@
         "check:dead-code": "bun run quality/dead-code/check.ts",
         "check:directory-fanout": "bun run quality/ci/repository-shape/directory-fanout/check.ts",
         "check:file-size": "bun run quality/ci/repository-shape/file-size/check.ts",
+        "check:logging": "bun run quality/logging/check.ts",
         "check:repository-shape": "bun run quality/ci/repository-shape/check.ts",
         "check:style": "biome check --reporter=concise --max-diagnostics=none .",
         "format": "biome check --write --unsafe --reporter=concise --max-diagnostics=none .",

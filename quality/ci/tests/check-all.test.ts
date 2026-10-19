@@ -18,6 +18,7 @@ test("check:all declares every fast workspace diagnostic in a stable order", () 
     expect(ALL_CHECKS.map(({ id }) => id)).toEqual([
         "architecture",
         "ui-contracts",
+        "logging",
         "repository-shape",
         "style",
         "typecheck",
@@ -29,6 +30,7 @@ test("check:all declares every fast workspace diagnostic in a stable order", () 
     expect(ALL_CHECKS.map(({ args }) => args)).toEqual([
         ["run", "check:architecture"],
         ["run", "check:ui-contracts"],
+        ["run", "check:logging"],
         ["run", "check:repository-shape"],
         ["run", "check:style"],
         ["run", "typecheck"],
