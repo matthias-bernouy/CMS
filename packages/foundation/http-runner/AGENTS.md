@@ -40,6 +40,8 @@ Middlewares run in this order:
 1. global middlewares registered with `use()`;
 2. group/route middlewares.
 
-Thrown errors bubble to the top-level `Bun.serve.fetch` catch, which logs the
-error and returns a generic 500 body. Do not leak internal error messages in the
-response body.
+Thrown errors bubble to the top-level dispatch boundary. Explicit public HTTP
+errors retain their status, safe message and public code; unknown errors are
+logged and become a generic 500 body. Every response carries its request ID and
+returned 5xx responses are logged even when no exception was thrown. Do not leak
+internal error fields in the response body.

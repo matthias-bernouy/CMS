@@ -1,27 +1,22 @@
 import { isIP } from "node:net";
 import { getRequestIP } from "./ip";
+import { PublicHttpError } from "./publicError";
 
 export type ClientAddressPolicy =
     | { mode: "disabled" }
     | { mode: "direct" }
     | { mode: "trusted-proxy"; trustedProxyHops: number };
 
-export class InvalidForwardedChainError extends Error {
-    readonly status = 400;
-    readonly publicCode = "invalid_forwarded_chain";
-
+export class InvalidForwardedChainError extends PublicHttpError {
     constructor() {
-        super("Forwarded client address chain is invalid");
+        super(400, "Forwarded client address chain is invalid", { code: "invalid_forwarded_chain" });
         this.name = "InvalidForwardedChainError";
     }
 }
 
-export class ClientAddressUnavailableError extends Error {
-    readonly status = 503;
-    readonly publicCode = "client_address_unavailable";
-
+export class ClientAddressUnavailableError extends PublicHttpError {
     constructor() {
-        super("Client address is unavailable");
+        super(503, "Client address is unavailable", { code: "client_address_unavailable" });
         this.name = "ClientAddressUnavailableError";
     }
 }

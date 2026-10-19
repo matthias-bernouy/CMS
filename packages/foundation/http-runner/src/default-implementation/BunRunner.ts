@@ -1,4 +1,5 @@
 import { getRequestIP as readRequestIP } from "http-runner/core/request/ip";
+import type { Logger } from "@bernouy/logging";
 import type { HttpMethod, Middleware, RouteHandler, Runner, RunnerListenOptions } from "http-runner/interfaces/Runner";
 import { dispatchBunRunnerRequest, type RegisteredDefaultEndpoint, type RegisteredRoute } from "./bunRequestDispatch";
 import { stopServerGracefully } from "./gracefulServerStop";
@@ -7,6 +8,7 @@ import { normalizePath, urlJoin } from "./runnerPaths";
 export type BunRunnerOptions = Readonly<{
     hostname?: string;
     idleTimeoutSeconds?: number;
+    logger?: Logger;
 }>;
 
 export class BunRunner implements Runner {
@@ -141,10 +143,20 @@ export class BunRunner implements Runner {
             ...(hostname === undefined ? {} : { hostname }),
             ...(this.options.idleTimeoutSeconds === undefined ? {} : { idleTimeout: this.options.idleTimeoutSeconds }),
             fetch: (request, server) =>
-                dispatchBunRunnerRequest(request, server, self.routes, self.defaultEndpoints, self.globalMiddlewares),
+                dispatchBunRunnerRequest(
+                    request,
+                    server,
+                    self.routes,
+                    self.defaultEndpoints,
+                    self.globalMiddlewares,
+                    self.options.logger,
+                ),
         });
 
-        console.log(`🚀 Server started on http://${hostname ?? "localhost"}:${this.server.port}`);
+        this.options.logger?.info("http.server.started", {
+            hostname: hostname ?? "localhost",
+            port: this.server.port,
+        });
     }
 
     /** Stop the `Bun.serve` listener and free the port. Idempotent. */

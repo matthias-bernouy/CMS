@@ -24,19 +24,32 @@ export {
     type ClientAddressPolicy,
 } from "http-runner/core/request/clientAddress";
 export {
-    CMS_CORRELATION_HEADER,
+    PublicHttpError,
+    publicHttpErrorDetails,
+    type PublicHttpErrorDetails,
+    type PublicHttpErrorOptions,
+} from "http-runner/core/request/publicError";
+export {
+    REQUEST_ID_HEADER,
     MAX_REQUEST_TIMING_ENTRIES,
     SERVER_TIMING_HEADER,
-    createRequestCorrelationMiddleware,
-    existingRequestCorrelationId,
+    createRequestIdMiddleware,
+    currentRequestContext,
+    currentRequestHeaders,
+    currentRequestId,
+    currentRequestLogAttributes,
+    existingRequestId,
     finishRequestTiming,
-    isValidCorrelationId,
+    isValidRequestId,
     measureRequestTiming,
     recordRequestTiming,
-    requestCorrelationId,
+    requestId,
     requestTimingSnapshot,
+    runWithRequestContext,
+    runWithoutRequestContext,
     serverTimingHeader,
-    withRequestCorrelationHeader,
+    withRequestIdHeader,
+    type HttpRequestContext,
 } from "http-runner/core/request/observability";
 export { escapeHtml, escapeAttr, htmlResponse, redirect } from "http-runner/core/html";
 

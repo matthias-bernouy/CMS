@@ -1,11 +1,10 @@
+import { PublicHttpError } from "./publicError";
+
 const DEFAULT_REQUEST_BODY_LIMIT = 1024 * 1024;
 
-export class RequestBodyTooLargeError extends Error {
-    readonly status = 413;
-    readonly publicCode = "request_body_too_large";
-
+export class RequestBodyTooLargeError extends PublicHttpError {
     constructor(readonly maximumBytes: number) {
-        super(`Request body exceeds the ${maximumBytes}-byte limit`);
+        super(413, "Request body is too large", { code: "request_body_too_large" });
         this.name = "RequestBodyTooLargeError";
     }
 }

@@ -1,36 +1,47 @@
-import { describe, expect, spyOn, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import { createMemoryLogger } from "@bernouy/logging/testing";
 import {
     BunRunner,
-    CMS_CORRELATION_HEADER,
+    PublicHttpError,
+    REQUEST_ID_HEADER,
     MAX_REQUEST_TIMING_ENTRIES,
+    currentRequestId,
+    currentRequestHeaders,
+    currentRequestLogAttributes,
     finishRequestTiming,
-    isValidCorrelationId,
+    isValidRequestId,
     measureRequestTiming,
     recordRequestTiming,
-    requestCorrelationId,
+    requestId,
     requestTimingSnapshot,
+    runWithRequestContext,
+    runWithoutRequestContext,
     serverTimingHeader,
 } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 
-describe("request correlation", () => {
+describe("request context", () => {
     test("accepts only canonical UUID v4 values and keeps one id per Request", () => {
         const valid = "11d38c6a-0e6a-4f68-9dad-2a92c17b8300";
-        const accepted = new Request("http://local", { headers: { [CMS_CORRELATION_HEADER]: valid } });
+        const accepted = new Request("http://local", { headers: { [REQUEST_ID_HEADER]: valid } });
         const rejected = new Request("http://local", {
-            headers: { [CMS_CORRELATION_HEADER]: "user@example.com" },
+            headers: { [REQUEST_ID_HEADER]: "user@example.com" },
         });
 
-        expect(isValidCorrelationId(valid)).toBe(true);
-        expect(requestCorrelationId(accepted)).toBe(valid);
-        expect(requestCorrelationId(accepted)).toBe(valid);
-        expect(requestCorrelationId(rejected)).not.toBe("user@example.com");
-        expect(isValidCorrelationId(requestCorrelationId(rejected))).toBe(true);
+        expect(isValidRequestId(valid)).toBe(true);
+        expect(requestId(accepted)).toBe(valid);
+        expect(requestId(accepted)).toBe(valid);
+        expect(requestId(rejected)).not.toBe("user@example.com");
+        expect(isValidRequestId(requestId(rejected))).toBe(true);
     });
 
-    test("returns the correlation id on normal and unhandled error responses", async () => {
-        const errorLog = spyOn(console, "error").mockImplementation(() => {});
-        const runner = new BunRunner();
+    test("returns the request id on normal and unhandled error responses", async () => {
+        const memory = createMemoryLogger({
+            service: "http-test",
+            level: "debug",
+            context: currentRequestLogAttributes,
+        });
+        const runner = new BunRunner({ logger: memory.logger });
         runner.group("/observed", (group) => {
             group.get("/ok", () => new Response("ok"));
             group.get("/error", () => {
@@ -42,44 +53,116 @@ describe("request correlation", () => {
         try {
             const ok = await server.request("GET", "/observed/ok");
             const failed = await server.request("GET", "/observed/error");
-            expect(isValidCorrelationId(ok.headers.get(CMS_CORRELATION_HEADER) ?? "")).toBe(true);
-            expect(isValidCorrelationId(failed.headers.get(CMS_CORRELATION_HEADER) ?? "")).toBe(true);
+            expect(isValidRequestId(ok.headers.get(REQUEST_ID_HEADER) ?? "")).toBe(true);
+            expect(isValidRequestId(failed.headers.get(REQUEST_ID_HEADER) ?? "")).toBe(true);
             expect(failed.status).toBe(500);
             expect(await failed.text()).not.toContain("private failure");
+            const failure = memory.records.find((record) => record.event === "http.request.unhandled");
+            expect(failure?.attributes?.requestId).toBe(failed.headers.get(REQUEST_ID_HEADER));
+            expect(memory.records.filter((record) => record.event === "http.request.completed")).toHaveLength(2);
         } finally {
             server.stop();
-            errorLog.mockRestore();
         }
     });
 
-    test("returns and propagates the correlation id on unmatched 404 responses", async () => {
+    test("returns and propagates the request id on unmatched 404 responses", async () => {
         const inbound = "11d38c6a-0e6a-4f68-9dad-2a92c17b8300";
         const server = serveForTest(new BunRunner());
 
         try {
             const generated = await server.request("GET", "/missing");
             const propagated = await server.request("GET", "/also-missing", {
-                headers: { [CMS_CORRELATION_HEADER]: inbound },
+                headers: { [REQUEST_ID_HEADER]: inbound },
             });
 
             expect(generated.status).toBe(404);
-            expect(isValidCorrelationId(generated.headers.get(CMS_CORRELATION_HEADER) ?? "")).toBe(true);
+            expect(isValidRequestId(generated.headers.get(REQUEST_ID_HEADER) ?? "")).toBe(true);
             expect(propagated.status).toBe(404);
-            expect(propagated.headers.get(CMS_CORRELATION_HEADER)).toBe(inbound);
+            expect(propagated.headers.get(REQUEST_ID_HEADER)).toBe(inbound);
         } finally {
             server.stop();
         }
     });
 
-    test("serializes an explicit public error code without exposing private fields", async () => {
-        const errorLog = spyOn(console, "error").mockImplementation(() => {});
+    test("isolates request ids across concurrent asynchronous handlers", async () => {
+        const first = "11d38c6a-0e6a-4f68-9dad-2a92c17b8300";
+        const second = "ea7a3428-a45e-48d1-8a1c-bc61921ff0b5";
+        const observed: Array<{ phase: string; requestId: string | undefined }> = [];
+        let releaseFirst!: () => void;
+        let releaseSecond!: () => void;
+        const firstBarrier = new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+        });
+        const secondBarrier = new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+        });
         const runner = new BunRunner();
-        runner.get("/coded-error", () => {
-            throw Object.assign(new Error("Repository unavailable"), {
-                status: 503,
-                publicCode: "repository_unavailable",
-                privateDetail: "internal.example.test",
+        runner.get("/first", async () => {
+            observed.push({ phase: "first-before", requestId: currentRequestId() });
+            releaseSecond();
+            await firstBarrier;
+            observed.push({ phase: "first-after", requestId: currentRequestId() });
+            return new Response("first");
+        });
+        runner.get("/second", async () => {
+            observed.push({ phase: "second-before", requestId: currentRequestId() });
+            releaseFirst();
+            await secondBarrier;
+            observed.push({ phase: "second-after", requestId: currentRequestId() });
+            return new Response("second");
+        });
+        const server = serveForTest(runner);
+
+        try {
+            await Promise.all([
+                server.request("GET", "/first", { headers: { [REQUEST_ID_HEADER]: first } }),
+                server.request("GET", "/second", { headers: { [REQUEST_ID_HEADER]: second } }),
+            ]);
+            expect(observed).toContainEqual({ phase: "first-before", requestId: first });
+            expect(observed).toContainEqual({ phase: "first-after", requestId: first });
+            expect(observed).toContainEqual({ phase: "second-before", requestId: second });
+            expect(observed).toContainEqual({ phase: "second-after", requestId: second });
+            expect(currentRequestId()).toBeUndefined();
+        } finally {
+            server.stop();
+        }
+    });
+
+    test("projects the authoritative request id into outbound headers", async () => {
+        const inbound = new Request("https://example.test", {
+            headers: { [REQUEST_ID_HEADER]: "11d38c6a-0e6a-4f68-9dad-2a92c17b8300" },
+        });
+
+        await runWithRequestContext(inbound, async () => {
+            const headers = currentRequestHeaders({
+                [REQUEST_ID_HEADER]: "ea7a3428-a45e-48d1-8a1c-bc61921ff0b5",
+                accept: "application/json",
             });
+            expect(headers.get(REQUEST_ID_HEADER)).toBe("11d38c6a-0e6a-4f68-9dad-2a92c17b8300");
+            expect(headers.get("accept")).toBe("application/json");
+        });
+    });
+
+    test("can detach durable background work from an inbound request", async () => {
+        const inbound = new Request("https://example.test", {
+            headers: { [REQUEST_ID_HEADER]: "11d38c6a-0e6a-4f68-9dad-2a92c17b8300" },
+        });
+
+        await runWithRequestContext(inbound, async () => {
+            expect(currentRequestId()).toBeDefined();
+            expect(runWithoutRequestContext(() => currentRequestId())).toBeUndefined();
+            expect(currentRequestId()).toBeDefined();
+        });
+    });
+
+    test("serializes an explicit public error code without exposing private fields", async () => {
+        const memory = createMemoryLogger({ service: "http-test", level: "debug" });
+        const runner = new BunRunner({ logger: memory.logger });
+        runner.get("/coded-error", () => {
+            throw Object.assign(
+                new PublicHttpError(503, "Repository unavailable", { code: "repository_unavailable" }),
+                { privateDetail: "internal.example.test" },
+            );
         });
         const server = serveForTest(runner);
 
@@ -90,9 +173,67 @@ describe("request correlation", () => {
                 error: "Repository unavailable",
                 code: "repository_unavailable",
             });
+            expect(memory.records.find((record) => record.event === "http.request.failed")?.attributes?.status).toBe(
+                503,
+            );
         } finally {
             server.stop();
-            errorLog.mockRestore();
+        }
+    });
+
+    test("does not classify handled client errors as unhandled failures", async () => {
+        const memory = createMemoryLogger({ service: "http-test", level: "debug" });
+        const runner = new BunRunner({ logger: memory.logger });
+        runner.post("/validation", () => {
+            throw new PublicHttpError(400, "Invalid title", { field: "title" });
+        });
+        const server = serveForTest(runner);
+
+        try {
+            const response = await server.request("POST", "/validation");
+            expect(response.status).toBe(400);
+            expect(memory.records.some((record) => record.level === "error")).toBe(false);
+            expect(memory.records.find((record) => record.event === "http.request.completed")?.attributes?.status).toBe(
+                400,
+            );
+        } finally {
+            server.stop();
+        }
+    });
+
+    test("records returned server failures at error level", async () => {
+        const memory = createMemoryLogger({ service: "http-test", level: "debug" });
+        const runner = new BunRunner({ logger: memory.logger });
+        runner.get("/unavailable", () => new Response("Unavailable", { status: 503 }));
+        const server = serveForTest(runner);
+
+        try {
+            expect((await server.request("GET", "/unavailable")).status).toBe(503);
+            expect(memory.records.find((record) => record.event === "http.request.completed")).toMatchObject({
+                level: "error",
+                attributes: { status: 503 },
+            });
+        } finally {
+            server.stop();
+        }
+    });
+
+    test("attaches internal stage timings only to the structured completion record", async () => {
+        const memory = createMemoryLogger({ service: "http-test", level: "debug" });
+        const runner = new BunRunner({ logger: memory.logger });
+        runner.get("/timed", async (request) => {
+            await measureRequestTiming(request, "cms_auth", async () => Promise.resolve());
+            return new Response("ok");
+        });
+        const server = serveForTest(runner);
+
+        try {
+            const response = await server.request("GET", "/timed");
+            const completion = memory.records.find((record) => record.event === "http.request.completed");
+            expect(response.headers.has("server-timing")).toBe(false);
+            expect(completion?.attributes?.timings).toEqual({ cms_auth: expect.any(Number) });
+        } finally {
+            server.stop();
         }
     });
 

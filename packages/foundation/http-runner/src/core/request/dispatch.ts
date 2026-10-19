@@ -1,9 +1,7 @@
 import type { Middleware, RouteHandler } from "http-runner/interfaces/Runner";
-import {
-    existingRequestCorrelationId,
-    requestCorrelationId,
-    withRequestCorrelationHeader,
-} from "http-runner/core/request/observability";
+import type { Logger } from "@bernouy/logging";
+import { requestId, withRequestIdHeader } from "http-runner/core/request/observability";
+import { publicHttpErrorDetails } from "http-runner/core/request/publicError";
 
 export type RequestTarget = {
     handler: RouteHandler;
@@ -14,8 +12,9 @@ export async function dispatchRequest(
     request: Request,
     target: RequestTarget,
     globalMiddlewares: Middleware[],
+    logger?: Logger,
 ): Promise<Response> {
-    requestCorrelationId(request);
+    requestId(request);
     const middlewares = [...globalMiddlewares, ...target.middlewares];
     let index = 0;
     const next = async (req: Request): Promise<Response> => {
@@ -27,21 +26,21 @@ export async function dispatchRequest(
     };
 
     try {
-        return withRequestCorrelationHeader(request, await next(request));
+        return withRequestIdHeader(request, await next(request));
     } catch (error) {
-        reportUnhandledRequestError(request, error);
-        const status = (error as { status?: unknown })?.status;
-        if (typeof status === "number") {
-            const message = error instanceof Error ? error.message : "Error";
-            const publicCode = (error as { publicCode?: unknown })?.publicCode;
-            const field = (error as { field?: unknown })?.field;
-            return withRequestCorrelationHeader(
+        const status = httpErrorStatus(error);
+        if (status !== undefined) {
+            if (status >= 500) {
+                reportRequestError(request, error, logger, status, true);
+            }
+            const publicError = publicHttpErrorDetails(error);
+            return withRequestIdHeader(
                 request,
                 new Response(
                     JSON.stringify({
-                        error: message,
-                        ...(typeof publicCode === "string" ? { code: publicCode } : {}),
-                        ...(typeof field === "string" ? { field } : {}),
+                        error: publicError?.message ?? genericMessage(status),
+                        ...(publicError?.code ? { code: publicError.code } : {}),
+                        ...(publicError?.field ? { field: publicError.field } : {}),
                     }),
                     {
                         status,
@@ -50,20 +49,36 @@ export async function dispatchRequest(
                 ),
             );
         }
-        return withRequestCorrelationHeader(request, new Response("Internal Server Error", { status: 500 }));
+        reportRequestError(request, error, logger, 500, false);
+        return withRequestIdHeader(request, new Response("Internal Server Error", { status: 500 }));
     }
 }
 
-function reportUnhandledRequestError(request: Request, error: unknown): void {
+function httpErrorStatus(error: unknown): number | undefined {
+    const status = (error as { status?: unknown } | null)?.status;
+    return typeof status === "number" && Number.isInteger(status) && status >= 400 && status <= 599
+        ? status
+        : undefined;
+}
+
+function genericMessage(status: number): string {
+    return status >= 500 ? "Internal Server Error" : "Request failed";
+}
+
+function reportRequestError(
+    request: Request,
+    error: unknown,
+    logger: Logger | undefined,
+    status: number,
+    expectedHttpError: boolean,
+): void {
     try {
-        console.error(
-            JSON.stringify({
-                scope: "http-runner",
-                kind: "unhandled_request_error",
-                correlationId: existingRequestCorrelationId(request),
-                errorType: error instanceof Error ? error.name : "unknown",
-            }),
-        );
+        const attributes = { method: request.method, path: new URL(request.url).pathname, status };
+        if (expectedHttpError) {
+            logger?.error("http.request.failed", attributes, error);
+        } else {
+            logger?.error("http.request.unhandled", attributes, error);
+        }
     } catch {
         // Diagnostics must never replace the generic error response.
     }
