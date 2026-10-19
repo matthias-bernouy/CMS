@@ -6,6 +6,7 @@ import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import { executeIndexingCapability } from "@bernouy/cms-seo";
 import { PRODUCT_PAGE } from "../indexing/fixtures";
 import { sitemapPage, sitemapRuntime } from "./fixture";
+import { createMemoryLogger } from "@bernouy/logging/testing";
 
 describe("dynamic indexing sitemap", () => {
     test("publishes discovery from an anonymous gateway capability as immutable chunks", async () => {
@@ -106,6 +107,26 @@ describe("dynamic indexing sitemap", () => {
         await expect(mounted.service.materialize()).rejects.toThrow();
         const response = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
         expect(await response.text()).toContain(first.snapshot.id);
+    });
+
+    test("reports sitemap rendering failures through the required logger", async () => {
+        const memory = createMemoryLogger({ service: "seo-test" });
+        const mounted = sitemapRuntime({
+            store: new MemoryBlobStore(),
+            logger: memory.logger,
+            content: {
+                getRenderingSettings: async () => {
+                    throw new Error("storage unavailable");
+                },
+                getPublishedPages: async () => [],
+                resolvePublishedRoute: async () => null,
+            },
+        });
+
+        const response = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
+
+        expect(response.status).toBe(500);
+        expect(memory.records[0]?.event).toBe("seo.sitemap.failed");
     });
 });
 

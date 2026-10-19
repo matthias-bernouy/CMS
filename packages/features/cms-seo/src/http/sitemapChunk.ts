@@ -1,9 +1,10 @@
 import type { BlobStore } from "@bernouy/blob-store";
 import { matchRootSitemapChunkPath, readSitemapManifest, sitemapChunkKey } from "cms-seo/sitemap/manifest";
+import type { Logger } from "@bernouy/logging";
 
 const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
-export function createSitemapChunkHandler(config: { store?: BlobStore; basePath: string }) {
+export function createSitemapChunkHandler(config: { store?: BlobStore; basePath: string; logger: Logger }) {
     return async (request: Request): Promise<Response> => {
         if (!config.store) {
             return new Response("Not Found", { status: 404 });
@@ -43,9 +44,7 @@ export function createSitemapChunkHandler(config: { store?: BlobStore; basePath:
                 },
             });
         } catch (error) {
-            console.error("Sitemap chunk failure", {
-                errorType: error instanceof Error ? error.name : "UnknownError",
-            });
+            config.logger.error("seo.sitemap-chunk.failed", {}, error);
             return new Response("Internal Server Error", {
                 status: 500,
                 headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" },

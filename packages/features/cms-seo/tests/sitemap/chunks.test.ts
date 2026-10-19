@@ -2,6 +2,7 @@ import { gunzipSync } from "bun";
 import { describe, expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { createSitemapChunkHandler } from "@bernouy/cms-seo/http";
+import { NOOP_LOGGER } from "@bernouy/logging";
 import { sitemapPage, sitemapService } from "./fixture";
 
 describe("sitemap chunks", () => {
@@ -17,7 +18,7 @@ describe("sitemap chunks", () => {
         expect(result.snapshot.chunks.map(({ urlCount }) => urlCount)).toEqual([50_000, 1]);
         expect(result.snapshot.chunks.map(({ language }) => language)).toEqual(["en", "en"]);
         const secondUrl = `https://example.test/sitemap-lang-en.${result.snapshot.id}.2.xml.gz`;
-        const handler = createSitemapChunkHandler({ store, basePath: "" });
+        const handler = createSitemapChunkHandler({ store, basePath: "", logger: NOOP_LOGGER });
         const response = await handler(new Request(secondUrl));
         const xml = new TextDecoder().decode(gunzipSync(await response.arrayBuffer()));
 

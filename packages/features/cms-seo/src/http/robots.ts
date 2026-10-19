@@ -1,5 +1,6 @@
 import { canonicalSiteBaseUrl, type ContentReader } from "@bernouy/cms-content/rendering";
 import { compress, sendCompressed } from "@bernouy/http-runner";
+import type { Logger } from "@bernouy/logging";
 
 export type RobotsHandlerConfig = {
     content: Pick<ContentReader, "getRenderingSettings">;
@@ -8,11 +9,12 @@ export type RobotsHandlerConfig = {
     collectionAssetsPath: string;
     publicRuntimePaths: readonly string[];
     capabilityCallsEnabled: boolean;
+    logger: Logger;
 };
 
 export function createRobotsHandler(config: RobotsHandlerConfig) {
     return async (request: Request): Promise<Response> => {
-        const settings = await renderingSettings(config.content);
+        const settings = await renderingSettings(config.content, config.logger);
         if (settings?.site.visible === false) {
             const root = config.basePath ? `${config.basePath}/` : "/";
             const body = `User-agent: *\nDisallow: ${root}\n`;
@@ -33,13 +35,11 @@ export function createRobotsHandler(config: RobotsHandlerConfig) {
     };
 }
 
-async function renderingSettings(content: Pick<ContentReader, "getRenderingSettings">) {
+async function renderingSettings(content: Pick<ContentReader, "getRenderingSettings">, logger: Logger) {
     try {
         return await content.getRenderingSettings();
     } catch (error) {
-        console.error("Robots canonical host lookup failure", {
-            errorType: error instanceof Error ? error.name : "UnknownError",
-        });
+        logger.error("seo.robots.settings.failed", {}, error);
         return null;
     }
 }

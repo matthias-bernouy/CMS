@@ -2,6 +2,7 @@ import type { BlobStore } from "@bernouy/blob-store";
 import { defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
 import { createSitemapService } from "@bernouy/cms-seo";
 import { createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-seo/http";
+import { NOOP_LOGGER, type Logger } from "@bernouy/logging";
 
 export function sitemapPage(id: string, path: string): TPage {
     return {
@@ -45,6 +46,7 @@ type SitemapRuntimeOptions = {
     content: Parameters<typeof createSitemapService>[0]["content"];
     execute?: Parameters<typeof createSitemapService>[0]["execute"];
     basePath?: string;
+    logger?: Logger;
 };
 
 export function sitemapRuntime(options: SitemapRuntimeOptions) {
@@ -62,7 +64,16 @@ export function sitemapRuntime(options: SitemapRuntimeOptions) {
     });
     return {
         service,
-        sitemap: createSitemapHandler({ content: options.content, store: options.store, isReservedPath }),
-        chunk: createSitemapChunkHandler({ store: options.store, basePath: options.basePath ?? "" }),
+        sitemap: createSitemapHandler({
+            content: options.content,
+            store: options.store,
+            isReservedPath,
+            logger: options.logger ?? NOOP_LOGGER,
+        }),
+        chunk: createSitemapChunkHandler({
+            store: options.store,
+            basePath: options.basePath ?? "",
+            logger: options.logger ?? NOOP_LOGGER,
+        }),
     };
 }

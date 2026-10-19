@@ -4,12 +4,14 @@ import { compress, sendCompressed } from "@bernouy/http-runner";
 import { localizedSitemapAlternates, localizedSitemapPages } from "cms-seo/sitemap/localizedPages";
 import { MAX_SITEMAP_URLS_PER_CHUNK, sitemapIndexXml, staticSitemapXml } from "cms-seo/sitemap/xml";
 import { readSitemapManifest } from "cms-seo/sitemap/manifest";
+import type { Logger } from "@bernouy/logging";
 import { storedSitemapLocations } from "cms-seo/sitemap/materialize";
 
 export type SitemapHandlerConfig = {
     content: Pick<ContentReader, "getRenderingSettings" | "getPublishedPages" | "resolvePublishedRoute">;
     store?: BlobStore;
     isReservedPath(path: string): boolean;
+    logger: Logger;
 };
 
 export function createSitemapHandler(config: SitemapHandlerConfig) {
@@ -36,7 +38,7 @@ export function createSitemapHandler(config: SitemapHandlerConfig) {
             }
             return buildStaticFallback(request, config, publicBaseUrl);
         } catch (error) {
-            console.error("Sitemap failure", { errorType: error instanceof Error ? error.name : "UnknownError" });
+            config.logger.error("seo.sitemap.failed", {}, error);
             return new Response("Internal Server Error", {
                 status: 500,
                 headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" },
