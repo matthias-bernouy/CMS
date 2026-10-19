@@ -17,6 +17,7 @@
         "@bernouy/cms-auth": "workspace:*",
         "linkedom": "^0.18.13",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-seo": "workspace:*",

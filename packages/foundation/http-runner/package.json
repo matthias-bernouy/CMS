@@ -11,6 +11,9 @@
         "./html": "./src/exports/html.ts",
         "./observability": "./src/exports/observability.ts"
     },
+    "dependencies": {
+        "@bernouy/logging": "workspace:*"
+    },
     "peerDependencies": {
         "typescript": "^7.0.2"
     }

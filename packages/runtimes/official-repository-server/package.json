@@ -13,6 +13,7 @@
     },
     "dependencies": {
         "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/http-runner": "workspace:*"
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*"
     }
 }

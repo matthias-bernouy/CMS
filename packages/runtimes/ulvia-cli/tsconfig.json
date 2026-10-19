@@ -13,6 +13,8 @@
         "src/**/*.ts"
     ],
     "references": [
+        { "path": "../../foundation/logging" },
+        { "path": "../../foundation/http-runner" },
         {
             "path": "../../foundation/binary-media"
         },

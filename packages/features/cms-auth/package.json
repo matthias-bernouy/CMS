@@ -17,6 +17,7 @@
         "@bernouy/envelope-crypto": "workspace:*",
         "jose": "^6.2.12",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "nodemailer": "^10.0.10"

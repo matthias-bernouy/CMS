@@ -1,0 +1,16 @@
+{
+    "name": "@bernouy/logging",
+    "version": "0.1.0",
+    "description": "Generic structured runtime diagnostics with bounded context and central redaction.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./node": "./src/exports/node.ts",
+        "./testing": "./src/exports/testing.ts"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

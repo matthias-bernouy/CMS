@@ -11,6 +11,9 @@
             "path": "packages/foundation/http-runner"
         },
         {
+            "path": "packages/foundation/logging"
+        },
+        {
             "path": "packages/foundation/envelope-crypto"
         },
         {

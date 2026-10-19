@@ -12,6 +12,7 @@
     "references": [
         { "path": "../../foundation/blob-store" },
         { "path": "../../foundation/http-runner" },
+        { "path": "../../foundation/logging" },
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-gateway" },
         { "path": "../../features/cms-seo" },

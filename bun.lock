@@ -39,6 +39,7 @@
       "dependencies": {
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "jose": "^6.2.12",
@@ -123,6 +124,7 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
       },
       "devDependencies": {
         "linkedom": "^0.18.13",
@@ -156,6 +158,9 @@
     "packages/foundation/http-runner": {
       "name": "@bernouy/http-runner",
       "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/logging": "workspace:*",
+      },
       "peerDependencies": {
         "typescript": "^7.0.2",
       },
@@ -165,6 +170,13 @@
       "version": "0.1.0",
       "peerDependencies": {
         "sharp": "^0.35.5",
+        "typescript": "^7.0.2",
+      },
+    },
+    "packages/foundation/logging": {
+      "name": "@bernouy/logging",
+      "version": "0.1.0",
+      "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
@@ -197,6 +209,7 @@
         "@bernouy/cms-kernel": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
       },
       "peerDependencies": {
@@ -209,6 +222,7 @@
       "dependencies": {
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
       },
     },
     "packages/runtimes/ulvia-cli": {
@@ -221,6 +235,7 @@
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-kernel-server": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/logging": "workspace:*",
         "@bernouy/ulvia-provider-server": "workspace:*",
       },
       "peerDependencies": {
@@ -241,6 +256,7 @@
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
+        "@bernouy/logging": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
@@ -261,6 +277,7 @@
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-seo": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
         "linkedom": "^0.18.13",
       },
       "devDependencies": {
@@ -313,6 +330,8 @@
     "@bernouy/http-runner": ["@bernouy/http-runner@workspace:packages/foundation/http-runner"],
 
     "@bernouy/image-processing": ["@bernouy/image-processing@workspace:packages/foundation/image-processing"],
+
+    "@bernouy/logging": ["@bernouy/logging@workspace:packages/foundation/logging"],
 
     "@bernouy/official-repository-server": ["@bernouy/official-repository-server@workspace:packages/runtimes/official-repository-server"],
 

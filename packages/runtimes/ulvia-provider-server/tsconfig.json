@@ -6,6 +6,7 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
+        { "path": "../../foundation/logging" },
         { "path": "../../foundation/blob-store" },
         { "path": "../../foundation/envelope-crypto" },
         { "path": "../../foundation/image-processing" },
