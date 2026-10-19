@@ -35,7 +35,10 @@ export type {
     ProviderOperationStatus,
     ProviderOperationStore,
 } from "./operations/types";
-export type { ProviderOperationExecutorOptions } from "./operations/ProviderOperationExecutor";
+export type {
+    ProviderOperationExecutorOptions,
+    ProviderOperationFailureObservation,
+} from "./operations/ProviderOperationExecutor";
 export type { ProviderInstanceRegistry } from "./instances/registry";
 export { ProviderInstanceRevisionConflictError } from "./instances/registry";
 export type {

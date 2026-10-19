@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
-import { DefaultProviderCapabilityDispatcher, type ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
+import {
+    DefaultProviderCapabilityDispatcher,
+    ProviderCapabilityDispatchError,
+    type ProviderCapabilityInvocationContext,
+} from "@bernouy/ulvia-provider";
 import { ProviderOperationExecutor, MemoryProviderOperationStore } from "@bernouy/ulvia-provider";
 import { registerJobCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
@@ -67,6 +71,66 @@ test("Provider operation recovery reclaims an expired lease and records failures
     await executor.recover();
     const record = await expectTerminal(store, "00000000-0000-7000-8000-000000000010", "failed");
     expect(record.errorCode).toBe("OPERATION_FAILED");
+});
+
+test("Provider operations report technical failures without exposing their input", async () => {
+    const store = new MemoryProviderOperationStore();
+    const failures: Array<{ observation: Record<string, unknown>; error?: unknown }> = [];
+    const executor = new ProviderOperationExecutor(store, undefined, {
+        onFailure: (observation, error) => failures.push({ observation, error }),
+    });
+    const failure = new Error("database unavailable");
+    executor.register("ulvia.cms.collections", "apply", async () => {
+        throw failure;
+    });
+
+    const queued = await executor.enqueue(
+        "ulvia.cms.collections",
+        "apply",
+        { administratorPassword: "must-never-be-observed" },
+        context,
+    );
+    await expectTerminal(store, queued.operationId, "failed");
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toMatchObject({
+        observation: {
+            operationId: queued.operationId,
+            contractId: "ulvia.cms.collections",
+            capabilityId: "apply",
+            requestId: context.requestId,
+            errorCode: "OPERATION_FAILED",
+            kind: "handler-failed",
+            durationMs: expect.any(Number),
+        },
+        error: failure,
+    });
+    expect(JSON.stringify(failures[0]?.observation)).not.toContain("must-never-be-observed");
+});
+
+test("Provider operations report expected domain rejections without a technical error", async () => {
+    const store = new MemoryProviderOperationStore();
+    const failures: Array<{ observation: Record<string, unknown>; error?: unknown }> = [];
+    const executor = new ProviderOperationExecutor(store, undefined, {
+        onFailure: (observation, error) => failures.push({ observation, error }),
+    });
+    executor.register("ulvia.cms.collections", "apply", async () => {
+        throw new ProviderCapabilityDispatchError("COLLECTION_CONFLICT", 409);
+    });
+
+    const queued = await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    await expectTerminal(store, queued.operationId, "failed");
+
+    expect(failures).toEqual([
+        {
+            observation: expect.objectContaining({
+                operationId: queued.operationId,
+                errorCode: "COLLECTION_CONFLICT",
+                kind: "handler-rejected",
+            }),
+            error: undefined,
+        },
+    ]);
 });
 
 test("Provider operation recovery terminates work whose handler no longer exists", async () => {

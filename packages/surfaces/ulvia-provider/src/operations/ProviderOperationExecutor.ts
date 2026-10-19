@@ -1,9 +1,11 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { randomUUIDv7 } from "bun";
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityInvocationContext } from "../dispatch/registry";
 import type { ProviderOperationHandler, ProviderOperationRecord, ProviderOperationStore } from "./types";
-import { ProviderOperationLeaseLostError, expiresAt, operationExecution, waitForLeaseRenewal } from "./lease";
+import { reportFailure, runProviderOperation, type ProviderOperationFailureObservation } from "./execution";
+
+export type { ProviderOperationFailureObservation } from "./execution";
 
 const DEFAULT_LEASE_MS = 30_000;
 const DEFAULT_RECOVERY_LIMIT = 100;
@@ -12,6 +14,7 @@ export type ProviderOperationExecutorOptions = Readonly<{
     leaseMs?: number;
     recoveryLimit?: number;
     retainResource?: () => () => void;
+    onFailure?: (observation: ProviderOperationFailureObservation, error?: unknown) => void;
 }>;
 
 export class ProviderOperationExecutor {
@@ -103,11 +106,16 @@ export class ProviderOperationExecutor {
         if (this.#stopping || record.status === "succeeded" || record.status === "failed") {
             return Promise.resolve();
         }
-        const running = this.#executeRetained(record).finally(() => {
-            if (this.#running.get(record.id) === running) {
-                this.#running.delete(record.id);
-            }
-        });
+        const running = this.#executeRetained(record)
+            .catch((error) => {
+                reportFailure(this.options, record, "executor-failed", "OPERATION_EXECUTOR_FAILED", 0, error);
+                throw error;
+            })
+            .finally(() => {
+                if (this.#running.get(record.id) === running) {
+                    this.#running.delete(record.id);
+                }
+            });
         this.#running.set(record.id, running);
         return running;
     }
@@ -115,78 +123,14 @@ export class ProviderOperationExecutor {
     async #executeRetained(record: ProviderOperationRecord): Promise<void> {
         const release = this.options.retainResource?.();
         try {
-            await this.#run(record);
+            await runProviderOperation(
+                this.store,
+                record,
+                this.#handlers.get(operationKey(record.contractId, record.capabilityId)),
+                { leaseMs: this.leaseMs, now: this.now, onFailure: this.options.onFailure },
+            );
         } finally {
             release?.();
-        }
-    }
-
-    async #run(record: ProviderOperationRecord): Promise<void> {
-        const token = randomUUID();
-        const now = this.now();
-        if (
-            !(await this.store.claim(
-                record.id,
-                record.revision,
-                token,
-                expiresAt(now, this.leaseMs),
-                now.toISOString(),
-            ))
-        ) {
-            return;
-        }
-        const handler = this.#handlers.get(operationKey(record.contractId, record.capabilityId));
-        if (!handler) {
-            await this.store.fail(record.id, token, "OPERATION_HANDLER_UNAVAILABLE", this.now().toISOString());
-            return;
-        }
-        const executionAbort = new AbortController();
-        const heartbeatAbort = new AbortController();
-        const execution = operationExecution(token, executionAbort.signal);
-        const heartbeat = this.#maintainLease(record.id, token, executionAbort, heartbeatAbort.signal);
-        try {
-            execution.throwIfLeaseLost();
-            const result = await handler(record.input, record.context, execution);
-            execution.throwIfLeaseLost();
-            if (!(await this.store.succeed(record.id, token, result, this.now().toISOString()))) {
-                executionAbort.abort(new ProviderOperationLeaseLostError());
-                return;
-            }
-        } catch (error) {
-            if (executionAbort.signal.aborted) {
-                return;
-            }
-            const code = error instanceof ProviderCapabilityDispatchError ? error.code : "OPERATION_FAILED";
-            await this.store.fail(record.id, token, code, this.now().toISOString());
-        } finally {
-            heartbeatAbort.abort();
-            await heartbeat;
-        }
-    }
-
-    async #maintainLease(
-        operationId: string,
-        token: string,
-        executionAbort: AbortController,
-        signal: AbortSignal,
-    ): Promise<void> {
-        while (!(await waitForLeaseRenewal(this.leaseMs / 3, signal))) {
-            const current = this.now();
-            try {
-                const renewed = await this.store.renew(
-                    operationId,
-                    token,
-                    expiresAt(current, this.leaseMs),
-                    current.toISOString(),
-                );
-                if (!renewed) {
-                    executionAbort.abort(new ProviderOperationLeaseLostError());
-                    return;
-                }
-            } catch (error) {
-                executionAbort.abort(error);
-                return;
-            }
         }
     }
 }
