@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { currentRequestId, runWithRequestContext } from "@bernouy/http-runner/observability";
 import { RecoverySupervisor } from "../src/runtime/recovery/RecoverySupervisor";
 
 test("recovery drains every initial batch", async () => {
@@ -41,6 +42,22 @@ test("recovery keeps scanning for work that expires after startup", async () => 
     await supervisor.stop();
 
     expect(recovered).toBe(1);
+});
+
+test("recovery does not inherit the request that opened an instance", async () => {
+    let observed: string | undefined = "not-called";
+    const supervisor = new RecoverySupervisor(async () => {
+        observed = currentRequestId();
+        return 0;
+    });
+    const inbound = new Request("http://provider.test", {
+        headers: { "x-request-id": "11d38c6a-0e6a-4f68-9dad-2a92c17b8300" },
+    });
+
+    await runWithRequestContext(inbound, () => supervisor.start());
+    await supervisor.stop();
+
+    expect(observed).toBeUndefined();
 });
 
 async function waitUntil(predicate: () => boolean): Promise<void> {

@@ -1,3 +1,5 @@
+import { runWithoutRequestContext } from "@bernouy/http-runner/observability";
+
 const DEFAULT_INTERVAL_MS = 10_000;
 const DEFAULT_BATCH_SIZE = 100;
 
@@ -9,8 +11,7 @@ export class RecoverySupervisor {
         private readonly recoverBatch: (limit: number) => Promise<number>,
         private readonly intervalMs = DEFAULT_INTERVAL_MS,
         private readonly batchSize = DEFAULT_BATCH_SIZE,
-        private readonly reportError: (error: unknown) => void = (error) =>
-            console.error("Provider recovery pass failed", error),
+        private readonly reportError: (error: unknown) => void = () => undefined,
     ) {
         if (!Number.isSafeInteger(intervalMs) || intervalMs < 1) {
             throw new TypeError("Recovery interval must be a positive safe integer");
@@ -24,8 +25,10 @@ export class RecoverySupervisor {
         if (this.#timer) {
             return;
         }
-        const initial = this.#trigger();
-        this.#timer = setInterval(() => void this.#trigger().catch(this.reportError), this.intervalMs);
+        const initial = runWithoutRequestContext(() => this.#trigger());
+        this.#timer = runWithoutRequestContext(() =>
+            setInterval(() => void this.#trigger().catch(this.reportError), this.intervalMs),
+        );
         this.#timer.unref?.();
         if (waitForInitial) {
             await initial;
