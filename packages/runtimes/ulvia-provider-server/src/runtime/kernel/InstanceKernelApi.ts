@@ -9,10 +9,12 @@ import type { KernelInstanceApi, KernelProviderQuery } from "@bernouy/ulvia-prov
 import type { InstanceComposition } from "../instances/ProviderInstanceHost";
 import type { ProviderInstanceRecord } from "@bernouy/ulvia-provider";
 import { createInstanceAuth } from "../authentication/createInstanceAuth";
+import type { Logger } from "@bernouy/logging";
 
 export async function createInstanceKernelApi(
     instance: ProviderInstanceRecord,
     composition: Pick<InstanceComposition, "stores" | "gateway">,
+    logger: Logger,
 ): Promise<KernelInstanceApi> {
     const { stores, gateway } = composition;
     const content = createContentReader(stores.repo, {
@@ -44,10 +46,15 @@ export async function createInstanceKernelApi(
         resolveActor: async (request) =>
             resolveActor(request, (await getAuthentication()).auth, gateway.isAdministrator),
     });
-    const sitemap = createSitemapHandler({ content, store: stores.sitemapStore, isReservedPath: isReservedPath });
-    const sitemapChunk = createSitemapChunkHandler({ store: stores.sitemapStore, basePath: "" });
+    const sitemap = createSitemapHandler({
+        content,
+        store: stores.sitemapStore,
+        isReservedPath,
+        logger,
+    });
+    const sitemapChunk = createSitemapChunkHandler({ store: stores.sitemapStore, basePath: "", logger });
     return {
-        query: (query) => executeQuery(query, content, getAuthentication, stores, gateway, pageExecution),
+        query: (query) => executeLoggedQuery(query, content, getAuthentication, stores, gateway, pageExecution, logger),
         handleAuth: async (action, request) => handleAuth(action, request, await getAuthentication()),
         handleCapability: (request) => capability(rewritePath(request, "/ulvia/kernel/v1/call", "/.cms/call")),
         handleQuery: (request) => query(rewritePath(request, "/ulvia/kernel/v1/queries", "/.cms/query")),
@@ -63,6 +70,33 @@ export async function createInstanceKernelApi(
             return original === "/sitemap.xml" ? sitemap(rewritten) : sitemapChunk(rewritten);
         },
     };
+}
+
+async function executeLoggedQuery(
+    query: KernelProviderQuery,
+    content: ContentReader,
+    getAuthentication: () => Promise<Awaited<ReturnType<typeof createInstanceAuth>>>,
+    stores: InstanceComposition["stores"],
+    gateway: InstanceComposition["gateway"],
+    pageExecution: PageExecutionService,
+    logger: Logger,
+): Promise<unknown> {
+    const startedAt = performance.now();
+    try {
+        const value = await executeQuery(query, content, getAuthentication, stores, gateway, pageExecution);
+        logger.debug("provider.kernel.query.completed", {
+            operation: query.operation,
+            durationMs: roundedDuration(performance.now() - startedAt),
+        });
+        return value;
+    } catch (error) {
+        logger.error(
+            "provider.kernel.query.failed",
+            { operation: query.operation, durationMs: roundedDuration(performance.now() - startedAt) },
+            error,
+        );
+        throw error;
+    }
 }
 
 async function executeQuery(
@@ -240,4 +274,8 @@ function textArray(value: unknown): string[] {
 
 function isReservedPath(path: string): boolean {
     return path === "/.cms" || path.startsWith("/.cms/");
+}
+
+function roundedDuration(durationMs: number): number {
+    return Math.round(durationMs * 100) / 100;
 }

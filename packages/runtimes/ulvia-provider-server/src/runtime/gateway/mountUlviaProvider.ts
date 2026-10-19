@@ -1,9 +1,10 @@
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import { BunRunner } from "@bernouy/http-runner";
 import { ProviderOperatorApi, UlviaProvider, type ProviderInstanceLifecycle } from "@bernouy/ulvia-provider";
-import type { ProviderRuntimeEnv } from "../runtimeEnv";
-import type { ProviderInstanceAuthenticator } from "./authentication/ProviderInstanceAuthenticator";
-import type { ProviderInstanceHost } from "./instances/ProviderInstanceHost";
+import type { ProviderRuntimeEnv } from "../../runtimeEnv";
+import type { ProviderInstanceAuthenticator } from "../authentication/ProviderInstanceAuthenticator";
+import type { ProviderInstanceHost } from "../instances/ProviderInstanceHost";
+import type { Logger } from "@bernouy/logging";
 
 export type UlviaProviderServerHandle = Readonly<{
     stop(): Promise<void>;
@@ -16,9 +17,10 @@ export function mountUlviaProvider(options: {
     authenticator: ProviderInstanceAuthenticator;
     host: ProviderInstanceHost;
     lifecycle: ProviderInstanceLifecycle;
+    logger: Logger;
 }): UlviaProviderServerHandle {
-    const { env, contracts, authenticator, host, lifecycle } = options;
-    const runner = new BunRunner({ hostname: env.ULVIA_PROVIDER_HOST });
+    const { env, contracts, authenticator, host, lifecycle, logger } = options;
+    const runner = new BunRunner({ hostname: env.ULVIA_PROVIDER_HOST, logger });
     new ProviderOperatorApi(runner, env.ULVIA_PROVIDER_OPERATOR_TOKEN, lifecycle);
     new UlviaProvider(runner, {
         contracts,

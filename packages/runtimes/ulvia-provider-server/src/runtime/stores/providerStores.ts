@@ -42,6 +42,7 @@ import {
 } from "@bernouy/cms-repository/providers/mongo";
 import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
 import { selectedCapabilityResolver } from "./selectedQueryCapabilities";
+import type { Logger } from "@bernouy/logging";
 
 const SCOPE_ID = "default";
 
@@ -54,7 +55,7 @@ export type ProviderStoreConfig = Readonly<{
     KERNEL_PUBLIC_URL: string;
 }>;
 
-export async function createProviderStores(env: ProviderStoreConfig) {
+export async function createProviderStores(env: ProviderStoreConfig, logger: Logger) {
     const mongo = new MongoClient(env.MONGO_URL);
     await mongo.connect();
     const db = mongo.db();
@@ -107,7 +108,7 @@ export async function createProviderStores(env: ProviderStoreConfig) {
     await migrationStorage.init();
     const collectionMigrations = new CollectionMigrationService(migrationRepo, migrationCollections, migrationStorage, {
         rollbackRetentionCount: env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
-        onRetentionError: (error) => console.error("Collection migration retention cleanup failed", error),
+        onRetentionError: (error) => logger.error("collection.migration.retention.failed", {}, error),
     });
     const repo = withCollectionMigrationWriteFence(
         migrationRepo,
@@ -136,7 +137,7 @@ export async function createProviderStores(env: ProviderStoreConfig) {
             store: providerFilesStore,
             blobs: providerBlobs,
             transformer: new SharpImageTransformer(),
-            reportError: (error) => console.error("CMS file image derivative failed", error),
+            reportError: (error) => logger.error("file.image.derivative.failed", {}, error),
         }),
     });
 

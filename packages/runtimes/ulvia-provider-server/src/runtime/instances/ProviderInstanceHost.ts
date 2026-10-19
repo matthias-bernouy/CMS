@@ -30,6 +30,8 @@ import { CmsFileWorkspace } from "../stores/CmsFileWorkspace";
 import { createInstanceProvisioningTarget } from "./instanceProvisioning";
 import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "./InstanceResourcePool";
 import { OfficialProviderObservation } from "./OfficialProviderObservation";
+import type { Logger } from "@bernouy/logging";
+import { correlatedRepositoryFetch } from "../gateway/repositoryFetch";
 
 const SITE_ID = "default";
 const MAX_OPEN_INSTANCES = 32;
@@ -56,9 +58,18 @@ export class ProviderInstanceHost {
         private readonly env: ProviderRuntimeEnv,
         private readonly credentials: EncryptedInstanceCredentials,
         private readonly profiles: OfficialInstanceProfiles,
+        private readonly logger: Logger,
     ) {
-        this.#providerSource = new HttpProviderRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
-        this.#collectionSource = new HttpCollectionRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
+        this.#providerSource = new HttpProviderRepository(
+            "ulvia-provider-bootstrap",
+            env.CMS_REPOSITORY_URL,
+            correlatedRepositoryFetch,
+        );
+        this.#collectionSource = new HttpCollectionRepository(
+            "ulvia-provider-bootstrap",
+            env.CMS_REPOSITORY_URL,
+            correlatedRepositoryFetch,
+        );
         this.#instances = new InstanceResourcePool(
             (key, lifetime) => this.createComposition(this.#records.get(key)!, lifetime),
             (composition) => composition.close(),
@@ -141,18 +152,21 @@ export class ProviderInstanceHost {
         }
         const filesDirectory = join(this.env.CMS_FILES_DIR, instance.storageKey);
         await mkdir(filesDirectory, { recursive: true, mode: 0o700 });
-        const stores = await createProviderStores({
-            CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: this.env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
-            CMS_SESSION_SECRET: credentials.sessionSecret,
-            CMS_KEK: {
-                activeKeyId: "instance",
-                keysHex: { instance: credentials.kekHex },
-                rotateOnStart: false,
+        const stores = await createProviderStores(
+            {
+                CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: this.env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
+                CMS_SESSION_SECRET: credentials.sessionSecret,
+                CMS_KEK: {
+                    activeKeyId: "instance",
+                    keysHex: { instance: credentials.kekHex },
+                    rotateOnStart: false,
+                },
+                MONGO_URL: instanceMongoUrl(this.env.MONGO_URL, instance.storageKey),
+                CMS_FILES_DIR: filesDirectory,
+                KERNEL_PUBLIC_URL: instance.kernelUrl,
             },
-            MONGO_URL: instanceMongoUrl(this.env.MONGO_URL, instance.storageKey),
-            CMS_FILES_DIR: filesDirectory,
-            KERNEL_PUBLIC_URL: instance.kernelUrl,
-        });
+            this.logger.child({ instanceId: instance.id }),
+        );
         let operationRecovery: RecoverySupervisor | undefined;
         try {
             const gateway = await createProviderGateway(stores, SITE_ID);
@@ -164,11 +178,21 @@ export class ProviderInstanceHost {
             const profile = this.requiredProfile(instance.profile.id, instance.profile.version);
             const report = providerReport(instance, profile);
             const management = managementForProfile(profile);
-            const observation = new OfficialProviderObservation(management, instance.id, profile);
+            const observation = new OfficialProviderObservation(management, instance.id, profile, Date.now, (error) =>
+                this.logger.error("provider.observation.refresh.failed", { instanceId: instance.id }, error),
+            );
             const providerOperations = new MongoProviderOperationStore(stores.db);
             await providerOperations.init();
             const operations = new ProviderOperationExecutor(providerOperations, undefined, {
                 retainResource: lifetime.retain,
+                onFailure: (observation, error) => {
+                    const attributes = { instanceId: instance.id, ...observation };
+                    if (observation.kind === "handler-unavailable" || observation.kind === "handler-rejected") {
+                        this.logger.warn("provider.operation.failed", attributes);
+                    } else {
+                        this.logger.error("provider.operation.failed", attributes, error);
+                    }
+                },
             });
             const dispatcher = new DefaultProviderCapabilityDispatcher();
             registerOfficialProviderCapabilities(
@@ -181,13 +205,22 @@ export class ProviderInstanceHost {
                 stores.providerFiles,
                 new CmsFileWorkspace(stores.providerFiles, stores.secrets),
             );
-            operationRecovery = new RecoverySupervisor((limit) => operations.recover(limit));
+            operationRecovery = new RecoverySupervisor(
+                (limit) => operations.recover(limit),
+                undefined,
+                undefined,
+                (error) => this.logger.error("provider.operation.recovery.failed", { instanceId: instance.id }, error),
+            );
             await operationRecovery.start(false);
             const activeRecovery = operationRecovery;
             const content = createContentReader(stores.repo, {
                 resolvePageRoute: (path) => stores.pageRoutes.resolve(gateway.siteId, path),
             });
-            const kernel = await createInstanceKernelApi(instance, { stores, gateway });
+            const kernel = await createInstanceKernelApi(
+                instance,
+                { stores, gateway },
+                this.logger.child({ instanceId: instance.id }),
+            );
             return {
                 stores,
                 gateway,

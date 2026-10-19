@@ -16,8 +16,7 @@ export class OfficialProviderObservation {
         private readonly instanceId: string,
         private readonly profile: OfficialInstanceProfile,
         private readonly now: () => number = Date.now,
-        private readonly reportError: (error: unknown) => void = (error) =>
-            console.error("Official Provider observation refresh failed", error),
+        private readonly reportError: (error: unknown) => void = () => undefined,
     ) {}
 
     ensureFresh(): Promise<void> {
