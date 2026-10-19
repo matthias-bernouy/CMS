@@ -32,7 +32,7 @@ describe("assertContentRefsExist", () => {
         await assertContentRefsExist(cms, `<div cms-bloc=\"fixture-card\"></div>`);
     });
 
-    test("rejects hidden Blocs outside the authoring catalogue", async () => {
+    test("rejects hidden Blocs as Page roots", async () => {
         let includeHidden = false;
         const cms = {
             getBlocsList: async (options?: { includeHidden?: boolean }) => {
@@ -42,9 +42,46 @@ describe("assertContentRefsExist", () => {
         };
 
         await expect(assertContentRefsExist(cms, '<div cms-bloc="basic-button"></div>')).rejects.toThrow(
-            "unknown or hidden",
+            "available cms-bloc identity",
         );
-        expect(includeHidden).toBeFalse();
+        expect(includeHidden).toBeTrue();
+    });
+
+    test("allows a hidden implementation Bloc only in an explicitly typed parent slot", async () => {
+        const visible = [
+            {
+                id: "fixture-file-input",
+                root: { accepts: ["div"] },
+                slots: {
+                    control: {
+                        accepts: [{ kind: "component", tag: "fixture-native-file" }],
+                        min: 1,
+                        max: 1,
+                    },
+                },
+            },
+            {
+                id: "fixture-generic",
+                root: { accepts: ["div"] },
+                slots: { content: { accepts: [{ kind: "any-component" }] } },
+            },
+        ];
+        const hidden = { id: "fixture-native-file", root: { accepts: ["div"] }, slots: {} };
+        const cms: any = {
+            getBlocsList: async (options?: { includeHidden?: boolean }) =>
+                options?.includeHidden ? [...visible, hidden] : visible,
+        };
+
+        await assertContentRefsExist(
+            cms,
+            '<div cms-bloc="fixture-file-input"><div cms-bloc="fixture-native-file" slot="control"></div></div>',
+        );
+        await expect(
+            assertContentRefsExist(
+                cms,
+                '<div cms-bloc="fixture-generic"><div cms-bloc="fixture-native-file" slot="content"></div></div>',
+            ),
+        ).rejects.toThrow("must be nested in a slot that explicitly accepts it");
     });
 
     test("rejects unknown bloc tag", async () => {
@@ -143,7 +180,7 @@ describe("assertContentRefsExist", () => {
         await expect(
             assertContentRefsExist(cms, `<div cms-bloc=\"w13c-reserved-example\" data-id="header"></div>`),
         ).rejects.toThrow();
-        expect(blocCalls).toBe(1);
+        expect(blocCalls).toBe(2);
     });
 
     test("enforces named slot accepts and cardinality", async () => {

@@ -38,40 +38,38 @@ export async function assertContentRefsExist(
         return;
     }
 
-    const registeredBlocs = await repository.getBlocsList();
-    const document = validatePageDocument(
-        content,
-        registeredBlocs.map((bloc) => ({
+    const [registeredBlocs, completeCatalogue] = await Promise.all([
+        repository.getBlocsList(),
+        repository.getBlocsList({ includeHidden: true }),
+    ]);
+    const visibleIds = new Set(registeredBlocs.map(({ id }) => id));
+    const hiddenBlocs = completeCatalogue.filter(({ id }) => !visibleIds.has(id));
+    const contracts = (blocs: typeof completeCatalogue) =>
+        blocs.map((bloc) => ({
             id: bloc.id,
-            kind: bloc.compositionHTML === undefined ? "component" : "composition",
+            kind: bloc.compositionHTML === undefined ? ("component" as const) : ("composition" as const),
             slots: bloc.slots ?? {},
             root: bloc.root,
             ...(bloc.content ? { content: bloc.content } : {}),
             ...(bloc.settings ? { settings: bloc.settings } : {}),
-        })),
-    );
+        }));
+    const visibleContracts = contracts(registeredBlocs);
+    const hiddenContracts = contracts(hiddenBlocs);
+    const document = validatePageDocument(content, visibleContracts, { hiddenBlocs: hiddenContracts });
     if (
         bindingOptions.resolveCapabilities ||
         bindingOptions.resolveQueryCapabilities ||
         bindingOptions.requireQueryCapabilityResolution
     ) {
-        validatePageDocument(
-            document.html,
-            registeredBlocs.map((bloc) => ({
-                id: bloc.id,
-                kind: bloc.compositionHTML === undefined ? "component" : "composition",
-                slots: bloc.slots ?? {},
-                root: bloc.root,
-                ...(bloc.content ? { content: bloc.content } : {}),
-                ...(bloc.settings ? { settings: bloc.settings } : {}),
-            })),
-            await resolveBindingAnalysisOptions(document.queries, document.mutations, bindingOptions),
-        );
+        validatePageDocument(document.html, visibleContracts, {
+            hiddenBlocs: hiddenContracts,
+            ...(await resolveBindingAnalysisOptions(document.queries, document.mutations, bindingOptions)),
+        });
     }
     const { document: expandedDocument } = parseHTML("<!DOCTYPE html><html><body></body></html>");
     expandedDocument.body.innerHTML = document.html;
     try {
-        expandCompositions(expandedDocument.body, registeredBlocs);
+        expandCompositions(expandedDocument.body, completeCatalogue);
         validateStateQueryGraph(expandedDocument.body);
     } catch (error) {
         throw new ContentValidationError(

@@ -35,21 +35,19 @@ export function validatePageDocument(
     blocs: readonly PageDocumentBlocContract[],
     options: {
         readonly unresolvedBlocs?: readonly UnresolvedPageDocumentBloc[];
+        readonly hiddenBlocs?: readonly PageDocumentBlocContract[];
     } & BindingAnalysisOptions = {},
 ): PageDocumentValidationResult {
+    const visible = new Map(blocs.map((bloc) => [bloc.id, bloc]));
+    const hidden = new Map((options.hiddenBlocs ?? []).map((bloc) => [bloc.id, bloc]));
+    const available = new Map([...visible, ...hidden]);
     const preflight = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>").document;
     preflight.body.innerHTML = html;
-    validateHosts(
-        preflight,
-        new Map(blocs.map((bloc) => [bloc.id, bloc])),
-        new Map((options.unresolvedBlocs ?? []).map((bloc) => [bloc.id, bloc])),
-        true,
-    );
+    validateHosts(preflight, available, new Map((options.unresolvedBlocs ?? []).map((bloc) => [bloc.id, bloc])), true);
     const normalized = validatePageContentMarkup(html);
-    const known = new Map(blocs.map((bloc) => [bloc.id, bloc]));
     const unresolved = new Map((options.unresolvedBlocs ?? []).map((bloc) => [bloc.id, bloc]));
     const uses = [...extractRefs(normalized).blocs].sort();
-    const missing = uses.filter((tag) => !known.has(tag) && !unresolved.has(tag));
+    const missing = uses.filter((tag) => !available.has(tag) && !unresolved.has(tag));
     if (missing.length > 0) {
         throw new ContentValidationError(
             "content",
@@ -64,11 +62,38 @@ export function validatePageDocument(
     if (options.capabilities || options.requireCapabilityResolution) {
         validateDocumentBindings(document, options);
     }
-    validateRoots(document, known, new Set(unresolved.keys()));
-    validateHosts(document, known, unresolved);
-    validateManagedNative(normalized, blocs);
+    validateRoots(document, available, new Set(visible.keys()), new Set(unresolved.keys()));
+    validateHiddenNesting(document, hidden, available);
+    validateHosts(document, available, unresolved);
+    validateManagedNative(normalized, [...blocs, ...(options.hiddenBlocs ?? [])]);
 
     return { html: document.body.innerHTML, queries, mutations, uses };
+}
+
+function validateHiddenNesting(
+    document: Document,
+    hidden: ReadonlyMap<string, PageDocumentBlocContract>,
+    available: ReadonlyMap<string, PageDocumentBlocContract>,
+): void {
+    for (const element of Array.from(document.body.querySelectorAll("[cms-bloc]"))) {
+        const id = element.getAttribute("cms-bloc")?.toLowerCase();
+        if (!id || !hidden.has(id)) {
+            continue;
+        }
+        const parent = element.parentElement;
+        const parentId = parent?.getAttribute("cms-bloc")?.toLowerCase();
+        const parentBloc = parentId ? available.get(parentId) : undefined;
+        const slotName = element.getAttribute("slot") ?? "";
+        const explicitlyAccepted = parentBloc?.slots?.[slotName]?.accepts?.some(
+            (accept) => accept.kind === "component" && accept.tag === id,
+        );
+        if (!explicitlyAccepted) {
+            throw new ContentValidationError(
+                "content",
+                `hidden Bloc <${id}> must be nested in a slot that explicitly accepts it`,
+            );
+        }
+    }
 }
 
 function validateHosts(
@@ -116,6 +141,7 @@ function validateManagedNative(html: string, blocs: readonly PageDocumentBlocCon
 function validateRoots(
     document: Document,
     known: ReadonlyMap<string, PageDocumentBlocContract>,
+    visible: ReadonlySet<string>,
     unresolved: ReadonlySet<string>,
 ): void {
     for (const node of Array.from(document.body.childNodes)) {
@@ -128,8 +154,11 @@ function validateRoots(
             continue;
         }
         const bloc = id ? known.get(id) : undefined;
-        if (!bloc) {
-            throw new ContentValidationError("content", `Page roots must declare an available cms-bloc identity`);
+        if (!id || !bloc || !visible.has(id)) {
+            throw new ContentValidationError(
+                "content",
+                `Page roots must declare an available cms-bloc identity; unknown or hidden roots are forbidden`,
+            );
         }
         const issue = blocHostContractIssue(root, bloc, known, unresolved);
         if (issue) {
