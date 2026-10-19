@@ -4,6 +4,7 @@ import { PUBLISHED_PAGE_SNAPSHOT_ROUTE, type ContentReader, type TPage } from "@
 import { TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import { CaptureRunner } from "./CaptureRunner";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 test("mounts the published Page snapshot handler", async () => {
     const page = { id: "page-legal", path: "/terms", visible: true } as TPage;
@@ -15,6 +16,7 @@ test("mounts the published Page snapshot handler", async () => {
             getPublishedPageById: async (id: string) => (id === page.id ? page : null),
         } as ContentReader,
         authentication: new InMemoryAuthentication(),
+        logger: NOOP_LOGGER,
     });
 
     const url = `https://site.test${PUBLISHED_PAGE_SNAPSHOT_ROUTE}?id=${page.id}`;

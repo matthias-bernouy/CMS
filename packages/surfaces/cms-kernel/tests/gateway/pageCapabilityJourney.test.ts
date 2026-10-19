@@ -10,6 +10,7 @@ import type { GatewayInvocation, GatewayInvoker } from "@bernouy/cms-gateway";
 import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
 import { InMemoryCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
+import { NOOP_LOGGER } from "@bernouy/logging";
 import { CaptureRunner } from "./support/CaptureRunner";
 
 test("a published Page renders and invokes only its exact capability plan", async () => {
@@ -58,6 +59,7 @@ test("a published Page renders and invokes only its exact capability plan", asyn
             resolveCapability: async () => ({ effect: "query", outputType: "object" }),
         },
         pageExecution,
+        logger: NOOP_LOGGER,
     });
 
     const pageResponse = await runner.defaultHandler("GET", "/")(new Request("https://site.test/products"));

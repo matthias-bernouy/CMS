@@ -15,6 +15,7 @@ describe("cms-kernel public API", () => {
                     const { InMemoryAuthentication } = await import("@bernouy/cms-auth");
                     const { createContentReader, InMemoryCmsRepository } = await import("@bernouy/cms-content");
                     const { TtlCache } = await import("@bernouy/http-runner");
+                    const { NOOP_LOGGER } = await import("@bernouy/logging");
                     const { CaptureRunner } = await import(${JSON.stringify(captureRunnerUrl)});
                     const runner = new CaptureRunner();
                     const kernel = new KernelCms({
@@ -22,6 +23,7 @@ describe("cms-kernel public API", () => {
                         cache: new TtlCache(),
                         content: createContentReader(new InMemoryCmsRepository()),
                         authentication: new InMemoryAuthentication(),
+                        logger: NOOP_LOGGER,
                     });
                     if (!(kernel instanceof KernelCms) || typeof runner.defaultHandler("GET", "/") !== "function") {
                         throw new Error("cms-kernel public API did not mount its fallback");

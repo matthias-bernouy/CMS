@@ -56,6 +56,7 @@ export function mountKernelRoutes(kernel: KernelCms) {
             `${kernel.cmsPathPrefix}/assets/cms-binding-core.js`,
         ],
         capabilityCallsEnabled: !!(kernel.capabilityGateway || kernel.capabilityHandler),
+        logger: kernel.logger,
     });
     const sitemapHandler =
         kernel.sitemapHandler ??
@@ -63,12 +64,14 @@ export function mountKernelRoutes(kernel: KernelCms) {
             content: kernel.content,
             store: kernel.sitemapStore,
             isReservedPath: (path) => isKernelReservedPath(path, kernel.cmsPathPrefix),
+            logger: kernel.logger,
         });
     const sitemapChunkHandler =
         kernel.sitemapChunkHandler ??
         createSitemapChunkHandler({
             store: kernel.sitemapStore,
             basePath: kernel.basePath,
+            logger: kernel.logger,
         });
     if (kernel.collections) {
         runner.use(

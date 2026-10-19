@@ -13,6 +13,7 @@ import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { PageExecutionService } from "@bernouy/cms-gateway/execution";
 import type { PageExecutionHttpPort } from "@bernouy/cms-gateway/http/handlers";
 import type { Cache, Runner } from "@bernouy/http-runner";
+import type { Logger } from "@bernouy/logging";
 
 export type KernelCmsConfig = {
     runner: Runner;
@@ -48,4 +49,5 @@ export type KernelCmsConfig = {
     sitemapHandler?: (request: Request) => Promise<Response>;
     sitemapChunkHandler?: (request: Request) => Promise<Response>;
     sitemapStore?: BlobStore;
+    logger: Logger;
 };

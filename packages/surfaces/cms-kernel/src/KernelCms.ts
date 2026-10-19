@@ -3,6 +3,7 @@ import type { KernelCmsConfig } from "cms-kernel/KernelCmsConfig";
 import { mountAuthRoutes } from "cms-kernel/http/auth/mountAuthRoutes";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type { BlobStore } from "@bernouy/blob-store";
+import type { Logger } from "@bernouy/logging";
 
 export type { KernelCmsConfig } from "cms-kernel/KernelCmsConfig";
 
@@ -27,6 +28,7 @@ export default class KernelCms {
     readonly enforcePageCsp: boolean;
     readonly basePath: string;
     readonly cmsPathPrefix: string;
+    readonly logger: Logger;
 
     constructor(config: KernelCmsConfig) {
         this.runner = config.runner;
@@ -47,6 +49,7 @@ export default class KernelCms {
         this.sitemapChunkHandler = config.sitemapChunkHandler;
         this.sitemapStore = config.sitemapStore;
         this.enforcePageCsp = config.enforcePageCsp ?? true;
+        this.logger = config.logger;
         this.basePath = config.runner.basePath === "/" ? "" : config.runner.basePath;
         this.cmsPathPrefix = `${this.basePath}/.cms`;
         mountKernelRoutes(this);

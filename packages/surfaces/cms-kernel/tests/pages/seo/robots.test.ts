@@ -4,6 +4,7 @@ import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content
 import { InMemoryCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import { CaptureRunner } from "../../gateway/support/CaptureRunner";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 describe("Kernel robots", () => {
     test("allows rendering assets and generic gateway calls", async () => {
@@ -18,6 +19,7 @@ describe("Kernel robots", () => {
             cache: new InMemoryCache(),
             content: createContentReader(repository),
             authentication: new InMemoryAuthentication(),
+            logger: NOOP_LOGGER,
             capabilityGateway: {
                 siteId: "site-a",
                 invoker: { invoke: async () => ({ kind: "success", status: 200, requestId: "test" }) } as never,
@@ -56,6 +58,7 @@ describe("Kernel robots", () => {
             cache: new InMemoryCache(),
             content: createContentReader(repository),
             authentication: new InMemoryAuthentication(),
+            logger: NOOP_LOGGER,
         });
 
         const response = await runner.endpointHandler(
@@ -78,6 +81,7 @@ describe("Kernel robots", () => {
             cache: new InMemoryCache(),
             content: createContentReader(repository),
             authentication: new InMemoryAuthentication(),
+            logger: NOOP_LOGGER,
         });
 
         const response = await runner.endpointHandler(

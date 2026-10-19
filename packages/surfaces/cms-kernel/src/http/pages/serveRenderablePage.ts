@@ -50,7 +50,7 @@ async function renderIndexedPage(
         });
     }
     if (indexing.kind === "unavailable") {
-        reportPageFailure("indexing", cachePath, new Error(indexing.reason));
+        reportPageFailure(kernel, "indexing", cachePath, new Error(indexing.reason));
         return renderRef(request, kernel, "serverError", 503, "Service unavailable");
     }
     return renderWithFallbacks(request, page, cachePath, kernel, cacheable && !indexing.dynamic, {
@@ -87,15 +87,16 @@ async function renderWithFallbacks(
             { skipCspHeader: true },
         );
     } catch (error) {
-        reportPageFailure("render", cachePath, error);
+        reportPageFailure(kernel, "render", cachePath, error);
         return renderRef(request, kernel, "serverError", 500, "Internal server error");
     }
 }
 
-function reportPageFailure(operation: "indexing" | "render", pathname: string, error: unknown): void {
-    console.error("Kernel public page failure", {
-        operation,
-        pathname,
-        errorType: error instanceof Error ? error.name : "UnknownError",
-    });
+function reportPageFailure(
+    kernel: KernelCms,
+    operation: "indexing" | "render",
+    pathname: string,
+    error: unknown,
+): void {
+    kernel.logger.error("kernel.page.failed", { operation, pathname }, error);
 }

@@ -3,11 +3,13 @@ import type { ContentReader, RenderingSettings } from "@bernouy/cms-content/rend
 import type { BlobReader, BlobStore as SitemapStore } from "@bernouy/blob-store";
 import type { KernelCmsConfig } from "@bernouy/cms-kernel";
 import type { Cache, Runner } from "@bernouy/http-runner";
+import type { Logger } from "@bernouy/logging";
 
 declare const settings: RenderingSettings;
 declare const authentication: Authentication;
 declare const runner: Runner;
 declare const cache: Cache;
+declare const logger: Logger;
 
 const reader: ContentReader = {
     getRenderablePage: async () => null,
@@ -37,10 +39,11 @@ export const config: KernelCmsConfig = {
     runner,
     cache,
     sitemapStore: sitemaps,
+    logger,
 };
 
 // @ts-expect-error The HTTP surface no longer accepts the writable repository property.
-const invalidRepositoryConfig: KernelCmsConfig = { repository: reader, authentication, runner, cache };
+const invalidRepositoryConfig: KernelCmsConfig = { repository: reader, authentication, runner, cache, logger };
 void invalidRepositoryConfig;
 
 // This fixture is compiled, never executed. These failures are part of the API contract.

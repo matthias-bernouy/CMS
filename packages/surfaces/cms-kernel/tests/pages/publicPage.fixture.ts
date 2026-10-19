@@ -16,6 +16,7 @@ import KernelCms from "cms-kernel/KernelCms";
 import type { KernelCmsConfig } from "cms-kernel/KernelCmsConfig";
 import { blocRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 export function publicPage(id: string, path: string, content = `<p>${id}</p>`): TPage {
     return {
@@ -119,6 +120,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
               }
             : {}),
         sitemapStore: options.sitemapStore,
+        logger: NOOP_LOGGER,
     });
     const sitemapService = options.sitemapStore
         ? createSitemapService({

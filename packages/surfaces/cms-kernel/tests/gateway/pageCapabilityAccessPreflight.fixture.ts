@@ -10,6 +10,7 @@ import {
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 const system: TSystem = {
     initializationStep: 1,
@@ -136,6 +137,7 @@ export async function mountPage(options: {
         },
         pageExecution,
         authentication: options.auth ?? authSubject(null),
+        logger: NOOP_LOGGER,
     });
     return { handler: runner.defaultHandler("GET", "/") };
 }

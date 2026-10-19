@@ -4,6 +4,7 @@ import { TtlCache } from "@bernouy/http-runner";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import KernelCms from "cms-kernel/KernelCms";
 import { authSystem, CaptureRunner } from "../authPublicSupport";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 describe("Kernel public auth mount", () => {
     test("mounts the configured public auth routes unguarded", async () => {
@@ -16,6 +17,7 @@ describe("Kernel public auth mount", () => {
             authentication: local,
             publicAuth,
             authBackends: { local },
+            logger: NOOP_LOGGER,
         });
         expect(runner.endpoints.get("POST /.cms/auth/login")).toBe(0);
         expect(runner.endpoints.has("POST /.cms/auth/signup")).toBe(true);
@@ -29,6 +31,7 @@ describe("Kernel public auth mount", () => {
             cache: new TtlCache(),
             content: createContentReader(new InMemoryCmsRepository()),
             authentication: new InMemoryAuthentication(),
+            logger: NOOP_LOGGER,
         });
         expect(runner.handlers.has("POST /.cms/sources")).toBe(false);
         expect(runner.handlers.has("GET /assets/admin-runtime.js")).toBe(false);

@@ -14,6 +14,7 @@ import {
 import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import { InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 class CaptureRunner implements Runner {
     readonly endpoints = new Set<string>();
@@ -147,6 +148,7 @@ function kernelConfig(runner: Runner, publicAuth?: PublicAuthRoutesConfig) {
         content: createContentReader(new InMemoryCmsRepository()),
         authentication: new InMemoryAuthentication(),
         publicAuth,
+        logger: NOOP_LOGGER,
     };
 }
 

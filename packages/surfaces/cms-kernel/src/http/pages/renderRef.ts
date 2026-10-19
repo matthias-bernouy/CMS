@@ -64,8 +64,8 @@ export async function renderRef(
                 );
             }
         }
-    } catch (err) {
-        console.error(`Failed to render ${field} fallback:`, err);
+    } catch (error) {
+        kernel.logger.error("kernel.page.fallback.failed", { field }, error);
     }
     return sendCompressed(req, textFallbackEntry(fallbackText), status === 410 ? "no-store" : undefined, { status });
 }

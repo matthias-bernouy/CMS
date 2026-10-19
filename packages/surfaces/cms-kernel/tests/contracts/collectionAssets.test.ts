@@ -4,6 +4,7 @@ import type { ContentReader } from "@bernouy/cms-content/rendering";
 import { TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 test("mounts installed collection assets below the tenant path", async () => {
     const runner = new CaptureRunner("/site");
@@ -12,6 +13,7 @@ test("mounts installed collection assets below the tenant path", async () => {
         cache: new TtlCache(),
         content: {} as ContentReader,
         authentication: new InMemoryAuthentication(),
+        logger: NOOP_LOGGER,
         collectionAssets: {
             siteId: "site",
             store: {
