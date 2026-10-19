@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
+import { REQUEST_ID_HEADER, runWithRequestContext } from "@bernouy/http-runner/observability";
 import { clientFixture } from "./providerClient.fixture";
+import { createMemoryLogger } from "@bernouy/logging/testing";
 
 test("projects every content read through the versioned Provider query endpoint", async () => {
     const { client, requests } = clientFixture((request) => {
@@ -110,4 +112,47 @@ test("forwards every streaming endpoint with its canonical Provider path", async
         "/ulvia/kernel/v1/sitemap/resource",
     ]);
     expect(new Headers(requests[3]?.init.headers).get("x-ulvia-original-path")).toBe("/sitemap-1.xml");
+});
+
+test("propagates the current request id through queries and forwarded requests", async () => {
+    const requestId = "11d38c6a-0e6a-4f68-9dad-2a92c17b8300";
+    const { client, requests } = clientFixture((request) =>
+        request.body ? Response.json({ value: "ok" }) : new Response("ok"),
+    );
+    const inbound = new Request("https://kernel.test/admin", {
+        headers: { [REQUEST_ID_HEADER]: requestId },
+    });
+
+    await runWithRequestContext(inbound, async () => {
+        await client.query("content.revision");
+        await client.capability(
+            new Request("https://kernel.test/.cms/call/catalog.items/list", {
+                headers: {
+                    [REQUEST_ID_HEADER]: "ea7a3428-a45e-48d1-8a1c-bc61921ff0b5",
+                    "x-ulvia-request-id": "provider-operation-id",
+                },
+            }),
+        );
+    });
+
+    expect(new Headers(requests[0]?.init.headers).get(REQUEST_ID_HEADER)).toBe(requestId);
+    expect(new Headers(requests[1]?.init.headers).get(REQUEST_ID_HEADER)).toBe(requestId);
+    expect(new Headers(requests[1]?.init.headers).get("x-ulvia-request-id")).toBe("provider-operation-id");
+});
+
+test("identifies failed Provider query operations without logging their inputs", async () => {
+    const memory = createMemoryLogger({ service: "kernel", level: "debug" });
+    const { client } = clientFixture(() => new Response("Unavailable", { status: 503 }), undefined, memory.logger);
+
+    await expect(client.query("content.renderable-page", { path: "/private" })).rejects.toThrow(
+        "Provider query failed (503)",
+    );
+
+    expect(memory.records).toHaveLength(1);
+    expect(memory.records[0]).toMatchObject({
+        level: "warn",
+        event: "provider.query.rejected",
+        attributes: { operation: "content.renderable-page", status: 503 },
+    });
+    expect(JSON.stringify(memory.records[0])).not.toContain("/private");
 });

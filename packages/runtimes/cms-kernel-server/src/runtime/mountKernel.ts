@@ -2,6 +2,7 @@ import type { RuntimeEnv } from "../runtimeEnv";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { PRODUCTION_KERNEL_RUNTIME, type ProductionKernelRuntime } from "./kernelRuntime";
 import type { ProviderKernelClient } from "./provider/ProviderKernelClient";
+import type { Logger } from "@bernouy/logging";
 
 export type { ProductionKernelRuntime } from "./kernelRuntime";
 
@@ -12,14 +13,15 @@ export type ProductionKernelHandle = {
 type MountOptions = {
     env: RuntimeEnv;
     provider: ProviderKernelClient;
+    logger: Logger;
 };
 
 export async function mountProductionKernel(
     options: MountOptions,
     runtime: ProductionKernelRuntime = PRODUCTION_KERNEL_RUNTIME,
 ): Promise<ProductionKernelHandle> {
-    const { env, provider } = options;
-    const runner = new runtime.Runner();
+    const { env, provider, logger } = options;
+    const runner = new runtime.Runner({ logger });
     new runtime.Kernel({
         runner,
         content: provider.content,
@@ -37,12 +39,13 @@ export async function mountProductionKernel(
         collectionAssets: provider.collectionAssets,
         sitemapHandler: provider.sitemap,
         sitemapChunkHandler: provider.sitemap,
+        logger,
     });
     runner.start({ port: env.KERNEL_PORT, hostname: env.KERNEL_HOST });
-    runtime.log("🚀 CMS listening");
-    runtime.log(`   sign in:      ${env.KERNEL_PUBLIC_URL}/login`);
-    runtime.log(`   site:         ${env.KERNEL_PUBLIC_URL}/`);
-    runtime.log(`   provider:     ${env.ULVIA_PROVIDER_URL}`);
+    logger.info("kernel.started", {
+        publicUrl: env.KERNEL_PUBLIC_URL,
+        providerUrl: env.ULVIA_PROVIDER_URL,
+    });
     return {
         async stop() {
             await runner.stopGracefully();

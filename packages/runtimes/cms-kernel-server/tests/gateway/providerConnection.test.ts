@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { fetchProviderHandshake } from "../../src/runtime/gateway/fetchProviderReport";
 import { ProviderKernelTransport } from "../../src/runtime/provider/ProviderKernelTransport";
 import { ProviderKernelClient } from "../../src/runtime/provider/ProviderKernelClient";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 test("provider handshakes accept the configured private service endpoint", async () => {
     const requests: Array<{ url: string; init?: RequestInit }> = [];
@@ -98,7 +99,7 @@ test("logical Page queries preserve GET or QUERY across the private Provider bou
             return Response.json({ items: [] });
         }) as typeof fetch,
     );
-    const client = new ProviderKernelClient(transport, "http://kernel.test");
+    const client = new ProviderKernelClient(transport, "http://kernel.test", NOOP_LOGGER);
     const request = new Request("http://kernel.test/.cms/query/catalog.items/list", {
         method: "QUERY",
         headers: { "content-type": "application/json", cookie: "cms-session=session-a" },

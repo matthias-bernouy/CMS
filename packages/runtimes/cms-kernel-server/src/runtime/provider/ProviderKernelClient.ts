@@ -13,6 +13,8 @@ import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { KernelProviderQuery, KernelProviderQueryOperation } from "@bernouy/ulvia-provider/kernel";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
 import type { ProviderKernelTransport } from "./ProviderKernelTransport";
+import type { Logger } from "@bernouy/logging";
+import { currentRequestHeaders } from "@bernouy/http-runner/observability";
 
 export class ProviderKernelClient {
     readonly content: ContentReader;
@@ -31,6 +33,7 @@ export class ProviderKernelClient {
     constructor(
         private readonly transport: ProviderKernelTransport,
         kernelUrl: string,
+        private readonly logger: Logger,
     ) {
         this.content = remoteContent(this);
         this.authentication = remoteAuthentication(this);
@@ -67,19 +70,37 @@ export class ProviderKernelClient {
     }
 
     async query<T>(operation: KernelProviderQueryOperation, input?: unknown): Promise<T> {
-        const response = await this.transport.request("/ulvia/kernel/v1/query", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-                operation,
-                ...(input === undefined ? {} : { input }),
-            } satisfies KernelProviderQuery),
-            signal: AbortSignal.timeout(10_000),
-        });
-        if (!response.ok) {
-            throw new Error(`Provider query failed (${response.status})`);
+        const startedAt = performance.now();
+        try {
+            const headers = currentRequestHeaders({ "content-type": "application/json" });
+            const response = await this.transport.request("/ulvia/kernel/v1/query", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                    operation,
+                    ...(input === undefined ? {} : { input }),
+                } satisfies KernelProviderQuery),
+                signal: AbortSignal.timeout(10_000),
+            });
+            if (!response.ok) {
+                this.logger.warn("provider.query.rejected", {
+                    operation,
+                    status: response.status,
+                    durationMs: roundedDuration(performance.now() - startedAt),
+                });
+                throw new ProviderQueryError(response.status);
+            }
+            return ((await response.json()) as { value: T }).value;
+        } catch (error) {
+            if (!(error instanceof ProviderQueryError)) {
+                this.logger.error(
+                    "provider.query.failed",
+                    { operation, durationMs: roundedDuration(performance.now() - startedAt) },
+                    error,
+                );
+            }
+            throw error;
         }
-        return ((await response.json()) as { value: T }).value;
     }
 
     auth(action: string, request: Request): Promise<Response> {
@@ -109,9 +130,9 @@ export class ProviderKernelClient {
         extraHeaders?: HeadersInit,
         timeoutMs?: number,
     ): Promise<Response> {
-        const response = await this.transport.forward(path, request, extraHeaders, timeoutMs);
+        const response = await this.transport.forward(path, request, currentRequestHeaders(extraHeaders), timeoutMs);
         if (!response.ok) {
-            console.error("Provider proxy request failed", {
+            this.logger.warn("provider.proxy.failed", {
                 path: path.split("?")[0],
                 status: response.status,
             });
@@ -123,6 +144,17 @@ export class ProviderKernelClient {
         const path = new URL(request.url).pathname;
         return this.forward("/ulvia/kernel/v1/sitemap/resource", request, { "x-ulvia-original-path": path });
     }
+}
+
+class ProviderQueryError extends Error {
+    constructor(status: number) {
+        super(`Provider query failed (${status})`);
+        this.name = "ProviderQueryError";
+    }
+}
+
+function roundedDuration(durationMs: number): number {
+    return Math.round(durationMs * 100) / 100;
 }
 
 function remoteContent(client: ProviderKernelClient): ContentReader {

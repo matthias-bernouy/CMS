@@ -1,5 +1,6 @@
 import { ProviderKernelClient } from "../../src/runtime/provider/ProviderKernelClient";
 import { ProviderKernelTransport } from "../../src/runtime/provider/ProviderKernelTransport";
+import { NOOP_LOGGER, type Logger } from "@bernouy/logging";
 
 export interface CapturedProviderRequest {
     url: URL;
@@ -10,6 +11,7 @@ export interface CapturedProviderRequest {
 export function clientFixture(
     respond: (request: CapturedProviderRequest) => Response | Promise<Response>,
     kernelUrl = "https://kernel.test",
+    logger: Logger = NOOP_LOGGER,
 ): { client: ProviderKernelClient; requests: CapturedProviderRequest[] } {
     const requests: CapturedProviderRequest[] = [];
     const fetcher = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
@@ -26,5 +28,5 @@ export function clientFixture(
         "provider-token-at-least-twenty",
         fetcher as typeof fetch,
     );
-    return { client: new ProviderKernelClient(transport, kernelUrl), requests };
+    return { client: new ProviderKernelClient(transport, kernelUrl, logger), requests };
 }

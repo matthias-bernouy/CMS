@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { mountProductionKernel, type ProductionKernelRuntime } from "../../src/runtime/mountKernel";
+import { createMemoryLogger } from "@bernouy/logging/testing";
 
 describe("production Kernel mounting", () => {
     test("mounts and stops one runtime", async () => {
         const events: string[] = [];
-        const logs: string[] = [];
+        const logs = createMemoryLogger({ service: "kernel-test" });
         let kernelConfig: Record<string, unknown> | undefined;
 
         class FakeRunner {
@@ -30,10 +31,6 @@ describe("production Kernel mounting", () => {
         const runtime = {
             Runner: FakeRunner,
             Kernel: FakeKernel,
-            log(message: string) {
-                logs.push(message);
-            },
-            reportError() {},
         } as unknown as ProductionKernelRuntime;
         const token = (name: string) => ({ name });
         const options = {
@@ -58,6 +55,7 @@ describe("production Kernel mounting", () => {
                 collectionAsset: async () => new Response(),
                 sitemap: async () => new Response(),
             },
+            logger: logs.logger,
         };
 
         const mounted = await mountProductionKernel(options as never, runtime);
@@ -71,7 +69,7 @@ describe("production Kernel mounting", () => {
             queryHandler: options.provider.declarativeQuery,
         });
         expect(events).toContain('start:{"port":3100,"hostname":"127.0.0.1"}');
-        expect(logs).toContain("🚀 CMS listening");
+        expect(logs.records.some((record) => record.event === "kernel.started")).toBeTrue();
 
         await mounted.stop();
         expect(events.at(-1)).toBe("stop");
