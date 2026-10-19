@@ -1,7 +1,11 @@
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
 import { readCataloguePages } from "cms-repository/repository-http/cataloguePages";
-import { getRepositoryBytes, MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/getBytes";
+import {
+    getRepositoryBytes,
+    MAX_REPOSITORY_RESPONSE_BYTES,
+    type RepositoryFetch,
+} from "cms-repository/repository-http/getBytes";
 import type {
     ProviderRepositorySource,
     RepositoryArtifactEntry,
@@ -16,7 +20,11 @@ export class HttpProviderRepository implements ProviderRepositorySource {
     readonly id: string;
     private readonly base: URL;
 
-    constructor(id: string, baseUrl: string) {
+    constructor(
+        id: string,
+        baseUrl: string,
+        private readonly request?: RepositoryFetch,
+    ) {
         if (!validProviderRepositoryId(id)) {
             throw new TypeError("Invalid provider repository ID");
         }
@@ -30,7 +38,9 @@ export class HttpProviderRepository implements ProviderRepositorySource {
                 const query = cursor
                     ? `?limit=${CATALOGUE_PAGE_SIZE}&cursor=${encodeURIComponent(cursor)}`
                     : `?limit=${CATALOGUE_PAGE_SIZE}`;
-                const bytes = await getRepositoryBytes(this.base, `v1/${pathKind(kind)}${query}`, "Provider");
+                const bytes = await getRepositoryBytes(this.base, `v1/${pathKind(kind)}${query}`, "Provider", {
+                    request: this.request,
+                });
                 return parseProviderCataloguePage(
                     parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64),
                     this.id,
@@ -50,6 +60,7 @@ export class HttpProviderRepository implements ProviderRepositorySource {
             this.base,
             `v1/${pathKind(reference.kind)}/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.id)}/${encodeURIComponent(reference.version)}`,
             "Provider",
+            { request: this.request },
         );
     }
 }

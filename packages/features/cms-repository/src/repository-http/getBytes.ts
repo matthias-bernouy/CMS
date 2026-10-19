@@ -1,14 +1,17 @@
 export const MAX_REPOSITORY_RESPONSE_BYTES = 8 * 1024 * 1024;
 
+export type RepositoryFetch = (url: URL, init: RequestInit) => Promise<Response>;
+
 /** Read a bounded repository response without following redirects. */
 export async function getRepositoryBytes(
     base: URL,
     path: string,
     kind: string,
-    options: { maxBytes?: number; accept?: string } = {},
+    options: { maxBytes?: number; accept?: string; request?: RepositoryFetch } = {},
 ): Promise<Uint8Array> {
     const maxBytes = options.maxBytes ?? MAX_REPOSITORY_RESPONSE_BYTES;
-    const response = await fetch(new URL(path, base), {
+    const request = options.request ?? defaultRepositoryFetch;
+    const response = await request(new URL(path, base), {
         signal: AbortSignal.timeout(10_000),
         redirect: "error",
         headers: { Accept: options.accept ?? "application/json" },
@@ -42,4 +45,8 @@ export async function getRepositoryBytes(
         offset += chunk.byteLength;
     }
     return bytes;
+}
+
+function defaultRepositoryFetch(url: URL, init: RequestInit): Promise<Response> {
+    return fetch(url, init);
 }

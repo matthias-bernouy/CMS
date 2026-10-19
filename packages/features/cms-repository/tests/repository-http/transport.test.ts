@@ -28,3 +28,16 @@ test("repository base URLs reject credentials and non-HTTPS remote hosts", () =>
     expect(() => repositoryBaseUrl("http://example.com", "Provider")).toThrow("HTTPS or loopback HTTP");
     expect(() => repositoryBaseUrl("https://user:pass@example.com", "Provider")).toThrow("URL credentials");
 });
+
+test("repository transport accepts runtime-owned outbound request decoration", async () => {
+    let observed: Headers | undefined;
+    const request = async (_url: URL, init: RequestInit) => {
+        observed = new Headers(init.headers);
+        return new Response(new Uint8Array([1]));
+    };
+    const base = repositoryBaseUrl("http://127.0.0.1:1", "Collection");
+
+    await getRepositoryBytes(base, "release", "Collection", { request });
+
+    expect(observed?.get("accept")).toBe("application/json");
+});
