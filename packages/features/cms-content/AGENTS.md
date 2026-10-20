@@ -16,8 +16,8 @@ bindings, validation, and read models.
   and live declarative binding runtime used by rendered Pages and contributed Blocs.
 - `@bernouy/cms-content/runtime-assets` exposes the generated system runtime
   entries to server composition; its build subpath owns their generation.
-- `@bernouy/cms-content/browser/dom` exposes inert network-binding preparation
-  for the Kernel renderer.
+- `@bernouy/cms-content/browser/dom` exposes binding cloak injection and inert
+  network-binding preparation for the Kernel renderer.
 - `@bernouy/cms-content/http` exposes mountable handlers for the generated
   browser runtimes, Bloc sets and published Page snapshots.
 - `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.

@@ -3,11 +3,10 @@ import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
-import { projectKnownFileImages } from "cms-kernel/html/fileImages";
-import { prepareNetworkInertBindings } from "@bernouy/cms-content/browser/dom";
+import { injectBindingCloak, prepareNetworkInertBindings } from "@bernouy/cms-content/browser/dom";
 import { buildHtmlBasics } from "cms-kernel/html/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-kernel/html/head/buildMetaCsp";
-import { buildAssetPreloads, buildBindingCloak, buildStylesheetLink } from "cms-kernel/html/head/buildAssets";
+import { buildAssetPreloads, buildStylesheetLink } from "cms-kernel/html/head/buildAssets";
 import { buildScriptTags } from "cms-kernel/html/head/buildScriptTags";
 import { defineMetaTags, definePageStructuredData } from "@bernouy/cms-seo";
 import type { RenderContext } from "cms-kernel/html/RenderContext";
@@ -84,7 +83,9 @@ export async function renderPage(
         buildMetaCsp(document, head, cspExtras);
     }
     buildAssetPreloads(document, head, assets, { includeBindingCore: requiresBindingRuntime });
-    buildBindingCloak(document, head, requiresBindingRuntime);
+    if (requiresBindingRuntime) {
+        injectBindingCloak(document);
+    }
     defineMetaTags(
         document,
         head,
@@ -97,7 +98,6 @@ export async function renderPage(
     definePageStructuredData(document, head, settings, metadata);
     buildStylesheetLink(document, head, assets);
     buildScriptTags(document, head, assets, { includeBindingCore: requiresBindingRuntime });
-    projectKnownFileImages(document);
 
     return compress(document.toString(), "text/html");
 }

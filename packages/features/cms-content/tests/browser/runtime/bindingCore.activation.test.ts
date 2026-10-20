@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, describe, expect, test } from "bun:test";
+import { injectBindingCloak } from "@bernouy/cms-content/browser/dom";
 import { BindingCore, BINDING_CORE_TAG } from "../../../src/browser/binding/bindingCore";
 import { resetDom, text, waitFor } from "../support/testUtils";
 
@@ -11,6 +12,13 @@ beforeAll(() => {
 afterEach(resetDom);
 
 describe("<cms-binding-core> — cloak", () => {
+    test("exposes idempotent cloak injection to server renderers", () => {
+        injectBindingCloak(document);
+        injectBindingCloak(document);
+
+        expect(document.querySelectorAll("#cms-binding-cloak")).toHaveLength(1);
+    });
+
     test("hides data-bound content only until the custom element is defined", () => {
         document.body.innerHTML = `<${BINDING_CORE_TAG}></${BINDING_CORE_TAG}>`;
         const style = document.getElementById("cms-binding-cloak");

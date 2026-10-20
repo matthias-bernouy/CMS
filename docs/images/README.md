@@ -24,7 +24,7 @@ at most ten content-addressed representations, and serves the original while
 background representations are unavailable. Representation discovery and reads
 are ordinary contract capabilities.
 
-`ulvia-official-image` receives a `FileReference`, a profile, `sizes`, `alt`,
-loading and presentation settings. The Kernel can emit known public references
-during server rendering; the browser helper resolves dynamic references after a
-binding completes. Image processing never runs in the gateway or the block.
+`ulvia-official-image` wraps a native `<img>`. Its `src`, `srcset`, `sizes`,
+`alt` and loading attributes follow the ordinary Page markup and binding rules;
+the Kernel does not interpret `FileReference` values or perform image-specific
+projection. Image processing never runs in the gateway or the Bloc.

@@ -33,18 +33,6 @@ export function buildAssetPreloads(
     }
 }
 
-/** Hide binding-owned bodies until the deferred custom element is defined. */
-export function buildBindingCloak(document: Document, head: HTMLElement, enabled: boolean): void {
-    if (!enabled) {
-        return;
-    }
-    const style = document.createElement("style");
-    style.id = "cms-binding-cloak";
-    style.textContent =
-        "cms-binding-core{display:contents}cms-binding-core:not(:defined) :is([cms-mutation],[cms-query]){visibility:hidden}";
-    head.appendChild(style);
-}
-
 /**
  * `<link rel="stylesheet">` entries for theme and Bloc CSS. Emitted late in `<head>`
  * (after preloads + meta tags) because the browser has already started the

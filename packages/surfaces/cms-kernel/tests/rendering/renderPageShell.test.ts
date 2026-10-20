@@ -161,31 +161,6 @@ describe("renderPage — binding core wrapper", () => {
         expect(staticImage?.getAttribute("data-cms-src")).toBeNull();
     });
 
-    test("projects a concrete file reference into an image before serialization", async () => {
-        const reference = JSON.stringify({
-            url: "/.cms/call/ulvia.cms.files/files/file-1/generation-1",
-            variants: [
-                {
-                    profile: "responsive",
-                    width: 640,
-                    url: "/.cms/call/ulvia.cms.files/files/file-1/generation-1/representations/responsive/640.webp",
-                },
-            ],
-        });
-        const entry = await renderPage(
-            {
-                ...page,
-                content: `<figure cms-bloc="ulvia-official-image" file='${reference}' alt="Product"><img></figure>`,
-            },
-            makeCtx(),
-        );
-        const { document } = parseHTML(new TextDecoder().decode(entry.raw));
-        const image = document.querySelector('[cms-bloc="ulvia-official-image"] > img');
-        expect(image?.getAttribute("src")).toContain("/files/file-1/generation-1");
-        expect(image?.getAttribute("srcset")).toContain("/representations/responsive/640.webp 640w");
-        expect(image?.getAttribute("alt")).toBe("Product");
-    });
-
     test("resolves platform metadata variables and an explicit noindex state", async () => {
         const ctx = makeCtx();
         const entry = await renderPage(
