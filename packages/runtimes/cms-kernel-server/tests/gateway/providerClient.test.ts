@@ -58,7 +58,6 @@ test("projects gateway, Page access and collection assets", async () => {
     await client.pageCapabilities.requiredAccess({ page: { path: "/admin" } } as never);
     await client.gateway.invoker.invoke({} as never);
     await client.gateway.invoker.resolveHttp({} as never);
-    await client.gateway.isAdministrator({ identifier: "subject-a" });
     await client.collectionAssets.store.getInstalledAssetMetadata("ignored", "collection-a", "asset-a");
     await client.collectionAssets.store.getInstalledAssetMetadataBatch("ignored", [
         {
@@ -120,7 +119,7 @@ test("propagates the current request id through queries and forwarded requests",
 
 test("identifies failed Provider query operations without logging their inputs", async () => {
     const memory = createMemoryLogger({ service: "kernel", level: "debug" });
-    const { client } = clientFixture(() => new Response("Unavailable", { status: 503 }), undefined, memory.logger);
+    const { client } = clientFixture(() => new Response("Unavailable", { status: 503 }), memory.logger);
 
     await expect(client.query("content.renderable-page", { path: "/private" })).rejects.toThrow(
         "Provider query failed (503)",

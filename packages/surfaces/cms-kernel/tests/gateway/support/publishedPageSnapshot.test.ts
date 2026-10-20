@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import { PUBLISHED_PAGE_SNAPSHOT_ROUTE, type ContentReader, type TPage } from "@bernouy/cms-content/rendering";
 import { TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
@@ -15,7 +14,7 @@ test("mounts the published Page snapshot handler", async () => {
         content: {
             getPublishedPageById: async (id: string) => (id === page.id ? page : null),
         } as ContentReader,
-        authentication: new InMemoryAuthentication(),
+        resolveActor: async () => ({ kind: "anonymous" }),
         logger: NOOP_LOGGER,
     });
 

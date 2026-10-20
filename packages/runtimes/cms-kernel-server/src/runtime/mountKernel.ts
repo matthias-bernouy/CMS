@@ -25,9 +25,8 @@ export async function mountProductionKernel(
     new runtime.Kernel({
         runner,
         content: provider.content,
-        authentication: provider.authentication,
-        publicAuth: { ...provider.publicAuth, allowSignup: false },
-        localAuthentication: provider.localAuthentication,
+        resolveActor: (request) => provider.resolveActor(request),
+        sessionCookie: { secure: env.KERNEL_PUBLIC_URL.startsWith("https:") },
         cache: new InMemoryCache(),
         enforcePageCsp: env.MODE !== "DEV",
         capabilityGateway: provider.gateway,

@@ -1,10 +1,8 @@
 import type { BlobStore } from "@bernouy/blob-store";
-import type { Authentication, LocalAuthenticationActions, Subject } from "@bernouy/cms-auth";
-import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
-import type { GatewayInvoker } from "@bernouy/cms-gateway";
+import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
 import type { PageCapabilityAccessPort } from "@bernouy/cms-gateway/analysis";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
@@ -12,9 +10,8 @@ import type { Logger } from "@bernouy/logging";
 export type KernelCmsConfig = {
     runner: Runner;
     content: ContentReader;
-    authentication: Authentication;
-    publicAuth?: PublicAuthRoutesConfig;
-    localAuthentication?: LocalAuthenticationActions;
+    resolveActor(request: Request): Promise<GatewayActor>;
+    sessionCookie?: { readonly secure?: boolean };
     collections?: {
         siteId: string;
         migrations: CollectionMigrationService;
@@ -25,7 +22,6 @@ export type KernelCmsConfig = {
     capabilityGateway?: {
         readonly siteId: string;
         readonly invoker: GatewayInvoker;
-        readonly isAdministrator: (subject: Subject) => Promise<boolean>;
         readonly authenticateProvider?: (token: string) => Promise<string | null>;
         readonly resolveCapability?: (
             contractId: string,

@@ -17,7 +17,7 @@ async function startKernel(): Promise<void> {
     const env = readRuntimeEnv(process.env);
     const transport = new ProviderKernelTransport(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN);
     await fetchProviderHandshake(transport);
-    const provider = new ProviderKernelClient(transport, env.KERNEL_PUBLIC_URL, logger);
+    const provider = new ProviderKernelClient(transport, logger);
     const kernel = await mountProductionKernel({ env, provider, logger });
 
     let stopping = false;

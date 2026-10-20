@@ -1,7 +1,7 @@
 # @bernouy/cms-kernel
 
-Unified CMS HTTP surface. It mounts Page rendering, authentication, feature
-handlers and public fallbacks onto one provided `Runner`.
+Unified CMS HTTP surface. It mounts Page rendering, feature handlers and public
+fallbacks onto one provided `Runner`.
 
 ## Boundaries
 
@@ -10,7 +10,8 @@ handlers and public fallbacks onto one provided `Runner`.
 - Kernel consumes the projected `ContentReader` boundary of
   `@bernouy/cms-content`; it must not receive a writable content repository or
   import Mongo, filesystem implementations or runtime composition code.
-- Persistence, auth, cache and gateway are injected through config.
+- Content projection, request-actor resolution, cache and gateway handlers are
+  injected through config. Authentication remains Provider-owned.
 - Domain HTTP behavior stays in its owning feature. Kernel supplies request
   context and mounts those handlers; it does not reimplement collection asset,
   capability invocation, browser runtime or SEO behavior.
@@ -32,7 +33,7 @@ handlers and public fallbacks onto one provided `Runner`.
   administrative behavior is authorized from capability access, not from a
   separate surface.
 - Preserve `/.cms/*` route semantics for blocsets, style, generic gateway
-  capabilities, runtime assets and auth. There is no per-Bloc or public
+  capabilities and runtime assets. There is no auth route family, per-Bloc or public
   `/.cms/sources` route.
 - Gateway execution uses the selected contract and injected runtime transport.
 - Public routes should be careful with cache headers and CSP-related settings.

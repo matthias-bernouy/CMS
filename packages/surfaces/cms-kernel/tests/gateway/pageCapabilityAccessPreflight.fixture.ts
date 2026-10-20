@@ -1,5 +1,4 @@
 import KernelCms from "cms-kernel/KernelCms";
-import type { Authentication } from "@bernouy/cms-auth";
 import {
     createContentReader,
     CMS_CACHE_KEYS,
@@ -7,7 +6,7 @@ import {
     type TPage,
     type TSystem,
 } from "@bernouy/cms-content";
-import type { GatewayInvoker } from "@bernouy/cms-gateway";
+import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 import { NOOP_LOGGER } from "@bernouy/logging";
@@ -24,7 +23,12 @@ const system: TSystem = {
         notFound: null,
         forbidden: null,
         serverError: null,
-        login: null,
+        login: {
+            kind: "contribution",
+            sourceId: "ulvia.official",
+            contributionId: "ulvia-official",
+            pageId: "login",
+        },
     },
     security: { connectExtras: [], mediaExtras: [] },
 };
@@ -82,7 +86,7 @@ class CaptureRunner implements Runner {
 
 export async function mountPage(options: {
     content: string;
-    auth?: Authentication;
+    resolveActor?: (request: Request) => Promise<GatewayActor>;
     pageId?: string;
     pagePath?: string;
     siteVisible?: boolean;
@@ -130,10 +134,9 @@ export async function mountPage(options: {
         capabilityGateway: {
             siteId: "site-a",
             invoker: shopInvoker,
-            isAdministrator: async () => false,
         },
         pageCapabilities,
-        authentication: options.auth ?? authSubject(null),
+        resolveActor: options.resolveActor ?? authSubject(null),
         logger: NOOP_LOGGER,
     });
     return { handler: runner.defaultHandler("GET", "/") };
@@ -148,15 +151,11 @@ const shopInvoker: GatewayInvoker = {
     invoke: async () => ({ kind: "success", status: 200, requestId: "test", output: {} }),
 };
 
-export function authSubject(subject: { identifier: string } | null): Authentication {
-    return {
-        loginUrl: "/login",
-        logoutUrl: "/logout",
-        profileUrl: "/profile",
-        buildLoginUrl: (returnTo: string) => `/login?returnTo=${encodeURIComponent(returnTo)}`,
-        buildLogoutUrl: (returnTo: string) => `/logout?returnTo=${encodeURIComponent(returnTo)}`,
-        getSubject: async () => subject,
-    };
+export function authSubject(subject: { identifier: string } | null): (request: Request) => Promise<GatewayActor> {
+    return async () =>
+        subject
+            ? { kind: "authenticated", subjectId: subject.identifier, administrator: false }
+            : { kind: "anonymous" };
 }
 
 function pageRepository(

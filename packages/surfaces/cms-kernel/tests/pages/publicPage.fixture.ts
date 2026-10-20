@@ -6,9 +6,8 @@ import {
     type TPage,
     type TSystem,
 } from "@bernouy/cms-content";
-import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import type { BlobStore } from "@bernouy/blob-store";
-import type { GatewayInvoker } from "@bernouy/cms-gateway";
+import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { createSitemapService, executeIndexingCapability } from "@bernouy/cms-seo";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
@@ -38,6 +37,7 @@ type HarnessOptions = Readonly<{
     siteHost?: string;
     repository?: ContentReader | CmsRepository;
     collections?: KernelCmsConfig["collections"];
+    resolveActor?: (request: Request) => Promise<GatewayActor>;
 }>;
 
 export function mountPublicPages(options: HarnessOptions = {}) {
@@ -103,7 +103,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
     const kernel = new KernelCms({
         runner,
         content: repository,
-        authentication: new InMemoryAuthentication(),
+        resolveActor: options.resolveActor ?? (async () => ({ kind: "anonymous" })),
         cache,
         collections: options.collections,
         ...(invoker
@@ -111,7 +111,6 @@ export function mountPublicPages(options: HarnessOptions = {}) {
                   capabilityGateway: {
                       siteId: "site-test",
                       invoker,
-                      isAdministrator: async () => false,
                   },
                   pageCapabilities,
               }

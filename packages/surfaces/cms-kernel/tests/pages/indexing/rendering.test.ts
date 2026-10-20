@@ -24,6 +24,7 @@ describe("Kernel dynamic page metadata", () => {
                     };
                 },
             },
+            resolveActor: async () => ({ kind: "user", subjectId: "dev-user" }),
         });
         const response = await mounted.get(
             new Request("https://example.test/products/detail?site-product=requested-chair&utm_source=ignored"),

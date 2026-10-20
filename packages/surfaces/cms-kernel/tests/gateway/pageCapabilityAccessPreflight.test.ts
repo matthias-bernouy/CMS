@@ -6,7 +6,7 @@ describe("Kernel page capability access preflight", () => {
         const anonymous = await mountPage({
             content: "<p>Members only</p>",
             siteVisible: false,
-            auth: authSubject(null),
+            resolveActor: authSubject(null),
         });
         const response = await anonymous.handler(new Request("http://site/products"));
         expect(response.status).toBe(302);
@@ -16,7 +16,7 @@ describe("Kernel page capability access preflight", () => {
         const member = await mountPage({
             content: "<p>Members only</p>",
             siteVisible: false,
-            auth: authSubject({ identifier: "member-1" }),
+            resolveActor: authSubject({ identifier: "member-1" }),
         });
         const memberResponse = await member.handler(new Request("http://site/products"));
         expect(memberResponse.status).toBe(200);
@@ -30,7 +30,7 @@ describe("Kernel page capability access preflight", () => {
             pageId: "sign-in",
             pagePath: "/sign-in",
             siteVisible: false,
-            auth: authSubject(null),
+            resolveActor: authSubject(null),
             systemPages: { login: { kind: "site", pageId: "sign-in" } },
         });
 
@@ -42,7 +42,7 @@ describe("Kernel page capability access preflight", () => {
     test("redirects anonymous visitors when a query capability requires authentication", async () => {
         const { handler } = await mountPage({
             content: `<section cms-query="shop:my-products as products"><p>Products</p></section>`,
-            auth: authSubject(null),
+            resolveActor: authSubject(null),
         });
 
         const response = await handler(new Request("http://site/products?category=shoes"));
@@ -53,7 +53,7 @@ describe("Kernel page capability access preflight", () => {
     test("uses the configured login page", async () => {
         const { handler } = await mountPage({
             content: `<section cms-query="shop:my-products as products"></section>`,
-            auth: authSubject(null),
+            resolveActor: authSubject(null),
             systemPages: { login: { kind: "site", pageId: "sign-in" } },
         });
 
@@ -65,7 +65,7 @@ describe("Kernel page capability access preflight", () => {
     test("uses a configured contributed login Page", async () => {
         const { handler } = await mountPage({
             content: `<section cms-query="shop:my-products as products"></section>`,
-            auth: authSubject(null),
+            resolveActor: authSubject(null),
             systemPages: {
                 login: {
                     kind: "contribution",
@@ -84,13 +84,13 @@ describe("Kernel page capability access preflight", () => {
     test("serves public capabilities anonymously and authenticated capabilities to members", async () => {
         const publicPage = await mountPage({
             content: `<section cms-query="shop:list-products as products"><p>Public</p></section>`,
-            auth: authSubject(null),
+            resolveActor: authSubject(null),
         });
         expect((await publicPage.handler(new Request("http://site/products"))).status).toBe(200);
 
         const memberPage = await mountPage({
             content: `<section cms-query="shop:my-products as products"><p>Private</p></section>`,
-            auth: authSubject({ identifier: "member-1" }),
+            resolveActor: authSubject({ identifier: "member-1" }),
         });
         expect((await memberPage.handler(new Request("http://site/products"))).status).toBe(200);
     });
@@ -98,7 +98,7 @@ describe("Kernel page capability access preflight", () => {
     test("requires authentication even when the capability is triggered on submit", async () => {
         const { handler } = await mountPage({
             content: `<form cms-mutation="shop:create-order as order"><button>Buy</button></form>`,
-            auth: authSubject(null),
+            resolveActor: authSubject(null),
         });
         const response = await handler(new Request("http://site/checkout"));
         expect(response.status).toBe(302);
@@ -108,7 +108,7 @@ describe("Kernel page capability access preflight", () => {
     test("forbids a verified user when the gateway host grant denies access", async () => {
         const { handler } = await mountPage({
             content: `<section cms-query="shop:restricted as restricted"></section>`,
-            auth: authSubject({ identifier: "member-1" }),
+            resolveActor: authSubject({ identifier: "member-1" }),
         });
         const response = await handler(new Request("http://site/products"));
         expect(response.status).toBe(403);

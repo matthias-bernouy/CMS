@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import { TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
@@ -12,7 +11,7 @@ test("mounts installed collection assets below the tenant path", async () => {
         runner,
         cache: new TtlCache(),
         content: {} as ContentReader,
-        authentication: new InMemoryAuthentication(),
+        resolveActor: async () => ({ kind: "anonymous" }),
         logger: NOOP_LOGGER,
         collectionAssets: {
             siteId: "site",

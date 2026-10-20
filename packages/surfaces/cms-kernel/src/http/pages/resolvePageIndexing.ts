@@ -6,6 +6,7 @@ import {
     type PageIndexingMetadataResult,
 } from "@bernouy/cms-seo";
 import type KernelCms from "cms-kernel/KernelCms";
+import { resolveRequestActor } from "./access/resolveRequestActor";
 
 /** Adapt Kernel identity and Gateway state to the SEO indexing feature. */
 export async function resolveRuntimePageIndexingMetadata(
@@ -20,6 +21,5 @@ export async function resolveRuntimePageIndexingMetadata(
 }
 
 async function indexingActor(kernel: KernelCms, request: Request): Promise<GatewayActor> {
-    const subject = await kernel.authentication.getSubject(request).catch(() => null);
-    return subject ? { kind: "user", subjectId: subject.identifier } : { kind: "anonymous" };
+    return resolveRequestActor(kernel, request);
 }

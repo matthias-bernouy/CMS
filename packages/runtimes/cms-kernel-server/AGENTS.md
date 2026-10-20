@@ -23,6 +23,6 @@ Production runtime composition root.
 - Changes here usually need an integration-style test or a clear manual
   verification path.
 - Inject only remote read/proxy boundaries into Kernel. Authoring,
-  installations, sitemap state and authentication mutations stay behind the
-  Provider instance API.
+  installations, sitemap state, actor resolution and authentication mutations
+  stay behind the Provider instance API and official contract bindings.
 - Never mount or start the Ulvia Provider surface from this package.

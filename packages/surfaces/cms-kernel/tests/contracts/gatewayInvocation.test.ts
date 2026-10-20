@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
 import { TtlCache } from "@bernouy/http-runner";
@@ -14,13 +13,12 @@ test("Kernel mounts every gateway binding method and supplies trusted actor stat
         runner,
         cache: new TtlCache(),
         content: createContentReader(new InMemoryCmsRepository()),
-        authentication: new InMemoryAuthentication(),
+        resolveActor: async () => ({ kind: "anonymous" }),
         logger: NOOP_LOGGER,
         capabilityGateway: {
             siteId: "site-a",
             invoker: invoker(calls),
             authenticateProvider: async (token) => (token === "provider-token" ? "install-caller" : null),
-            isAdministrator: async () => false,
         },
     });
     const response = await runner.defaultHandler(

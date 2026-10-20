@@ -10,7 +10,6 @@ export interface CapturedProviderRequest {
 
 export function clientFixture(
     respond: (request: CapturedProviderRequest) => Response | Promise<Response>,
-    kernelUrl = "https://kernel.test",
     logger: Logger = NOOP_LOGGER,
 ): { client: ProviderKernelClient; requests: CapturedProviderRequest[] } {
     const requests: CapturedProviderRequest[] = [];
@@ -28,5 +27,5 @@ export function clientFixture(
         "provider-token-at-least-twenty",
         fetcher as typeof fetch,
     );
-    return { client: new ProviderKernelClient(transport, kernelUrl, logger), requests };
+    return { client: new ProviderKernelClient(transport, logger), requests };
 }

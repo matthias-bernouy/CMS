@@ -26,6 +26,7 @@ import {
 } from "@bernouy/cms-repository/collections/http";
 import { resolveRequestActor } from "cms-kernel/http/pages/access/resolveRequestActor";
 import { isKernelReservedPath } from "cms-kernel/http/pages/reservedPaths";
+import { applySessionEffect } from "cms-kernel/http/session/applySessionEffect";
 
 /**
  * Wire every Kernel endpoint onto `kernel.runner`. Called from the
@@ -149,7 +150,9 @@ export function mountKernelRoutes(kernel: KernelCms) {
             });
         runner.group(CMS_CAPABILITY_CALL_ROUTE, (callRunner) => {
             for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const) {
-                callRunner.setDefaultEndpoint(method, capabilityHandler);
+                callRunner.setDefaultEndpoint(method, async (request) =>
+                    applySessionEffect(await capabilityHandler(request), kernel.sessionCookie),
+                );
             }
         });
     }
@@ -163,8 +166,12 @@ export function mountKernelRoutes(kernel: KernelCms) {
                 resolveActor: (request) => resolveRequestActor(kernel, request),
             });
         runner.group(CMS_CAPABILITY_QUERY_ROUTE, (queryRunner) => {
-            queryRunner.setDefaultEndpoint("GET", queryHandler);
-            queryRunner.setDefaultEndpoint("QUERY", queryHandler);
+            queryRunner.setDefaultEndpoint("GET", async (request) =>
+                applySessionEffect(await queryHandler(request), kernel.sessionCookie),
+            );
+            queryRunner.setDefaultEndpoint("QUERY", async (request) =>
+                applySessionEffect(await queryHandler(request), kernel.sessionCookie),
+            );
         });
     }
 

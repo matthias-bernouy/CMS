@@ -44,9 +44,7 @@ describe("production Kernel mounting", () => {
             },
             provider: {
                 content: token("content"),
-                authentication: token("authentication"),
-                publicAuth: token("public-auth"),
-                localAuthentication: token("local-auth"),
+                resolveActor: async () => ({ kind: "anonymous" }),
                 gateway: token("gateway"),
                 pageCapabilities: token("page-capabilities"),
                 capability: async () => new Response(),
@@ -63,7 +61,8 @@ describe("production Kernel mounting", () => {
         expect(kernelConfig).toMatchObject({
             content: options.provider.content,
             runner: expect.any(FakeRunner),
-            publicAuth: { name: "public-auth", allowSignup: false },
+            resolveActor: expect.any(Function),
+            sessionCookie: { secure: true },
             capabilityGateway: options.provider.gateway,
             queryHandler: options.provider.declarativeQuery,
         });

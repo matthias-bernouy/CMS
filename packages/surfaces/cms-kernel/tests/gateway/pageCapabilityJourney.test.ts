@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import {
     createContentReader,
     type CmsRepository,
@@ -45,12 +44,11 @@ test("a published Page is analyzed statically and invokes its public capability 
     new KernelCms({
         runner,
         content: createContentReader(repository),
-        authentication: new InMemoryAuthentication(),
+        resolveActor: async () => ({ kind: "anonymous" }),
         cache: new InMemoryCache(),
         capabilityGateway: {
             siteId: "site-a",
             invoker,
-            isAdministrator: async () => false,
             resolveCapability: async () => ({ access: "public", effect: "query", outputType: "object" }),
         },
         pageCapabilities,

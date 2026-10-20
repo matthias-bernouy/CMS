@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
 import { InMemoryCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
@@ -18,12 +17,11 @@ describe("Kernel robots", () => {
             runner,
             cache: new InMemoryCache(),
             content: createContentReader(repository),
-            authentication: new InMemoryAuthentication(),
+            resolveActor: async () => ({ kind: "anonymous" }),
             logger: NOOP_LOGGER,
             capabilityGateway: {
                 siteId: "site-a",
                 invoker: { invoke: async () => ({ kind: "success", status: 200, requestId: "test" }) } as never,
-                isAdministrator: async () => false,
             },
         });
 
@@ -57,7 +55,7 @@ describe("Kernel robots", () => {
             runner,
             cache: new InMemoryCache(),
             content: createContentReader(repository),
-            authentication: new InMemoryAuthentication(),
+            resolveActor: async () => ({ kind: "anonymous" }),
             logger: NOOP_LOGGER,
         });
 
@@ -80,7 +78,7 @@ describe("Kernel robots", () => {
             runner,
             cache: new InMemoryCache(),
             content: createContentReader(repository),
-            authentication: new InMemoryAuthentication(),
+            resolveActor: async () => ({ kind: "anonymous" }),
             logger: NOOP_LOGGER,
         });
 

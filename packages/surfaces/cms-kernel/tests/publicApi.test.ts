@@ -12,7 +12,6 @@ describe("cms-kernel public API", () => {
                 "-e",
                 `
                     const { KernelCms } = await import("@bernouy/cms-kernel");
-                    const { InMemoryAuthentication } = await import("@bernouy/cms-auth");
                     const { createContentReader, InMemoryCmsRepository } = await import("@bernouy/cms-content");
                     const { TtlCache } = await import("@bernouy/http-runner");
                     const { NOOP_LOGGER } = await import("@bernouy/logging");
@@ -22,7 +21,7 @@ describe("cms-kernel public API", () => {
                         runner,
                         cache: new TtlCache(),
                         content: createContentReader(new InMemoryCmsRepository()),
-                        authentication: new InMemoryAuthentication(),
+                        resolveActor: async () => ({ kind: "anonymous" }),
                         logger: NOOP_LOGGER,
                     });
                     if (!(kernel instanceof KernelCms) || typeof runner.defaultHandler("GET", "/") !== "function") {

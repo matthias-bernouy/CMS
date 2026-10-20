@@ -55,7 +55,10 @@ async function authorizeAccess(request: Request, kernel: KernelCms, required: Pa
     if (required === "public") {
         return { access: "public", cacheable: true };
     }
-    const actor = await resolveRequestActor(kernel, request);
+    const actor = await resolveRequestActor(kernel, request).catch(() => null);
+    if (!actor) {
+        return unavailable();
+    }
     if (required === "authenticated" && actor.kind === "anonymous") {
         return { access: required, cacheable: false, response: await accessDenied(request, kernel, 401) };
     }
@@ -114,9 +117,10 @@ async function accessDenied(request: Request, kernel: KernelCms, status: 401 | 4
         if (loginPath === url.pathname) {
             return new Response("Unauthorized", { status, headers: { "cache-control": "no-store" } });
         }
-        const location = loginPath
-            ? `${loginPath}?returnTo=${encodeURIComponent(returnTo)}`
-            : kernel.authentication.buildLoginUrl(returnTo);
+        if (!loginPath) {
+            return unavailable().response!;
+        }
+        const location = `${loginPath}?returnTo=${encodeURIComponent(returnTo)}`;
         return new Response(null, { status: 302, headers: { Location: location, "cache-control": "no-store" } });
     }
     return renderRef(request, kernel, "forbidden", 403, "Forbidden");
