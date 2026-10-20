@@ -1,4 +1,5 @@
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { GatewayActorCredential, GatewayResponseEffect } from "@bernouy/cms-gateway/protocol";
 
 /** Verified invocation metadata. Site and provider identity are injected by the runtime. */
 export interface ProviderCapabilityInvocationContext {
@@ -8,11 +9,26 @@ export interface ProviderCapabilityInvocationContext {
     readonly providerId: string;
     readonly subjectId?: string;
     readonly idempotencyKey?: string;
+    readonly actorCredential?: GatewayActorCredential;
     readonly binaryBody?: {
         readonly stream: ReadableStream<Uint8Array>;
         readonly contentType?: string;
         readonly contentLength?: number;
     };
+}
+
+export class ProviderCapabilityResponse {
+    constructor(
+        readonly output: unknown,
+        readonly responseEffect?: GatewayResponseEffect,
+    ) {}
+}
+
+export function capabilityResponse(
+    output: unknown,
+    responseEffect?: GatewayResponseEffect,
+): ProviderCapabilityResponse {
+    return new ProviderCapabilityResponse(output, responseEffect);
 }
 
 export interface ProviderBinaryResult {

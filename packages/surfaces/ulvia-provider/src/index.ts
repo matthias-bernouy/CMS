@@ -19,6 +19,8 @@ export type {
 } from "./ports";
 export {
     ProviderCapabilityDispatchError,
+    ProviderCapabilityResponse,
+    capabilityResponse,
     DefaultProviderCapabilityDispatcher,
     type ProviderCapabilityDispatcher,
     type ProviderCapabilityHandler,

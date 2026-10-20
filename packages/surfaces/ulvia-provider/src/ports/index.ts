@@ -1,4 +1,12 @@
-import type { LocalCredentialStore, PatRepository, UsersRepository } from "@bernouy/cms-auth";
+import type {
+    AuthenticationCredential,
+    LocalCredentialStore,
+    LocalLoginResult,
+    PatRepository,
+    PublicAuthActions,
+    Subject,
+    UsersRepository,
+} from "@bernouy/cms-auth";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
@@ -34,6 +42,18 @@ export interface CmsAccessDependencies {
     readonly users: UsersRepository;
     readonly credentials: LocalCredentialStore;
     readonly pats: PatRepository;
+    readonly authentication: {
+        authenticate(email: string | undefined, password: string | undefined): Promise<LocalLoginResult>;
+        resolveCredential(credential: AuthenticationCredential | undefined): Promise<Subject | null>;
+    };
+    readonly accountLifecycle: Pick<
+        PublicAuthActions,
+        | "signup"
+        | "requestEmailVerification"
+        | "confirmEmailVerification"
+        | "requestPasswordReset"
+        | "confirmPasswordReset"
+    >;
 }
 
 export type UlviaProviderDependencies = CmsPageDependencies &

@@ -41,7 +41,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
             });
         }
     }
-    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(69);
+    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(77);
     const runner = new BunRunner();
     const runtime = {
         siteId: "site-a",
@@ -56,7 +56,6 @@ test("mounts and dispatches every official CMS contract release", async () => {
         contentRevision: async () => 1,
         kernel: {
             query: async () => null,
-            handleAuth: async () => new Response(null, { status: 404 }),
             handleCapability: async () => new Response(null, { status: 404 }),
             handleQuery: async () => new Response(null, { status: 404 }),
             handleCollectionAsset: async () => new Response(null, { status: 404 }),

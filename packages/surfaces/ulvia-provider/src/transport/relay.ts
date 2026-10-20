@@ -6,10 +6,12 @@ import { RequestBodyTooLargeError } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
 import {
     ProviderCapabilityDispatchError,
+    ProviderCapabilityResponse,
     type ProviderBinaryResult,
     type ProviderCapabilityDispatcher,
     type ProviderCapabilityInvocationContext,
 } from "../dispatch/registry";
+import { encodeSessionEffect, SESSION_EFFECT_HEADER } from "@bernouy/cms-gateway/protocol";
 import { providerInvocationContext } from "./context";
 import { decodeProviderContractInput } from "./input";
 import type { ProviderRoute } from "./routes";
@@ -62,8 +64,24 @@ export function createProviderContractRelay(
             });
         }
         try {
-            const output = await dispatcher.invoke(contractId, capability.id, input, context);
+            const dispatched = await dispatcher.invoke(contractId, capability.id, input, context);
+            const output = dispatched instanceof ProviderCapabilityResponse ? dispatched.output : dispatched;
+            const responseEffect =
+                dispatched instanceof ProviderCapabilityResponse ? dispatched.responseEffect : undefined;
+            if (capability.responseEffects?.length) {
+                logger.debug("provider.capability.response_effect", {
+                    contractId,
+                    capabilityId: capability.id,
+                    effect: responseEffect?.type ?? "none",
+                });
+            }
+            if (responseEffect && !capability.responseEffects?.includes(responseEffect.type)) {
+                throw new TypeError("Capability returned an undeclared response effect.");
+            }
             if (capability.output.type === "binary") {
+                if (responseEffect) {
+                    throw new TypeError("Binary capabilities cannot return response effects.");
+                }
                 return binaryResponse(request.method, capability, output);
             }
             if (capability.behavior.execution === "operation") {
@@ -71,7 +89,7 @@ export function createProviderContractRelay(
             } else {
                 validateSchemaValue(capability.output, output);
             }
-            return successResponse(request.method, capability, output);
+            return successResponse(request.method, capability, output, responseEffect);
         } catch (cause) {
             if (cause instanceof ProviderCapabilityDispatchError) {
                 const status = capability.binding.response.errorStatuses[cause.code];
@@ -210,9 +228,17 @@ function validateIdempotencyContext(
     }
 }
 
-function successResponse(method: string, capability: CapabilityDefinition, output: unknown): Response {
+function successResponse(
+    method: string,
+    capability: CapabilityDefinition,
+    output: unknown,
+    responseEffect?: import("@bernouy/cms-gateway/protocol").GatewayResponseEffect,
+): Response {
     const status = capability.binding.response.successStatuses[0]!;
-    const headers = { "Cache-Control": "no-store" };
+    const headers = {
+        "Cache-Control": "no-store",
+        ...(responseEffect ? { [SESSION_EFFECT_HEADER]: encodeSessionEffect(responseEffect) } : {}),
+    };
     if (method === "HEAD" || status === 204 || status === 205) {
         return new Response(null, { status, headers });
     }

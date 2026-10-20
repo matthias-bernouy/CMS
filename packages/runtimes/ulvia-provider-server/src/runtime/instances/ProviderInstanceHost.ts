@@ -32,6 +32,7 @@ import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from 
 import { OfficialProviderObservation } from "./OfficialProviderObservation";
 import type { Logger } from "@bernouy/logging";
 import { correlatedRepositoryFetch } from "../gateway/repositoryFetch";
+import { createInstanceAuth } from "../authentication/createInstanceAuth";
 
 const SITE_ID = "default";
 const MAX_OPEN_INSTANCES = 32;
@@ -195,9 +196,14 @@ export class ProviderInstanceHost {
                 },
             });
             const dispatcher = new DefaultProviderCapabilityDispatcher();
+            const authentication = await createInstanceAuth(stores, instance.kernelUrl);
             registerOfficialProviderCapabilities(
                 dispatcher,
-                stores,
+                {
+                    ...stores,
+                    authentication: authentication.auth,
+                    accountLifecycle: authentication.accountLifecycle,
+                },
                 gateway,
                 operations,
                 createProtectedProviderManagement(management, instance, profile),
@@ -217,7 +223,6 @@ export class ProviderInstanceHost {
                 resolvePageRoute: (path) => stores.pageRoutes.resolve(gateway.siteId, path),
             });
             const kernel = await createInstanceKernelApi(
-                instance,
                 { stores, gateway },
                 this.logger.child({ instanceId: instance.id }),
             );

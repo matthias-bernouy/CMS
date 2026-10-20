@@ -1,5 +1,6 @@
 import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
+import { ACTOR_CREDENTIAL_HEADER, decodeActorCredential } from "@bernouy/cms-gateway/protocol";
 
 export function providerInvocationContext(
     request: Request,
@@ -11,6 +12,14 @@ export function providerInvocationContext(
         throw new TypeError("Invocation request ID does not match its signed claim.");
     }
     const idempotencyKey = optionalHeader(request, "idempotency-key", /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u);
+    const encodedCredential = request.headers.get(ACTOR_CREDENTIAL_HEADER);
+    if (
+        encodedCredential !== null &&
+        (claims.contractId !== "ulvia.cms.access" || claims.capabilityId !== "resolve-actor")
+    ) {
+        throw new TypeError("Actor credentials are restricted to the Access actor resolver.");
+    }
+    const actorCredential = decodeActorCredential(encodedCredential);
     return {
         requestId,
         contractVersion: claims.contractVersion,
@@ -18,6 +27,7 @@ export function providerInvocationContext(
         providerId: scope.providerId,
         ...(claims.subjectId ? { subjectId: claims.subjectId } : {}),
         ...(idempotencyKey ? { idempotencyKey } : {}),
+        ...(actorCredential ? { actorCredential } : {}),
     };
 }
 

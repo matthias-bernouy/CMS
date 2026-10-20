@@ -1,5 +1,3 @@
-import type { Subject } from "@bernouy/cms-auth";
-import { localLoginHandler, localLogoutHandler } from "@bernouy/cms-auth/http";
 import { createContentReader, type ContentReader } from "@bernouy/cms-content/rendering";
 import { PageCapabilityAnalyzer, type PageCapabilityDocument } from "@bernouy/cms-gateway/analysis";
 import { createCapabilityHttpHandler, createCapabilityQueryHandler } from "@bernouy/cms-gateway/http/handlers";
@@ -7,12 +5,11 @@ import { serveInstalledCollectionAsset } from "@bernouy/cms-repository/collectio
 import { createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-seo/http";
 import type { KernelInstanceApi, KernelProviderQuery } from "@bernouy/ulvia-provider/kernel";
 import type { InstanceComposition } from "../instances/ProviderInstanceHost";
-import type { ProviderInstanceRecord } from "@bernouy/ulvia-provider";
-import { createInstanceAuth } from "../authentication/createInstanceAuth";
 import type { Logger } from "@bernouy/logging";
+import type { GatewayActor } from "@bernouy/cms-gateway";
+import { actorCredentialFromRequest } from "@bernouy/cms-gateway/protocol";
 
 export async function createInstanceKernelApi(
-    instance: ProviderInstanceRecord,
     composition: Pick<InstanceComposition, "stores" | "gateway">,
     logger: Logger,
 ): Promise<KernelInstanceApi> {
@@ -20,8 +17,6 @@ export async function createInstanceKernelApi(
     const content = createContentReader(stores.repo, {
         resolvePageRoute: (path) => stores.pageRoutes.resolve(gateway.siteId, path),
     });
-    let authentication: Awaited<ReturnType<typeof createInstanceAuth>> | undefined;
-    const getAuthentication = async () => (authentication ??= await createInstanceAuth(stores, instance.kernelUrl));
     const pageCapabilities = new PageCapabilityAnalyzer({
         resolveCapability: gateway.resolvePageCapability,
     });
@@ -42,16 +37,14 @@ export async function createInstanceKernelApi(
                 logger.warn("provider.kernel.capability.rejected", attributes, error);
             }
         },
-        resolveActor: async (request) =>
-            resolveActor(request, (await getAuthentication()).auth, gateway.isAdministrator),
+        resolveActor: (request) => resolveActor(request, gateway.siteId, gateway.invoker),
     });
     const query = createCapabilityQueryHandler({
         siteId: gateway.siteId,
         basePath: "",
         invoker: gateway.invoker,
         resolveCapability: gateway.resolvePageCapability,
-        resolveActor: async (request) =>
-            resolveActor(request, (await getAuthentication()).auth, gateway.isAdministrator),
+        resolveActor: (request) => resolveActor(request, gateway.siteId, gateway.invoker),
     });
     const sitemap = createSitemapHandler({
         content,
@@ -61,9 +54,7 @@ export async function createInstanceKernelApi(
     });
     const sitemapChunk = createSitemapChunkHandler({ store: stores.sitemapStore, basePath: "", logger });
     return {
-        query: (query) =>
-            executeLoggedQuery(query, content, getAuthentication, stores, gateway, pageCapabilities, logger),
-        handleAuth: async (action, request) => handleAuth(action, request, await getAuthentication()),
+        query: (query) => executeLoggedQuery(query, content, stores, gateway, pageCapabilities, logger),
         handleCapability: (request) => capability(rewritePath(request, "/ulvia/kernel/v1/call", "/.cms/call")),
         handleQuery: (request) => query(rewritePath(request, "/ulvia/kernel/v1/queries", "/.cms/query")),
         handleCollectionAsset: (request) =>
@@ -83,7 +74,6 @@ export async function createInstanceKernelApi(
 async function executeLoggedQuery(
     query: KernelProviderQuery,
     content: ContentReader,
-    getAuthentication: () => Promise<Awaited<ReturnType<typeof createInstanceAuth>>>,
     stores: InstanceComposition["stores"],
     gateway: InstanceComposition["gateway"],
     pageCapabilities: PageCapabilityAnalyzer,
@@ -91,7 +81,7 @@ async function executeLoggedQuery(
 ): Promise<unknown> {
     const startedAt = performance.now();
     try {
-        const value = await executeQuery(query, content, getAuthentication, stores, gateway, pageCapabilities);
+        const value = await executeQuery(query, content, stores, gateway, pageCapabilities);
         logger.debug("provider.kernel.query.completed", {
             operation: query.operation,
             durationMs: roundedDuration(performance.now() - startedAt),
@@ -110,7 +100,6 @@ async function executeLoggedQuery(
 async function executeQuery(
     query: KernelProviderQuery,
     content: ContentReader,
-    getAuthentication: () => Promise<Awaited<ReturnType<typeof createInstanceAuth>>>,
     stores: InstanceComposition["stores"],
     gateway: InstanceComposition["gateway"],
     pageCapabilities: PageCapabilityAnalyzer,
@@ -145,10 +134,6 @@ async function executeQuery(
             return content.getBlocViewJS(text(input.tag));
         case "content.rendering-settings":
             return content.getRenderingSettings();
-        case "auth.subject":
-            return (await getAuthentication()).auth.getSubject(requestFromInput(input));
-        case "auth.is-administrator":
-            return gateway.isAdministrator({ identifier: text(input.subjectId) });
         case "page.capability-access": {
             return pageCapabilities.requiredAccess(input.page as PageCapabilityDocument);
         }
@@ -181,66 +166,38 @@ async function projectContentTexts(content: ContentReader) {
     };
 }
 
-async function handleAuth(
-    action: string,
-    request: Request,
-    authentication: Awaited<ReturnType<typeof createInstanceAuth>>,
-): Promise<Response> {
-    if (action === "login") {
-        if (!request.headers.get("content-type")?.includes("application/json")) {
-            return localLoginHandler(authentication.auth, request);
-        }
-        const input = objectInput(await request.json());
-        return Response.json(await authentication.auth.authenticate(text(input.email), text(input.password)), {
-            headers: { "cache-control": "private, no-store" },
-        });
-    }
-    if (action === "logout") {
-        return localLogoutHandler(authentication.auth, request);
-    }
-    const input = objectInput(await request.json());
-    if (action === "signup") {
-        await authentication.publicAuth.signup({ email: text(input.email), password: text(input.password) });
-    } else if (action === "request-email-verification") {
-        await authentication.publicAuth.requestEmailVerification({ email: text(input.email) });
-    } else if (action === "confirm-email-verification") {
-        await authentication.publicAuth.confirmEmailVerification({ token: text(input.token) });
-    } else if (action === "request-password-reset") {
-        await authentication.publicAuth.requestPasswordReset({ email: text(input.email) });
-    } else if (action === "confirm-password-reset") {
-        await authentication.publicAuth.confirmPasswordReset({
-            token: text(input.token),
-            password: text(input.password),
-        });
-    } else {
-        return new Response(null, { status: 404 });
-    }
-    return Response.json({ ok: true }, { headers: { "cache-control": "private, no-store" } });
-}
-
 async function resolveActor(
     request: Request,
-    authentication: Awaited<ReturnType<typeof createInstanceAuth>>["auth"],
-    isAdministrator: (subject: Subject) => Promise<boolean>,
-) {
-    const subject = await authentication.getSubject(request).catch(() => null);
-    if (!subject) {
+    siteId: string,
+    invoker: InstanceComposition["gateway"]["invoker"],
+): Promise<GatewayActor> {
+    const actorCredential = actorCredentialFromRequest(request);
+    const result = await invoker.invoke({
+        siteId,
+        contractId: "ulvia.cms.access",
+        capabilityId: "resolve-actor",
+        input: {},
+        actor: { kind: "anonymous" },
+        ...(actorCredential ? { actorCredential } : {}),
+    });
+    if (result.kind !== "success" || !result.output || typeof result.output !== "object") {
+        throw new TypeError("Access actor resolver returned an invalid outcome");
+    }
+    const output = result.output as Record<string, unknown>;
+    if (output.state === "anonymous") {
         return { kind: "anonymous" as const };
     }
-    return (await isAdministrator(subject))
-        ? { kind: "administrator" as const, subjectId: subject.identifier }
-        : { kind: "user" as const, subjectId: subject.identifier };
-}
-
-function requestFromInput(input: Record<string, unknown>): Request {
-    const headers = new Headers();
-    if (typeof input.cookie === "string") {
-        headers.set("cookie", input.cookie);
+    if (
+        output.state !== "authenticated" ||
+        typeof output.subjectId !== "string" ||
+        typeof output.administrator !== "boolean"
+    ) {
+        throw new TypeError("Access actor resolver returned an invalid actor");
     }
-    if (typeof input.authorization === "string") {
-        headers.set("authorization", input.authorization);
-    }
-    return new Request("http://kernel.internal/", { headers });
+    return {
+        kind: output.administrator ? "administrator" : "user",
+        subjectId: output.subjectId,
+    };
 }
 
 function rewritePath(request: Request, from: string, to: string): Request {

@@ -91,21 +91,6 @@ export class UlviaProvider {
                 return Response.json({ value: await runtime.kernel.query(query) }, noStore());
             }),
         );
-        for (const action of [
-            "login",
-            "logout",
-            "signup",
-            "request-email-verification",
-            "confirm-email-verification",
-            "request-password-reset",
-            "confirm-password-reset",
-        ]) {
-            runner.post(`/ulvia/kernel/v1/auth/${action}`, (request) =>
-                withKernelRuntime(request, options, (runtime, forwardedRequest) =>
-                    runtime.kernel.handleAuth(action, forwardedRequest),
-                ),
-            );
-        }
         runner.group("/ulvia/kernel/v1/call", (callRunner) => {
             for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const) {
                 callRunner.setDefaultEndpoint(method, (request) =>

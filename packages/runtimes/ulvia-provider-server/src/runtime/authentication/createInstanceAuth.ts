@@ -11,19 +11,13 @@ import type { ProviderStores } from "../stores/providerStores";
 export async function createInstanceAuth(stores: ProviderStores, kernelUrl: string) {
     const auth = new LocalAuthentication({
         providerId: "local",
-        loginPagePath: "/login",
-        logoutPath: "/auth/logout",
         credentials: stores.credentials,
         resolver: new SubjectResolver(stores.users),
         codec: new SignedCookieCodec(new TextEncoder().encode(stores.runtimeSessionSecret)),
         pats: stores.pats,
         rateLimit: stores.rateLimit,
-        cookieName: "cms-session",
-        cookieSecure: kernelUrl.startsWith("https:"),
-        defaultHome: "/admin",
     });
     const shared = {
-        local: auth,
         credentials: stores.credentials,
         users: stores.users,
         tokens: stores.authTokens,
@@ -40,10 +34,18 @@ export async function createInstanceAuth(stores: ProviderStores, kernelUrl: stri
     const origin = kernelUrl.replace(/\/$/u, "");
     return {
         auth,
-        publicAuth: createPublicAuthActions({
+        accountLifecycle: createPublicAuthActions({
             ...shared,
-            emailVerificationUrl: `${origin}/auth/confirm-email`,
-            passwordResetUrl: `${origin}/auth/reset-password`,
+            emailVerificationUrl: `${origin}/confirm-email`,
+            passwordResetUrl: `${origin}/reset-password`,
+            buildEmailVerificationUrl: (token) => authActionUrl(origin, "/confirm-email", token),
+            buildPasswordResetUrl: (token) => authActionUrl(origin, "/reset-password", token),
         }),
     };
+}
+
+function authActionUrl(origin: string, path: string, token: string): string {
+    const url = new URL(path, `${origin}/`);
+    url.searchParams.set("ulvia-official-auth-token", token);
+    return url.toString();
 }

@@ -22,8 +22,6 @@ export const KERNEL_PROVIDER_QUERY_OPERATIONS = [
     "content.renderable-blocs",
     "content.bloc-view-js",
     "content.rendering-settings",
-    "auth.subject",
-    "auth.is-administrator",
     "page.capability-access",
     "gateway.invoke",
     "gateway.resolve-http",
@@ -40,7 +38,6 @@ export type KernelProviderQuery = Readonly<{
 
 export interface KernelInstanceApi {
     query(query: KernelProviderQuery): Promise<unknown>;
-    handleAuth(action: string, request: Request): Promise<Response>;
     handleCapability(request: Request): Promise<Response>;
     handleQuery(request: Request): Promise<Response>;
     handleCollectionAsset(request: Request): Promise<Response>;
