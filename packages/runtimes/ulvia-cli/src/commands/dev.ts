@@ -112,7 +112,7 @@ async function runDevStack(paths: UlviaPaths, log: (message: string) => void, po
     log("Preparing bundled official resources...");
     await bootstrapOfficialRepository(paths.repository);
     log("Starting persistent local MongoDB...");
-    const mongo = await startLocalMongo(paths.mongo, ports.mongo);
+    const mongo = await startLocalMongo(paths.mongo, ports.mongo, { logger: supervisorLogger });
     const config = await loadOrCreateDevRuntimeConfig(paths.dev);
     const repository = startLocalRepository(
         ports.repository,
