@@ -25,7 +25,7 @@ The provider owns resource and cache semantics.
 Provider credentials remain opaque. `CapabilityGateway` passes only a secret
 reference to the server-side network adapter, which resolves it immediately
 before the request and derives a short-lived signed grant for the observed
-provider instance, exact contract release and capability. Provider-origin calls require an enabled installation, an
+provider instance, exact contract release and capability. Provider-to-provider calls require an enabled installation, an
 exact declared dependency and a separate effective capability grant. The
 selection graph rejects cycles and dependency paths containing more than eight
 contracts before activation. CMS site, installation and actor-role metadata stay
@@ -36,10 +36,13 @@ The gateway has no file, image, video, MIME, namespace, visibility, signature,
 variant or image-processing model. Those concepts belong to providers such as
 `@bernouy/cms-files`.
 
-`./execution` owns immutable collection Page plans and grants. `./identity`
-owns provider-wide user aliases. `./conformance` runs admitted suites against
-injected disposable provider environments. `./http` and `./http/node` expose
-the generic binding transport and hardened network adapter.
+`./analysis` statically verifies Page requirements and derives Page access from
+the selected capabilities. Live browser authorization depends only on the
+capability's declared access and a trusted actor; Pages, referrers and execution
+pins are not authorities. `./access` exposes optional durable grant adapters,
+`./identity` owns provider-wide user aliases, and `./conformance` runs admitted
+suites against injected disposable provider environments. `./http` and
+`./http/node` expose the generic binding transport and hardened network adapter.
 
 Synchronous commands are durably audited. A failure after dispatch produces
 `outcome_unknown` with the request ID so callers can reconcile before retrying.

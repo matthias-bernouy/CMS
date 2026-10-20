@@ -23,7 +23,8 @@ handlers and public fallbacks onto one provided `Runner`.
 - Rendering is on demand. Do not introduce build-time prerendering or browser
   automation into this package.
 - Public rendering reads projected published content. Page access is derived
-  from the Page execution plan, including administration Pages.
+  by static capability analysis, including administration Pages. This analysis
+  is not a live gateway grant.
 - `cms-seo` generates and retains sitemap snapshots. Kernel only mounts its
   injected HTTP handlers. File bytes and representations are served through
   selected gateway capabilities.

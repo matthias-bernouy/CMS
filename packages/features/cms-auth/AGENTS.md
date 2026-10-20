@@ -42,7 +42,7 @@ the exact same operation.
 - Public auth routes are mounted under `PUBLIC_AUTH_ROUTES.base` by a surface.
   The Kernel disables signup for its guarded administration context.
 - Membership records contain identity and activity metadata only. Authorization
-  belongs to CMS policies, capability grants and Page execution plans; it must
+  belongs to CMS policies, capability access and trusted gateway actors; it must
   not be added to authentication subjects.
 - Do not add browser components to this package.
 - Keep local password proof in `providers`, cookie protocol in `sessions`, and

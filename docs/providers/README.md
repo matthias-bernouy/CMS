@@ -74,7 +74,7 @@ Kernel Page request
   -> contract validation and response projection
 ```
 
-Provider-origin calls authenticate the source installation with its Bearer
+Provider-to-provider calls authenticate the source installation with its Bearer
 credential. The host then checks that the source manifest declares the exact
 contract capability and compatible target version, that an exact source/target
 grant is enabled, and that its quota allows the call. Cycles and paths longer
@@ -85,7 +85,7 @@ For a live capability call, the gateway derives a short-lived HMAC Bearer from
 the installation's provider credential. Its closed claims contain only the
 request ID, provider-owned opaque instance audience, exact contract version and
 capability, timestamps, and the provider-scoped opaque subject when the
-capability requires an authenticated identity. Site, installation, origin and
+capability requires an authenticated identity. Site, installation and
 actor-role metadata are never forwarded. The provider checks the audience,
 selects the exact release route from the verified claims and receives its local
 site/provider scope from runtime configuration. The durable credential itself
@@ -103,11 +103,12 @@ registry before opening that instance's stores and gateway. The Kernel receives
 only its Provider URL and instance token; it does not receive the Provider
 operator secret or select an instance through a caller-supplied site header.
 The current host policy allows public, authenticated or administrator access as
-declared by each capability. Page execution plans restrict collection-owned and
-site-owned Pages to the capabilities required by their exact document and
-transitive Blocs. The Kernel activates the revisioned plan from the same-origin
-referring Page before each call and sends only its immutable execution pin to
-the gateway.
+declared by each capability. Before rendering, the Kernel statically verifies
+the requirements of collection-owned and site-owned Pages, including transitive
+Bloc requirements, and derives the Page access level from those capabilities.
+This analysis controls rendering and caching; it is not a live invocation grant.
+Browser calls are authorized from the trusted actor and the selected
+capability's declared access, without a `Referer` or Page execution pin.
 
 The local Ulvia Provider transport is contract-neutral: `@bernouy/ulvia-provider`
 derives its HTTP routes from admitted contract bindings. The same package
@@ -142,7 +143,7 @@ and migration through `ulvia.cms.collections`; collection theme editing uses
 Provider health remains the last validated runtime
 observation shown by these Pages, not an implicit live probe of every
 capability. Every collection request uses the common
-`/.cms/call/<contractId>{binding.path}` transport and its Page execution pin.
+`/.cms/call/<contractId>{binding.path}` transport.
 The selected API origin and token belong to installation state. Manifests list
 allowed origins but do not classify providers as local or remote. The runtime
 accepts HTTPS endpoints and literal loopback HTTP for development, and applies

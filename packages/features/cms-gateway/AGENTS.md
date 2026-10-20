@@ -8,7 +8,9 @@ publish releases or choose providers.
 
 - `src/invocation/` owns route resolution, authorization, response validation,
   HTTP handlers, and transport implementations.
-- `src/execution/` owns immutable collection-Page plans and revisioned grants.
+- `src/analysis/` owns static Page capability analysis used by rendering and
+  admission. It does not grant live invocations.
+- `src/access/` owns durable administrative grants selected by the runtime.
 - `src/identity/` owns provider-wide authority aliases, their contracts, and
   memory, Mongo, and request-scoped implementations.
 - `src/conformance/` executes already-admitted suites against injected disposable
@@ -29,6 +31,9 @@ publish releases or choose providers.
   requests. Installation revocation must not delete provider-wide aliases.
 - Deny execution paths without complete validation or authorization. In
   particular, keyed commands need durable idempotency before activation.
+- Treat the contract capability access and the trusted actor as the complete
+  browser-call authorization inputs. Do not infer authority from a Page,
+  `Referer`, caller-supplied origin or runtime execution pin.
 - Keep the gateway independent of file, image, MIME, namespace, visibility,
   signature and representation semantics. Binary response headers come from the provider.
 - Runtime adapters select HTTP, persistence, DNS policy, secret storage and

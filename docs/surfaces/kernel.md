@@ -3,7 +3,7 @@
 `@bernouy/cms-kernel` is the single site HTTP application. It renders local and
 collection Pages through the same registry and document pipeline. Pages carry
 no `surface` field: their required access level is derived from every capability
-in their exact execution plan, including transitive Bloc requirements.
+in their static requirements, including transitive Bloc requirements.
 
 The Kernel owns route composition and Page HTTP presentation for:
 
@@ -22,11 +22,11 @@ not to an authored administration Page.
 
 New administration screens are ordinary collection Pages. Navigation, shells
 and layouts are ordinary Blocs composed by those Pages. The Kernel resolves the
-selected Page, its transitive Blocs and its exact capability execution plan.
+selected Page, its transitive Blocs and its capability requirements.
 A Page becomes administrative when at least one required capability requires
-administrator access. Calls without a same-origin referring Page and an exact
-active plan fail closed. No second administration transport exists alongside
-the capability model.
+administrator access. This Page analysis controls rendering and caching, not
+live call authority. Gateway calls use the trusted request actor and the
+capability's declared access; no second administration transport exists.
 
 Collection Pages use native links whose static pathname names the target Page's
 declared default route:

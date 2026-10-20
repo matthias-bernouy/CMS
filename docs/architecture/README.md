@@ -74,7 +74,7 @@ Files providers use generic transforms from `@bernouy/image-processing`.
 
 The production runtime constructs Mongo catalogues and site stores, secret
 resolution, network adapters, identity storage and observation refresh. The
-Kernel receives provider-neutral invocation and a Page execution service.
+Kernel receives provider-neutral invocation and a static Page capability analyzer.
 It exposes collection-backed provider and collection administration Pages;
 provider connection approval, credential rotation and exact contract selection
 are application workflows owned by `cms-repository`. Repository publication is
@@ -99,8 +99,8 @@ feature-owned HTTP handlers on one supplied `Runner`.
 SEO metadata, structured data, dynamic indexing and sitemap materialization are
 implemented by `cms-seo`; Kernel mounts its robots and sitemap handlers while
 the runtime starts periodic materialization.
-Whether a Page is public, authenticated or administrative is derived from the
-capabilities in its execution plan; there is no Page surface field or separate
+Whether a Page is public, authenticated or administrative is derived by
+statically analyzing its capability requirements; there is no Page surface field or separate
 admin/public route namespace. Ulvia Provider mounts the provider report and the
 declared HTTP bindings of `ulvia.cms.*`. Neither surface chooses production
 databases or storage roots.

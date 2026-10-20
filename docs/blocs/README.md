@@ -29,7 +29,7 @@ authored collection sources
   -> ulvia release + Bloc build
   -> strict admission + immutable digest
   -> repository publication
-  -> site installation and execution plans
+  -> site installation and static capability analysis
   -> Kernel server composition
   -> native Light DOM + optional bloc-runtime.js behavior
 ```

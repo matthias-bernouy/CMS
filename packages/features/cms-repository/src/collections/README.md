@@ -247,7 +247,8 @@ before removal is safe.
 ## Next slices
 
 Presets remain absent from the public format: unsupported fields reject.
-Exact Page execution plans and revisioned provider grants are implemented.
+Static Page capability analysis and access derivation are implemented in
+`cms-gateway`; live invocation authority remains independent of Page documents.
 Remote signed publication is implemented by the CLI and official repository
 server. Live conformance execution, resumable publication transfers and
 third-party JavaScript isolation remain open. The current first-party trust
