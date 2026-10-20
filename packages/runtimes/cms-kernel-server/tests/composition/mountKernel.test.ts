@@ -49,7 +49,7 @@ describe("production Kernel mounting", () => {
                 localAuthentication: token("local-auth"),
                 identityProviders: token("identity-providers"),
                 gateway: token("gateway"),
-                pageExecution: token("page-execution"),
+                pageCapabilities: token("page-capabilities"),
                 capability: async () => new Response(),
                 declarativeQuery: async () => new Response(),
                 collectionAsset: async () => new Response(),

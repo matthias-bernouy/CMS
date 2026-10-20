@@ -10,8 +10,7 @@ import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
-import type { PageExecutionService } from "@bernouy/cms-gateway/execution";
-import type { PageExecutionHttpPort } from "@bernouy/cms-gateway/http/handlers";
+import type { PageCapabilityAccessPort } from "@bernouy/cms-gateway/analysis";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
 
@@ -40,9 +39,13 @@ export type KernelCmsConfig = {
         readonly resolveCapability?: (
             contractId: string,
             capabilityId: string,
-        ) => Promise<{ readonly effect: "query" | "command"; readonly outputType: string } | null>;
+        ) => Promise<{
+            readonly access: "public" | "authenticated" | "admin";
+            readonly effect: "query" | "command";
+            readonly outputType: string;
+        } | null>;
     };
-    pageExecution?: PageExecutionService | PageExecutionHttpPort;
+    pageCapabilities?: PageCapabilityAccessPort;
     capabilityHandler?: (request: Request) => Promise<Response>;
     queryHandler?: (request: Request) => Promise<Response>;
     collectionAssetHandler?: (request: Request) => Promise<Response>;

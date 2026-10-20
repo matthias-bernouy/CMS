@@ -1,35 +1,33 @@
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayActor, GatewayInvoker } from "cms-gateway/invocation/interfaces/Invocation";
-import type { PageCapabilityAccess, PageExecutionPage } from "cms-gateway/execution/core/PageExecutionService";
-import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/PageExecution";
 import { gatewayRoutePrefix, CMS_CAPABILITY_CALL_ROUTE, CMS_CAPABILITY_QUERY_ROUTE } from "./routes";
-import { gatewayFailureResponse, gatewayResultResponse, handleGatewayHttpCall } from "./handleHttpCall";
+import {
+    gatewayFailureResponse,
+    gatewayResultResponse,
+    handleGatewayHttpCall,
+    observeFailure,
+    type GatewayHttpFailureObserver,
+} from "./handleHttpCall";
 import { readGatewayHttpInput } from "./readHttpInput";
 
 export type CapabilityHttpHandlerConfig = {
     siteId: string;
     basePath: string;
     invoker: GatewayInvoker;
-    pageExecution?: PageExecutionHttpPort;
     resolveActor(request: Request): Promise<GatewayActor>;
     authenticateProvider?: (token: string) => Promise<string | null>;
+    onFailure?: GatewayHttpFailureObserver;
 };
-
-export interface PageExecutionHttpPort {
-    requiredAccess(page: PageExecutionPage, pageUrl: URL, callPrefix: string): Promise<PageCapabilityAccess | null>;
-    authorizeCall(
-        request: Request,
-        basePath: string,
-        contractId: string,
-        capabilityId: string,
-    ): Promise<GatewayExecutionPin>;
-}
 
 export type CapabilityQueryHandlerConfig = Omit<CapabilityHttpHandlerConfig, "authenticateProvider"> & {
     resolveCapability(
         contractId: string,
         capabilityId: string,
-    ): Promise<{ readonly effect: "query" | "command"; readonly outputType: string } | null>;
+    ): Promise<{
+        readonly access: "public" | "authenticated" | "admin";
+        readonly effect: "query" | "command";
+        readonly outputType: string;
+    } | null>;
 };
 
 /** Create the complete provider/page capability HTTP adapter. */
@@ -40,36 +38,37 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
             return handleGatewayHttpCall(request, {
                 siteId: config.siteId,
                 invoker: config.invoker,
-                origin: "provider",
                 actor: { kind: "provider", installationId },
                 prefix: routePrefix(config.basePath),
+                onFailure: config.onFailure,
             });
         }
 
-        let execution;
+        let actor: GatewayActor = { kind: "anonymous" };
         try {
             const identifiers = await capabilityIdentifiers(request, config);
-            if (!config.pageExecution) {
-                throw new GatewayError("not_authorized", "Page execution is unavailable");
+            if (identifiers.route.capability.access !== "public") {
+                actor = await config.resolveActor(request);
             }
-            execution = await config.pageExecution.authorizeCall(
-                request,
-                config.basePath,
-                identifiers.contractId,
-                identifiers.capabilityId,
-            );
         } catch (error) {
             const code = error instanceof GatewayError ? error.code : "internal_error";
-            const status = code === "not_authorized" ? 403 : code === "not_selected" ? 404 : 503;
+            const status =
+                code === "invalid_input"
+                    ? 400
+                    : code === "not_authorized"
+                      ? 403
+                      : code === "not_selected" || code === "invalid_route"
+                        ? 404
+                        : 503;
+            observeFailure(config.onFailure, { code, status, phase: "authorization" }, error);
             return gatewayFailureResponse(code, status);
         }
         return handleGatewayHttpCall(request, {
             siteId: config.siteId,
             invoker: config.invoker,
-            origin: "page",
-            actor: await config.resolveActor(request),
-            execution,
+            actor,
             prefix: routePrefix(config.basePath),
+            onFailure: config.onFailure,
         });
     };
 }
@@ -83,15 +82,6 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
                 throw new GatewayError("invalid_route", "query transport accepts GET or QUERY only");
             }
             const { contractId, capabilityId } = queryIdentifiers(request, config.basePath);
-            if (!config.pageExecution) {
-                throw new GatewayError("not_authorized", "Page execution is unavailable");
-            }
-            const execution = await config.pageExecution.authorizeCall(
-                request,
-                config.basePath,
-                contractId,
-                capabilityId,
-            );
             const capability = await config.resolveCapability(contractId, capabilityId);
             if (!capability) {
                 throw new GatewayError("not_selected", "query capability is not selected");
@@ -109,15 +99,15 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
             if (!input || typeof input !== "object" || Array.isArray(input)) {
                 throw new GatewayError("invalid_input", "query input must be a JSON object");
             }
-            actor = await config.resolveActor(request);
+            if (capability.access !== "public") {
+                actor = await config.resolveActor(request);
+            }
             const result = await config.invoker.invoke({
                 siteId: config.siteId,
                 contractId,
                 capabilityId,
                 input,
-                origin: "page",
                 actor,
-                execution,
             });
             return gatewayResultResponse(result, request.method);
         } catch (error) {
@@ -158,7 +148,7 @@ async function capabilityIdentifiers(request: Request, config: CapabilityHttpHan
         method: request.method,
         path: separator < 0 ? "/" : suffix.slice(separator),
     });
-    return { contractId, capabilityId: route.capability.id };
+    return { route };
 }
 
 async function providerInstallation(config: CapabilityHttpHandlerConfig, request: Request): Promise<string | null> {

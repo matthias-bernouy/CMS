@@ -1,7 +1,7 @@
 import type { Subject } from "@bernouy/cms-auth";
 import { localLoginHandler, localLogoutHandler } from "@bernouy/cms-auth/http";
 import { createContentReader, type ContentReader } from "@bernouy/cms-content/rendering";
-import { PageExecutionService } from "@bernouy/cms-gateway/execution";
+import { PageCapabilityAnalyzer, type PageCapabilityDocument } from "@bernouy/cms-gateway/analysis";
 import { createCapabilityHttpHandler, createCapabilityQueryHandler } from "@bernouy/cms-gateway/http/handlers";
 import { serveInstalledCollectionAsset } from "@bernouy/cms-repository/collections/http";
 import { createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-seo/http";
@@ -22,18 +22,26 @@ export async function createInstanceKernelApi(
     });
     let authentication: Awaited<ReturnType<typeof createInstanceAuth>> | undefined;
     const getAuthentication = async () => (authentication ??= await createInstanceAuth(stores, instance.kernelUrl));
-    const pageExecution = new PageExecutionService({
-        siteId: gateway.siteId,
-        content,
-        authority: gateway.pageExecutions,
+    const pageCapabilities = new PageCapabilityAnalyzer({
         resolveCapability: gateway.resolvePageCapability,
     });
     const capability = createCapabilityHttpHandler({
         siteId: gateway.siteId,
         basePath: "",
         invoker: gateway.invoker,
-        pageExecution,
         authenticateProvider: gateway.authenticateProvider,
+        onFailure: (failure, error) => {
+            const attributes = {
+                phase: failure.phase,
+                code: failure.code,
+                status: failure.status,
+            };
+            if (failure.status >= 500) {
+                logger.error("provider.kernel.capability.failed", attributes, error);
+            } else {
+                logger.warn("provider.kernel.capability.rejected", attributes, error);
+            }
+        },
         resolveActor: async (request) =>
             resolveActor(request, (await getAuthentication()).auth, gateway.isAdministrator),
     });
@@ -41,7 +49,6 @@ export async function createInstanceKernelApi(
         siteId: gateway.siteId,
         basePath: "",
         invoker: gateway.invoker,
-        pageExecution,
         resolveCapability: gateway.resolvePageCapability,
         resolveActor: async (request) =>
             resolveActor(request, (await getAuthentication()).auth, gateway.isAdministrator),
@@ -54,7 +61,8 @@ export async function createInstanceKernelApi(
     });
     const sitemapChunk = createSitemapChunkHandler({ store: stores.sitemapStore, basePath: "", logger });
     return {
-        query: (query) => executeLoggedQuery(query, content, getAuthentication, stores, gateway, pageExecution, logger),
+        query: (query) =>
+            executeLoggedQuery(query, content, getAuthentication, stores, gateway, pageCapabilities, logger),
         handleAuth: async (action, request) => handleAuth(action, request, await getAuthentication()),
         handleCapability: (request) => capability(rewritePath(request, "/ulvia/kernel/v1/call", "/.cms/call")),
         handleQuery: (request) => query(rewritePath(request, "/ulvia/kernel/v1/queries", "/.cms/query")),
@@ -78,12 +86,12 @@ async function executeLoggedQuery(
     getAuthentication: () => Promise<Awaited<ReturnType<typeof createInstanceAuth>>>,
     stores: InstanceComposition["stores"],
     gateway: InstanceComposition["gateway"],
-    pageExecution: PageExecutionService,
+    pageCapabilities: PageCapabilityAnalyzer,
     logger: Logger,
 ): Promise<unknown> {
     const startedAt = performance.now();
     try {
-        const value = await executeQuery(query, content, getAuthentication, stores, gateway, pageExecution);
+        const value = await executeQuery(query, content, getAuthentication, stores, gateway, pageCapabilities);
         logger.debug("provider.kernel.query.completed", {
             operation: query.operation,
             durationMs: roundedDuration(performance.now() - startedAt),
@@ -105,7 +113,7 @@ async function executeQuery(
     getAuthentication: () => Promise<Awaited<ReturnType<typeof createInstanceAuth>>>,
     stores: InstanceComposition["stores"],
     gateway: InstanceComposition["gateway"],
-    pageExecution: PageExecutionService,
+    pageCapabilities: PageCapabilityAnalyzer,
 ): Promise<unknown> {
     const input = objectInput(query.input);
     switch (query.operation) {
@@ -143,10 +151,8 @@ async function executeQuery(
             return gateway.isAdministrator({ identifier: text(input.subjectId) });
         case "auth.identity-providers":
             return stores.identityProviders.list();
-        case "page.required-access": {
-            const path = text(input.path);
-            const page = await content.getRenderablePage(path);
-            return page ? pageExecution.requiredAccess(page, new URL(text(input.url)), "/.cms/call") : null;
+        case "page.capability-access": {
+            return pageCapabilities.requiredAccess(input.page as PageCapabilityDocument);
         }
         case "gateway.invoke":
             return gateway.invoker.invoke(input.invocation as never);

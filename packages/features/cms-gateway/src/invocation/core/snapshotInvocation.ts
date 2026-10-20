@@ -9,11 +9,24 @@ import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 
 /** Bounded JSON envelope budget, including escaping and metadata around a 1 MiB contract string. */
 export const MAX_GATEWAY_JSON_BYTES = MAX_CAPABILITY_JSON_BYTES;
+const INVOCATION_FIELDS = new Set([
+    "siteId",
+    "contractId",
+    "capabilityId",
+    "input",
+    "binaryBody",
+    "httpMethod",
+    "actor",
+    "idempotencyKey",
+]);
 
 /** Snapshot caller input before the first asynchronous route or grant lookup. */
 export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation {
     if (!value || typeof value !== "object") {
         throw new GatewayError("invalid_input", "invocation context is required");
+    }
+    if (Object.keys(value).some((field) => !INVOCATION_FIELDS.has(field))) {
+        throw new GatewayError("invalid_input", "invocation context contains an unsupported field");
     }
     if (
         typeof value.siteId !== "string" ||
@@ -27,9 +40,6 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
         if (typeof field !== "string" || field.length > 128 || !/^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/.test(field)) {
             throw new GatewayError("invalid_input", "contract or capability identifier is invalid");
         }
-    }
-    if (!["page", "provider", "system", "conformance"].includes(value.origin)) {
-        throw new GatewayError("invalid_input", "invocation origin is invalid");
     }
     if (value.httpMethod !== undefined && value.httpMethod !== "HEAD") {
         throw new GatewayError("invalid_input", "HTTP method override is invalid");
@@ -46,11 +56,9 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             siteId: value.siteId,
             contractId: value.contractId,
             capabilityId: value.capabilityId,
-            origin: value.origin,
             actor,
             ...(value.httpMethod ? { httpMethod: value.httpMethod } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),
-            ...(value.execution ? { execution: snapshotExecution(value.execution) } : {}),
             ...(binaryBody ? { binaryBody } : {}),
             input: parseStrictJson(bytes, MAX_GATEWAY_JSON_BYTES, MAX_CAPABILITY_JSON_DEPTH),
         };
@@ -93,50 +101,35 @@ function snapshotIdempotencyKey(value: unknown): string | undefined {
     return value;
 }
 
-function snapshotExecution(
-    value: NonNullable<GatewayInvocation["execution"]>,
-): NonNullable<GatewayInvocation["execution"]> {
-    if (
-        !value ||
-        typeof value !== "object" ||
-        !/^sha256:[0-9a-f]{64}$/u.test(value.planDigest) ||
-        typeof value.version !== "string" ||
-        !value.version ||
-        value.version.length > 128 ||
-        !/^sha256:[0-9a-f]{64}$/u.test(value.digest) ||
-        typeof value.installationId !== "string" ||
-        !value.installationId ||
-        value.installationId.length > 256
-    ) {
-        throw new GatewayError("invalid_input", "execution pin is invalid");
-    }
-    return {
-        planDigest: value.planDigest,
-        version: value.version,
-        digest: value.digest,
-        installationId: value.installationId,
-    };
-}
-
 function snapshotActor(actor: GatewayActor): GatewayActor {
     if (!actor || typeof actor !== "object") {
         throw new GatewayError("not_authorized", "trusted actor context is required");
     }
     switch (actor.kind) {
         case "anonymous":
+            requireActorFields(actor, ["kind"]);
             return { kind: "anonymous" };
         case "user":
         case "administrator":
+            requireActorFields(actor, ["kind", "subjectId"]);
             requireId(actor.subjectId);
             return { kind: actor.kind, subjectId: actor.subjectId };
         case "provider":
+            requireActorFields(actor, ["kind", "installationId"]);
             requireId(actor.installationId);
             return { kind: "provider", installationId: actor.installationId };
         case "system":
+            requireActorFields(actor, ["kind", "serviceId"]);
             requireId(actor.serviceId);
             return { kind: "system", serviceId: actor.serviceId };
         default:
             throw new GatewayError("not_authorized", "actor kind is invalid");
+    }
+}
+
+function requireActorFields(actor: GatewayActor, allowed: readonly string[]): void {
+    if (Object.keys(actor).some((field) => !allowed.includes(field))) {
+        throw new GatewayError("not_authorized", "actor context contains an unsupported field");
     }
 }
 

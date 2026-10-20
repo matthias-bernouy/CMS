@@ -1,5 +1,5 @@
 import type { RenderablePage } from "@bernouy/cms-content/rendering";
-import { pageRequiresCapabilityExecution } from "@bernouy/cms-gateway/execution";
+import { pageRequiresCapabilityAnalysis } from "@bernouy/cms-gateway/analysis";
 import type KernelCms from "cms-kernel/KernelCms";
 import { renderRef } from "cms-kernel/http/pages/renderRef";
 import { resolveRequestActor } from "./resolveRequestActor";
@@ -17,7 +17,7 @@ export async function preflightPageGatewayAccess(
     renderable: RenderablePage,
     kernel: KernelCms,
 ): Promise<PageAccessDecision> {
-    const capabilityDecision = await capabilityAccess(renderable, kernel, request);
+    const capabilityDecision = await capabilityAccess(renderable, kernel);
     if (capabilityDecision.response) {
         return capabilityDecision;
     }
@@ -34,24 +34,16 @@ export async function preflightPageGatewayAccess(
     return { ...decision, cacheable: decision.cacheable && !isLoginPage };
 }
 
-async function capabilityAccess(
-    renderable: RenderablePage,
-    kernel: KernelCms,
-    request: Request,
-): Promise<PageAccessDecision> {
-    const execution = kernel.pageExecution;
-    if (!execution) {
-        if (!pageRequiresCapabilityExecution({ page: renderable.page, requirements: renderable.requirements })) {
+async function capabilityAccess(renderable: RenderablePage, kernel: KernelCms): Promise<PageAccessDecision> {
+    const analysis = kernel.pageCapabilities;
+    if (!analysis) {
+        if (!pageRequiresCapabilityAnalysis({ page: renderable.page, requirements: renderable.requirements })) {
             return { access: "public", cacheable: true };
         }
         return unavailable();
     }
-    const required = await execution
-        .requiredAccess(
-            { page: renderable.page, requirements: renderable.requirements },
-            new URL(request.url),
-            `${kernel.cmsPathPrefix}/call/`,
-        )
+    const required = await analysis
+        .requiredAccess({ page: renderable.page, requirements: renderable.requirements })
         .catch(() => null);
     if (!required) {
         return unavailable();

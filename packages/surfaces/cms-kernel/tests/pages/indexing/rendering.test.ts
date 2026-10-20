@@ -42,7 +42,6 @@ describe("Kernel dynamic page metadata", () => {
                 contractId: "commerce",
                 capabilityId: "product.get",
                 input: { slug: "requested-chair" },
-                origin: "page",
                 actor: { kind: "user", subjectId: "dev-user" },
             },
         ]);

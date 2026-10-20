@@ -56,7 +56,6 @@ export async function createNetworkJourney() {
                 contractId: admission.release.contractId,
                 capabilityId: "echo",
                 input: { value },
-                origin: "system",
                 actor: { kind: "system", serviceId: "performance-suite" },
             });
             return Response.json(result);

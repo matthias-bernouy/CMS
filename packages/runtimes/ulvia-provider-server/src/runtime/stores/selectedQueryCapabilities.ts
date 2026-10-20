@@ -4,6 +4,7 @@ import type {
     BindingQueryCapability,
     BindingQueryCapabilityResolver,
 } from "@bernouy/cms-content/page-document";
+import { ContentValidationError } from "@bernouy/cms-content";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 
@@ -24,7 +25,7 @@ export function selectedQueryCapabilityResolver(
         for (const target of targets) {
             const selection = stored.plan.selections.find(({ contractId }) => contractId === target.contractId);
             if (!selection) {
-                throw new Error(`Contract ${JSON.stringify(target.contractId)} is not selected for this site`);
+                throw unavailableBinding(target.contractId, target.capabilityId);
             }
             const record = await releases.get(selection.contractId, selection.version);
             if (!record || record.admission.digest !== selection.digest) {
@@ -34,9 +35,7 @@ export function selectedQueryCapabilityResolver(
             }
             const capability = record.admission.release.capabilities.find(({ id }) => id === target.capabilityId);
             if (!capability || capability.behavior.effect !== "query" || capability.output.type === "binary") {
-                throw new Error(
-                    `Capability ${target.contractId}:${target.capabilityId} is not an available structured query`,
-                );
+                throw unavailableBinding(target.contractId, target.capabilityId, "structured query");
             }
             result.push({
                 contractId: target.contractId,
@@ -66,7 +65,7 @@ export function selectedCapabilityResolver(
         for (const target of targets) {
             const selection = stored.plan.selections.find(({ contractId }) => contractId === target.contractId);
             if (!selection) {
-                throw new Error(`Contract ${JSON.stringify(target.contractId)} is not selected for this site`);
+                throw unavailableBinding(target.contractId, target.capabilityId);
             }
             const record = await releases.get(selection.contractId, selection.version);
             if (!record || record.admission.digest !== selection.digest) {
@@ -76,9 +75,7 @@ export function selectedCapabilityResolver(
             }
             const capability = record.admission.release.capabilities.find(({ id }) => id === target.capabilityId);
             if (!capability || capability.behavior.effect !== target.effect || capability.output.type === "binary") {
-                throw new Error(
-                    `Capability ${target.contractId}:${target.capabilityId} is not an available structured ${target.effect}`,
-                );
+                throw unavailableBinding(target.contractId, target.capabilityId, `structured ${target.effect}`);
             }
             result.push({
                 contractId: target.contractId,
@@ -89,4 +86,13 @@ export function selectedCapabilityResolver(
         }
         return result;
     };
+}
+
+function unavailableBinding(contractId: string, capabilityId: string, expected?: string): ContentValidationError {
+    return new ContentValidationError(
+        "content",
+        expected
+            ? `capability ${contractId}:${capabilityId} is not an available ${expected}`
+            : `contract ${JSON.stringify(contractId)} is not selected for this site`,
+    );
 }

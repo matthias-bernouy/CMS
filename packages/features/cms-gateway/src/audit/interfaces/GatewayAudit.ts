@@ -1,4 +1,4 @@
-import type { GatewayActor, GatewayOrigin } from "cms-gateway/invocation/interfaces/Invocation";
+import type { GatewayActor } from "cms-gateway/invocation/interfaces/Invocation";
 
 export type GatewayCommandAuditStage = "started" | "completed" | "declared-error" | "outcome-unknown";
 
@@ -10,7 +10,6 @@ export interface GatewayCommandAuditEvent {
     readonly installationId: string;
     readonly contractId: string;
     readonly capabilityId: string;
-    readonly origin: GatewayOrigin;
     readonly actorKind: GatewayActor["kind"];
     readonly actorSubjectId?: string;
     readonly stage: GatewayCommandAuditStage;

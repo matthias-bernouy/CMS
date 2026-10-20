@@ -16,7 +16,6 @@ export type {
     GatewayAccessProbe,
     GatewayInvocation,
     GatewayInvoker,
-    GatewayOrigin,
     GatewayResult,
     GatewayRoute,
     GatewayRouteResolver,

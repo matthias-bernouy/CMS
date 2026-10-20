@@ -58,13 +58,7 @@ test("projects gateway, Page access, collection assets and identity providers", 
         Response.json({ value: request.body?.operation === "auth.identity-providers" ? providers : true }),
     );
 
-    await client.pageExecution.requiredAccess(
-        { page: { path: "/admin" } } as never,
-        new URL("https://kernel.test/admin"),
-    );
-    await expect(client.pageExecution.authorizeCall({} as never, {} as never)).rejects.toThrow(
-        "Capability authorization is owned by the Provider",
-    );
+    await client.pageCapabilities.requiredAccess({ page: { path: "/admin" } } as never);
     await client.gateway.invoker.invoke({} as never);
     await client.gateway.invoker.resolveHttp({} as never);
     await client.gateway.isAdministrator({ identifier: "subject-a" });

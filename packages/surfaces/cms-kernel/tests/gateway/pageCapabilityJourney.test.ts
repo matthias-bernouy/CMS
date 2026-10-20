@@ -7,13 +7,13 @@ import {
     ValidatingCmsRepository,
 } from "@bernouy/cms-content";
 import type { GatewayInvocation, GatewayInvoker } from "@bernouy/cms-gateway";
-import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
+import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { InMemoryCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { CaptureRunner } from "./support/CaptureRunner";
 
-test("a published Page renders and invokes only its exact capability plan", async () => {
+test("a published Page is analyzed statically and invokes its public capability without a Page grant", async () => {
     const repository: CmsRepository = new ValidatingCmsRepository(new InMemoryCmsRepository());
     await repository.createBloc({
         id: "catalog-products",
@@ -29,20 +29,14 @@ test("a published Page renders and invokes only its exact capability plan", asyn
     });
     await repository.insertPage("/products", "Products", '<div cms-bloc="catalog-products"></div>');
     const draft = await repository.getPage("/products");
-    const published = await repository.updatePage({ id: draft!.id, visible: true }, draft!.revision);
+    await repository.updatePage({ id: draft!.id, visible: true }, draft!.revision);
     repository.getPageRequirements = async () => [
         { contractId: "shop", capabilityId: "list-products", versionRange: "=2.3.0" },
     ];
 
-    const activations: Parameters<PageExecutionAuthority["activate"]>[0][] = [];
-    const authorizations: Parameters<PageExecutionAuthority["authorize"]>[0][] = [];
     const invocations: GatewayInvocation[] = [];
-    const authority = captureAuthority(activations, authorizations);
     const invoker = catalogueInvoker(invocations);
-    const pageExecution = new PageExecutionService({
-        siteId: "site-a",
-        content: createContentReader(repository),
-        authority,
+    const pageCapabilities = new PageCapabilityAnalyzer({
         resolveCapability: async (contractId, capabilityId) =>
             contractId === "shop" && capabilityId === "list-products" ? { access: "public", version: "2.3.0" } : null,
     });
@@ -56,9 +50,9 @@ test("a published Page renders and invokes only its exact capability plan", asyn
             siteId: "site-a",
             invoker,
             isAdministrator: async () => false,
-            resolveCapability: async () => ({ effect: "query", outputType: "object" }),
+            resolveCapability: async () => ({ access: "public", effect: "query", outputType: "object" }),
         },
-        pageExecution,
+        pageCapabilities,
         logger: NOOP_LOGGER,
     });
 
@@ -75,66 +69,22 @@ test("a published Page renders and invokes only its exact capability plan", asyn
     )(
         new Request("https://site.test/.cms/query/shop/list-products", {
             method: "QUERY",
-            headers: { "content-type": "application/json", referer: "https://site.test/products" },
+            headers: { "content-type": "application/json" },
             body: '{"category":"shoes"}',
         }),
     );
     expect(callResponse.status).toBe(200);
     expect(await callResponse.json()).toEqual({ items: [{ id: "shoe-1" }] });
-    expect(activations).toEqual([
-        {
-            consumer: { kind: "site", siteId: "site-a", pageId: published!.id, pageRevision: published!.revision },
-            requirements: [{ contractId: "shop", capabilityId: "list-products", versionRange: "=2.3.0" }],
-        },
-    ]);
-    expect(authorizations).toEqual([
-        {
-            kind: "site",
-            siteId: "site-a",
-            pageId: published!.id,
-            pageRevision: published!.revision,
-            contractId: "shop",
-            capabilityId: "list-products",
-        },
-    ]);
     expect(invocations).toEqual([
         {
             siteId: "site-a",
             contractId: "shop",
             capabilityId: "list-products",
             input: { category: "shoes" },
-            origin: "page",
-            actor: { kind: "user", subjectId: "dev-user" },
-            execution: {
-                planDigest: "sha256:page-plan",
-                version: "2.3.0",
-                digest: "sha256:provider-release",
-                installationId: "shop-provider",
-            },
+            actor: { kind: "anonymous" },
         },
     ]);
 });
-
-function captureAuthority(
-    activations: Parameters<PageExecutionAuthority["activate"]>[0][],
-    authorizations: Parameters<PageExecutionAuthority["authorize"]>[0][],
-): PageExecutionAuthority {
-    return {
-        activate: async (input) => {
-            activations.push(input);
-            return {} as never;
-        },
-        authorize: async (input) => {
-            authorizations.push(input);
-            return {
-                planDigest: "sha256:page-plan",
-                version: "2.3.0",
-                digest: "sha256:provider-release",
-                installationId: "shop-provider",
-            };
-        },
-    };
-}
 
 function catalogueInvoker(invocations: GatewayInvocation[]): GatewayInvoker {
     return {

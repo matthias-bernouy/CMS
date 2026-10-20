@@ -8,7 +8,7 @@ import type {
     Subject,
 } from "@bernouy/cms-auth";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
-import type { PageExecutionHttpPort } from "@bernouy/cms-gateway/http/handlers";
+import type { PageCapabilityAccessPort } from "@bernouy/cms-gateway/analysis";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { KernelProviderQuery, KernelProviderQueryOperation } from "@bernouy/ulvia-provider/kernel";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
@@ -22,7 +22,7 @@ export class ProviderKernelClient {
     readonly localAuthentication: LocalAuthenticationActions;
     readonly publicAuth: PublicAuthActions;
     readonly identityProviders: IdentityProviderRepository;
-    readonly pageExecution: PageExecutionHttpPort;
+    readonly pageCapabilities: PageCapabilityAccessPort;
     readonly collectionAssets: InstalledCollectionAssetSource;
     readonly gateway: {
         siteId: string;
@@ -40,12 +40,8 @@ export class ProviderKernelClient {
         this.localAuthentication = remoteLocalAuthentication(this, kernelUrl.startsWith("https:"));
         this.publicAuth = remotePublicAuth(this);
         this.identityProviders = remoteIdentityProviders(this);
-        this.pageExecution = {
-            requiredAccess: (page, pageUrl) =>
-                this.query("page.required-access", { path: page.page.path, url: pageUrl.toString() }),
-            authorizeCall: async () => {
-                throw new Error("Capability authorization is owned by the Provider");
-            },
+        this.pageCapabilities = {
+            requiredAccess: (page) => this.query("page.capability-access", { page }),
         };
         this.gateway = {
             siteId: "default",

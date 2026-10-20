@@ -145,7 +145,6 @@ export function mountKernelRoutes(kernel: KernelCms) {
             createCapabilityHttpHandler({
                 ...kernel.capabilityGateway!,
                 basePath: kernel.basePath,
-                pageExecution: kernel.pageExecution,
                 resolveActor: (request) => resolveRequestActor(kernel, request),
             });
         runner.group(CMS_CAPABILITY_CALL_ROUTE, (callRunner) => {
@@ -161,7 +160,6 @@ export function mountKernelRoutes(kernel: KernelCms) {
                 ...kernel.capabilityGateway!,
                 resolveCapability: kernel.capabilityGateway!.resolveCapability!,
                 basePath: kernel.basePath,
-                pageExecution: kernel.pageExecution,
                 resolveActor: (request) => resolveRequestActor(kernel, request),
             });
         runner.group(CMS_CAPABILITY_QUERY_ROUTE, (queryRunner) => {

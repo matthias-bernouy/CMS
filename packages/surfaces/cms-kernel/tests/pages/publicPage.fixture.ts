@@ -9,7 +9,7 @@ import {
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
-import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
+import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { createSitemapService, executeIndexingCapability } from "@bernouy/cms-seo";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
@@ -95,11 +95,8 @@ export function mountPublicPages(options: HarnessOptions = {}) {
               ...options.gateway,
           } as GatewayInvoker)
         : undefined;
-    const pageExecution = invoker
-        ? new PageExecutionService({
-              siteId: "site-test",
-              content: repository,
-              authority: unusedAuthority,
+    const pageCapabilities = invoker
+        ? new PageCapabilityAnalyzer({
               resolveCapability: async () => ({ access: "public", version: "1.0.0" }),
           })
         : undefined;
@@ -116,7 +113,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
                       invoker,
                       isAdministrator: async () => false,
                   },
-                  pageExecution,
+                  pageCapabilities,
               }
             : {}),
         sitemapStore: options.sitemapStore,
@@ -152,15 +149,6 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         storedLookups,
     };
 }
-
-const unusedAuthority: PageExecutionAuthority = {
-    activate: async () => {
-        throw new Error("not used by the public Page fixture");
-    },
-    authorize: async () => {
-        throw new Error("not used by the public Page fixture");
-    },
-};
 
 function renderable(page: TPage) {
     return {

@@ -7,11 +7,11 @@
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
+        "./access/mongo": "./src/exports/access/mongo.ts",
         "./audit": "./src/exports/audit/index.ts",
         "./audit/mongo": "./src/exports/audit/mongo.ts",
+        "./analysis": "./src/exports/analysis/index.ts",
         "./conformance": "./src/exports/conformance/index.ts",
-        "./execution": "./src/exports/execution/index.ts",
-        "./execution/mongo": "./src/exports/execution/mongo.ts",
         "./http": "./src/exports/http/index.ts",
         "./http/handlers": "./src/exports/http/handlers.ts",
         "./http/node": "./src/exports/http/node.ts",

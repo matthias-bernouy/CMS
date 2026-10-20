@@ -10,6 +10,8 @@ import { InMemoryCmsRepository, InMemoryPageRouteRegistry, ValidatingCmsReposito
 import { createContentReader, expandCompositions, generateStyleEntry } from "@bernouy/cms-content/rendering";
 import { parseHTML } from "linkedom";
 import { compileBlocStyle } from "@bernouy/cms-repository/collections/build";
+import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 
 const release = {
     kind: "collection",
@@ -91,6 +93,80 @@ test("installed resources participate in authoring validation and public read mo
     await expect(
         repository.replaceBloc({ ...(await repository.getBlocRecord("test-welcome"))!.artifact! }),
     ).rejects.toThrow("immutable");
+});
+
+test("site Pages inherit capability requirements from installed Blocs", async () => {
+    const contracts = new InMemoryReleaseCatalogue();
+    await contracts.publish(
+        await admitContractRelease({
+            kind: "contract",
+            protocol: "ulvia-provider/v1",
+            schemaDialect: "ulvia-schema/v1",
+            contractId: "example.files",
+            name: "Example files",
+            version: "1.0.0",
+            publisherId: "example",
+            capabilities: [
+                {
+                    id: "files.read",
+                    access: "public",
+                    behavior: { effect: "query", execution: "sync" },
+                    input: {
+                        type: "object",
+                        properties: {
+                            fileId: { type: "string", maxLength: 128 },
+                            generation: { type: "string", maxLength: 128 },
+                        },
+                        required: ["fileId", "generation"],
+                    },
+                    output: { type: "binary", maxBytes: 1024 },
+                    errors: [],
+                    binding: {
+                        transport: "http",
+                        method: "GET",
+                        path: "/files/{fileId}/{generation}",
+                        input: { path: { fileId: "fileId", generation: "generation" } },
+                        response: {
+                            successStatuses: [200],
+                            contentTypes: [],
+                            errorStatuses: {},
+                        },
+                    },
+                },
+            ],
+        }),
+    );
+    const store = new CollectionStore(new MemoryCollectionStorage(), contracts);
+    const artifact = await store.importRelease({
+        ...release,
+        blocs: [
+            {
+                ...release.blocs[0]!,
+                requires: [
+                    {
+                        contractId: "example.files",
+                        capabilityId: "files.read",
+                        versionRange: "^1.0.0",
+                    },
+                ],
+            },
+        ],
+    });
+    await store.install("site", artifact.digest, 0);
+    const repository = new ValidatingCmsRepository(
+        withInstalledCollections(new InMemoryCmsRepository(), store, "site"),
+    );
+    await repository.insertPage("/media", "Media", '<div cms-bloc="test-welcome"></div>');
+    const page = (await repository.getPage("/media"))!;
+    await repository.updatePage({ id: page.id, visible: true });
+
+    expect((await createContentReader(repository).getRenderablePage("/media"))?.requirements).toEqual([
+        {
+            contractId: "example.files",
+            capabilityId: "files.read",
+            versionRange: "^1.0.0",
+        },
+    ]);
 });
 
 test("installed Page aliases redirect to their effective collection route", async () => {
@@ -255,7 +331,7 @@ test("installed polymorphic native components project their contract and keep wr
         translations: {
             en: {
                 ...release.translations.en,
-                "setting.title.label": "Wrapper title",
+                "setting.wrapper-label.label": "Wrapper label",
             },
         },
         blocs: [
@@ -270,8 +346,8 @@ test("installed polymorphic native components project their contract and keep wr
                 defaultContent: '<button type="button">{{ cms.i18n.test.title }}</button>',
                 settings: [
                     {
-                        id: "title",
-                        label: "setting.title.label",
+                        id: "wrapper-label",
+                        label: "setting.wrapper-label.label",
                         type: "string",
                         default: "",
                         maxLength: 120,
@@ -296,12 +372,12 @@ test("installed polymorphic native components project their contract and keep wr
     await repository.insertPage(
         "/native-button",
         "Button",
-        '<div cms-bloc=\"test-action\" title="Wrapper title"><button type="button">Save</button></div>',
+        '<div cms-bloc=\"test-action\" wrapper-label="Wrapper label"><button type="button">Save</button></div>',
     );
     await repository.insertPage(
         "/native-link",
         "Link",
-        '<div cms-bloc=\"test-action\" title="Wrapper title"><a href="/about">About</a></div>',
+        '<div cms-bloc=\"test-action\" wrapper-label="Wrapper label"><a href="/about">About</a></div>',
     );
     await expect(
         repository.insertPage("/native-wrong", "Wrong", '<div cms-bloc="test-action"><p>Wrong</p></div>'),

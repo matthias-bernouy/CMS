@@ -22,7 +22,6 @@ export async function executeIndexingCapability(
             contractId,
             capabilityId,
             input,
-            origin: "page",
             actor,
         });
         if (result.kind === "binary") {

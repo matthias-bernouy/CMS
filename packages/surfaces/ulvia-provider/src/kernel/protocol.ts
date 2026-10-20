@@ -25,7 +25,7 @@ export const KERNEL_PROVIDER_QUERY_OPERATIONS = [
     "auth.subject",
     "auth.is-administrator",
     "auth.identity-providers",
-    "page.required-access",
+    "page.capability-access",
     "gateway.invoke",
     "gateway.resolve-http",
     "assets.metadata",

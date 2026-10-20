@@ -58,23 +58,13 @@ function invocation(
         siteId: "site-a",
         contractId: "catalog",
         capabilityId: "item.list",
-        origin: "system" as const,
         actor,
         input,
     };
 }
 
-function pageInvocation(route: GatewayRoute, actor: GatewayActor, input: unknown = { term: "one" }) {
-    return {
-        ...invocation(actor, input),
-        origin: "page" as const,
-        execution: {
-            planDigest: `sha256:${"a".repeat(64)}` as const,
-            version: route.selection.version,
-            digest: route.selection.digest,
-            installationId: route.selection.installationId,
-        },
-    };
+function actorInvocation(actor: GatewayActor, input: unknown = { term: "one" }) {
+    return invocation(actor, input);
 }
 
 describe("capability gateway", () => {
@@ -107,6 +97,18 @@ describe("capability gateway", () => {
         expect(scope.sent[0]?.input).toEqual({ term: "before" });
     });
 
+    test("rejects removed invocation authority fields instead of silently accepting stale callers", async () => {
+        const scope = harness(await gatewayRoute());
+
+        await expect(scope.gateway.invoke({ ...invocation(), origin: "page" } as never)).rejects.toMatchObject({
+            code: "invalid_input",
+        });
+        await expect(scope.gateway.invoke({ ...invocation(), execution: {} } as never)).rejects.toMatchObject({
+            code: "invalid_input",
+        });
+        expect(scope.sent).toHaveLength(0);
+    });
+
     test("rejects pin mismatches, disabled installations, and absent readiness", async () => {
         const route = await gatewayRoute();
         for (const candidate of [
@@ -136,10 +138,10 @@ describe("capability gateway", () => {
     test("uses provider identity and hides CMS subject IDs from transport", async () => {
         const route = await gatewayRoute({ access: "authenticated" });
         const scope = harness(route);
-        await expect(scope.gateway.invoke(pageInvocation(route, { kind: "anonymous" }))).rejects.toMatchObject({
+        await expect(scope.gateway.invoke(actorInvocation({ kind: "anonymous" }))).rejects.toMatchObject({
             code: "not_authorized",
         });
-        await scope.gateway.invoke(pageInvocation(route, { kind: "user", subjectId: "cms-user-1" }));
+        await scope.gateway.invoke(actorInvocation({ kind: "user", subjectId: "cms-user-1" }));
         const alias = scope.sent[0]?.subjectId;
         expect(alias).toMatch(/^[0-9a-f-]{36}$/);
         expect(JSON.stringify(scope.sent[0])).not.toContain("cms-user-1");
@@ -158,10 +160,7 @@ describe("capability gateway", () => {
             scope.identities,
         );
         await otherInstallation.gateway.invoke({
-            ...pageInvocation(
-                { ...route, selection: { ...route.selection, siteId: "site-b", installationId: "install-b" } },
-                { kind: "user", subjectId: "cms-user-1" },
-            ),
+            ...actorInvocation({ kind: "user", subjectId: "cms-user-1" }),
             siteId: "site-b",
         });
         expect(otherInstallation.sent[0]?.subjectId).toBe(alias);
@@ -170,7 +169,7 @@ describe("capability gateway", () => {
     test("propagates an opaque subject alias for administrator capabilities", async () => {
         const route = await gatewayRoute({ access: "admin" });
         const scope = harness(route);
-        await scope.gateway.invoke(pageInvocation(route, { kind: "administrator", subjectId: "cms-admin-1" }));
+        await scope.gateway.invoke(actorInvocation({ kind: "administrator", subjectId: "cms-admin-1" }));
 
         const alias = scope.sent[0]?.subjectId;
         expect(alias).toMatch(/^[0-9a-f-]{36}$/);
@@ -182,15 +181,13 @@ describe("capability gateway", () => {
         const identities = new InMemoryIdentityService();
         const route = await gatewayRoute({ access: "authenticated" });
         const scope = harness(route, new ProviderIdentityAliases(identities));
-        const call = pageInvocation(route, { kind: "user", subjectId: "cms-user-1" });
+        const call = actorInvocation({ kind: "user", subjectId: "cms-user-1" });
         await scope.gateway.assertAuthorized(call);
         expect(scope.sent).toHaveLength(0);
         expect(
             await identities.resolve({ authority: "cms", kind: "user", value: "cms-user-1" }, "ulvia.example"),
         ).toBeNull();
-        await expect(
-            scope.gateway.assertAuthorized(pageInvocation(route, { kind: "anonymous" })),
-        ).rejects.toMatchObject({
+        await expect(scope.gateway.assertAuthorized(actorInvocation({ kind: "anonymous" }))).rejects.toMatchObject({
             code: "not_authorized",
         });
     });
@@ -341,74 +338,56 @@ describe("capability gateway", () => {
         await expect(scope.gateway.invoke(invocation())).rejects.toMatchObject({ code: "invalid_provider_response" });
     });
 
-    test("accepts only trusted actor kinds for provider and system origins", async () => {
-        const scope = harness(await gatewayRoute());
-        await expect(scope.gateway.invoke({ ...invocation(), origin: "provider" })).rejects.toMatchObject({
+    test("authorizes capability access from the trusted actor only", async () => {
+        const publicScope = harness(await gatewayRoute({ access: "public" }));
+        await expect(publicScope.gateway.invoke(actorInvocation({ kind: "anonymous" }))).resolves.toMatchObject({
+            kind: "success",
+        });
+
+        const authenticatedScope = harness(await gatewayRoute({ access: "authenticated" }));
+        await expect(authenticatedScope.gateway.invoke(actorInvocation({ kind: "anonymous" }))).rejects.toMatchObject({
             code: "not_authorized",
         });
         await expect(
-            scope.gateway.invoke({
-                ...invocation({ kind: "provider", installationId: "caller-installation" }),
-                origin: "provider",
-            }),
+            authenticatedScope.gateway.invoke(actorInvocation({ kind: "user", subjectId: "user-1" })),
         ).resolves.toMatchObject({ kind: "success" });
+
+        const adminScope = harness(await gatewayRoute({ access: "admin" }));
         await expect(
-            scope.gateway.invoke({ ...invocation({ kind: "system", serviceId: "scheduler" }), origin: "system" }),
-        ).resolves.toMatchObject({ kind: "success" });
+            adminScope.gateway.invoke(actorInvocation({ kind: "user", subjectId: "user-1" })),
+        ).rejects.toMatchObject({ code: "not_authorized" });
         await expect(
-            scope.gateway.invoke({
-                ...invocation({ kind: "system", serviceId: "conformance" }),
-                origin: "conformance",
-            }),
+            adminScope.gateway.invoke(actorInvocation({ kind: "administrator", subjectId: "admin-1" })),
         ).resolves.toMatchObject({ kind: "success" });
     });
 
     test("authorizes provider calls without forwarding gateway authority context", async () => {
         const scope = harness(await gatewayRoute());
         const actor = { kind: "provider" as const, installationId: "caller-installation" };
-        await scope.gateway.invoke({
-            ...invocation(actor),
-            origin: "provider",
-        });
+        await scope.gateway.invoke(invocation(actor));
         expect(scope.sent).toHaveLength(1);
         expect(scope.sent[0]).not.toHaveProperty("invocationOrigin");
         expect(scope.sent[0]).not.toHaveProperty("actorKind");
         expect(scope.sent[0]).not.toHaveProperty("providerInstallationId");
     });
 
-    test("requires an exact execution pin for Page calls", async () => {
-        const route = await gatewayRoute();
+    test("applies the same access model to binary capabilities", async () => {
+        const route = await gatewayRoute({ binary: true });
         const scope = harness(route);
-        await expect(scope.gateway.invoke({ ...invocation(), origin: "page" })).rejects.toMatchObject({
-            code: "not_authorized",
-        });
+        scope.setResponse({ status: 200, contentType: "image/png", bytes: new Uint8Array([1, 2, 3]) });
+
         await expect(
-            scope.gateway.invoke({
-                ...invocation(),
-                origin: "page",
-                execution: {
-                    planDigest: `sha256:${"a".repeat(64)}`,
-                    version: route.selection.version,
-                    digest: route.selection.digest,
-                    installationId: route.selection.installationId,
-                },
-            }),
-        ).resolves.toMatchObject({ kind: "success" });
+            scope.gateway.invoke(invocation({ kind: "anonymous" }, { fileId: "photo-1" })),
+        ).resolves.toMatchObject({ kind: "binary", status: 200 });
+        expect(scope.sent).toHaveLength(1);
+
+        const authenticated = harness(await gatewayRoute({ access: "authenticated", binary: true }));
         await expect(
-            scope.gateway.invoke({
-                ...invocation(),
-                origin: "page",
-                execution: {
-                    planDigest: `sha256:${"a".repeat(64)}`,
-                    version: route.selection.version,
-                    digest: route.selection.digest,
-                    installationId: "install-other",
-                },
-            }),
-        ).rejects.toMatchObject({ code: "stale_route" });
+            authenticated.gateway.invoke(invocation({ kind: "anonymous" }, { fileId: "photo-1" })),
+        ).rejects.toMatchObject({ code: "not_authorized" });
     });
 
-    test("passes the trusted origin to grants and checks the route after transport", async () => {
+    test("passes the trusted actor to grants and checks the route after transport", async () => {
         const route = await gatewayRoute();
         let current = true;
         const seen: string[] = [];
@@ -420,8 +399,8 @@ describe("capability gateway", () => {
                     return { status: 200, contentType: "application/json", output: { items: ["one"] } };
                 },
             },
-            authorize: async (_actor, _capability, _route, origin) => {
-                seen.push(origin);
+            authorize: async (actor) => {
+                seen.push(actor.kind);
                 return true;
             },
             now: () => NOW,

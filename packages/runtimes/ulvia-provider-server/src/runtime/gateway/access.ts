@@ -1,6 +1,6 @@
 import type { Subject } from "@bernouy/cms-auth";
 import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
-import { MongoAdministratorGrantStore } from "@bernouy/cms-gateway/execution/mongo";
+import { MongoAdministratorGrantStore } from "@bernouy/cms-gateway/access/mongo";
 import { satisfiesVersionRange } from "@bernouy/cms-repository/providers";
 import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
@@ -74,9 +74,8 @@ export function createProviderGatewayAccess(
         return Number(counter?.count) <= grant.maxCallsPerMinute;
     };
     const isAdministratorId = async (subjectId: string) => (await administrators.get(subjectId)).enabled;
-    const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, route, origin) =>
-        (origin === "provider" &&
-            actor.kind === "provider" &&
+    const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, route) =>
+        (actor.kind === "provider" &&
             (await providerMayCall(
                 actor.installationId,
                 route.selection.version,
@@ -84,12 +83,10 @@ export function createProviderGatewayAccess(
                 route.selection.contractId,
                 route.installation.installation.id,
             ))) ||
-        (origin === "page" &&
-            (capability.access === "public" ||
-                (capability.access === "authenticated" && (actor.kind === "user" || actor.kind === "administrator")) ||
-                (capability.access === "admin" &&
-                    actor.kind === "administrator" &&
-                    (await isAdministratorId(actor.subjectId)))));
+        (actor.kind === "anonymous" && capability.access === "public") ||
+        ((actor.kind === "user" || actor.kind === "administrator") &&
+            (capability.access === "public" || capability.access === "authenticated")) ||
+        (actor.kind === "administrator" && capability.access === "admin" && (await isAdministratorId(actor.subjectId)));
     return {
         authorize,
         isAdministrator: async (subject: Subject) => isAdministratorId(subject.identifier),

@@ -71,7 +71,7 @@ export class MutationRequest {
     async send(captured: CapturedSubmission, signal: AbortSignal): Promise<FormSubmitResult> {
         const headers = new Headers();
         headers.set("Accept", "application/json");
-        headers.set("X-Ulvia-Automatic-Idempotency-Key", captured.automaticIdempotencyKey);
+        headers.set("Idempotency-Key", captured.automaticIdempotencyKey);
         const init: RequestInit = { method: "POST", headers, signal };
         if (captured.serialized.kind === "json") {
             headers.set("Content-Type", "application/json");

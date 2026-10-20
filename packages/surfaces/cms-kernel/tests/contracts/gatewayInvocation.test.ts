@@ -38,7 +38,6 @@ test("Kernel mounts every gateway binding method and supplies trusted actor stat
         siteId: "site-a",
         contractId: "catalog",
         capabilityId: "item.list",
-        origin: "provider",
         actor: { kind: "provider", installationId: "install-caller" },
         input: { term: "one" },
     });

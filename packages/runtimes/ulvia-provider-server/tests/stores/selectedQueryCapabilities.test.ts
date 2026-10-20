@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
-import { selectedQueryCapabilityResolver } from "../../src/runtime/stores/selectedQueryCapabilities";
+import { ContentValidationError } from "@bernouy/cms-content";
+import {
+    selectedCapabilityResolver,
+    selectedQueryCapabilityResolver,
+} from "../../src/runtime/stores/selectedQueryCapabilities";
 
 const capability = {
     id: "list",
@@ -38,6 +42,30 @@ describe("selected query capability resolution", () => {
         await expect(resolve([{ contractId: "catalog", capabilityId: "list" }])).rejects.toThrow(
             "unavailable or invalid",
         );
+    });
+
+    test("reports an unselected authored binding as invalid content", async () => {
+        const selectionStore: ContractSelectionStore = {
+            get: async () =>
+                ({
+                    siteId: "default",
+                    revision: 1,
+                    dependencyRevision: "fixture",
+                    plan: { siteId: "default", selections: [], dependencies: [] },
+                }) as never,
+            replace: async () => {
+                throw new Error("not used");
+            },
+        };
+        const resolve = selectedCapabilityResolver(
+            "default",
+            selectionStore,
+            releases("sha256:" + "a".repeat(64), false),
+        );
+
+        await expect(
+            resolve([{ contractId: "forms", capabilityId: "submission.create", effect: "command" }]),
+        ).rejects.toBeInstanceOf(ContentValidationError);
     });
 });
 

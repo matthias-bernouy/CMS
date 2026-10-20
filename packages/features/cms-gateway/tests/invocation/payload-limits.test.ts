@@ -22,7 +22,6 @@ test("Gateway JSON envelopes preserve a contract-sized Page document", async () 
             siteId: "default",
             contractId: "ulvia.cms.pages",
             capabilityId: "update",
-            origin: "system",
             actor: { kind: "administrator", subjectId: "admin-1" },
             input: { content: CONTRACT_SIZED_TEXT },
         }).input,

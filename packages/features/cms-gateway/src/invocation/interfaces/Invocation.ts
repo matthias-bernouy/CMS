@@ -4,15 +4,11 @@ import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts
 import type { CatalogueProviderManifest } from "@bernouy/cms-repository/providers/catalogue";
 import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
-import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/PageExecution";
-
 export type GatewayActor =
     | { readonly kind: "anonymous" }
     | { readonly kind: "user" | "administrator"; readonly subjectId: string }
     | { readonly kind: "provider"; readonly installationId: string }
     | { readonly kind: "system"; readonly serviceId: string };
-
-export type GatewayOrigin = "page" | "provider" | "system" | "conformance";
 
 export interface GatewayInvocation {
     readonly siteId: string;
@@ -23,14 +19,10 @@ export interface GatewayInvocation {
     readonly binaryBody?: GatewayBinaryBody;
     /** Trusted HTTP transport override used only for automatic HEAD on binary GET resources. */
     readonly httpMethod?: "HEAD";
-    /** Constructed by the trusted surface; never copied from capability input. */
-    readonly origin: GatewayOrigin;
     /** Constructed by a trusted surface from verified authentication. */
     readonly actor: GatewayActor;
     /** Required by keyed commands and transported outside authored capability input. */
     readonly idempotencyKey?: string;
-    /** Required for collection Page calls; constructed from a current CMS-owned execution grant. */
-    readonly execution?: GatewayExecutionPin;
 }
 
 interface GatewayBinaryBody {

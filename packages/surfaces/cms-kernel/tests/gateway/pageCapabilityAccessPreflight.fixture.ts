@@ -8,7 +8,7 @@ import {
     type TSystem,
 } from "@bernouy/cms-content";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
-import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
+import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 import { NOOP_LOGGER } from "@bernouy/logging";
 
@@ -101,10 +101,7 @@ export async function mountPage(options: {
         options.pagePath,
     );
     const content = createContentReader(repository);
-    const pageExecution = new PageExecutionService({
-        siteId: "site-a",
-        content,
-        authority: unusedAuthority,
+    const pageCapabilities = new PageCapabilityAnalyzer({
         resolveCapability: async (contractId, capabilityId) => {
             if (contractId !== "shop") {
                 return null;
@@ -135,21 +132,12 @@ export async function mountPage(options: {
             invoker: shopInvoker,
             isAdministrator: async () => false,
         },
-        pageExecution,
+        pageCapabilities,
         authentication: options.auth ?? authSubject(null),
         logger: NOOP_LOGGER,
     });
     return { handler: runner.defaultHandler("GET", "/") };
 }
-
-const unusedAuthority: PageExecutionAuthority = {
-    activate: async () => {
-        throw new Error("not used by the Page access fixture");
-    },
-    authorize: async () => {
-        throw new Error("not used by the Page access fixture");
-    },
-};
 
 const shopInvoker: GatewayInvoker = {
     resolveHttp: async ({ path }) => ({

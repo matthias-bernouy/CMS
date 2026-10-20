@@ -4,20 +4,25 @@ import type {
     GatewayActor,
     GatewayHttpRoute,
     GatewayInvoker,
-    GatewayOrigin,
     GatewayResult,
 } from "cms-gateway/invocation/interfaces/Invocation";
-import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/PageExecution";
 import { readGatewayHttpInput } from "cms-gateway/invocation/http/readHttpInput";
 
 export interface GatewayHttpCallOptions {
     readonly invoker: GatewayInvoker;
     readonly siteId: string;
-    readonly origin: GatewayOrigin;
     readonly actor: GatewayActor;
-    readonly execution?: GatewayExecutionPin;
     readonly prefix: string;
+    readonly onFailure?: GatewayHttpFailureObserver;
 }
+
+export type GatewayHttpFailure = Readonly<{
+    code: string;
+    status: number;
+    phase: "authorization" | "invocation";
+}>;
+
+export type GatewayHttpFailureObserver = (failure: GatewayHttpFailure, error: unknown) => void;
 
 /** Resolves the admitted HTTP binding and invokes it through the normal authorization path. */
 export async function handleGatewayHttpCall(request: Request, options: GatewayHttpCallOptions): Promise<Response> {
@@ -30,15 +35,13 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             path: target.bindingPath,
         });
         const { input, binaryBody } = await readBindingInput(request, route);
-        const idempotencyKey = requestIdempotencyKey(request, route, options.origin);
+        const idempotencyKey = requestIdempotencyKey(request);
         const result = await options.invoker.invoke({
             siteId: options.siteId,
             contractId: target.contractId,
             capabilityId: route.capability.id,
-            origin: options.origin,
             actor: options.actor,
             ...(request.method === "HEAD" ? { httpMethod: "HEAD" as const } : {}),
-            ...(options.execution ? { execution: options.execution } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),
             ...(binaryBody ? { binaryBody } : {}),
             input,
@@ -46,29 +49,30 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
         return gatewayResultResponse(result, request.method);
     } catch (error) {
         const head = request.method === "HEAD";
-        if (!(error instanceof GatewayError)) {
-            if (head) {
-                return headFailure("internal_error", 500);
-            }
-            return gatewayFailureResponse("internal_error", 500);
-        }
+        const code = error instanceof GatewayError ? error.code : "internal_error";
+        const status = error instanceof GatewayError ? errorStatus(error, options.actor) : 500;
+        observeFailure(options.onFailure, { code, status, phase: "invocation" }, error);
         if (head) {
-            return headFailure(error.code, errorStatus(error, options.actor), error.requestId);
+            return headFailure(code, status, error instanceof GatewayError ? error.requestId : undefined);
         }
-        return gatewayFailureResponse(error.code, errorStatus(error, options.actor), error.requestId);
+        return gatewayFailureResponse(code, status, error instanceof GatewayError ? error.requestId : undefined);
     }
 }
 
-function requestIdempotencyKey(request: Request, route: GatewayHttpRoute, origin: GatewayOrigin): string | undefined {
-    const explicit = parseIdempotencyKey(request.headers.get("idempotency-key"));
-    if (explicit || origin !== "page") {
-        return explicit;
+export function observeFailure(
+    observer: GatewayHttpFailureObserver | undefined,
+    failure: GatewayHttpFailure,
+    error: unknown,
+): void {
+    try {
+        observer?.(failure, error);
+    } catch {
+        // Observability must never alter the capability response.
     }
-    const behavior = route.capability.behavior;
-    if (behavior.effect !== "command" || behavior.idempotency !== "keyed") {
-        return undefined;
-    }
-    return parseIdempotencyKey(request.headers.get("x-ulvia-automatic-idempotency-key"));
+}
+
+function requestIdempotencyKey(request: Request): string | undefined {
+    return parseIdempotencyKey(request.headers.get("idempotency-key"));
 }
 
 function headFailure(code: string, status: number, requestId?: string): Response {

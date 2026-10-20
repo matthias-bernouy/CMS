@@ -1,8 +1,6 @@
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { CapabilityGateway, CatalogueGatewayRouteResolver } from "@bernouy/cms-gateway";
 import { MongoGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit/mongo";
-import { DefaultPageExecutionAuthority } from "@bernouy/cms-gateway/execution";
-import { MongoPageExecutionGrantStore } from "@bernouy/cms-gateway/execution/mongo";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { createSecretResolver } from "@bernouy/secret-store";
@@ -12,7 +10,6 @@ import { createProviderGatewayAccess } from "./access";
 export async function createProviderGateway(stores: ProviderStores, siteId: string) {
     const { db, releases, manifests, installations, selections } = stores;
     const routes = new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests });
-    const pageExecutions = new DefaultPageExecutionAuthority(selections, routes, new MongoPageExecutionGrantStore(db));
     const resolveSecret = createSecretResolver(stores.secrets);
     const network = new NodeGatewayHttpNetwork({
         resolveToken: async (reference) => {
@@ -68,7 +65,6 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
         selections,
         routes,
         invoker,
-        pageExecutions,
         commandAudit,
         authenticateProvider,
         resolvePageCapability,

@@ -49,7 +49,7 @@ test("commands map JSON bodies through their admitted binding", async () => {
     });
 });
 
-test("page commands derive keyed idempotency from the browser candidate", async () => {
+test("keyed commands use the standard idempotency header", async () => {
     const route = await gatewayRoute({
         behavior: { effect: "command", execution: "sync", idempotency: "keyed" },
     });
@@ -63,18 +63,18 @@ test("page commands derive keyed idempotency from the browser candidate", async 
             method: "POST",
             headers: {
                 "content-type": "application/json",
-                "x-ulvia-automatic-idempotency-key": "browser-attempt-1",
+                "idempotency-key": "browser-attempt-1",
             },
             body: '{"term":"saved"}',
         }),
-        pageOptions(route, gateway),
+        options(gateway),
     );
 
     expect(response.status).toBe(200);
     expect(exchanges[0]?.idempotencyKey).toBe("browser-attempt-1");
 });
 
-test("automatic idempotency candidates are ignored outside keyed page commands", async () => {
+test("legacy automatic idempotency headers are ignored", async () => {
     const route = await gatewayRoute({
         behavior: { effect: "command", execution: "sync", idempotency: "natural" },
     });
@@ -92,7 +92,7 @@ test("automatic idempotency candidates are ignored outside keyed page commands",
             },
             body: '{"term":"saved"}',
         }),
-        pageOptions(route, gateway),
+        options(gateway),
     );
 
     expect(response.status).toBe(200);
@@ -226,25 +226,8 @@ function gatewayFor(
 function options(invoker: CapabilityGateway) {
     return {
         siteId: "site-a",
-        origin: "system" as const,
         actor: { kind: "system" as const, serviceId: "http-test" },
         prefix: "/.cms/call",
         invoker,
-    };
-}
-
-function pageOptions(route: Awaited<ReturnType<typeof gatewayRoute>>, invoker: CapabilityGateway) {
-    return {
-        siteId: "site-a",
-        origin: "page" as const,
-        actor: { kind: "anonymous" as const },
-        prefix: "/.cms/call",
-        invoker,
-        execution: {
-            planDigest: `sha256:${"0".repeat(64)}` as const,
-            version: route.selection.version,
-            digest: route.selection.digest,
-            installationId: route.selection.installationId,
-        },
     };
 }

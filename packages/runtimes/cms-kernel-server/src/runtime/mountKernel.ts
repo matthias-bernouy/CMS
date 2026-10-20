@@ -32,7 +32,7 @@ export async function mountProductionKernel(
         cache: new InMemoryCache(),
         enforcePageCsp: env.MODE !== "DEV",
         capabilityGateway: provider.gateway,
-        pageExecution: provider.pageExecution,
+        pageCapabilities: provider.pageCapabilities,
         capabilityHandler: provider.capability,
         queryHandler: provider.declarativeQuery,
         collectionAssetHandler: provider.collectionAsset,

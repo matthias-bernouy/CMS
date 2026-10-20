@@ -48,6 +48,9 @@ export class ValidatingCmsRepository implements CmsRepository {
     async getContentContributions() {
         return (await this.inner.getContentContributions?.()) ?? { revision: 0, pages: [], texts: [] };
     }
+    async getPageRequirements(page: TPage) {
+        return (await this.inner.getPageRequirements?.(page)) ?? [];
+    }
     getSiteBlocGroups(): Promise<SiteBlocGroup[]> {
         return this.inner.getSiteBlocGroups();
     }

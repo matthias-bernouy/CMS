@@ -4,7 +4,6 @@ export {
     createCapabilityQueryHandler,
     type CapabilityQueryHandlerConfig,
     type CapabilityHttpHandlerConfig,
-    type PageExecutionHttpPort,
 } from "cms-gateway/invocation/http/createCapabilityHttpHandler";
 export { readGatewayHttpInput } from "cms-gateway/invocation/http/readHttpInput";
 export {

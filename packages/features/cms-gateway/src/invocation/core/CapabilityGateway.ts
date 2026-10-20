@@ -9,7 +9,6 @@ import type {
     GatewayInvocation,
     GatewayHttpRoute,
     GatewayHttpRouteRequest,
-    GatewayOrigin,
     GatewayResult,
     GatewayRoute,
     GatewayRouteResolver,
@@ -33,7 +32,6 @@ export interface CapabilityGatewayOptions {
         actor: GatewayActor,
         capability: CapabilityDefinition,
         route: GatewayRoute,
-        origin: GatewayOrigin,
     ) => Promise<boolean>;
     readonly identities?: ProviderIdentityService;
     /** Required for command capabilities. Commands fail closed before dispatch when audit is unavailable. */
@@ -199,17 +197,6 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (!route) {
             throw new GatewayError("not_selected", "site has no selected release for this contract");
         }
-        if (value.origin === "page" && !value.execution) {
-            throw new GatewayError("not_authorized", "Page invocation requires an active execution plan");
-        }
-        if (
-            value.execution &&
-            (value.execution.version !== route.selection.version ||
-                value.execution.digest !== route.selection.digest ||
-                value.execution.installationId !== route.selection.installationId)
-        ) {
-            throw new GatewayError("stale_route", "Page execution plan no longer matches the selected provider route");
-        }
         const release = resolveRoute(
             route,
             value.siteId,
@@ -238,8 +225,8 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (!keyed && value.idempotencyKey) {
             throw new GatewayError("invalid_input", "idempotency keys are accepted only by keyed commands");
         }
-        checkAccess(value.actor, capability, value.origin);
-        if (!(await this.#options.authorize(value.actor, capability, route, value.origin))) {
+        checkAccess(value.actor, capability);
+        if (!(await this.#options.authorize(value.actor, capability, route))) {
             throw new GatewayError("not_authorized", "host grant denied this capability");
         }
         if (!(await this.#options.routes.isCurrent(route))) {
@@ -293,16 +280,7 @@ function headBinding(binding: CompiledHttpBinding): CompiledHttpBinding {
     });
 }
 
-function checkAccess(actor: GatewayActor, capability: CapabilityDefinition, origin: GatewayOrigin): void {
-    if (origin === "provider" && actor.kind !== "provider") {
-        throw new GatewayError("not_authorized", "provider origin requires a verified provider actor");
-    }
-    if (origin === "system" && actor.kind !== "system") {
-        throw new GatewayError("not_authorized", "system origin requires a verified system actor");
-    }
-    if (origin === "conformance" && actor.kind !== "system") {
-        throw new GatewayError("not_authorized", "conformance origin requires a verified system actor");
-    }
+function checkAccess(actor: GatewayActor, capability: CapabilityDefinition): void {
     if (actor.kind === "provider" || actor.kind === "system") {
         return;
     }
@@ -378,7 +356,6 @@ function commandAuditEvent(
         installationId: route.installation.installation.id,
         contractId: invocation.contractId,
         capabilityId: invocation.capabilityId,
-        origin: invocation.origin,
         actorKind: invocation.actor.kind,
         ...(invocation.actor.kind === "user" || invocation.actor.kind === "administrator"
             ? { actorSubjectId: invocation.actor.subjectId }
