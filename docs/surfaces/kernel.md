@@ -7,7 +7,7 @@ in their static requirements, including transitive Bloc requirements.
 
 The Kernel owns route composition and Page HTTP presentation for:
 
-- `/login` and the configured authentication routes;
+- collection-contributed authentication Pages such as `/login`;
 - feature-owned handlers for the prebuilt `cms-content` browser runtimes;
 - generic capability calls implemented by `cms-gateway`;
 - every Page path, resolved from the shared site route registry;
@@ -16,9 +16,9 @@ The Kernel owns route composition and Page HTTP presentation for:
 - sitemap and robots handlers implemented by `cms-seo`.
 
 The two browser assets are mounted explicitly. Adding a file below
-`cms-content/src/browser/` never creates a route. Authentication documents live
-below `src/http/auth/` because they belong to the bootstrap kernel,
-not to an authored administration Page.
+`cms-content/src/browser/` never creates a route. Authentication documents are
+ordinary contributed Pages; the Kernel has no private auth Page or auth route
+family.
 
 New administration screens are ordinary collection Pages. Navigation, shells
 and layouts are ordinary Blocs composed by those Pages. The Kernel resolves the

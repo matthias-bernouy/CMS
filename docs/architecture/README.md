@@ -83,19 +83,20 @@ served independently by `official-repository-server`. See
 
 ### Authentication
 
-`cms-auth` groups accounts, providers, sessions, tokens, email and application
-composition. Runtimes build `PublicAuthActions` from credential, user, token
-and email dependencies. The Kernel receives the public operations and injected
-authentication ports. Its small sign-in document is HTTP presentation only.
+`cms-auth` groups accounts, local credential proof, signed session tokens,
+personal access tokens, one-time tokens, email and account-lifecycle
+composition. The Provider runtime builds these operations and exposes them
+through the required `ulvia.cms.access` contract. The Kernel owns no auth
+capabilities or auth persistence: it resolves one request actor through Access
+and applies validated semantic session effects.
 
-HTTP handlers use `@bernouy/cms-auth/http`; Mongo and SMTP adapters are explicit
-runtime imports. Secret storage is generic infrastructure in
+Mongo and SMTP adapters are explicit runtime imports. Secret storage is generic infrastructure in
 `@bernouy/secret-store` under Foundation.
 
 ## Surface And Runtime Composition
 
-The Kernel mounts every site or contributed Page, authentication and
-feature-owned HTTP handlers on one supplied `Runner`.
+The Kernel mounts every site or contributed Page and feature-owned HTTP handlers
+on one supplied `Runner`.
 SEO metadata, structured data, dynamic indexing and sitemap materialization are
 implemented by `cms-seo`; Kernel mounts its robots and sitemap handlers while
 the runtime starts periodic materialization.

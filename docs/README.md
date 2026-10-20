@@ -42,12 +42,12 @@ gates remain recorded in [Deferred platform work](TODO.md).
 ## HTTP Applications
 
 - [Kernel routing](surfaces/kernel.md): the unified Page, administration,
-  authentication, capability and asset application.
+  capability and asset application.
 - [Page languages and routes](surfaces/page-routes.md): localized URLs,
   redirects, deletion and recovery.
 - [Dynamic page indexing](surfaces/page-indexing.md): metadata projection and
   sitemap discovery through selected gateway capabilities.
-- [Public authentication](surfaces/public-auth.md): the Kernel's CMS-owned auth routes.
+- [Access authentication](surfaces/public-auth.md): provider-owned identity resolution and Kernel-applied session effects.
 
 ## Images And UI Quality
 

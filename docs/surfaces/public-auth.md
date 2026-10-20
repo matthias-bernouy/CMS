@@ -1,41 +1,49 @@
-# Public Authentication
+# Access authentication
 
-The Kernel mounts CMS-owned authentication under `/.cms/auth` when public auth is
-configured. These routes work independently of provider selections.
-Paths below are relative to the Kernel's base path. `@bernouy/cms-auth/http`
-supplies the registrar, and the runtime injects the public auth operations.
+Authentication is exposed by the required `ulvia.cms.access` contract. The
+Kernel owns no authentication capability, user store, session secret or
+authentication route family. Its only authentication responsibilities are to
+resolve the request actor through `resolve-actor` and to apply validated browser
+session effects returned by Access.
 
-| Method | Path | JSON body | Response |
-| --- | --- | --- | --- |
-| `GET` | `/.cms/auth/me` | none | `{ "subject": Subject \| null }` |
-| `POST` | `/.cms/auth/login` | `{ "email": string, "password": string, "returnTo"?: string }` | Session response and cookie |
-| `POST` | `/.cms/auth/logout` | none | `{ "ok": true }` and a cleared cookie |
-| `POST` | `/.cms/auth/signup` | `{ "email": string, "password": string }` | `{ "ok": true }` |
-| `POST` | `/.cms/auth/email/verification/request` | `{ "email": string }` | `{ "ok": true }` |
-| `POST` | `/.cms/auth/email/verification/confirm` | `{ "token": string }` | `{ "ok": true }` |
-| `POST` | `/.cms/auth/password/reset/request` | `{ "email": string }` | `{ "ok": true }` |
-| `POST` | `/.cms/auth/password/reset/confirm` | `{ "token": string, "password": string }` | `{ "ok": true }` |
+The official Access contract publishes these public capabilities:
 
-Signup is mounted only when the configured public auth actions allow it. It
-creates a local credential and CMS membership, then sends the verification
-message. Extra JSON fields are rejected by the auth action input parser.
+| Effect | Capability | Purpose |
+| --- | --- | --- |
+| query | `resolve-actor` | Resolve the opaque browser credential to anonymous, authenticated or administrator state. |
+| command | `login-password` | Prove local credentials and establish a session. |
+| command | `logout` | Clear the browser session. |
+| command | `signup` | Create or resume a local account. |
+| command | `request-email-verification` | Send a verification message without disclosing account existence. |
+| command | `confirm-email-verification` | Consume a one-time verification token. |
+| command | `request-password-reset` | Send a recovery message without disclosing account existence. |
+| command | `confirm-password-reset` | Consume a one-time recovery token and set a password. |
 
-Use `cms-query="kernel.auth:me as account"` for account state. The binding
-runtime maps this closed Kernel query to `GET /.cms/auth/me`. Action forms can
-submit to the corresponding auth route. For example:
+Pages use the ordinary declarative binding grammar. There is no `kernel.auth`
+namespace or special browser transport:
 
 ```html
-<form cms-mutation="kernel.auth:login as session">
-  <input name="email" type="email" required>
-  <input name="password" type="password" required>
-  <button type="submit">Log in</button>
+<form cms-mutation="ulvia.cms.access:login-password as session">
+    <input name="email" type="email" autocomplete="username" required>
+    <input name="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Log in</button>
 </form>
 ```
 
-The Kernel does not mount `/.cms/sources`. Provider data, files and image
-representations use selected gateway capabilities under `/.cms/call`.
+Credential bytes are not part of a capability input. The browser sends either
+the `cms-session` cookie or an `Authorization: Bearer` credential. The Kernel
+forwards exactly one opaque credential to `resolve-actor`; the Provider resolves
+it and joins the result with the Access administrator grant. A Bearer credential
+has precedence and never falls back to a cookie when invalid.
 
-See [binding forms](../blocs/data-bindings.md) for submission state and
-[provider identities](../providers/README.md#identity) for the separate
-provider alias contract. Public login establishes the CMS session; it does not
-select or approve a provider installation.
+`login-password` and `logout` declare the typed `session` response effect. The
+Provider returns only semantic data (`establish` with token and expiry, or
+`clear`). The Gateway validates that the selected contract and successful
+capability response permit that effect. Only then does the Kernel emit the
+fixed `cms-session` cookie with `HttpOnly`, `SameSite=Lax`, `Path=/` and
+`Secure` on HTTPS. Provider `Set-Cookie` headers never pass through.
+
+The official collection contributes `/login`, `/confirm-email` and
+`/reset-password` as ordinary Pages. Adding another login method changes the
+Access provider implementation and its contract capabilities; it does not add
+Kernel-owned authentication code.
