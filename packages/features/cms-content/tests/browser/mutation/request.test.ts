@@ -119,7 +119,7 @@ describe("Form mutation — submit request", () => {
         const keys: string[] = [];
         let status = 503;
         globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
-            keys.push(new Headers(init?.headers).get("Idempotency-Key") ?? "");
+            keys.push(new Headers(init?.headers).get("X-Ulvia-Automatic-Idempotency-Key") ?? "");
             return new Response(JSON.stringify({ ok: status === 200 }), {
                 status,
                 headers: { "content-type": "application/json" },
@@ -160,7 +160,7 @@ describe("Form mutation — submit request", () => {
     test("automatic idempotency distinguishes files with identical metadata", async () => {
         const keys: string[] = [];
         globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
-            keys.push(new Headers(init?.headers).get("Idempotency-Key") ?? "");
+            keys.push(new Headers(init?.headers).get("X-Ulvia-Automatic-Idempotency-Key") ?? "");
             return Response.json({ error: { code: "UNAVAILABLE", retryable: true } }, { status: 503 });
         }) as typeof fetch;
         const root = el(`

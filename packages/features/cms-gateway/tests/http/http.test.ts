@@ -74,7 +74,7 @@ test("keyed commands use the standard idempotency header", async () => {
     expect(exchanges[0]?.idempotencyKey).toBe("browser-attempt-1");
 });
 
-test("legacy automatic idempotency headers are ignored", async () => {
+test("automatic idempotency candidates are ignored outside keyed commands", async () => {
     const route = await gatewayRoute({
         behavior: { effect: "command", execution: "sync", idempotency: "natural" },
     });
@@ -97,6 +97,31 @@ test("legacy automatic idempotency headers are ignored", async () => {
 
     expect(response.status).toBe(200);
     expect(exchanges[0]?.idempotencyKey).toBeUndefined();
+});
+
+test("keyed commands promote browser idempotency candidates", async () => {
+    const route = await gatewayRoute({
+        behavior: { effect: "command", execution: "sync", idempotency: "keyed" },
+    });
+    const exchanges: GatewayHttpExchange[] = [];
+    const gateway = gatewayFor(route, async (request) => {
+        exchanges.push(request);
+        return Response.json({ items: ["saved"] });
+    });
+    const response = await handleGatewayHttpCall(
+        new Request("https://site.example/.cms/call/catalog/v1/items", {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "x-ulvia-automatic-idempotency-key": "browser-attempt-1",
+            },
+            body: '{"term":"saved"}',
+        }),
+        options(gateway),
+    );
+
+    expect(response.status).toBe(200);
+    expect(exchanges[0]?.idempotencyKey).toBe("browser-attempt-1");
 });
 
 test("binary provider responses stay streamed and retain safe resource headers", async () => {

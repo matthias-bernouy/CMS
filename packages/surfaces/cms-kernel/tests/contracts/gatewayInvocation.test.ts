@@ -52,6 +52,7 @@ function invoker(calls: GatewayInvocation[]) {
             ({
                 capability: {
                     id: "item.list",
+                    behavior: { effect: "command", execution: "sync", idempotency: "natural" },
                     input: {
                         type: "object",
                         properties: { term: { type: "string", maxLength: 50 } },

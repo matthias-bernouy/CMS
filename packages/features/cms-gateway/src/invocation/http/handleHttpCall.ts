@@ -35,7 +35,7 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             path: target.bindingPath,
         });
         const { input, binaryBody } = await readBindingInput(request, route);
-        const idempotencyKey = requestIdempotencyKey(request);
+        const idempotencyKey = requestIdempotencyKey(request, route);
         const result = await options.invoker.invoke({
             siteId: options.siteId,
             contractId: target.contractId,
@@ -71,8 +71,16 @@ export function observeFailure(
     }
 }
 
-function requestIdempotencyKey(request: Request): string | undefined {
-    return parseIdempotencyKey(request.headers.get("idempotency-key"));
+function requestIdempotencyKey(request: Request, route: GatewayHttpRoute): string | undefined {
+    const explicit = parseIdempotencyKey(request.headers.get("idempotency-key"));
+    if (explicit) {
+        return explicit;
+    }
+    const behavior = route.capability.behavior;
+    if (behavior.effect !== "command" || behavior.idempotency !== "keyed") {
+        return undefined;
+    }
+    return parseIdempotencyKey(request.headers.get("x-ulvia-automatic-idempotency-key"));
 }
 
 function headFailure(code: string, status: number, requestId?: string): Response {
