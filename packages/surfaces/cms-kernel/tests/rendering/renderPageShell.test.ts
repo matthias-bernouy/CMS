@@ -83,14 +83,44 @@ describe("renderPage — binding core wrapper", () => {
         expect(output).toContain(BINDING_CORE_URL);
     });
 
-    test("passes transitive composition dependencies to asset resolution", async () => {
+    test("passes transitive component dependencies without retaining the composition host", async () => {
         const ctx = makeCtx();
         const repository = ctx.content as unknown as {
-            getRenderableBlocs: () => Promise<{ id: string }[]>;
+            getRenderableBlocs: () => Promise<
+                {
+                    id: string;
+                    kind: "component" | "composition";
+                    markupHTML: string;
+                    root: { accepts: ["div"] };
+                    hasBehavior: boolean;
+                }[]
+            >;
             getBlocViewJS: (tag: string) => Promise<string | null>;
         };
         repository.getRenderableBlocs = async () => {
-            return [{ id: "site-header" }, { id: "base-nav" }, { id: "base-link" }];
+            return [
+                {
+                    id: "site-header",
+                    kind: "composition",
+                    markupHTML: '<nav cms-bloc="base-nav"></nav>',
+                    root: { accepts: ["div"] },
+                    hasBehavior: false,
+                },
+                {
+                    id: "base-nav",
+                    kind: "component",
+                    markupHTML: '<a cms-bloc="base-link"></a>',
+                    root: { accepts: ["div"] },
+                    hasBehavior: false,
+                },
+                {
+                    id: "base-link",
+                    kind: "component",
+                    markupHTML: "<slot></slot>",
+                    root: { accepts: ["div"] },
+                    hasBehavior: true,
+                },
+            ];
         };
         repository.getBlocViewJS = async (tag) =>
             ({
@@ -107,7 +137,7 @@ describe("renderPage — binding core wrapper", () => {
 
         await renderPage({ ...page, content: '<header cms-bloc="site-header"></header>' }, ctx);
 
-        expect(resolvedTags).toEqual(["base-link", "base-nav", "site-header"]);
+        expect(resolvedTags).toEqual(["base-link", "base-nav"]);
     });
 
     test("makes dynamic image sources inert without changing static images", async () => {

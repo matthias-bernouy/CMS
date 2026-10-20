@@ -69,7 +69,7 @@ export function migrationRelease(version: string, blocId: string): Record<string
                 root: { accepts: ["div"] },
                 id: blocId,
                 label: "bloc.label",
-                template: "<div></div>",
+                markup: "<div></div>",
                 uses: [],
                 requires: [],
                 slots: {},

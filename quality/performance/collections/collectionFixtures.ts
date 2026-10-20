@@ -11,7 +11,7 @@ export function collectionFixture(blocCount: number, pageCount: number, version 
             root: { accepts: ["div"] },
             id,
             label,
-            template: '<article><slot name="body"></slot></article>',
+            markup: '<article><slot name="body"></slot></article>',
             slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
             uses: [],
             requires: [],

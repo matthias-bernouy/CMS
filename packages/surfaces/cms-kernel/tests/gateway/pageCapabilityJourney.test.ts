@@ -22,7 +22,8 @@ test("a published Page is analyzed statically and invokes its public capability 
         description: "Displays products returned by the catalogue provider.",
         viewJS: "cmsRuntime.registerBloc('catalog-products', { mount() {} })",
         root: { accepts: ["div"] },
-        templateHTML:
+        kind: "component" as const,
+        markupHTML:
             '<section cms-query="shop:list-products as products" cms-query-input=\'{"category":{"from":"literal","value":"shoes"}}\'></section>',
         ownership: { kind: "code-managed" },
         slots: {},
