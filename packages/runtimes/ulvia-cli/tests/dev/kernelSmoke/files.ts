@@ -22,7 +22,19 @@ export async function mutateFiles(page: Page): Promise<void> {
     const card = fileCard(page, "smoke.png");
     const renameForm = capabilityForm(card, "workspace.files.update");
     await renameForm.locator('input[name="name"]').fill("smoke-renamed.png");
-    await submit(page, "workspace.files.update", renameForm.locator('button[type="submit"]'));
+    const refreshedAfterRename = await submit(
+        page,
+        "workspace.files.update",
+        renameForm.locator('button[type="submit"]'),
+    );
+    const refreshedWorkspace = (await refreshedAfterRename.json()) as { items?: Array<{ name?: unknown }> };
+    if (!refreshedWorkspace.items?.some(({ name }) => name === "smoke-renamed.png")) {
+        throw new Error(
+            `workspace.get returned stale file names after rename: ${refreshedWorkspace.items
+                ?.map(({ name }) => String(name))
+                .join(", ")}`,
+        );
+    }
     const renamed = fileCard(page, "smoke-renamed.png");
     await renamed.waitFor();
 
@@ -107,12 +119,14 @@ async function replace(page: Page, card: Locator, name: string, contents: Buffer
     await fileCard(page, name).waitFor();
 }
 
-async function submit(page: Page, capabilityId: string, trigger: Locator): Promise<void> {
+async function submit(page: Page, capabilityId: string, trigger: Locator) {
     const responsePromise = page.waitForResponse((candidate) => candidate.url().includes(capabilityId));
     const refreshed = page.waitForResponse(isWorkspaceResponse);
     await trigger.click();
     await expectOk(capabilityId, await responsePromise);
-    await expectOk("workspace.get", await refreshed);
+    const refreshResponse = await refreshed;
+    await expectOk("workspace.get", refreshResponse);
+    return refreshResponse;
 }
 
 async function expectOpenImage(page: Page, card: ReturnType<typeof fileCard>, expectedWidth: number): Promise<void> {

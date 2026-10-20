@@ -65,10 +65,23 @@ async function signIn(
     await page.getByRole("heading", { name: /^(Welcome back|Bon retour)$/u }).waitFor();
     await page.getByLabel(/^(Email address|Adresse e-mail)$/u).fill(credentials.adminEmail);
     await page.getByLabel(/^(Password|Mot de passe)$/u).fill(credentials.adminPassword);
-    await Promise.all([
-        page.waitForURL(/\/admin$/u),
-        page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click(),
-    ]);
+    const loginResponse = page.waitForResponse((response) =>
+        response.url().includes("/.cms/call/ulvia.cms.access/login-password"),
+    );
+    await page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click();
+    const response = await loginResponse;
+    if (!response.ok()) {
+        throw new Error(`login capability returned ${response.status()}`);
+    }
+    const cookies = await page.context().cookies(kernelOrigin);
+    if (!cookies.some((cookie) => cookie.name === "cms-session")) {
+        const headers = await response.allHeaders();
+        const signals = ["set-cookie", "x-ulvia-session-effect"].filter((name) => Object.hasOwn(headers, name));
+        throw new Error(
+            `login capability returned success without establishing the CMS session cookie (response signals: ${signals.join(", ") || "none"})`,
+        );
+    }
+    await page.waitForURL(/\/admin$/u);
     await page.getByRole("heading", { name: /^(Dashboard|Tableau de bord)$/u }).waitFor();
     await adminPageLink(page, "pages").click();
     await page.getByRole("heading", { name: "Pages", exact: true }).waitFor();

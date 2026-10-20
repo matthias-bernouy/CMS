@@ -56,9 +56,10 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     }
     await addHeading.click();
     await fillLatestVisibleElementContent(page, "Smoke Page");
-    await addHeading.click();
+    const addProse = page.locator('button[data-add="ulvia-official-prose"]');
+    await addProse.click();
     await fillLatestVisibleElementContent(page, "Published through the Kernel.");
-    await addHeading.click();
+    await addProse.click();
     await fillLatestVisibleElementContent(page, "Built with the visual Page editor.");
     const saveResponse = await submitPageMutation(page, "update");
     if (!saveResponse.ok()) {
