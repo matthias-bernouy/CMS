@@ -1,0 +1,25 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-auth-shell",
+    "label": "bloc.auth-shell.label",
+    "description": "bloc.auth-shell.description",
+    "category": "bloc.category.layout",
+    "catalogue": "hidden",
+    "uses": ["ulvia-official-cover"],
+    "requires": [],
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-cover"
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["main"]
+    }
+}

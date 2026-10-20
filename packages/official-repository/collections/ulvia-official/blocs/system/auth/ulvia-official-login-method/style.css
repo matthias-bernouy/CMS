@@ -1,6 +1,3 @@
-[part="wrapper"] {
-    display: contents;
-}
 :scope {
     display: inline-flex;
     width: 100%;

@@ -25,7 +25,3 @@
         sans-serif
     );
 }
-
-[part="page"] {
-    min-height: 100svh;
-}
