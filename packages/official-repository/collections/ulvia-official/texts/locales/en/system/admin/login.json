@@ -1,12 +1,8 @@
 {
     "ui-administration-access-is-restricted-to-approved-accounts": "Administration access is restricted to approved accounts.",
-    "ui-continue-with": "Or continue with",
     "ui-invalid-email-or-password": "Invalid email or password.",
-    "ui-loading-sign-in-methods": "Loading sign-in methods…",
-    "ui-no-sign-in-method-is-currently-available": "No sign-in method is currently available. Contact the site administrator.",
     "ui-password": "Password",
     "ui-sign-in": "Sign in",
-    "ui-sign-in-methods-unavailable": "Sign-in methods could not be loaded. Please try again.",
     "ui-sign-in-to-continue-to-your-administration-workspace": "Sign in to continue to your administration workspace.",
     "ui-site-administration": "Site administration",
     "ui-too-many-attempts-please-wait-and-try-again": "Too many attempts. Please wait and try again.",

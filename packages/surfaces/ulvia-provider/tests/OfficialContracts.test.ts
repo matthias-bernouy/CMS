@@ -41,7 +41,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
             });
         }
     }
-    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(70);
+    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(69);
     const runner = new BunRunner();
     const runtime = {
         siteId: "site-a",

@@ -16,8 +16,6 @@ test("auth entrypoints separate composition, management and HTTP without exposin
         "registerPublicAuthRoutes",
         "createLocalUser",
         "deleteUserCompletely",
-        "deleteIdentityProvider",
-        "updateIdentityProvider",
     ]) {
         expect(auth).not.toHaveProperty(name);
     }
@@ -44,15 +42,4 @@ test("ordinary auth entrypoints do not resolve SMTP or Mongo even through transi
     expect(result.logs).toEqual([]);
     expect(result.success).toBe(true);
     expect(result.outputs).toHaveLength(3);
-});
-
-test("browser helpers bundle independently from authentication and transport implementations", async () => {
-    const result = await Bun.build({
-        entrypoints: [resolve(import.meta.dir, "../../src/exports/browser.ts")],
-        target: "browser",
-        write: false,
-    });
-    expect(result.logs).toEqual([]);
-    expect(result.success).toBe(true);
-    expect(await result.outputs[0]!.text()).not.toMatch(/nodemailer|mongodb|LocalAuthentication|OidcAuthentication/);
 });

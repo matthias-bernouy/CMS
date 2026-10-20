@@ -143,7 +143,6 @@ test("official administrator provisioning writes the shared authority model", as
         instance: { id: "instance:official", storageKey: "instance-official" } as ProviderInstanceRecord,
         composition: {
             stores: {
-                identityProviders: { get: async () => ({ id: "local" }) },
                 credentials: { getByEmail: async () => ({ sub: "administrator" }) },
             },
             administrators: {

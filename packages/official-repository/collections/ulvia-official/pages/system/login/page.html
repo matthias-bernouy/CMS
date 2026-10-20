@@ -17,67 +17,37 @@
                             <p slot="content">{{ cms.i18n.ulvia-official.ui-sign-in-to-continue-to-your-administration-workspace }}</p>
                         </div>
                     </div>
-                    <section slot="items" cms-query="kernel.auth:methods as methods">
-                        <p role="status" aria-live="polite" cms-condition="methods.activity === 'fetching'">
-                            {{ cms.i18n.ulvia-official.ui-loading-sign-in-methods }}
-                        </p>
-                        <div cms-match="methods.outcome.kind">
-                            <span cms-case='"none"'></span>
-                            <div cms-case='"success"'>
-                                <p role="status" cms-condition="methods.data.length === 0">
-                                    {{ cms.i18n.ulvia-official.ui-no-sign-in-method-is-currently-available }}
-                                </p>
-                                <form
-                                    cms-repeat="methods.data as method"
-                                    cms-condition="method.fields"
-                                    cms-mutation="kernel.auth:login as session"
-                                    cms-mutation-redirect="/admin"
-                                    cms-mutation-redirect-param="returnTo"
-                                >
-                                    <div cms-bloc="ulvia-official-stack" gap="md">
-                                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                                            <span slot="label">{{ cms.i18n.ulvia-official.ui-email-address }}</span>
-                                            <div cms-bloc="ulvia-official-input" slot="control">
-                                                <input type="email" name="email" autocomplete="username" inputmode="email" required>
-                                            </div>
-                                        </div>
-                                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                                            <span slot="label">{{ cms.i18n.ulvia-official.ui-password }}</span>
-                                            <div cms-bloc="ulvia-official-input" slot="control">
-                                                <input type="password" name="password" autocomplete="current-password" required>
-                                            </div>
-                                        </div>
-                                        <div cms-bloc="ulvia-official-form-actions" wide="" slot="items">
-                                            <button cms-bloc="ulvia-official-action" slot="actions" type="submit">
-                                                <span>{{ cms.i18n.ulvia-official.ui-sign-in }}</span>
-                                            </button>
-                                        </div>
-                                        <p
-                                            slot="items"
-                                            role="alert"
-                                            cms-condition="(session.outcome.kind === 'error' || session.outcome.kind === 'failure') && session.outcome.status !== 429"
-                                        >
-                                            {{ cms.i18n.ulvia-official.ui-invalid-email-or-password }}
-                                        </p>
-                                        <p slot="items" role="alert" cms-condition="session.outcome.status === 429">
-                                            {{ cms.i18n.ulvia-official.ui-too-many-attempts-please-wait-and-try-again }}
-                                        </p>
-                                    </div>
-                                </form>
-                                <p cms-repeat="methods.data as method" cms-condition="method.loginUrl">{{ cms.i18n.ulvia-official.ui-continue-with }}</p>
-                                <button
-                                    cms-bloc="ulvia-official-login-method"
-                                    login-url="{{ method.loginUrl }}"
-                                    cms-condition="method.loginUrl"
-                                    cms-repeat="methods.data as method"
-                                    type="button"
-                                >
-                                    <span>{{ method.displayName }}</span>
+                    <form slot="items" cms-mutation="kernel.auth:login as session" cms-mutation-redirect="/admin" cms-mutation-redirect-param="returnTo">
+                        <div cms-bloc="ulvia-official-stack" gap="md">
+                            <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
+                                <span slot="label">{{ cms.i18n.ulvia-official.ui-email-address }}</span>
+                                <div cms-bloc="ulvia-official-input" slot="control">
+                                    <input type="email" name="email" autocomplete="username" inputmode="email" required>
+                                </div>
+                            </div>
+                            <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
+                                <span slot="label">{{ cms.i18n.ulvia-official.ui-password }}</span>
+                                <div cms-bloc="ulvia-official-input" slot="control">
+                                    <input type="password" name="password" autocomplete="current-password" required>
+                                </div>
+                            </div>
+                            <div cms-bloc="ulvia-official-form-actions" wide="" slot="items">
+                                <button cms-bloc="ulvia-official-action" slot="actions" type="submit">
+                                    <span>{{ cms.i18n.ulvia-official.ui-sign-in }}</span>
                                 </button>
                             </div>
-                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-sign-in-methods-unavailable }}</p>
+                            <p
+                                slot="items"
+                                role="alert"
+                                cms-condition="(session.outcome.kind === 'error' || session.outcome.kind === 'failure') && session.outcome.status !== 429"
+                            >
+                                {{ cms.i18n.ulvia-official.ui-invalid-email-or-password }}
+                            </p>
+                            <p slot="items" role="alert" cms-condition="session.outcome.status === 429">
+                                {{ cms.i18n.ulvia-official.ui-too-many-attempts-please-wait-and-try-again }}
+                            </p>
                         </div>
-                    </section>
+                    </form>
                 </div>
             </div>
         </div>

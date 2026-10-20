@@ -30,7 +30,6 @@ test("access overview retries until settings and revision belong to one snapshot
                 getSystem: async () => structuredClone(systems.shift() ?? currentSystem),
             },
             users: { list: async () => ({ users: [], total: 0, page: 1, limit: 50, hasMore: false }) },
-            identityProviders: { list: async () => [] },
         } as never,
         { administrators: { list: async () => [] } } as never,
     );

@@ -12,12 +12,6 @@
         "group": "text.group.admin.access"
     },
     {
-        "id": "ui-choose-which-configured-identity-methods-are-available-on-the-administration-sign-in-page",
-        "label": "text.ui-choose-which-configured-identity-methods-are-available-on-the-administration-sign-in-page.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
         "id": "ui-delete-member",
         "label": "text.ui-delete-member.label",
         "category": "text.category.admin",
@@ -26,12 +20,6 @@
     {
         "id": "ui-disabled",
         "label": "text.ui-disabled.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
-        "id": "ui-display-name",
-        "label": "text.ui-display-name.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
     },
@@ -60,20 +48,14 @@
         "group": "text.group.admin.access"
     },
     {
-        "id": "ui-login-providers",
-        "label": "text.ui-login-providers.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
         "id": "ui-make-administrator",
         "label": "text.ui-make-administrator.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
     },
     {
-        "id": "ui-manage-cms-members-administrator-access-and-sign-in-methods",
-        "label": "text.ui-manage-cms-members-administrator-access-and-sign-in-methods.label",
+        "id": "ui-manage-cms-members-and-administrator-access",
+        "label": "text.ui-manage-cms-members-and-administrator-access.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
     },
@@ -96,44 +78,14 @@
         "group": "text.group.admin.access"
     },
     {
-        "id": "ui-provider-display-name",
-        "label": "text.ui-provider-display-name.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
-        "id": "ui-provider-status",
-        "label": "text.ui-provider-status.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
         "id": "ui-remove-administrator",
         "label": "text.ui-remove-administrator.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
     },
     {
-        "id": "ui-save-provider",
-        "label": "text.ui-save-provider.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
-        "id": "ui-status",
-        "label": "text.ui-status.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
         "id": "ui-the-administrator-grant-changed-reload-and-retry",
         "label": "text.ui-the-administrator-grant-changed-reload-and-retry.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
-        "id": "ui-the-provider-cannot-be-changed-in-its-current-state",
-        "label": "text.ui-the-provider-cannot-be-changed-in-its-current-state.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
     },

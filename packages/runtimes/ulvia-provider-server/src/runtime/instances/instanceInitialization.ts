@@ -72,16 +72,6 @@ export async function initializeOfficialAdministrator(
 ): Promise<void> {
     execution.throwIfLeaseLost();
     const stores = composition.stores;
-    if (!(await stores.identityProviders.get("local"))) {
-        execution.throwIfLeaseLost();
-        await stores.identityProviders.create({
-            id: "local",
-            kind: "local",
-            enabled: true,
-            displayName: "Email & password",
-        });
-    }
-    execution.throwIfLeaseLost();
     const existing = await stores.credentials.getByEmail(administrator.email);
     execution.throwIfLeaseLost();
     const subjectId = existing

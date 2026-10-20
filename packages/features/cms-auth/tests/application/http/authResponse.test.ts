@@ -19,7 +19,7 @@ describe("private auth responses", () => {
     test("preserves redirects and every Set-Cookie value", () => {
         const headers = new Headers({ Location: "/admin" });
         headers.append("Set-Cookie", "cms-session=session-token; HttpOnly");
-        headers.append("Set-Cookie", "oidc-flight=; Max-Age=0");
+        headers.append("Set-Cookie", "auth-flow=; Max-Age=0");
 
         const response = privateAuthResponse(null, { status: 302, headers });
 
@@ -28,7 +28,7 @@ describe("private auth responses", () => {
         expect(response.headers.get("location")).toBe("/admin");
         expect(response.headers.getSetCookie()).toEqual([
             "cms-session=session-token; HttpOnly",
-            "oidc-flight=; Max-Age=0",
+            "auth-flow=; Max-Age=0",
         ]);
         expectPrivatePolicy(response);
     });

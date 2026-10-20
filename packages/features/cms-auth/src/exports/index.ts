@@ -20,10 +20,6 @@ export {
     LocalAuthentication,
     type LocalAuthConfig,
 } from "cms-auth/application/core/authentication/LocalAuthentication";
-export {
-    OidcAuthentication,
-    type OidcAuthConfig,
-} from "cms-auth/application/core/authentication/OidcAuthentication";
 export { SubjectResolver } from "cms-auth/accounts/core/SubjectResolver";
 export { resolveRequestSubject } from "cms-auth/application/core/authentication/requestSubject";
 export {
@@ -31,12 +27,7 @@ export {
     type PublicAuthActions,
     type PublicAuthActionsConfig,
 } from "cms-auth/application/core/public-flows/PublicAuthActions";
-export {
-    validateProviderKind,
-    validatePatName,
-    isBuiltinProvider,
-    AuthValidationError,
-} from "cms-auth/application/core/validation";
+export { validatePatName, AuthValidationError } from "cms-auth/application/core/validation";
 export {
     signupLocalUser,
     requestEmailVerification,
@@ -56,14 +47,6 @@ export type {
     UsersListOptions,
     UsersPage,
 } from "cms-auth/accounts/interfaces/UsersRepository";
-export type {
-    IdentityProvider,
-    IdentityProviderRepository,
-    IdentityProviderKind,
-    LoginMethod,
-    NewIdentityProvider,
-    IdentityProviderPatch,
-} from "cms-auth/providers/interfaces/IdentityProvider";
 export type {
     LocalCredentialStore,
     LocalCredential,
@@ -94,7 +77,6 @@ export type {
 
 // ── Default implementations (in-memory; Mongo under ./mongo) ───────────
 export { InMemoryUsersRepository } from "cms-auth/accounts/default-implementation/memory/InMemoryUsersRepository";
-export { InMemoryIdentityProviderRepository } from "cms-auth/providers/default-implementation/memory/InMemoryIdentityProviderRepository";
 export { InMemoryLocalCredentialStore } from "cms-auth/providers/default-implementation/memory/InMemoryLocalCredentialStore";
 export { InMemoryPatRepository } from "cms-auth/tokens/personal-access/default-implementation/memory/InMemoryPatRepository";
 export { InMemoryAuthTokenStore } from "cms-auth/tokens/one-time/default-implementation/memory/InMemoryAuthTokenStore";

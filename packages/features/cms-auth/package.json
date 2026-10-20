@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-auth",
     "version": "0.1.0",
-    "description": "CMS-owned authentication primitives (LocalAuth + OidcAuth + PAT + signed cookies) plus the membership / identity-provider / credential stores. Provider-agnostic — Keycloak/Google/Okta plug in as one OIDC backend among many. Consumed by every CMS surface that needs an admin-side auth chain.",
+    "description": "CMS-owned local authentication, personal access tokens, signed sessions, membership and credential stores.",
     "license": "MIT",
     "type": "module",
     "main": "./src/exports/index.ts",
@@ -10,12 +10,10 @@
         "./management": "./src/exports/management.ts",
         "./http": "./src/exports/http.ts",
         "./mongo": "./src/exports/mongo.ts",
-        "./smtp": "./src/exports/smtp.ts",
-        "./browser": "./src/exports/browser.ts"
+        "./smtp": "./src/exports/smtp.ts"
     },
     "dependencies": {
         "@bernouy/envelope-crypto": "workspace:*",
-        "jose": "^6.2.12",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",

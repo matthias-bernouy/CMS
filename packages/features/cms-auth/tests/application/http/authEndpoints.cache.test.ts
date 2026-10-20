@@ -1,17 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { NOOP_LOGGER } from "@bernouy/logging";
 import type { Runner, RouteHandler } from "@bernouy/http-runner";
-import { InMemorySecretStore } from "@bernouy/secret-store";
 import {
-    InMemoryIdentityProviderRepository,
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
     LocalAuthentication,
-    OidcAuthentication,
     SignedCookieCodec,
     SubjectResolver,
 } from "@bernouy/cms-auth";
-import { authMethodsHandler, registerPublicAuthRoutes, type PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
+import { registerPublicAuthRoutes, type PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import {
     localLoginHandler,
     localLoginJsonHandler,
@@ -73,29 +69,6 @@ describe("authentication endpoint cache policy", () => {
         for (const response of [login, rejected, logout, localLogoutJsonHandler(auth)]) {
             expectPrivatePolicy(response);
         }
-    });
-
-    test("protects auth discovery and OIDC error responses", async () => {
-        const methods = await authMethodsHandler({});
-        expect(await methods.json()).toEqual([]);
-        expectPrivatePolicy(methods);
-
-        const users = new InMemoryUsersRepository();
-        const oidc = new OidcAuthentication({
-            callbackBase: "https://site.test/auth",
-            providers: new InMemoryIdentityProviderRepository(),
-            secrets: new InMemorySecretStore(),
-            resolver: new SubjectResolver(users),
-            codec: codec(),
-            cookieName: "cms-session",
-            loginPagePath: "/login",
-            defaultHome: "/admin",
-            logger: NOOP_LOGGER,
-        });
-        const unknown = await oidc.login(new Request("https://site.test/auth/missing/login"));
-        expect(unknown.status).toBe(404);
-        expect(await unknown.text()).toBe("Unknown provider");
-        expectPrivatePolicy(unknown);
     });
 });
 

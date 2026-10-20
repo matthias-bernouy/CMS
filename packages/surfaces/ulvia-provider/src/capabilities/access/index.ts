@@ -7,7 +7,6 @@ import {
     accessCommand,
     actorSubject,
     administratorState,
-    projectIdentityProvider,
     projectSite,
     projectUser,
     requiredGateway,
@@ -22,17 +21,15 @@ export function registerAccessCapabilities(
 ): void {
     dispatcher.register("ulvia.cms.access", "overview", async (input) => {
         const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 50;
-        const [site, page, loginProviders] = await Promise.all([
+        const [site, page] = await Promise.all([
             readSystemSnapshot(dependencies.repo),
             dependencies.users.list({ pagination: { page: 1, limit } }),
-            dependencies.identityProviders.list(),
         ]);
         const administrators = await Promise.all(page.users.map((user) => administratorState(gateway, user.sub)));
         return {
             site: projectSite(site.system, site.revision),
             users: page.users.map((user, index) => projectUser(user, administrators[index]!)),
             totalUsers: page.total,
-            loginProviders: loginProviders.map(projectIdentityProvider),
         };
     });
     dispatcher.register("ulvia.cms.access", "list-users", async (input) => {

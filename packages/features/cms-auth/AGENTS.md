@@ -1,14 +1,13 @@
 # @bernouy/cms-auth
 
-Feature package for CMS-owned authentication: local credentials, OIDC, PATs,
+Feature package for CMS-owned authentication: local credentials, PATs,
 signed session cookies, public auth flows, and membership stores.
 
 ## Layout
 
 - `accounts/`: CMS membership records and identity-to-subject resolution.
-- `providers/`: local credentials, password proof, provider configuration and
-  OIDC protocol helpers/adapters.
-- `sessions/`: shared signed-cookie protocol for local and OIDC login.
+- `providers/`: local credentials and password proof.
+- `sessions/`: signed-cookie protocol for local login.
 - `tokens/`: separate personal-access and one-time token contracts and stores.
 - `email/`: transport-neutral composition/errors and optional SMTP delivery.
 - `application/`: cross-domain account/public flows, authentication assembly,
@@ -29,8 +28,6 @@ the exact same operation.
 - `@bernouy/cms-auth/mongo` exposes Mongo repositories for composition roots.
 - `@bernouy/cms-auth/smtp` exposes SMTP/configured email delivery for runtime
   composition roots only.
-- `@bernouy/cms-auth/browser` exposes browser-safe helpers only. UI components
-  belong to their consuming surface or integration.
 - This package may depend on `@bernouy/secret-store`,
   `@bernouy/envelope-crypto`, `@bernouy/http-runner`, and
   `@bernouy/rate-limiter`; it must not import surfaces or runtimes.

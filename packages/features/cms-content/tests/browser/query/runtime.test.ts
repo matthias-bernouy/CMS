@@ -113,9 +113,6 @@ test("the closed Kernel query map does not expose arbitrary URLs", () => {
     const account = el('<section cms-query="kernel.auth:me as account"></section>');
     expect(queryRequest(account)).toEqual({ url: "/.cms/auth/me", init: { method: "GET" } });
 
-    const methods = el('<section cms-query="kernel.auth:methods as methods"></section>');
-    expect(queryRequest(methods)).toEqual({ url: "/.cms/auth/methods", init: { method: "GET" } });
-
     const unknown = el('<section cms-query="kernel.auth:secrets as secrets"></section>');
     expect(() => queryRequest(unknown)).toThrow('Unknown Kernel query "kernel.auth:secrets"');
 });

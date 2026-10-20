@@ -1,11 +1,6 @@
 import type { BlobStore } from "@bernouy/blob-store";
-import type {
-    Authentication,
-    IdentityProviderRepository,
-    LocalAuthenticationActions,
-    Subject,
-} from "@bernouy/cms-auth";
-import type { OidcAuthHandlers, PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
+import type { Authentication, LocalAuthenticationActions, Subject } from "@bernouy/cms-auth";
+import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
@@ -19,11 +14,7 @@ export type KernelCmsConfig = {
     content: ContentReader;
     authentication: Authentication;
     publicAuth?: PublicAuthRoutesConfig;
-    authBackends?: {
-        local?: LocalAuthenticationActions;
-        oidc?: OidcAuthHandlers;
-    };
-    identityProviders?: IdentityProviderRepository;
+    localAuthentication?: LocalAuthenticationActions;
     collections?: {
         siteId: string;
         migrations: CollectionMigrationService;

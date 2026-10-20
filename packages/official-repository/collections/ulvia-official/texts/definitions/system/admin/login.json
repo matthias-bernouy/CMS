@@ -6,26 +6,8 @@
         "group": "text.group.admin.access"
     },
     {
-        "id": "ui-continue-with",
-        "label": "text.ui-continue-with.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
         "id": "ui-invalid-email-or-password",
         "label": "text.ui-invalid-email-or-password.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
-        "id": "ui-loading-sign-in-methods",
-        "label": "text.ui-loading-sign-in-methods.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
-        "id": "ui-no-sign-in-method-is-currently-available",
-        "label": "text.ui-no-sign-in-method-is-currently-available.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
     },
@@ -38,12 +20,6 @@
     {
         "id": "ui-sign-in",
         "label": "text.ui-sign-in.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.access"
-    },
-    {
-        "id": "ui-sign-in-methods-unavailable",
-        "label": "text.ui-sign-in-methods-unavailable.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
     },

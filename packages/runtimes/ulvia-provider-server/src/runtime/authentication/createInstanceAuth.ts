@@ -9,10 +9,6 @@ import { ConfiguredEmailer } from "@bernouy/cms-auth/smtp";
 import type { ProviderStores } from "../stores/providerStores";
 
 export async function createInstanceAuth(stores: ProviderStores, kernelUrl: string) {
-    const localProvider = await stores.identityProviders.get("local");
-    if (!localProvider?.enabled) {
-        throw new Error("The instance has not been provisioned with an enabled local identity provider");
-    }
     const auth = new LocalAuthentication({
         providerId: "local",
         loginPagePath: "/login",

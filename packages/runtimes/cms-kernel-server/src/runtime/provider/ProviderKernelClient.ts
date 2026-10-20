@@ -1,7 +1,5 @@
 import type {
     Authentication,
-    IdentityProvider,
-    IdentityProviderRepository,
     LocalAuthenticationActions,
     LocalLoginResult,
     PublicAuthActions,
@@ -21,7 +19,6 @@ export class ProviderKernelClient {
     readonly authentication: Authentication;
     readonly localAuthentication: LocalAuthenticationActions;
     readonly publicAuth: PublicAuthActions;
-    readonly identityProviders: IdentityProviderRepository;
     readonly pageCapabilities: PageCapabilityAccessPort;
     readonly collectionAssets: InstalledCollectionAssetSource;
     readonly gateway: {
@@ -39,7 +36,6 @@ export class ProviderKernelClient {
         this.authentication = remoteAuthentication(this);
         this.localAuthentication = remoteLocalAuthentication(this, kernelUrl.startsWith("https:"));
         this.publicAuth = remotePublicAuth(this);
-        this.identityProviders = remoteIdentityProviders(this);
         this.pageCapabilities = {
             requiredAccess: (page) => this.query("page.capability-access", { page }),
         };
@@ -269,19 +265,4 @@ function remotePublicAuth(client: ProviderKernelClient): PublicAuthActions {
         },
         confirmPasswordReset: (input) => post("confirm-password-reset", input),
     };
-}
-
-function remoteIdentityProviders(client: ProviderKernelClient): IdentityProviderRepository {
-    const list = () => client.query<IdentityProvider[]>("auth.identity-providers");
-    return {
-        list,
-        get: async (id) => (await list()).find((provider) => provider.id === id) ?? null,
-        create: async () => unsupported(),
-        update: async () => unsupported(),
-        delete: async () => unsupported(),
-    };
-}
-
-function unsupported(): never {
-    throw new Error("Identity provider mutations are owned by the Provider");
 }

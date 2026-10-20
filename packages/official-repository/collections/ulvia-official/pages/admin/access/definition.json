@@ -18,11 +18,6 @@
             "contractId": "ulvia.cms.access",
             "capabilityId": "set-administrator",
             "versionRange": "^1.0.0"
-        },
-        {
-            "contractId": "ulvia.cms.access",
-            "capabilityId": "update-login-provider",
-            "versionRange": "^1.0.0"
         }
     ]
 }

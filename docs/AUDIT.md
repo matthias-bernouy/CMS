@@ -228,10 +228,7 @@ penetration testing, dependency monitoring or deployment review.
    are admitted. The versioned ABI and admission policy reject incompatible or
    explicitly forbidden behavior, but scoped Light DOM and namespaces remain
    encapsulation rather than isolation.
-2. OIDC code exists but is not part of the current official local bootstrap.
-   Discovery, token and JWKS networking must receive Gateway-equivalent SSRF,
-   timeout, redirect and size protections before production activation.
-3. Author files are publicly readable by ID/path once exposed by the site,
+2. Author files are publicly readable by ID/path once exposed by the site,
    including unused or draft-only files. They are not a confidential-file
    facility.
 
@@ -297,8 +294,7 @@ changing a constant.
    environments, surface evidence history to operators and require current
    passing evidence where approval policy demands it.
 6. **Harden deferred trust boundaries before enabling them.** In particular,
-   isolate unreviewed collection JavaScript and harden OIDC networking before
-   those features are exposed.
+   isolate unreviewed collection JavaScript before that feature is exposed.
 
 ## Deliberate Non-Goals For Now
 

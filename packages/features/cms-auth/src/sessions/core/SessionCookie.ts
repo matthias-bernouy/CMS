@@ -10,7 +10,7 @@ export type SessionCookieConfig = {
     ttlSeconds?: number;
 };
 
-/** Shared signed CMS session cookie protocol used by local and OIDC login. */
+/** Signed CMS session cookie protocol used by local login. */
 export class SessionCookie {
     private readonly ttl: number;
 

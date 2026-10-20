@@ -5,7 +5,6 @@ import { readJsonObject, requiredString } from "cms-auth/application/http/input/
 
 export const PUBLIC_AUTH_ROUTES = {
     base: "/.cms/auth",
-    methods: "/methods",
     signup: "/signup",
     login: "/login",
     logout: "/logout",

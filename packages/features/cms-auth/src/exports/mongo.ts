@@ -9,10 +9,6 @@ export {
     type MongoUsersConfig,
 } from "cms-auth/accounts/default-implementation/mongo/MongoUsersRepository";
 export {
-    MongoIdentityProviderRepository,
-    type MongoIdentityProviderConfig,
-} from "cms-auth/providers/default-implementation/mongo/MongoIdentityProviderRepository";
-export {
     MongoLocalCredentialStore,
     type MongoLocalCredentialConfig,
 } from "cms-auth/providers/default-implementation/mongo/MongoLocalCredentialStore";

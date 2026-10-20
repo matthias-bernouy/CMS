@@ -107,7 +107,7 @@ test("collection system Pages admit only the closed authentication bindings", ()
         root: { accepts: ["div"] },
         id: "atlas-authentication",
         label: "bloc.page.label",
-        markup: `<section cms-query="kernel.auth:methods as methods">
+        markup: `<section cms-query="kernel.auth:me as account">
             <form cms-mutation="kernel.auth:login as session">
                 <input type="email" name="email" required>
                 <input type="password" name="password" required>
@@ -124,10 +124,10 @@ test("collection system Pages admit only the closed authentication bindings", ()
     ).not.toThrow();
 
     for (const markup of [
-        authentication.markup.replace("kernel.auth:methods", "kernel.auth:secrets"),
+        authentication.markup.replace("kernel.auth:me", "kernel.auth:secrets"),
         authentication.markup.replace(
-            'cms-query="kernel.auth:methods as methods"',
-            'cms-query="kernel.auth:methods as methods" cms-query-input=\'{"id":{"from":"literal","value":"x"}}\'',
+            'cms-query="kernel.auth:me as account"',
+            'cms-query="kernel.auth:me as account" cms-query-input=\'{"id":{"from":"literal","value":"x"}}\'',
         ),
     ]) {
         expect(() =>

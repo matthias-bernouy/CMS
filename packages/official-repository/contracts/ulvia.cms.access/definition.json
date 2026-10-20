@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "contractId": "ulvia.cms.access",
     "name": "CMS Access And Settings",
-    "description": "Manage CMS membership, administrator grants, authentication methods and non-secret site settings.",
+    "description": "Manage CMS membership, administrator grants and non-secret site settings.",
     "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": {

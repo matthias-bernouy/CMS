@@ -1,6 +1,6 @@
 # @bernouy/cms-auth
 
-CMS-owned authentication for local credentials, OIDC, personal access tokens,
+CMS-owned authentication for local credentials, personal access tokens,
 signed sessions, public account flows, and membership persistence.
 
 ## Public API

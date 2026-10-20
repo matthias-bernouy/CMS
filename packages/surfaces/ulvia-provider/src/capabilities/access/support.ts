@@ -1,5 +1,5 @@
 import type { TSystem } from "@bernouy/cms-content";
-import type { IdentityProvider, TUser } from "@bernouy/cms-auth";
+import type { TUser } from "@bernouy/cms-auth";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityInvocationContext } from "../../dispatch/registry";
 import type { UlviaProviderGateway } from "../../ports";
 
@@ -22,25 +22,6 @@ export function projectUser(user: TUser, administrator: { enabled: boolean; revi
         administratorRevision: administrator.revision,
         createdAt: user.createdAt.toISOString(),
         lastSeenAt: user.lastSeenAt.toISOString(),
-    };
-}
-
-export function projectIdentityProvider(provider: IdentityProvider) {
-    return {
-        id: provider.id,
-        revision: provider.revision,
-        kind: provider.kind,
-        displayName: provider.displayName,
-        enabled: provider.enabled,
-        ...(provider.icon ? { icon: provider.icon } : {}),
-        ...(provider.issuer ? { issuer: provider.issuer } : {}),
-        ...(provider.authorizationEndpoint ? { authorizationEndpoint: provider.authorizationEndpoint } : {}),
-        ...(provider.tokenEndpoint ? { tokenEndpoint: provider.tokenEndpoint } : {}),
-        ...(provider.jwksUri ? { jwksUri: provider.jwksUri } : {}),
-        ...(provider.clientId ? { clientId: provider.clientId } : {}),
-        ...(provider.scopes ? { scopes: provider.scopes } : {}),
-        createdAt: provider.createdAt.toISOString(),
-        updatedAt: provider.updatedAt.toISOString(),
     };
 }
 
@@ -73,13 +54,6 @@ export async function accessCommand<T>(operation: () => Promise<T>): Promise<T> 
         if (status === 409) {
             throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
         }
-        const message = String(error);
-        if (message.includes("unknown provider")) {
-            throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
-        }
-        if (message.includes("cannot disable") || message.includes("not editable")) {
-            throw new ProviderCapabilityDispatchError("INVALID_STATE", 409);
-        }
         throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
     }
 }
@@ -96,14 +70,6 @@ export function revision(value: unknown): number {
         throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
     }
     return Number(value);
-}
-
-export function positiveRevision(value: unknown): number {
-    const valueRevision = revision(value);
-    if (valueRevision < 1) {
-        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-    }
-    return valueRevision;
 }
 
 export function requiredGateway(gateway: UlviaProviderGateway | undefined): UlviaProviderGateway {

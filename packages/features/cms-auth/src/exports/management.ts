@@ -11,12 +11,7 @@ export {
     changeOwnPassword,
     type ChangeOwnPasswordStores,
 } from "cms-auth/application/core/account-lifecycle/changeOwnPassword";
-export {
-    deleteIdentityProvider,
-    updateIdentityProvider,
-    type IdentityProviderStores,
-} from "cms-auth/application/core/account-lifecycle/identityProviderRules";
-export { validateProviderKind, validatePatName, AuthValidationError } from "cms-auth/application/core/validation";
+export { validatePatName, AuthValidationError } from "cms-auth/application/core/validation";
 export {
     createAuthEmailTestSender,
     type AuthEmailTestSenderConfig,
@@ -28,14 +23,6 @@ export type {
     UsersListOptions,
     UsersPage,
 } from "cms-auth/accounts/interfaces/UsersRepository";
-export type {
-    IdentityProvider,
-    IdentityProviderRepository,
-    IdentityProviderKind,
-    LoginMethod,
-    NewIdentityProvider,
-    IdentityProviderPatch,
-} from "cms-auth/providers/interfaces/IdentityProvider";
 export type {
     LocalCredentialStore,
     LocalCredential,

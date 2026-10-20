@@ -74,23 +74,7 @@ export async function mutateProviders(page: Page): Promise<void> {
 
 export async function mutateAccess(page: Page, adminEmail: string): Promise<void> {
     await adminPageLink(page, "access").click();
-    await page.locator('a[href="#access-login-providers"]').click();
-    await page.waitForURL(/#access-login-providers$/u);
-    const passwordProvider = page
-        .locator('#access-login-providers [role="listitem"]')
-        .filter({ hasText: "Email & password" });
-    await passwordProvider.waitFor();
-    const providerForm = passwordProvider.locator('form[cms-mutation^="ulvia.cms.access:update-login-provider "]');
-    await providerForm.locator('select[name="enabled"]').selectOption("true");
-    const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.access/update-login-provider")),
-        providerForm.locator('button[type="submit"]').click(),
-    ]);
-    if (!response.ok()) {
-        throw new Error(`Login provider flow failed (${response.status()}).`);
-    }
-    await page.locator('a[href="#access-members"]').click();
-    await page.waitForURL(/#access-members$/u);
+    await page.locator("#access-members").waitFor();
     const administrator = page.locator('#access-members [role="listitem"]').filter({ hasText: adminEmail });
     const removeAdministrator = administrator
         .locator('form[cms-mutation^="ulvia.cms.access:set-administrator "]')

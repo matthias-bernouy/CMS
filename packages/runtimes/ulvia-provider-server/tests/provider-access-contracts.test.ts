@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher, type ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { registerAccessCapabilities } from "@bernouy/ulvia-provider/capabilities";
-import { InMemoryIdentityProviderRepository, InMemoryUsersRepository } from "@bernouy/cms-auth";
+import { InMemoryUsersRepository } from "@bernouy/cms-auth";
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -16,7 +16,7 @@ test("access capabilities protect the caller and cleanly remove another member",
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const users = new InMemoryUsersRepository();
     await users.upsert({ sub: "local:admin", provider: "local", email: "admin@example.test" });
-    await users.upsert({ sub: "oidc:member", provider: "oidc", email: "member@example.test" });
+    await users.upsert({ sub: "external:member", provider: "external", email: "member@example.test" });
     const grants = new Map([["local:admin", { sub: "local:admin", enabled: true, revision: 1, bootstrap: true }]]);
     const administrators = {
         list: async () => [...grants.values()].filter(({ enabled }) => enabled).map(({ sub }) => sub),
@@ -35,7 +35,6 @@ test("access capabilities protect the caller and cleanly remove another member",
     const core = {
         repo: new InMemoryCmsRepository(),
         users,
-        identityProviders: new InMemoryIdentityProviderRepository(),
         credentials: {},
         pats: { list: async () => [], revoke: async () => false },
     };
@@ -49,7 +48,7 @@ test("access capabilities protect the caller and cleanly remove another member",
     expect(await dispatcher.invoke("ulvia.cms.access", "overview", {}, context)).toMatchObject({
         users: [
             { sub: "local:admin", administrator: true, administratorRevision: 1 },
-            { sub: "oidc:member", administrator: false, administratorRevision: 0 },
+            { sub: "external:member", administrator: false, administratorRevision: 0 },
         ],
     });
 
@@ -66,15 +65,15 @@ test("access capabilities protect the caller and cleanly remove another member",
         await dispatcher.invoke(
             "ulvia.cms.access",
             "set-administrator",
-            { sub: "oidc:member", enabled: true, expectedRevision: 0 },
+            { sub: "external:member", enabled: true, expectedRevision: 0 },
             context,
         ),
-    ).toMatchObject({ sub: "oidc:member", administrator: true, revision: 1 });
+    ).toMatchObject({ sub: "external:member", administrator: true, revision: 1 });
 
-    expect(await dispatcher.invoke("ulvia.cms.access", "delete-user", { sub: "oidc:member" }, context)).toEqual({
-        sub: "oidc:member",
+    expect(await dispatcher.invoke("ulvia.cms.access", "delete-user", { sub: "external:member" }, context)).toEqual({
+        sub: "external:member",
         deleted: true,
     });
-    expect(await users.getBySub("oidc:member")).toBeNull();
-    expect((await administrators.get("oidc:member")).enabled).toBe(false);
+    expect(await users.getBySub("external:member")).toBeNull();
+    expect((await administrators.get("external:member")).enabled).toBe(false);
 });

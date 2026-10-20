@@ -10,7 +10,7 @@ export interface Subject {
 
 /**
  * Contract exposed to applications that need to authenticate users.
- * Implementations are provided by auth backends (OIDC, local, mock, etc.).
+ * Implementations are provided by the instance authentication service.
  * The interface is intentionally framework-agnostic: it builds URLs and
  * reads the session from a standard Request, but never writes to a Response.
  * Applications remain in control of HTTP side-effects (redirects, cookies).

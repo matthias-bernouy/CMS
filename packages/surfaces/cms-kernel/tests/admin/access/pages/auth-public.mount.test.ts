@@ -16,12 +16,12 @@ describe("Kernel public auth mount", () => {
             content: createContentReader(new InMemoryCmsRepository()),
             authentication: local,
             publicAuth,
-            authBackends: { local },
+            localAuthentication: local,
             logger: NOOP_LOGGER,
         });
         expect(runner.endpoints.get("POST /.cms/auth/login")).toBe(0);
         expect(runner.endpoints.has("POST /.cms/auth/signup")).toBe(true);
-        expect(runner.endpoints.has("GET /.cms/auth/methods")).toBe(true);
+        expect(runner.endpoints.has("GET /.cms/auth/methods")).toBe(false);
     });
 
     test("does not mount the old Source proxy", async () => {
@@ -37,6 +37,6 @@ describe("Kernel public auth mount", () => {
         expect(runner.handlers.has("GET /assets/admin-runtime.js")).toBe(false);
         expect(runner.handlers.has("GET /assets/admin-styles.css")).toBe(false);
         expect(runner.handlers.has("GET /login")).toBe(false);
-        expect(runner.handlers.has("GET /.cms/auth/methods")).toBe(true);
+        expect(runner.handlers.has("GET /.cms/auth/methods")).toBe(false);
     });
 });

@@ -9,9 +9,9 @@ describe("BindingRuntime — nested core isolation", () => {
         globalThis.fetch = (async () => new Response("[]")) as typeof fetch;
         const root = el(`
             <div>
-                <section cms-query="kernel.auth:methods as outer"></section>
+                <section cms-query="kernel.auth:me as outer"></section>
                 <cms-binding-core>
-                    <section cms-query="kernel.auth:methods as inner"></section>
+                    <section cms-query="kernel.auth:me as inner"></section>
                 </cms-binding-core>
             </div>
         `);

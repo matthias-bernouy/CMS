@@ -31,8 +31,6 @@
     "bloc.file-upload-input.label": "File upload input",
     "bloc.file-link.description": "Open a public or privately signed file URL",
     "bloc.file-link.label": "File link",
-    "bloc.login-method.description": "Open a trusted external sign-in method",
-    "bloc.login-method.label": "Login method",
     "bloc.auth-shell.description": "Frame a full-height authentication experience without owning its content",
     "bloc.auth-shell.label": "Authentication shell",
     "bloc.collection-texts.description": "Edit the site-owned translations of one installed collection",

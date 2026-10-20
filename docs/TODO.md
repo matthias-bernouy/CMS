@@ -55,13 +55,6 @@ Add feature-owned, idempotent migrations with a durable applied-version ledger,
 single-writer fencing, restart recovery and backup/restore tests before internal
 schemas become long-lived production contracts.
 
-## OIDC Activation Gate
-
-**Status:** OIDC support is dormant in the current official local bootstrap.
-Before enabling it in production, give discovery, token and JWKS requests the
-same bounded networking posture as the Gateway: explicit allowlists, DNS/IP
-policy, redirect policy, timeouts, response-size limits and rotation tests.
-
 ## High Availability
 
 **Status:** the current deployment assumes one active CMS runtime and one active

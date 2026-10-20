@@ -1,5 +1,3 @@
-import type { IdentityProviderKind } from "cms-auth/providers/interfaces/IdentityProvider";
-
 /** Thrown when an auth input breaks a domain rule. Carries `.status` so any
  *  HTTP surface maps it to a 400 without importing surface error classes. */
 export class AuthValidationError extends Error {
@@ -20,20 +18,6 @@ export function validatePassword(password: string): void {
     if (password.length < MIN_PASSWORD) {
         throw new AuthValidationError("password", `at least ${MIN_PASSWORD} characters`);
     }
-}
-
-const PROVIDER_KINDS: IdentityProviderKind[] = ["oidc", "local"];
-
-export function isBuiltinProvider(kind: IdentityProviderKind | string): boolean {
-    return kind === "local";
-}
-
-/** Identity-provider kind whitelist. Returns the validated kind. */
-export function validateProviderKind(kind: string): IdentityProviderKind {
-    if (!PROVIDER_KINDS.includes(kind as IdentityProviderKind)) {
-        throw new AuthValidationError("kind", "must be oidc or local");
-    }
-    return kind as IdentityProviderKind;
 }
 
 const MAX_PAT_NAME = 100;

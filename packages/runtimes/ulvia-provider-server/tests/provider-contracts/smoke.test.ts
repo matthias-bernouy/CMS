@@ -32,19 +32,6 @@ test("all eight administration domains dispatch outputs matching their official 
                 hasMore: false,
             }),
         },
-        identityProviders: {
-            list: async () => [
-                {
-                    id: "local",
-                    revision: 1,
-                    kind: "local",
-                    displayName: "Email",
-                    enabled: true,
-                    createdAt: now,
-                    updatedAt: now,
-                },
-            ],
-        },
         collectionMigrations: {
             getActive: async () => null,
             listAudits: async () => [],

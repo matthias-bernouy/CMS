@@ -1,10 +1,6 @@
 <div cms-bloc="ulvia-official-admin-workspace">
     <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-users }}</h1>
-    <p slot="description">{{ cms.i18n.ulvia-official.ui-manage-cms-members-administrator-access-and-sign-in-methods }}</p>
-    <div cms-bloc="ulvia-official-route-tabs" size="sm" label="{{ cms.i18n.ulvia-official.ui-users }}" slot="page-navigation">
-        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#access-members"><span>{{ cms.i18n.ulvia-official.ui-members }}</span></a>
-        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#access-login-providers"><span>{{ cms.i18n.ulvia-official.ui-login-providers }}</span></a>
-    </div>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-manage-cms-members-and-administrator-access }}</p>
     <section
         cms-bloc="ulvia-official-section"
         id="access-overview"
@@ -26,7 +22,7 @@
                     </div>
                 </div>
                 <div cms-bloc="ulvia-official-stack" gap="xl" cms-case='"success"'>
-                    <div id="access-members" role="tabpanel" slot="items">
+                    <div id="access-members" slot="items">
                         <header>
                             <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-members }}</h2>
                             <p>{{ access.data.totalUsers }} {{ cms.i18n.ulvia-official.ui-total-users }}</p>
@@ -138,79 +134,6 @@
                                         </div>
                                     </form>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="access-login-providers" role="tabpanel" slot="items">
-                        <header>
-                            <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-login-providers }}</h2>
-                            <p>{{ cms.i18n.ulvia-official.ui-choose-which-configured-identity-methods-are-available-on-the-administration-sign-in-page }}</p>
-                        </header>
-                        <div cms-bloc="ulvia-official-list" role="list">
-                            <div cms-bloc="ulvia-official-list-item" role="listitem" cms-repeat="access.data.loginProviders as provider" slot="items">
-                                <strong slot="title">{{ provider.displayName }}</strong>
-                                <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="provider.enabled" slot="meta">
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-enabled }}</span>
-                                </div>
-                                <div cms-bloc="ulvia-official-badge" tone="neutral" cms-condition="provider.enabled === false" slot="meta">
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-disabled }}</span>
-                                </div>
-                                <form
-                                    slot="body"
-                                    cms-mutation="ulvia.cms.access:update-login-provider as mutation"
-                                    cms-sync="@page:ulvia-official-access-mutation"
-                                    cms-sync-select="lastSuccess.requestId"
-                                >
-                                    <input type="hidden" name="providerId" value="{{ provider.id }}">
-                                    <input type="hidden" name="expectedRevision" value="{{ provider.revision }}" cms-form-value-type="number">
-                                    <div cms-bloc="ulvia-official-field" cms-condition="provider.kind === 'oidc'" label-position="top">
-                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-display-name }}</span>
-                                        <div cms-bloc="ulvia-official-input" slot="control">
-                                            <input
-                                                type="text"
-                                                name="displayName"
-                                                value="{{ provider.displayName }}"
-                                                maxlength="160"
-                                                aria-label="{{ cms.i18n.ulvia-official.ui-provider-display-name }}"
-                                                required
-                                            >
-                                        </div>
-                                    </div>
-                                    <div cms-bloc="ulvia-official-field" label-position="top">
-                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-status }}</span>
-                                        <div cms-bloc="ulvia-official-select" slot="control">
-                                            <select name="enabled" cms-form-value-type="boolean" aria-label="{{ cms.i18n.ulvia-official.ui-provider-status }}">
-                                                <option value="true" cms-condition="provider.enabled" selected>{{ cms.i18n.ulvia-official.ui-enabled }}</option>
-                                                <option value="true" cms-condition="provider.enabled === false">
-                                                    {{ cms.i18n.ulvia-official.ui-enabled }}
-                                                </option>
-                                                <option value="false" cms-condition="provider.enabled">{{ cms.i18n.ulvia-official.ui-disabled }}</option>
-                                                <option value="false" cms-condition="provider.enabled === false" selected>
-                                                    {{ cms.i18n.ulvia-official.ui-disabled }}
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" type="submit">
-                                        <span>{{ cms.i18n.ulvia-official.ui-save-provider }}</span>
-                                    </button>
-                                    <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
-                                        {{ cms.i18n.ulvia-official.ui-the-provider-cannot-be-changed-in-its-current-state }}
-                                    </p>
-
-                                    <div cms-match="mutation.outcome.kind">
-                                        <span cms-case='"none"'></span>
-                                        <span cms-case='"success"'></span>
-                                        <div cms-case='"error"' cms-match="mutation.outcome.code">
-                                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                            <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        </div>
-                                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                    </div>
-                                </form>
                             </div>
                         </div>
                     </div>

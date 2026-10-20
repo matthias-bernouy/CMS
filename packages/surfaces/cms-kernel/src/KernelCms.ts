@@ -13,8 +13,7 @@ export default class KernelCms {
     readonly content: ContentReader;
     readonly authentication;
     readonly publicAuth;
-    readonly authBackends;
-    readonly identityProviders;
+    readonly localAuthentication;
     readonly collections;
     readonly collectionAssets;
     readonly capabilityGateway;
@@ -36,8 +35,7 @@ export default class KernelCms {
         this.content = config.content;
         this.authentication = config.authentication;
         this.publicAuth = config.publicAuth;
-        this.authBackends = config.authBackends;
-        this.identityProviders = config.identityProviders;
+        this.localAuthentication = config.localAuthentication;
         this.collections = config.collections;
         this.collectionAssets = config.collectionAssets;
         this.capabilityGateway = config.capabilityGateway;

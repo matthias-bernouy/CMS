@@ -89,8 +89,8 @@ and email dependencies. The Kernel receives the public operations and injected
 authentication ports. Its small sign-in document is HTTP presentation only.
 
 HTTP handlers use `@bernouy/cms-auth/http`; Mongo and SMTP adapters are explicit
-runtime imports. `@bernouy/cms-auth/browser` stays browser-safe. Secret storage
-is generic infrastructure in `@bernouy/secret-store` under Foundation.
+runtime imports. Secret storage is generic infrastructure in
+`@bernouy/secret-store` under Foundation.
 
 ## Surface And Runtime Composition
 

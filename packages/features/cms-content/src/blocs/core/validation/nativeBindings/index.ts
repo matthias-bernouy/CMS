@@ -150,7 +150,7 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
             binding &&
             "contractId" in binding &&
             binding.contractId.startsWith("kernel.") &&
-            !["kernel.auth:me", "kernel.auth:methods"].includes(`${binding.contractId}:${binding.capabilityId}`)
+            `${binding.contractId}:${binding.capabilityId}` !== "kernel.auth:me"
         ) {
             return "CMS query targets an unknown Kernel capability";
         }

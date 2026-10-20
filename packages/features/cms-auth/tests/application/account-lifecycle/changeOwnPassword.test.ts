@@ -29,7 +29,7 @@ describe("changeOwnPassword", () => {
     test("rejects non-local users", async () => {
         const credentials = new InMemoryLocalCredentialStore();
         await expect(
-            changeOwnPassword({ credentials }, user({ provider: "oidc" }), "old-password", "new-password"),
+            changeOwnPassword({ credentials }, user({ provider: "external" }), "old-password", "new-password"),
         ).rejects.toMatchObject({ field: "provider" });
     });
 

@@ -149,8 +149,6 @@ async function executeQuery(
             return (await getAuthentication()).auth.getSubject(requestFromInput(input));
         case "auth.is-administrator":
             return gateway.isAdministrator({ identifier: text(input.subjectId) });
-        case "auth.identity-providers":
-            return stores.identityProviders.list();
         case "page.capability-access": {
             return pageCapabilities.requiredAccess(input.page as PageCapabilityDocument);
         }

@@ -24,7 +24,6 @@ export const KERNEL_PROVIDER_QUERY_OPERATIONS = [
     "content.rendering-settings",
     "auth.subject",
     "auth.is-administrator",
-    "auth.identity-providers",
     "page.capability-access",
     "gateway.invoke",
     "gateway.resolve-http",

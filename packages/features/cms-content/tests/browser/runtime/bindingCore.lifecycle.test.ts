@@ -17,7 +17,7 @@ describe("<cms-binding-core> — teardown on disconnect", () => {
             calls++;
             return new Response("[]");
         }) as typeof fetch;
-        document.body.innerHTML = `<${BINDING_CORE_TAG}><section cms-query="kernel.auth:methods as methods"></section></${BINDING_CORE_TAG}>`;
+        document.body.innerHTML = `<${BINDING_CORE_TAG}><section cms-query="kernel.auth:me as methods"></section></${BINDING_CORE_TAG}>`;
         const core = document.querySelector(BINDING_CORE_TAG)!;
 
         await waitFor(() => calls === 1);

@@ -13,7 +13,6 @@ import {
 } from "@bernouy/cms-repository/collections/installations";
 import {
     MongoAuthTokenStore,
-    MongoIdentityProviderRepository,
     MongoLocalCredentialStore,
     MongoPatRepository,
     MongoUsersRepository,
@@ -142,7 +141,6 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     });
 
     const users = new MongoUsersRepository(db, fieldCrypto);
-    const identityProviders = new MongoIdentityProviderRepository(db);
     const credentials = new MongoLocalCredentialStore(db, fieldCrypto);
     await credentials.init();
     const pats = new MongoPatRepository(db);
@@ -172,7 +170,6 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         repo,
         providerFiles,
         users,
-        identityProviders,
         credentials,
         pats,
         authTokens,

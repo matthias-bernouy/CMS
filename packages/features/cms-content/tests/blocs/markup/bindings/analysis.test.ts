@@ -89,7 +89,7 @@ describe("typed binding analysis", () => {
 
     test("keeps repeats available for intentionally opaque kernel queries", () => {
         const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
-        document.body.innerHTML = `<section cms-query="kernel.auth:methods as methods">
+        document.body.innerHTML = `<section cms-query="kernel.auth:me as methods">
             <p cms-repeat="methods.data as method">{{ method.displayName }}</p>
         </section>`;
         expect(() => validateDocumentBindings(document, { requireCapabilityResolution: true })).not.toThrow();

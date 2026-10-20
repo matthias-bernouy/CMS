@@ -21,10 +21,6 @@
                     {
                         "path": "/users",
                         "present": true
-                    },
-                    {
-                        "path": "/loginProviders",
-                        "present": true
                     }
                 ]
             }

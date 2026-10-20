@@ -44,7 +44,7 @@ describe("<cms-binding-core> — activation", () => {
         globalThis.fetch = (async () => new Response(JSON.stringify(["password"]))) as typeof fetch;
         document.body.innerHTML = `
             <${BINDING_CORE_TAG}>
-                <section cms-query="kernel.auth:methods as methods">
+                <section cms-query="kernel.auth:me as methods">
                     <p>{{ methods.data[0] }}</p>
                 </section>
             </${BINDING_CORE_TAG}>`;

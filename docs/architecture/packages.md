@@ -40,7 +40,7 @@ already been published to a registry.
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues, authored collection admission, content projections, migrations and the explicit collection build toolchain. |
 | `@bernouy/cms-gateway` | Authorized provider-neutral capability invocation, identities and streaming binary transport. |
 | `@bernouy/cms-seo` | Page metadata, structured data, dynamic entity indexing, persisted sitemap snapshots and their mountable HTTP handlers. |
-| `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |
+| `@bernouy/cms-auth` | Accounts, local credentials, PATs, signed sessions, public auth operations and email composition. |
 
 Collection Pages are admitted resources. The Kernel mounts their shared route
 registry, rendering and revisioned execution-plan activation alongside

@@ -52,11 +52,8 @@ test("projects every content read through the versioned Provider query endpoint"
     expect(requests.every((request) => request.url.pathname === "/ulvia/kernel/v1/query")).toBe(true);
 });
 
-test("projects gateway, Page access, collection assets and identity providers", async () => {
-    const providers = [{ id: "local", label: "Local", type: "local", enabled: true }];
-    const { client, requests } = clientFixture((request) =>
-        Response.json({ value: request.body?.operation === "auth.identity-providers" ? providers : true }),
-    );
+test("projects gateway, Page access and collection assets", async () => {
+    const { client, requests } = clientFixture(() => Response.json({ value: true }));
 
     await client.pageCapabilities.requiredAccess({ page: { path: "/admin" } } as never);
     await client.gateway.invoker.invoke({} as never);
@@ -72,19 +69,6 @@ test("projects gateway, Page access, collection assets and identity providers", 
     await expect(client.collectionAssets.store.getReleaseAsset("collection-a", "1.0.0", "asset-a")).rejects.toThrow(
         "Collection asset bytes are streamed through the Provider proxy",
     );
-    expect(await client.identityProviders.list()).toEqual(providers);
-    expect(await client.identityProviders.get("local")).toEqual(providers[0]);
-    expect(await client.identityProviders.get("missing")).toBeNull();
-    await expect(client.identityProviders.create({} as never)).rejects.toThrow(
-        "Identity provider mutations are owned by the Provider",
-    );
-    await expect(client.identityProviders.update("local", {} as never)).rejects.toThrow(
-        "Identity provider mutations are owned by the Provider",
-    );
-    await expect(client.identityProviders.delete("local")).rejects.toThrow(
-        "Identity provider mutations are owned by the Provider",
-    );
-
     expect(requests.map((request) => request.body?.operation)).toContain("assets.metadata-batch");
 });
 

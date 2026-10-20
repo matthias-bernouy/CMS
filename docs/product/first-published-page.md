@@ -39,7 +39,7 @@ namespace key, select a provider or install a required official dependency.
 - Publication targets the last saved revision. Unsaved changes cannot be
   presented as published.
 - Public site media is the only media visibility needed by this slice.
-- Forms, commerce, third-party collection JavaScript, version history, OIDC,
+- Forms, commerce, third-party collection JavaScript, version history, external identity providers,
   provider-managed instance lifecycle and high availability are out of scope.
 
 ## Acceptance Checkpoints

@@ -1,9 +1,4 @@
-import type {
-    IdentityProviderRepository,
-    LocalCredentialStore,
-    PatRepository,
-    UsersRepository,
-} from "@bernouy/cms-auth";
+import type { LocalCredentialStore, PatRepository, UsersRepository } from "@bernouy/cms-auth";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
@@ -37,7 +32,6 @@ export interface CmsLocalizationDependencies {
 export interface CmsAccessDependencies {
     readonly repo: CmsRepository;
     readonly users: UsersRepository;
-    readonly identityProviders: IdentityProviderRepository;
     readonly credentials: LocalCredentialStore;
     readonly pats: PatRepository;
 }

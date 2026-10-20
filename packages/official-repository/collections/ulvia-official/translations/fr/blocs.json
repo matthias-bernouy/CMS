@@ -31,8 +31,6 @@
     "bloc.file-upload-input.label": "Sélecteur de fichier à téléverser",
     "bloc.file-link.description": "Ouvrez l’URL publique ou signée d’un fichier privé",
     "bloc.file-link.label": "Lien vers un fichier",
-    "bloc.login-method.description": "Ouvrez une méthode de connexion externe approuvée",
-    "bloc.login-method.label": "Méthode de connexion",
     "bloc.auth-shell.description": "Cadrez une expérience d’authentification pleine hauteur sans posséder son contenu",
     "bloc.auth-shell.label": "Cadre d’authentification",
     "bloc.collection-texts.description": "Modifiez les traductions propres au site d’une Collection installée",

@@ -47,7 +47,6 @@ describe("production Kernel mounting", () => {
                 authentication: token("authentication"),
                 publicAuth: token("public-auth"),
                 localAuthentication: token("local-auth"),
-                identityProviders: token("identity-providers"),
                 gateway: token("gateway"),
                 pageCapabilities: token("page-capabilities"),
                 capability: async () => new Response(),
