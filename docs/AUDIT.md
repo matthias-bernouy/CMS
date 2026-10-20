@@ -1,6 +1,6 @@
 # Repository Audit
 
-This audit describes the CmsCore repository as reviewed on 2026-10-16. It is a
+This audit describes the CmsCore repository as reviewed on 2026-10-20. It is a
 source-backed engineering assessment, not a security certification or a claim
 that every production failure mode has been exercised.
 
@@ -21,9 +21,9 @@ deployment validation rather than unclear ownership between packages.
 
 ## Verified Shape
 
-The workspace contains 19 packages:
+The workspace contains 20 packages:
 
-- seven Foundation packages;
+- eight Foundation packages, including shared structured logging;
 - six feature packages: authentication, content, files, gateway, repository and SEO;
 - two HTTP applications: Ulvia Provider and the site Kernel;
 - four executable runtimes: Ulvia Provider server, Kernel server, official
@@ -31,12 +31,13 @@ The workspace contains 19 packages:
 
 The official repository currently contains:
 
-- eight `ulvia.cms.*` contracts with 70 capabilities;
+- eight `ulvia.cms.*` contracts with 77 capabilities;
 - one provider-only CMS-instance discovery contract with two capabilities that
   the `ulvia.official` data-plane manifest does not claim;
 - the `ulvia.official` provider manifest;
-- the `ulvia-official` collection with 166 Bloc definitions, 119 theme tokens
-  and eleven Pages, including login and ten administration routes.
+- the `ulvia-official` collection with 92 Blocs, 119 theme tokens and thirteen
+  Pages: ten administration routes plus login, email-confirmation and
+  password-reset Pages.
 
 The supported package dependency direction is:
 
@@ -52,10 +53,11 @@ runtime that admits and serves its immutable artifacts.
 
 The final review run completed with:
 
-- all nine `check:all` diagnostics passing;
+- all ten `check:all` diagnostics passing;
 - the complete workspace build passing;
-- the complete workspace test suite passing with no failure and the explicitly
-  opt-in fresh-install browser smoke kept as a separate environment journey;
+- the complete workspace test suite passing with 2,222 tests, one skipped test
+  and no failure, with the explicitly opt-in fresh-install browser smoke kept as
+  a separate environment journey;
 - that fresh-install browser smoke passing separately against a new local stack,
   including administration mutations, a second isolated instance and restart;
 - all tracked relative Markdown links resolving;
@@ -134,8 +136,15 @@ advisory audit because it requires current registry access.
 
 ### Authentication And Security Controls
 
-- Sessions use bounded signed cookies and the HTTP layer applies same-origin
-  checks to protected mutations.
+- Access owns accounts, credential proof, signed session tokens and account
+  lifecycle capabilities. Administrator authority remains a separate revisioned
+  grant joined during actor resolution.
+- The Kernel owns no authentication store or secret. It applies only a validated
+  semantic session effect and fixes the `cms-session` cookie policy to
+  `HttpOnly`, `SameSite=Lax`, `Path=/`, bounded expiry and `Secure` on HTTPS.
+- Bearer and cookie credentials are reduced to one typed opaque credential for
+  `resolve-actor`; arbitrary browser authority headers do not pass through to
+  ordinary Provider capabilities.
 - One-time recovery and authentication tokens use operation-bound reservation
   and finalization in memory and MongoDB.
 - Secrets use references and envelope encryption; historical KEKs are required
@@ -150,11 +159,10 @@ advisory audit because it requires current registry access.
 - HTML and SVG paths have explicit sanitization and image transforms enforce
   input bounds.
 
-A focused Codex Security review covered authentication, gateway networking,
-repository publication, files/media, collection rendering, migrations and
-runtime deployment. It produced no reportable finding. The review was
-surface-complete rather than a line-by-line proof and does not replace external
-penetration testing, dependency monitoring or deployment review.
+This audit does not replace external penetration testing, dependency monitoring
+or deployment review. The explicit browser-mutation provenance gap is recorded
+in [`TODO.md`](./TODO.md#browser-mutation-provenance) rather than hidden behind
+the cookie policy.
 
 ### Unified Kernel
 
@@ -162,10 +170,14 @@ penetration testing, dependency monitoring or deployment review.
   and Foundation visual component package are removed.
 - Administration and public rendering use the same Page/Bloc/resource model and the same
   `/.cms/call` capability transport.
-- Administration Pages are collection resources, while login, sessions, bootstrap,
-  recovery, file streaming and health remain kernel transport concerns.
-- The official administration collection provides Pages for overview, content details,
-  collections, files, providers, access and settings.
+- Authentication and recovery documents are collection Pages. Access owns their
+  capabilities and session-token semantics; Kernel owns only actor resolution
+  and validated cookie application.
+- File bytes use the same generic capability transport as JSON operations; the
+  Files provider owns their streaming, range and cache semantics.
+- The official administration collection provides Pages for overview, Page
+  catalogue/details, collections/details/migrations, files, providers, access,
+  settings and diagnostics.
 
 ## Current Weaknesses
 
@@ -179,8 +191,9 @@ penetration testing, dependency monitoring or deployment review.
 
 ### Operations
 
-1. Durable jobs exist, but cross-domain audit events, metrics, trace coverage
-   and operator diagnostics are not yet systematic.
+1. Structured runtime diagnostics, request correlation and local rotating
+   journals are systematic. Durable cross-domain audit events, metrics, traces
+   and an operator-facing observability backend are not.
 2. Full production backup/restore, historical KEK recovery, interrupted
    repository publication and corrupt-state recovery need black-box drills.
 3. The supported topology is one active Kernel per instance, one Ulvia Provider
@@ -188,6 +201,9 @@ penetration testing, dependency monitoring or deployment review.
    fencing and split-brain behavior are not proven.
 4. Proxy headers, external TLS termination, shutdown under load and deployment
    rollback need environment-level tests, not only package tests.
+5. Cookie-authenticated commands rely on the current cookie policy; a single
+   explicit `Origin`/Fetch Metadata policy is not yet enforced at the generic
+   Kernel capability boundary.
 
 ### Scale
 
@@ -204,12 +220,13 @@ penetration testing, dependency monitoring or deployment review.
 
 ### Product Completeness
 
-1. The new administration UI covers the official management areas, including per-page
-   route/SEO mutation and an operational diagnostics Page. Several deeper
-   administration journeys still need dedicated product flows.
-2. The active visual Page editor supports top-level Bloc insertion, settings,
-   ordering, duplication and removal. Nested visual editing, history and richer
-   authoring feedback remain incomplete.
+1. The administration UI covers the official management areas, including
+   per-Page route/SEO mutation, file workspace operations and an operational
+   diagnostics Page. Several deeper administration journeys still need
+   dedicated product flows and further visual/interaction refinement.
+2. The visual Page editor supports top-level Bloc insertion, settings, ordering,
+   duplication and removal. Nested visual editing, starter templates, history,
+   direct media selection and richer authoring feedback remain incomplete.
 3. Conformance suites can run against injected disposable environments and
    immutable output-free evidence can be published and read remotely. Production
    environment provisioning, approval policy and operator-visible evidence

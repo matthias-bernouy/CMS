@@ -2,8 +2,11 @@
 
 These Protocol v1 declarations are parsed and validated by
 `@bernouy/cms-repository/contracts`.
-They describe what a future runner must execute; parsing does not contact a
-provider, wait, poll, provision tenants or issue passing-provider attestations.
+They describe what an injected live runner must execute. The parser itself does
+not contact a provider, wait, poll, provision tenants or issue passing-provider
+evidence. The transport-neutral runner is implemented in
+`@bernouy/cms-gateway/conformance`; a runtime still has to provide the disposable
+provider environment and invocation adapters.
 
 ## Profile applicability and isolation
 

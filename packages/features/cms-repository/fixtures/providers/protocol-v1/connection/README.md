@@ -5,7 +5,7 @@ illustrative placeholders, not an admitted manifest, a real credential, or
 evidence of a running implementation. Structural fixture tests do not replace
 semantic validation against a trusted admitted manifest.
 
-## Proposed control-plane protocol
+## Control-plane protocol metadata
 
 `PROVIDER_CONNECTION_PROTOCOL` defines this V1 metadata. No routes are mounted
 and no HTTP requests are sent by this package.
@@ -24,11 +24,12 @@ and verify acknowledgement installation/provider/account identities against
 the approved installation; the response parser alone checks shape, not this
 request-response correlation. No business-capability routes are defined here.
 
-## Domain workflow and planned transport orchestration
+## Domain workflow and transport orchestration
 
-1. A future server-side action accepts an API origin and dedicated provider
-   token, stores the token, and produces a `ProviderConnectionTarget` with a
-   secret reference. Never persist the raw submitted token in an installation.
+1. The Provider management workflow accepts an API origin and dedicated
+   provider token, stores the token, and produces a `ProviderConnectionTarget`
+   with a secret reference. Never persist the raw submitted token in an
+   installation.
 2. Fetch a report using that token and resolve its exact manifest reference
    through a trusted admission source. Report parsing alone grants nothing.
 3. Validate the report against that admitted manifest and selected endpoint.
@@ -44,12 +45,14 @@ request-response correlation. No business-capability routes are defined here.
 6. Use the full-site graph planner and selection store to record exact selections.
    Re-observing a report must not perform an upgrade or expand permissions.
 
-The installation parser represents an approved record; the local lifecycle now
+The installation parser represents an approved record; the local lifecycle
 issues ephemeral preparations and supports explicit approval, modification and
-administrative transitions. Persisted drafts, live probing and remote registration
-failure handling are not implemented. `enabled | disabled | revoked` records
-administrative intent. Observation freshness and selected-release validity remain
-separate. See the [implemented domain workflows](../../../../src/providers/workflows.md).
+administrative transitions. The runtime composes live report probing and durable
+secret persistence. Persisted drafts and remote callback registration failure
+handling are not implemented. `enabled | disabled | revoked` records
+administrative intent. Observation freshness and selected-release validity
+remain separate. See the
+[implemented domain workflows](../../../../src/providers/workflows.md).
 
 ## Identity, availability, and multiple sites
 
@@ -89,7 +92,8 @@ follow the CMS secret-reference syntax but are not resolved by this package.
 Manifest `credentialSlots` do not add alternative V1 connection mechanisms.
 Provider hub SMTP, payment, and other business credentials stay on the hub.
 One dedicated provider token plus a separate optional gateway token is the
-current connection model. Durable persistence, host authorization, actual token
-rotation/revocation, HTTP and registration execution still need implementation
-before this protocol is usable end to end. Local administrative revocation does
-not itself call the hub, revoke a stored credential or remove gateway grants.
+current connection model. Durable CMS-side persistence, host authorization,
+report probing and credential rotation are implemented. Provider-side token
+revocation and callback registration/removal remain incomplete: local
+administrative revocation does not itself call the hub, revoke the remote
+credential or remove remote gateway grants.

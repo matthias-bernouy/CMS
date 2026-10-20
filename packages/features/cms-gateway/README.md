@@ -36,6 +36,11 @@ The gateway has no file, image, video, MIME, namespace, visibility, signature,
 variant or image-processing model. Those concepts belong to providers such as
 `@bernouy/cms-files`.
 
+Successful responses may carry a separately authenticated semantic effect only
+when the selected contract declares it. The current closed effect vocabulary
+contains `session`; Gateway validates it and returns it to Kernel as metadata
+instead of forwarding Provider `Set-Cookie` headers.
+
 `./analysis` statically verifies Page requirements and derives Page access from
 the selected capabilities. Live browser authorization depends only on the
 capability's declared access and a trusted actor; Pages, referrers and execution

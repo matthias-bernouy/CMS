@@ -7,7 +7,8 @@ signed session tokens, public account flows, and membership stores.
 
 - `accounts/`: CMS membership records and identity-to-subject resolution.
 - `providers/`: local credentials and password proof.
-- `sessions/`: signed-cookie protocol for local login.
+- `sessions/`: signed session-token issuance and verification. Cookie policy
+  belongs to the Kernel boundary that applies a validated session effect.
 - `tokens/`: separate personal-access and one-time token contracts and stores.
 - `email/`: transport-neutral composition/errors and optional SMTP delivery.
 - `application/`: cross-domain account/public flows and credential resolution.
@@ -28,8 +29,8 @@ the exact same operation.
 - `@bernouy/cms-auth/smtp` exposes SMTP/configured email delivery for runtime
   composition roots only.
 - This package may depend on `@bernouy/secret-store`,
-  `@bernouy/envelope-crypto`, `@bernouy/http-runner`, and
-  `@bernouy/rate-limiter`; it must not import surfaces or runtimes.
+  `@bernouy/envelope-crypto`, and `@bernouy/rate-limiter`; it must not import
+  HTTP runners, surfaces or runtimes.
 
 ## Rules
 
@@ -44,5 +45,6 @@ the exact same operation.
 - Keep local password proof in `providers`, signed session tokens in `sessions`,
   and opaque credential resolution in `application`. Provider surfaces receive
   bounded account-lifecycle actions, never stores.
-- Security-sensitive changes require tests around cookie behavior, rate limits,
-  and token expiry.
+- Security-sensitive changes require tests around credential precedence, rate
+  limits, token expiry and one-time-token recovery. Cookie behavior is tested
+  in the Kernel surface that owns it.

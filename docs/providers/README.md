@@ -65,8 +65,9 @@ release and connection steps.
 ## Live Invocation
 
 ```text
-Kernel Page request
-  -> trusted actor supplied by the Kernel
+Browser request
+  -> Kernel resolves one opaque credential through Access
+  -> trusted request actor (anonymous, authenticated or administrator)
   -> exact site selection and approved installation
   -> current readiness and host authorization
   -> admitted binding plan, credentials and provider identity alias
@@ -91,12 +92,19 @@ selects the exact release route from the verified claims and receives its local
 site/provider scope from runtime configuration. The durable credential itself
 is sent only to the authenticated `/ulvia/report` control endpoint.
 
-The current execution slice supports synchronous JSON queries, synchronous
-commands with `none` or `natural` idempotency, and bounded file reads. Keyed
-commands, asynchronous execution and binary request bodies are rejected. A
-dispatched command whose response cannot be accepted can return an unknown
-outcome with a request ID; consumers must reconcile it before retrying.
-Keyed commands still require durable idempotency before activation.
+The generic execution path supports structured synchronous calls,
+operation-handle responses, keyed/natural/non-idempotent commands and streamed
+binary requests or responses according to the admitted binding. Keyed commands
+require an idempotency key; the browser mutation runtime generates one stable
+attempt key for an unchanged submission. A dispatched command whose response
+cannot be accepted returns an unknown outcome with a request ID; consumers must
+reconcile it before retrying.
+
+The provider-neutral discovery catalogue exposed to ordinary collection
+authoring is deliberately narrower: it lists synchronous, structured,
+non-keyed public/authenticated capabilities. Advanced or administrator-only
+operations need an explicit product workflow rather than accidental catalogue
+exposure.
 
 Ulvia Provider resolves every opaque instance Bearer against its durable
 registry before opening that instance's stores and gateway. The Kernel receives
@@ -116,9 +124,16 @@ contains thin official capability adapters that coordinate injected feature
 ports; it does not select stores or persistence adapters. Browsers still use
 the normal Kernel `/.cms/call` route. The stateless Kernel streams that request
 through the authenticated private Provider protocol, where the instance-owned
-gateway performs execution. The Provider consumes the instance access Bearer
-before restoring an optional user Bearer or session cookie for capability
-authorization. The shared bounded JSON budget applies at both HTTP boundaries.
+gateway performs execution.
+
+Browser credentials follow a separate, narrow path. Kernel extracts either one
+Bearer credential or the fixed `cms-session` cookie and asks the private
+Provider protocol to execute `ulvia.cms.access:resolve-actor`. The Provider
+receives a typed opaque credential only for that operation, resolves it through
+Access and returns actor state. Kernel then supplies that trusted actor to
+ordinary capability calls. Arbitrary browser Cookie and Authorization headers
+are never forwarded as general Provider authority. The shared bounded JSON
+budget applies at both HTTP boundaries.
 
 | Application | Routes relative to its base path |
 | --- | --- |

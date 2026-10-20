@@ -52,7 +52,7 @@ namespace key, select a provider or install a required official dependency.
 | Blank Page creation | New Pages start with an empty document and no implicit Bloc | Implemented |
 | Landing/Content starter selection | No authored starter catalogue is exposed yet | Missing |
 | Visual Bloc insertion and editing | Page editor catalogue, outline, settings, move/duplicate/remove controls and browser smoke | Implemented for top-level Blocs |
-| Site media library and picker | Files provider exists; no site-bound administration workflow exists | Missing |
+| Site media library and picker | `/admin/files` uploads, lists, replaces and deletes workspace files; the Page editor has no media picker integration | Partial |
 | Isolated document preview | Current document preview Bloc | Partial |
 | Revision-checked save and publication | Page update and publish capabilities | Implemented |
 | Public Page rendering | Browser smoke publishes and opens `/smoke-page` | Implemented |

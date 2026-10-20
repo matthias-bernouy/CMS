@@ -68,4 +68,5 @@ protocol-owned response headers, never user-controlled request mappings.
 Declared methods retain `errorEnvelope: { kind: "json" }`. This metadata describes
 the error channel, not a successful operation's final-result representation.
 Actual response production, request-ID generation and response-envelope
-validation belong to the future HTTP adapter; this package defines the plan.
+validation belong to the Gateway HTTP adapter. This package compiles and
+validates the immutable transport plan consumed by that adapter.

@@ -20,7 +20,7 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   the administrator's golden path and its executable completion gate.
 - [Deferred platform work](TODO.md): explicit trust assumptions and work that
   must be completed before those assumptions change.
-- [Provider instance initialization](todo/local-provider-initialization.md):
+- [Provider instance initialization](architecture/provider-instance-initialization.md):
   operator API, exact official profile, isolated instance connection, local
   first run, restart and production composition boundaries.
 
@@ -32,8 +32,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   contracts, bindings and themes.
 - [Collection API and admission](blocs/collections.md): the current administration
   workspace and the separate `ulvia-collection/v1` authored bundle format.
-- [Site health](providers/README.md): provider observations, selected sources,
-  and collection versions in the admin Health page.
+- [Runtime diagnostics](development/README.md#runtime-logs): structured events,
+  request correlation, local journals, redaction and CLI inspection.
 
 Use the [repository audit](AUDIT.md), the architecture guides and the referenced
 source code to establish current behavior. Deliberately deferred activation
@@ -47,7 +47,8 @@ gates remain recorded in [Deferred platform work](TODO.md).
   redirects, deletion and recovery.
 - [Dynamic page indexing](surfaces/page-indexing.md): metadata projection and
   sitemap discovery through selected gateway capabilities.
-- [Access authentication](surfaces/public-auth.md): provider-owned identity resolution and Kernel-applied session effects.
+- [Access and authentication](surfaces/access-authentication.md): provider-owned
+  identity, account flows, administrator grants and Kernel-applied session effects.
 
 ## Images And UI Quality
 

@@ -137,5 +137,5 @@ installation and selection records with revision-checked writes. Production
 composition supplies durable release and manifest catalogues plus a coherent
 dependency-revision source. The Kernel mounts authorized management Pages, and the
 management workflow rotates local credentials. Provider-side credential
-revocation, registration/grants and live conformance execution remain separate
-implementation work.
+revocation, registration/grants and production composition of disposable
+conformance environments remain separate implementation work.

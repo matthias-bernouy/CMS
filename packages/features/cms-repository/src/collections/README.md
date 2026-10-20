@@ -192,12 +192,13 @@ catalogue while content text overrides remain separate.
 
 The local release command recursively reads
 `pages/**/<page-id>/definition.json` and `page.html`, then places the document
-in the immutable release. Admission permits
-text, a small semantic HTML set and declared local or explicitly imported Bloc
-tags. It derives the exact `uses` set from the HTML. Canonical
-`/.cms/call/<contract>/<capability>` sources require a matching versioned
-capability requirement; admission verifies those witnesses alongside transitive
-local Bloc requirements. Scripts, executable links, dynamic internal paths,
+in the immutable release. Every nonempty Page root must be a declared local or
+explicitly imported Bloc identified by `cms-bloc`; native elements and text are
+admitted only through that Bloc's slot and managed-native contracts. Admission
+derives the exact `uses` set from the HTML. Declarative `cms-query` and `cms-mutation`
+bindings name `contract:capability` and require a matching versioned capability
+requirement; admission verifies those witnesses alongside transitive local Bloc
+requirements. Scripts, executable links, dynamic internal paths,
 inline handlers and inline styles reject. Native anchors may use static internal
 paths declared by the release. Page imports pin the exact resource generation
 and default path, so admission can reject typos before publication. The
@@ -252,8 +253,9 @@ Presets remain absent from the public format: unsupported fields reject.
 Static Page capability analysis and access derivation are implemented in
 `cms-gateway`; live invocation authority remains independent of Page documents.
 Remote signed publication is implemented by the CLI and official repository
-server. Live conformance execution, resumable publication transfers and
-third-party JavaScript isolation remain open. The current first-party trust
+server. The live conformance runner and immutable evidence publication exist;
+production disposable-provider composition, resumable publication transfers
+and third-party JavaScript isolation remain open. The current first-party trust
 assumption and the required boundary before third-party collections are
 recorded in the repository
 [deferred-work documentation](../../../../../docs/TODO.md#collection-javascript-isolation).

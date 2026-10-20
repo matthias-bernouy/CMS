@@ -97,4 +97,4 @@ and the browser request have separate execution/error paths.
 See [candidate detection](../../packages/features/cms-content/src/pages/core/indexing/detection.ts),
 [SEO resolution](../../packages/features/cms-seo/src/indexing/resolvePageIndexingMetadata.ts),
 [gateway execution](../../packages/features/cms-seo/src/indexing/executeIndexingCapability.ts),
-and the [Kernel adapter](../../packages/surfaces/cms-kernel/src/seo/runtimeIndexing.ts).
+and the [Kernel adapter](../../packages/surfaces/cms-kernel/src/http/pages/resolvePageIndexing.ts).

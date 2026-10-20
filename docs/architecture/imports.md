@@ -46,7 +46,11 @@ Adapter subpaths isolate optional infrastructure:
 - `@bernouy/blob-store/s3` imports the generic S3-backed blob adapter.
 - `@bernouy/blob-store/local-fs` imports the generic filesystem blob adapter.
 - `./browser` exposes browser-safe APIs where the package declares it, such as
-  `cms-auth/browser`.
+  `@bernouy/cms-content/browser`.
+
+Subpath names are not conventions that callers may guess. They must exist in
+the producing package's `exports` map. For example, `@bernouy/cms-auth` exposes
+`/management`, `/mongo` and `/smtp`, but deliberately has no browser subpath.
 
 Production adapters are composed inside the server that consumes them. Kernel
 and Provider must not share an aggregate instance-runtime package or import one

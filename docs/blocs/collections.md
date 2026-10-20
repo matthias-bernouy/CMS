@@ -55,9 +55,11 @@ A retained Bloc may declare a bounded default slot accepting a
 child contracts each declare accepted native tags and constrained native
 attributes. This is ordinary slot validation, not a second content mechanism.
 
-CSS is parsed, checked, and wrapped in `@scope ([cms-bloc="<id>"])` by the
-build. Shadow DOM selectors and global selectors are rejected. Named markup
-slots become Light DOM `part` tokens after projection.
+CSS is parsed, checked, and wrapped in
+`@scope ([cms-bloc="<id>"]) to (:scope [cms-bloc])` by the build. The lower
+boundary prevents a parent Bloc stylesheet from crossing into a nested Bloc.
+Shadow DOM selectors and global selectors are rejected. Named markup slots
+become Light DOM `part` tokens after projection.
 
 Behavior is optional. When present, `bloc.ts` exports one `mount(root)` function
 and returns cleanup when it installs listeners or observers. The build owns

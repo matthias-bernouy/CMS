@@ -80,10 +80,19 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/providers/compatibility` | Descriptive manifest changes and exact-digest approval requirements |
 | `@bernouy/cms-repository/providers/installations` | Parsers, local preparation/approval lifecycle, observations, readiness and revisioned memory store |
 | `@bernouy/cms-repository/providers/selections` | Bounded full-site graph planning, revisioned memory store and catalogue dependency source |
+| `@bernouy/cms-repository/providers/sources` | Exact remote manifest and contract-release sources used by provider discovery |
+| `@bernouy/cms-repository/providers/http` | Provider repository HTTP route registration and bounded wire decoding |
 | `@bernouy/cms-repository/providers/mongo` | Mongo manifest catalogue, installation and selection stores with revision-checked writes |
+| `@bernouy/cms-repository/providers/management` | Provider installation and selection application services |
 | `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
 | `@bernouy/cms-repository/collections/build` | Bun-based collection Bloc source validation and browser runtime compilation for authoring tools |
 | `@bernouy/cms-repository/collections/installations` | Revisioned site installations, compatibility analysis, resource digests and atomic migration replacement/restoration |
+| `@bernouy/cms-repository/collections/content` | Projection of installed collection Pages, Blocs, routes and theme sources into Content |
+| `@bernouy/cms-repository/collections/assets` | Verified collection asset projection and reads |
+| `@bernouy/cms-repository/collections/texts` | Collection text definition, locale and site-override composition |
+| `@bernouy/cms-repository/collections/sources` | Exact remote collection-release sources and dependency fetching |
+| `@bernouy/cms-repository/collections/http` | Collection repository HTTP route registration and bounded wire decoding |
+| `@bernouy/cms-repository/collections/mongo` | Mongo collection catalogues and installation stores |
 | `@bernouy/cms-repository/repository/publication` | Signed staged-publication protocol, exact remote client, mutation endpoint, upload-store and replay-store ports |
 | `@bernouy/cms-repository/repository/filesystem` | Reference immutable registry, streamed upload staging, durable replay claims, local catalogues, yanks and read endpoint |
 
@@ -122,7 +131,7 @@ consistency remain composition responsibilities.
 See the [contract guide](src/contracts/README.md) for release evolution, schema
 and transport profiles, and conformance dependencies. The
 [provider guide](src/providers/README.md) explains immutable claims, site state
-and the proposed connection protocol. [Provider workflows](src/providers/workflows.md)
+and the implemented V1 connection protocol. [Provider workflows](src/providers/workflows.md)
 details implemented transitions, upgrade boundaries and remaining runtime work.
 The [collections guide](src/collections/README.md) documents admitted themes,
 texts, Pages, assets and resource requirements. The installed

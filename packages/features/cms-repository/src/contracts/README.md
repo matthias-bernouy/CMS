@@ -87,6 +87,18 @@ does not narrow values when a closed object's `minProperties` already forces it 
 
 ## Schema and transport profiles
 
+Every capability declares `public`, `authenticated` or `admin` access and a
+behavior effect (`query` or `command`). Queries are read-only at the contract
+boundary; commands additionally declare synchronous or durable-operation
+execution and their idempotency model. Provider-declared errors have stable codes and retry
+semantics distinct from transport failures.
+
+An optional `responseEffects` list declares trusted browser-side effects outside
+the ordinary output schema. The V1 vocabulary contains only `session`, reserved
+to public synchronous structured commands of `ulvia.cms.access`. Changing an
+existing capability's effect list is a breaking contract change. Providers
+return semantic effect metadata; they never control the browser cookie policy.
+
 String and map-key lengths use UTF-16 code units, not grapheme counts. Formats
 follow this dialect's concrete validators: calendar `YYYY-MM-DD`; uppercase
 date-time separators, seconds 00–59 and a required UTC/offset suffix; a simple
@@ -150,7 +162,10 @@ capture paths include guaranteed object fields, array indices and asserted
 map entries. See
 [conformance controls](../../fixtures/contracts/protocol-v1/conformance-controls.md)
 for exact restrictions. Every applicable scenario/profile pair requires fresh
-disposable state, identities and captures. No runner or attestation is included.
+disposable state, identities and captures. This contracts package stops at
+admission: the transport-neutral live runner is exported by
+`@bernouy/cms-gateway/conformance`, and immutable output-free evidence is
+published through the repository publication protocol.
 
 ## Remaining boundaries
 

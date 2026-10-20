@@ -46,6 +46,19 @@ Exit conditions:
 - a crashed or non-responsive collection runtime can be terminated without
   making the rest of the page unusable.
 
+## Browser Mutation Provenance
+
+**Status:** the session cookie is `HttpOnly`, `SameSite=Lax` and secure on HTTPS,
+but the generic capability boundary does not yet enforce one centralized
+`Origin` or `Sec-Fetch-Site` policy for cookie-authenticated commands.
+
+Before supporting untrusted same-site applications, cross-site embedding or a
+broader public deployment, define one Kernel policy for browser mutation
+provenance. It must preserve bearer clients and native multipart uploads,
+distinguish absent headers from an explicit foreign origin, cover every generic
+command method, and have black-box proxy/TLS tests. Do not reintroduce
+capability-specific CSRF rules.
+
 ## Internal Persistence Migrations
 
 **Status:** collection-owned content migrations are implemented, but internal

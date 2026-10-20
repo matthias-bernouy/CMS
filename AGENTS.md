@@ -131,8 +131,9 @@ bun test
 bun run clean
 ```
 
-`bun run build` emits TypeScript project references, then builds the
-`@bernouy/cms-kernel` Admin browser runtime from `@bernouy/cms-content/browser`.
+`bun run build` emits TypeScript project references, builds the Bloc behavior
+and binding-core runtimes owned by `@bernouy/cms-content`, then refreshes the
+CLI's admitted official bootstrap snapshot.
 
 ## Agent Validation Loop
 

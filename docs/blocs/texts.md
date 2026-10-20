@@ -42,12 +42,13 @@ server DOM pass `renderCollectionTexts(root, locale, sources)`. The Kernel runs
 this pass after composition expansion, before serializing and caching HTML.
 The same helper renders installed administration Pages.
 
-Templates reserve the `cms` root for server-owned expressions:
+Templates reserve the `cms` root for server-owned expressions. The collection
+ID is always explicit:
 
 ```html
-<h2>{{ cms.i18n.checkout.title }}</h2>
-<p>{{ cms.i18n.checkout.greeting }} {{ order.total }}</p>
-<input placeholder="{{ cms.i18n.checkout.placeholder }}">
+<h2>{{ cms.i18n.shop.checkout-title }}</h2>
+<p>{{ cms.i18n.shop.checkout-greeting }} {{ order.total }}</p>
+<input placeholder="{{ cms.i18n.shop.checkout-placeholder }}">
 ```
 
 A bounded expression scanner accepts exactly `cms.i18n.<collection>.<text>`.
@@ -91,7 +92,7 @@ keys, duplicate collection IDs and malformed reserved expressions fail rendering
 Values containing braces are rejected so a collection text cannot construct a
 browser expression, including across replacement boundaries.
 
-The catalogue permits at most 256 definitions and 32 locales per definition.
+The catalogue permits at most 4,096 definitions and 32 locales per definition.
 Messages have at most 8192 UTF-16 code units; release-wide bounds also apply.
 IDs are lowercase names without dots. Unknown fields, duplicate IDs/locales,
 object values and dynamic text syntax reject. This is a static plain-text format,

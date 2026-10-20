@@ -85,12 +85,13 @@ accepted as a documented document boundary.
 
 Discovery reads production HTML and TypeScript/JavaScript inside real workspace
 packages. It excludes dependency/output/test/fixture directories, declaration
-files, and the generated Kernel administration bundle. All HTML is checked as
-markup; executable inline scripts are treated as browser code.
+files and generated browser bundles. All HTML is checked as markup; executable
+inline scripts are treated as browser code.
 
-Browser script entrypoints are administration components, foundation visual components
-and binding, `*.client.*`, and resource `Bloc.ts` files. Static imports are followed through workspace aliases and
-package exports, including helpers outside component directories. This is import
+Browser script entrypoints are collection Bloc behaviors, the binding runtime,
+`*.client.*` files and declared application entrypoints. Static imports are
+followed through workspace aliases and package exports, including helpers
+outside Bloc directories. This is import
 reachability, not proof that an exported function executes. It is deliberately
 broader than a tree-shaken production bundle.
 

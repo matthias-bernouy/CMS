@@ -44,8 +44,8 @@ bun run verify
 ```
 
 `check:all` covers architecture, package exports, repository shape, style, UI
-contracts, and the TypeScript project. The build also verifies the generated
-Kernel administration bundle used by the browser.
+contracts, logging, dead code and the TypeScript project. The build also verifies
+the generated Bloc behavior and binding-core browser runtimes.
 
 ## Publication status
 
@@ -53,7 +53,9 @@ Use `ulvia release` for explicit authored directories, then `ulvia push` for one
 exact admitted coordinate. Do not restore the removed package repository or
 integration manifests. The receiving repository re-runs collection,
 contract/provider and release-evolution validation before making bytes visible.
-Installation remains a separate administration action, and a live provider conformance
-runner remains open. There is no mounted private Bloc import route; authored
+Installation remains a separate administration action. A transport-neutral live
+provider conformance runner exists; production disposable-environment
+composition and approval policy remain open. There is no mounted private Bloc
+import route; authored
 collection Blocs use the explicit release pipeline described in
 [authoring](authoring.md).

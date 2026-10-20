@@ -30,6 +30,7 @@ already been published to a registry.
 | `@bernouy/rate-limiter` | Fixed-window rate limiting with memory and Mongo implementations. |
 | `@bernouy/secret-store` | Secret storage, reference resolution and encrypted Mongo persistence. |
 | `@bernouy/image-processing` | Generic image inspection and WebP transforms used by Files provider implementations. |
+| `@bernouy/logging` | Structured diagnostics, bounded attributes, central redaction, Node sinks and test loggers. |
 
 ## Features
 
@@ -40,7 +41,7 @@ already been published to a registry.
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues, authored collection admission, content projections, migrations and the explicit collection build toolchain. |
 | `@bernouy/cms-gateway` | Authorized provider-neutral capability invocation, identities and streaming binary transport. |
 | `@bernouy/cms-seo` | Page metadata, structured data, dynamic entity indexing, persisted sitemap snapshots and their mountable HTTP handlers. |
-| `@bernouy/cms-auth` | Accounts, local credentials, PATs, signed sessions, public auth operations and email composition. |
+| `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, signed session tokens, account lifecycle and email composition. It exposes no HTTP routes. |
 
 Collection Pages are admitted resources. The Kernel mounts their shared route
 registry, rendering and revisioned execution-plan activation alongside

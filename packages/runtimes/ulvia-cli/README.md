@@ -10,7 +10,7 @@ bun run ulvia -- dev credentials
 bun run ulvia -- dev stop
 bun run ulvia -- dev new --data-dir /absolute/path/to/a/fresh-environment
 bun run ulvia -- dev reset --yes
-bun run ulvia -- release packages/official-repository/collections/test
+bun run ulvia -- release packages/official-repository/collections/ulvia-official
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
 bun run ulvia -- push contract ulvia.official/ulvia.cms.jobs@1.0.0 --repository https://repository.example
@@ -54,10 +54,10 @@ at `/v1/collections`, `/v1/contracts`, and `/v1/providers` on loopback port
 5102, with declared contract fixtures at
 `/v1/contracts/<publisher>/<contract>/<version>/fixtures/<asset-id>`, and sees
 new releases without restarting. The CMS consumes the collection and provider
-repository endpoints. Administration Pages explore manifests in Settings → Provider
-connections, connects an account, then selects exact contract releases in
-Explore sources for gateway calls. `prune` empties all local repository content without
-deleting `dev/` data.
+repository endpoints. The Provider administration Page imports an exact
+manifest, approves an account connection and replaces the site's exact contract
+selections for Gateway calls. `prune` empties all local repository content
+without deleting `dev/` data.
 
 Contract authors may keep only release metadata in `definition.json` and split
 capabilities recursively below `capabilities/`. Each capability is one JSON
@@ -73,7 +73,8 @@ An optional conformance companion uses `conformance/definition.json`, recursive
 fixture bytes live below `conformance/fixtures/<asset-id>`. The release command
 assembles and admits a present suite, including exact locally released
 dependencies, before storing the contract. Conformance publication and live
-execution remain separate future work.
+execution are separate Gateway/repository APIs; the CLI does not yet orchestrate
+a disposable provider environment.
 
 `push` publishes one exact local coordinate, and `pull` downloads and re-admits
 one exact remote coordinate before storing it locally. Both support

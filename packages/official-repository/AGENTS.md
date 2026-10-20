@@ -23,7 +23,8 @@
   `blocs/`; source paths never contribute to stable text or Bloc IDs.
 - Give every official text definition translated `label`, `category` and `group`
   metadata. Organize those metadata translations recursively by product domain;
-  never make Control display raw text IDs as its primary catalogue labels.
+  never make administration Pages display raw text IDs as their primary
+  catalogue labels.
 - Keep user-facing copy out of Bloc `default.html`, fixed `markup.html` and
   Page `page.html`. Visible text and accessible labels must be a business-data
   binding or an exact `cms.i18n.<collection>.<text>` reference; author reusable

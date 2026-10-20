@@ -7,8 +7,11 @@ them inside its validated scoped stylesheet.
 ## Site Themes
 
 Theme settings contain token sources, named value sets and one active theme.
-Site-owned tokens use `--site-variable-*`. Installed collections may contribute
-immutable namespaced tokens, for example `--ulvia-official-primary`.
+Installed collections contribute immutable tokens whose IDs and CSS variables
+are derived from the collection namespace, for example
+`--ulvia-official-primary`. Unowned site token sources are supported by the
+Content model, but the current administration contract only edits values of
+installed collection tokens; it does not create arbitrary site tokens.
 
 The Kernel serves the document foundation and active values through
 `/.cms/style`. The foundation does not restyle native controls, headings,
@@ -30,14 +33,22 @@ properties, so misspellings fail before publication.
 
 ## Scoped Bloc Styles
 
-Authors write rules relative to the Bloc root. The build wraps them in
-`@scope ([cms-bloc="<id>"])`:
+Authors write rules relative to the Bloc root. The build wraps them in a scope
+that stops before nested Blocs:
+
+```css
+@scope ([cms-bloc="<id>"]) to (:scope [cms-bloc]) {
+    /* authored rules */
+}
+```
+
+An authored stylesheet therefore contains only the inner rules:
 
 ```css
 :scope {
-    --example-card-background: var(--site-variable-surface-background, Canvas);
-    --example-card-color: var(--site-variable-surface-text, CanvasText);
-    --_example-card-padding: var(--site-variable-space-md, 1rem);
+    --example-card-background: var(--ulvia-official-background-surface, Canvas);
+    --example-card-color: var(--ulvia-official-text-primary, CanvasText);
+    --_example-card-padding: var(--ulvia-official-spacing-md, 1rem);
 
     display: grid;
     padding: var(--_example-card-padding);
@@ -51,7 +62,7 @@ Authors write rules relative to the Bloc root. The build wraps them in
 }
 
 [part~="description"] {
-    color: var(--site-variable-surface-muted-text, currentColor);
+    color: var(--ulvia-official-text-muted, currentColor);
 }
 ```
 

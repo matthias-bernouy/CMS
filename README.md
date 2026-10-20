@@ -7,10 +7,9 @@ organized in four layers with a one-way dependency rule:
 
 - **foundation/** — generic, zero CMS knowledge; a non-CMS product could use
   these as-is (no `cms-` prefix).
-- **features/** — the CMS domain, one package per persistence seam. Each
-  exports contracts + dependency-free implementations from its root, network
-  adapters under `./mongo` / `./s3` subpaths, and its mountable HTTP values
-  (handlers, registrars, middlewares, page renderers) under `src/http/`.
+- **features/** — reusable CMS domain modules with explicit ownership. Packages
+  expose adapter-light roots and declare optional persistence, HTTP, browser or
+  tooling subpaths explicitly in their export maps.
 - **surfaces/** — mountable HTTP modules: define behavior, decide nothing
   (everything injected; no `process.env`, no `listen`).
 - **runtimes/** — executables: read env, pick adapters, mount surfaces, listen.
@@ -29,6 +28,7 @@ CmsCore/
 |   |   |-- blob-store/        @bernouy/blob-store
 |   |   |-- http-runner/       @bernouy/http-runner
 |   |   |-- envelope-crypto/   @bernouy/envelope-crypto
+|   |   |-- logging/           @bernouy/logging
 |   |   |-- rate-limiter/      @bernouy/rate-limiter
 |   |   |-- image-processing/  @bernouy/image-processing
 |   |   `-- secret-store/      @bernouy/secret-store
@@ -79,18 +79,19 @@ CmsCore/
 
 ```bash
 bun install                 # links every workspace package + installs externals
-bun run build               # orchestrated: tsc --build -> cms-kernel browser bundle
+bun run build               # types, browser runtimes and official bootstrap
 bun run typecheck           # tsc --build only (project references)
 bun run clean               # tsc --build --clean (drops per-package dist + tsbuildinfo)
 bun test                    # workspace test runner
 ```
 
-`build.ts` first runs `tsc --build`, then builds the Kernel Admin asset from the
-live `@bernouy/cms-content/browser` entry. There is no separate visual-component
+`build.ts` first runs `tsc --build`, then builds the generated Bloc behavior and
+binding-core runtimes owned by `@bernouy/cms-content`, and finally refreshes the
+CLI's admitted official bootstrap snapshot. There is no separate visual-component
 package or generated component distribution.
 
 Packages ship **source** through their `exports` fields; consumers resolve
-straight to `src/` outside the explicit Kernel browser bundle.
+straight to `src/` outside the explicit `cms-content` browser bundles.
 
 ## Deployment
 
