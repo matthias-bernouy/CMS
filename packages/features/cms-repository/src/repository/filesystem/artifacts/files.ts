@@ -1,8 +1,9 @@
-import { createHash, randomUUID } from "node:crypto";
-import { link, readFile, readdir, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { stat } from "node:fs/promises";
-import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
+import { ensureDurableDirectory } from "../core/durable";
+import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
 
 export type ArtifactType = "contracts" | "providers";
 export type StoredArtifact = {
@@ -40,10 +41,19 @@ export class LocalArtifactFiles {
                 if (!IDENTIFIER.test(fixture.id)) {
                     throw new Error("Invalid fixture asset ID");
                 }
-                await writeImmutable(join(fixtureRoot, fixture.id), fixture.bytes);
+                const path = join(fixtureRoot, fixture.id);
+                await writeImmutableFile(
+                    path,
+                    fixture.bytes,
+                    `Immutable artifact file already has different content: ${path}`,
+                );
             }
         }
-        await writeImmutable(path, Buffer.from(canonicalJson));
+        await writeImmutableFile(
+            path,
+            Buffer.from(canonicalJson),
+            `Immutable artifact file already has different content: ${path}`,
+        );
         return true;
     }
 
@@ -75,8 +85,8 @@ export class LocalArtifactFiles {
 
     async list(type: ArtifactType): Promise<StoredArtifact[]> {
         const artifacts: StoredArtifact[] = [];
-        for (const publisherId of await directories(join(this.root, type))) {
-            for (const id of await directories(join(this.root, type, publisherId))) {
+        for (const publisherId of await listDirectories(join(this.root, type))) {
+            for (const id of await listDirectories(join(this.root, type, publisherId))) {
                 const folder = join(this.root, type, publisherId, id);
                 for (const file of await readdir(folder, { withFileTypes: true })) {
                     if (!file.isFile() || !file.name.endsWith(".json")) {
@@ -102,7 +112,11 @@ export class LocalArtifactFiles {
             return sameBytes(existing, canonicalJson, "conformance evidence", evidenceId, "immutable");
         }
         await ensureDurableDirectory(dirname(path), this.root);
-        await writeImmutable(path, Buffer.from(canonicalJson));
+        await writeImmutableFile(
+            path,
+            Buffer.from(canonicalJson),
+            `Immutable artifact file already has different content: ${path}`,
+        );
         return true;
     }
 
@@ -127,36 +141,6 @@ export class LocalArtifactFiles {
     }
 }
 
-async function writeImmutable(path: string, bytes: Uint8Array | Blob): Promise<void> {
-    const temporary = join(dirname(path), `.${randomUUID()}.tmp`);
-    const snapshot = bytes instanceof Blob ? bytes : new Blob([bytes.slice()]);
-    await durableWriteFile(temporary, new Uint8Array(await snapshot.arrayBuffer()), { flag: "wx", mode: 0o600 });
-    try {
-        await link(temporary, path);
-        await syncDirectory(dirname(path));
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
-            throw error;
-        }
-        const winner = Bun.file(path);
-        if (winner.size !== snapshot.size || !(await sameBlobBytes(winner, snapshot))) {
-            throw new Error(`Immutable artifact file already has different content: ${path}`);
-        }
-    } finally {
-        await rm(temporary, { force: true });
-    }
-}
-
-async function sameBlobBytes(left: Blob, right: Blob): Promise<boolean> {
-    const [leftDigest, rightDigest] = await Promise.all(
-        [left, right].map(async (value) => {
-            const digest = await crypto.subtle.digest("SHA-256", await value.arrayBuffer());
-            return Buffer.from(digest).toString("hex");
-        }),
-    );
-    return leftDigest === rightDigest;
-}
-
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
@@ -170,17 +154,4 @@ function sameBytes(existing: Buffer, candidate: string, type: string, id: string
         throw new Error(`${type} ${id}@${version} already exists with different content`);
     }
     return false;
-}
-
-async function directories(root: string): Promise<string[]> {
-    const entries = await readdir(root, { withFileTypes: true }).catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") {
-            return [];
-        }
-        throw error;
-    });
-    return entries
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name)
-        .sort();
 }

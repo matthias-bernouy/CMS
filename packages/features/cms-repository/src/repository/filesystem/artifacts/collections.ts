@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { link, readFile, readdir, rm } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import {
     isCollectionNamespace,
     parseCollectionReleaseJson,
@@ -15,6 +15,7 @@ import type { CollectionAssetDefinition } from "cms-repository/collections/inter
 import type { VerifiedCollectionReleaseMetadata } from "cms-repository/collections/interfaces/CollectionAdmission";
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
 import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
+import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
 import { pruneRepository } from "../core/recovery";
 
 export class LocalCollectionRepository {
@@ -39,7 +40,12 @@ export class LocalCollectionRepository {
         if (artifact.assets.length) {
             await ensureDurableDirectory(assetDirectory, this.root);
             for (const asset of artifact.assets) {
-                await writeImmutable(join(assetDirectory, asset.id), new Uint8Array(await asset.bytes.arrayBuffer()));
+                const path = join(assetDirectory, asset.id);
+                await writeImmutableFile(
+                    path,
+                    asset.bytes,
+                    `Immutable collection asset already has different content: ${path}`,
+                );
             }
         }
         const temporary = join(directory, `.${randomUUID()}.tmp`);
@@ -78,8 +84,8 @@ export class LocalCollectionRepository {
 
     async listMetadata(): Promise<VerifiedCollectionReleaseMetadata[]> {
         const releases: VerifiedCollectionReleaseMetadata[] = [];
-        for (const publisher of await directories(join(this.root, "releases"))) {
-            for (const collection of await directories(join(this.root, "releases", publisher))) {
+        for (const publisher of await listDirectories(join(this.root, "releases"))) {
+            for (const collection of await listDirectories(join(this.root, "releases", publisher))) {
                 const folder = join(this.root, "releases", publisher, collection);
                 for (const entry of await readdir(folder, { withFileTypes: true })) {
                     if (!entry.isFile() || !entry.name.endsWith(".json")) {
@@ -173,25 +179,6 @@ export class LocalCollectionRepository {
     }
 }
 
-async function writeImmutable(path: string, bytes: Uint8Array): Promise<void> {
-    const temporary = `${path}.${randomUUID()}.tmp`;
-    await durableWriteFile(temporary, bytes, { flag: "wx", mode: 0o600 });
-    try {
-        await link(temporary, path);
-        await syncDirectory(dirname(path));
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
-            throw error;
-        }
-        const winner = await readFile(path);
-        if (!winner.equals(bytes)) {
-            throw new Error(`Immutable collection asset already has different content: ${path}`);
-        }
-    } finally {
-        await rm(temporary, { force: true });
-    }
-}
-
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
 
@@ -211,17 +198,4 @@ function coordinate(artifact: CollectionIdentity): string {
 
 function releaseHash(value: string | Uint8Array): string {
     return createHash("sha256").update(value).digest("hex");
-}
-
-async function directories(root: string): Promise<string[]> {
-    const entries = await readdir(root, { withFileTypes: true }).catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") {
-            return [];
-        }
-        throw error;
-    });
-    return entries
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name)
-        .sort();
 }
