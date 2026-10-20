@@ -68,7 +68,7 @@ describe("collection authored bundle admission", () => {
         });
         blocs[1] = {
             ...blocs[1],
-            lightdom: "<main>{{ resource.name }}</main>",
+            markup: "<main>{{ resource.name }}</main>",
             uses: [],
             slots: {},
             defaultContent: "",
@@ -115,7 +115,7 @@ describe("collection authored bundle admission", () => {
             root: { accepts: ["div"] },
             id: "atlas-catalog",
             label: "bloc.page.label",
-            lightdom: `<section cms-query="catalog.items:item.list as items">
+            markup: `<section cms-query="catalog.items:item.list as items">
                 <div cms-match="items.outcome.kind">
                     <div cms-case='"none"'></div>
                     <p cms-case='"success"'>{{ items.data.id }}</p>
@@ -175,7 +175,7 @@ describe("collection authored bundle admission", () => {
             root: { accepts: ["div"] },
             id: "atlas-catalog",
             label: "bloc.page.label",
-            lightdom: `<section
+            markup: `<section
                 cms-query="catalog.items:item.list as items"
                 cms-sync="@page:atlas-selection"
                 cms-sync-select="data.id"
@@ -208,7 +208,7 @@ describe("collection authored bundle admission", () => {
 
         const implicitFullSnapshot = structuredClone(source);
         const bloc = (implicitFullSnapshot.blocs as Record<string, unknown>[]).at(-1)!;
-        bloc.lightdom = String(bloc.lightdom).replace(' cms-sync-select="data.id"', "");
+        bloc.markup = String(bloc.markup).replace(' cms-sync-select="data.id"', "");
         await expect(admitCollectionRelease(implicitFullSnapshot, [], { contracts })).rejects.toThrow(
             "cms-sync producer is incompatible",
         );

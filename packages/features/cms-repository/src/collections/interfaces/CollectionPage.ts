@@ -12,7 +12,6 @@ export interface CollectionPage {
     /** Collection-provided route used only until the site chooses an override. */
     readonly defaultPath: string;
     readonly name: CollectionTranslationKey;
-    readonly icon?: string;
     readonly description?: CollectionTranslationKey;
     /** Blocs referenced by this document, derived during admission. */
     readonly uses: readonly string[];

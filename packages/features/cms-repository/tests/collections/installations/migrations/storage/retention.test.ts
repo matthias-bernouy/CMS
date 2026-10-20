@@ -119,7 +119,7 @@ function release(version: string, id: string): Record<string, unknown> {
                 root: { accepts: ["div"] },
                 id,
                 label: "bloc.label",
-                template: "<div></div>",
+                markup: "<div></div>",
                 uses: [],
                 requires: [],
                 slots: {},

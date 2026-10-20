@@ -5,7 +5,12 @@ import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, record, string, unique } from "../../values";
 import { isCollectionSystemQuery, parseRequirements } from "../requirements";
 import { parseDefaultPath } from "./document";
-import { validatePageDocument, type PageDocumentValidationResult } from "@bernouy/cms-content/page-document";
+import { collectionPageDefinitions } from "./definitions";
+import {
+    validateExpandedPageDocument,
+    validatePageDocument,
+    type PageDocumentValidationResult,
+} from "@bernouy/cms-content/page-document";
 
 /** Parses a bounded immutable Page document. */
 export function parseCollectionPages(
@@ -19,11 +24,7 @@ export function parseCollectionPages(
     const pages = array(value, limits.maxPages, "$.pages").map((entry, index) => {
         const path = `$.pages[${index}]`;
         const source = record(entry, path);
-        keys(
-            source,
-            ["id", "generation", "defaultPath", "name", "icon", "description", "requires", "uses", "document"],
-            path,
-        );
+        keys(source, ["id", "generation", "defaultPath", "name", "description", "requires", "uses", "document"], path);
         const id = identifier(source.id, `${path}.id`);
         const defaultPath = parseDefaultPath(source.defaultPath, `${path}.defaultPath`);
         const document = record(source.document, `${path}.document`);
@@ -34,6 +35,7 @@ export function parseCollectionPages(
             validated = validatePageDocument(authoredHtml, localBlocs, {
                 unresolvedBlocs: [...importedBlocs].map((id) => ({ id })),
             });
+            validateExpandedPageDocument(validated.html, collectionPageDefinitions(localBlocs));
         } catch (error) {
             invalid(error instanceof Error ? error.message : "invalid Page document", `${path}.document.html`);
         }
@@ -68,7 +70,6 @@ export function parseCollectionPages(
                     : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
             defaultPath,
             name: string(source.name, 128, `${path}.name`),
-            ...(source.icon === undefined ? {} : { icon: identifier(source.icon, `${path}.icon`) }),
             ...(source.description === undefined
                 ? {}
                 : { description: string(source.description, 4096, `${path}.description`) }),

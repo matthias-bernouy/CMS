@@ -46,7 +46,7 @@ export function release(version: string, id: string): Record<string, unknown> {
                 root: { accepts: ["div"] },
                 id,
                 label: "bloc.label",
-                template: '<div><slot name="content"></slot></div>',
+                markup: '<div><slot name="content"></slot></div>',
                 uses: [],
                 requires: [],
                 slots: { content: { accepts: [{ kind: "native-content", profile: "prose" }] } },

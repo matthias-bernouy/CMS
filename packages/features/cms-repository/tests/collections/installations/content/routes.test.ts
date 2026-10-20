@@ -173,7 +173,7 @@ function collectionRelease(html: string) {
                 root: { accepts: ["div"] },
                 id: "official-page",
                 label: "bloc.page.label",
-                lightdom: html,
+                markup: html,
                 uses: [],
                 requires: [],
                 slots: {},

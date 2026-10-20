@@ -112,10 +112,9 @@ async function assertProspectivePagesValid(
             id: bloc.id,
             slots: bloc.slots,
             uses: bloc.uses,
-            ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
-            ...(bloc.kind === "component" ? { templateHTML: bloc.template } : {}),
+            kind: bloc.kind,
+            markupHTML: bloc.markup,
             root: bloc.root,
-            ...(bloc.content ? { content: bloc.content } : {}),
             ...(bloc.kind === "component" && bloc.settings ? { settings: bloc.settings } : {}),
         })),
     );

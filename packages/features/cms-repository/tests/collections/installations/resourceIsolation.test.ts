@@ -31,7 +31,7 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
                 root: { accepts: ["div"] },
                 id: blocId,
                 label: "bloc.welcome.label",
-                lightdom: "<p>{{ copy }}</p>",
+                markup: "<p>{{ copy }}</p>",
                 uses: [],
                 requires: [],
                 slots: {},
@@ -157,8 +157,7 @@ test("installs only declared public resources from compatible collection depende
         blocs: [
             {
                 ...baseConsumer.blocs[0]!,
-                lightdom:
-                    '<div cms-bloc=\"ulvia-official-button\"></div><span>{{ cms.i18n.ulvia-official.submit }}</span><img src="{{ cms.asset.ulvia-official.empty.svg }}" alt="{{ cms.i18n.ulvia-official.submit }}">',
+                markup: '<div cms-bloc=\"ulvia-official-button\"></div><span>{{ cms.i18n.ulvia-official.submit }}</span><img src="{{ cms.asset.ulvia-official.empty.svg }}" alt="{{ cms.i18n.ulvia-official.submit }}">',
                 uses: ["ulvia-official-button"],
             },
         ],
@@ -278,7 +277,7 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
                 root: { accepts: ["div"] },
                 id: "foundation-card",
                 label: "bloc.welcome.label",
-                template: '<section><slot name="body"></slot></section>',
+                markup: '<section><slot name="body"></slot></section>',
                 uses: [],
                 requires: [],
                 slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
@@ -341,7 +340,7 @@ test("rejects imports that the dependency does not export", async () => {
         blocs: [
             {
                 ...baseConsumer.blocs[0]!,
-                lightdom: '<div cms-bloc="ulvia-official-button"></div>',
+                markup: '<div cms-bloc="ulvia-official-button"></div>',
                 uses: ["ulvia-official-button"],
             },
         ],

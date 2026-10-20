@@ -120,12 +120,17 @@ test("upgrades preserve managed native element choices", async () => {
                 id: "atlas-action",
                 label: "bloc.panel.label",
                 root: { accepts: ["div"] },
-                content: { accepts },
-                template: "<slot></slot>",
+                markup: "<slot></slot>",
                 defaultContent: `<${root}>{{ cms.i18n.atlas.submit }}</${root}>`,
                 uses: [],
                 requires: [],
-                slots: {},
+                slots: {
+                    default: {
+                        accepts: [{ kind: "native-element", accepts }],
+                        min: 1,
+                        max: 1,
+                    },
+                },
             },
         ];
         return source;
@@ -135,7 +140,7 @@ test("upgrades preserve managed native element choices", async () => {
     await store.install("site", initial.digest, 0, "local");
     const changed = await store.importRelease(managedRelease("1.1.0", ["button"], "button"));
 
-    await expect(store.upgrade("site", changed.digest, 1, "local")).rejects.toThrow("managed native content contract");
+    await expect(store.upgrade("site", changed.digest, 1, "local")).rejects.toThrow("existing slot contract");
 });
 
 test("upgrades accept wider slot and managed native contracts", async () => {
@@ -148,12 +153,17 @@ test("upgrades accept wider slot and managed native contracts", async () => {
         id: "atlas-action",
         label: "bloc.panel.label",
         root: { accepts: ["div"] },
-        content: { accepts: ["button"] },
-        template: "<slot></slot>",
+        markup: "<slot></slot>",
         defaultContent: "<button>{{ cms.i18n.atlas.submit }}</button>",
         uses: [],
         requires: [],
-        slots: {},
+        slots: {
+            default: {
+                accepts: [{ kind: "native-element", accepts: ["button"] }],
+                min: 1,
+                max: 1,
+            },
+        },
     };
     initial.blocs = [...initial.blocs, managed];
     const store = new CollectionStore(new MemoryCollectionStorage());
@@ -165,7 +175,13 @@ test("upgrades accept wider slot and managed native contracts", async () => {
     const nextPanel = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
     nextPanel.slots = { body: { min: 0, max: 2 } };
     const nextManaged = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-action")!;
-    nextManaged.content = { accepts: ["button", "a"] };
+    nextManaged.slots = {
+        default: {
+            accepts: [{ kind: "native-element", accepts: ["button", "a"] }],
+            min: 1,
+            max: 1,
+        },
+    };
     const admitted = await store.importRelease(next);
 
     await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });

@@ -200,8 +200,8 @@ function collectionMarkups(owner: StateOwner): readonly { html: string; path: st
     return [
         ...owner.blocs.flatMap((bloc) => [
             {
-                html: bloc.kind === "component" ? bloc.template : bloc.lightdom,
-                path: `$.blocs[${bloc.id}].${bloc.kind === "component" ? "template" : "lightdom"}`,
+                html: bloc.markup,
+                path: `$.blocs[${bloc.id}].markup`,
             },
             ...(bloc.defaultContent === undefined
                 ? []

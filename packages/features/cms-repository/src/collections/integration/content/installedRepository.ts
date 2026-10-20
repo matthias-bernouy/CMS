@@ -129,9 +129,8 @@ export function withInstalledCollections(
                             viewJS: bloc.kind === "component" ? (bloc.runtime?.viewJS ?? "") : "",
                             catalogue: bloc.catalogue,
                             root: bloc.root,
-                            ...(bloc.content ? { content: bloc.content } : {}),
-                            ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
-                            ...(bloc.kind === "component" ? { templateHTML: bloc.template } : {}),
+                            kind: bloc.kind,
+                            markupHTML: bloc.markup,
                             ...(bloc.kind === "component" && bloc.runtime?.styleCSS
                                 ? {
                                       styleCSS: bloc.runtime.styleCSS,

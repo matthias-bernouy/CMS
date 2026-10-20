@@ -26,6 +26,7 @@ const common = [
     "requires",
     "slots",
     "root",
+    "markup",
     "defaultContent",
 ];
 
@@ -46,14 +47,7 @@ function parseBloc(
     if (source.kind !== "component" && source.kind !== "composition") {
         invalid("kind must be component or composition", `${path}.kind`);
     }
-    keys(
-        source,
-        [
-            ...common,
-            ...(source.kind === "component" ? ["content", "template", "style", "settings", "runtime"] : ["lightdom"]),
-        ],
-        path,
-    );
+    keys(source, [...common, ...(source.kind === "component" ? ["style", "settings", "runtime"] : [])], path);
     const id = parseCollectionBlocTag(source.id, collectionId, `${path}.id`);
     if (source.catalogue !== undefined && source.catalogue !== "listed" && source.catalogue !== "hidden") {
         invalid("must be listed or hidden", `${path}.catalogue`);
@@ -78,9 +72,7 @@ function parseBloc(
         requires: parseRequirements(source.requires === undefined ? [] : source.requires, `${path}.requires`, limits),
         slots: parseSlots(source.slots === undefined ? {} : source.slots, `${path}.slots`, limits),
         root: parseManagedNativeElement(source.root, `${path}.root`),
-        ...(source.kind !== "component" || source.content === undefined
-            ? {}
-            : { content: parseManagedNativeElement(source.content, `${path}.content`) }),
+        markup: string(source.markup, limits.maxMarkupLength, `${path}.markup`),
         ...(source.defaultContent === undefined
             ? {}
             : {
@@ -91,7 +83,6 @@ function parseBloc(
         return {
             ...base,
             kind: "composition",
-            lightdom: string(source.lightdom, limits.maxMarkupLength, `${path}.lightdom`),
         };
     }
     const settings =
@@ -142,7 +133,6 @@ function parseBloc(
     return {
         ...base,
         kind: "component",
-        template: string(source.template, limits.maxMarkupLength, `${path}.template`),
         ...(style === undefined ? {} : { style }),
         ...(settings === undefined ? {} : { settings }),
         ...(styleCSS === undefined && viewJS === undefined

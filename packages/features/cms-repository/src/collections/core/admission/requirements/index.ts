@@ -17,7 +17,7 @@ type BindingTarget = {
 };
 
 function blocMarkup(bloc: CollectionBloc): string {
-    return bloc.kind === "component" ? bloc.template : bloc.lightdom;
+    return bloc.markup;
 }
 
 /** Each resource and its used blocs need joint witnesses; unrelated resources stay independent. */

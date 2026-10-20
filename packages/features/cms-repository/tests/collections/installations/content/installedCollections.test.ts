@@ -26,6 +26,7 @@ const release = {
         en: {
             "bloc.card.label": "Card",
             "bloc.category.content": "Content",
+            "bloc.heading.label": "Heading",
             "bloc.welcome.label": "Welcome",
             "collection.name": "Test",
             "setting.compact.label": "Compact",
@@ -54,14 +55,31 @@ const release = {
     ],
     blocs: [
         {
+            kind: "component",
+            root: { accepts: ["h1", "h2", "h3", "h4", "h5", "h6"] },
+            id: "test-heading",
+            label: "bloc.heading.label",
+            category: "bloc.category.content",
+            order: 20,
+            markup: "<slot></slot>",
+            uses: [],
+            requires: [],
+            slots: {
+                default: {
+                    accepts: [{ kind: "native-content", profile: "phrasing" }],
+                    min: 1,
+                },
+            },
+        },
+        {
             kind: "composition",
             root: { accepts: ["div"] },
             id: "test-welcome",
             label: "bloc.welcome.label",
             category: "bloc.category.content",
             order: 30,
-            lightdom: "<h1>{{ cms.i18n.test.title }}</h1>",
-            uses: [],
+            markup: '<h1 cms-bloc="test-heading">{{ cms.i18n.test.title }}</h1>',
+            uses: ["test-heading"],
             requires: [],
             slots: {},
         },
@@ -84,7 +102,9 @@ test("installed resources participate in authoring validation and public read mo
         catalogueOrder: 30,
     });
     const reader = createContentReader(repository);
-    expect((await reader.getRenderableBlocs())[0]!.compositionHTML).toContain("cms.i18n.test.title");
+    expect((await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-welcome")?.markupHTML).toContain(
+        "cms.i18n.test.title",
+    );
     expect((await reader.getPublishedPage("/test"))!.content).toContain("test-welcome");
     expect(await reader.getContentRevision!()).toBe(1);
     await store.saveTexts("site", "test", 1, { title: { en: "Changed" } });
@@ -139,18 +159,20 @@ test("site Pages inherit capability requirements from installed Blocs", async ()
     const store = new CollectionStore(new MemoryCollectionStorage(), contracts);
     const artifact = await store.importRelease({
         ...release,
-        blocs: [
-            {
-                ...release.blocs[0]!,
-                requires: [
-                    {
-                        contractId: "example.files",
-                        capabilityId: "files.read",
-                        versionRange: "^1.0.0",
-                    },
-                ],
-            },
-        ],
+        blocs: release.blocs.map((bloc) =>
+            bloc.id === "test-welcome"
+                ? {
+                      ...bloc,
+                      requires: [
+                          {
+                              contractId: "example.files",
+                              capabilityId: "files.read",
+                              versionRange: "^1.0.0",
+                          },
+                      ],
+                  }
+                : bloc,
+        ),
     });
     await store.install("site", artifact.digest, 0);
     const repository = new ValidatingCmsRepository(
@@ -232,7 +254,7 @@ test("installed hidden blocs stay out of the authoring catalogue but remain avai
                 id: "test-helper",
                 label: "bloc.helper.label",
                 catalogue: "hidden",
-                template: "<div></div>",
+                markup: "<div></div>",
                 uses: [],
                 requires: [],
                 slots: {},
@@ -301,7 +323,7 @@ test("installed Light DOM component projects its repository-compiled style witho
                     root: { accepts: ["div"] },
                     id: "test-card",
                     label: "bloc.card.label",
-                    template: '<article class="card"><slot name="body"></slot></article>',
+                    markup: '<article class="card"><slot name="body"></slot></article>',
                     style,
                     uses: [],
                     requires: [],
@@ -321,7 +343,7 @@ test("installed Light DOM component projects its repository-compiled style witho
         styleCollectionId: "test",
         styleCSS: compileBlocStyle("test-card", style),
     });
-    expect(projected?.compositionHTML).toBeUndefined();
+    expect(projected?.markupHTML).toBe('<article class="card"><slot name="body"></slot></article>');
 });
 
 test("installed polymorphic native components project their contract and keep wrapper attributes separate", async () => {
@@ -341,8 +363,7 @@ test("installed polymorphic native components project their contract and keep wr
                 id: "test-action",
                 label: "bloc.card.label",
                 root: { accepts: ["div"] },
-                content: { accepts: ["button", "a"] },
-                template: "<slot></slot>",
+                markup: "<slot></slot>",
                 defaultContent: '<button type="button">{{ cms.i18n.test.title }}</button>',
                 settings: [
                     {
@@ -356,7 +377,13 @@ test("installed polymorphic native components project their contract and keep wr
                 ],
                 uses: [],
                 requires: [],
-                slots: {},
+                slots: {
+                    default: {
+                        accepts: [{ kind: "native-element", accepts: ["button", "a"] }],
+                        min: 1,
+                        max: 1,
+                    },
+                },
             },
         ],
     });
@@ -365,9 +392,13 @@ test("installed polymorphic native components project their contract and keep wr
         withInstalledCollections(new InMemoryCmsRepository(), store, "site"),
     );
     const projected = (await repository.getBlocRecord("test-action"))!.artifact!;
-    expect(projected.content).toEqual({ accepts: ["button", "a"] });
+    expect(projected.slots[""]).toEqual({
+        accepts: [{ kind: "native-element", accepts: ["button", "a"] }],
+        min: 1,
+        max: 1,
+    });
     expect((await createContentReader(repository).getRenderableBlocs()).find(({ id }) => id === "test-action")).toEqual(
-        expect.objectContaining({ content: { accepts: ["button", "a"] } }),
+        expect.objectContaining({ root: { accepts: ["div"] } }),
     );
     await repository.insertPage(
         "/native-button",
@@ -381,7 +412,7 @@ test("installed polymorphic native components project their contract and keep wr
     );
     await expect(
         repository.insertPage("/native-wrong", "Wrong", '<div cms-bloc="test-action"><p>Wrong</p></div>'),
-    ).rejects.toThrow("accepted native element");
+    ).rejects.toThrow("does not accept native <p>");
 });
 
 test("installed collection thumbnails are projected from verified release assets", async () => {
@@ -405,7 +436,7 @@ test("installed collection thumbnails are projected from verified release assets
                     id: "test-card",
                     label: "bloc.card.label",
                     thumbnail: "card.svg",
-                    template: "<article></article>",
+                    markup: "<article></article>",
                     uses: [],
                     requires: [],
                     slots: {},
@@ -432,8 +463,7 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
                 root: { accepts: ["div"] },
                 id: "test-card",
                 label: "bloc.card.label",
-                template:
-                    '<article><slot name="title"></slot><section><p>{{ cms.i18n.test.title }}</p></section></article>',
+                markup: '<article><slot name="title"></slot><section><p>{{ cms.i18n.test.title }}</p></section></article>',
                 defaultContent: '<h2 slot="title">{{ cms.i18n.test.title }}</h2>',
                 settings: [
                     {
@@ -468,13 +498,13 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
     const record = (await repository.getBlocRecord("test-card"))!;
-    expect(record.artifact?.templateHTML).toContain("cms.i18n.test.title");
+    expect(record.artifact?.markupHTML).toContain("cms.i18n.test.title");
     expect(record.artifact?.defaultContent).toContain("cms.i18n.test.title");
     expect(record.artifact?.settings?.map((item) => [item.id, item.default])).toEqual([
         ["tone", "quiet"],
         ["compact", false],
     ]);
-    expect((await createContentReader(repository).getRenderableBlocs())[0]?.templateHTML).toContain(
+    expect((await createContentReader(repository).getRenderableBlocs())[0]?.markupHTML).toContain(
         "cms.i18n.test.title",
     );
     const { document } = parseHTML(

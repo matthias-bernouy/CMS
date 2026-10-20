@@ -33,9 +33,6 @@ function assertBlocCompatibility(previous: CollectionBloc, next: CollectionBloc 
         if (!managedNativeAcceptsPrevious(previous.root, next.root)) {
             reject(`Upgrade changes existing managed native contract ${previous.id}`);
         }
-        if (!managedNativeAcceptsPrevious(previous.content, next.content)) {
-            reject(`Upgrade changes existing managed native content contract ${previous.id}`);
-        }
     }
 }
 
@@ -56,12 +53,9 @@ function settingsAcceptPrevious(previous: CollectionComponentSettings, next: Col
 }
 
 function managedNativeAcceptsPrevious(
-    previous: Extract<CollectionBloc, { kind: "component" }>["content"],
-    next: Extract<CollectionBloc, { kind: "component" }>["content"],
+    previous: Extract<CollectionBloc, { kind: "component" }>["root"],
+    next: Extract<CollectionBloc, { kind: "component" }>["root"],
 ): boolean {
-    if (!previous || !next) {
-        return previous === next;
-    }
     return (
         previous.accepts.every((tag) => next.accepts.includes(tag)) &&
         sameJson(previous.attributes ?? {}, next.attributes ?? {})
@@ -93,6 +87,9 @@ function acceptIncludes(candidate: CollectionSlotAccept, previous: CollectionSlo
     }
     if (candidate.kind === "native-content" && previous.kind === "native-content") {
         return candidate.profile === previous.profile;
+    }
+    if (candidate.kind === "native-element" && previous.kind === "native-element") {
+        return managedNativeAcceptsPrevious(previous, candidate);
     }
     return true;
 }

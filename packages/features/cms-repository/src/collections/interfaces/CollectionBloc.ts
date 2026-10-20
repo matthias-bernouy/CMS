@@ -49,16 +49,14 @@ interface CollectionBlocBase {
     readonly slots: Readonly<Record<string, CollectionSlot>>;
     /** Native element contract for the authored element carrying `cms-bloc`. */
     readonly root: CollectionManagedNativeElement;
-    /** Optional single Page-owned native child managed by a wrapper Bloc. */
-    readonly content?: CollectionManagedNativeElement;
+    /** Fixed authored markup expanded according to `kind`. */
+    readonly markup: string;
     /** Editable initial page content, distinct from the fixed composition. */
     readonly defaultContent?: string;
 }
 
 export interface CollectionComponent extends CollectionBlocBase {
     readonly kind: "component";
-    /** Server-expanded Light DOM template. */
-    readonly template: string;
     readonly style?: string;
     readonly settings?: CollectionComponentSettings;
     /** Immutable browser artifacts derived and verified when the release is admitted. */
@@ -72,8 +70,6 @@ export interface CollectionComponent extends CollectionBlocBase {
 
 export interface CollectionComposition extends CollectionBlocBase {
     readonly kind: "composition";
-    /** Expanded into light DOM: the authoring host does not survive delivery. */
-    readonly lightdom: string;
 }
 
 export type CollectionBloc = CollectionComponent | CollectionComposition;

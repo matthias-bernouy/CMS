@@ -35,7 +35,7 @@ function collection(field: string, versionRange: string): Record<string, unknown
         root: { accepts: ["div"] },
         id: "atlas-catalog",
         label: "bloc.page.label",
-        lightdom: `<section cms-query="catalog.items:item.list as items">
+        markup: `<section cms-query="catalog.items:item.list as items">
             <div cms-match="items.outcome.kind">
                 <div cms-case='"none"'></div>
                 <p cms-case='"success"'>{{ items.data.${field} }}</p>

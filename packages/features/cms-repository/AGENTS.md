@@ -239,12 +239,13 @@ models and validation for CMS-owned installations and site selections.
 
 ## Collection authored bundles
 
-- Keep retained Blocs and compositions distinct: retained Blocs may have fixed
-  `template.html`, scoped styles and optional behavior; compositions expand
-  into Light DOM without retaining their authoring host. Compositions cannot
-  have settings, styles or behavior modules.
+- Keep retained Blocs and compositions distinct through explicit `kind` values.
+  Every Bloc has one fixed `markup.html`; retained components keep their native
+  host and may have scoped styles and optional behavior, while compositions
+  replace their authoring host. Compositions cannot have settings, styles or
+  behavior modules.
 - Reject inline style attributes in all authored markup. Structural classes are
-  valid only in fixed templates, while binding expressions live in Light DOM.
+  valid only in component markup, while binding expressions live in Light DOM.
   CSS is parsed and wrapped in a Bloc-owned `@scope`; Shadow DOM selectors and
   APIs are forbidden. Compiled behavior declares the exact browser ABI and is
   rechecked for syntax and forbidden APIs during admission. It remains
@@ -265,8 +266,9 @@ models and validation for CMS-owned installations and site selections.
   finite-option string items. Validate comparisons and reject visibility cycles;
   hiding a control never clears or exempts its stored attribute.
 - Every Bloc declares a nonempty unique `root.accepts` list for the native
-  element carrying `cms-bloc`. A retained wrapper may also declare `content`
-  for exactly one Page-owned native child. Root settings and child native
+  element carrying `cms-bloc`. A retained Bloc that owns one Page-authored
+  native child declares a bounded default slot with `kind: "native-element"`;
+  there is no separate Bloc `content` contract. Root settings and child native
   attributes remain separate contracts.
 - Every bloc declares its author-facing label. Optional catalogue categories are
   translation keys and optional nonnegative order values are stable within that

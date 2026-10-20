@@ -79,10 +79,7 @@ export function validateCollectionTextReferences(
 ): void {
     for (const bloc of blocs) {
         for (const [field, markup] of [
-            [
-                bloc.kind === "component" ? "template" : "lightdom",
-                bloc.kind === "component" ? bloc.template : bloc.lightdom,
-            ],
+            ["markup", bloc.markup],
             ["defaultContent", bloc.defaultContent],
         ] as const) {
             if (markup === undefined) {

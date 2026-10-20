@@ -2,8 +2,10 @@ import type { CollectionSlot, CollectionSlotAccept } from "cms-repository/collec
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, ordinal, record, unique } from "../../values";
+import { parseManagedNativeElement } from "./managedNativeElement";
 
-const NATIVE_CONTENT_PROFILES = ["inline", "prose"] as const;
+const NATIVE_CONTENT_PROFILES = ["phrasing", "inline", "prose"] as const;
+const DEFAULT_SLOT_SOURCE_NAME = "default";
 
 export function blocReferences(value: unknown, path: string, limits: Readonly<CollectionLimits>): string[] {
     const result = array(value, limits.maxBlocs, path).map((item, index) => identifier(item, `${path}[${index}]`));
@@ -21,34 +23,34 @@ export function parseSlots(
     if (names.length > limits.maxSlotsPerBloc) {
         invalid(`must declare at most ${limits.maxSlotsPerBloc} slots`, path);
     }
-    return Object.fromEntries(
-        names.map((name) => {
-            identifier(name, `${path}.${name}`);
-            const entry = record(source[name], `${path}.${name}`);
-            keys(entry, ["accepts", "min", "max"], `${path}.${name}`);
-            const min =
-                entry.min === undefined
-                    ? undefined
-                    : integer(entry.min, 0, Number.MAX_SAFE_INTEGER, `${path}.${name}.min`);
-            const max =
-                entry.max === undefined
-                    ? undefined
-                    : integer(entry.max, 0, Number.MAX_SAFE_INTEGER, `${path}.${name}.max`);
-            if ((min ?? 0) > (max ?? Number.MAX_SAFE_INTEGER)) {
-                invalid("min must not exceed max", `${path}.${name}`);
-            }
-            return [
-                name,
-                {
-                    ...(entry.accepts === undefined
-                        ? {}
-                        : { accepts: parseSlotAccepts(entry.accepts, `${path}.${name}.accepts`, limits) }),
-                    ...(min === undefined ? {} : { min }),
-                    ...(max === undefined ? {} : { max }),
-                },
-            ];
-        }),
+    const entries = names.map((name) => {
+        const normalizedName =
+            name === DEFAULT_SLOT_SOURCE_NAME || name === "" ? "" : identifier(name, `${path}.${name}`);
+        const entry = record(source[name], `${path}.${name}`);
+        keys(entry, ["accepts", "min", "max"], `${path}.${name}`);
+        const min =
+            entry.min === undefined ? undefined : integer(entry.min, 0, Number.MAX_SAFE_INTEGER, `${path}.${name}.min`);
+        const max =
+            entry.max === undefined ? undefined : integer(entry.max, 0, Number.MAX_SAFE_INTEGER, `${path}.${name}.max`);
+        if ((min ?? 0) > (max ?? Number.MAX_SAFE_INTEGER)) {
+            invalid("min must not exceed max", `${path}.${name}`);
+        }
+        return [
+            normalizedName,
+            {
+                ...(entry.accepts === undefined
+                    ? {}
+                    : { accepts: parseSlotAccepts(entry.accepts, `${path}.${name}.accepts`, limits) }),
+                ...(min === undefined ? {} : { min }),
+                ...(max === undefined ? {} : { max }),
+            },
+        ] as const;
+    });
+    unique(
+        entries.map(([name]) => name),
+        path,
     );
+    return Object.fromEntries(entries);
 }
 
 function parseSlotAccepts(value: unknown, path: string, limits: Readonly<CollectionLimits>): CollectionSlotAccept[] {
@@ -74,8 +76,20 @@ function parseSlotAccepts(value: unknown, path: string, limits: Readonly<Collect
             }
             return { kind: "native-content", profile: source.profile as (typeof NATIVE_CONTENT_PROFILES)[number] };
         }
+        if (source.kind === "native-element") {
+            keys(source, ["kind", "accepts", "attributes", "defaults"], itemPath);
+            const parsed = parseManagedNativeElement(
+                {
+                    accepts: source.accepts,
+                    ...(source.attributes === undefined ? {} : { attributes: source.attributes }),
+                    ...(source.defaults === undefined ? {} : { defaults: source.defaults }),
+                },
+                itemPath,
+            );
+            return { kind: "native-element", ...parsed };
+        }
         return invalid(
-            "slot acceptance kind must be component, any-component, plain-text or native-content",
+            "slot acceptance kind must be component, any-component, plain-text, native-content or native-element",
             `${itemPath}.kind`,
         );
     });

@@ -19,7 +19,7 @@ export function validateDeclarative(tree: MarkupTree, path: string, allowClasses
             invalid("inline style attributes are forbidden", path);
         }
         if (!allowClasses && Object.hasOwn(node.attribs, "class")) {
-            invalid("class attributes belong only in a Bloc template", path);
+            invalid("class attributes belong only in component markup", path);
         }
     }
 }
@@ -46,6 +46,6 @@ function validateInitialValue(value: string, path: string): void {
         invalid(error instanceof Error ? error.message : "invalid server collection expression", path);
     }
     if (binding(withoutServerExpressions)) {
-        invalid("dynamic bindings belong only in lightdom", path);
+        invalid("dynamic bindings belong only in Bloc markup", path);
     }
 }

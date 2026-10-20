@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
 
-test("admits the checked-in Light DOM starter collection with its exact asset bytes", async () => {
+test("admits the checked-in markup starter collection with its exact asset bytes", async () => {
     const base = new URL("../../fixtures/collections/v1/", import.meta.url);
     const document = await Bun.file(new URL("atlas.collection.json", base)).text();
     const admission = await admitCollectionReleaseJson(document, [

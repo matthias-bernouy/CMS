@@ -24,26 +24,30 @@ describe("collection bloc admission", () => {
         );
     });
 
-    test.each(["settings", "style", "template", "behaviour", "behaviourJS", "content"])(
+    test.each(["settings", "style", "unknownMarkupAlias", "behaviour", "behaviourJS", "content"])(
         "refuses composition %s",
         (key) => {
             expect(() => check([composition({ [key]: {} })])).toThrow("unknown property");
         },
     );
 
-    test("admits bounded native root and Page-owned content contracts", () => {
+    test("admits bounded native roots and managed native default slots", () => {
         const root = { accepts: ["button", "a"] };
+        const managedSpan = {
+            accepts: [{ kind: "native-element", accepts: ["span"] }],
+            min: 1,
+            max: 1,
+        };
         const parsed = check([
             component({
                 root,
-                content: { accepts: ["span"] },
-                template: "<span><slot></slot></span>",
-                slots: {},
+                markup: "<span><slot></slot></span>",
+                slots: { default: managedSpan },
                 defaultContent: "<span>Action</span>",
             }),
         ])[0];
         expect(parsed?.root).toEqual(root);
-        expect(parsed?.content).toEqual({ accepts: ["span"] });
+        expect(parsed?.slots[""]).toEqual(managedSpan);
         expect(() => check([component({ root: "button" })])).toThrow("object");
         expect(() => check([component({ root: { accepts: [] } })])).toThrow("at least one");
         expect(() => check([component({ root: { accepts: ["a", "a"] } })])).toThrow("duplicate");
@@ -52,9 +56,8 @@ describe("collection bloc admission", () => {
             check([
                 component({
                     root: { accepts: ["button"] },
-                    content: { accepts: ["span"] },
-                    template: "<slot></slot>",
-                    slots: {},
+                    markup: "<slot></slot>",
+                    slots: { default: managedSpan },
                     defaultContent: "<span></span>",
                 }),
             ]),
@@ -63,51 +66,54 @@ describe("collection bloc admission", () => {
             check([
                 component({
                     root: { accepts: ["button"], defaults: { "aria-label": "Save" } },
-                    content: { accepts: ["span"] },
-                    template: "<slot></slot>",
-                    slots: {},
+                    markup: "<slot></slot>",
+                    slots: { default: managedSpan },
                     defaultContent: "<span></span>",
                 }),
             ]),
         ).not.toThrow();
         const checkbox = {
-            accepts: ["input"],
-            attributes: { type: { required: true, values: ["checkbox"] } },
+            accepts: [
+                {
+                    kind: "native-element",
+                    accepts: ["input"],
+                    attributes: { type: { required: true, values: ["checkbox"] } },
+                },
+            ],
+            min: 1,
+            max: 1,
         };
         expect(
             check([
                 component({
                     root: { accepts: ["div"] },
-                    content: checkbox,
-                    template: "<slot></slot>",
-                    slots: {},
+                    markup: "<slot></slot>",
+                    slots: { default: checkbox },
                     defaultContent: '<input type="checkbox">',
                 }),
             ])[0],
-        ).toMatchObject({ content: checkbox });
+        ).toMatchObject({ slots: { "": checkbox } });
         expect(() =>
             check([
                 component({
                     root: { accepts: ["div"] },
-                    content: checkbox,
-                    template: "<slot></slot>",
-                    slots: {},
+                    markup: "<slot></slot>",
+                    slots: { default: checkbox },
                     defaultContent: '<input type="radio">',
                 }),
             ]),
-        ).toThrow("native attribute");
+        ).toThrow('native attribute "type" must be one of "checkbox"');
         expect(() =>
             check([
                 component({
                     root,
-                    content: { accepts: ["span"] },
-                    template: "<slot></slot>",
-                    lightdom: "<a>Fixed</a>",
-                    slots: {},
+                    markup: "<slot></slot>",
+                    markupAlias: "<a>Unsupported</a>",
+                    slots: { default: managedSpan },
                     defaultContent: "<span>Action</span>",
                 }),
             ]),
-        ).toThrow('unknown property "lightdom"');
+        ).toThrow('unknown property "markupAlias"');
     });
 
     test.each(["uses", "requires", "slots"])("does not normalize explicit null %s into omission", (key) => {
@@ -341,7 +347,9 @@ describe("collection bloc admission", () => {
                     slots: { body: { accepts: [{ kind: "media", accept: ["image"] }] as never } },
                 }),
             ]),
-        ).toThrow("slot acceptance kind must be component, any-component, plain-text or native-content");
+        ).toThrow(
+            "slot acceptance kind must be component, any-component, plain-text, native-content or native-element",
+        );
         expect(parsed?.kind === "component" ? parsed.settings?.map(({ control }) => control.kind) : undefined).toEqual([
             "text",
             "media-picker",

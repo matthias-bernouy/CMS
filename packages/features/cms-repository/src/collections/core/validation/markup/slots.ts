@@ -3,29 +3,20 @@ import { invalid } from "../../errors";
 import { elements, isElement, type MarkupElement, type MarkupTree, offeredSlots } from "./tree";
 
 export interface BlocMarkup {
-    readonly template?: MarkupTree;
+    readonly fixed: MarkupTree;
     readonly initial?: MarkupTree;
     readonly pageSlots: ReadonlySet<string>;
 }
 
 export function validatePageSlots(bloc: CollectionBloc, markup: BlocMarkup, path: string): void {
-    if (markup.pageSlots.has("") && !bloc.content) {
-        invalid("an unnamed slot requires a managed Page-owned native child", `${path}.content`);
-    }
-    if (bloc.content && !markup.pageSlots.has("")) {
-        invalid("managed Page-owned native content requires one unnamed slot", `${path}.content`);
-    }
     for (const name of markup.pageSlots) {
-        if (name === "") {
-            continue;
-        }
         if (!Object.hasOwn(bloc.slots, name)) {
-            invalid(`must declare page slot ${name}`, `${path}.slots`);
+            invalid(`must declare page slot ${name || "default"}`, `${path}.slots`);
         }
     }
     for (const name of Object.keys(bloc.slots)) {
         if (!markup.pageSlots.has(name)) {
-            invalid(`declared slot ${name} does not exist in the page template`, `${path}.slots.${name}`);
+            invalid(`declared slot ${name} does not exist in the Bloc markup`, `${path}.slots.${name}`);
         }
     }
 }
@@ -73,7 +64,6 @@ export function validateSlotTargets(
     }
 }
 
-export function pageSlots(template: MarkupTree | undefined): ReadonlySet<string> {
-    const tree = template;
-    return tree ? offeredSlots(tree) : new Set();
+export function pageSlots(markup: MarkupTree): ReadonlySet<string> {
+    return offeredSlots(markup);
 }

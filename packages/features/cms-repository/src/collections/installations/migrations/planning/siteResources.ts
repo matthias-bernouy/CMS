@@ -32,10 +32,9 @@ export async function validateTargetSiteResources(
         artifact.release.blocs.map((bloc) => ({
             id: bloc.id,
             slots: bloc.slots,
-            ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
-            ...(bloc.kind === "component" ? { templateHTML: bloc.template } : {}),
+            kind: bloc.kind,
+            markupHTML: bloc.markup,
             root: bloc.root,
-            ...(bloc.content ? { content: bloc.content } : {}),
             ...(bloc.kind === "component" && bloc.settings ? { settings: bloc.settings } : {}),
         })),
     );
@@ -143,8 +142,7 @@ function assertTextReferences(content: string, texts: ReadonlyMap<string, Readon
 function recordContents(record: BlocRecord): [string, string][] {
     const contents: [string, string][] = [];
     for (const [name, value] of Object.entries({
-        composition: record.artifact?.compositionHTML,
-        component: record.artifact?.templateHTML,
+        markup: record.artifact?.markupHTML,
         default: record.artifact?.defaultContent,
     })) {
         if (value) {

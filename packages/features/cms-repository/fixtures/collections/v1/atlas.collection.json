@@ -36,7 +36,7 @@
             "id": "atlas-panel",
             "label": "bloc.panel.label",
             "thumbnail": "preview",
-            "template": "<section><slot name=\"body\"></slot></section>",
+            "markup": "<section><slot name=\"body\"></slot></section>",
             "style": ":scope { display: block; } :scope([tone=\"muted\"]) { opacity: 0.8; }",
             "slots": { "body": { "accepts": [{ "kind": "native-content", "profile": "prose" }] } },
             "settings": [
@@ -62,7 +62,7 @@
             "id": "atlas-page",
             "label": "bloc.page.label",
             "uses": ["atlas-panel"],
-            "lightdom": "<div cms-bloc=\"atlas-panel\" tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></div>",
+            "markup": "<div cms-bloc=\"atlas-panel\" tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></div>",
             "slots": { "main": { "accepts": [{ "kind": "native-content", "profile": "prose" }], "max": 8 } },
             "defaultContent": "<p slot=\"main\"></p>"
         }

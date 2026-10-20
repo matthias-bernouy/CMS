@@ -53,7 +53,7 @@ test("indexes installed Blocs once per collection revision", async () => {
                     id: "cached-card",
                     label: "bloc.card.label",
                     thumbnail: "card.svg",
-                    template: "<article></article>",
+                    markup: "<article></article>",
                     uses: [],
                     requires: [],
                     slots: {},

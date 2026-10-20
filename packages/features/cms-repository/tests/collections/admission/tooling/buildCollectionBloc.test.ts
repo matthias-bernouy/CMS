@@ -41,17 +41,17 @@ describe("buildCollectionBloc output", () => {
         const artifact = await buildCollectionBloc({
             tag: "demo-separated",
             viewSource: [
-                `import template from "./template.html" with { type: "text" };`,
+                `import fragment from "./fragment.html" with { type: "text" };`,
                 `import css from "./style.css" with { type: "text" };`,
-                `export function mount(root) { root.dataset.template = template; root.dataset.css = css; }`,
+                `export function mount(root) { root.dataset.fragment = fragment; root.dataset.css = css; }`,
             ].join("\n"),
             source: {
-                "template.html": Buffer.from("<p>Separated template</p>").toString("base64"),
+                "fragment.html": Buffer.from("<p>Separated fragment</p>").toString("base64"),
                 "style.css": Buffer.from(":scope { display: block; }").toString("base64"),
             },
         });
 
-        expect(artifact.viewJS).toContain("Separated template");
+        expect(artifact.viewJS).toContain("Separated fragment");
         expect(artifact.viewJS).toContain("display: block");
     });
 

@@ -9,11 +9,11 @@ import { type BlocMarkup, pageSlots, validatePageSlots, validateSlotTargets } fr
 import { elements, markupTree, significantRoots } from "./tree";
 
 function inspect(bloc: CollectionBloc): BlocMarkup {
-    const template = markupTree(bloc.kind === "component" ? bloc.template : bloc.lightdom);
+    const fixed = markupTree(bloc.markup);
     return {
-        template,
+        fixed,
         initial: bloc.defaultContent === undefined ? undefined : markupTree(bloc.defaultContent),
-        pageSlots: pageSlots(template),
+        pageSlots: pageSlots(fixed),
     };
 }
 
@@ -26,7 +26,7 @@ function validateDeclaredUses(tree: ReturnType<typeof markupTree>, bloc: Collect
     }
 }
 
-/** Checks authored Light DOM structure and the shared Page grammar. */
+/** Checks authored Bloc markup and the shared Page grammar. */
 export function validateMarkup(
     blocs: readonly CollectionBloc[],
     limits: Readonly<CollectionLimits>,
@@ -38,11 +38,7 @@ export function validateMarkup(
         const path = `$.blocs[${bloc.id}]`;
         const content = markup.get(bloc.id)!;
         validateManagedNativeDefinition(bloc, path);
-        validateDeclarative(
-            content.template!,
-            `${path}.${bloc.kind === "component" ? "template" : "lightdom"}`,
-            bloc.kind === "component",
-        );
+        validateDeclarative(content.fixed, `${path}.markup`, bloc.kind === "component");
         if (content.initial) {
             validateDeclarative(content.initial, `${path}.defaultContent`);
             validateNoBindings(content.initial, `${path}.defaultContent`);
@@ -50,7 +46,7 @@ export function validateMarkup(
         let canonical: BlocDocumentValidationResult;
         try {
             canonical = validateBlocDocument(
-                { ...bloc, fixedContent: bloc.kind === "component" ? bloc.template : bloc.lightdom },
+                { ...bloc, fixedContent: bloc.markup },
                 blocs,
                 [...importedBlocs].map((id) => ({ id })),
             );
@@ -61,11 +57,11 @@ export function validateMarkup(
             invalid(`markup must offer at most ${limits.maxSlotsPerBloc} slots`, `${path}.slots`);
         }
         validatePageSlots(bloc, content, path);
-        if (bloc.kind === "component" && significantRoots(content.template!).some((node) => node.type === "text")) {
-            invalid("component templates need element roots for slot projection", `${path}.template`);
+        if (bloc.kind === "component" && significantRoots(content.fixed).some((node) => node.type === "text")) {
+            invalid("component markup needs element roots for slot projection", `${path}.markup`);
         }
-        validateDeclaredUses(content.template!, bloc, `${path}.template`);
-        validateSlotTargets(content.template!, content.pageSlots, byId, markup, `${path}.template`, importedBlocs);
+        validateDeclaredUses(content.fixed, bloc, `${path}.markup`);
+        validateSlotTargets(content.fixed, content.pageSlots, byId, markup, `${path}.markup`, importedBlocs);
         validateRequirements(bloc, canonical!, path);
         if (content.initial) {
             validateDeclaredUses(content.initial, bloc, `${path}.defaultContent`);

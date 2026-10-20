@@ -30,12 +30,12 @@ This slice supports:
 - Optional Pages: bounded collection-owned documents carrying a collection
   default path and capability requirements that determine their access policy.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
-- Retained Blocs with optional fixed `template`, scoped `style`, behavior and
+- Retained Blocs with required fixed `markup`, optional scoped `style`, behavior and
   declarative setting items. Optional translated `category`
   and numeric `order` metadata organize the author-facing catalogue without
   deriving public identity from source paths.
-- Composition Blocs with fixed `lightdom` only: their authoring host is replaced
-  by their content at delivery. They have no own shell, settings or stylesheet.
+- Composition Blocs with fixed `markup`: their authoring host is replaced by
+  their content at delivery. They have no settings, stylesheet or behavior.
 - Explicit local `uses`, named slots for Blocs, plain text or bounded
   native-content profiles, optional thumbnail asset, initial editable `defaultContent`
   and resource-level capability requirements.
@@ -45,7 +45,7 @@ This slice supports:
 - Cumulative adjacent, declarative migration steps for site-owned data.
 
 Collection and bloc configuration are distinct. `defaultContent` belongs to
-the editable page instance; `lightdom` describes the reusable fixed assembly.
+the editable page instance; `markup` describes the reusable fixed assembly.
 Updating an installed release updates every page's fixed assembly while each
 page retains its own slot children.
 Initial content is not inserted into the fixed composition during admission.
@@ -60,7 +60,7 @@ delivery.
 Structural validation uses an HTML parser, not a regex template scanner. It
 checks declared page slots, local bloc references, `uses` cycles, immediate
 parent slot targets and the native element carrying `cms-bloc`. Inline styles
-are forbidden in all markup; structural classes belong only in fixed templates
+are forbidden in all markup; structural classes belong only in component markup
 and bindings only in Light DOM. CSS is parsed and wrapped in a Bloc-owned
 `@scope`; Shadow DOM selectors and APIs reject.
 Composition-only settings, styles and behaviour fields reject.
@@ -81,25 +81,27 @@ The local repository may read this list from a bloc's
 Optional `visibleWhen` rules reference other finite-valued items and affect
 editor visibility only; admission rejects invalid references and cycles.
 
-A retained Bloc may declare `content: { accepts: ["button", "a"] }` for one
-Page-owned native child. Accepted lists are nonempty, unique and restricted to
-the platform vocabulary. Authored occurrences must contain exactly one matching
-child. Root settings and child native attributes remain separate targets.
+A retained Bloc may declare one bounded default slot with
+`{ "kind": "native-element", "accepts": ["button", "a"] }` for a Page-owned
+native child. Accepted lists are nonempty, unique and restricted to the platform
+vocabulary. Authored occurrences must contain exactly one matching child. Root
+settings and child native attributes remain separate targets; there is no
+separate Bloc `content` contract.
 
 String controls are `text`, `select`, `segmented`, `color`,
 `media-picker` and `theme-token-picker`. Booleans use `toggle`; numbers and
 integers use `number` or a bounded `range`. Media content normally belongs in a
 dedicated media Bloc; the setting control is for Bloc configuration such as a
 poster or background. Rich text is page-owned HTML in a `plain-text` or
-`native-content` slot, never an HTML string stored in a setting. Native-content profiles are currently
-the closed `inline` and `prose` vocabulary; the future editor may expose only
-features permitted by that profile.
+`native-content` slot, never an HTML string stored in a setting. Native-content
+profiles are the closed `phrasing`, `inline` and `prose` vocabularies; the future
+editor may expose only features permitted by that profile.
 
 Theme defaults do validate local and selectively imported token references.
 Exact local aliases must preserve token types, and local reference cycles reject.
 Installation repeats type checks for exact aliases to imported tokens.
 
-**Admission is not an HTML/CSS sanitizer or template compiler.** The separate
+**Admission is not an HTML/CSS sanitizer or markup compiler.** The separate
 `@bernouy/cms-repository/collections/build` authoring toolchain compiles a
 Bloc's browser behavior before admission, but it does not weaken these
 admission boundaries. Admission itself does not type-check arbitrary business

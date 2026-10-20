@@ -108,7 +108,7 @@ function release(version: string, blocId: string): Record<string, unknown> {
                 root: { accepts: ["div"] },
                 id: blocId,
                 label: "bloc.label",
-                template: "<div></div>",
+                markup: "<div></div>",
                 uses: [],
                 requires: [],
                 slots: {},

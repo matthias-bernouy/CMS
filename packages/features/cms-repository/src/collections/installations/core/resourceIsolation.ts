@@ -6,7 +6,8 @@ import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
 import type { CollectionInstallation, CollectionStorage } from "../interfaces/store";
 import { pageLinks, pageLinkSources } from "../../core/parsing/pages/references";
-import { validatePageDocument } from "@bernouy/cms-content/page-document";
+import { validateExpandedPageDocument, validatePageDocument } from "@bernouy/cms-content/page-document";
+import { collectionPageDefinitions } from "../../core/parsing/pages/definitions";
 
 export async function assertInstallableCollectionResources(
     storage: CollectionStorage,
@@ -51,11 +52,13 @@ export function assertCollectionResourceIsolation(releases: readonly CollectionR
 
 function validateInstalledPageDocuments(releases: readonly CollectionRelease[]): void {
     const blocs = releases.flatMap((release) => release.blocs);
+    const definitions = collectionPageDefinitions(blocs);
     for (const release of releases) {
         for (const page of release.pages ?? []) {
             const path = `Collection Page ${release.collectionId}.${page.id}`;
             try {
-                validatePageDocument(page.document.html, blocs);
+                const document = validatePageDocument(page.document.html, blocs);
+                validateExpandedPageDocument(document.html, definitions);
             } catch (error) {
                 reject(`${path} is invalid: ${error instanceof Error ? error.message : "invalid Page document"}`);
             }

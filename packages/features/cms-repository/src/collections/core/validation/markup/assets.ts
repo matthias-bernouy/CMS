@@ -11,11 +11,7 @@ export function validateCollectionAssetReferences(
     pages: readonly CollectionPage[] = [],
 ): void {
     for (const bloc of blocs) {
-        const values = [
-            bloc.kind === "component" ? bloc.template : bloc.lightdom,
-            bloc.defaultContent,
-            bloc.kind === "component" ? bloc.style : undefined,
-        ];
+        const values = [bloc.markup, bloc.defaultContent, bloc.kind === "component" ? bloc.style : undefined];
         for (const value of values) {
             if (value !== undefined) {
                 validateValue(value, collectionId, assetIds, importedAssets, `$.blocs[${bloc.id}]`);

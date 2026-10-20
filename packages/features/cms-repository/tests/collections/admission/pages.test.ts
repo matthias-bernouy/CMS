@@ -6,7 +6,6 @@ const page = {
     id: "overview",
     defaultPath: "/admin",
     name: "page.overview.name",
-    icon: "star",
     document: {
         html: '<div cms-bloc="atlas-panel"></div>',
     },
@@ -80,7 +79,7 @@ test("collection Pages admit typed capability forms owned by a composition", () 
         root: { accepts: ["div"] },
         id: "atlas-form-page",
         label: "bloc.page.label",
-        lightdom: form,
+        markup: form,
         slots: {},
         uses: [],
         requires: [{ contractId: "catalog.items", capabilityId: "item.rename", versionRange: "^1.0.0" }],
@@ -96,7 +95,7 @@ test("collection Pages admit typed capability forms owned by a composition", () 
         form.replace('cms-form-value-type="number"', 'cms-form-value-type="object"'),
     ]) {
         const invalid = structuredClone(source);
-        (invalid.blocs as Record<string, unknown>[]).find(({ id }) => id === "atlas-form-page")!.lightdom = html;
+        (invalid.blocs as Record<string, unknown>[]).find(({ id }) => id === "atlas-form-page")!.markup = html;
         expect(() => parseCollectionRelease({ ...invalid, pages: [mutation] })).toThrow();
     }
 });
@@ -108,7 +107,7 @@ test("collection system Pages admit only the closed authentication bindings", ()
         root: { accepts: ["div"] },
         id: "atlas-authentication",
         label: "bloc.page.label",
-        lightdom: `<section cms-query="kernel.auth:methods as methods">
+        markup: `<section cms-query="kernel.auth:methods as methods">
             <form cms-mutation="kernel.auth:login as session">
                 <input type="email" name="email" required>
                 <input type="password" name="password" required>
@@ -124,9 +123,9 @@ test("collection system Pages admit only the closed authentication bindings", ()
         parseCollectionRelease({ ...source, blocs: [...source.blocs, authentication], pages: [login] }),
     ).not.toThrow();
 
-    for (const lightdom of [
-        authentication.lightdom.replace("kernel.auth:methods", "kernel.auth:secrets"),
-        authentication.lightdom.replace(
+    for (const markup of [
+        authentication.markup.replace("kernel.auth:methods", "kernel.auth:secrets"),
+        authentication.markup.replace(
             'cms-query="kernel.auth:methods as methods"',
             'cms-query="kernel.auth:methods as methods" cms-query-input=\'{"id":{"from":"literal","value":"x"}}\'',
         ),
@@ -134,7 +133,7 @@ test("collection system Pages admit only the closed authentication bindings", ()
         expect(() =>
             parseCollectionRelease({
                 ...source,
-                blocs: [...source.blocs, { ...authentication, lightdom }],
+                blocs: [...source.blocs, { ...authentication, markup }],
                 pages: [login],
             }),
         ).toThrow();
@@ -214,6 +213,58 @@ test("collection Pages use the closed content grammar", () => {
             parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }, details] }),
         ).toThrow();
     }
+});
+
+test("collection admission validates the outline after expanding local compositions", () => {
+    const source = collectionDocument({
+        "bloc.heading.label": "Heading",
+        "bloc.outline.label": "Outline",
+        "page.overview.name": "Overview",
+    });
+    const heading = {
+        kind: "component",
+        id: "atlas-heading",
+        label: "bloc.heading.label",
+        markup: "<slot></slot>",
+        root: { accepts: ["h1", "h2", "h3", "h4", "h5", "h6"] },
+        slots: { default: { accepts: [{ kind: "native-content", profile: "phrasing" }], min: 1 } },
+        uses: [],
+        requires: [],
+    };
+    const outline = (markup: string) => ({
+        kind: "composition",
+        id: "atlas-outline",
+        label: "bloc.outline.label",
+        markup,
+        root: { accepts: ["div"] },
+        slots: {},
+        uses: ["atlas-heading"],
+        requires: [],
+    });
+    const collectionPage = { ...page, document: { html: '<div cms-bloc="atlas-outline"></div>' } };
+
+    expect(() =>
+        parseCollectionRelease({
+            ...source,
+            blocs: [
+                ...(source.blocs as unknown[]),
+                heading,
+                outline('<h2 cms-bloc="atlas-heading">{{ copy }}</h2><h4 cms-bloc="atlas-heading">{{ copy }}</h4>'),
+            ],
+            pages: [collectionPage],
+        }),
+    ).toThrow("skips from h2 to h4");
+    expect(() =>
+        parseCollectionRelease({
+            ...source,
+            blocs: [
+                ...(source.blocs as unknown[]),
+                heading,
+                outline('<h1 cms-bloc="atlas-heading">{{ copy }}</h1><h1 cms-bloc="atlas-heading">{{ copy }}</h1>'),
+            ],
+            pages: [collectionPage],
+        }),
+    ).toThrow("at most one h1");
 });
 
 test("collection Pages reject executable or unbounded markup", () => {

@@ -53,11 +53,12 @@ test("blocks target changes that would break a site-owned bloc", async () => {
         group: "Local",
         description: "",
         viewJS: "",
-        compositionHTML: '<div cms-bloc="atlas-card"></div>',
+        kind: "composition" as const,
+        markupHTML: '<div cms-bloc="atlas-card"></div>',
         root: { accepts: ["div"] },
         ownership: { kind: "code-managed" },
     });
 
     const plan = await fixture.service.plan("site", [{ digest: next.digest }], 1);
-    expect(plan.blockedReasons).toContainEqual(expect.stringContaining("Site bloc local-shell composition"));
+    expect(plan.blockedReasons).toContainEqual(expect.stringContaining("Site bloc local-shell markup"));
 });
