@@ -7,11 +7,12 @@
     "order": 170,
     "uses": [],
     "requires": [],
-    "slots": {},
-    "root": {
-        "accepts": ["div"]
+    "slots": {
+        "default": {
+            "accepts": [{ "kind": "native-content", "profile": "phrasing" }]
+        }
     },
-    "content": {
+    "root": {
         "accepts": ["output"],
         "attributes": {
             "aria-live": {

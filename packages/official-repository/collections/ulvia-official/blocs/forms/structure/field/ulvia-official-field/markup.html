@@ -1,0 +1,12 @@
+<div part="field">
+    <span part="heading"
+        ><label part="field-label"
+            ><div cms-bloc="ulvia-official-field-caption"><slot name="label" slot="label"></slot></div></label
+        ><span part="heading-actions"
+            ><span part="field-value" data-field-value="" aria-hidden="true" hidden></span><span part="field-help"><slot name="help"></slot></span></span
+        ></span
+    >
+    <div part="field-control"><slot name="control"></slot></div>
+    <div part="field-description"><slot name="description"></slot></div>
+    <div part="field-error" role="alert"><slot name="error"></slot></div>
+</div>

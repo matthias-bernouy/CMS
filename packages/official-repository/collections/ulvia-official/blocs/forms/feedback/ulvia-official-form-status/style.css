@@ -3,18 +3,12 @@
     --ulvia-official-form-status-background: var(--ulvia-official-info-subtle, #eaf6ff);
     --ulvia-official-form-status-border: var(--ulvia-official-info-border, #5aa8d6);
     display: block;
-    font-family: var(--ulvia-official-font-family-main, inherit);
-}
-[part="status"] {
-    display: contents;
-}
-output {
-    display: block;
     padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
     border-inline-start: 0.25rem solid var(--ulvia-official-form-status-border);
     border-radius: var(--ulvia-official-radius-sm, 0.25rem);
     color: var(--ulvia-official-form-status-color);
     background: var(--ulvia-official-form-status-background);
+    font-family: var(--ulvia-official-font-family-main, inherit);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }

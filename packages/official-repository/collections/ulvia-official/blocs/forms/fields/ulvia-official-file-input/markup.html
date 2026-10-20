@@ -1,0 +1,15 @@
+<span part="control"
+    ><span part="drop-zone"
+        ><span part="card-preview" hidden></span
+        ><span part="card-actions" hidden
+            ><button part="replace-action" type="button" data-file-replace="">{{ cms.i18n.ulvia-official.ui-replace-content }}</button
+            ><button part="remove-action" type="button" data-file-remove="">{{ cms.i18n.ulvia-official.ui-delete }}</button></span
+        ><span part="icon" aria-hidden="true"></span
+        ><span part="copy"
+            ><span part="prompt">{{ cms.i18n.ulvia-official.ui-choose-a-file }}</span
+            ><span part="support">{{ cms.i18n.ulvia-official.ui-or-drag-it-here }}</span
+            ><span part="empty-state">{{ cms.i18n.ulvia-official.ui-no-file-selected }}</span
+            ><output part="file-name" data-file-name="" aria-live="polite" hidden></output></span
+        ><span part="file-control"><slot name="control"></slot></span></span
+    ><span part="preview" hidden></span></span
+>

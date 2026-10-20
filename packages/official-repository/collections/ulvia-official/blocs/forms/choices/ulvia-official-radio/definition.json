@@ -7,22 +7,21 @@
     "order": 90,
     "uses": [],
     "requires": [],
-    "slots": {},
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["input"],
+                    "attributes": { "type": { "required": true, "values": ["radio"] } },
+                    "defaults": { "type": "radio", "name": "choice", "value": "option" }
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
     "root": {
         "accepts": ["div"]
-    },
-    "content": {
-        "accepts": ["input"],
-        "attributes": {
-            "type": {
-                "required": true,
-                "values": ["radio"]
-            }
-        },
-        "defaults": {
-            "type": "radio",
-            "name": "choice",
-            "value": "option"
-        }
     }
 }

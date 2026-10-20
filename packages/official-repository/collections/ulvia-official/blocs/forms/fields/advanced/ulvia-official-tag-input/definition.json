@@ -7,26 +7,29 @@
     "order": 75,
     "uses": [],
     "requires": [],
-    "slots": {},
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["input"],
+                    "attributes": {
+                        "type": { "required": true, "values": ["text"] },
+                        "aria-description": { "required": false }
+                    },
+                    "defaults": {
+                        "type": "text",
+                        "name": "tags",
+                        "value": "research,design",
+                        "autocomplete": "off"
+                    }
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
     "root": {
         "accepts": ["div"]
-    },
-    "content": {
-        "accepts": ["input"],
-        "attributes": {
-            "type": {
-                "required": true,
-                "values": ["text"]
-            },
-            "aria-description": {
-                "required": false
-            }
-        },
-        "defaults": {
-            "type": "text",
-            "name": "tags",
-            "value": "research,design",
-            "autocomplete": "off"
-        }
     }
 }

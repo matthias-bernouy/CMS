@@ -7,14 +7,14 @@
     "order": 35,
     "uses": [],
     "requires": [],
-    "slots": {},
+    "slots": {
+        "default": {
+            "accepts": [{ "kind": "native-element", "accepts": ["select"], "defaults": { "name": "lookup" } }],
+            "min": 1,
+            "max": 1
+        }
+    },
     "root": {
         "accepts": ["div"]
-    },
-    "content": {
-        "accepts": ["select"],
-        "defaults": {
-            "name": "lookup"
-        }
     }
 }

@@ -12,6 +12,10 @@
             "accepts": [
                 {
                     "kind": "any-component"
+                },
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
                 }
             ],
             "min": 1

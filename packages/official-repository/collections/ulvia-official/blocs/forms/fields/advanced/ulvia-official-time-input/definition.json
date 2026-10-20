@@ -7,23 +7,21 @@
     "order": 62,
     "uses": [],
     "requires": [],
-    "slots": {},
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["input"],
+                    "attributes": { "type": { "required": true, "values": ["text"] } },
+                    "defaults": { "type": "text", "name": "time", "value": "09:30", "inputmode": "numeric" }
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
     "root": {
         "accepts": ["div"]
-    },
-    "content": {
-        "accepts": ["input"],
-        "attributes": {
-            "type": {
-                "required": true,
-                "values": ["text"]
-            }
-        },
-        "defaults": {
-            "type": "text",
-            "name": "time",
-            "value": "09:30",
-            "inputmode": "numeric"
-        }
     }
 }

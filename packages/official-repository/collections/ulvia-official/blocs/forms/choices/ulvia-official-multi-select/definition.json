@@ -7,22 +7,21 @@
     "order": 70,
     "uses": [],
     "requires": [],
-    "slots": {},
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["select"],
+                    "attributes": { "multiple": { "required": true, "values": [""] } },
+                    "defaults": { "name": "choices", "multiple": "", "size": "5" }
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
     "root": {
         "accepts": ["div"]
-    },
-    "content": {
-        "accepts": ["select"],
-        "attributes": {
-            "multiple": {
-                "required": true,
-                "values": [""]
-            }
-        },
-        "defaults": {
-            "name": "choices",
-            "multiple": "",
-            "size": "5"
-        }
     }
 }

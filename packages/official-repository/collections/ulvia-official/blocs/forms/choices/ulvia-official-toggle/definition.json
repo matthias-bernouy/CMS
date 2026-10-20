@@ -7,27 +7,24 @@
     "order": 100,
     "uses": [],
     "requires": [],
-    "slots": {},
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["input"],
+                    "attributes": {
+                        "type": { "required": true, "values": ["checkbox"] },
+                        "role": { "required": true, "values": ["switch"] }
+                    },
+                    "defaults": { "type": "checkbox", "role": "switch", "name": "enabled", "value": "yes" }
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
     "root": {
         "accepts": ["div"]
-    },
-    "content": {
-        "accepts": ["input"],
-        "attributes": {
-            "type": {
-                "required": true,
-                "values": ["checkbox"]
-            },
-            "role": {
-                "required": true,
-                "values": ["switch"]
-            }
-        },
-        "defaults": {
-            "type": "checkbox",
-            "role": "switch",
-            "name": "enabled",
-            "value": "yes"
-        }
     }
 }
