@@ -58,13 +58,12 @@ test("local repository lists immutable metadata and serves matching release byte
             expect(action.runtime?.viewJS).toBeUndefined();
             expect(action.runtime?.styleCSS).toContain('@scope ([cms-bloc="ulvia-official-action"])');
             expect(action.root).toEqual({ accepts: ["button", "a"], defaults: { type: "button" } });
-            expect(action.lightdom).toBeUndefined();
-            expect(action.defaultContent).toContain("<span>{{ cms.i18n.ulvia-official.ui-action-label }}</span>");
+            expect(action.markup).toBe("<slot></slot>");
+            expect(action.defaultContent).toBe("{{ cms.i18n.ulvia-official.ui-action-label }}");
             expect(action.settings?.map((setting) => setting.id)).toEqual(["variant", "tone", "size", "wide"]);
         }
         const heading = release.blocs.find((bloc) => bloc.id === "ulvia-official-heading");
-        expect(heading?.kind === "component" ? heading.root?.accepts : undefined).toEqual(["div"]);
-        expect(heading?.kind === "component" ? heading.content?.accepts : undefined).toEqual([
+        expect(heading?.kind === "component" ? heading.root?.accepts : undefined).toEqual([
             "h1",
             "h2",
             "h3",
@@ -72,6 +71,10 @@ test("local repository lists immutable metadata and serves matching release byte
             "h5",
             "h6",
         ]);
+        expect(heading?.kind === "component" ? heading.slots[""] : undefined).toEqual({
+            accepts: [{ kind: "native-content", profile: "phrasing" }],
+            min: 1,
+        });
         const grid = release.blocs.find((bloc) => bloc.id === "ulvia-official-grid");
         expect(grid?.settings?.find((setting) => setting.id === "columns")).toMatchObject({
             type: "integer",
@@ -81,7 +84,7 @@ test("local repository lists immutable metadata and serves matching release byte
         });
         const textIds = new Set(release.texts?.map((entry) => entry.id));
         for (const bloc of release.blocs) {
-            for (const html of [bloc.lightdom, bloc.template, bloc.defaultContent]) {
+            for (const html of [bloc.markup, bloc.defaultContent]) {
                 for (const match of html?.matchAll(/cms\.i18n\.ulvia-official\.([a-z0-9-]+)/g) ?? []) {
                     expect(textIds.has(match[1]!)).toBeTrue();
                 }
@@ -202,7 +205,7 @@ test("collection source assets keep their verified bytes through the repository 
                     slots: {},
                 }),
             );
-            await writeFile(join(root, "lightdom.html"), "<p>{{ example.name }}</p>");
+            await writeFile(join(root, "markup.html"), "<p>{{ example.name }}</p>");
         }
         await writeFile(
             join(sourceRoot, "translations", "en", "collection.json"),

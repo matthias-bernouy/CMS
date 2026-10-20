@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import { buildCollectionBloc, compileBlocStyle, compileBlocTemplate } from "@bernouy/cms-repository/collections/build";
+import { buildCollectionBloc, compileBlocStyle } from "@bernouy/cms-repository/collections/build";
 import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery";
 import { readSourceEntries, scanFileSourceTree } from "./authored/sourceTree";
 
@@ -26,11 +26,10 @@ export async function loadCollectionBlocs(directory: string): Promise<unknown[]>
 
 async function compileBlocSource(source: BlocSource): Promise<unknown> {
     const { definition, id, root } = source;
-    if (["template", "lightdom", "style", "runtime", "defaultContent"].some((key) => Object.hasOwn(definition, key))) {
+    if (["markup", "style", "runtime", "defaultContent"].some((key) => Object.hasOwn(definition, key))) {
         throw new Error(`Bloc ${id} must keep markup, CSS and JavaScript in separate files`);
     }
-    const templateFile = Bun.file(join(root, "template.html"));
-    const light = Bun.file(join(root, "lightdom.html"));
+    const markupFile = Bun.file(join(root, "markup.html"));
     const style = Bun.file(join(root, "style.css"));
     const defaults = Bun.file(join(root, "default.html"));
     const script = Bun.file(join(root, "bloc.ts"));
@@ -49,26 +48,25 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
         throw new Error(`Bloc ${id} must declare settings in only one place`);
     }
     const defaultContent = (await defaults.exists()) ? (await defaults.text()).trim() : undefined;
+    if (!(await markupFile.exists())) {
+        throw new Error(`Bloc ${id} requires markup.html`);
+    }
+    const markup = (await markupFile.text()).trim();
     if (definition.kind === "composition") {
         if (
-            !(await light.exists()) ||
-            (await templateFile.exists()) ||
             (await style.exists()) ||
             (await script.exists()) ||
             Object.keys(runtimeSources).length > 0 ||
             hasSettingsDirectory
         ) {
-            throw new Error(`Composition ${id} must have only lightdom.html and optional default.html`);
+            throw new Error(`Composition ${id} must have only markup.html and optional default.html`);
         }
-        return { ...definition, lightdom: (await light.text()).trim(), ...(defaultContent ? { defaultContent } : {}) };
+        return { ...definition, markup, ...(defaultContent ? { defaultContent } : {}) };
     }
-    if (definition.kind !== "component" || !(await templateFile.exists())) {
-        throw new Error(`Component ${id} requires template.html`);
+    if (definition.kind !== "component") {
+        throw new Error(`Bloc ${id} kind must be component or composition`);
     }
-    const shell = (await templateFile.text()).trim();
-    const lightdom = (await light.exists()) ? (await light.text()).trim() : undefined;
     const css = (await style.exists()) ? (await style.text()).trim() : undefined;
-    const template = compileBlocTemplate(shell, lightdom);
     compileBlocStyle(id, css ?? "");
     const compiled = (await script.exists())
         ? await buildCollectionBloc({
@@ -84,7 +82,7 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
     return {
         ...definition,
         ...(hasSettingsDirectory ? { settings: await settingsFile.json() } : {}),
-        template,
+        markup,
         ...(defaultContent ? { defaultContent } : {}),
         ...(css ? { style: css } : {}),
         ...(compiled ? { runtime: { browserAbi: compiled.browserAbi, viewJS: compiled.viewJS } } : {}),

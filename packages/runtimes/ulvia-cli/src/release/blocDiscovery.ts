@@ -8,10 +8,9 @@ const BLOC_ENTRIES = new Set([
     "bloc.ts",
     "default.html",
     "definition.json",
-    "lightdom.html",
+    "markup.html",
     "runtime",
     "settings",
-    "template.html",
     "style.css",
 ]);
 

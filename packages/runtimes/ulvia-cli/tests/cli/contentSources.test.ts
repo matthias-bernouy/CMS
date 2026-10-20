@@ -56,9 +56,9 @@ test("Bloc folders are discovered recursively while their IDs remain folder-owne
     await writeComposition(join(root, "content", "nested", "example-welcome"), "example-welcome");
     await writeComposition(join(root, "layout", "example-footer"), "example-footer");
 
-    const blocs = (await loadCollectionBlocs(root, "Example")) as { id: string; lightdom: string }[];
+    const blocs = (await loadCollectionBlocs(root, "Example")) as { id: string; markup: string }[];
     expect(blocs.map((bloc) => bloc.id)).toEqual(["example-footer", "example-welcome"]);
-    expect(blocs[1]!.lightdom).toBe("<p>example-welcome</p>");
+    expect(blocs[1]!.markup).toBe("<p>example-welcome</p>");
 });
 
 test("Bloc discovery rejects duplicate IDs and files in grouping directories", async () => {
@@ -85,7 +85,7 @@ test("component runtime modules stay inside the Bloc source boundary", async () 
         requires: [],
         slots: {},
     });
-    await Bun.write(join(componentRoot, "template.html"), "<div></div>");
+    await Bun.write(join(componentRoot, "markup.html"), "<div></div>");
     await Bun.write(join(componentRoot, "style.css"), ":scope { display: block; }");
     await Bun.write(join(componentRoot, "runtime", "message.ts"), 'export const message = "modular-runtime";');
     await Bun.write(
@@ -100,7 +100,7 @@ test("component runtime modules stay inside the Bloc source boundary", async () 
     const compositionRoot = join(root, "content", "example-composition");
     await writeComposition(compositionRoot, "example-composition");
     await Bun.write(join(compositionRoot, "runtime", "invalid.ts"), "export {};");
-    await expect(loadCollectionBlocs(root, "Example")).rejects.toThrow("must have only lightdom.html");
+    await expect(loadCollectionBlocs(root, "Example")).rejects.toThrow("must have only markup.html");
 });
 
 test("CSS-only components do not receive a synthetic JavaScript runtime", async () => {
@@ -115,7 +115,7 @@ test("CSS-only components do not receive a synthetic JavaScript runtime", async 
         requires: [],
         slots: {},
     });
-    await Bun.write(join(componentRoot, "template.html"), "<div></div>");
+    await Bun.write(join(componentRoot, "markup.html"), "<div></div>");
     await Bun.write(join(componentRoot, "style.css"), ":scope { display: block; }");
 
     const [bloc] = (await loadCollectionBlocs(root, "Example")) as {
@@ -159,7 +159,7 @@ async function writeComposition(root: string, id: string): Promise<void> {
         requires: [],
         slots: {},
     });
-    await Bun.write(join(root, "lightdom.html"), `<p>${id}</p>`);
+    await Bun.write(join(root, "markup.html"), `<p>${id}</p>`);
 }
 
 async function temporaryDirectory(): Promise<string> {

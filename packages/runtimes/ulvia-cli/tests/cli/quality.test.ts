@@ -43,7 +43,7 @@ test("the official collection passes its source quality contract", async () => {
     expect(
         visible
             .filter((bloc) => bloc.kind === "composition")
-            .every((bloc) => bloc.lightdom?.includes('data-cms-composition-controller=""')),
+            .every((bloc) => bloc.markup?.includes('data-cms-composition-controller=""')),
     ).toBeTrue();
     expect(Object.keys(artifact.release.translations.fr ?? {}).toSorted()).toEqual(
         Object.keys(artifact.release.translations.en ?? {}).toSorted(),
@@ -56,35 +56,35 @@ test("the official collection passes its source quality contract", async () => {
     expect(artifact.release.exports?.blocs).toEqual(visible.map((bloc) => bloc.id).toSorted());
     expect(
         artifact.release.blocs.some((bloc) =>
-            [bloc.defaultContent, bloc.lightdom, bloc.template].some((html) => html?.includes('href="#"')),
+            [bloc.defaultContent, bloc.markup].some((html) => html?.includes('href="#"')),
         ),
     ).toBeFalse();
 
     const fileInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-file-input");
-    expect(fileInput?.template).toContain('<span part="prompt">{{ cms.i18n.ulvia-official.ui-choose-a-file }}</span>');
-    expect(fileInput?.template).toContain(
-        '<button part="replace-action" type="button" data-file-replace="">{{ cms.i18n.ulvia-official.ui-replace-content }}</button>',
-    );
+    expect(fileInput?.markup).toContain("{{ cms.i18n.ulvia-official.ui-choose-a-file }}");
+    expect(fileInput?.markup).toContain('part="replace-action"');
+    expect(fileInput?.markup).toContain('data-file-replace=""');
+    expect(fileInput?.markup).toContain("{{ cms.i18n.ulvia-official.ui-replace-content }}");
     expect(fileInput?.settings?.map((setting) => setting.id)).toEqual(["variant"]);
     expect(fileInput?.runtime?.viewJS).not.toMatch(/(?:button|drop|empty|remove|replace)-label/);
     expect(fileInput?.runtime?.viewJS).not.toMatch(/Choose a file|No file selected|Replace|Remove/);
 
     const adminWorkspace = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-admin-workspace");
-    expect(adminWorkspace?.lightdom).toContain('<slot name="secondary-navigation" slot="secondary-sidebar"></slot>');
-    expect(adminWorkspace?.lightdom).toContain('<slot name="page-navigation" slot="navigation"></slot>');
+    expect(adminWorkspace?.markup).toContain('<slot name="secondary-navigation" slot="secondary-sidebar"></slot>');
+    expect(adminWorkspace?.markup).toContain('<slot name="page-navigation" slot="navigation"></slot>');
 
     const routeTabs = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-route-tabs");
     const appearance = routeTabs?.settings?.find((setting) => setting.id === "appearance");
     expect(appearance?.control?.options?.map((option) => option.value)).toEqual(["underline", "pills"]);
-    expect(routeTabs?.template).not.toContain('role="tablist"');
+    expect(routeTabs?.markup).not.toContain('role="tablist"');
     expect(routeTabs?.runtime?.viewJS).toContain("ArrowRight");
     expect(routeTabs?.runtime?.viewJS).toContain(".tabIndex=");
     expect(routeTabs?.runtime?.viewJS).toContain("aria-labelledby");
 
     const fieldHelp = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-field-help");
     expect(fieldHelp?.uses).toEqual([]);
-    expect(fieldHelp?.template).toContain('data-field-help-trigger=""');
-    expect(fieldHelp?.template).toContain('data-field-help-panel=""');
+    expect(fieldHelp?.markup).toContain('data-field-help-trigger=""');
+    expect(fieldHelp?.markup).toContain('data-field-help-panel=""');
     expect(artifact.release.blocs.some((bloc) => bloc.id.startsWith("ulvia-official-field-help-"))).toBeFalse();
 
     const appShell = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-app-shell");
@@ -97,7 +97,7 @@ test("the official collection passes its source quality contract", async () => {
     expect(action?.style).toContain("max-width: 100%");
     expect(action?.style).toContain("min-height: var(--ulvia-official-action-height)");
     expect(action?.style).toContain("white-space: normal");
-    expect(action?.style).toContain(":scope > span");
+    expect(action?.style).not.toContain(":scope > span");
 
     const link = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-link");
     expect(link?.style).not.toContain("height: 100%");
@@ -119,7 +119,7 @@ test("the official collection passes its source quality contract", async () => {
 
     expect(
         artifact.release.blocs.some((bloc) =>
-            [bloc.defaultContent, bloc.lightdom, bloc.template].some(
+            [bloc.defaultContent, bloc.markup, bloc.markup].some(
                 (html) => html?.includes('appearance="sidebar"') || html?.includes('slot="contextual-navigation"'),
             ),
         ),
