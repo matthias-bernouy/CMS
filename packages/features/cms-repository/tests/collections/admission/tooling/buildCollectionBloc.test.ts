@@ -107,6 +107,23 @@ describe("buildCollectionBloc output", () => {
         ).rejects.toThrow("Bloc imports may only use bundled relative sources or approved host APIs");
     });
 
+    test("applies behavior guards to bundled runtime modules", async () => {
+        await expect(
+            buildCollectionBloc({
+                tag: "demo-runtime-guard",
+                viewSource: [
+                    'import { forbidden } from "./runtime/behavior";',
+                    "export function mount(root) { forbidden(root); }",
+                ].join("\n"),
+                source: {
+                    "runtime/behavior.ts": Buffer.from(
+                        'export function forbidden(root) { root.attachShadow({ mode: "open" }); }',
+                    ).toString("base64"),
+                },
+            }),
+        ).rejects.toThrow("Shadow DOM APIs are forbidden");
+    });
+
     test("registers an exported Light DOM mount function", async () => {
         const artifact = await buildCollectionBloc({
             tag: "demo-component",

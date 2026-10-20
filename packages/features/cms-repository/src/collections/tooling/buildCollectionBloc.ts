@@ -30,6 +30,7 @@ export async function buildCollectionBloc(input: CollectionBlocBuildInput): Prom
     const validation = validateBloc({
         tag: input.tag,
         ...(input.viewSource ? { viewSource: input.viewSource } : {}),
+        behaviorSources: executableSources(input.source),
         ...(input.uses ? { uses: input.uses } : {}),
     });
     if (validation.errors.length > 0) {
@@ -58,4 +59,15 @@ export async function buildCollectionBloc(input: CollectionBlocBuildInput): Prom
     } finally {
         await rm(tempDir, { recursive: true, force: true }).catch(() => null);
     }
+}
+
+function executableSources(
+    source: CollectionBlocBuildInput["source"],
+): ReadonlyArray<{ label: string; source: string }> {
+    return Object.entries(source ?? {})
+        .filter(([path]) => /\.(?:[cm]?[jt]sx?)$/u.test(path))
+        .map(([path, contents]) => ({
+            label: `Bloc runtime ${path}`,
+            source: Buffer.from(contents, "base64").toString("utf8"),
+        }));
 }

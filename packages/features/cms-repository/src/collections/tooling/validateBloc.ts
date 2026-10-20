@@ -13,6 +13,8 @@ export type ValidateBlocInput = {
     tag: string;
     /** User's view source (typically `Bloc.ts`). */
     viewSource?: string;
+    /** Executable source files imported by the view entry. */
+    behaviorSources?: readonly Readonly<{ label: string; source: string }>[];
     /** Blocs whose public CSS inputs may be written by this Bloc runtime. */
     uses?: readonly string[];
 };
@@ -48,6 +50,10 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
         errors.push(...validateForbiddenBlocBehavior(input.viewSource, "Bloc"));
         errors.push(...checkFunctionalMountExport(input.viewSource, "Bloc"));
         errors.push(...checkStyleVariableWrites(input.viewSource, input.tag, input.uses ?? [], "Bloc"));
+    }
+    for (const behavior of input.behaviorSources ?? []) {
+        errors.push(...validateForbiddenBlocBehavior(behavior.source, behavior.label));
+        errors.push(...checkStyleVariableWrites(behavior.source, input.tag, input.uses ?? [], behavior.label));
     }
     return { errors };
 }

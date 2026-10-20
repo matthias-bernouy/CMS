@@ -70,6 +70,20 @@ describe("validateBloc — source patterns", () => {
         expect(result.errors).toEqual([expect.stringContaining("must export a `mount(root)` function")]);
     });
 
+    test("applies behavior guards to imported runtime sources", () => {
+        const result = validateBloc({
+            tag: "my-bloc",
+            viewSource: 'export { mount } from "./runtime/behavior";',
+            behaviorSources: [
+                {
+                    label: "Bloc runtime runtime/behavior.ts",
+                    source: 'export function mount(root) { root.attachShadow({ mode: "open" }); }',
+                },
+            ],
+        });
+        expect(result.errors).toContainEqual(expect.stringContaining("Shadow DOM APIs are forbidden"));
+    });
+
     test.each([
         [`export function mount(root) { root.attachShadow({ mode: "open" }); }`],
         [`export function mount(root) { return root.shadowRoot; }`],
