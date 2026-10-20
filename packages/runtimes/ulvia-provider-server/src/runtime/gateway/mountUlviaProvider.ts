@@ -24,6 +24,7 @@ export function mountUlviaProvider(options: {
     new ProviderOperatorApi(runner, env.ULVIA_PROVIDER_OPERATOR_TOKEN, lifecycle);
     new UlviaProvider(runner, {
         contracts,
+        logger,
         authenticateControlToken: async (token) => {
             const instance = await authenticator.authenticateControlToken(token);
             return instance ? host.runtime(instance) : null;

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
+import { createMemoryLogger } from "@bernouy/logging/testing";
 import { MAX_CAPABILITY_JSON_BYTES } from "@bernouy/cms-repository/contracts/protocol";
 import { UlviaProvider } from "../src";
 import {
@@ -191,6 +192,41 @@ describe("UlviaProvider", () => {
                     })
                 ).status,
             ).toBe(404);
+        } finally {
+            server.stop();
+        }
+    });
+
+    test("logs an unexpected capability failure without recording its input", async () => {
+        const contract = await contractRelease();
+        const dispatcher = new DefaultProviderCapabilityDispatcher();
+        dispatcher.register("ulvia.cms.fixture", "echo", async () => {
+            throw new Error("storage unavailable");
+        });
+        const memory = createMemoryLogger({ service: "provider-test", level: "debug" });
+        const runner = new BunRunner();
+        new UlviaProvider(runner, providerOptions([contract], dispatcher, PROVIDER_INSTANCE_ID, {}, memory.logger));
+        const server = serveForTest(runner);
+        try {
+            const response = await server.request("POST", "/v1/provider/echo/record-1", {
+                headers: { ...invocationHeaders("failed-capability"), "Content-Type": "application/json" },
+                body: JSON.stringify({ value: "must-not-be-logged" }),
+            });
+
+            expect(response.status).toBe(503);
+            expect(memory.records).toEqual([
+                expect.objectContaining({
+                    level: "error",
+                    event: "provider.capability.failed",
+                    attributes: {
+                        contractId: "ulvia.cms.fixture",
+                        capabilityId: "echo",
+                        status: 503,
+                    },
+                    error: expect.objectContaining({ name: "Error", message: "storage unavailable" }),
+                }),
+            ]);
+            expect(JSON.stringify(memory.records)).not.toContain("must-not-be-logged");
         } finally {
             server.stop();
         }

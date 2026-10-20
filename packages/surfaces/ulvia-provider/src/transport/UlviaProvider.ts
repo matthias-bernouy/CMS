@@ -1,4 +1,5 @@
 import type { HttpMethod, Runner } from "@bernouy/http-runner";
+import type { Logger } from "@bernouy/logging";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
@@ -36,6 +37,7 @@ export type UlviaProviderInstanceLease = Readonly<{
 
 export type UlviaProviderOptions = Readonly<{
     contracts: readonly ContractRelease[];
+    logger: Logger;
     authenticateControlToken(token: string): Promise<UlviaProviderInstanceLease | null>;
     authenticateInvocationToken(
         token: string,
@@ -159,10 +161,15 @@ export class UlviaProvider {
                     let relay = relays.get(runtime.dispatcher);
                     if (!relay) {
                         runtime.dispatcher.seal(options.contracts);
-                        relay = createProviderContractRelay(routes, runtime.dispatcher, {
-                            siteId: runtime.siteId,
-                            providerId: runtime.report.providerId,
-                        });
+                        relay = createProviderContractRelay(
+                            routes,
+                            runtime.dispatcher,
+                            {
+                                siteId: runtime.siteId,
+                                providerId: runtime.report.providerId,
+                            },
+                            options.logger,
+                        );
                         relays.set(runtime.dispatcher, relay);
                     }
                     return (await relay(request, claims)) ?? new Response(null, { status: 404 });

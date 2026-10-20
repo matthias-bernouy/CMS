@@ -17,6 +17,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { UlviaProvider } from "../src";
 import type { CmsFilesService } from "@bernouy/cms-files";
+import { NOOP_LOGGER } from "@bernouy/logging";
 
 const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
@@ -64,6 +65,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
     };
     new UlviaProvider(runner, {
         contracts: contracts.map(({ release }) => release),
+        logger: NOOP_LOGGER,
         authenticateControlToken: async (token) =>
             token === TOKEN ? { resource: runtime, release: () => undefined } : null,
         authenticateInvocationToken: async (token) => {

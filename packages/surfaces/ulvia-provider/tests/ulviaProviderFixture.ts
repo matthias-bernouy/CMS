@@ -1,4 +1,5 @@
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
+import { NOOP_LOGGER, type Logger } from "@bernouy/logging";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
 import type {
@@ -20,6 +21,7 @@ export function providerOptions(
     dispatcher: DefaultProviderCapabilityDispatcher,
     instanceId = PROVIDER_INSTANCE_ID,
     kernelOverrides: Partial<KernelInstanceApi> = {},
+    logger: Logger = NOOP_LOGGER,
 ): UlviaProviderOptions {
     const runtime: UlviaProviderInstanceRuntime = {
         siteId: "default",
@@ -36,6 +38,7 @@ export function providerOptions(
     };
     return {
         contracts: contracts.map(({ release }) => release),
+        logger,
         authenticateControlToken: async (token) =>
             token === PROVIDER_TOKEN ? { resource: runtime, release: () => undefined } : null,
         authenticateInvocationToken: async (token) => {

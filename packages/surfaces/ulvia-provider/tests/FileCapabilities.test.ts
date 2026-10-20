@@ -172,6 +172,18 @@ test("managed workspace capabilities never require or return namespace credentia
     ).rejects.toMatchObject({ code: "INVALID_INPUT", status: 422 });
 });
 
+test("unexpected file failures remain observable at the transport boundary", async () => {
+    const dispatcher = new DefaultProviderCapabilityDispatcher();
+    const failure = new Error("blob store unavailable");
+    registerFileCapabilities(dispatcher, {
+        createNamespace: async () => {
+            throw failure;
+        },
+    } as unknown as CmsFilesService);
+
+    await expect(invoke(dispatcher, "namespace.create", { name: "Assets" })).rejects.toBe(failure);
+});
+
 function files(): CmsFilesService {
     return new CmsFilesService({
         store: new InMemoryCmsFilesStore(),

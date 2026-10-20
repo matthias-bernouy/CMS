@@ -2,11 +2,7 @@ import { expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { CmsFilesService } from "@bernouy/cms-files";
 import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
-import {
-    ProviderCapabilityDispatchError,
-    DefaultProviderCapabilityDispatcher,
-    type ProviderCapabilityInvocationContext,
-} from "@bernouy/ulvia-provider";
+import { DefaultProviderCapabilityDispatcher, type ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
 import { registerFileCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 const context: ProviderCapabilityInvocationContext = {
@@ -16,7 +12,7 @@ const context: ProviderCapabilityInvocationContext = {
     providerId: "ulvia.official",
 };
 
-test("file capability failures preserve public errors and hide unexpected failures", async () => {
+test("file capability failures preserve declared public errors", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     registerFileCapabilities(
         dispatcher,
@@ -38,16 +34,6 @@ test("file capability failures preserve public errors and hide unexpected failur
         code: "INVALID_INPUT",
         status: 422,
     });
-
-    const unavailable = new DefaultProviderCapabilityDispatcher();
-    registerFileCapabilities(unavailable, {
-        async createNamespace() {
-            throw new Error("database credentials must remain private");
-        },
-    } as unknown as CmsFilesService);
-    await expect(invoke(unavailable, "namespace.create", { name: "Assets" })).rejects.toEqual(
-        new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503),
-    );
 });
 
 function invoke(

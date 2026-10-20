@@ -302,7 +302,7 @@ async function fileCall<T>(operation: () => Promise<T>): Promise<T> {
         if (error instanceof CmsFilesError) {
             throw new ProviderCapabilityDispatchError(error.code, error.status, error.code, error.responseHeaders);
         }
-        throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+        throw error;
     }
 }
 

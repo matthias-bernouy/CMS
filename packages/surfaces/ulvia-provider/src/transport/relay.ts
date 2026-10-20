@@ -3,6 +3,7 @@ import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contract
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { RequestBodyTooLargeError } from "@bernouy/http-runner";
+import type { Logger } from "@bernouy/logging";
 import {
     ProviderCapabilityDispatchError,
     type ProviderBinaryResult,
@@ -17,6 +18,7 @@ export function createProviderContractRelay(
     routes: readonly ProviderRoute[],
     dispatcher: ProviderCapabilityDispatcher,
     scope: { readonly siteId: string; readonly providerId: string },
+    logger: Logger,
 ): (request: Request, claims: ProviderInvocationClaims) => Promise<Response | null> {
     return async (request, claims) => {
         const url = new URL(request.url);
@@ -45,6 +47,15 @@ export function createProviderContractRelay(
             };
             validateIdempotencyContext(capability, context);
         } catch (cause) {
+            logger.warn(
+                "provider.capability.input_rejected",
+                {
+                    contractId,
+                    capabilityId: capability.id,
+                    status: cause instanceof RequestBodyTooLargeError ? 413 : 400,
+                },
+                cause,
+            );
             return new Response(null, {
                 status: cause instanceof RequestBodyTooLargeError ? 413 : 400,
                 headers: { "Cache-Control": "no-store" },
@@ -65,6 +76,12 @@ export function createProviderContractRelay(
             if (cause instanceof ProviderCapabilityDispatchError) {
                 const status = capability.binding.response.errorStatuses[cause.code];
                 if (status === cause.status) {
+                    logger.warn("provider.capability.rejected", {
+                        contractId,
+                        capabilityId: capability.id,
+                        errorCode: cause.code,
+                        status,
+                    });
                     if (request.method === "HEAD") {
                         return headError(status, cause.code, context.requestId, cause.responseHeaders);
                     }
@@ -77,6 +94,7 @@ export function createProviderContractRelay(
                     );
                 }
             }
+            logger.error("provider.capability.failed", { contractId, capabilityId: capability.id, status: 503 }, cause);
             if (request.method === "HEAD") {
                 return headError(503, "CORE_UNAVAILABLE", context.requestId);
             }
