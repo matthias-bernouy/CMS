@@ -22,7 +22,6 @@ import {
     recoverMongoPagePathUpdates,
 } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/recovery";
 import {
-    canUsePageRoute,
     rethrowPagePathConflict,
     updateMongoPagePaths,
 } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/updates";
@@ -42,6 +41,7 @@ import {
     pageContentReferenceKey,
     pageContentReferenceKeys,
 } from "cms-content/pages/core/queries/contentReferences";
+import { canUsePageRoute, requirePageScan, samePagePaths } from "cms-content/pages/core/routing/values";
 
 const PAGE_REFERENCE_BACKFILL_BATCH_SIZE = 250;
 
@@ -487,23 +487,4 @@ export class MongoContentRepository extends MongoBlocRepository {
             rethrowPagePathConflict(error, path);
         }
     }
-}
-
-function requirePageScan(cursor: string | undefined, limit: number): void {
-    if (
-        (cursor !== undefined && (typeof cursor !== "string" || !cursor || cursor.length > 256)) ||
-        !Number.isSafeInteger(limit) ||
-        limit < 1 ||
-        limit > 1_000
-    ) {
-        throw new TypeError("Page scan requires a valid cursor and a limit between 1 and 1000");
-    }
-}
-
-function samePagePaths(left: Record<string, string> | undefined, right: Record<string, string>): boolean {
-    return (
-        !!left &&
-        Object.keys(left).length === Object.keys(right).length &&
-        Object.entries(right).every(([language, path]) => left[language] === path)
-    );
 }

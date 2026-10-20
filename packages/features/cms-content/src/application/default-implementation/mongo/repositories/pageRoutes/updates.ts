@@ -1,8 +1,9 @@
 import { randomUUIDv7 } from "bun";
 import type { Collection } from "mongodb";
-import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
+import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { pagePathsForSystem, type PlannedPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
+import { canUsePageRoute, samePagePaths } from "cms-content/pages/core/routing/values";
 import {
     DuplicatePagePathError,
     PagePathUpdateConflictError,
@@ -148,24 +149,9 @@ export async function releasePagePathClaim(pages: Pages, id: string, token: stri
     }
 }
 
-export function canUsePageRoute(route: Pick<PageRoute, "pageId" | "ownerPageId" | "state">, pageId: string): boolean {
-    return (
-        route.pageId === pageId &&
-        ((route.state === "current" && route.ownerPageId === pageId) ||
-            (route.state === "redirect" && route.ownerPageId === pageId))
-    );
-}
-
 export function rethrowPagePathConflict(error: unknown, path: string): never {
     if ((error as { code?: unknown } | null)?.code === 11000) {
         throw new DuplicatePagePathError(path);
     }
     throw error;
-}
-
-function samePagePaths(left: Record<string, string>, right: Record<string, string>): boolean {
-    return (
-        Object.keys(left).length === Object.keys(right).length &&
-        Object.entries(right).every(([language, path]) => left[language] === path)
-    );
 }

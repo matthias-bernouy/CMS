@@ -19,6 +19,7 @@ import {
     pageContentReferenceKey,
     pageContentReferenceKeys,
 } from "cms-content/pages/core/queries/contentReferences";
+import { canUsePageRoute, requirePageScan, samePagePaths } from "cms-content/pages/core/routing/values";
 
 export class InMemoryContentRepository extends InMemoryBlocRepository {
     protected readonly pages = new Map<string, TPage>();
@@ -345,30 +346,4 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             throw new Error("Page route migration is in progress.");
         }
     }
-}
-
-function requirePageScan(cursor: string | undefined, limit: number): void {
-    if (
-        (cursor !== undefined && (typeof cursor !== "string" || !cursor || cursor.length > 256)) ||
-        !Number.isSafeInteger(limit) ||
-        limit < 1 ||
-        limit > 1_000
-    ) {
-        throw new TypeError("Page scan requires a valid cursor and a limit between 1 and 1000");
-    }
-}
-
-function samePagePaths(left: Record<string, string>, right: Record<string, string>): boolean {
-    return (
-        Object.keys(left).length === Object.keys(right).length &&
-        Object.entries(right).every(([language, path]) => left[language] === path)
-    );
-}
-
-function canUsePageRoute(route: PageRoute, pageId: string): boolean {
-    return (
-        route.pageId === pageId &&
-        ((route.state === "current" && route.ownerPageId === pageId) ||
-            (route.state === "redirect" && route.ownerPageId === pageId))
-    );
 }

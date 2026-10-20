@@ -1,4 +1,5 @@
 import type { PageReference, RegisteredPageRoute } from "cms-content/pages/interfaces/routing";
+import type { PageRoute } from "cms-content/pages/interfaces/pages";
 import { validatePagePath } from "cms-content/pages/core/validation/page";
 
 const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
@@ -76,4 +77,34 @@ export function validateRegisteredPagePath(value: string): string {
 
 export function clonePageRoute(route: RegisteredPageRoute): RegisteredPageRoute {
     return structuredClone(route);
+}
+
+export function canUsePageRoute(route: Pick<PageRoute, "pageId" | "ownerPageId" | "state">, pageId: string): boolean {
+    return (
+        route.pageId === pageId &&
+        ((route.state === "current" && route.ownerPageId === pageId) ||
+            (route.state === "redirect" && route.ownerPageId === pageId))
+    );
+}
+
+export function samePagePaths(
+    left: Readonly<Record<string, string>> | undefined,
+    right: Readonly<Record<string, string>>,
+): boolean {
+    return (
+        left !== undefined &&
+        Object.keys(left).length === Object.keys(right).length &&
+        Object.entries(right).every(([language, path]) => left[language] === path)
+    );
+}
+
+export function requirePageScan(cursor: string | undefined, limit: number): void {
+    if (
+        (cursor !== undefined && (typeof cursor !== "string" || !cursor || cursor.length > 256)) ||
+        !Number.isSafeInteger(limit) ||
+        limit < 1 ||
+        limit > 1_000
+    ) {
+        throw new TypeError("Page scan requires a valid cursor and a limit between 1 and 1000");
+    }
 }
