@@ -53,4 +53,25 @@ describe("EditablePageDocument", () => {
 
         expect(page.serialize()).toBe('<div cms-bloc="ulvia-official-field"><input type="text" name="field"></div>');
     });
+
+    test("edits a single named native-content slot without removing its structure", () => {
+        const page = new EditablePageDocument("");
+        const prose: EditorCatalogueItem = {
+            ...heading,
+            id: "ulvia-official-prose",
+            defaultContent: '<div slot="content"><p>Default prose</p></div>',
+            authoringJson: JSON.stringify({
+                root: { accepts: ["div"] },
+                slots: { content: { accepts: [{ kind: "native-content", profile: "prose" }] } },
+            }),
+        };
+        const index = page.add(prose);
+
+        expect(page.editableContent(index, prose)).toBe("<p>Default prose</p>");
+        page.updateContent(index, "<p>Updated prose</p>", prose);
+
+        expect(page.serialize()).toBe(
+            '<div cms-bloc="ulvia-official-prose"><div slot="content"><p>Updated prose</p></div></div>',
+        );
+    });
 });

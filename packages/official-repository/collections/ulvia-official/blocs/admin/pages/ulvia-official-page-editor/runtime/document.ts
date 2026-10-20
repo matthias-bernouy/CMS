@@ -1,4 +1,4 @@
-import { authoringContract, defaultManagedElement, type EditorCatalogueItem } from "./model";
+import { authoringContract, managedContent, type EditorCatalogueItem, type ManagedContent } from "./model";
 
 export class EditablePageDocument {
     private readonly template = document.createElement("template");
@@ -33,14 +33,17 @@ export class EditablePageDocument {
             element.setAttribute(name, value);
         }
         element.innerHTML = item.defaultContent;
-        const managedElement = defaultManagedElement(contract);
-        if (managedElement && !this.managedContent(element, managedElement.accepts ?? [])) {
-            const contentTag = managedElement.accepts?.[0];
+        const managed = managedContent(contract);
+        if (managed?.nativeElement && !this.managedContent(element, managed)) {
+            const contentTag = managed.nativeElement.accepts?.[0];
             if (!contentTag) {
                 throw new Error(`Bloc ${item.id} does not declare an authoring content element`);
             }
             const content = document.createElement(contentTag);
-            for (const [name, value] of Object.entries(managedElement.defaults ?? {})) {
+            if (managed.slot) {
+                content.slot = managed.slot;
+            }
+            for (const [name, value] of Object.entries(managed.nativeElement.defaults ?? {})) {
                 content.setAttribute(name, value);
             }
             element.append(content);
@@ -84,10 +87,8 @@ export class EditablePageDocument {
         if (!element) {
             return "";
         }
-        const managedElement = item && defaultManagedElement(authoringContract(item));
-        return managedElement
-            ? (this.managedContent(element, managedElement.accepts ?? [])?.innerHTML ?? "")
-            : element.innerHTML;
+        const managed = item && managedContent(authoringContract(item));
+        return managed ? (this.managedContent(element, managed)?.innerHTML ?? "") : element.innerHTML;
     }
 
     updateContent(index: number, content: string, item?: EditorCatalogueItem): void {
@@ -95,8 +96,8 @@ export class EditablePageDocument {
         if (!element) {
             return;
         }
-        const managedElement = item && defaultManagedElement(authoringContract(item));
-        const target = managedElement ? this.managedContent(element, managedElement.accepts ?? []) : element;
+        const managed = item && managedContent(authoringContract(item));
+        const target = managed ? this.managedContent(element, managed) : element;
         if (target) {
             target.innerHTML = content;
         }
@@ -126,12 +127,17 @@ export class EditablePageDocument {
         }
     }
 
-    private managedContent(element: HTMLElement, acceptedTags: readonly string[]): HTMLElement | undefined {
+    private managedContent(element: HTMLElement, contract: ManagedContent): HTMLElement | undefined {
+        if (!contract.slot && !contract.nativeElement) {
+            return element;
+        }
+        const acceptedTags = contract.nativeElement?.accepts ?? [];
         return Array.from(element.children).find(
             (child): child is HTMLElement =>
                 child instanceof HTMLElement &&
                 !child.hasAttribute("cms-bloc") &&
-                acceptedTags.includes(child.localName),
+                child.getAttribute("slot") === (contract.slot || null) &&
+                (acceptedTags.length === 0 || acceptedTags.includes(child.localName)),
         );
     }
 }

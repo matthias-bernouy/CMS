@@ -20,8 +20,22 @@ type EditorNativeElement = { accepts?: string[]; defaults?: Record<string, strin
 type EditorSlot = { accepts?: EditorSlotAccept[] };
 type EditorSlotAccept = EditorNativeElement & { kind?: string };
 
-export function defaultManagedElement(contract: AuthoringContract): EditorNativeElement | undefined {
-    return contract.slots?.[""]?.accepts?.find((accept) => accept.kind === "native-element");
+export type ManagedContent = {
+    readonly slot: string;
+    readonly nativeElement?: EditorNativeElement;
+};
+
+export function managedContent(contract: AuthoringContract): ManagedContent | undefined {
+    const entries = Object.entries(contract.slots ?? {});
+    if (entries.length !== 1) {
+        return undefined;
+    }
+    const [slot, definition] = entries[0]!;
+    const nativeElement = definition.accepts?.find((accept) => accept.kind === "native-element");
+    if (nativeElement) {
+        return { slot, nativeElement };
+    }
+    return definition.accepts?.some((accept) => accept.kind === "native-content") ? { slot } : undefined;
 }
 
 export type EditorSetting = {
