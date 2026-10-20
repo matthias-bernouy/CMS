@@ -9,9 +9,9 @@ describe("BindingRuntime — nested core isolation", () => {
         globalThis.fetch = (async () => new Response("[]")) as typeof fetch;
         const root = el(`
             <div>
-                <section cms-query="kernel.auth:me as outer"></section>
+                <section cms-query="ulvia.cms.access:resolve-actor as outer"></section>
                 <cms-binding-core>
-                    <section cms-query="kernel.auth:me as inner"></section>
+                    <section cms-query="ulvia.cms.access:resolve-actor as inner"></section>
                 </cms-binding-core>
             </div>
         `);

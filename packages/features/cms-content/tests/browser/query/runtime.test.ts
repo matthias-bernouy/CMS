@@ -109,12 +109,12 @@ test("a Provider query without input uses the cache-compatible logical GET trans
     });
 });
 
-test("the closed Kernel query map does not expose arbitrary URLs", () => {
-    const account = el('<section cms-query="kernel.auth:me as account"></section>');
-    expect(queryRequest(account)).toEqual({ url: "/.cms/auth/me", init: { method: "GET" } });
-
-    const unknown = el('<section cms-query="kernel.auth:secrets as secrets"></section>');
-    expect(() => queryRequest(unknown)).toThrow('Unknown Kernel query "kernel.auth:secrets"');
+test("queries always use the canonical capability transport", () => {
+    const account = el('<section cms-query="ulvia.cms.access:resolve-actor as account"></section>');
+    expect(queryRequest(account)).toEqual({
+        url: "/.cms/query/ulvia.cms.access/resolve-actor",
+        init: { method: "GET" },
+    });
 });
 
 test("the alias owns the complete query state and data", async () => {

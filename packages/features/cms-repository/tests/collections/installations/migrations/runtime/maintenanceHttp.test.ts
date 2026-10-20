@@ -22,11 +22,9 @@ describe("collection migration maintenance HTTP guard", () => {
         });
     });
 
-    test("keeps login, authentication and immutable assets available", async () => {
+    test("keeps the contributed login Page and immutable assets available", async () => {
         for (const path of [
             "/login",
-            "/.cms/auth/methods",
-            "/.cms/public-auth/me",
             "/.cms/assets/bloc-runtime.js",
             "/.cms/collections/official/assets/logo",
             "/.cms/blocset",

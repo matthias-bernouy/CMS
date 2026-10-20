@@ -2,7 +2,6 @@ import { validateBlocDocument, type BlocDocumentValidationResult } from "@bernou
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
-import { isCollectionSystemQuery } from "../../parsing/requirements";
 import { validateManagedNativeDefinition } from "./managedNative";
 import { validateDeclarative, validateNoBindings } from "./shell";
 import { type BlocMarkup, pageSlots, validatePageSlots, validateSlotTargets } from "./slots";
@@ -79,16 +78,12 @@ export function validateMarkup(
 
 function validateRequirements(bloc: CollectionBloc, canonical: BlocDocumentValidationResult, path: string): void {
     const calls = [
-        ...canonical.queries.map(({ contractId, capabilityId }) =>
-            isCollectionSystemQuery(contractId, capabilityId) ? null : `${contractId}/${capabilityId}`,
-        ),
-        ...canonical.mutations.map(({ contractId, capabilityId }) =>
-            contractId.startsWith("kernel.") ? null : `${contractId}/${capabilityId}`,
-        ),
+        ...canonical.queries.map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
+        ...canonical.mutations.map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
     ];
     const requirements = new Set(bloc.requires.map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`));
     for (const call of calls) {
-        if (call !== null && !requirements.has(call)) {
+        if (!requirements.has(call)) {
             invalid(`capability call ${call} must be declared in requires`, `${path}.requires`);
         }
     }

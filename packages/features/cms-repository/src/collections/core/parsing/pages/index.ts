@@ -3,7 +3,7 @@ import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, record, string, unique } from "../../values";
-import { isCollectionSystemQuery, parseRequirements } from "../requirements";
+import { parseRequirements } from "../requirements";
 import { parseDefaultPath } from "./document";
 import { collectionPageDefinitions } from "./definitions";
 import {
@@ -51,12 +51,8 @@ export function parseCollectionPages(
         }
         const requires = parseRequirements(source.requires, `${path}.requires`, limits);
         const calls = new Set([
-            ...queries
-                .filter(({ contractId, capabilityId }) => !isCollectionSystemQuery(contractId, capabilityId))
-                .map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
-            ...mutations
-                .filter(({ contractId }) => !contractId.startsWith("kernel."))
-                .map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
+            ...queries.map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
+            ...mutations.map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
         ]);
         const declaredCalls = new Set(requires.map((item) => `${item.contractId}/${item.capabilityId}`));
         if (declaredCalls.size !== calls.size || [...calls].some((call) => !declaredCalls.has(call))) {

@@ -13,12 +13,6 @@ import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespac
 import { textIdentifier } from "../texts/validation";
 import { parseDefaultPath } from "./pages/document";
 
-const SYSTEM_QUERIES = new Set(["kernel.auth:me"]);
-
-export function isCollectionSystemQuery(contractId: string, capabilityId: string): boolean {
-    return SYSTEM_QUERIES.has(`${contractId}:${capabilityId}`);
-}
-
 export function parseRequirements(
     value: unknown,
     path: string,

@@ -159,12 +159,10 @@ export class FormMutation {
 function mutationBinding(form: HTMLFormElement): { readonly url: string; readonly alias: string } | null {
     const mutation = parseMutation(form.getAttribute(MUTATION_ATTR) ?? "");
     if (mutation) {
-        const key = `${mutation.contractId}:${mutation.capabilityId}`;
-        const url =
-            key === "kernel.auth:login"
-                ? "/.cms/auth/login"
-                : `/.cms/call/${mutation.contractId}/${mutation.capabilityId}`;
-        return { url, alias: mutation.name };
+        return {
+            url: `/.cms/call/${mutation.contractId}/${mutation.capabilityId}`,
+            alias: mutation.name,
+        };
     }
     return null;
 }

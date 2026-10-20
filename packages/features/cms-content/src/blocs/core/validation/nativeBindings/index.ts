@@ -119,11 +119,8 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
         return "CMS mutations are reserved for form submissions";
     }
     const mutationBinding = mutation === undefined ? null : parseMutation(mutation);
-    if (
-        mutationBinding?.contractId.startsWith("kernel.") &&
-        `${mutationBinding.contractId}:${mutationBinding.capabilityId}` !== "kernel.auth:login"
-    ) {
-        return "CMS mutation targets an unknown Kernel capability";
+    if (mutationBinding?.contractId.startsWith("kernel.")) {
+        return "CMS mutations cannot target Kernel-owned capabilities";
     }
     if (query !== undefined) {
         const binding = parseQuery(query);
@@ -146,21 +143,8 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
         ) {
             return "synchronized-state queries cannot declare remote query controls";
         }
-        if (
-            binding &&
-            "contractId" in binding &&
-            binding.contractId.startsWith("kernel.") &&
-            `${binding.contractId}:${binding.capabilityId}` !== "kernel.auth:me"
-        ) {
-            return "CMS query targets an unknown Kernel capability";
-        }
-        if (
-            binding &&
-            "contractId" in binding &&
-            binding.contractId === "kernel.auth" &&
-            attributes[CMS_BINDING_ATTRIBUTES.queryInput] !== undefined
-        ) {
-            return "Kernel authentication queries do not accept input";
+        if (binding && "contractId" in binding && binding.contractId.startsWith("kernel.")) {
+            return "CMS queries cannot target Kernel-owned capabilities";
         }
     }
     if (queries !== undefined && query === undefined && sync !== undefined) {

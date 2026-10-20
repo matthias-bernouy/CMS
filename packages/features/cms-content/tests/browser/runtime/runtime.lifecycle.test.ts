@@ -9,7 +9,7 @@ describe("BindingRuntime — lifecycle", () => {
     test("discovers a declarative query", async () => {
         globalThis.fetch = (async () => new Response(JSON.stringify(["password"]))) as typeof fetch;
         const root = el(
-            `<div><section cms-query="kernel.auth:me as methods"><p>{{ methods.data[0] }}</p></section></div>`,
+            `<div><section cms-query="ulvia.cms.access:resolve-actor as methods"><p>{{ methods.data[0] }}</p></section></div>`,
         );
         document.body.appendChild(root);
         const runtime = new BindingRuntime(root);

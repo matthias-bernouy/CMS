@@ -87,12 +87,14 @@ describe("typed binding analysis", () => {
         );
     });
 
-    test("keeps repeats available for intentionally opaque kernel queries", () => {
+    test("rejects unresolved capability schemas without a Kernel-specific escape hatch", () => {
         const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
-        document.body.innerHTML = `<section cms-query="kernel.auth:me as methods">
+        document.body.innerHTML = `<section cms-query="ulvia.cms.access:resolve-actor as methods">
             <p cms-repeat="methods.data as method">{{ method.displayName }}</p>
         </section>`;
-        expect(() => validateDocumentBindings(document, { requireCapabilityResolution: true })).not.toThrow();
+        expect(() => validateDocumentBindings(document, { requireCapabilityResolution: true })).toThrow(
+            "cannot be resolved to an exact contract schema",
+        );
     });
 
     test("validates mutation outcomes and command output paths", () => {

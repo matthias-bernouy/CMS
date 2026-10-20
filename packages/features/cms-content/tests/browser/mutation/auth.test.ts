@@ -4,7 +4,7 @@ import { el, resetDom, settle, waitFor } from "../support/testUtils";
 
 afterEach(resetDom);
 
-describe("Form mutation — auth submit", () => {
+describe("Form mutation — Access submit", () => {
     test.each([
         ["/sell?resume=listing#photos", "/sell?resume=listing#photos"],
         ["http://localhost/checkout?offer=42", "/checkout?offer=42"],
@@ -16,7 +16,7 @@ describe("Form mutation — auth submit", () => {
         globalThis.fetch = (async () =>
             Response.json({ subject: { identifier: "user:ada" } })) as unknown as typeof fetch;
         location.href = `http://localhost/login?returnTo=${encodeURIComponent(returnTo)}`;
-        const form = el(`<form cms-mutation="kernel.auth:login as session"
+        const form = el(`<form cms-mutation="ulvia.cms.access:login-password as session"
             cms-mutation-redirect="/account" cms-mutation-redirect-param="returnTo">
             <input name="email" value="ada@example.test">
         </form>`);
@@ -30,7 +30,7 @@ describe("Form mutation — auth submit", () => {
         runtime.stop();
     });
 
-    test("auth login form markup submits JSON and redirects on success", async () => {
+    test("Access login form markup submits JSON and redirects on success", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
         globalThis.fetch = (async (url: string, init?: RequestInit) => {
             request = { url, init };
@@ -44,7 +44,7 @@ describe("Form mutation — auth submit", () => {
         location.href = "http://localhost/auth/login?returnTo=%2Fdashboard";
 
         const root = el(`
-            <form cms-mutation="kernel.auth:login as session" cms-mutation-redirect="/">
+            <form cms-mutation="ulvia.cms.access:login-password as session" cms-mutation-redirect="/">
                 <input type="email" name="email" placeholder="Email" required>
                 <input type="password" name="password" placeholder="Password" required>
                 <input type="submit" value="Login">
@@ -65,7 +65,7 @@ describe("Form mutation — auth submit", () => {
 
         const captured = request as unknown as { url: string; init?: RequestInit };
         expect(event.defaultPrevented).toBe(true);
-        expect(captured.url).toBe("http://localhost/.cms/auth/login");
+        expect(captured.url).toBe("http://localhost/.cms/call/ulvia.cms.access/login-password");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.body).toBe(
             JSON.stringify({

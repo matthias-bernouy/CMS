@@ -152,7 +152,7 @@ describe("expandCompositions", () => {
     });
 
     test("preserves site host bindings on the generated behavior controller", () => {
-        const document = body(`<header cms-bloc=\"site-header\" cms-query="kernel.auth:me as auth">
+        const document = body(`<header cms-bloc=\"site-header\" cms-query="ulvia.cms.access:resolve-actor as auth">
             <a slot="actions" cms-condition="!auth.data.subject">Log in</a>
             <div cms-bloc=\"user-menu\" slot="actions" cms-condition="auth.data.subject">Account</div>
         </header>`);
@@ -166,7 +166,7 @@ describe("expandCompositions", () => {
         ]);
 
         const navbar = document.querySelector("nav")!;
-        expect(navbar.getAttribute("cms-query")).toBe("kernel.auth:me as auth");
+        expect(navbar.getAttribute("cms-query")).toBe("ulvia.cms.access:resolve-actor as auth");
         expect(navbar.hasAttribute("data-cms-composition-controller")).toBe(false);
         expect(navbar.querySelector('a[slot="actions"]')?.getAttribute("cms-condition")).toBe("!auth.data.subject");
         expect(navbar.querySelector('[cms-bloc=\"user-menu\"][slot="actions"]')?.getAttribute("cms-condition")).toBe(

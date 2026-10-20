@@ -11,8 +11,6 @@ export type QueryRequest =
       }
     | { waiting: true };
 
-const KERNEL_QUERIES = new Map([["kernel.auth:me", { url: "/.cms/auth/me", method: "GET" }]]);
-
 export function queryRequest(element: Element): QueryRequest {
     const binding = parseQuery(element.getAttribute(QUERY_ATTR) ?? "");
     if (!binding) {
@@ -22,16 +20,8 @@ export function queryRequest(element: Element): QueryRequest {
         throw new TypeError("Synchronized-state queries do not use HTTP transport.");
     }
 
-    const key = `${binding.contractId}:${binding.capabilityId}`;
     if (binding.contractId.startsWith("kernel.")) {
-        const builtIn = KERNEL_QUERIES.get(key);
-        if (!builtIn) {
-            throw new TypeError(`Unknown Kernel query "${key}".`);
-        }
-        if (element.hasAttribute(QUERY_INPUT_ATTR)) {
-            throw new TypeError(`Kernel query "${key}" does not accept cms-query-input.`);
-        }
-        return { url: builtIn.url, init: { method: builtIn.method } };
+        throw new TypeError("Kernel-owned queries are not part of the binding protocol.");
     }
 
     const input = element.getAttribute(QUERY_INPUT_ATTR);

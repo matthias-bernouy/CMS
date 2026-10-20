@@ -44,7 +44,7 @@ describe("<cms-binding-core> — activation", () => {
         globalThis.fetch = (async () => new Response(JSON.stringify(["password"]))) as typeof fetch;
         document.body.innerHTML = `
             <${BINDING_CORE_TAG}>
-                <section cms-query="kernel.auth:me as methods">
+                <section cms-query="ulvia.cms.access:resolve-actor as methods">
                     <p>{{ methods.data[0] }}</p>
                 </section>
             </${BINDING_CORE_TAG}>`;

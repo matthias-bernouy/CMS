@@ -100,15 +100,15 @@ test("collection Pages admit typed capability forms owned by a composition", () 
     }
 });
 
-test("collection system Pages admit only the closed authentication bindings", () => {
+test("collection Pages use declared Access capabilities instead of Kernel-owned authentication", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const authentication = {
         kind: "composition",
         root: { accepts: ["div"] },
         id: "atlas-authentication",
         label: "bloc.page.label",
-        markup: `<section cms-query="kernel.auth:me as account">
-            <form cms-mutation="kernel.auth:login as session">
+        markup: `<section>
+            <form cms-mutation="ulvia.cms.access:login-password as session">
                 <input type="email" name="email" required>
                 <input type="password" name="password" required>
                 <button type="submit">{{ copy }}</button>
@@ -116,7 +116,13 @@ test("collection system Pages admit only the closed authentication bindings", ()
         </section>`,
         slots: {},
         uses: [],
-        requires: [],
+        requires: [
+            {
+                contractId: "ulvia.cms.access",
+                capabilityId: "login-password",
+                versionRange: "^1.0.0",
+            },
+        ],
     };
     const login = { ...page, document: { html: '<div cms-bloc="atlas-authentication"></div>' } };
     expect(() =>
@@ -124,11 +130,8 @@ test("collection system Pages admit only the closed authentication bindings", ()
     ).not.toThrow();
 
     for (const markup of [
-        authentication.markup.replace("kernel.auth:me", "kernel.auth:secrets"),
-        authentication.markup.replace(
-            'cms-query="kernel.auth:me as account"',
-            'cms-query="kernel.auth:me as account" cms-query-input=\'{"id":{"from":"literal","value":"x"}}\'',
-        ),
+        authentication.markup.replace("ulvia.cms.access:login-password", "kernel.auth:login"),
+        authentication.markup.replace("ulvia.cms.access:login-password", "kernel.auth:secrets"),
     ]) {
         expect(() =>
             parseCollectionRelease({

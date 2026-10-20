@@ -320,7 +320,7 @@ describe("site bloc validation", () => {
                 /typed parameter map/,
             ],
             [
-                `<form cms-bloc="site-login-form" cms-mutation="kernel.auth:login as session"
+                `<form cms-bloc="site-login-form" cms-mutation="ulvia.cms.access:login-password as session"
                     cms-mutation-redirect-param="bad param"></form>`,
                 /redirect parameter is invalid/,
             ],

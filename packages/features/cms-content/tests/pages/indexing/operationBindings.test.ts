@@ -41,7 +41,7 @@ describe("collectCmsMutationBindings", () => {
             <section cms-mutation="catalog:ignored as ignored"></section>
             <form cms-mutation="newsletter:subscribe as subscription"
                 cms-mutation-input='{"audience":{"from":"state","key":"@page:newsletter-audience"}}'></form>
-            <form cms-mutation="kernel.auth:login as session"></form>
+            <form cms-mutation="ulvia.cms.access:login-password as session"></form>
         `),
         ).toEqual([
             {
@@ -49,6 +49,11 @@ describe("collectCmsMutationBindings", () => {
                 capabilityId: "subscribe",
                 alias: "subscription",
                 input: { audience: { from: "state", key: "@page:newsletter-audience" } },
+            },
+            {
+                contractId: "ulvia.cms.access",
+                capabilityId: "login-password",
+                alias: "session",
             },
         ]);
     });

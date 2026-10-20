@@ -17,7 +17,7 @@ describe("BindingRuntime — query render reconciliation", () => {
         globalThis.fetch = (async () => res(200, JSON.stringify({ items: [++outerCalls] }))) as unknown as typeof fetch;
         const root = el(`
             <div>
-                <div cms-query="kernel.auth:me as outer" cms-query-listen="@page:test-query-refresh">
+                <div cms-query="ulvia.cms.access:resolve-actor as outer" cms-query-listen="@page:test-query-refresh">
                     <section cms-repeat="outer.data.items as item">
                         <input class="param" cms-sync="@param:test-detached-param" value="{{ item }}">
                         <input class="state" cms-sync="@page:test-detached-state" value="{{ item }}">
