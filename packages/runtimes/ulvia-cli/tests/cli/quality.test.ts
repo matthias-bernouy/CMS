@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { validatePageDocument } from "@bernouy/cms-content/page-document";
@@ -11,9 +11,16 @@ test("the official collection passes its source quality contract", async () => {
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
     const artifact = await prepareCollectionRelease(source, await officialContractCatalogue());
     const showcaseRoot = resolve(import.meta.dir, "../../../../official-repository/showcases/ulvia-official");
+    const showcasedBlocs = new Set<string>();
     for (const name of (await readdir(showcaseRoot)).filter((entry) => entry.endsWith(".html"))) {
         const html = await readFile(join(showcaseRoot, name), "utf8");
         expect(html).not.toMatch(/<ulvia-[a-z]/u);
+        for (const match of html.matchAll(/\bcms-bloc\s*=\s*["']([^"']+)["']/gu)) {
+            showcasedBlocs.add(match[1]!);
+        }
+        for (const media of html.matchAll(/\/files\/(showcase-[a-z-]+)\/generation/gu)) {
+            await access(join(showcaseRoot, "assets", `${media[1]}.svg`));
+        }
         try {
             validatePageDocument(html, artifact.release.blocs);
         } catch (error) {
@@ -21,6 +28,9 @@ test("the official collection passes its source quality contract", async () => {
         }
     }
     const visible = artifact.release.blocs.filter((bloc) => bloc.catalogue !== "hidden");
+    const knownBlocIds = new Set(artifact.release.blocs.map((bloc) => bloc.id));
+    expect([...showcasedBlocs].every((id) => knownBlocIds.has(id))).toBeTrue();
+    expect(visible.every((bloc) => showcasedBlocs.has(bloc.id))).toBeTrue();
     expect(visible.every((bloc) => bloc.category !== undefined && bloc.order !== undefined)).toBeTrue();
     expect(new Set(visible.map((bloc) => `${bloc.category}:${bloc.order}`)).size).toBe(visible.length);
     expect(
@@ -30,6 +40,11 @@ test("the official collection passes its source quality contract", async () => {
         visible.filter((bloc) => bloc.kind === "component").every((bloc) => bloc.style?.includes(":scope")),
     ).toBeTrue();
     expect(visible.filter((bloc) => bloc.kind === "composition").every((bloc) => bloc.uses.length > 0)).toBeTrue();
+    expect(
+        visible
+            .filter((bloc) => bloc.kind === "composition")
+            .every((bloc) => bloc.lightdom?.includes('data-cms-composition-controller=""')),
+    ).toBeTrue();
     expect(Object.keys(artifact.release.translations.fr ?? {}).toSorted()).toEqual(
         Object.keys(artifact.release.translations.en ?? {}).toSorted(),
     );
@@ -61,10 +76,46 @@ test("the official collection passes its source quality contract", async () => {
     const routeTabs = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-route-tabs");
     const appearance = routeTabs?.settings?.find((setting) => setting.id === "appearance");
     expect(appearance?.control?.options?.map((option) => option.value)).toEqual(["underline", "pills"]);
-    expect(routeTabs?.template).toContain('role="tablist" aria-orientation="horizontal"');
+    expect(routeTabs?.template).not.toContain('role="tablist"');
     expect(routeTabs?.runtime?.viewJS).toContain("ArrowRight");
     expect(routeTabs?.runtime?.viewJS).toContain(".tabIndex=");
     expect(routeTabs?.runtime?.viewJS).toContain("aria-labelledby");
+
+    const fieldHelp = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-field-help");
+    expect(fieldHelp?.uses).toEqual([]);
+    expect(fieldHelp?.template).toContain('data-field-help-trigger=""');
+    expect(fieldHelp?.template).toContain('data-field-help-panel=""');
+    expect(artifact.release.blocs.some((bloc) => bloc.id.startsWith("ulvia-official-field-help-"))).toBeFalse();
+
+    const appShell = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-app-shell");
+    expect(appShell?.style).toContain(':scope > [part="shell"] > [part="mobile-backdrop"]');
+    expect(appShell?.style).toContain("button[data-mobile-toggle-close]");
+
+    const action = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
+    expect(action?.style).toContain("font-family: var(--ulvia-official-font-family-main, inherit)");
+    expect(action?.style).not.toContain("font: inherit;");
+    expect(action?.style).toContain("max-width: 100%");
+    expect(action?.style).toContain("min-height: var(--ulvia-official-action-height)");
+    expect(action?.style).toContain("white-space: normal");
+    expect(action?.style).toContain(":scope > span");
+
+    const link = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-link");
+    expect(link?.style).not.toContain("height: 100%");
+
+    const timeInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-time-input");
+    expect(timeInput?.style).toContain("max-width: 100%");
+    expect(timeInput?.style).toContain("flex: 0 1 3rem");
+
+    const colorInput = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-color-input");
+    expect(colorInput?.style).toContain("@container (max-width: 20rem)");
+    expect(colorInput?.style).toContain("grid-template-columns: minmax(0, 1fr)");
+
+    const grid = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-grid");
+    expect(grid?.style).toContain("repeat(auto-fit, minmax(min(100%, 18rem), 1fr))");
+
+    const panel = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-panel");
+    expect(panel?.style).toContain("flex-wrap: wrap");
+    expect(panel?.style).toContain("flex: 1 1 10rem");
 
     expect(
         artifact.release.blocs.some((bloc) =>

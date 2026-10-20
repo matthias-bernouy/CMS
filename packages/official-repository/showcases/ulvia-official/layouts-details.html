@@ -53,38 +53,38 @@
     </div>
 
     <div density="default" appearance="plain" width="xl" slot="content" cms-bloc="ulvia-official-page-shell">
-        <div justify="start" align="center" gap="sm" slot="breadcrumb" cms-bloc="ulvia-official-cluster">
+        <div justify="start" items-align="center" gap="sm" slot="breadcrumb" cms-bloc="ulvia-official-cluster">
             <span tone="muted" size="sm" name="layout" slot="items" cms-bloc="ulvia-official-icon"></span>
             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
                 <span slot="content">Collections / Ulvia Official / Detail views</span>
             </div>
         </div>
-        <div align="start" size="xl" slot="title" cms-bloc="ulvia-official-heading"><h1>Detail shell views</h1></div>
+        <div text-align="start" size="xl" slot="title" cms-bloc="ulvia-official-heading"><h1>Detail shell views</h1></div>
         <div size="lg" measure="wide" slot="description" cms-bloc="ulvia-official-prose">
             <p slot="content">
                 Two realistic compositions for a focused resource view: a structured editor and a review workspace. Their columns collapse from the space
                 offered by the container.
             </p>
         </div>
-        <div label="Layout catalogue sections" size="md" align="start" appearance="underline" slot="navigation" cms-bloc="ulvia-official-route-tabs">
+        <div label="Layout catalogue sections" size="md" tabs-align="start" appearance="underline" slot="navigation" cms-bloc="ulvia-official-route-tabs">
             <a slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/catalogue"><span>Overview</span></a>
             <a slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/components"><span>Components</span></a>
             <a slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/theme"><span>Theme tokens</span></a>
             <a active="" slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/details"><span>Detail views</span></a>
         </div>
 
-        <div align="stretch" gap="xl" slot="content" cms-bloc="ulvia-official-stack">
+        <div items-align="stretch" gap="xl" slot="content" cms-bloc="ulvia-official-stack">
             <div density="default" appearance="outlined" slot="items" cms-bloc="ulvia-official-panel">
-                <div justify="start" align="center" gap="sm" slot="header" cms-bloc="ulvia-official-cluster">
+                <div justify="start" items-align="center" gap="sm" slot="header" cms-bloc="ulvia-official-cluster">
                     <span tone="primary" size="md" name="collections" slot="items" cms-bloc="ulvia-official-icon"></span>
-                    <div align="start" size="md" slot="items" cms-bloc="ulvia-official-heading"><h2>Block detail</h2></div>
+                    <div text-align="start" size="md" slot="items" cms-bloc="ulvia-official-heading"><h2>Block detail</h2></div>
                 </div>
                 <a size="sm" tone="neutral" variant="outline" slot="actions" cms-bloc="ulvia-official-action" href="/layouts/components"
                     ><span>Open component preview</span></a
                 >
                 <div narrow-layout="navigation-first" gap="md" aside-width="sm" navigation-width="sm" slot="content" cms-bloc="ulvia-official-detail-layout">
                     <div radius="lg" padding="sm" appearance="subtle" slot="navigation" cms-bloc="ulvia-official-surface">
-                        <div align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                        <div items-align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Configuration</strong></div>
                             <button emphasis="default" active="" slot="items" cms-bloc="ulvia-official-navigation-item" type="button">
                                 <span slot="content">General</span>
@@ -101,8 +101,8 @@
                         </div>
                     </div>
                     <div density="default" appearance="elevated" slot="main" cms-bloc="ulvia-official-panel">
-                        <div align="start" size="sm" slot="header" cms-bloc="ulvia-official-heading"><h3>General information</h3></div>
-                        <div align="stretch" gap="md" slot="content" cms-bloc="ulvia-official-stack">
+                        <div text-align="start" size="sm" slot="header" cms-bloc="ulvia-official-heading"><h3>General information</h3></div>
+                        <div items-align="stretch" gap="md" slot="content" cms-bloc="ulvia-official-stack">
                             <div required label-position="top" slot="items" cms-bloc="ulvia-official-field">
                                 <span slot="label">Display name</span>
                                 <div size="md" slot="control" cms-bloc="ulvia-official-input"><input type="text" value="Navigation group"></div>
@@ -114,7 +114,7 @@
                                     <textarea rows="4">An expandable navigation parent with nested links or groups.</textarea>
                                 </div>
                             </div>
-                            <div responsive-layout="wrap" align="end" slot="items" cms-bloc="ulvia-official-form-actions">
+                            <div responsive-layout="wrap" actions-align="end" slot="items" cms-bloc="ulvia-official-form-actions">
                                 <button size="md" tone="neutral" variant="ghost" slot="actions" cms-bloc="ulvia-official-action" type="button">
                                     <span>Cancel</span>
                                 </button><button size="md" tone="primary" variant="filled" slot="actions" cms-bloc="ulvia-official-action" type="button">
@@ -123,9 +123,9 @@
                             </div>
                         </div>
                     </div>
-                    <div align="stretch" gap="md" slot="aside" cms-bloc="ulvia-official-stack">
+                    <div items-align="stretch" gap="md" slot="aside" cms-bloc="ulvia-official-stack">
                         <div radius="lg" padding="md" appearance="inverse" slot="items" cms-bloc="ulvia-official-surface">
-                            <div align="start" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                            <div items-align="start" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
                                 <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Publication</strong></div>
                                 <div size="md" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
                                     <span slot="content">Included in the next immutable collection release.</span>
@@ -133,7 +133,7 @@
                             </div>
                         </div>
                         <div radius="lg" padding="md" appearance="outlined" slot="items" cms-bloc="ulvia-official-surface">
-                            <div align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                            <div items-align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
                                 <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Quality checks</strong></div>
                                 <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
                                     <span slot="content">Keyboard navigation<br>Slot compatibility<br>Translation keys</span>
@@ -145,13 +145,13 @@
             </div>
 
             <div density="default" appearance="outlined" slot="items" cms-bloc="ulvia-official-panel">
-                <div justify="start" align="center" gap="sm" slot="header" cms-bloc="ulvia-official-cluster">
+                <div justify="start" items-align="center" gap="sm" slot="header" cms-bloc="ulvia-official-cluster">
                     <span tone="primary" size="md" name="media" slot="items" cms-bloc="ulvia-official-icon"></span>
-                    <div align="start" size="md" slot="items" cms-bloc="ulvia-official-heading"><h2>Asset review</h2></div>
+                    <div text-align="start" size="md" slot="items" cms-bloc="ulvia-official-heading"><h2>Asset review</h2></div>
                 </div>
                 <div narrow-layout="main-first" gap="lg" aside-width="md" navigation-width="sm" slot="content" cms-bloc="ulvia-official-detail-layout">
                     <div radius="lg" padding="sm" appearance="subtle" slot="navigation" cms-bloc="ulvia-official-surface">
-                        <div align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                        <div items-align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Assets</strong></div>
                             <button emphasis="default" active="" slot="items" cms-bloc="ulvia-official-navigation-item" type="button">
                                 <span slot="content">Hero image</span>
@@ -167,9 +167,9 @@
                     <div radius="lg" fit="cover" ratio="landscape" slot="main" cms-bloc="ulvia-official-frame">
                         <div radius="none" padding="xl" appearance="inverse" slot="content" cms-bloc="ulvia-official-surface">
                             <div intrinsic="" text-align="center" width="sm" slot="content" cms-bloc="ulvia-official-center">
-                                <div align="center" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                                <div items-align="center" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
                                     <span tone="current" size="lg" name="media" slot="items" cms-bloc="ulvia-official-icon"></span>
-                                    <div align="center" size="lg" slot="items" cms-bloc="ulvia-official-heading"><h3>Media preview</h3></div>
+                                    <div text-align="center" size="lg" slot="items" cms-bloc="ulvia-official-heading"><h3>Media preview</h3></div>
                                     <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
                                         <span slot="content">1600 × 900 · WebP</span>
                                     </div>
@@ -178,8 +178,8 @@
                         </div>
                     </div>
                     <div density="compact" appearance="elevated" slot="aside" cms-bloc="ulvia-official-panel">
-                        <div align="start" size="sm" slot="header" cms-bloc="ulvia-official-heading"><h3>Asset information</h3></div>
-                        <div align="stretch" gap="md" slot="content" cms-bloc="ulvia-official-stack">
+                        <div text-align="start" size="sm" slot="header" cms-bloc="ulvia-official-heading"><h3>Asset information</h3></div>
+                        <div items-align="stretch" gap="md" slot="content" cms-bloc="ulvia-official-stack">
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
                                 <span slot="content"><strong>Alternative text</strong><br>Abstract green composition</span>
                             </div>

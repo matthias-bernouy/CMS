@@ -6,7 +6,7 @@
     <a cms-bloc="ulvia-official-action" variant="outline" tone="secondary" size="sm" slot="actions" href="/forms/contact"><span>Start a project</span></a>
 </div>
 
-<div cms-bloc="ulvia-official-hero" surface="base" align="start">
+<div cms-bloc="ulvia-official-hero" surface="base" content-align="start">
     <span slot="eyebrow">Independent digital studio · Lyon</span>
     <h1 slot="heading">Clear products for ambitious ideas.</h1>
     <p slot="body">We turn complex services into useful, accessible experiences that people understand on the first visit.</p>
@@ -25,7 +25,7 @@
 </div>
 
 <div cms-bloc="ulvia-official-section" width="xl" spacing="lg" surface="subtle">
-    <div cms-bloc="ulvia-official-cluster" justify="between" align="center" gap="md" slot="content">
+    <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center" gap="md" slot="content">
         <div cms-bloc="ulvia-official-badge" tone="success" slot="items"><span slot="label">Available for two new projects</span></div>
         <div cms-bloc="ulvia-official-prose" size="sm" measure="wide" slot="items">
             <span slot="content">Strategy · Product design · Accessible interfaces · Design systems</span>
@@ -36,14 +36,14 @@
 <div id="services" cms-bloc="ulvia-official-features">
     <span slot="heading">A compact team, from the first question to launch.</span>
     <p slot="intro">Each engagement combines product clarity, visual craft and a technical system your team can continue to evolve.</p>
-    <div cms-bloc="ulvia-official-card" surface="raised" padding="lg" slot="features">
+    <div cms-bloc="ulvia-official-card" surface="raised" padding="lg" media-tone="primary" slot="features">
         <span cms-bloc="ulvia-official-icon" name="search" tone="primary" size="lg" slot="media"></span>
         <span slot="eyebrow">01 · Understand</span>
         <h3 slot="title">Find the useful problem</h3>
         <p slot="body">Research, framing and content architecture reveal what the experience truly needs to accomplish.</p>
         <a cms-bloc="ulvia-official-action" variant="ghost" tone="primary" size="sm" slot="actions" href="#questions"><span>How we begin</span></a>
     </div>
-    <div cms-bloc="ulvia-official-card" surface="raised" padding="lg" slot="features">
+    <div cms-bloc="ulvia-official-card" surface="raised" padding="lg" media-tone="secondary" slot="features">
         <span cms-bloc="ulvia-official-icon" name="layout" tone="primary" size="lg" slot="media"></span>
         <span slot="eyebrow">02 · Design</span>
         <h3 slot="title">Make the path obvious</h3>
@@ -52,7 +52,7 @@
             ><span>Explore the system</span></a
         >
     </div>
-    <div cms-bloc="ulvia-official-card" surface="raised" padding="lg" slot="features">
+    <div cms-bloc="ulvia-official-card" surface="raised" padding="lg" media-tone="neutral" slot="features">
         <span cms-bloc="ulvia-official-icon" name="health" tone="primary" size="lg" slot="media"></span>
         <span slot="eyebrow">03 · Deliver</span>
         <h3 slot="title">Ship a durable foundation</h3>
@@ -62,8 +62,25 @@
 </div>
 
 <div id="work" cms-bloc="ulvia-official-section" width="xl" spacing="lg">
-    <div cms-bloc="ulvia-official-sidebar" side="end" sidebar-width="sm" collapse="automatic" gap="xl" slot="content">
-        <div cms-bloc="ulvia-official-media-figure" ratio="landscape" fit="cover" slot="content">
+    <div cms-bloc="ulvia-official-grid" columns="2" gap="xl" slot="content">
+        <div cms-bloc="ulvia-official-stack" gap="md" slot="items">
+            <div cms-bloc="ulvia-official-heading" text-align="start" size="lg" slot="items"><h2>Built to remain understandable</h2></div>
+            <div cms-bloc="ulvia-official-prose" size="md" measure="narrow" slot="items">
+                <p slot="content">Every decision is documented in the interface itself: fewer hidden rules, fewer expensive surprises.</p>
+            </div>
+            <div cms-bloc="ulvia-official-list" role="list" slot="items">
+                <strong slot="header">What you keep</strong>
+                <div cms-bloc="ulvia-official-list-item" role="listitem" slot="items">
+                    <span cms-bloc="ulvia-official-icon" name="check" tone="success" size="sm" slot="leading"></span>
+                    <strong slot="title">A tested product narrative</strong><span slot="description">Clear enough to guide future pages and features.</span>
+                </div>
+                <div cms-bloc="ulvia-official-list-item" role="listitem" slot="items">
+                    <span cms-bloc="ulvia-official-icon" name="check" tone="success" size="sm" slot="leading"></span>
+                    <strong slot="title">A reusable interface system</strong><span slot="description">Responsive, accessible and ready for real content.</span>
+                </div>
+            </div>
+        </div>
+        <div cms-bloc="ulvia-official-media-figure" ratio="landscape" fit="cover" slot="items">
             <div cms-bloc="ulvia-official-image" ratio="landscape" slot="media">
                 <img
                     src="/.cms/call/ulvia.cms.files/files/showcase-workshop/generation"
@@ -73,26 +90,6 @@
                 >
             </div>
             <figcaption slot="caption">A shared visual language helps every discipline make better decisions together.</figcaption>
-        </div>
-        <div cms-bloc="ulvia-official-sticky-region" offset="lg" slot="sidebar">
-            <div cms-bloc="ulvia-official-stack" align="start" gap="md" slot="content">
-                <div cms-bloc="ulvia-official-heading" align="start" size="lg" slot="items"><h2>Built to remain understandable</h2></div>
-                <div cms-bloc="ulvia-official-prose" size="md" measure="narrow" slot="items">
-                    <p slot="content">Every decision is documented in the interface itself: fewer hidden rules, fewer expensive surprises.</p>
-                </div>
-                <div cms-bloc="ulvia-official-list" role="list" slot="items">
-                    <strong slot="header">What you keep</strong>
-                    <div cms-bloc="ulvia-official-list-item" role="listitem" slot="items">
-                        <span cms-bloc="ulvia-official-icon" name="check" tone="success" size="sm" slot="leading"></span>
-                        <strong slot="title">A tested product narrative</strong><span slot="description">Clear enough to guide future pages and features.</span>
-                    </div>
-                    <div cms-bloc="ulvia-official-list-item" role="listitem" slot="items">
-                        <span cms-bloc="ulvia-official-icon" name="check" tone="success" size="sm" slot="leading"></span>
-                        <strong slot="title">A reusable interface system</strong
-                        ><span slot="description">Responsive, accessible and ready for real content.</span>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -182,10 +179,11 @@
     </div>
 </div>
 
-<div cms-bloc="ulvia-official-footer" surface="subtle">
+<div cms-bloc="ulvia-official-footer" surface="inverse">
     <strong slot="brand">Northstar Studio</strong>
-    <a cms-bloc="ulvia-official-link" slot="navigation" href="/layouts/catalogue"><span>Component catalogue</span></a>
-    <a cms-bloc="ulvia-official-link" slot="navigation" href="/forms/catalogue"><span>Form catalogue</span></a>
-    <a cms-bloc="ulvia-official-link" slot="social" href="/forms/contact"><span>Contact</span></a>
+    <a cms-bloc="ulvia-official-link" slot="navigation" href="#work"><span>Work</span></a>
+    <a cms-bloc="ulvia-official-link" slot="navigation" href="#services"><span>Services</span></a>
+    <a cms-bloc="ulvia-official-link" slot="navigation" href="#questions"><span>Questions</span></a>
+    <a cms-bloc="ulvia-official-link" slot="social" href="/forms/contact"><span>Start a project</span></a>
     <small slot="legal">Demonstration site built exclusively with Ulvia Official Blocs.</small>
 </div>

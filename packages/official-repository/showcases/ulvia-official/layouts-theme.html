@@ -57,38 +57,38 @@
     </div>
 
     <div density="default" appearance="plain" width="xl" slot="content" cms-bloc="ulvia-official-page-shell">
-        <div justify="start" align="center" gap="sm" slot="breadcrumb" cms-bloc="ulvia-official-cluster">
+        <div justify="start" items-align="center" gap="sm" slot="breadcrumb" cms-bloc="ulvia-official-cluster">
             <span tone="muted" size="sm" name="layout" slot="items" cms-bloc="ulvia-official-icon"></span>
             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><span slot="content">Collections / Ulvia Official / Theme</span></div>
         </div>
-        <div align="start" size="xl" slot="title" cms-bloc="ulvia-official-heading"><h1>Theme foundations</h1></div>
+        <div text-align="start" size="xl" slot="title" cms-bloc="ulvia-official-heading"><h1>Theme foundations</h1></div>
         <div size="lg" measure="wide" slot="description" cms-bloc="ulvia-official-prose">
             <p slot="content">
                 A semantic token system shared by Ulvia blocks and available to dependent collections. Components consume roles such as primary, surface and
                 danger instead of owning literal design values.
             </p>
         </div>
-        <div label="Layout catalogue sections" size="md" align="start" appearance="underline" slot="navigation" cms-bloc="ulvia-official-route-tabs">
+        <div label="Layout catalogue sections" size="md" tabs-align="start" appearance="underline" slot="navigation" cms-bloc="ulvia-official-route-tabs">
             <a slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/catalogue"><span>Overview</span></a>
             <a slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/components"><span>Components</span></a>
             <a active="" slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/theme"><span>Theme tokens</span></a>
             <a slot="items" cms-bloc="ulvia-official-route-tab" href="/layouts/details"><span>Detail views</span></a>
         </div>
 
-        <div align="stretch" gap="xl" slot="content" cms-bloc="ulvia-official-stack">
+        <div items-align="stretch" gap="xl" slot="content" cms-bloc="ulvia-official-stack">
             <div density="default" appearance="elevated" slot="items" cms-bloc="ulvia-official-panel">
-                <div align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Token architecture</h2></div>
+                <div text-align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Token architecture</h2></div>
                 <div gap="md" columns="4" slot="content" cms-bloc="ulvia-official-grid">
-                    <div align="start" slot="items" cms-bloc="ulvia-official-stat">
+                    <div text-align="start" slot="items" cms-bloc="ulvia-official-stat">
                         <strong slot="value">119</strong><span slot="label">Semantic tokens</span><span slot="description">Namespaced by the collection</span>
                     </div>
-                    <div align="start" slot="items" cms-bloc="ulvia-official-stat">
+                    <div text-align="start" slot="items" cms-bloc="ulvia-official-stat">
                         <strong slot="value">9</strong><span slot="label">Token families</span><span slot="description">From colour to motion</span>
                     </div>
-                    <div align="start" slot="items" cms-bloc="ulvia-official-stat">
+                    <div text-align="start" slot="items" cms-bloc="ulvia-official-stat">
                         <strong slot="value">7</strong><span slot="label">Action tones</span><span slot="description">Intent stays explicit</span>
                     </div>
-                    <div align="start" slot="items" cms-bloc="ulvia-official-stat">
+                    <div text-align="start" slot="items" cms-bloc="ulvia-official-stat">
                         <strong slot="value">0</strong><span slot="label">Literal values in blocks</span
                         ><span slot="description">Components reference roles</span>
                     </div>
@@ -99,13 +99,13 @@
             </div>
 
             <div density="default" appearance="outlined" slot="items" cms-bloc="ulvia-official-panel">
-                <div align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Semantic action palette</h2></div>
+                <div text-align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Semantic action palette</h2></div>
                 <div size="sm" measure="wide" slot="content" cms-bloc="ulvia-official-prose">
                     <p slot="content">
                         Each role includes foreground, hover, active and subtle companions. The labels keep meaning available without relying on colour alone.
                     </p>
                 </div>
-                <div justify="start" align="center" gap="sm" slot="content" cms-bloc="ulvia-official-cluster">
+                <div justify="start" items-align="center" gap="sm" slot="content" cms-bloc="ulvia-official-cluster">
                     <button size="md" tone="primary" variant="filled" slot="items" cms-bloc="ulvia-official-action" type="button"><span>Primary</span></button>
                     <button size="md" tone="secondary" variant="filled" slot="items" cms-bloc="ulvia-official-action" type="button">
                         <span>Secondary</span>
@@ -116,7 +116,7 @@
                     <button size="md" tone="warning" variant="filled" slot="items" cms-bloc="ulvia-official-action" type="button"><span>Warning</span></button>
                     <button size="md" tone="danger" variant="filled" slot="items" cms-bloc="ulvia-official-action" type="button"><span>Danger</span></button>
                 </div>
-                <div justify="start" align="center" gap="sm" slot="footer" cms-bloc="ulvia-official-cluster">
+                <div justify="start" items-align="center" gap="sm" slot="footer" cms-bloc="ulvia-official-cluster">
                     <button size="sm" tone="primary" variant="outline" slot="items" cms-bloc="ulvia-official-action" type="button">
                         <span>Primary outline</span>
                     </button>
@@ -130,16 +130,16 @@
             </div>
 
             <div density="default" appearance="outlined" slot="items" cms-bloc="ulvia-official-panel">
-                <div align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Surface hierarchy</h2></div>
+                <div text-align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Surface hierarchy</h2></div>
                 <div gap="md" columns="4" slot="content" cms-bloc="ulvia-official-grid">
                     <div radius="lg" padding="lg" appearance="plain" slot="items" cms-bloc="ulvia-official-surface">
-                        <div align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                        <div items-align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Base</strong></div>
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><span slot="content">Primary reading surface</span></div>
                         </div>
                     </div>
                     <div radius="lg" padding="lg" appearance="subtle" slot="items" cms-bloc="ulvia-official-surface">
-                        <div align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                        <div items-align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Subtle</strong></div>
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
                                 <span slot="content">Grouped secondary content</span>
@@ -147,7 +147,7 @@
                         </div>
                     </div>
                     <div radius="lg" padding="lg" appearance="elevated" slot="items" cms-bloc="ulvia-official-surface">
-                        <div align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                        <div items-align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Elevated</strong></div>
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
                                 <span slot="content">Focused interactive layer</span>
@@ -155,7 +155,7 @@
                         </div>
                     </div>
                     <div radius="lg" padding="lg" appearance="inverse" slot="items" cms-bloc="ulvia-official-surface">
-                        <div align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
+                        <div items-align="stretch" gap="sm" slot="content" cms-bloc="ulvia-official-stack">
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Inverse</strong></div>
                             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><span slot="content">High-emphasis region</span></div>
                         </div>
@@ -163,13 +163,13 @@
                 </div>
             </div>
 
-            <div narrow-order="primary-first" align="stretch" gap="lg" ratio="equal" slot="items" cms-bloc="ulvia-official-split">
+            <div narrow-order="primary-first" items-align="stretch" gap="lg" ratio="equal" slot="items" cms-bloc="ulvia-official-split">
                 <div density="default" appearance="outlined" slot="primary" cms-bloc="ulvia-official-panel">
-                    <div align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Type scale</h2></div>
-                    <div align="start" gap="md" slot="content" cms-bloc="ulvia-official-stack">
-                        <div align="start" size="xl" slot="items" cms-bloc="ulvia-official-heading"><h3>Display heading</h3></div>
-                        <div align="start" size="lg" slot="items" cms-bloc="ulvia-official-heading"><h4>Section heading</h4></div>
-                        <div align="start" size="md" slot="items" cms-bloc="ulvia-official-heading"><h5>Component heading</h5></div>
+                    <div text-align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Type scale</h2></div>
+                    <div items-align="start" gap="md" slot="content" cms-bloc="ulvia-official-stack">
+                        <div text-align="start" size="xl" slot="items" cms-bloc="ulvia-official-heading"><h3>Display heading</h3></div>
+                        <div text-align="start" size="lg" slot="items" cms-bloc="ulvia-official-heading"><h4>Section heading</h4></div>
+                        <div text-align="start" size="md" slot="items" cms-bloc="ulvia-official-heading"><h5>Component heading</h5></div>
                         <div size="md" measure="default" slot="items" cms-bloc="ulvia-official-prose">
                             <p slot="content">Body copy uses a comfortable measure and a dedicated line-height role for sustained reading.</p>
                         </div>
@@ -179,8 +179,8 @@
                     </div>
                 </div>
                 <div density="default" appearance="outlined" slot="secondary" cms-bloc="ulvia-official-panel">
-                    <div align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Foundations</h2></div>
-                    <div align="stretch" gap="md" slot="content" cms-bloc="ulvia-official-stack">
+                    <div text-align="start" size="md" slot="header" cms-bloc="ulvia-official-heading"><h2>Foundations</h2></div>
+                    <div items-align="stretch" gap="md" slot="content" cms-bloc="ulvia-official-stack">
                         <div radius="sm" padding="sm" appearance="subtle" slot="items" cms-bloc="ulvia-official-surface">
                             <span slot="content">Small radius · compact spacing</span>
                         </div>

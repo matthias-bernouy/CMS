@@ -4,6 +4,11 @@ These HTML fragments are reproducible Delivery pages for manual UI, responsive
 container and accessibility reviews. They use only public collection Blocs and
 keep the native `form` element page-owned.
 
+The two `assets/showcase-*.svg` files are site-owned demonstration media, not
+collection assets. A live installer uploads them as public workspace files and
+replaces the matching symbolic file references in `site-home.html` with the
+immutable URLs returned by the Files contract.
+
 - `forms-catalogue.html` presents every form primitive and composition.
 - `contact-form.html` demonstrates a realistic responsive contact form with
   semantic fieldset sections.
@@ -20,6 +25,6 @@ mutually exclusive drawers instead of horizontal link strips.
 Review the live Delivery pages at desktop and narrow container widths. Static
 captures are deliberately not the source of truth because the collection evolves.
 
-The forms point at the official `forms/submission.create` capability path. A
-visual review does not require that source to be connected; a successful submit
-does.
+The form showcases deliberately expose non-submitting controls. They review the
+official field, choice, layout and feedback Blocs without selecting an external
+Forms contract or pretending that a submission succeeded.

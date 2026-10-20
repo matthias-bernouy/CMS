@@ -1,8 +1,8 @@
 <div viewport-height="" surface="base" width="md" spacing="sm" cms-bloc="ulvia-official-section">
     <div gap="xl" columns="2" slot="content" cms-bloc="ulvia-official-grid">
-        <div gap="lg" slot="items" align="start" cms-bloc="ulvia-official-stack">
-            <div gap="sm" slot="items" align="start" cms-bloc="ulvia-official-stack">
-                <div slot="items" align="start" size="xl" cms-bloc="ulvia-official-heading"><h1>Let’s talk</h1></div>
+        <div gap="lg" slot="items" items-align="start" cms-bloc="ulvia-official-stack">
+            <div gap="sm" slot="items" items-align="start" cms-bloc="ulvia-official-stack">
+                <div slot="items" text-align="start" size="xl" cms-bloc="ulvia-official-heading"><h1>Let’s talk</h1></div>
                 <div size="lg" measure="narrow" cms-bloc="ulvia-official-prose" slot="items">
                     <p slot="content">Tell us what you are working on. We will reply with a clear next step.</p>
                 </div>
@@ -15,7 +15,7 @@
             >
         </div>
 
-        <form cms-bloc="ulvia-official-form-section" appearance="elevated" slot="items" cms-mutation="forms:submission.create as submission">
+        <div cms-bloc="ulvia-official-form-section" appearance="elevated" slot="items">
             <span slot="legend">Contact details</span>
             <span slot="description">Required fields are marked with an asterisk.</span>
             <div required slot="content" label-position="top" cms-bloc="ulvia-official-field">
@@ -44,12 +44,12 @@
                 <div slot="control" size="md" cms-bloc="ulvia-official-checkbox"><input type="checkbox" name="copy" value="yes"></div>
                 <span slot="label">Send me a copy</span>
             </div>
-            <div slot="content" responsive-layout="stack" align="start" cms-bloc="ulvia-official-form-actions">
-                <button slot="actions" variant="filled" tone="primary" size="md" cms-bloc="ulvia-official-action" type="submit">
+            <div slot="content" responsive-layout="stack" actions-align="start" cms-bloc="ulvia-official-form-actions">
+                <button slot="actions" variant="filled" tone="primary" size="md" cms-bloc="ulvia-official-action" type="button">
                     <span>Send message</span>
                 </button>
-                <button slot="actions" variant="ghost" tone="neutral" size="md" cms-bloc="ulvia-official-action" type="reset"><span>Clear form</span></button>
+                <button slot="actions" variant="ghost" tone="neutral" size="md" cms-bloc="ulvia-official-action" type="button"><span>Clear form</span></button>
             </div>
-        </form>
+        </div>
     </div>
 </div>
