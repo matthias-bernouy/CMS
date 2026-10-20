@@ -2,7 +2,7 @@
     <div gap="xl" slot="content" items-align="stretch" cms-bloc="ulvia-official-stack">
         <div gap="lg" columns="2" slot="items" cms-bloc="ulvia-official-grid">
             <div gap="sm" slot="items" items-align="start" cms-bloc="ulvia-official-stack">
-                <div slot="items" text-align="start" size="xl" cms-bloc="ulvia-official-heading"><h1>Form components</h1></div>
+                <h1 slot="items" text-align="start" size="xl" cms-bloc="ulvia-official-heading">Form components</h1>
                 <div size="lg" measure="narrow" cms-bloc="ulvia-official-prose" slot="items">
                     <p slot="content">Accessible controls for clear, dependable forms—from first input to final feedback.</p>
                 </div>
@@ -651,10 +651,10 @@
             <span slot="legend">Feedback</span>
             <span slot="description">Status messages remain distinct from actionable validation errors.</span>
             <div gap="lg" columns="2" slot="content" cms-bloc="ulvia-official-grid">
-                <div tone="success" slot="items" cms-bloc="ulvia-official-form-status"><output aria-live="polite">Example saved successfully.</output></div>
-                <div tone="warning" slot="items" cms-bloc="ulvia-official-form-status">
-                    <output aria-live="polite">The current draft expires in ten minutes.</output>
-                </div>
+                <output tone="success" slot="items" cms-bloc="ulvia-official-form-status" aria-live="polite">Example saved successfully.</output>
+                <output tone="warning" slot="items" cms-bloc="ulvia-official-form-status" aria-live="polite">
+                    The current draft expires in ten minutes.
+                </output>
             </div>
             <div slot="content" cms-bloc="ulvia-official-error-summary">
                 <strong slot="title">Please correct two fields</strong>
