@@ -7,11 +7,18 @@
     "order": 10,
     "uses": [],
     "requires": [],
-    "slots": {},
-    "root": {
-        "accepts": ["div"]
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "phrasing"
+                }
+            ],
+            "min": 1
+        }
     },
-    "content": {
+    "root": {
         "accepts": ["h1", "h2", "h3", "h4", "h5", "h6"]
     }
 }

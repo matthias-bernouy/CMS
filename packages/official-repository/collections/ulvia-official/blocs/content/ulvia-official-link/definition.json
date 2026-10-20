@@ -7,14 +7,16 @@
     "order": 20,
     "uses": [],
     "requires": [],
-    "slots": {},
+    "slots": {
+        "default": {
+            "accepts": [{ "kind": "native-content", "profile": "phrasing" }],
+            "min": 1
+        }
+    },
     "root": {
         "accepts": ["a"],
         "defaults": {
             "href": ""
         }
-    },
-    "content": {
-        "accepts": ["span"]
     }
 }

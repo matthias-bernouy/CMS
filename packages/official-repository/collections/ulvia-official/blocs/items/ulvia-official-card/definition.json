@@ -5,7 +5,7 @@
     "description": "bloc.card.description",
     "category": "bloc.category.components",
     "order": 10,
-    "uses": ["ulvia-official-action", "ulvia-official-icon", "ulvia-official-image"],
+    "uses": ["ulvia-official-action", "ulvia-official-heading", "ulvia-official-icon", "ulvia-official-image"],
     "requires": [],
     "slots": {
         "media": {
@@ -32,6 +32,10 @@
         },
         "title": {
             "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-heading"
+                },
                 {
                     "kind": "native-content",
                     "profile": "inline"

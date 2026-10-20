@@ -5,11 +5,15 @@
     "description": "bloc.pricing-plan.description",
     "category": "bloc.category.components",
     "order": 30,
-    "uses": ["ulvia-official-action"],
+    "uses": ["ulvia-official-action", "ulvia-official-heading"],
     "requires": [],
     "slots": {
         "name": {
             "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-heading"
+                },
                 {
                     "kind": "native-content",
                     "profile": "inline"

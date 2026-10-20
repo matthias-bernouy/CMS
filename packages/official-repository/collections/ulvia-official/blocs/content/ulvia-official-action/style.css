@@ -18,16 +18,6 @@
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 
-[part="wrapper"] {
-    display: contents;
-}
-:scope > span {
-    display: inline-flex;
-    min-width: 0;
-    align-items: center;
-    justify-content: center;
-    gap: var(--ulvia-official-spacing-xs, 0.5rem);
-}
 :scope {
     display: inline-flex;
     width: var(--ulvia-official-action-width, auto);

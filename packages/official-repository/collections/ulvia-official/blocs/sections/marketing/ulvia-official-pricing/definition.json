@@ -6,10 +6,10 @@
     "category": "bloc.category.sections",
     "order": 30,
     "uses": [
+        "ulvia-official-action",
         "ulvia-official-center",
         "ulvia-official-grid",
         "ulvia-official-heading",
-        "ulvia-official-action",
         "ulvia-official-pricing-plan",
         "ulvia-official-prose",
         "ulvia-official-section",

@@ -7,19 +7,12 @@
     font-family: var(--ulvia-official-font-family-secondary, inherit);
     min-width: 0;
     overflow-wrap: anywhere;
-}
-
-[part="header"] {
-    text-align: start;
-}
-* {
     margin: 0;
-    color: inherit;
-    font: inherit;
     font-size: var(--ulvia-official-heading-size);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
     line-height: var(--ulvia-official-heading-line-height);
     letter-spacing: var(--ulvia-official-letter-spacing-tight, -0.025em);
+    text-align: start;
 }
 :scope[size="sm"] {
     --ulvia-official-heading-size: var(--ulvia-official-font-size-xl, 1.5rem);
@@ -30,9 +23,9 @@
 :scope[size="xl"] {
     --ulvia-official-heading-size: var(--ulvia-official-font-size-5xl, 3rem);
 }
-:scope[text-align="center"] [part="header"] {
+:scope[text-align="center"] {
     text-align: center;
 }
-:scope[text-align="end"] [part="header"] {
+:scope[text-align="end"] {
     text-align: end;
 }
