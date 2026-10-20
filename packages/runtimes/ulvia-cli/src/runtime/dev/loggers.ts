@@ -1,6 +1,5 @@
 import { join } from "node:path";
-import { isLogLevel, parseLogLevel, type Logger, type LogLevel } from "@bernouy/logging";
-import { createNodeLogger, isLogFormat, parseLogFormat, type LogFormat } from "@bernouy/logging/node";
+import { createConfiguredNodeLogger } from "@bernouy/logging/node";
 import { currentRequestLogAttributes } from "@bernouy/http-runner/observability";
 import type { UlviaPaths } from "../paths";
 
@@ -8,48 +7,41 @@ export function createDevLoggers(paths: UlviaPaths, environment: Record<string, 
     const configuredLevel = environment.ULVIA_LOG_LEVEL?.trim();
     const configuredConsoleLevel = environment.ULVIA_LOG_CONSOLE_LEVEL?.trim();
     const configuredFormat = environment.ULVIA_LOG_FORMAT?.trim();
-    const level = parseLogLevel(configuredLevel, "debug");
-    const mirrorLevel = parseLogLevel(configuredConsoleLevel, "info");
-    const format = parseLogFormat(configuredFormat, "pretty");
-    const supervisor = createDevLogger("ulvia-dev", join(paths.logs, "supervisor.ndjson"), level, mirrorLevel, format);
+    const configuration = {
+        level: configuredLevel,
+        consoleLevel: configuredConsoleLevel,
+        format: configuredFormat,
+    };
+    const supervisor = createDevLogger("ulvia-dev", join(paths.logs, "supervisor.ndjson"), configuration, true);
     const repository = createDevLogger(
         "official-repository",
         join(paths.logs, "repository.ndjson"),
-        level,
-        mirrorLevel,
-        format,
+        configuration,
+        false,
     );
-    reportInvalidConfiguration(supervisor, configuredLevel, configuredConsoleLevel, configuredFormat);
     return Object.freeze({ supervisor, repository });
 }
 
 function createDevLogger(
     service: string,
     file: string,
-    level: LogLevel,
-    mirrorLevel: LogLevel,
-    format: LogFormat,
-): Logger {
-    return createNodeLogger({
+    configuration: Readonly<{ level?: string; consoleLevel?: string; format?: string }>,
+    reportInvalidConfiguration: boolean,
+) {
+    return createConfiguredNodeLogger({
         service,
-        level,
-        fileLevel: level,
-        mirrorLevel,
-        format,
+        configuration,
+        defaults: { level: "debug", consoleLevel: "info", format: "pretty" },
+        settingNames: LOG_SETTING_NAMES,
+        reportInvalidConfiguration,
         file,
         includeErrorStack: true,
         context: currentRequestLogAttributes,
     });
 }
 
-function reportInvalidConfiguration(logger: Logger, level?: string, consoleLevel?: string, format?: string): void {
-    if (level && !isLogLevel(level)) {
-        logger.warn("logging.configuration.invalid", { setting: "ULVIA_LOG_LEVEL" });
-    }
-    if (consoleLevel && !isLogLevel(consoleLevel)) {
-        logger.warn("logging.configuration.invalid", { setting: "ULVIA_LOG_CONSOLE_LEVEL" });
-    }
-    if (format && !isLogFormat(format)) {
-        logger.warn("logging.configuration.invalid", { setting: "ULVIA_LOG_FORMAT" });
-    }
-}
+const LOG_SETTING_NAMES = {
+    level: "ULVIA_LOG_LEVEL",
+    consoleLevel: "ULVIA_LOG_CONSOLE_LEVEL",
+    format: "ULVIA_LOG_FORMAT",
+} as const;

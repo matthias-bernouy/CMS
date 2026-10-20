@@ -2,7 +2,7 @@ import { expect, spyOn, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createNodeLogger, isLogFormat, parseLogFormat } from "@bernouy/logging/node";
+import { createConfiguredNodeLogger, createNodeLogger, isLogFormat, parseLogFormat } from "@bernouy/logging/node";
 
 test("the Node logger writes private bounded NDJSON journals", async () => {
     const root = await mkdtemp(join(tmpdir(), "logging-node-"));
@@ -32,6 +32,31 @@ test("log format parsing honors explicit values and safe fallbacks", () => {
     expect(parseLogFormat("json", "pretty")).toBe("json");
     expect(parseLogFormat("pretty", "json")).toBe("pretty");
     expect(parseLogFormat("unknown", "json")).toBe("json");
+});
+
+test("text logger configuration applies fallbacks and reports only setting names", () => {
+    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
+    try {
+        const logger = createConfiguredNodeLogger({
+            service: "configured-service",
+            configuration: { level: "private-level", format: "private-format" },
+            defaults: { level: "debug", consoleLevel: "info", format: "pretty" },
+            settingNames: { level: "LOG_LEVEL", format: "LOG_FORMAT" },
+        });
+        logger.debug("hidden.detail");
+        logger.info("visible.summary");
+
+        const output = stdout.mock.calls.map((call) => String(call[0])).join("\n");
+        expect(output.match(/logging\.configuration\.invalid/gu)).toHaveLength(2);
+        expect(output).toContain("LOG_LEVEL");
+        expect(output).toContain("LOG_FORMAT");
+        expect(output).toContain("visible.summary");
+        expect(output).not.toContain("hidden.detail");
+        expect(output).not.toContain("private-level");
+        expect(output).not.toContain("private-format");
+    } finally {
+        stdout.mockRestore();
+    }
 });
 
 test("file and terminal destinations use independent thresholds", async () => {

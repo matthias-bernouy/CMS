@@ -1,5 +1,5 @@
-import { isLogLevel, parseLogLevel, type Logger } from "@bernouy/logging";
-import { createNodeLogger, isLogFormat, parseLogFormat } from "@bernouy/logging/node";
+import type { Logger } from "@bernouy/logging";
+import { createConfiguredNodeLogger } from "@bernouy/logging/node";
 import { currentRequestLogAttributes } from "@bernouy/http-runner/observability";
 
 export function createProviderLogger(environment: Record<string, string | undefined>): Logger {
@@ -7,29 +7,27 @@ export function createProviderLogger(environment: Record<string, string | undefi
     const configuredLevel = environment.ULVIA_LOG_LEVEL?.trim();
     const configuredConsoleLevel = environment.ULVIA_LOG_CONSOLE_LEVEL?.trim();
     const configuredFormat = environment.ULVIA_LOG_FORMAT?.trim();
-    const level = parseLogLevel(configuredLevel, development ? "debug" : "info");
-    const logger = createNodeLogger({
+    return createConfiguredNodeLogger({
         service: "ulvia-provider",
-        level,
-        fileLevel: level,
-        mirrorLevel: development ? parseLogLevel(configuredConsoleLevel, "info") : level,
-        format: parseLogFormat(configuredFormat, development ? "pretty" : "json"),
+        configuration: {
+            level: configuredLevel,
+            consoleLevel: configuredConsoleLevel,
+            format: configuredFormat,
+        },
+        defaults: {
+            level: development ? "debug" : "info",
+            ...(development ? { consoleLevel: "info" as const } : {}),
+            format: development ? "pretty" : "json",
+        },
+        settingNames: LOG_SETTING_NAMES,
         file: development ? environment.ULVIA_LOG_FILE?.trim() || undefined : undefined,
         includeErrorStack: true,
         context: currentRequestLogAttributes,
     });
-    reportInvalidConfiguration(logger, configuredLevel, configuredConsoleLevel, configuredFormat);
-    return logger;
 }
 
-function reportInvalidConfiguration(logger: Logger, level?: string, consoleLevel?: string, format?: string): void {
-    if (level && !isLogLevel(level)) {
-        logger.warn("logging.configuration.invalid", { setting: "ULVIA_LOG_LEVEL" });
-    }
-    if (consoleLevel && !isLogLevel(consoleLevel)) {
-        logger.warn("logging.configuration.invalid", { setting: "ULVIA_LOG_CONSOLE_LEVEL" });
-    }
-    if (format && !isLogFormat(format)) {
-        logger.warn("logging.configuration.invalid", { setting: "ULVIA_LOG_FORMAT" });
-    }
-}
+const LOG_SETTING_NAMES = {
+    level: "ULVIA_LOG_LEVEL",
+    consoleLevel: "ULVIA_LOG_CONSOLE_LEVEL",
+    format: "ULVIA_LOG_FORMAT",
+} as const;
