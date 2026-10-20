@@ -2,7 +2,27 @@
     "id": "overview",
     "defaultPath": "/admin",
     "name": "page.overview.name",
-    "icon": "dashboard",
     "description": "page.overview.description",
-    "requires": []
+    "requires": [
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "catalogue",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.providers",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.jobs",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        }
+    ]
 }

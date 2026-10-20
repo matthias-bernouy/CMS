@@ -1,1 +1,225 @@
-<div cms-bloc="ulvia-official-admin-access-page"></div>
+<div cms-bloc="ulvia-official-admin-workspace">
+    <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-users }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-manage-cms-members-administrator-access-and-sign-in-methods }}</p>
+    <div cms-bloc="ulvia-official-route-tabs" size="sm" label="{{ cms.i18n.ulvia-official.ui-users }}" slot="page-navigation">
+        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#access-members"><span>{{ cms.i18n.ulvia-official.ui-members }}</span></a>
+        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#access-login-providers"><span>{{ cms.i18n.ulvia-official.ui-login-providers }}</span></a>
+    </div>
+    <section
+        cms-bloc="ulvia-official-section"
+        id="access-overview"
+        slot="content"
+        cms-query="ulvia.cms.access:overview as access"
+        cms-query-input='{"limit":{"from":"literal","value":100}}'
+        cms-query-listen="@page:ulvia-official-access-mutation/lastSuccess/requestId"
+    >
+        <p slot="content" role="status" aria-live="polite" cms-condition="access.activity === 'fetching'">
+            {{ cms.i18n.ulvia-official.ui-loading-access-configuration }}
+        </p>
+        <div cms-bloc="ulvia-official-stack" slot="content">
+            <div slot="items" cms-match="access.outcome.kind">
+                <span cms-case='"none"'></span>
+                <div cms-case='"error"' cms-match="access.outcome.code">
+                    <div role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                        <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-access-unavailable }}</h2>
+                        <p>{{ cms.i18n.ulvia-official.ui-users-and-settings-could-not-be-read }}</p>
+                    </div>
+                </div>
+                <div cms-bloc="ulvia-official-stack" gap="xl" cms-case='"success"'>
+                    <div id="access-members" role="tabpanel" slot="items">
+                        <header>
+                            <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-members }}</h2>
+                            <p>{{ access.data.totalUsers }} {{ cms.i18n.ulvia-official.ui-total-users }}</p>
+                        </header>
+                        <div cms-bloc="ulvia-official-list" role="list">
+                            <div cms-bloc="ulvia-official-list-item" role="listitem" cms-repeat="access.data.users as user" slot="items">
+                                <strong slot="title">{{ user.email }}</strong>
+                                <div cms-bloc="ulvia-official-badge" tone="info" cms-condition="user.administrator" slot="meta">
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-administrator }}</span>
+                                </div>
+                                <div cms-bloc="ulvia-official-badge" tone="neutral" cms-condition="user.administrator === false" slot="meta">
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-member }}</span>
+                                </div>
+                                <div cms-bloc="ulvia-official-cluster" gap="sm" slot="description">
+                                    <span slot="items">{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }}</span>
+                                    <small slot="items"
+                                        >{{ cms.i18n.ulvia-official.ui-last-seen }}
+                                        {{ user.lastSeenAt | dateLong(access.data.site.language) }}</small
+                                    >
+                                </div>
+                                <div cms-bloc="ulvia-official-cluster" justify="end" items-align="center" slot="actions">
+                                    <form
+                                        slot="items"
+                                        cms-condition="user.administrator === false"
+                                        cms-mutation="ulvia.cms.access:set-administrator as mutation"
+                                        cms-sync="@page:ulvia-official-access-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                    >
+                                        <input type="hidden" name="sub" value="{{ user.sub }}">
+                                        <input type="hidden" name="enabled" value="true" cms-form-value-type="boolean">
+                                        <input type="hidden" name="expectedRevision" value="{{ user.administratorRevision }}" cms-form-value-type="number">
+                                        <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" type="submit">
+                                            <span>{{ cms.i18n.ulvia-official.ui-make-administrator }}</span>
+                                        </button>
+                                        <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
+                                            {{ cms.i18n.ulvia-official.ui-the-administrator-grant-changed-reload-and-retry }}
+                                        </p>
+
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"'></span>
+                                            <span cms-case='"success"'></span>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CANNOT_REMOVE_SELF"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"ACTOR_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                    <form
+                                        slot="items"
+                                        cms-condition="user.administrator"
+                                        cms-mutation="ulvia.cms.access:set-administrator as mutation"
+                                        cms-sync="@page:ulvia-official-access-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                    >
+                                        <input type="hidden" name="sub" value="{{ user.sub }}">
+                                        <input type="hidden" name="enabled" value="false" cms-form-value-type="boolean">
+                                        <input type="hidden" name="expectedRevision" value="{{ user.administratorRevision }}" cms-form-value-type="number">
+                                        <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" type="submit">
+                                            <span>{{ cms.i18n.ulvia-official.ui-remove-administrator }}</span>
+                                        </button>
+                                        <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
+                                            {{ cms.i18n.ulvia-official.ui-your-own-or-protected-grant-cannot-be-removed }}
+                                        </p>
+
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"'></span>
+                                            <span cms-case='"success"'></span>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CANNOT_REMOVE_SELF"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"ACTOR_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                    <form
+                                        slot="items"
+                                        cms-mutation="ulvia.cms.access:delete-user as mutation"
+                                        cms-sync="@page:ulvia-official-access-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                    >
+                                        <input type="hidden" name="sub" value="{{ user.sub }}">
+                                        <button cms-bloc="ulvia-official-action" size="sm" tone="danger" variant="ghost" type="submit">
+                                            <span>{{ cms.i18n.ulvia-official.ui-delete-member }}</span>
+                                        </button>
+                                        <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
+                                            {{ cms.i18n.ulvia-official.ui-protected-members-and-the-current-account-cannot-be-deleted }}
+                                        </p>
+
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"'></span>
+                                            <span cms-case='"success"'></span>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CANNOT_REMOVE_SELF"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"PROTECTED_USER"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"ACTOR_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="access-login-providers" role="tabpanel" slot="items">
+                        <header>
+                            <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-login-providers }}</h2>
+                            <p>{{ cms.i18n.ulvia-official.ui-choose-which-configured-identity-methods-are-available-on-the-administration-sign-in-page }}</p>
+                        </header>
+                        <div cms-bloc="ulvia-official-list" role="list">
+                            <div cms-bloc="ulvia-official-list-item" role="listitem" cms-repeat="access.data.loginProviders as provider" slot="items">
+                                <strong slot="title">{{ provider.displayName }}</strong>
+                                <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="provider.enabled" slot="meta">
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-enabled }}</span>
+                                </div>
+                                <div cms-bloc="ulvia-official-badge" tone="neutral" cms-condition="provider.enabled === false" slot="meta">
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-disabled }}</span>
+                                </div>
+                                <form
+                                    slot="body"
+                                    cms-mutation="ulvia.cms.access:update-login-provider as mutation"
+                                    cms-sync="@page:ulvia-official-access-mutation"
+                                    cms-sync-select="lastSuccess.requestId"
+                                >
+                                    <input type="hidden" name="providerId" value="{{ provider.id }}">
+                                    <input type="hidden" name="expectedRevision" value="{{ provider.revision }}" cms-form-value-type="number">
+                                    <div cms-bloc="ulvia-official-field" cms-condition="provider.kind === 'oidc'" label-position="top">
+                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-display-name }}</span>
+                                        <div cms-bloc="ulvia-official-input" slot="control">
+                                            <input
+                                                type="text"
+                                                name="displayName"
+                                                value="{{ provider.displayName }}"
+                                                maxlength="160"
+                                                aria-label="{{ cms.i18n.ulvia-official.ui-provider-display-name }}"
+                                                required
+                                            >
+                                        </div>
+                                    </div>
+                                    <div cms-bloc="ulvia-official-field" label-position="top">
+                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-status }}</span>
+                                        <div cms-bloc="ulvia-official-select" slot="control">
+                                            <select name="enabled" cms-form-value-type="boolean" aria-label="{{ cms.i18n.ulvia-official.ui-provider-status }}">
+                                                <option value="true" cms-condition="provider.enabled" selected>{{ cms.i18n.ulvia-official.ui-enabled }}</option>
+                                                <option value="true" cms-condition="provider.enabled === false">
+                                                    {{ cms.i18n.ulvia-official.ui-enabled }}
+                                                </option>
+                                                <option value="false" cms-condition="provider.enabled">{{ cms.i18n.ulvia-official.ui-disabled }}</option>
+                                                <option value="false" cms-condition="provider.enabled === false" selected>
+                                                    {{ cms.i18n.ulvia-official.ui-disabled }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" type="submit">
+                                        <span>{{ cms.i18n.ulvia-official.ui-save-provider }}</span>
+                                    </button>
+                                    <p role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
+                                        {{ cms.i18n.ulvia-official.ui-the-provider-cannot-be-changed-in-its-current-state }}
+                                    </p>
+
+                                    <div cms-match="mutation.outcome.kind">
+                                        <span cms-case='"none"'></span>
+                                        <span cms-case='"success"'></span>
+                                        <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div role="alert" cms-case='"failure"'>
+                    <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-access-unavailable }}</h2>
+                    <p>{{ cms.i18n.ulvia-official.ui-users-and-settings-could-not-be-read }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

@@ -2,7 +2,6 @@
     "id": "providers",
     "defaultPath": "/admin/providers",
     "name": "page.providers.name",
-    "icon": "providers",
     "description": "page.providers.description",
     "requires": []
 }

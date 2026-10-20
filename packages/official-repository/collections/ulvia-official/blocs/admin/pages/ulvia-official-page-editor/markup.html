@@ -2,7 +2,7 @@
     <header part="header">
         <div>
             <p part="eyebrow">{{ cms.i18n.ulvia-official.ui-page-builder }}</p>
-            <h3 id="page-editor-title">{{ cms.i18n.ulvia-official.ui-page-document }}</h3>
+            <h3 cms-bloc="ulvia-official-heading" id="page-editor-title">{{ cms.i18n.ulvia-official.ui-page-document }}</h3>
             <p>{{ cms.i18n.ulvia-official.ui-compose-the-page-from-the-blocs-installed-on-this-site }}</p>
         </div>
         <button type="button" data-save>{{ cms.i18n.ulvia-official.ui-save-changes }}</button>
@@ -10,7 +10,7 @@
     <p part="notice" data-notice role="status" aria-live="polite"></p>
     <div part="workspace">
         <aside part="panel catalogue" aria-labelledby="catalogue-title">
-            <h4 id="catalogue-title">{{ cms.i18n.ulvia-official.ui-add-a-bloc }}</h4>
+            <h4 cms-bloc="ulvia-official-heading" id="catalogue-title">{{ cms.i18n.ulvia-official.ui-add-a-bloc }}</h4>
             <label part="visually-hidden" for="page-editor-search">
                 {{ cms.i18n.ulvia-official.ui-search-blocs }}
             </label>
@@ -19,12 +19,12 @@
             <p data-catalogue-empty hidden>{{ cms.i18n.ulvia-official.ui-no-matching-blocs }}</p>
         </aside>
         <main part="panel structure" aria-labelledby="structure-title">
-            <h4 id="structure-title">{{ cms.i18n.ulvia-official.ui-document-structure }}</h4>
+            <h4 cms-bloc="ulvia-official-heading" id="structure-title">{{ cms.i18n.ulvia-official.ui-document-structure }}</h4>
             <div part="empty" data-empty>{{ cms.i18n.ulvia-official.ui-no-elements-yet-add-a-bloc-to-start }}</div>
             <ol data-outline></ol>
         </main>
         <aside part="panel inspector" aria-labelledby="inspector-title">
-            <h4 id="inspector-title">{{ cms.i18n.ulvia-official.ui-selected-element }}</h4>
+            <h4 cms-bloc="ulvia-official-heading" id="inspector-title">{{ cms.i18n.ulvia-official.ui-selected-element }}</h4>
             <div data-inspector-empty>{{ cms.i18n.ulvia-official.ui-select-an-element-to-edit-it }}</div>
             <div data-inspector hidden>
                 <strong data-selected-label></strong>
@@ -43,7 +43,7 @@
         </aside>
     </div>
     <section part="preview-section" aria-labelledby="preview-title">
-        <h4 id="preview-title">{{ cms.i18n.ulvia-official.ui-document-preview }}</h4>
+        <h4 cms-bloc="ulvia-official-heading" id="preview-title">{{ cms.i18n.ulvia-official.ui-document-preview }}</h4>
         <iframe data-preview title="{{ cms.i18n.ulvia-official.ui-document-preview }}" sandbox=""></iframe>
     </section>
     <details part="source">

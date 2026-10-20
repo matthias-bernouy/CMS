@@ -1,4 +1,4 @@
-import { authoringContract, type EditorCatalogueItem } from "./model";
+import { authoringContract, defaultManagedElement, type EditorCatalogueItem } from "./model";
 
 export class EditablePageDocument {
     private readonly template = document.createElement("template");
@@ -33,13 +33,14 @@ export class EditablePageDocument {
             element.setAttribute(name, value);
         }
         element.innerHTML = item.defaultContent;
-        if (contract.content && !this.managedContent(element)) {
-            const contentTag = contract.content.accepts?.[0];
+        const managedElement = defaultManagedElement(contract);
+        if (managedElement && !this.managedContent(element, managedElement.accepts ?? [])) {
+            const contentTag = managedElement.accepts?.[0];
             if (!contentTag) {
                 throw new Error(`Bloc ${item.id} does not declare an authoring content element`);
             }
             const content = document.createElement(contentTag);
-            for (const [name, value] of Object.entries(contract.content.defaults ?? {})) {
+            for (const [name, value] of Object.entries(managedElement.defaults ?? {})) {
                 content.setAttribute(name, value);
             }
             element.append(content);
@@ -83,8 +84,9 @@ export class EditablePageDocument {
         if (!element) {
             return "";
         }
-        return item && authoringContract(item).content
-            ? (this.managedContent(element)?.innerHTML ?? "")
+        const managedElement = item && defaultManagedElement(authoringContract(item));
+        return managedElement
+            ? (this.managedContent(element, managedElement.accepts ?? [])?.innerHTML ?? "")
             : element.innerHTML;
     }
 
@@ -93,7 +95,8 @@ export class EditablePageDocument {
         if (!element) {
             return;
         }
-        const target = item && authoringContract(item).content ? this.managedContent(element) : element;
+        const managedElement = item && defaultManagedElement(authoringContract(item));
+        const target = managedElement ? this.managedContent(element, managedElement.accepts ?? []) : element;
         if (target) {
             target.innerHTML = content;
         }
@@ -123,9 +126,12 @@ export class EditablePageDocument {
         }
     }
 
-    private managedContent(element: HTMLElement): HTMLElement | undefined {
+    private managedContent(element: HTMLElement, acceptedTags: readonly string[]): HTMLElement | undefined {
         return Array.from(element.children).find(
-            (child): child is HTMLElement => child instanceof HTMLElement && !child.hasAttribute("cms-bloc"),
+            (child): child is HTMLElement =>
+                child instanceof HTMLElement &&
+                !child.hasAttribute("cms-bloc") &&
+                acceptedTags.includes(child.localName),
         );
     }
 }

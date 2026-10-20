@@ -1,0 +1,361 @@
+<div cms-query="@param:ulvia-official-page-id as pageSelection">
+    <div cms-match="pageSelection.hasData">
+        <div cms-case="false">
+            <div cms-bloc="ulvia-official-page-catalogue"></div>
+        </div>
+        <div cms-case="true">
+            <div cms-bloc="ulvia-official-admin-workspace">
+                <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-page-details }}</h1>
+                <p slot="description">{{ cms.i18n.ulvia-official.ui-update-the-shared-page-document-through-revision-checked-provider-capabilities }}</p>
+                <a cms-bloc="ulvia-official-action" tone="secondary" variant="outline" slot="actions" href="/admin/pages"
+                    ><span>{{ cms.i18n.ulvia-official.ui-back-to-pages }}</span></a
+                >
+                <div cms-bloc="ulvia-official-route-tabs" size="sm" label="{{ cms.i18n.ulvia-official.ui-page-details }}" slot="page-navigation">
+                    <a cms-bloc="ulvia-official-route-tab" slot="items" href="#page-general"><span>{{ cms.i18n.ulvia-official.ui-page-details }}</span></a>
+                    <a cms-bloc="ulvia-official-route-tab" slot="items" href="#page-content"><span>{{ cms.i18n.ulvia-official.ui-page-document }}</span></a>
+                    <a cms-bloc="ulvia-official-route-tab" slot="items" href="#page-routes"><span>{{ cms.i18n.ulvia-official.ui-routes }}</span></a>
+                    <a cms-bloc="ulvia-official-route-tab" slot="items" href="#page-search"><span>{{ cms.i18n.ulvia-official.ui-search-metadata }}</span></a>
+                    <a cms-bloc="ulvia-official-route-tab" slot="items" href="#page-publication"><span>{{ cms.i18n.ulvia-official.ui-publication }}</span></a>
+                    <a cms-bloc="ulvia-official-route-tab" slot="items" href="#page-danger"><span>{{ cms.i18n.ulvia-official.ui-danger-zone }}</span></a>
+                </div>
+                <section
+                    id="page-detail"
+                    slot="content"
+                    cms-query="ulvia.cms.pages:get as selected"
+                    cms-query-input='{"id":{"from":"state","key":"@param:ulvia-official-page-id"}}'
+                    cms-query-listen="@param:ulvia-official-page-id @page:ulvia-official-page-detail-mutation/lastSuccess/requestId"
+                >
+                    <div role="status" aria-live="polite" cms-condition="selected.activity === 'fetching'">
+                        <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-loading-page }}</h2>
+                        <p>{{ cms.i18n.ulvia-official.ui-the-latest-revision-is-being-read-from-the-provider }}</p>
+                    </div>
+                    <div cms-match="selected.outcome.kind">
+                        <span cms-case='"none"' hidden></span>
+                        <div cms-case='"error"' cms-match="selected.outcome.code">
+                            <div role="alert" cms-case='"NOT_FOUND"'>
+                                <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-page-unavailable }}</h2>
+                                <p>{{ cms.i18n.ulvia-official.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable }}</p>
+                            </div>
+                            <div role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                                <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-page-unavailable }}</h2>
+                                <p>{{ cms.i18n.ulvia-official.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable }}</p>
+                            </div>
+                        </div>
+                        <div cms-bloc="ulvia-official-stack" gap="lg" cms-case='"success"'>
+                            <div
+                                cms-bloc="ulvia-official-surface"
+                                radius="sm"
+                                padding="md"
+                                appearance="outlined"
+                                slot="items"
+                                id="page-general"
+                                role="tabpanel"
+                            >
+                                <form
+                                    slot="content"
+                                    cms-mutation="ulvia.cms.pages:update as saved"
+                                    cms-sync="@page:ulvia-official-page-detail-mutation"
+                                    cms-sync-select="lastSuccess.requestId"
+                                    cms-mutation-reset="false"
+                                >
+                                    <input type="hidden" name="id" value="{{ selected.data.id }}">
+                                    <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
+                                    <div cms-bloc="ulvia-official-stack" gap="lg">
+                                        <header slot="items">
+                                            <p>{{ cms.i18n.ulvia-official.ui-page-revision }} {{ selected.data.revision }}</p>
+                                            <h2 cms-bloc="ulvia-official-heading">{{ selected.data.title }}</h2>
+                                            <code>{{ selected.data.path }}</code>
+                                        </header>
+                                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
+                                            <label slot="label" for="page-title">{{ cms.i18n.ulvia-official.ui-title }}</label>
+                                            <span slot="description">{{
+                                                cms.i18n.ulvia-official.ui-displayed-in-administration-and-used-as-the-default-document-title
+                                            }}</span>
+                                            <div cms-bloc="ulvia-official-input" slot="control">
+                                                <input
+                                                    id="page-title"
+                                                    type="text"
+                                                    name="title"
+                                                    value="{{ selected.data.title }}"
+                                                    maxlength="70"
+                                                    autocomplete="off"
+                                                    required
+                                                >
+                                            </div>
+                                        </div>
+                                        <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
+                                            <label slot="label" for="page-description">{{ cms.i18n.ulvia-official.ui-description }}</label>
+                                            <div cms-bloc="ulvia-official-textarea" slot="control">
+                                                <textarea
+                                                    id="page-description"
+                                                    name="description"
+                                                    maxlength="200"
+                                                    rows="3"
+                                                >{{ selected.data.description }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div cms-bloc="ulvia-official-form-actions" actions-align="end" slot="items">
+                                            <p slot="actions" role="status" aria-live="polite" cms-condition="saved.activity === 'submitting'">
+                                                {{ cms.i18n.ulvia-official.ui-saving }}
+                                            </p>
+                                            <p slot="actions" role="alert" cms-condition="(saved.outcome.kind === 'error' || saved.outcome.kind === 'failure')">
+                                                {{ cms.i18n.ulvia-official.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}
+                                            </p>
+                                            <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" type="submit">
+                                                <span>{{ cms.i18n.ulvia-official.ui-save-changes }}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div cms-match="saved.outcome.kind">
+                                        <span cms-case='"none"' hidden></span>
+                                        <span cms-case='"success"' hidden></span>
+                                        <div cms-case='"error"' cms-match="saved.outcome.code">
+                                            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"INVALID_PAGE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    </div>
+                                </form>
+                            </div>
+                            <div
+                                cms-bloc="ulvia-official-surface"
+                                radius="sm"
+                                padding="md"
+                                appearance="outlined"
+                                slot="items"
+                                id="page-content"
+                                role="tabpanel"
+                            >
+                                <div cms-bloc="ulvia-official-page-editor" slot="content"></div>
+                            </div>
+                            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-routes" role="tabpanel">
+                                <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
+                                    <header slot="items">
+                                        <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-routes }}</h2>
+                                        <p>
+                                            {{
+                                                cms.i18n.ulvia-official.ui-each-language-owns-a-local-path-the-primary-language-determines-the-canonical-page-path
+                                            }}
+                                        </p>
+                                    </header>
+                                    <form
+                                        slot="items"
+                                        cms-repeat="selected.data.routes as route"
+                                        cms-mutation="ulvia.cms.pages:update-route as mutation"
+                                        cms-sync="@page:ulvia-official-page-detail-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                        cms-mutation-reset="false"
+                                    >
+                                        <input type="hidden" name="id" value="{{ selected.data.id }}">
+                                        <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
+                                        <input type="hidden" name="language" value="{{ route.language }}">
+                                        <div cms-bloc="ulvia-official-control-group" joined="">
+                                            <div cms-bloc="ulvia-official-field" label-position="top" slot="control">
+                                                <label slot="label" for="route-{{ route.language }}"
+                                                    >{{ route.language }} {{ cms.i18n.ulvia-official.ui-route }}</label
+                                                >
+                                                <div cms-bloc="ulvia-official-input" slot="control">
+                                                    <input
+                                                        id="route-{{ route.language }}"
+                                                        type="text"
+                                                        name="path"
+                                                        value="{{ route.path }}"
+                                                        maxlength="2048"
+                                                        autocomplete="off"
+                                                        required
+                                                    >
+                                                </div>
+                                            </div>
+                                            <button cms-bloc="ulvia-official-action" tone="secondary" variant="outline" slot="trailing" type="submit">
+                                                <span>{{ cms.i18n.ulvia-official.ui-save-route }}</span>
+                                            </button>
+                                        </div>
+
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"' hidden></span>
+                                            <span cms-case='"success"' hidden></span>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"PATH_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"INVALID_PAGE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-search" role="tabpanel">
+                                <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
+                                    <header slot="items">
+                                        <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-search-metadata }}</h2>
+                                        <p>{{ cms.i18n.ulvia-official.ui-empty-values-inherit-the-page-title-and-description }}</p>
+                                    </header>
+                                    <form
+                                        slot="items"
+                                        cms-repeat="selected.data.seoEntries as entry"
+                                        cms-mutation="ulvia.cms.pages:update-seo as mutation"
+                                        cms-sync="@page:ulvia-official-page-detail-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                        cms-mutation-reset="false"
+                                    >
+                                        <input type="hidden" name="id" value="{{ selected.data.id }}">
+                                        <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
+                                        <input type="hidden" name="language" value="{{ entry.language }}">
+                                        <div cms-bloc="ulvia-official-stack" gap="md">
+                                            <h3 cms-bloc="ulvia-official-heading" slot="items">{{ entry.language }}</h3>
+                                            <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
+                                                <label slot="label" for="seo-title-{{ entry.language }}">{{ cms.i18n.ulvia-official.ui-search-title }}</label>
+                                                <div cms-bloc="ulvia-official-input" slot="control">
+                                                    <input
+                                                        id="seo-title-{{ entry.language }}"
+                                                        type="text"
+                                                        name="title"
+                                                        value="{{ entry.title }}"
+                                                        maxlength="70"
+                                                        autocomplete="off"
+                                                    >
+                                                </div>
+                                            </div>
+                                            <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
+                                                <label slot="label" for="seo-description-{{ entry.language }}">{{
+                                                    cms.i18n.ulvia-official.ui-search-description
+                                                }}</label>
+                                                <div cms-bloc="ulvia-official-textarea" slot="control">
+                                                    <textarea
+                                                        id="seo-description-{{ entry.language }}"
+                                                        name="description"
+                                                        maxlength="200"
+                                                        rows="3"
+                                                    >{{ entry.description }}</textarea>
+                                                </div>
+                                            </div>
+                                            <div cms-bloc="ulvia-official-form-actions" actions-align="end" slot="items">
+                                                <button cms-bloc="ulvia-official-action" tone="secondary" variant="outline" slot="actions" type="submit">
+                                                    <span>{{ cms.i18n.ulvia-official.ui-save-metadata }}</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div cms-match="mutation.outcome.kind">
+                                            <span cms-case='"none"' hidden></span>
+                                            <span cms-case='"success"' hidden></span>
+                                            <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"INVALID_PAGE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div
+                                cms-bloc="ulvia-official-surface"
+                                radius="sm"
+                                padding="md"
+                                appearance="outlined"
+                                slot="items"
+                                id="page-publication"
+                                role="tabpanel"
+                            >
+                                <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center" slot="content">
+                                    <div slot="items">
+                                        <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-publication }}</h2>
+                                        <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="selected.data.visible">
+                                            <span slot="label">{{ cms.i18n.ulvia-official.ui-published }}</span>
+                                        </div>
+                                        <div cms-bloc="ulvia-official-badge" tone="neutral" cms-condition="selected.data.visible === false">
+                                            <span slot="label">{{ cms.i18n.ulvia-official.ui-draft }}</span>
+                                        </div>
+                                    </div>
+                                    <form
+                                        slot="items"
+                                        cms-condition="selected.data.visible === false"
+                                        cms-mutation="ulvia.cms.pages:publish as publication"
+                                        cms-sync="@page:ulvia-official-page-detail-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                    >
+                                        <input type="hidden" name="id" value="{{ selected.data.id }}">
+                                        <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
+                                        <input type="hidden" name="visible" value="true" cms-form-value-type="boolean">
+                                        <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" type="submit">
+                                            <span>{{ cms.i18n.ulvia-official.ui-publish }}</span>
+                                        </button>
+
+                                        <div cms-match="publication.outcome.kind">
+                                            <span cms-case='"none"' hidden></span>
+                                            <span cms-case='"success"' hidden></span>
+                                            <div cms-case='"error"' cms-match="publication.outcome.code">
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                    <form
+                                        slot="items"
+                                        cms-condition="selected.data.visible"
+                                        cms-mutation="ulvia.cms.pages:publish as publication"
+                                        cms-sync="@page:ulvia-official-page-detail-mutation"
+                                        cms-sync-select="lastSuccess.requestId"
+                                    >
+                                        <input type="hidden" name="id" value="{{ selected.data.id }}">
+                                        <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
+                                        <input type="hidden" name="visible" value="false" cms-form-value-type="boolean">
+                                        <button cms-bloc="ulvia-official-action" tone="secondary" variant="outline" type="submit">
+                                            <span>{{ cms.i18n.ulvia-official.ui-return-to-draft }}</span>
+                                        </button>
+
+                                        <div cms-match="publication.outcome.kind">
+                                            <span cms-case='"none"' hidden></span>
+                                            <span cms-case='"success"' hidden></span>
+                                            <div cms-case='"error"' cms-match="publication.outcome.code">
+                                                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            </div>
+                                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-danger" role="tabpanel">
+                                <h2 cms-bloc="ulvia-official-heading" slot="content">{{ cms.i18n.ulvia-official.ui-danger-zone }}</h2>
+                                <p slot="content">{{ cms.i18n.ulvia-official.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit }}</p>
+                                <form slot="content" cms-mutation="ulvia.cms.pages:delete as deletion" cms-mutation-redirect="/admin/pages">
+                                    <input type="hidden" name="id" value="{{ selected.data.id }}">
+                                    <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
+                                    <button cms-bloc="ulvia-official-action" tone="danger" variant="outline" type="submit">
+                                        <span>{{ cms.i18n.ulvia-official.ui-delete-page }}</span>
+                                    </button>
+
+                                    <div cms-match="deletion.outcome.kind">
+                                        <span cms-case='"none"' hidden></span>
+                                        <span cms-case='"success"' hidden></span>
+                                        <div cms-case='"error"' cms-match="deletion.outcome.code">
+                                            <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        </div>
+                                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div role="alert" cms-case='"failure"'>
+                            <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-page-unavailable }}</h2>
+                            <p>{{ cms.i18n.ulvia-official.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable }}</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>

@@ -25,7 +25,7 @@ class Controller {
         this.button.disabled = true;
         this.showError(false);
         try {
-            const url = this.blocRoot.getAttribute("url")?.trim() || (await this.signedUrl());
+            const url = await this.signedUrl();
             const target = new URL(url, location.href);
             if (target.origin !== location.origin || !target.pathname.startsWith("/.cms/call/ulvia.cms.files/files/")) {
                 throw new Error();

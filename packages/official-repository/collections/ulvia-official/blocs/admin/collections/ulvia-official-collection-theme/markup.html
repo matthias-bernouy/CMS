@@ -15,7 +15,7 @@
         </div>
         <div cms-bloc="ulvia-official-stack" gap="lg" cms-case='"success"'>
             <header slot="items">
-                <h3>{{ cms.i18n.ulvia-official.ui-collection-theme-editor }}</h3>
+                <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-collection-theme-editor }}</h3>
                 <p>{{ cms.i18n.ulvia-official.ui-edit-collection-theme-help }}</p>
             </header>
             <div cms-bloc="ulvia-official-surface" padding="lg" appearance="subtle" slot="items">
@@ -113,7 +113,7 @@
                 <div cms-bloc="ulvia-official-stack" gap="md" slot="content">
                     <header slot="items">
                         <p>{{ collectionTheme.data.token.categoryLabel }}</p>
-                        <h4>{{ collectionTheme.data.token.label }}</h4>
+                        <h4 cms-bloc="ulvia-official-heading">{{ collectionTheme.data.token.label }}</h4>
                         <p>{{ collectionTheme.data.token.description }}</p>
                         <code>{{ collectionTheme.data.token.variable }}</code>
                     </header>

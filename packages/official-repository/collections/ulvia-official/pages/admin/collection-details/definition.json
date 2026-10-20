@@ -3,5 +3,16 @@
     "defaultPath": "/admin/collections/detail",
     "name": "page.collection-details.name",
     "description": "page.collection-details.description",
-    "requires": []
+    "requires": [
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "update-configuration",
+            "versionRange": "^1.0.0"
+        }
+    ]
 }

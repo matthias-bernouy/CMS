@@ -13,10 +13,16 @@ export type EditorCatalogueItem = {
 export type AuthoringContract = {
     settings?: EditorSetting[];
     root?: EditorNativeElement;
-    content?: EditorNativeElement;
+    slots?: Record<string, EditorSlot>;
 };
 
 type EditorNativeElement = { accepts?: string[]; defaults?: Record<string, string> };
+type EditorSlot = { accepts?: EditorSlotAccept[] };
+type EditorSlotAccept = EditorNativeElement & { kind?: string };
+
+export function defaultManagedElement(contract: AuthoringContract): EditorNativeElement | undefined {
+    return contract.slots?.[""]?.accepts?.find((accept) => accept.kind === "native-element");
+}
 
 export type EditorSetting = {
     id: string;

@@ -2,7 +2,22 @@
     "id": "diagnostics",
     "defaultPath": "/admin/diagnostics",
     "name": "page.diagnostics.name",
-    "icon": "health",
     "description": "page.diagnostics.description",
-    "requires": []
+    "requires": [
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "migration-status",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.jobs",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.providers",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        }
+    ]
 }

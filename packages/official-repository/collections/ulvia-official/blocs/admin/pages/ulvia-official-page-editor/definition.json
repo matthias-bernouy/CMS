@@ -6,7 +6,7 @@
     "category": "bloc.category.administration",
     "order": 10,
     "catalogue": "hidden",
-    "uses": [],
+    "uses": ["ulvia-official-heading"],
     "requires": [
         {
             "contractId": "ulvia.cms.pages",

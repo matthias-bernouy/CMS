@@ -3,5 +3,16 @@
     "defaultPath": "/admin/collections/migration",
     "name": "page.collection-migration.name",
     "description": "page.collection-migration.description",
-    "requires": []
+    "requires": [
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "plan-migration",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "apply-migration",
+            "versionRange": "^1.0.0"
+        }
+    ]
 }

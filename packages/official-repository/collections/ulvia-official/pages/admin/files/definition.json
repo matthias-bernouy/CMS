@@ -2,7 +2,6 @@
     "id": "files",
     "defaultPath": "/admin/files",
     "name": "page.files.name",
-    "icon": "media",
     "description": "page.files.description",
     "requires": []
 }

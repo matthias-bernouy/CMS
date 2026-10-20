@@ -1,19 +1,19 @@
 <section cms-query="ulvia.cms.providers:list as providers" cms-query-listen="@page:ulvia-official-providers-mutation/lastSuccess/requestId">
     <div role="status" aria-live="polite" cms-condition="providers.activity === 'fetching'">
-        <h2>{{ cms.i18n.ulvia-official.ui-reading-provider-configuration }}</h2>
+        <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-reading-provider-configuration }}</h2>
     </div>
     <div cms-match="providers.outcome.kind">
         <span cms-case='"none"' hidden></span>
         <div cms-case='"error"' cms-match="providers.outcome.code">
             <div role="alert" cms-case='"CORE_UNAVAILABLE"'>
-                <h2>{{ cms.i18n.ulvia-official.ui-provider-configuration-unavailable }}</h2>
+                <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-provider-configuration-unavailable }}</h2>
                 <p>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
             </div>
         </div>
         <div cms-bloc="ulvia-official-stack" gap="lg" cms-case='"success"'>
             <div id="provider-installations" role="tabpanel" slot="items">
                 <header>
-                    <h2>{{ cms.i18n.ulvia-official.ui-provider-installations }}</h2>
+                    <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-provider-installations }}</h2>
                     <p>
                         {{ providers.data.installations.length }}
                         {{ cms.i18n.ulvia-official.ui-provider-installations }}
@@ -24,7 +24,7 @@
 
                 <div cms-bloc="ulvia-official-list" role="list" cms-condition="providers.data.installations.length">
                     <div cms-bloc="ulvia-official-list-item" role="listitem" cms-repeat="providers.data.installations as installation" slot="items">
-                        <h3 slot="title">{{ installation.providerId }}</h3>
+                        <h3 cms-bloc="ulvia-official-heading" slot="title">{{ installation.providerId }}</h3>
                         <p slot="description">{{ installation.accountId }}</p>
                         <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="installation.status === 'enabled'" slot="meta">
                             <span slot="label">{{ cms.i18n.ulvia-official.ui-enabled }}</span>
@@ -170,7 +170,7 @@
                     <input type="hidden" name="expectedRevision" value="{{ providers.data.selectionRevision }}" cms-form-value-type="number">
                     <div cms-bloc="ulvia-official-stack" gap="lg">
                         <header slot="items">
-                            <h3>{{ cms.i18n.ulvia-official.ui-contract-routing }}</h3>
+                            <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-contract-routing }}</h3>
                         </header>
                         <div cms-bloc="ulvia-official-field" label-position="top" cms-repeat="providers.data.routes as route" slot="items">
                             <label slot="label" for="provider-route-{{ route.contractId }}">{{ route.contractId }}</label>
@@ -224,7 +224,7 @@
             </div>
         </div>
         <div role="alert" cms-case='"failure"'>
-            <h2>{{ cms.i18n.ulvia-official.ui-provider-configuration-unavailable }}</h2>
+            <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-provider-configuration-unavailable }}</h2>
             <p>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
         </div>
     </div>

@@ -2,7 +2,6 @@
     "id": "collections",
     "defaultPath": "/admin/collections",
     "name": "page.collections.name",
-    "icon": "collections",
     "description": "page.collections.description",
     "requires": []
 }

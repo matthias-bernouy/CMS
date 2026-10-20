@@ -1,1 +1,143 @@
-<div cms-bloc="ulvia-official-admin-overview-page"></div>
+<div cms-bloc="ulvia-official-admin-workspace">
+    <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-dashboard }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-dashboard-introduction }}</p>
+    <a cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" href="/admin/pages"
+        ><span>{{ cms.i18n.ulvia-official.ui-pages-9046da16 }}</span></a
+    >
+    <div cms-bloc="ulvia-official-stack" gap="xl" slot="content">
+        <section slot="items" aria-labelledby="dashboard-actions-title">
+            <div cms-bloc="ulvia-official-stack" gap="md">
+                <h2 cms-bloc="ulvia-official-heading" id="dashboard-actions-title" slot="items">{{ cms.i18n.ulvia-official.ui-quick-actions }}</h2>
+                <div cms-bloc="ulvia-official-grid" gap="md" columns="4" slot="items">
+                    <div cms-bloc="ulvia-official-card" surface="base" padding="sm" slot="items">
+                        <h3 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-pages-9046da16 }}</h3>
+                        <p slot="body">{{ cms.i18n.ulvia-official.ui-create-and-manage-site-pages-through-the-selected-ulvia-provider }}</p>
+                        <a cms-bloc="ulvia-official-action" size="sm" tone="primary" variant="ghost" slot="actions" href="/admin/pages"
+                            ><span>{{ cms.i18n.ulvia-official.ui-open-workspace }}</span></a
+                        >
+                    </div>
+                    <div cms-bloc="ulvia-official-card" surface="base" padding="sm" slot="items">
+                        <h3 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-files }}</h3>
+                        <p slot="body">{{ cms.i18n.ulvia-official.ui-upload-replace-and-organise-author-files-through-stable-cms-identities }}</p>
+                        <a cms-bloc="ulvia-official-action" size="sm" tone="primary" variant="ghost" slot="actions" href="/admin/files"
+                            ><span>{{ cms.i18n.ulvia-official.ui-open-workspace }}</span></a
+                        >
+                    </div>
+                    <div cms-bloc="ulvia-official-card" surface="base" padding="sm" slot="items">
+                        <h3 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-collections }}</h3>
+                        <p slot="body">
+                            {{ cms.i18n.ulvia-official.ui-install-immutable-releases-configure-collections-and-preview-migrations-before-applying-them }}
+                        </p>
+                        <a cms-bloc="ulvia-official-action" size="sm" tone="primary" variant="ghost" slot="actions" href="/admin/collections"
+                            ><span>{{ cms.i18n.ulvia-official.ui-open-workspace }}</span></a
+                        >
+                    </div>
+                    <div cms-bloc="ulvia-official-card" surface="base" padding="sm" slot="items">
+                        <h3 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-providers }}</h3>
+                        <p slot="body">{{ cms.i18n.ulvia-official.ui-approved-provider-accounts-and-exact-contract-releases-selected-by-this-cms }}</p>
+                        <a cms-bloc="ulvia-official-action" size="sm" tone="primary" variant="ghost" slot="actions" href="/admin/providers"
+                            ><span>{{ cms.i18n.ulvia-official.ui-open-workspace }}</span></a
+                        >
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section slot="items" aria-labelledby="dashboard-snapshot-title">
+            <div cms-bloc="ulvia-official-stack" gap="md">
+                <header slot="items">
+                    <h2 cms-bloc="ulvia-official-heading" id="dashboard-snapshot-title">{{ cms.i18n.ulvia-official.ui-system-snapshot }}</h2>
+                    <p>{{ cms.i18n.ulvia-official.ui-system-snapshot-description }}</p>
+                </header>
+                <div cms-bloc="ulvia-official-grid" gap="md" columns="4" slot="items">
+                    <section
+                        slot="items"
+                        cms-query="ulvia.cms.pages:list as pages"
+                        cms-query-input='{"limit":{"from":"literal","value":100}}'
+                        aria-label="{{ cms.i18n.ulvia-official.ui-pages-9046da16 }}"
+                    >
+                        <p role="status" aria-live="polite" cms-condition="pages.activity === 'fetching'">
+                            {{ cms.i18n.ulvia-official.ui-loading-pages }}
+                        </p>
+                        <div cms-match="pages.outcome.kind">
+                            <span cms-case='"none"'></span>
+                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-pages-unavailable }}</p>
+                            <div cms-case='"error"' cms-match="pages.outcome.code">
+                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-pages-unavailable }}</p>
+                            </div>
+                            <div cms-bloc="ulvia-official-surface" radius="sm" padding="sm" appearance="outlined" cms-case='"success"'>
+                                <div cms-bloc="ulvia-official-stat" size="sm" slot="content">
+                                    <strong slot="value">{{ pages.data.items.length }}</strong>
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-pages-9046da16 }}</span>
+                                    <span slot="description">{{ cms.i18n.ulvia-official.ui-pages-in-this-batch }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section slot="items" cms-query="ulvia.cms.collections:catalogue as collections" aria-label="{{ cms.i18n.ulvia-official.ui-collections }}">
+                        <p role="status" aria-live="polite" cms-condition="collections.activity === 'fetching'">
+                            {{ cms.i18n.ulvia-official.ui-reading-collection-catalogue }}
+                        </p>
+                        <div cms-match="collections.outcome.kind">
+                            <span cms-case='"none"'></span>
+                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-collection-catalogue-unavailable }}</p>
+                            <div cms-case='"error"' cms-match="collections.outcome.code">
+                                <p role="alert" cms-case='"CATALOGUE_TOO_LARGE"'>{{ cms.i18n.ulvia-official.ui-collection-catalogue-unavailable }}</p>
+                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-collection-catalogue-unavailable }}</p>
+                            </div>
+                            <div cms-bloc="ulvia-official-surface" radius="sm" padding="sm" appearance="outlined" cms-case='"success"'>
+                                <div cms-bloc="ulvia-official-stat" size="sm" slot="content">
+                                    <strong slot="value">{{ collections.data.installed.length }}</strong>
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-collections }}</span>
+                                    <span slot="description">{{ cms.i18n.ulvia-official.ui-installed-collections-count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section slot="items" cms-query="ulvia.cms.providers:list as providers" aria-label="{{ cms.i18n.ulvia-official.ui-providers }}">
+                        <p role="status" aria-live="polite" cms-condition="providers.activity === 'fetching'">
+                            {{ cms.i18n.ulvia-official.ui-reading-provider-state }}
+                        </p>
+                        <div cms-match="providers.outcome.kind">
+                            <span cms-case='"none"'></span>
+                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-provider-configuration-unavailable }}</p>
+                            <div cms-case='"error"' cms-match="providers.outcome.code">
+                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-provider-configuration-unavailable }}</p>
+                            </div>
+                            <div cms-bloc="ulvia-official-surface" radius="sm" padding="sm" appearance="outlined" cms-case='"success"'>
+                                <div cms-bloc="ulvia-official-stat" size="sm" slot="content">
+                                    <strong slot="value">{{ providers.data.installations.length }}</strong>
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-providers }}</span>
+                                    <span slot="description">{{ cms.i18n.ulvia-official.ui-provider-installations }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section
+                        slot="items"
+                        cms-query="ulvia.cms.jobs:list as jobs"
+                        cms-query-input='{"limit":{"from":"literal","value":100}}'
+                        aria-label="{{ cms.i18n.ulvia-official.ui-durable-jobs }}"
+                    >
+                        <p role="status" aria-live="polite" cms-condition="jobs.activity === 'fetching'">
+                            {{ cms.i18n.ulvia-official.ui-reading-durable-jobs }}
+                        </p>
+                        <div cms-match="jobs.outcome.kind">
+                            <span cms-case='"none"'></span>
+                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
+                            <div cms-case='"error"' cms-match="jobs.outcome.code">
+                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
+                            </div>
+                            <div cms-bloc="ulvia-official-surface" radius="sm" padding="sm" appearance="outlined" cms-case='"success"'>
+                                <div cms-bloc="ulvia-official-stat" size="sm" slot="content">
+                                    <strong slot="value">{{ jobs.data.items.length }}</strong>
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</span>
+                                    <span slot="description">{{ cms.i18n.ulvia-official.ui-recent-activity }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

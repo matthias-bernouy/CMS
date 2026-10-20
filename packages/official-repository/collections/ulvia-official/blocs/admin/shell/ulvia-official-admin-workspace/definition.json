@@ -8,6 +8,7 @@
     "catalogue": "hidden",
     "uses": [
         "ulvia-official-app-shell",
+        "ulvia-official-heading",
         "ulvia-official-icon",
         "ulvia-official-navigation-item",
         "ulvia-official-navigation-menu",
@@ -80,6 +81,10 @@
                 {
                     "kind": "native-content",
                     "profile": "prose"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["section"]
                 }
             ]
         },

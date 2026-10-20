@@ -2,7 +2,6 @@
     "id": "details",
     "defaultPath": "/admin/pages",
     "name": "page.details.name",
-    "icon": "pages",
     "description": "page.details.description",
     "requires": []
 }
