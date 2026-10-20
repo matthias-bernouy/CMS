@@ -5,6 +5,8 @@
     "page.access.name": "Utilisateurs",
     "page.collections.description": "Consultez les releases exactes des Collections installées et l’ensemble de leurs ressources.",
     "page.collections.name": "Collections",
+    "page.confirm-email.description": "Confirmez l’adresse e-mail associée à un compte local.",
+    "page.confirm-email.name": "Confirmer l’adresse e-mail",
     "page.collection-details.description": "Consultez et configurez une Collection installée.",
     "page.collection-details.name": "Détails de la Collection",
     "page.collection-migration.description": "Vérifiez le plan de migration d’une Collection avant de l’appliquer.",
@@ -21,6 +23,8 @@
     "page.overview.name": "Tableau de bord",
     "page.providers.description": "Consultez les providers approuvés et les contrats exacts sélectionnés.",
     "page.providers.name": "Providers",
+    "page.reset-password.description": "Choisissez un nouveau mot de passe à l’aide d’un lien de récupération à usage unique.",
+    "page.reset-password.name": "Réinitialiser le mot de passe",
     "page.settings.description": "Configurez l’identité, la disponibilité et les langues du site.",
     "page.settings.name": "Paramètres"
 }

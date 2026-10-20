@@ -252,6 +252,7 @@
                 "required": ["lastSuccess"]
             }
         },
+        { "id": "auth-token", "scope": "param", "schema": { "type": "string", "maxLength": 4096 } },
         { "id": "collection", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
         {
             "id": "collection-catalogue-mutation",

@@ -1,0 +1,13 @@
+{
+    "id": "confirm-email",
+    "defaultPath": "/confirm-email",
+    "name": "page.confirm-email.name",
+    "description": "page.confirm-email.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "confirm-email-verification",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

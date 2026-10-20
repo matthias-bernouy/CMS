@@ -5,6 +5,8 @@
     "page.access.name": "Users",
     "page.collections.description": "Inspect exact installed collection releases and their resource footprint.",
     "page.collections.name": "Collections",
+    "page.confirm-email.description": "Confirm the email address associated with a local account.",
+    "page.confirm-email.name": "Confirm email",
     "page.collection-details.description": "Inspect and configure one installed collection.",
     "page.collection-details.name": "Collection details",
     "page.collection-migration.description": "Review a collection migration plan before applying it.",
@@ -21,6 +23,8 @@
     "page.overview.name": "Dashboard",
     "page.providers.description": "Inspect approved providers and exact selected contracts.",
     "page.providers.name": "Providers",
+    "page.reset-password.description": "Choose a new password using a one-time recovery link.",
+    "page.reset-password.name": "Reset password",
     "page.settings.description": "Configure the site identity, availability and languages.",
     "page.settings.name": "Settings"
 }

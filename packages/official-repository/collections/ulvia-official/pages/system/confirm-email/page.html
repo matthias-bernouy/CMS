@@ -1,0 +1,47 @@
+<main cms-bloc="ulvia-official-auth-shell">
+    <div cms-bloc="ulvia-official-cover" spacing="md" height="viewport">
+        <div cms-bloc="ulvia-official-prose" size="sm" slot="header">
+            <p slot="content"><strong>{{ cms.i18n.ulvia-official.ui-ulvia-admin }}</strong></p>
+        </div>
+        <div cms-bloc="ulvia-official-center" text-align="start" width="sm" slot="content">
+            <div cms-bloc="ulvia-official-surface" radius="lg" padding="xl" appearance="elevated" slot="content">
+                <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
+                    <div cms-bloc="ulvia-official-stack" gap="sm" slot="items">
+                        <h1 cms-bloc="ulvia-official-heading" size="lg" slot="items">
+                            {{ cms.i18n.ulvia-official.ui-confirm-email }}
+                        </h1>
+                        <div cms-bloc="ulvia-official-prose" slot="items">
+                            <p slot="content">{{ cms.i18n.ulvia-official.ui-confirm-email-description }}</p>
+                        </div>
+                    </div>
+                    <form
+                        slot="items"
+                        cms-mutation="ulvia.cms.access:confirm-email-verification as confirmation"
+                        cms-mutation-input='{"token":{"from":"state","key":"@param:ulvia-official-auth-token"}}'
+                    >
+                        <div cms-bloc="ulvia-official-stack" gap="md">
+                            <div cms-bloc="ulvia-official-form-actions" wide="" slot="items">
+                                <button cms-bloc="ulvia-official-action" slot="actions" type="submit">
+                                    <span>{{ cms.i18n.ulvia-official.ui-confirm-email-action }}</span>
+                                </button>
+                            </div>
+                            <div slot="items" cms-match="confirmation.outcome.kind">
+                                <span cms-case='"none"'></span>
+                                <p role="status" cms-case='"success"'>{{ cms.i18n.ulvia-official.ui-email-confirmed }}</p>
+                                <div cms-case='"error"' cms-match="confirmation.outcome.code">
+                                    <p role="alert" cms-case='"INVALID_INPUT"'>
+                                        {{ cms.i18n.ulvia-official.ui-invalid-or-expired-link }}
+                                    </p>
+                                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                                        {{ cms.i18n.ulvia-official.ui-request-failed }}
+                                    </p>
+                                </div>
+                                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>

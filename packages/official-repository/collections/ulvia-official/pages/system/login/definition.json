@@ -3,5 +3,11 @@
     "defaultPath": "/login",
     "name": "page.login.name",
     "description": "page.login.description",
-    "requires": []
+    "requires": [
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "login-password",
+            "versionRange": "^1.0.0"
+        }
+    ]
 }

@@ -6,14 +6,74 @@
         "group": "text.group.admin.access"
     },
     {
+        "id": "ui-confirm-email",
+        "label": "text.ui-confirm-email.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-confirm-email-action",
+        "label": "text.ui-confirm-email-action.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-confirm-email-description",
+        "label": "text.ui-confirm-email-description.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-email-confirmed",
+        "label": "text.ui-email-confirmed.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
         "id": "ui-invalid-email-or-password",
         "label": "text.ui-invalid-email-or-password.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
     },
     {
+        "id": "ui-invalid-or-expired-link",
+        "label": "text.ui-invalid-or-expired-link.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-new-password",
+        "label": "text.ui-new-password.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
         "id": "ui-password",
         "label": "text.ui-password.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-password-reset",
+        "label": "text.ui-password-reset.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-reset-password-action",
+        "label": "text.ui-reset-password-action.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-reset-password-description",
+        "label": "text.ui-reset-password-description.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.access"
+    },
+    {
+        "id": "ui-reset-password-title",
+        "label": "text.ui-reset-password-title.label",
         "category": "text.category.admin",
         "group": "text.group.admin.access"
     },
