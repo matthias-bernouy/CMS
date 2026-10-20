@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { chmod, readFile, writeFile } from "node:fs/promises";
+import { chmod, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const SCHEMA = "ulvia.dev-runtime.v1" as const;
@@ -18,6 +18,7 @@ export async function loadOrCreateDevRuntimeConfig(devRoot: string): Promise<Dev
     if (existing) {
         return existing;
     }
+    await assertNoOrphanedEncryptedState(devRoot);
     const config: DevRuntimeConfig = {
         schema: SCHEMA,
         adminEmail: "dev@ulvia.local",
@@ -37,6 +38,20 @@ export async function loadOrCreateDevRuntimeConfig(devRoot: string): Promise<Dev
             throw new Error("Ulvia dev runtime configuration disappeared during creation");
         }
         return concurrent;
+    }
+}
+
+async function assertNoOrphanedEncryptedState(devRoot: string): Promise<void> {
+    const mongoEntries = await readdir(join(devRoot, "mongo")).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") {
+            return [];
+        }
+        throw error;
+    });
+    if (mongoEntries.length > 0) {
+        throw new Error(
+            "Ulvia runtime credentials are missing while persistent MongoDB data exists. Run ulvia dev reset --yes.",
+        );
     }
 }
 

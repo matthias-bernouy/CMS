@@ -3,11 +3,12 @@
 Local development launcher for CmsCore.
 
 ```bash
+bun run ulvia -- dev new
 bun run ulvia -- dev
 bun run ulvia -- dev status
 bun run ulvia -- dev credentials
 bun run ulvia -- dev stop
-bun run ulvia -- dev new /absolute/path/to/a/fresh-environment
+bun run ulvia -- dev new --data-dir /absolute/path/to/a/fresh-environment
 bun run ulvia -- dev reset --yes
 bun run ulvia -- release packages/official-repository/collections/test
 bun run ulvia -- release /path/to/contract-directory
@@ -19,8 +20,14 @@ bun run ulvia -- restore collection ulvia.official/ulvia-official@1.0.0 --reposi
 bun run ulvia -- prune
 ```
 
-The CLI stores local releases in `ULVIA_DATA_DIR/repository`, or under
-`$XDG_DATA_HOME/ulvia/repository` / `~/.local/share/ulvia/repository` by default.
+`dev new` associates the current directory with a private development
+environment. The project keeps only a non-sensitive identity below
+`.ulvia/`; persistent data lives below
+`$XDG_DATA_HOME/ulvia/environments/` or
+`~/.local/share/ulvia/environments/`. Commands resolve the association from the
+current directory or one of its parents. They never silently fall back to a
+global environment. `ULVIA_DATA_DIR` remains an explicit advanced override.
+The CLI stores local releases in `<data>/repository`.
 The separate `dev/` directory holds credentials, CMS files, and MongoDB data.
 `dev` mounts the authenticated Ulvia Provider surface on loopback port 5103.
 That port is fixed because it is part of the admitted official Provider
@@ -28,9 +35,10 @@ manifest; `ULVIA_DEV_PROVIDER_PORT` cannot select another origin.
 `dev credentials` prints the CMS administrator email and password. Repository,
 Provider operator and instance bearer tokens remain in the private `dev/`
 directory and are not printed as user credentials.
-`dev new <absolute-data-directory>` creates and immediately starts a completely
-isolated environment. The destination must not exist, and later commands target
-it by setting `ULVIA_DATA_DIR` to the same path. `dev reset --yes` stops the
+`dev new` creates, associates, and immediately starts a completely isolated
+environment. `dev new --data-dir <absolute-data-directory>` selects an advanced
+custom destination, which must not exist. Later commands recover either form
+from the project association. `dev reset --yes` stops the
 current environment's MongoDB container and permanently clears only its `dev/`
 and `repository/` directories. It refuses to continue while the Kernel,
 Provider, or repository listener is still reachable; stop the foreground
@@ -142,7 +150,7 @@ bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.pages
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.providers
 bun run ulvia -- release packages/official-repository/contracts/ulvia.provider.cms-instances
 bun run ulvia -- release packages/official-repository/providers/ulvia.official
-bun run ulvia -- dev
+bun run ulvia -- dev new
 ```
 
 Local `dev` provisions an instance through the Provider operator API, then

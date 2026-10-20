@@ -1,25 +1,10 @@
-import { chmod, lstat, mkdir, opendir, readFile, rm } from "node:fs/promises";
+import { chmod, lstat, opendir, readFile, rm } from "node:fs/promises";
 import { createConnection } from "node:net";
 import { join } from "node:path";
 import type { DevPorts } from "../runtime/cms";
 import { stopLocalMongo } from "../runtime/mongo";
-import { ensureUlviaPaths, resolveUlviaPaths, type UlviaPaths } from "../runtime/paths";
-
-type StartDev = (paths: UlviaPaths, ports: DevPorts) => Promise<void>;
-
-export async function runFreshDevEnvironment(
-    dataDirectory: string,
-    current: UlviaPaths,
-    ports: DevPorts,
-    log: (message: string) => void,
-    start: StartDev,
-): Promise<void> {
-    await assertDevServersStopped(ports);
-    const freshPaths = await createFreshDevPaths(dataDirectory, current);
-    await stopLocalMongo(current.mongo);
-    log(`Created isolated development environment: ${freshPaths.data}`);
-    await start(freshPaths, ports);
-}
+import { ensureUlviaPaths, type UlviaPaths } from "../runtime/paths";
+import { readProjectEnvironment } from "../runtime/dev/projectEnvironmentConfig";
 
 export async function resetCurrentDevEnvironment(
     paths: UlviaPaths,
@@ -31,19 +16,6 @@ export async function resetCurrentDevEnvironment(
     await resetDevData(paths);
     log(`Reset development environment: ${paths.data}`);
     log("Run ulvia dev to provision a fresh instance.");
-}
-
-export async function createFreshDevPaths(dataDirectory: string, current: UlviaPaths): Promise<UlviaPaths> {
-    const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: dataDirectory });
-    if (paths.data === current.data) {
-        throw new Error("The new development data directory must differ from the current one");
-    }
-    const created = await mkdir(paths.data, { recursive: true, mode: 0o700 });
-    if (created === undefined) {
-        throw new Error(`Development data directory already exists: ${paths.data}`);
-    }
-    await ensureUlviaPaths(paths);
-    return paths;
 }
 
 export async function resetDevData(paths: UlviaPaths): Promise<void> {
@@ -95,24 +67,30 @@ export async function assertDevServersStopped(
 }
 
 async function assertUlviaDevEnvironment(paths: UlviaPaths): Promise<void> {
+    try {
+        if (await readProjectEnvironment(join(paths.data, "environment.json"), true)) {
+            return;
+        }
+    } catch {
+        throw new Error(`Refusing to reset unrecognized development data at ${paths.data}`);
+    }
     const source = await readFile(join(paths.dev, "runtime.json"), "utf8").catch((error: NodeJS.ErrnoException) => {
         if (error.code === "ENOENT") {
             return null;
         }
         throw error;
     });
-    if (source === null) {
-        throw new Error(`No initialized Ulvia development environment exists at ${paths.data}`);
-    }
-    let value: { schema?: unknown };
-    try {
-        value = JSON.parse(source) as { schema?: unknown };
-    } catch {
+    if (source !== null) {
+        try {
+            if ((JSON.parse(source) as { schema?: unknown }).schema === "ulvia.dev-runtime.v1") {
+                return;
+            }
+        } catch {
+            // Fall through to the guarded refusal below.
+        }
         throw new Error(`Refusing to reset unrecognized development data at ${paths.data}`);
     }
-    if (value.schema !== "ulvia.dev-runtime.v1") {
-        throw new Error(`Refusing to reset unrecognized development data at ${paths.data}`);
-    }
+    throw new Error(`No initialized Ulvia development environment exists at ${paths.data}`);
 }
 
 function canConnect(port: number): Promise<boolean> {

@@ -1,28 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { chmod, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assertDevServersStopped, createFreshDevPaths, resetDevData } from "../../src/commands/devData";
+import { assertDevServersStopped, resetDevData } from "../../src/commands/devData";
+import { loadOrCreateDevRuntimeConfig } from "../../src/runtime/config";
 import { ensureUlviaPaths, resolveUlviaPaths } from "../../src/runtime/paths";
 
 describe("Ulvia development data lifecycle", () => {
-    test("creates a separate empty environment without changing the current one", async () => {
-        const root = await mkdtemp(join(tmpdir(), "ulvia-dev-new-"));
-        const current = resolveUlviaPaths({ ULVIA_DATA_DIR: join(root, "current") });
-        const target = join(root, "fresh");
-        try {
-            const fresh = await createFreshDevPaths(target, current);
-
-            expect(fresh.data).toBe(target);
-            expect((await stat(fresh.dev)).isDirectory()).toBe(true);
-            expect((await stat(fresh.repository)).isDirectory()).toBe(true);
-            await expect(createFreshDevPaths(target, current)).rejects.toThrow(/already exists/);
-            await expect(createFreshDevPaths(current.data, current)).rejects.toThrow(/must differ/);
-        } finally {
-            await rm(root, { recursive: true, force: true });
-        }
-    });
-
     test("resets only Ulvia-owned children and preserves root siblings", async () => {
         const root = await mkdtemp(join(tmpdir(), "ulvia-dev-reset-"));
         const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
@@ -66,5 +50,17 @@ describe("Ulvia development data lifecycle", () => {
                 async () => true,
             ),
         ).rejects.toThrow(/Stop the active development stack/);
+    });
+
+    test("refuses to replace a missing encryption key over persistent MongoDB data", async () => {
+        const root = await mkdtemp(join(tmpdir(), "ulvia-dev-orphaned-mongo-"));
+        const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
+        try {
+            await ensureUlviaPaths(paths);
+            await writeFile(join(paths.mongo, "WiredTiger"), "existing database");
+            await expect(loadOrCreateDevRuntimeConfig(paths.dev)).rejects.toThrow(/credentials are missing/);
+        } finally {
+            await rm(root, { recursive: true, force: true });
+        }
     });
 });

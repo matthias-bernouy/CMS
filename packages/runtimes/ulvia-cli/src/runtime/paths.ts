@@ -16,10 +16,7 @@ export function resolveUlviaPaths(
     userHome = homedir(),
 ): UlviaPaths {
     const explicit = environment.ULVIA_DATA_DIR?.trim();
-    const xdg = environment.XDG_DATA_HOME?.trim();
-    const data = explicit
-        ? absolutePath(explicit, "ULVIA_DATA_DIR")
-        : join(xdg ? absolutePath(xdg, "XDG_DATA_HOME") : join(userHome, ".local", "share"), "ulvia");
+    const data = explicit ? absolutePath(explicit, "ULVIA_DATA_DIR") : resolveUlviaDataHome(environment, userHome);
     const dev = join(data, "dev");
     return Object.freeze({
         data,
@@ -29,6 +26,14 @@ export function resolveUlviaPaths(
         cmsFiles: join(dev, "cms-files"),
         logs: join(dev, "logs"),
     });
+}
+
+export function resolveUlviaDataHome(
+    environment: Record<string, string | undefined> = process.env,
+    userHome = homedir(),
+): string {
+    const xdg = environment.XDG_DATA_HOME?.trim();
+    return join(xdg ? absolutePath(xdg, "XDG_DATA_HOME") : join(userHome, ".local", "share"), "ulvia");
 }
 
 export async function ensureUlviaPaths(paths: UlviaPaths): Promise<void> {

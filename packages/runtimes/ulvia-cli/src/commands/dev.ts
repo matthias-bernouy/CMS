@@ -24,7 +24,7 @@ import { provisionLocalInstance } from "../runtime/instance";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
 import type { UlviaPaths } from "../runtime/paths";
 import { bootstrapOfficialRepository } from "./bootstrap";
-import { resetCurrentDevEnvironment, runFreshDevEnvironment } from "./devData";
+import { resetCurrentDevEnvironment } from "./devData";
 import { showDevLogs } from "../runtime/dev/logs";
 
 export async function devCommand(
@@ -66,14 +66,6 @@ export async function devCommand(
         log(`MongoDB: ${mongo ? "stopped" : "not running"}`);
         return;
     }
-    if (action === "new") {
-        expectArgumentCount(args, 2, "Usage: ulvia dev new <absolute-data-directory>");
-        const ports = resolveDevPorts(environment);
-        await runFreshDevEnvironment(args[1] ?? "", paths, ports, log, async (freshPaths, freshPorts) => {
-            await runDev(freshPaths, log, freshPorts);
-        });
-        return;
-    }
     if (action === "reset") {
         if (args.length !== 2 || args[1] !== "--yes") {
             throw new Error(
@@ -111,9 +103,9 @@ async function runDevStack(paths: UlviaPaths, log: (message: string) => void, po
     supervisorLogger.info("dev.starting", { dataDirectory: paths.data, ports });
     log("Preparing bundled official resources...");
     await bootstrapOfficialRepository(paths.repository);
+    const config = await loadOrCreateDevRuntimeConfig(paths.dev);
     log("Starting persistent local MongoDB...");
     const mongo = await startLocalMongo(paths.mongo, ports.mongo, { logger: supervisorLogger });
-    const config = await loadOrCreateDevRuntimeConfig(paths.dev);
     const repository = startLocalRepository(
         ports.repository,
         paths.repository,
@@ -149,7 +141,7 @@ async function runDevStack(paths: UlviaPaths, log: (message: string) => void, po
     log(`Ulvia Provider: http://127.0.0.1:${ports.provider}`);
     log(`CMS Kernel: http://127.0.0.1:${ports.kernel}`);
     log(`Persistent data: ${paths.data}`);
-    log("Credentials: run ulvia dev credentials with the same ULVIA_DATA_DIR");
+    log("Credentials: run ulvia dev credentials from this project");
     try {
         await superviseServers(kernel, provider);
     } finally {

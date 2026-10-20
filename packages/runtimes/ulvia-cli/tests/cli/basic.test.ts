@@ -20,6 +20,7 @@ describe("Ulvia CLI", () => {
         expect(output.join("\n")).toContain("ulvia pull");
         expect(output.join("\n")).toContain("ulvia push");
         expect(output.join("\n")).toContain("ulvia dev new");
+        expect(output.join("\n")).not.toContain("dev new <absolute-data-directory>");
         expect(output.join("\n")).toContain("ulvia dev reset --yes");
         expect(output.join("\n")).toContain("ulvia dev logs");
     });
@@ -92,6 +93,16 @@ describe("Ulvia CLI", () => {
     }, 15_000);
 
     test("rejects obsolete integration-shaped pull arguments", async () => {
-        await expect(runCli(["pull", "demo"], { log: () => undefined })).rejects.toThrow("Usage: ulvia pull");
+        const root = await mkdtemp(join(tmpdir(), "ulvia-obsolete-pull-"));
+        try {
+            await expect(
+                runCli(["pull", "demo"], {
+                    environment: { ULVIA_DATA_DIR: root },
+                    log: () => undefined,
+                }),
+            ).rejects.toThrow("Usage: ulvia pull");
+        } finally {
+            await rm(root, { recursive: true, force: true });
+        }
     });
 });

@@ -10,6 +10,7 @@ bun install --frozen-lockfile
 ## Local CMS
 
 ```bash
+bun run ulvia -- dev new
 bun run ulvia -- dev
 bun run ulvia -- dev status
 bun run ulvia -- dev credentials
@@ -18,8 +19,10 @@ bun run ulvia -- dev stop
 ```
 
 The CLI manages a persistent local stack with MongoDB, an Ulvia Provider, a CMS
-Kernel and an immutable resource repository. `ULVIA_DATA_DIR`
-overrides its data directory; `ULVIA_DEV_KERNEL_PORT`,
+Kernel and an immutable resource repository. `dev new` associates the current
+project with private data below the user data directory. Later commands resolve
+that association automatically, including from project subdirectories.
+`ULVIA_DATA_DIR` explicitly overrides project resolution; `ULVIA_DEV_KERNEL_PORT`,
 `ULVIA_DEV_MONGO_PORT`, and
 `ULVIA_DEV_REPOSITORY_PORT` override the local ports. `release` validates an
 authored collection, contract, or provider manifest into the local immutable

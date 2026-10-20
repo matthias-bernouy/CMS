@@ -3,14 +3,15 @@ import { pruneCommand } from "./commands/prune";
 import { releaseCommand } from "./commands/release";
 import { remoteCommand } from "./commands/remote";
 import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
-import { ensureUlviaPaths, resolveUlviaPaths } from "./runtime/paths";
+import { ensureUlviaPaths } from "./runtime/paths";
+import { createProjectEnvironment, resolveCommandPaths } from "./runtime/dev/projectEnvironment";
 
 const HELP = `Ulvia local CMS CLI
 
 Usage:
   ulvia dev [status | credentials | stop]
   ulvia dev logs [all | kernel | provider | repository | supervisor] [filters] [--json] [--stack] [--follow]
-  ulvia dev new <absolute-data-directory>
+  ulvia dev new [--data-dir <absolute-data-directory>]
   ulvia dev reset --yes
   ulvia release <resource-directory>
   ulvia push <kind> <publisher/id@version> --repository <url>
@@ -62,7 +63,16 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         throw new Error(`Unknown command: ${command}`);
     }
     const environment = options.environment ?? process.env;
-    const paths = resolveUlviaPaths(environment, options.home);
+    const cwd = options.cwd ?? process.cwd();
+    if (command === "dev" && args[1] === "new") {
+        const dataDirectory = parseNewDataDirectory(args.slice(2));
+        const created = await createProjectEnvironment(cwd, environment, options.home, dataDirectory);
+        log(`Created Ulvia environment for ${created.projectRoot}`);
+        log(`Persistent data: ${created.paths.data}`);
+        await devCommand([], created.paths, log, environment);
+        return;
+    }
+    const paths = await resolveCommandPaths(cwd, environment, options.home);
     await ensureUlviaPaths(paths);
     if (command === "dev") {
         await devCommand(args.slice(1), paths, log, environment);
@@ -70,7 +80,7 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     }
     const repository = new LocalCollectionRepository(paths.repository);
     if (command === "release") {
-        await releaseCommand(args.slice(1), options.cwd ?? process.cwd(), paths.repository, log);
+        await releaseCommand(args.slice(1), cwd, paths.repository, log);
         return;
     }
     if (command === "push" || command === "pull" || command === "yank" || command === "restore") {
@@ -78,4 +88,14 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         return;
     }
     await pruneCommand(args.slice(1), repository, log);
+}
+
+function parseNewDataDirectory(args: readonly string[]): string | undefined {
+    if (args.length === 0) {
+        return undefined;
+    }
+    if (args.length === 2 && args[0] === "--data-dir" && args[1]) {
+        return args[1];
+    }
+    throw new Error("Usage: ulvia dev new [--data-dir <absolute-data-directory>]");
 }
