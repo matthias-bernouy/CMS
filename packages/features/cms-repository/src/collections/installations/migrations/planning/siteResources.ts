@@ -1,16 +1,20 @@
 import {
     collectionThemeTokenId,
-    replaceCollectionAssetExpressions,
     type CollectionRelease,
     type CollectionResourceKind,
 } from "@bernouy/cms-repository/collections";
-import { replaceCollectionTextExpressions } from "@bernouy/cms-repository/collections/texts";
 import type { CmsRepository } from "@bernouy/cms-content";
 import { assertContentRefsExist } from "@bernouy/cms-content/page-document";
 import type { BlocRecord, SiteBlocNode } from "@bernouy/cms-content";
 import type { CollectionMigrationParticipantSnapshot } from "../interfaces";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
 import { migrationIssue } from "./validation";
+import {
+    assertCollectionAssetReferences,
+    assertCollectionTextReferences,
+    collectionTextIds,
+    finalCollectionReleases,
+} from "./targetResources";
 
 export async function validateTargetSiteResources(
     repository: CmsRepository,
@@ -39,17 +43,15 @@ export async function validateTargetSiteResources(
         })),
     );
     const finalBlocs = [...current.filter((bloc) => !oldIds.has(bloc.id)), ...targetBlocs];
-    const releases = finalReleases(installed, targets);
-    const texts = new Map(
-        releases.map((release) => [release.collectionId, new Set((release.texts ?? []).map(({ id }) => id))]),
-    );
+    const releases = finalCollectionReleases(installed, targets);
+    const texts = collectionTextIds(releases);
     const availableResources = collectionResourceKeys(releases);
     for (const record of records.filter(({ contributionId }) => !contributionId)) {
         for (const [location, content] of recordContents(record)) {
             try {
                 await assertContentRefsExist({ getBlocsList: async () => finalBlocs }, content);
-                assertTextReferences(content, texts);
-                assertAssetReferences(content, releases);
+                assertCollectionTextReferences(content, texts);
+                assertCollectionAssetReferences(content, releases);
                 for (const tokenId of removedThemeTokens) {
                     if (referencesThemeToken(content, tokenId)) {
                         throw new Error(`references theme token ${tokenId}`);
@@ -106,37 +108,8 @@ function collectionResourceKeys(releases: readonly CollectionRelease[]): Set<str
     return keys;
 }
 
-function assertAssetReferences(content: string, releases: readonly CollectionRelease[]): void {
-    const assets = new Map(
-        releases.map((release) => [release.collectionId, new Set(release.assets.map(({ id }) => id))]),
-    );
-    replaceCollectionAssetExpressions(content, (collectionId, assetId) => {
-        if (!assets.get(collectionId)?.has(assetId)) {
-            throw new Error(`references collection asset ${collectionId}.${assetId}`);
-        }
-        return "";
-    });
-}
-
 function resourceKey(kind: CollectionResourceKind, collectionId: string, id: string): string {
     return `${kind}:${collectionId}:${id}`;
-}
-
-function finalReleases(
-    installed: readonly { release: CollectionRelease }[],
-    targets: readonly { artifact: { release: CollectionRelease } }[],
-): CollectionRelease[] {
-    const byId = new Map(targets.map(({ artifact }) => [artifact.release.collectionId, artifact.release]));
-    return installed.map(({ release }) => byId.get(release.collectionId) ?? release);
-}
-
-function assertTextReferences(content: string, texts: ReadonlyMap<string, ReadonlySet<string>>): void {
-    replaceCollectionTextExpressions(content, (collectionId, textId) => {
-        if (!texts.get(collectionId)?.has(textId)) {
-            throw new Error(`references collection text ${collectionId}.${textId}`);
-        }
-        return "";
-    });
 }
 
 function recordContents(record: BlocRecord): [string, string][] {

@@ -1,14 +1,17 @@
-import { replaceCollectionAssetExpressions, type CollectionRelease } from "@bernouy/cms-repository/collections";
-import {
-    parseCollectionTextOverrides,
-    replaceCollectionTextExpressions,
-} from "@bernouy/cms-repository/collections/texts";
+import type { CollectionRelease } from "@bernouy/cms-repository/collections";
+import { parseCollectionTextOverrides } from "@bernouy/cms-repository/collections/texts";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import type { CmsRepository } from "@bernouy/cms-content";
 import { assertContentRefsExist } from "@bernouy/cms-content/page-document";
 import { composeCollectionThemes } from "../../../integration/content/theme";
 import type { CollectionMigrationResourceChange } from "../interfaces";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
+import {
+    assertCollectionAssetReferences,
+    assertCollectionTextReferences,
+    collectionTextIds,
+    finalCollectionReleases,
+} from "./targetResources";
 
 export function validateTargetData(
     release: CollectionRelease,
@@ -54,7 +57,8 @@ export async function validateTargetPages(
         })),
     );
     const finalBlocs = [...current.filter((bloc) => !oldIds.has(bloc.id)), ...targetBlocs];
-    const texts = collectionTexts(finalReleases(installed, targets));
+    const releases = finalCollectionReleases(installed, targets);
+    const texts = collectionTextIds(releases);
     for (const { page, content } of pages) {
         try {
             const targetRepository = {
@@ -62,24 +66,12 @@ export async function validateTargetPages(
                 getBlocViewJS: (tag: string) => repository.getBlocViewJS(tag),
             };
             await assertContentRefsExist(targetRepository, content);
-            assertTextReferences(content, texts);
-            assertAssetReferences(content, finalReleases(installed, targets));
+            assertCollectionTextReferences(content, texts);
+            assertCollectionAssetReferences(content, releases);
         } catch (error) {
             blocked.push(migrationIssue(`Page ${page.path} is incompatible with the target collections`, error));
         }
     }
-}
-
-function assertAssetReferences(content: string, releases: readonly CollectionRelease[]): void {
-    const assets = new Map(
-        releases.map((release) => [release.collectionId, new Set(release.assets.map(({ id }) => id))]),
-    );
-    replaceCollectionAssetExpressions(content, (collectionId, assetId) => {
-        if (!assets.get(collectionId)?.has(assetId)) {
-            throw new Error(`references collection asset ${collectionId}.${assetId}`);
-        }
-        return "";
-    });
 }
 
 export function validateTargetTheme(
@@ -126,27 +118,4 @@ export function validateTargetPageThemeReferences(
 
 export function migrationIssue(context: string, error: unknown): string {
     return `${context}: ${error instanceof Error ? error.message : "unknown validation error"}.`;
-}
-
-function finalReleases(
-    installed: readonly { release: CollectionRelease }[],
-    targets: readonly { artifact: { release: CollectionRelease } }[],
-): CollectionRelease[] {
-    const byId = new Map(targets.map(({ artifact }) => [artifact.release.collectionId, artifact.release]));
-    return installed.map(({ release }) => byId.get(release.collectionId) ?? release);
-}
-
-function collectionTexts(releases: readonly CollectionRelease[]): Map<string, Set<string>> {
-    return new Map(
-        releases.map((release) => [release.collectionId, new Set((release.texts ?? []).map(({ id }) => id))]),
-    );
-}
-
-function assertTextReferences(content: string, texts: ReadonlyMap<string, ReadonlySet<string>>): void {
-    replaceCollectionTextExpressions(content, (collectionId, textId) => {
-        if (!texts.get(collectionId)?.has(textId)) {
-            throw new Error(`references collection text ${collectionId}.${textId}`);
-        }
-        return "";
-    });
 }
