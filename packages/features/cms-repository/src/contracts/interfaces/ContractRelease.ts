@@ -4,6 +4,7 @@ import type { ReleaseDigest } from "../core/admission/digest";
 
 export type CapabilityAccess = "admin" | "authenticated" | "public";
 export type CapabilityExecution = "operation" | "sync";
+export type CapabilityResponseEffect = "session";
 
 /**
  * Queries do not change business state, so they need no idempotency declaration.
@@ -77,6 +78,8 @@ export interface CapabilityDefinition {
     readonly output: UlviaSchema;
     readonly errors: readonly CapabilityErrorDefinition[];
     readonly binding: HttpBindingDefinition;
+    /** Trusted HTTP-boundary effects a successful response may request. */
+    readonly responseEffects?: readonly CapabilityResponseEffect[];
     readonly requires?: readonly CapabilityRequirement[];
     readonly mocks?: readonly CapabilityMockDefinition[];
     readonly deprecation?: CapabilityDeprecation;

@@ -14,6 +14,7 @@ import type {
     CapabilityDefinition,
     CapabilityErrorDefinition,
     CapabilityExecution,
+    CapabilityResponseEffect,
     ContractFixtureAssetDefinition,
 } from "../../interfaces/ContractRelease";
 import type { UlviaObjectSchema } from "../../interfaces/UlviaSchema";
@@ -29,6 +30,7 @@ const ACCESS_LEVELS = new Set<CapabilityAccess>(["admin", "authenticated", "publ
 const EFFECTS = new Set(["command", "query"] as const);
 const EXECUTIONS = new Set<CapabilityExecution>(["operation", "sync"]);
 const IDEMPOTENCY = new Set(["keyed", "natural", "none"] as const);
+const RESPONSE_EFFECTS = new Set<CapabilityResponseEffect>(["session"]);
 
 export function parseCapability(
     value: unknown,
@@ -53,6 +55,7 @@ export function parseCapability(
             "binding",
             "mocks",
             "requires",
+            "responseEffects",
         ],
         path,
         "invalid_contract",
@@ -77,6 +80,7 @@ export function parseCapability(
     const errors = parseErrors(record.errors, `${path}.errors`, schemaState);
     const behavior = parseBehavior(record.behavior, `${path}.behavior`);
     const binding = parseHttpBinding(record.binding, `${path}.binding`, limits);
+    const responseEffects = parseResponseEffects(record.responseEffects, `${path}.responseEffects`);
     return {
         id: parseIdentifier(record.id, `${path}.id`),
         ...(description ? { description } : {}),
@@ -86,6 +90,7 @@ export function parseCapability(
         output,
         errors,
         binding,
+        ...(responseEffects ? { responseEffects } : {}),
         ...(record.requires === undefined
             ? {}
             : { requires: parseCapabilityRequirements(record.requires, `${path}.requires`, limits) }),
@@ -107,6 +112,25 @@ export function parseCapability(
             ? {}
             : { deprecation: parseCapabilityDeprecation(record.deprecation, `${path}.deprecation`) }),
     };
+}
+
+function parseResponseEffects(value: unknown, path: string): readonly CapabilityResponseEffect[] | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    const source = expectArray(value, path, "invalid_contract");
+    if (source.length === 0) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "must declare at least one supported response effect",
+            path,
+        );
+    }
+    const effects = source.map((effect, index) => enumValue(effect, `${path}[${index}]`, RESPONSE_EFFECTS));
+    if (new Set(effects).size !== effects.length) {
+        throw new ReleaseValidationError("invalid_contract", "contains duplicate response effects", path);
+    }
+    return effects;
 }
 
 function parseBehavior(value: unknown, path: string): CapabilityBehavior {

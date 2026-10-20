@@ -82,6 +82,7 @@ export function parseContractRelease(
         capabilities,
         ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
     };
+    validateResponseEffectAuthority(release);
     for (const [index, capability] of capabilities.entries()) {
         if (capability.requires?.some((requirement) => requirement.contractId === release.contractId)) {
             throw new ReleaseValidationError(
@@ -99,6 +100,34 @@ export function parseContractRelease(
     }
     // Retained mock literals must belong to the release, not freeze or alias caller data.
     return deepFreeze(structuredClone(release)) as ContractRelease;
+}
+
+function validateResponseEffectAuthority(release: ContractRelease): void {
+    for (const [index, capability] of release.capabilities.entries()) {
+        if (!capability.responseEffects?.includes("session")) {
+            continue;
+        }
+        const path = `$.capabilities[${index}].responseEffects`;
+        if (release.contractId !== "ulvia.cms.access") {
+            throw new ReleaseValidationError(
+                "invalid_contract",
+                "session response effects are reserved to ulvia.cms.access",
+                path,
+            );
+        }
+        if (
+            capability.access !== "public" ||
+            capability.behavior.effect !== "command" ||
+            capability.behavior.execution !== "sync" ||
+            capability.output.type === "binary"
+        ) {
+            throw new ReleaseValidationError(
+                "invalid_contract",
+                "session response effects require a public synchronous structured command",
+                path,
+            );
+        }
+    }
 }
 
 function parseCatalogueMetadata(value: unknown): ContractRelease["catalogue"] {

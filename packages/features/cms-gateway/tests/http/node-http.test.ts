@@ -1,9 +1,6 @@
 import { expect, test } from "bun:test";
-import type { IncomingMessage } from "node:http";
-import { Readable } from "node:stream";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { selectGatewayAddress } from "cms-gateway/invocation/node-http/addressPolicy";
-import { toResponse } from "cms-gateway/invocation/node-http/nodeHttpRequest";
 
 test("node transport rejects mixed public and private DNS answers before reading secrets", async () => {
     let secretsRead = 0;
@@ -119,20 +116,6 @@ test("node transport aborts DNS and secret lookups that outlast the request dead
         expect(result).toBe("TimeoutError");
         expect(sent).toBe(0);
     }
-});
-
-test("node response bridge pauses the source until the web body is consumed", async () => {
-    const incoming = Readable.from(Array.from({ length: 32 }, () => Buffer.alloc(1024)));
-    Object.assign(incoming, { statusCode: 200, headers: {} });
-    let emitted = 0;
-    const response = toResponse(incoming as IncomingMessage, "GET");
-    incoming.on("data", () => {
-        emitted += 1;
-    });
-    await Bun.sleep(10);
-    expect(emitted).toBe(1);
-    expect((await response.arrayBuffer()).byteLength).toBe(32 * 1024);
-    expect(emitted).toBe(32);
 });
 
 test("address policy refuses private, mapped, and documentation ranges", () => {

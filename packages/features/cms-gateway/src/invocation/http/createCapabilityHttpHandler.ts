@@ -9,6 +9,7 @@ import {
     type GatewayHttpFailureObserver,
 } from "./handleHttpCall";
 import { readGatewayHttpInput } from "./readHttpInput";
+import { actorCredentialFromRequest } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export type CapabilityHttpHandlerConfig = {
     siteId: string;
@@ -45,8 +46,12 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
         }
 
         let actor: GatewayActor = { kind: "anonymous" };
+        let actorCredential: ReturnType<typeof actorCredentialFromRequest>;
         try {
             const identifiers = await capabilityIdentifiers(request, config);
+            if (identifiers.contractId === "ulvia.cms.access" && identifiers.route.capability.id === "resolve-actor") {
+                actorCredential = actorCredentialFromRequest(request);
+            }
             if (identifiers.route.capability.access !== "public") {
                 actor = await config.resolveActor(request);
             }
@@ -69,6 +74,7 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
             actor,
             prefix: routePrefix(config.basePath),
             onFailure: config.onFailure,
+            ...(actorCredential ? { actorCredential } : {}),
         });
     };
 }
@@ -108,6 +114,9 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
                 capabilityId,
                 input,
                 actor,
+                ...(contractId === "ulvia.cms.access" && capabilityId === "resolve-actor"
+                    ? { actorCredential: actorCredentialFromRequest(request) }
+                    : {}),
             });
             return gatewayResultResponse(result, request.method);
         } catch (error) {
@@ -148,7 +157,7 @@ async function capabilityIdentifiers(request: Request, config: CapabilityHttpHan
         method: request.method,
         path: separator < 0 ? "/" : suffix.slice(separator),
     });
-    return { route };
+    return { contractId, route };
 }
 
 async function providerInstallation(config: CapabilityHttpHandlerConfig, request: Request): Promise<string | null> {

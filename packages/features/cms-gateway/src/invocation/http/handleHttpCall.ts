@@ -3,10 +3,12 @@ import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type {
     GatewayActor,
     GatewayHttpRoute,
+    GatewayInvocation,
     GatewayInvoker,
     GatewayResult,
 } from "cms-gateway/invocation/interfaces/Invocation";
 import { readGatewayHttpInput } from "cms-gateway/invocation/http/readHttpInput";
+import { encodeSessionEffect, SESSION_EFFECT_HEADER } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export interface GatewayHttpCallOptions {
     readonly invoker: GatewayInvoker;
@@ -14,6 +16,7 @@ export interface GatewayHttpCallOptions {
     readonly actor: GatewayActor;
     readonly prefix: string;
     readonly onFailure?: GatewayHttpFailureObserver;
+    readonly actorCredential?: GatewayInvocation["actorCredential"];
 }
 
 export type GatewayHttpFailure = Readonly<{
@@ -44,6 +47,7 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             ...(request.method === "HEAD" ? { httpMethod: "HEAD" as const } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),
             ...(binaryBody ? { binaryBody } : {}),
+            ...(options.actorCredential ? { actorCredential: options.actorCredential } : {}),
             input,
         });
         return gatewayResultResponse(result, request.method);
@@ -226,6 +230,9 @@ function parseIdempotencyKey(value: string | null): string | undefined {
 }
 
 export function gatewayResultResponse(result: GatewayResult, method: string): Response {
+    const effectHeader: Record<string, string> = result.responseEffect
+        ? { [SESSION_EFFECT_HEADER]: encodeSessionEffect(result.responseEffect) }
+        : {};
     if (result.kind === "binary") {
         if (method === "HEAD") {
             void result.stream.cancel();
@@ -238,6 +245,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
                 "x-ulvia-request-id": result.requestId,
                 ...(result.contentLength === undefined ? {} : { "content-length": String(result.contentLength) }),
                 ...result.responseHeaders,
+                ...effectHeader,
             },
         });
     }
@@ -249,17 +257,22 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
                 "x-ulvia-error-code": encodeURIComponent(result.errorCode),
                 "x-ulvia-request-id": result.requestId,
                 ...result.responseHeaders,
+                ...effectHeader,
             },
         });
     }
     if (result.status === 204 || result.status === 205) {
         return new Response(null, {
             status: result.status,
-            headers: { "cache-control": "private, no-store", "x-ulvia-request-id": result.requestId },
+            headers: {
+                "cache-control": "private, no-store",
+                "x-ulvia-request-id": result.requestId,
+                ...effectHeader,
+            },
         });
     }
     return result.kind === "success"
-        ? jsonResponse(result.output ?? null, result.status, result.requestId)
+        ? jsonResponse(result.output ?? null, result.status, result.requestId, effectHeader)
         : jsonResponse(
               {
                   error: {

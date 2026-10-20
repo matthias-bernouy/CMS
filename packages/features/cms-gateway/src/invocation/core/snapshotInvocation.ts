@@ -18,6 +18,7 @@ const INVOCATION_FIELDS = new Set([
     "httpMethod",
     "actor",
     "idempotencyKey",
+    "actorCredential",
 ]);
 
 /** Snapshot caller input before the first asynchronous route or grant lookup. */
@@ -46,6 +47,7 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     }
     const actor = snapshotActor(value.actor);
     const idempotencyKey = snapshotIdempotencyKey(value.idempotencyKey);
+    const actorCredential = snapshotActorCredential(value.actorCredential);
     try {
         const bytes = canonicalIJsonBytes(value.input, MAX_CAPABILITY_JSON_DEPTH);
         if (bytes.byteLength > MAX_GATEWAY_JSON_BYTES) {
@@ -59,12 +61,31 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             actor,
             ...(value.httpMethod ? { httpMethod: value.httpMethod } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),
+            ...(actorCredential ? { actorCredential } : {}),
             ...(binaryBody ? { binaryBody } : {}),
             input: parseStrictJson(bytes, MAX_GATEWAY_JSON_BYTES, MAX_CAPABILITY_JSON_DEPTH),
         };
     } catch {
         throw new GatewayError("invalid_input", "input must be bounded interoperable JSON");
     }
+}
+
+function snapshotActorCredential(value: GatewayInvocation["actorCredential"]): GatewayInvocation["actorCredential"] {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (
+        !value ||
+        (value.kind !== "bearer" && value.kind !== "session") ||
+        Object.keys(value).some((field) => field !== "kind" && field !== "token") ||
+        typeof value.token !== "string" ||
+        value.token.length === 0 ||
+        value.token.length > 4_096 ||
+        /[\x00-\x20\x7f]/u.test(value.token)
+    ) {
+        throw new GatewayError("invalid_input", "actor credential is invalid");
+    }
+    return { kind: value.kind, token: value.token };
 }
 
 function snapshotBinaryBody(value: GatewayInvocation["binaryBody"]): GatewayInvocation["binaryBody"] {

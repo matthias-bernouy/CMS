@@ -25,6 +25,7 @@ export type {
     CapabilityRequirement,
     CapabilityErrorDefinition,
     CapabilityExecution,
+    CapabilityResponseEffect,
     CapabilityMockDefinition,
     CapabilityMockOutcome,
     CapabilityDeprecation,

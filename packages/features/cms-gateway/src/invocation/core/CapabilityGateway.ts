@@ -90,6 +90,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
     async invoke(value: GatewayInvocation): Promise<GatewayResult> {
         const invocation = snapshotInvocation(value);
         const { route, instanceId, release, capability, binding } = await this.#authorizedRoute(invocation);
+        assertActorCredentialTarget(invocation, capability);
         const input = snapshotInput(invocation.input, capability);
         const subjectId = await this.#providerSubjectId(invocation.actor, capability, route);
         if (!(await this.#options.routes.isCurrent(route))) {
@@ -118,6 +119,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 ...(invocation.binaryBody ? { binaryBody: invocation.binaryBody } : {}),
                 ...(subjectId ? { subjectId } : {}),
                 ...(invocation.idempotencyKey ? { idempotencyKey: invocation.idempotencyKey } : {}),
+                ...(invocation.actorCredential ? { actorCredential: invocation.actorCredential } : {}),
             });
             if (!(await this.#options.routes.isCurrent(route))) {
                 throw new GatewayError("stale_route", "selection or installation changed during invocation");
@@ -253,6 +255,20 @@ export class CapabilityGateway implements GatewayAccessProbe {
             { providerId: route.installation.installation.providerId },
             actor.subjectId,
         );
+    }
+}
+
+function assertActorCredentialTarget(invocation: GatewayInvocation, capability: CapabilityDefinition): void {
+    if (!invocation.actorCredential) {
+        return;
+    }
+    if (
+        invocation.contractId !== "ulvia.cms.access" ||
+        invocation.capabilityId !== "resolve-actor" ||
+        capability.access !== "public" ||
+        capability.behavior.effect !== "query"
+    ) {
+        throw new GatewayError("invalid_input", "actor credentials are restricted to the Access actor resolver");
     }
 }
 

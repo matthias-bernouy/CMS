@@ -10,6 +10,7 @@ import type {
 import { buildHttpInvocation, type PreparedHttpInvocation } from "cms-gateway/invocation/http/buildHttpInvocation";
 import { readBounded } from "cms-gateway/invocation/http/readBounded";
 import { withAbort } from "cms-gateway/invocation/http/withAbort";
+import { decodeSessionEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export interface GatewayHttpExchange extends PreparedHttpInvocation {
     readonly requestId: string;
@@ -25,6 +26,7 @@ export interface GatewayHttpExchange extends PreparedHttpInvocation {
               readonly subjectId?: string;
           };
     readonly idempotencyKey?: string;
+    readonly actorCredential?: GatewayTransportRequest["actorCredential"];
     readonly signal: AbortSignal;
     readonly accept?: string;
 }
@@ -86,6 +88,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                 ...(request.subjectId ? { subjectId: request.subjectId } : {}),
             },
             ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
+            ...(request.actorCredential ? { actorCredential: request.actorCredential } : {}),
             accept:
                 request.binding.response.kind === "operation-handle"
                     ? "application/json"
@@ -107,6 +110,7 @@ export class HttpGatewayTransport implements GatewayTransport {
             }
             const contentType = response.headers.get("content-type") ?? undefined;
             const responseHeaders = allowedResponseHeaders(response.headers);
+            const responseEffect = decodeSessionEffect(response.headers.get("x-ulvia-session-effect"));
             const maximum =
                 request.binding.response.kind !== "operation-handle" &&
                 request.capability.output.type === "binary" &&
@@ -130,6 +134,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                     stream: boundedStream(prefetched, maximum, abort, this.#inactivityTimeoutMs),
                     ...(contentLength === undefined ? {} : { contentLength }),
                     responseHeaders,
+                    ...(responseEffect ? { responseEffect } : {}),
                 };
             }
             const bytes = await readBounded(response, maximum, signal);
@@ -140,10 +145,15 @@ export class HttpGatewayTransport implements GatewayTransport {
                     contentType,
                     responseHeaders,
                     output: bytes.byteLength ? parseStrictJson(bytes, this.#maxResponseBytes, 64) : null,
+                    ...(responseEffect ? { responseEffect } : {}),
                 };
             }
             if (request.binding.response.errorEnvelope.kind === "headers") {
-                return { ...headError(response, request, bytes), responseHeaders };
+                return {
+                    ...headError(response, request, bytes),
+                    responseHeaders,
+                    ...(responseEffect ? { responseEffect } : {}),
+                };
             }
             if (contentType?.split(";", 1)[0]?.trim().toLowerCase() !== "application/json") {
                 throw new TypeError("provider error content type is invalid");
@@ -165,6 +175,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                 contentType,
                 responseHeaders,
                 errorCode: fields.code,
+                ...(responseEffect ? { responseEffect } : {}),
                 ...(Object.hasOwn(fields, "output") ? { output: fields.output } : {}),
             };
         } catch {

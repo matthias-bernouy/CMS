@@ -148,4 +148,26 @@ describe("contract release compatibility", () => {
 
         expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: true, requiredBump: "patch" });
     });
+
+    test("requires a major release when a capability response effect changes", () => {
+        const command = capabilityDocument({
+            access: "public",
+            behavior: { effect: "command", idempotency: "natural", execution: "sync" },
+        });
+        const previous = parseContractRelease(
+            contractDocument({ contractId: "ulvia.cms.access", version: "1.0.0", capabilities: [command] }),
+        );
+        const next = parseContractRelease(
+            contractDocument({
+                contractId: "ulvia.cms.access",
+                version: "2.0.0",
+                capabilities: [{ ...command, responseEffects: ["session"] }],
+            }),
+        );
+
+        expect(compareContractReleases(previous, next)).toMatchObject({
+            requiredBump: "major",
+            issues: [{ path: 'capabilities["email.message.send"].responseEffects' }],
+        });
+    });
 });

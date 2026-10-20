@@ -12,6 +12,7 @@ import {
     type ResolvedAddress,
 } from "cms-gateway/invocation/node-http/addressPolicy";
 import { sendPinnedHttpRequest, type PinnedHttpRequest } from "cms-gateway/invocation/node-http/nodeHttpRequest";
+import { ACTOR_CREDENTIAL_HEADER, encodeActorCredential } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export interface NodeGatewayHttpNetworkOptions {
     /** Resolves a host-owned credential reference without exposing its value to the gateway core. */
@@ -102,6 +103,9 @@ function trustedHeaders(request: GatewayHttpExchange, authorization: string): Re
         authorization: `Bearer ${authorization}`,
         "x-ulvia-request-id": request.requestId,
         ...(request.idempotencyKey ? { "idempotency-key": request.idempotencyKey } : {}),
+        ...(request.actorCredential
+            ? { [ACTOR_CREDENTIAL_HEADER]: encodeActorCredential(request.actorCredential) }
+            : {}),
         ...(request.contentLength === undefined ? {} : { "content-length": String(request.contentLength) }),
     };
 }

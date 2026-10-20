@@ -109,6 +109,18 @@ describe("capability gateway", () => {
         expect(scope.sent).toHaveLength(0);
     });
 
+    test("rejects opaque actor credentials outside the Access actor resolver", async () => {
+        const scope = harness(await gatewayRoute());
+
+        await expect(
+            scope.gateway.invoke({
+                ...invocation(),
+                actorCredential: { kind: "session", token: "opaque-session" },
+            }),
+        ).rejects.toMatchObject({ code: "invalid_input" });
+        expect(scope.sent).toHaveLength(0);
+    });
+
     test("rejects pin mismatches, disabled installations, and absent readiness", async () => {
         const route = await gatewayRoute();
         for (const candidate of [

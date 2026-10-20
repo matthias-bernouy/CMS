@@ -107,6 +107,36 @@ describe("contract release parsing", () => {
         ).toThrow('unknown property "audience"');
     });
 
+    test("reserves session effects to public synchronous Access commands", () => {
+        const sessionCommand = capabilityDocument({
+            access: "public",
+            behavior: { effect: "command", idempotency: "natural", execution: "sync" },
+            responseEffects: ["session"],
+        });
+        expect(() =>
+            parseContractRelease(contractDocument({ contractId: "ulvia.cms.access", capabilities: [sessionCommand] })),
+        ).not.toThrow();
+        expect(() => parseContractRelease(contractDocument({ capabilities: [sessionCommand] }))).toThrow(
+            "session response effects are reserved to ulvia.cms.access",
+        );
+        expect(() =>
+            parseContractRelease(
+                contractDocument({
+                    contractId: "ulvia.cms.access",
+                    capabilities: [capabilityDocument({ ...sessionCommand, access: "authenticated" })],
+                }),
+            ),
+        ).toThrow("public synchronous structured command");
+        expect(() =>
+            parseContractRelease(
+                contractDocument({
+                    contractId: "ulvia.cms.access",
+                    capabilities: [capabilityDocument({ ...sessionCommand, responseEffects: ["session", "session"] })],
+                }),
+            ),
+        ).toThrow("duplicate response effects");
+    });
+
     test("admits neutral synchronous binary queries", () => {
         const binaryCapability = capabilityDocument({
             id: "asset.read",

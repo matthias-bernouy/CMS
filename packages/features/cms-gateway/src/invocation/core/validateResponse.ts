@@ -15,6 +15,7 @@ export function validateResponse(
     if (!Number.isInteger(response.status)) {
         throw new GatewayError("invalid_provider_response", "provider response status is invalid");
     }
+    const responseEffect = validatedResponseEffect(capability, binding, response);
     if (binding.response.successStatuses.includes(response.status)) {
         if (response.errorCode !== undefined) {
             throw new GatewayError("invalid_provider_response", "success response contains an error code");
@@ -30,6 +31,7 @@ export function validateResponse(
                     requestId,
                     status: response.status,
                     output: parseCapabilityOperationHandle(response.output),
+                    ...(responseEffect ? { responseEffect } : {}),
                 });
             } catch {
                 throw new GatewayError("invalid_provider_response", "provider operation handle is invalid");
@@ -64,6 +66,7 @@ export function validateResponse(
                     "cache-control",
                     "last-modified",
                 ]),
+                ...(responseEffect ? { responseEffect } : {}),
             });
         }
         if (response.bytes !== undefined) {
@@ -71,7 +74,13 @@ export function validateResponse(
         }
         try {
             const output = projectSchemaValue(capability.output, response.output ?? null);
-            return Object.freeze({ kind: "success", requestId, status: response.status, output });
+            return Object.freeze({
+                kind: "success",
+                requestId,
+                status: response.status,
+                output,
+                ...(responseEffect ? { responseEffect } : {}),
+            });
         } catch {
             throw new GatewayError(
                 "invalid_provider_response",
@@ -116,6 +125,24 @@ export function validateResponse(
     } catch {
         throw new GatewayError("invalid_provider_response", "provider error output violates the selected release");
     }
+}
+
+function validatedResponseEffect(
+    capability: CapabilityDefinition,
+    binding: CompiledHttpBinding,
+    response: GatewayTransportResponse,
+): GatewayTransportResponse["responseEffect"] {
+    const effect = response.responseEffect;
+    if (!effect) {
+        return undefined;
+    }
+    if (!binding.response.successStatuses.includes(response.status)) {
+        throw new GatewayError("invalid_provider_response", "provider errors cannot request response effects");
+    }
+    if (effect.type !== "session" || !capability.responseEffects?.includes("session")) {
+        throw new GatewayError("invalid_provider_response", "provider returned an undeclared response effect");
+    }
+    return effect;
 }
 
 function checkBinaryRange(response: GatewayTransportResponse): void {

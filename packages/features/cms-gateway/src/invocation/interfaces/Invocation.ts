@@ -4,6 +4,7 @@ import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts
 import type { CatalogueProviderManifest } from "@bernouy/cms-repository/providers/catalogue";
 import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
+import type { GatewayActorCredential, GatewayResponseEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
 export type GatewayActor =
     | { readonly kind: "anonymous" }
     | { readonly kind: "user" | "administrator"; readonly subjectId: string }
@@ -23,6 +24,8 @@ export interface GatewayInvocation {
     readonly actor: GatewayActor;
     /** Required by keyed commands and transported outside authored capability input. */
     readonly idempotencyKey?: string;
+    /** Opaque browser credential accepted only by the Access actor resolver. */
+    readonly actorCredential?: GatewayActorCredential;
 }
 
 interface GatewayBinaryBody {
@@ -56,6 +59,7 @@ export interface GatewayTransportRequest {
     /** Provider-scoped opaque user identity, included only when the capability requires one. */
     readonly subjectId?: string;
     readonly idempotencyKey?: string;
+    readonly actorCredential?: GatewayActorCredential;
 }
 
 export interface GatewayTransportResponse {
@@ -67,6 +71,7 @@ export interface GatewayTransportResponse {
     readonly stream?: ReadableStream<Uint8Array>;
     readonly contentLength?: number;
     readonly errorCode?: string;
+    readonly responseEffect?: GatewayResponseEffect;
 }
 
 export interface GatewayTransport {
@@ -77,6 +82,7 @@ interface GatewayResultBase {
     readonly requestId: string;
     readonly status: number;
     readonly responseHeaders?: Readonly<Record<string, string>>;
+    readonly responseEffect?: GatewayResponseEffect;
 }
 
 export type GatewayResult =

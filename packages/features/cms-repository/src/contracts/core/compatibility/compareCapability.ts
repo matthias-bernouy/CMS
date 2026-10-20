@@ -27,6 +27,12 @@ export function compareCapability(
     if (fingerprint(previous.behavior, maxJsonDepth) !== fingerprint(next.behavior, maxJsonDepth)) {
         changes.push(major("capability_changed", `${path}.behavior`, "capability behavior changed"));
     }
+    if (
+        fingerprint(previous.responseEffects ?? [], maxJsonDepth) !==
+        fingerprint(next.responseEffects ?? [], maxJsonDepth)
+    ) {
+        changes.push(major("capability_changed", `${path}.responseEffects`, "capability response effects changed"));
+    }
     changes.push(...compareRequirements(previous.requires ?? [], next.requires ?? [], `${path}.requires`));
     const inputChange = compareSchema(previous.input, next.input, `${path}.input`, "input", maxJsonDepth);
     if (inputChange) {
