@@ -1,0 +1,28 @@
+{
+    "id": "resolve-actor",
+    "description": "Resolve one trusted browser credential into the current CMS actor.",
+    "access": "public",
+    "behavior": { "effect": "query", "execution": "sync" },
+    "input": { "type": "object", "properties": {}, "required": [] },
+    "output": {
+        "type": "object",
+        "properties": {
+            "state": { "type": "string", "enum": ["anonymous", "authenticated"], "maxLength": 13 },
+            "subjectId": { "type": "string", "maxLength": 200 },
+            "administrator": { "type": "boolean" },
+            "authorizationRevision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+        },
+        "required": ["state"]
+    },
+    "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/resolve-actor",
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+        }
+    }
+}

@@ -31,7 +31,7 @@
         {
             "contractId": "ulvia.cms.access",
             "version": "1.0.0",
-            "digest": "sha256:3e48a677280cf4d9a9785afc8b4e07d5d74dbfb8614ff307bf50bab443ce4ebd",
+            "digest": "sha256:61fee8562e4b72a8a7cdd216cc541d47263f4919b7b3a92bc92797e99f8029eb",
             "requires": []
         },
         {

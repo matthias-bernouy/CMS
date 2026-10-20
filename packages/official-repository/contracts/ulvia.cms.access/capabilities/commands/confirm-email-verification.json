@@ -1,0 +1,28 @@
+{
+    "id": "confirm-email-verification",
+    "description": "Confirm a local account email with a one-time token.",
+    "access": "public",
+    "behavior": { "effect": "command", "idempotency": "natural", "execution": "sync" },
+    "input": {
+        "type": "object",
+        "properties": { "token": { "type": "string", "sensitive": true, "minLength": 1, "maxLength": 4096 } },
+        "required": ["token"]
+    },
+    "output": {
+        "type": "object",
+        "properties": { "confirmed": { "type": "boolean" } },
+        "required": ["confirmed"]
+    },
+    "errors": [{ "code": "INVALID_INPUT", "retryable": false }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/confirm-email-verification",
+        "input": { "body": true },
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "INVALID_INPUT": 422, "CORE_UNAVAILABLE": 503 }
+        }
+    }
+}
