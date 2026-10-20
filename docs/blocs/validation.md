@@ -28,7 +28,7 @@ CSS custom-property writes. Bundling enforces supported imports and validates
 emitted syntax. Release admission parses every Bloc stylesheet and validates
 custom-property ownership, declared Bloc dependencies, theme-token imports and
 fallbacks for optional values. The collection import path additionally checks
-source bundles, default content and managed native-child structure.
+source bundles, default content and bounded `native-element` slot structure.
 
 When changing compiler behavior, add a focused test beside
 `packages/features/cms-repository/tests/collections/admission/tooling/`.

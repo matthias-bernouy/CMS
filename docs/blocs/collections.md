@@ -11,8 +11,7 @@ collection/
 ├── definition.json
 ├── blocs/**/<bloc>/
 │   ├── definition.json
-│   ├── template.html
-│   ├── lightdom.html
+│   ├── markup.html
 │   ├── default.html
 │   ├── style.css
 │   ├── bloc.ts
@@ -30,10 +29,11 @@ collection/
 ```
 
 Bloc folders may be grouped recursively. The folder basename is the Bloc ID;
-grouping paths never become identities. A retained component uses
-`template.html`; a server-expanded composition uses `lightdom.html`.
-`default.html`, `style.css` and `bloc.ts` are optional where the Bloc kind
-allows them. There is no `shadowdom.html` source.
+grouping paths never become identities. Every Bloc uses `markup.html`;
+`definition.json.kind` decides whether its native host is retained as a
+component or replaced as a server-expanded composition. `default.html`,
+`style.css` and `bloc.ts` are optional where the Bloc kind allows them. There
+are no `template.html`, `lightdom.html` or `shadowdom.html` sources.
 
 ## Bloc Documents
 
@@ -44,18 +44,19 @@ with the Bloc identity in `cms-bloc`:
 <section cms-bloc="example-hero"></section>
 ```
 
-The fixed template, Page-owned defaults and Page documents are all Light DOM.
+The fixed markup, Page-owned defaults and Page documents are all Light DOM.
 Nested Blocs use the same representation. Named slots declare exact accepted
 Blocs, `any-component`, `plain-text`, or bounded `native-content` profiles.
 Cardinality is enforced at every write boundary. Compositions are expanded on
 the server and are not accepted by `any-component`.
 
-A retained Bloc may declare `content` for exactly one Page-owned native child,
-such as an input or select enhanced by behavior. Root and child contracts each
-declare accepted native tags and constrained native attributes.
+A retained Bloc may declare a bounded default slot accepting a
+`native-element`, such as an input or select enhanced by behavior. Root and
+child contracts each declare accepted native tags and constrained native
+attributes. This is ordinary slot validation, not a second content mechanism.
 
 CSS is parsed, checked, and wrapped in `@scope ([cms-bloc="<id>"])` by the
-build. Shadow DOM selectors and global selectors are rejected. Named template
+build. Shadow DOM selectors and global selectors are rejected. Named markup
 slots become Light DOM `part` tokens after projection.
 
 Behavior is optional. When present, `bloc.ts` exports one `mount(root)` function

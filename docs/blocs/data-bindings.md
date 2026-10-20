@@ -270,6 +270,19 @@ only for the boolean value `true`. ARIA boolean values become the strings
 `"true"` and `"false"`. The `string` filter explicitly converts safe scalar
 values and rejects objects and arrays.
 
+A dynamic native link must either keep a static same-site path and encode only
+its query or fragment values with `urlencode`, or filter its whole provider
+value through `internalUrl`:
+
+```html
+<a href="/products?id={{ product.id | urlencode }}">…</a>
+<a href="{{ file.url | internalUrl }}">…</a>
+```
+
+`internalUrl` accepts only an absolute same-origin path beginning with one `/`.
+It rejects schemes, protocol-relative URLs, backslashes, whitespace and control
+characters, then normalizes the path before the browser receives it.
+
 Attributes on a `cms-bloc` root must correspond to declared Bloc settings,
 admitted native root attributes or platform binding attributes. Their types,
 native booleans, ARIA values and dynamic URL destinations are checked when a

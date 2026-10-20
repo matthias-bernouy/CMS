@@ -24,7 +24,7 @@
 - Give every official text definition translated `label`, `category` and `group`
   metadata. Organize those metadata translations recursively by product domain;
   never make Control display raw text IDs as its primary catalogue labels.
-- Keep user-facing copy out of Bloc `default.html`, fixed `lightdom.html` and
+- Keep user-facing copy out of Bloc `default.html`, fixed `markup.html` and
   Page `page.html`. Visible text and accessible labels must be a business-data
   binding or an exact `cms.i18n.<collection>.<text>` reference; author reusable
   values in the recursive collection text trees.
@@ -32,5 +32,6 @@
   `"*"` shorthand, but the admitted release must show exactly which public Blocs,
   tokens, texts and assets form its API. Never use wildcard dependency imports.
 - Every Bloc declares a native `root` contract and Pages identify it with
-  `cms-bloc`. Wrapper Blocs may declare exactly one Page-owned native `content`
-  child. All structure is Light DOM; Shadow DOM is forbidden.
+  `cms-bloc`. A Bloc that owns one Page-authored native child declares it as a
+  bounded default slot with `kind: "native-element"`; there is no separate
+  `content` contract. All structure is Light DOM; Shadow DOM is forbidden.

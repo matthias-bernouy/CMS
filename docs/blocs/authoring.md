@@ -12,8 +12,7 @@ Bloc at `definition.json`; its basename must equal the definition `id`.
 ```text
 blocs/content/example-card/
 ├── definition.json
-├── template.html       # optional fixed Light DOM for retained Blocs
-├── lightdom.html       # required for server-expanded compositions
+├── markup.html         # required fixed Light DOM
 ├── default.html        # optional initial Page-owned content
 ├── style.css           # optional, compiled into a scoped stylesheet
 ├── bloc.ts             # optional behavior
@@ -21,9 +20,10 @@ blocs/content/example-card/
 └── runtime/helpers.ts
 ```
 
-Grouping folders contain directories only. A component Bloc requires
-`template.html`; a composition requires `lightdom.html`. Compositions cannot
-have styles, settings, behavior or fixed component content.
+Grouping folders contain directories only. Every Bloc requires `markup.html`.
+`definition.json` declares whether that markup belongs to a retained component
+or replaces a composition host. Compositions cannot have styles, settings or
+behavior.
 
 ## Native Roots
 
@@ -48,16 +48,29 @@ Collection custom-element tags are forbidden. The Bloc ID remains a stable,
 namespaced identity, but it is stored in `cms-bloc` instead of becoming the DOM
 tag name. Pages therefore stay crawlable and accessible without JavaScript.
 
-A wrapper Bloc may declare `content` to manage exactly one Page-owned native
-child, for example an enriched `<input>` or `<select>`. The wrapper root and
-managed child have separate native contracts. Native links require a real
-`href`; interactive descendants are rejected.
+A wrapper Bloc may manage one Page-owned native child through its default slot:
+
+```json
+{
+    "slots": {
+        "default": {
+            "accepts": [{ "kind": "native-element", "accepts": ["input"] }],
+            "min": 1,
+            "max": 1
+        }
+    }
+}
+```
+
+The wrapper root and native child have separate contracts. There is no special
+`content` field. Native links require a real `href`; interactive descendants
+are rejected.
 
 ## Light DOM And CSS
 
 All visible content lives in Light DOM. Shadow DOM, `attachShadow`,
 `shadowRoot`, `:host`, `::part` and `::slotted` are not part of the Bloc model.
-`template.html` owns fixed structural Light DOM; `default.html` supplies
+`markup.html` owns fixed structural Light DOM; `default.html` supplies
 initial Page-owned children that must satisfy the Bloc slot contract.
 
 `style.css` is parsed during the build and wrapped in a collection-owned native
@@ -116,7 +129,7 @@ Location mutation are rejected.
 
 An empty Page is empty. Every non-empty Page root must carry `cms-bloc` and
 reference an active installed Bloc. Native children are admitted only through
-that Bloc's `content` or named-slot contract. Slot acceptance, cardinality,
+that Bloc's default or named-slot contract. Slot acceptance, cardinality,
 native attributes, accessibility, bindings, links and transitive Bloc
 references are checked for collection Pages, defaults, Page writes,
 publication and migrations.
