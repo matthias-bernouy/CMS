@@ -1,4 +1,4 @@
-import type { Subject } from "cms-auth/application/interfaces/Authentication";
+import type { Subject } from "cms-auth/accounts/interfaces/Subject";
 import type { Identity, TUser, UsersRepository } from "cms-auth/accounts/interfaces/UsersRepository";
 
 /**

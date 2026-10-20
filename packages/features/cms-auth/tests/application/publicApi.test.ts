@@ -2,18 +2,15 @@ import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import * as auth from "@bernouy/cms-auth";
 import * as management from "@bernouy/cms-auth/management";
-import * as http from "@bernouy/cms-auth/http";
 
-test("auth entrypoints separate composition, management and HTTP without exposing SMTP at root", () => {
+test("auth entrypoints separate composition and management without exposing adapters at root", () => {
     expect(auth.createPublicAuthActions).toBeFunction();
-    expect(http.registerPublicAuthRoutes).toBeFunction();
     expect(management.createLocalUser).toBeFunction();
     expect(management.createAuthEmailTestSender).toBeFunction();
     for (const name of [
         "SmtpEmailer",
         "ConfiguredEmailer",
         "MongoUsersRepository",
-        "registerPublicAuthRoutes",
         "createLocalUser",
         "deleteUserCompletely",
     ]) {
@@ -23,9 +20,7 @@ test("auth entrypoints separate composition, management and HTTP without exposin
 
 test("ordinary auth entrypoints do not resolve SMTP or Mongo even through transitive helpers", async () => {
     const result = await Bun.build({
-        entrypoints: ["index.ts", "http.ts", "management.ts"].map((file) =>
-            resolve(import.meta.dir, "../../src/exports", file),
-        ),
+        entrypoints: ["index.ts", "management.ts"].map((file) => resolve(import.meta.dir, "../../src/exports", file)),
         target: "bun",
         write: false,
         plugins: [
@@ -41,5 +36,5 @@ test("ordinary auth entrypoints do not resolve SMTP or Mongo even through transi
     });
     expect(result.logs).toEqual([]);
     expect(result.success).toBe(true);
-    expect(result.outputs).toHaveLength(3);
+    expect(result.outputs).toHaveLength(2);
 });

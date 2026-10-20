@@ -1,21 +1,18 @@
 {
     "name": "@bernouy/cms-auth",
     "version": "0.1.0",
-    "description": "CMS-owned local authentication, personal access tokens, signed sessions, membership and credential stores.",
+    "description": "Provider-owned local authentication, personal access tokens, signed sessions, membership and credential stores.",
     "license": "MIT",
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
         "./management": "./src/exports/management.ts",
-        "./http": "./src/exports/http.ts",
         "./mongo": "./src/exports/mongo.ts",
         "./smtp": "./src/exports/smtp.ts"
     },
     "dependencies": {
         "@bernouy/envelope-crypto": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "@bernouy/logging": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "nodemailer": "^10.0.10"

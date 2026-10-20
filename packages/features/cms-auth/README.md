@@ -1,16 +1,18 @@
 # @bernouy/cms-auth
 
-CMS-owned authentication for local credentials, personal access tokens,
-signed sessions, public account flows, and membership persistence.
+Provider-owned authentication primitives for local credentials, personal access
+tokens, signed sessions, public account flows, and membership persistence.
 
 ## Public API
 
 - `@bernouy/cms-auth` exposes adapter-light contracts, in-memory implementations,
-  session handling, and authentication assembly.
-- `/management` contains administration operations; `/http` contains route
-  handlers and registrars.
+  session-token handling, credential resolution and account-flow composition.
+- `/management` contains administration operations.
 - `/mongo` and `/smtp` are composition-root adapters.
-- `/browser` contains browser-safe helpers only.
+
+The package exposes no HTTP routes. Provider surfaces map its operations to an
+admitted access contract; the browser-facing Kernel only applies validated
+semantic session effects.
 
 Authorization policy is deliberately outside this package. Never log credentials,
 session material, PATs, or one-time tokens.

@@ -1,16 +1,16 @@
 /**
  * @bernouy/cms-auth — CMS-owned authentication primitives.
  *
- * Authentication contracts, session assembly, public action composition and
- * in-memory stores. Administrative mutations and HTTP registrars have explicit
- * ./management and ./http entrypoints.
+ * Credential proof, session-token assembly, account lifecycle actions and
+ * in-memory stores. Administrative mutations have an explicit ./management
+ * entrypoint.
  *
  * Browser-safe helpers live under ./browser. Mongo and SMTP adapters live
  * under ./mongo and ./smtp for composition roots; neither is loaded here.
  */
 
 // ── Authentication ─────────────────────────────────────────────────────
-export type { Authentication, Subject } from "cms-auth/application/interfaces/Authentication";
+export type { Subject } from "cms-auth/accounts/interfaces/Subject";
 export type {
     LocalAuthenticationActions,
     LocalLoginResult,
@@ -21,7 +21,7 @@ export {
     type LocalAuthConfig,
 } from "cms-auth/application/core/authentication/LocalAuthentication";
 export { SubjectResolver } from "cms-auth/accounts/core/SubjectResolver";
-export { resolveRequestSubject } from "cms-auth/application/core/authentication/requestSubject";
+export type { AuthenticationCredential } from "cms-auth/application/core/authentication/RequestSubjectResolver";
 export {
     createPublicAuthActions,
     type PublicAuthActions,
@@ -89,7 +89,3 @@ export {
     type TemplatedAuthEmailComposerConfig,
 } from "cms-auth/email/default-implementation/TemplatedAuthEmailComposer";
 export { DefaultAuthEmailComposer } from "cms-auth/email/default-implementation/DefaultAuthEmailComposer";
-export {
-    InMemoryAuthentication,
-    type InMemoryAuthConfig,
-} from "cms-auth/application/default-implementation/memory/InMemoryAuthentication";

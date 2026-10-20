@@ -1,7 +1,7 @@
 # @bernouy/cms-auth
 
-Feature package for CMS-owned authentication: local credentials, PATs,
-signed session cookies, public auth flows, and membership stores.
+Feature package for Provider-owned authentication: local credentials, PATs,
+signed session tokens, public account flows, and membership stores.
 
 ## Layout
 
@@ -10,8 +10,8 @@ signed session cookies, public auth flows, and membership stores.
 - `sessions/`: signed-cookie protocol for local login.
 - `tokens/`: separate personal-access and one-time token contracts and stores.
 - `email/`: transport-neutral composition/errors and optional SMTP delivery.
-- `application/`: cross-domain account/public flows, authentication assembly,
-  request snapshots and HTTP handlers. It receives runtime-selected stores.
+- `application/`: cross-domain account/public flows and credential resolution.
+  It receives runtime-selected stores and exposes no routes.
 - `exports/`: curated package entrypoints. Tests follow the same domain grouping.
 
 Email-disabled verification policy and operation-bound recovery-token
@@ -21,10 +21,9 @@ the exact same operation.
 
 ## Boundaries
 
-- Root export exposes adapter-light contracts, session/authentication assembly,
-  in-memory implementations, and public-auth action composition. Management
-  mutations use `@bernouy/cms-auth/management`; route handlers and registrars
-  use `@bernouy/cms-auth/http`.
+- Root export exposes adapter-light contracts, credential/session assembly,
+  in-memory stores and public account action composition. Management mutations
+  use `@bernouy/cms-auth/management`.
 - `@bernouy/cms-auth/mongo` exposes Mongo repositories for composition roots.
 - `@bernouy/cms-auth/smtp` exposes SMTP/configured email delivery for runtime
   composition roots only.
@@ -36,14 +35,14 @@ the exact same operation.
 
 - Never log credentials, PAT tokens, auth tokens, email verification tokens, or
   password reset tokens.
-- Public auth routes are mounted under `PUBLIC_AUTH_ROUTES.base` by a surface.
-  The Kernel disables signup for its guarded administration context.
+- Authentication is exposed only through a provider contract such as
+  `ulvia.cms.access`; do not reintroduce a parallel auth route family.
 - Membership records contain identity and activity metadata only. Authorization
   belongs to CMS policies, capability access and trusted gateway actors; it must
   not be added to authentication subjects.
 - Do not add browser components to this package.
-- Keep local password proof in `providers`, cookie protocol in `sessions`, and
-  request subject resolution plus HTTP parsing/response construction in
-  `application`. Public surfaces receive `PublicAuthActions`, never stores.
+- Keep local password proof in `providers`, signed session tokens in `sessions`,
+  and opaque credential resolution in `application`. Provider surfaces receive
+  bounded account-lifecycle actions, never stores.
 - Security-sensitive changes require tests around cookie behavior, rate limits,
   and token expiry.
