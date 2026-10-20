@@ -16,7 +16,7 @@
         }
     },
     {
-        "id": "align",
+        "id": "text-align",
         "label": "setting.alignment.label",
         "group": "setting.group.typography",
         "type": "string",

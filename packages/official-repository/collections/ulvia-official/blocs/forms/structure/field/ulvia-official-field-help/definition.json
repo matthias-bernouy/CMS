@@ -5,7 +5,7 @@
     "description": "bloc.field-help.description",
     "category": "bloc.category.forms",
     "order": 115,
-    "uses": ["ulvia-official-field-help-panel", "ulvia-official-field-help-trigger"],
+    "uses": [],
     "requires": [],
     "slots": {
         "label": {

@@ -170,6 +170,14 @@ describe("collection bloc admission", () => {
         const hyphenated = { ...compact, id: "full-width" };
         const parsedHyphenated = check([component({ settings: [hyphenated] })])[0];
         expect(parsedHyphenated?.kind === "component" ? parsedHyphenated.settings : undefined).toEqual([hyphenated]);
+        expect(() => check([component({ settings: [{ ...tone, id: "align" }] })])).toThrow("reserved by native <div>");
+        expect(() => check([component({ root: { accepts: ["input"] }, settings: [{ ...tone, id: "size" }] })])).toThrow(
+            "reserved by native <input>",
+        );
+        expect(() => check([component({ settings: [{ ...tone, id: "aria-label" }] })])).toThrow(
+            "reserved by the platform",
+        );
+        expect(() => check([component({ settings: [{ ...tone, id: "items-align" }] })])).not.toThrow();
         expect(() => check([component({ settings: [tone, tone] })])).toThrow("duplicate");
         expect(() => check([component({ settings: [{ ...tone, id: "Tone" }] })])).toThrow("safe, lowercase");
         expect(() => check([component({ settings: [{ ...tone, default: "invalid" }] })])).toThrow("invalid defaults");

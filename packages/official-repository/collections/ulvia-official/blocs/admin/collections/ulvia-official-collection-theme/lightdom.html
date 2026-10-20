@@ -19,7 +19,7 @@
                 <p>{{ cms.i18n.ulvia-official.ui-edit-collection-theme-help }}</p>
             </header>
             <div cms-bloc="ulvia-official-surface" padding="lg" appearance="subtle" slot="items">
-                <div cms-bloc="ulvia-official-grid" gap="md" align="end" columns="3" slot="content">
+                <div cms-bloc="ulvia-official-grid" gap="md" items-align="end" columns="3" slot="content">
                     <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                         <label slot="label" for="collection-theme-profile">
                             {{ cms.i18n.ulvia-official.ui-theme-profile }}
@@ -67,7 +67,7 @@
                     </div>
                 </div>
             </div>
-            <div cms-bloc="ulvia-official-cluster" justify="between" align="center" slot="items">
+            <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center" slot="items">
                 <div cms-bloc="ulvia-official-badge" cms-condition="collectionTheme.data.profileActive" tone="success" slot="items">
                     <span slot="label">{{ cms.i18n.ulvia-official.ui-active-theme }}</span>
                 </div>
@@ -144,7 +144,7 @@
                                     >
                                 </div>
                             </div>
-                            <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
+                            <div cms-bloc="ulvia-official-form-actions" actions-align="end" slot="items">
                                 <p slot="actions" role="status" aria-live="polite" cms-condition="savedThemeToken.outcome.kind === 'success'">
                                     {{ cms.i18n.ulvia-official.ui-theme-value-saved }}
                                 </p>
@@ -210,7 +210,7 @@
                     <strong slot="title">{{ token.label }}</strong>
                     <span slot="meta">{{ token.categoryLabel }}</span>
                     <code slot="description">{{ token.variable }}</code>
-                    <div cms-bloc="ulvia-official-cluster" gap="sm" align="center" slot="body">
+                    <div cms-bloc="ulvia-official-cluster" gap="sm" items-align="center" slot="body">
                         <code slot="items">{{ token.value }}</code>
                         <div cms-bloc="ulvia-official-badge" cms-condition="token.overridden" tone="info" slot="items">
                             <span slot="label">{{ cms.i18n.ulvia-official.ui-overridden }}</span>

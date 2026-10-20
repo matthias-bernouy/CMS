@@ -211,6 +211,7 @@ class Controller {
         this.trigger.addEventListener("click", this.toggle);
         this.modeTabs.addEventListener("click", this.changeMode);
         this.editor.addEventListener("input", this.changeValue);
+        this.blocRoot.ownerDocument.addEventListener("keydown", this.closeFromKeyboard);
         this.blocRoot.ownerDocument.addEventListener("pointerdown", this.closeFromOutside);
         this.blocRoot.ownerDocument.addEventListener("reset", this.handleReset);
         this.bindInput();
@@ -220,6 +221,7 @@ class Controller {
         this.trigger.removeEventListener("click", this.toggle);
         this.modeTabs.removeEventListener("click", this.changeMode);
         this.editor.removeEventListener("input", this.changeValue);
+        this.blocRoot.ownerDocument.removeEventListener("keydown", this.closeFromKeyboard);
         this.blocRoot.ownerDocument.removeEventListener("pointerdown", this.closeFromOutside);
         this.blocRoot.ownerDocument.removeEventListener("reset", this.handleReset);
         this.input?.removeEventListener("input", this.sync);
@@ -455,6 +457,14 @@ class Controller {
     private closeFromOutside = (event: Event): void => {
         if (event.target instanceof Node && !this.blocRoot.contains(event.target)) {
             this.setOpen(false);
+        }
+    };
+
+    private closeFromKeyboard = (event: Event): void => {
+        if (event instanceof KeyboardEvent && event.key === "Escape" && !this.popover.hasAttribute("hidden")) {
+            event.preventDefault();
+            this.setOpen(false);
+            this.trigger.focus();
         }
     };
 

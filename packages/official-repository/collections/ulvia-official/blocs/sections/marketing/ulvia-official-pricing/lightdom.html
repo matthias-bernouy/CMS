@@ -1,9 +1,11 @@
-<div cms-bloc="ulvia-official-section">
-    <div cms-bloc="ulvia-official-stack" align="center" gap="xl" slot="content">
-        <div cms-bloc="ulvia-official-heading" align="center" size="xl" slot="items">
+<div cms-bloc="ulvia-official-section" data-cms-composition-controller="">
+    <div cms-bloc="ulvia-official-stack" gap="xl" slot="content">
+        <div cms-bloc="ulvia-official-heading" text-align="center" size="xl" slot="items">
             <h2><slot name="heading"></slot></h2>
         </div>
-        <div cms-bloc="ulvia-official-prose" measure="narrow" slot="items"><slot name="intro" slot="content"></slot></div>
+        <div cms-bloc="ulvia-official-center" width="sm" text-align="center" slot="items">
+            <div cms-bloc="ulvia-official-prose" measure="narrow" slot="content"><slot name="intro" slot="content"></slot></div>
+        </div>
         <div cms-bloc="ulvia-official-grid" columns="3" slot="items"><slot name="plans" slot="items"></slot></div>
     </div>
 </div>

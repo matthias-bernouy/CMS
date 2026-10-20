@@ -1,5 +1,5 @@
 <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
-    <div cms-bloc="ulvia-official-cluster" justify="end" align="center" slot="items">
+    <div cms-bloc="ulvia-official-cluster" justify="end" items-align="center" slot="items">
         <button
             cms-bloc="ulvia-official-action"
             tone="primary"
@@ -17,7 +17,7 @@
         <dialog cms-bloc="ulvia-official-dialog" slot="items" aria-labelledby="upload-file-dialog-title" id="upload-file-dialog">
             <div slot="content" cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
                 <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
-                    <div cms-bloc="ulvia-official-cluster" justify="between" align="start" slot="items">
+                    <div cms-bloc="ulvia-official-cluster" justify="between" items-align="start" slot="items">
                         <h2 id="upload-file-dialog-title" slot="items">{{ cms.i18n.ulvia-official.ui-upload-a-file }}</h2>
                         <button
                             cms-bloc="ulvia-official-action"
@@ -71,7 +71,7 @@
                 </div>
             </div>
             <div cms-bloc="ulvia-official-stack" gap="md" cms-case='"success"'>
-                <div cms-bloc="ulvia-official-cluster" justify="between" align="center" slot="items">
+                <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center" slot="items">
                     <h2 slot="items">{{ cms.i18n.ulvia-official.ui-library }}</h2>
                     <p slot="items">
                         {{ workspace.data.items.length }} {{ cms.i18n.ulvia-official.ui-files-in-this-batch }}
@@ -112,7 +112,7 @@
                                         <input id="file-name-{{ file.fileId }}" type="text" name="name" value="{{ file.name }}" maxlength="255" required>
                                     </div>
                                 </div>
-                                <div cms-bloc="ulvia-official-form-actions" align="end">
+                                <div cms-bloc="ulvia-official-form-actions" actions-align="end">
                                     <p slot="actions" role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">
                                         {{ cms.i18n.ulvia-official.ui-saving }}
                                     </p>
@@ -161,7 +161,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div cms-bloc="ulvia-official-cluster" align="center" slot="items">
+                            <div cms-bloc="ulvia-official-cluster" items-align="center" slot="items">
                                 <div cms-bloc="ulvia-official-file-link" url="{{ file.url }}" cms-condition="file.visibility === 'public'" slot="items">
                                     <button slot="content" type="button">
                                         {{ cms.i18n.ulvia-official.ui-open-file }}

@@ -6,6 +6,7 @@
     "category": "bloc.category.sections",
     "order": 30,
     "uses": [
+        "ulvia-official-center",
         "ulvia-official-grid",
         "ulvia-official-heading",
         "ulvia-official-action",

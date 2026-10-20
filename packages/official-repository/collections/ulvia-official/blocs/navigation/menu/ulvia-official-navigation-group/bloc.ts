@@ -36,7 +36,7 @@ class Controller {
         this.blocRoot.toggleAttribute("expanded");
     };
 
-    private sync(): void {
+    private sync = (): void => {
         const expanded = this.blocRoot.hasAttribute("expanded");
         this.trigger?.setAttribute("aria-expanded", String(expanded));
         const label = this.trigger?.textContent?.trim();
@@ -54,7 +54,7 @@ class Controller {
         } else {
             this.trigger?.removeAttribute("data-count");
         }
-    }
+    };
 }
 
 export function mount(root: HTMLElement): void | (() => void) {

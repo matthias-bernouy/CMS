@@ -26,10 +26,10 @@
     gap: var(--ulvia-official-spacing-md, 1rem);
     border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c9d5d0);
 }
-:scope[align="center"] [part="tabs"] {
+:scope[tabs-align="center"] [part="tabs"] {
     justify-content: center;
 }
-:scope[align="stretch"] {
+:scope[tabs-align="stretch"] {
     --ulvia-official-route-tab-flex: 1 0 auto;
 }
 :scope[appearance="pills"] [part="tabs"] {

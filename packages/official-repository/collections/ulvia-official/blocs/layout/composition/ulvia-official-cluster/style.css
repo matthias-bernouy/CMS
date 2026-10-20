@@ -21,13 +21,13 @@
 :scope[gap="lg"] {
     --ulvia-official-cluster-gap: var(--ulvia-official-spacing-lg, 1.5rem);
 }
-:scope[align="start"] [part="cluster"] {
+:scope[items-align="start"] [part="cluster"] {
     align-items: flex-start;
 }
-:scope[align="end"] [part="cluster"] {
+:scope[items-align="end"] [part="cluster"] {
     align-items: flex-end;
 }
-:scope[align="stretch"] [part="cluster"] {
+:scope[items-align="stretch"] [part="cluster"] {
     align-items: stretch;
 }
 :scope[justify="center"] [part="cluster"] {

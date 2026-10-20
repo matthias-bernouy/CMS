@@ -10,6 +10,7 @@ import { parseManagedNativeElement } from "./managedNativeElement";
 import { compileBlocStyle } from "../../validation/blocStyleCompilation";
 import { validateCompiledBlocBehavior } from "../../validation/blocBehaviorPolicy";
 import { CMS_BROWSER_RUNTIME_ABI } from "@bernouy/cms-content/runtime-abi";
+import { blocSettingAttributeNameIssue } from "@bernouy/cms-content/page-document";
 
 const common = [
     "kind",
@@ -95,6 +96,12 @@ function parseBloc(
     }
     const settings =
         source.settings === undefined ? undefined : parseComponentSettings(source.settings, `${path}.settings`, limits);
+    for (const [index, setting] of (settings ?? []).entries()) {
+        const issue = blocSettingAttributeNameIssue(setting.id, base.root.accepts);
+        if (issue) {
+            invalid(issue, `${path}.settings[${index}].id`);
+        }
+    }
     const style =
         source.style === undefined ? undefined : optionalText(source.style, limits.maxMarkupLength, `${path}.style`);
     let styleCSS: string | undefined;

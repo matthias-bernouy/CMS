@@ -12,3 +12,52 @@
     position: relative;
     display: inline-block;
 }
+[data-field-help-trigger] {
+    display: inline-grid;
+    width: 1.375rem;
+    height: 1.375rem;
+    place-items: center;
+    box-sizing: border-box;
+    padding: 0;
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-strong, #89968f);
+    border-radius: var(--ulvia-official-radius-full, 999px);
+    color: var(--ulvia-official-text-secondary, #42504a);
+    background: var(--ulvia-official-background-surface, Canvas);
+    box-shadow: 0 1px 2px rgb(23 33 30 / 8%);
+    font: inherit;
+    font-size: var(--ulvia-official-font-size-xs, 0.75rem);
+    font-weight: var(--ulvia-official-font-weight-bold, 700);
+    line-height: 1;
+    cursor: pointer;
+}
+[data-field-help-trigger]:hover {
+    border-color: var(--ulvia-official-primary, #086c55);
+    color: var(--ulvia-official-on-primary, #fff);
+    background: var(--ulvia-official-primary, #086c55);
+}
+[data-field-help-trigger]:focus-visible {
+    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline-offset: 2px;
+}
+[data-field-help-panel] {
+    position: absolute;
+    z-index: 20;
+    inset-block-start: calc(100% + var(--ulvia-official-spacing-xs, 0.5rem));
+    inset-inline-end: 0;
+    transform: translateX(var(--ulvia-official-field-help-shift-x, 0));
+    display: block;
+    width: min(18rem, calc(100vw - 2rem));
+    box-sizing: border-box;
+    padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c7cbd1);
+    border-radius: var(--ulvia-official-radius-md, 0.5rem);
+    color: var(--ulvia-official-text-primary, CanvasText);
+    background: var(--ulvia-official-background-raised, Canvas);
+    box-shadow: var(--ulvia-official-shadow-md, 0 0.5rem 1.5rem rgb(0 0 0 / 12%));
+    font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    font-weight: var(--ulvia-official-font-weight-regular, 400);
+    line-height: var(--ulvia-official-line-height-normal, 1.5);
+}
+[data-field-help-panel][hidden] {
+    display: none;
+}

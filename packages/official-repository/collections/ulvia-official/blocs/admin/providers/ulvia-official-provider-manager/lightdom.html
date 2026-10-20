@@ -49,7 +49,7 @@
                         <p slot="body" role="alert" cms-condition="installation.selectionCount > 0">
                             {{ cms.i18n.ulvia-official.ui-reroute-selected-contracts-before-changing-this-provider }}
                         </p>
-                        <div cms-bloc="ulvia-official-cluster" justify="end" align="center" slot="actions">
+                        <div cms-bloc="ulvia-official-cluster" justify="end" items-align="center" slot="actions">
                             <form
                                 slot="items"
                                 cms-condition="installation.status === 'enabled'"
@@ -196,7 +196,7 @@
                         <p slot="items" cms-condition="providers.data.routes.length === 0">
                             {{ cms.i18n.ulvia-official.ui-no-contract-route-is-available }}
                         </p>
-                        <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
+                        <div cms-bloc="ulvia-official-form-actions" actions-align="end" slot="items">
                             <p slot="actions" role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">
                                 {{ cms.i18n.ulvia-official.ui-saving }}
                             </p>

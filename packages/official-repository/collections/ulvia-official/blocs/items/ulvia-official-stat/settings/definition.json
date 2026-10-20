@@ -1,6 +1,6 @@
 [
     {
-        "id": "align",
+        "id": "text-align",
         "label": "setting.alignment.label",
         "group": "setting.group.layout",
         "type": "string",

@@ -10,6 +10,7 @@ class Controller {
     private contextualToggle: HTMLButtonElement | null = null;
     private readonly footer: HTMLElement | null;
     private readonly navigationPanel: HTMLElement | null;
+    private navigationCloseTimer: ReturnType<typeof setTimeout> | null = null;
     private navigationToggle: HTMLButtonElement | null = null;
     private promotedContextualLayout = false;
     private readonly resizeObserver: ResizeObserver;
@@ -44,6 +45,10 @@ class Controller {
         this.blocRoot.removeEventListener("click", this.closeAfterNavigation);
         this.blocRoot.removeEventListener("keydown", this.closeOnEscape);
         this.resizeObserver.disconnect();
+        if (this.navigationCloseTimer !== null) {
+            clearTimeout(this.navigationCloseTimer);
+            this.navigationCloseTimer = null;
+        }
     }
 
     private closeAfterNavigation = (event: Event): void => {
@@ -61,8 +66,11 @@ class Controller {
             );
         });
         if (isNavigationAction && !isDisclosure) {
-            this.closePanel(false);
-            this.scope.querySelector<HTMLElement>('[part="content"]')?.focus();
+            this.navigationCloseTimer = setTimeout(() => {
+                this.navigationCloseTimer = null;
+                this.closePanel(false);
+                this.scope.querySelector<HTMLElement>('[part="content"]')?.focus();
+            }, 0);
         }
     };
 

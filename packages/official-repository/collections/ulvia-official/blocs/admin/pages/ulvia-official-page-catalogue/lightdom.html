@@ -22,7 +22,7 @@
                 </div>
             </div>
             <div cms-bloc="ulvia-official-stack" gap="md" cms-case='"success"'>
-                <div cms-bloc="ulvia-official-cluster" justify="between" align="center" slot="items">
+                <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center" slot="items">
                     <h2 id="page-catalogue-title" slot="items">{{ cms.i18n.ulvia-official.ui-page-catalogue }}</h2>
                     <p slot="items">{{ pages.data.items.length }} {{ cms.i18n.ulvia-official.ui-pages-in-this-batch }}</p>
                 </div>
@@ -75,7 +75,7 @@
     <dialog cms-bloc="ulvia-official-dialog" slot="content" aria-labelledby="create-page-dialog-title" id="create-page-dialog">
         <div slot="content" cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
             <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
-                <div cms-bloc="ulvia-official-cluster" justify="between" align="start" slot="items">
+                <div cms-bloc="ulvia-official-cluster" justify="between" items-align="start" slot="items">
                     <h2 id="create-page-dialog-title" slot="items">{{ cms.i18n.ulvia-official.ui-create-a-page }}</h2>
                     <button
                         cms-bloc="ulvia-official-action"
@@ -130,7 +130,7 @@
                                 >
                             </div>
                         </div>
-                        <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
+                        <div cms-bloc="ulvia-official-form-actions" actions-align="end" slot="items">
                             <p slot="actions" role="status" aria-live="polite" cms-condition="created.activity === 'submitting'">
                                 {{ cms.i18n.ulvia-official.ui-creating }}
                             </p>

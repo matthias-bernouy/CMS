@@ -45,7 +45,7 @@
                                 <input type="hidden" name="targets[0][collectionId]" value="{{ plan.data.references.0.collectionId }}">
                                 <input type="hidden" name="targets[0][version]" value="{{ plan.data.references.0.version }}">
                                 <input type="hidden" name="targets[0][digest]" value="{{ plan.data.references.0.digest }}">
-                                <div cms-bloc="ulvia-official-form-actions" align="end">
+                                <div cms-bloc="ulvia-official-form-actions" actions-align="end">
                                     <div slot="actions" cms-condition="mutation.activity === 'submitting'">
                                         {{ cms.i18n.ulvia-official.ui-starting-migration }}
                                     </div>

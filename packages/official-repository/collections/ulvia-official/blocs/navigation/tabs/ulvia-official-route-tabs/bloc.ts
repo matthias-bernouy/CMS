@@ -103,9 +103,14 @@ class Controller {
                 !entries.some((entry) => entry.link === link),
             );
         }
+        const tablist = this.scope.querySelector<HTMLElement>('[part="tabs"]');
+        tablist?.toggleAttribute("role", entries.length > 0);
+        tablist?.toggleAttribute("aria-orientation", entries.length > 0);
         if (entries.length === 0) {
             return;
         }
+        tablist?.setAttribute("role", "tablist");
+        tablist?.setAttribute("aria-orientation", "horizontal");
         const selected = entries.find(({ panel }) => `#${panel.id}` === window.location.hash) ?? entries[0];
         for (const { link, panel } of entries) {
             const active = panel === selected.panel;

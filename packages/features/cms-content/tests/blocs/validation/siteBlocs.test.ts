@@ -71,6 +71,31 @@ describe("site bloc validation", () => {
         expect(validateBlocWrite(codeWrite).ownership).toEqual({ kind: "code-managed" });
     });
 
+    test("rejects setting names reserved by every accepted native root", () => {
+        const setting = {
+            id: "align",
+            label: "Alignment",
+            type: "string" as const,
+            default: "start",
+            control: { kind: "text" as const },
+        };
+        expect(() => validateBlocWrite(siteBlocArtifact({ settings: [setting] }))).toThrow(/reserved by native <div>/);
+        expect(() =>
+            validateBlocWrite(
+                siteBlocArtifact({
+                    root: { accepts: ["div", "input"] },
+                    settings: [{ ...setting, id: "size" }],
+                }),
+            ),
+        ).toThrow(/reserved by native <input>/);
+        expect(() => validateBlocWrite(siteBlocArtifact({ settings: [{ ...setting, id: "aria-expanded" }] }))).toThrow(
+            /reserved by the platform/,
+        );
+        expect(validateBlocWrite(siteBlocArtifact({ settings: [{ ...setting, id: "items-align" }] })).settings).toEqual(
+            [{ ...setting, id: "items-align" }],
+        );
+    });
+
     test("accepts only site-prefixed definitions with matching ownership", () => {
         expect(validateSiteBlocDefinition(siteBlocDefinition()).tag).toBe("site-feature-panel");
         expect(() => validateSiteBlocDefinition(siteBlocDefinition({ tag: "custom-panel" }))).toThrow(

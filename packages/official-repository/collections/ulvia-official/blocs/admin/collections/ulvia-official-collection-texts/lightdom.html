@@ -22,7 +22,7 @@
                 <p>{{ cms.i18n.ulvia-official.ui-edit-collection-text-overrides-help }}</p>
             </header>
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items">
-                <div cms-bloc="ulvia-official-grid" gap="md" align="end" columns="3" slot="content">
+                <div cms-bloc="ulvia-official-grid" gap="md" items-align="end" columns="3" slot="content">
                     <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
                         <label slot="label" for="collection-text-locale">
                             {{ cms.i18n.ulvia-official.ui-translation-language }}
@@ -115,7 +115,7 @@
                                     >{{ text.overrideValue }}</textarea>
                                 </div>
                             </div>
-                            <div cms-bloc="ulvia-official-form-actions" responsive-layout="wrap" align="end">
+                            <div cms-bloc="ulvia-official-form-actions" responsive-layout="wrap" actions-align="end">
                                 <p slot="actions" role="status" aria-live="polite" cms-condition="savedText.activity === 'submitting'">
                                     {{ cms.i18n.ulvia-official.ui-working }}
                                 </p>

@@ -1,14 +1,8 @@
 :scope {
     display: block;
-    height: 100%;
-    font-family: var(--ulvia-official-font-family-main, inherit);
-}
-
-:scope {
-    display: block;
-    height: 100%;
     border-radius: inherit;
     color: inherit;
+    font-family: var(--ulvia-official-font-family-main, inherit);
     text-decoration: none;
 }
 

@@ -15,26 +15,34 @@
     grid-template-columns: minmax(12rem, 0.8fr) minmax(0, 1fr) auto;
     gap: var(--ulvia-official-spacing-xl, 2rem);
 }
-[part="brand"] {
+[part="container"] > [part="brand"] {
     font-family: var(--ulvia-official-font-family-secondary, inherit);
     font-size: var(--ulvia-official-font-size-xl, 1.5rem);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
 }
-[part="navigation"] {
+[part="container"] > [part="navigation"] {
+    display: flex;
     min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-xl, 2rem);
 }
-[part="social"] {
+[part="container"] > [part="social"] {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
     text-align: end;
 }
-[part="legal"] {
+[part="container"] > [part="legal"] {
     grid-column: 1 / -1;
     padding-block-start: var(--ulvia-official-spacing-lg, 1.5rem);
     border-block-start: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-strong, #737b88);
     color: var(--ulvia-official-text-muted, #737b88);
 }
-[part~="navigation"],
-[part~="social"],
-[part~="legal"] {
+[part="container"] > [part~="navigation"],
+[part="container"] > [part~="social"],
+[part="container"] > [part~="legal"] {
     margin: 0;
 }
 :scope[surface="base"] {
@@ -45,14 +53,24 @@
     color: var(--ulvia-official-text-primary, CanvasText);
     background: var(--ulvia-official-background-subtle, #f4f5f7);
 }
+:scope:not([surface]) [part="container"] > [part="legal"],
+:scope[surface="inverse"] [part="container"] > [part="legal"] {
+    border-color: currentcolor;
+    color: inherit;
+    opacity: 0.72;
+}
 @container (max-width: 42rem) {
     [part="container"] {
         grid-template-columns: minmax(0, 1fr);
     }
-    [part="social"] {
+    [part="container"] > [part="social"] {
+        justify-content: flex-start;
         text-align: start;
     }
-    [part="legal"] {
+    [part="container"] > [part="navigation"] {
+        justify-content: flex-start;
+    }
+    [part="container"] > [part="legal"] {
         grid-column: auto;
     }
 }

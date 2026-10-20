@@ -25,12 +25,12 @@
 :scope[gap="xl"] {
     --ulvia-official-stack-gap: var(--ulvia-official-spacing-xl, 2rem);
 }
-:scope[align="start"] [part="stack"] {
+:scope[items-align="start"] [part="stack"] {
     align-items: flex-start;
 }
-:scope[align="center"] [part="stack"] {
+:scope[items-align="center"] [part="stack"] {
     align-items: center;
 }
-:scope[align="end"] [part="stack"] {
+:scope[items-align="end"] [part="stack"] {
     align-items: flex-end;
 }

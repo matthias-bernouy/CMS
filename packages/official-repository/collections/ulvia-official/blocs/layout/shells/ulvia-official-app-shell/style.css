@@ -51,7 +51,7 @@
     justify-content: flex-end;
 }
 [part="mobile-navigation"],
-[part="mobile-backdrop"] {
+:scope > [part="shell"] > [part="mobile-backdrop"] {
     display: none;
 }
 [part="secondary-navigation"] {
@@ -294,17 +294,18 @@
     button[part~="mobile-contextual-toggle"][hidden] {
         display: none;
     }
-    [part="mobile-backdrop"] {
+    :scope > [part="shell"] > [part="mobile-backdrop"] {
+        display: block;
         z-index: 10;
         grid-area: body;
         width: 100%;
         height: 100%;
         background: rgb(14 30 25 / 42%);
     }
-    :scope:not([mobile-panel]) [part="mobile-backdrop"] {
+    :scope:not([mobile-panel]) > [part="shell"] > [part="mobile-backdrop"] {
         display: none;
     }
-    button[part~="mobile-backdrop"] {
+    button[data-mobile-toggle-close] {
         width: 100%;
         height: 100%;
         padding: 0;

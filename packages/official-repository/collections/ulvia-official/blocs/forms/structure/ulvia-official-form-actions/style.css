@@ -10,10 +10,10 @@
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
     align-items: center;
 }
-:scope[align="center"] [part="actions"] {
+:scope[actions-align="center"] [part="actions"] {
     justify-content: center;
 }
-:scope[align="end"] [part="actions"] {
+:scope[actions-align="end"] [part="actions"] {
     justify-content: flex-end;
 }
 :scope[wide] * {

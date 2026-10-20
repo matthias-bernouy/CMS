@@ -12,18 +12,20 @@ class Controller {
     }
 
     connect(): void {
-        this.trigger = this.scope.querySelector<HTMLButtonElement>("button");
-        this.panel = this.scope.queryBlocRoot("ulvia-official-field-help-panel");
+        this.trigger = this.scope.querySelector<HTMLButtonElement>("[data-field-help-trigger]");
+        this.panel = this.scope.querySelector("[data-field-help-panel]");
         this.prepareTrigger();
         this.trigger?.addEventListener("click", this.togglePanel);
         document.addEventListener("pointerdown", this.closeFromOutside);
         document.addEventListener("keydown", this.closeFromKeyboard);
+        this.blocRoot.ownerDocument.defaultView?.addEventListener("resize", this.clampPanelToViewport);
     }
 
     disconnect(): void {
         this.trigger?.removeEventListener("click", this.togglePanel);
         document.removeEventListener("pointerdown", this.closeFromOutside);
         document.removeEventListener("keydown", this.closeFromKeyboard);
+        this.blocRoot.ownerDocument.defaultView?.removeEventListener("resize", this.clampPanelToViewport);
     }
 
     private prepareTrigger(): void {
@@ -55,7 +57,7 @@ class Controller {
     };
 
     private closeFromKeyboard = (event: KeyboardEvent): void => {
-        if (event.key === "Escape") {
+        if (event.key === "Escape" && this.panel?.hasAttribute("hidden") === false) {
             this.setOpen(false);
             this.trigger?.focus();
         }
@@ -66,10 +68,29 @@ class Controller {
         this.trigger?.setAttribute("aria-expanded", String(open));
         if (open && this.panel) {
             this.trigger?.setAttribute("aria-describedby", this.panel.id);
+            this.clampPanelToViewport();
         } else {
             this.trigger?.removeAttribute("aria-describedby");
+            this.panel?.style.removeProperty("--ulvia-official-field-help-shift-x");
         }
     }
+
+    private clampPanelToViewport = (): void => {
+        if (!this.panel || this.panel.hasAttribute("hidden")) {
+            return;
+        }
+        this.panel.style.setProperty("--ulvia-official-field-help-shift-x", "0px");
+        const viewportWidth = this.blocRoot.ownerDocument.defaultView?.innerWidth ?? 0;
+        const rect = this.panel.getBoundingClientRect();
+        const gutter = 16;
+        const shift =
+            rect.left < gutter
+                ? gutter - rect.left
+                : rect.right > viewportWidth - gutter
+                  ? viewportWidth - gutter - rect.right
+                  : 0;
+        this.panel.style.setProperty("--ulvia-official-field-help-shift-x", `${shift}px`);
+    };
 }
 
 export function mount(root: HTMLElement): void | (() => void) {

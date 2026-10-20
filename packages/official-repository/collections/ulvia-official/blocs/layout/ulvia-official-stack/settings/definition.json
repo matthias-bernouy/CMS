@@ -17,7 +17,7 @@
         }
     },
     {
-        "id": "align",
+        "id": "items-align",
         "label": "setting.alignment.label",
         "group": "setting.group.layout",
         "type": "string",

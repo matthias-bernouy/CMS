@@ -31,13 +31,13 @@
 :scope[gap="xl"] {
     --ulvia-official-split-gap: var(--ulvia-official-spacing-xl, 2rem);
 }
-:scope[align="start"] [part="split"] {
+:scope[items-align="start"] [part="split"] {
     align-items: start;
 }
-:scope[align="end"] [part="split"] {
+:scope[items-align="end"] [part="split"] {
     align-items: end;
 }
-:scope[align="stretch"] [part="split"] {
+:scope[items-align="stretch"] [part="split"] {
     align-items: stretch;
 }
 

@@ -6,6 +6,7 @@ import { isPlatformManagedNativeElementTag } from "cms-content/blocs/core/valida
 import { parsePresentationImage } from "cms-content/blocs/core/presentationImage";
 import { validateBlocContentMarkup } from "cms-content/blocs/core/markup/validation/nativeContent";
 import { assertBlocArtifactBudgets } from "cms-content/blocs/core/markup/validation/documents/blocBudgets";
+import { blocSettingAttributeNameIssue } from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";
 import type { BlocOwnership, SiteBlocDefinition, TBloc, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
 
 export function validateBlocWrite(value: TBlocWrite): TBloc {
@@ -52,6 +53,12 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
         throw new ContentValidationError("bloc", "viewJS and compositionHTML are mutually exclusive");
     }
     validateManagedNativeElement(bloc.root, "root");
+    for (const setting of bloc.settings ?? []) {
+        const issue = blocSettingAttributeNameIssue(setting.id, bloc.root.accepts);
+        if (issue) {
+            throw new ContentValidationError("settings", issue);
+        }
+    }
     if (bloc.content !== undefined) {
         validateManagedNativeElement(bloc.content, "content");
         if (bloc.compositionHTML !== undefined) {

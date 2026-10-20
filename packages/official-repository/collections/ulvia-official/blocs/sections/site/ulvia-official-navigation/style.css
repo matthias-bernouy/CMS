@@ -17,17 +17,19 @@
     gap: var(--ulvia-official-spacing-xl, 2rem);
     padding-block: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-[part="brand"] {
+[part="navigation"] > [part="brand"] {
     font-family: var(--ulvia-official-font-family-secondary, inherit);
     font-size: var(--ulvia-official-font-size-lg, 1.125rem);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
 }
-[part="links"] {
+[part="navigation"] > [part="links"] {
     display: flex;
     flex: 1;
+    flex-wrap: wrap;
+    gap: var(--ulvia-official-spacing-md, 1rem);
     justify-content: center;
 }
-[part="actions"] {
+[part="navigation"] > [part="actions"] {
     display: flex;
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
@@ -50,13 +52,13 @@
     [part="navigation"] {
         flex-wrap: wrap;
     }
-    [part="links"] {
+    [part="navigation"] > [part="links"] {
         order: 3;
         width: 100%;
         flex-basis: 100%;
         justify-content: flex-start;
     }
-    [part="actions"] {
+    [part="navigation"] > [part="actions"] {
         margin-inline-start: auto;
     }
 }

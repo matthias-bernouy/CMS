@@ -15,7 +15,7 @@
         }
     },
     {
-        "id": "align",
+        "id": "content-align",
         "label": "setting.alignment.label",
         "group": "setting.group.layout",
         "type": "string",

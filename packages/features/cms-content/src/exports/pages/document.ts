@@ -57,3 +57,4 @@ export {
     MANAGED_NATIVE_ELEMENT_TAGS,
     managedNativeAttributesIssue,
 } from "cms-content/blocs/core/markup/validation/contracts/managedNativePolicy";
+export { blocSettingAttributeNameIssue } from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";

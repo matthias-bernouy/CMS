@@ -24,7 +24,7 @@
                         <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-migration-diagnostics-are-unavailable }}</p>
                     </div>
                     <div cms-bloc="ulvia-official-stack" gap="sm" cms-case='"success"'>
-                        <div cms-bloc="ulvia-official-cluster" justify="between" align="center" slot="items">
+                        <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center" slot="items">
                             <div slot="items">
                                 <strong cms-condition="migrations.data.maintenance">{{ cms.i18n.ulvia-official.ui-maintenance-mode-is-active }}</strong>
                                 <strong cms-condition="migrations.data.maintenance === false">{{
@@ -73,7 +73,7 @@
                         <p slot="items" cms-condition="jobs.data.items.length === 0">{{ cms.i18n.ulvia-official.ui-no-durable-jobs }}</p>
                         <div cms-bloc="ulvia-official-stack" role="list" gap="sm" cms-condition="jobs.data.items.length > 0" slot="items">
                             <article slot="items" cms-repeat="jobs.data.items as job" role="listitem">
-                                <div cms-bloc="ulvia-official-cluster" justify="between" align="center">
+                                <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center">
                                     <div slot="items">
                                         <strong>{{ job.contractId }} {{ cms.i18n.ulvia-official.ui-copy }} {{ job.capabilityId }}</strong>
                                         <p>{{ job.updatedAt | dateLong }}</p>
@@ -98,7 +98,7 @@
                     </div>
                     <div cms-bloc="ulvia-official-stack" role="list" gap="sm" cms-case='"success"'>
                         <article slot="items" cms-repeat="providers.data.installations as provider" role="listitem">
-                            <div cms-bloc="ulvia-official-cluster" justify="between" align="center">
+                            <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center">
                                 <div slot="items">
                                     <strong>{{ provider.providerId }}</strong>
                                     <p>{{ provider.endpoint }} {{ cms.i18n.ulvia-official.ui-manifest }} {{ provider.manifestVersion }}</p>

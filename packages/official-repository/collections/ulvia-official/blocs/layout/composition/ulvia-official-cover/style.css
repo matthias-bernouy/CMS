@@ -24,10 +24,10 @@
 :scope[height="viewport"] {
     --ulvia-official-cover-height: 100svh;
 }
-:scope[align="start"] [part="content"] {
+:scope[content-align="start"] [part="content"] {
     align-items: start;
 }
-:scope[align="end"] [part="content"] {
+:scope[content-align="end"] [part="content"] {
     align-items: end;
 }
 :scope[spacing="sm"] {

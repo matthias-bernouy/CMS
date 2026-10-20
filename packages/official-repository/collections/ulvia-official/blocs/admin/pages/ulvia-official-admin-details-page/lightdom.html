@@ -85,7 +85,7 @@
                                             >{{ selected.data.description }}</textarea>
                                         </div>
                                     </div>
-                                    <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
+                                    <div cms-bloc="ulvia-official-form-actions" actions-align="end" slot="items">
                                         <p slot="actions" role="status" aria-live="polite" cms-condition="saved.activity === 'submitting'">
                                             {{ cms.i18n.ulvia-official.ui-saving }}
                                         </p>
@@ -215,7 +215,7 @@
                                                 >{{ entry.description }}</textarea>
                                             </div>
                                         </div>
-                                        <div cms-bloc="ulvia-official-form-actions" align="end" slot="items">
+                                        <div cms-bloc="ulvia-official-form-actions" actions-align="end" slot="items">
                                             <button cms-bloc="ulvia-official-action" tone="secondary" variant="outline" slot="actions" type="submit">
                                                 <span>{{ cms.i18n.ulvia-official.ui-save-metadata }}</span>
                                             </button>
@@ -245,7 +245,7 @@
                             id="page-publication"
                             role="tabpanel"
                         >
-                            <div cms-bloc="ulvia-official-cluster" justify="between" align="center" slot="content">
+                            <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center" slot="content">
                                 <div slot="items">
                                     <h2>{{ cms.i18n.ulvia-official.ui-publication }}</h2>
                                     <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="selected.data.visible">

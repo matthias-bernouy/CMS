@@ -24,10 +24,10 @@
 * {
     margin: 0;
 }
-:scope[align="center"] [part="stat"] {
+:scope[text-align="center"] [part="stat"] {
     text-align: center;
 }
-:scope[align="end"] [part="stat"] {
+:scope[text-align="end"] [part="stat"] {
     text-align: end;
 }
 :scope[size="sm"] [part="stat"] {
