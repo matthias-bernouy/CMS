@@ -5,7 +5,7 @@
     "description": "bloc.page-shell.description",
     "category": "bloc.category.layout",
     "order": 170,
-    "uses": [],
+    "uses": ["ulvia-official-heading"],
     "requires": [],
     "slots": {
         "breadcrumb": {

@@ -16,6 +16,10 @@
                 {
                     "kind": "native-content",
                     "profile": "prose"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["div", "section", "article"]
                 }
             ]
         }

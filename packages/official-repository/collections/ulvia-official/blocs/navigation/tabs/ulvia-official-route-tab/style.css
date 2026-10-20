@@ -6,9 +6,6 @@
 :scope[hidden] {
     display: none;
 }
-[part="tab"] {
-    display: contents;
-}
 :scope {
     position: relative;
     display: flex;

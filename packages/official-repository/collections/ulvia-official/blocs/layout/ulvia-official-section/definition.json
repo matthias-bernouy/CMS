@@ -21,6 +21,6 @@
         }
     },
     "root": {
-        "accepts": ["div"]
+        "accepts": ["section", "article", "aside", "nav", "header", "footer", "main", "div"]
     }
 }

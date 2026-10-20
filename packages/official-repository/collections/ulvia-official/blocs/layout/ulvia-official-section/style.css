@@ -4,14 +4,12 @@
     --ulvia-official-section-gutter: var(--ulvia-official-page-gutter, 1rem);
     --ulvia-official-section-block-spacing: var(--ulvia-official-section-spacing, 4rem);
     display: block;
+    padding-block: var(--ulvia-official-section-block-spacing);
     color: var(--ulvia-official-section-color);
     background: var(--ulvia-official-section-background);
     container-type: inline-size;
 }
 
-[part="section"] {
-    padding-block: var(--ulvia-official-section-block-spacing);
-}
 [part="container"] {
     width: min(100% - (2 * var(--ulvia-official-section-gutter)), var(--ulvia-official-content-width-lg, 72rem));
     margin-inline: auto;
@@ -48,14 +46,14 @@
 :scope[spacing="lg"] {
     --ulvia-official-section-block-spacing: var(--ulvia-official-spacing-3xl, 4rem);
 }
-:scope[viewport-height] [part="section"] {
+:scope[viewport-height] {
     display: grid;
     min-height: 100svh;
     align-items: center;
     box-sizing: border-box;
 }
 @container (max-width: 30rem) {
-    :scope[spacing="lg"] [part="section"] {
+    :scope[spacing="lg"] {
         padding-block: var(--ulvia-official-spacing-2xl, 3rem);
     }
 }

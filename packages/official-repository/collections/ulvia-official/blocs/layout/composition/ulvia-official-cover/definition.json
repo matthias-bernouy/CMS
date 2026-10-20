@@ -5,7 +5,7 @@
     "description": "bloc.cover.description",
     "category": "bloc.category.layout",
     "order": 90,
-    "uses": [],
+    "uses": ["ulvia-official-heading"],
     "requires": [],
     "slots": {
         "header": {

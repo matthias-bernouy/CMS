@@ -5,7 +5,7 @@
     "description": "bloc.app-shell.description",
     "category": "bloc.category.layout",
     "order": 160,
-    "uses": [],
+    "uses": ["ulvia-official-heading"],
     "requires": [],
     "slots": {
         "brand": {

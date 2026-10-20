@@ -1,0 +1,29 @@
+<div part="shell">
+    <header part="header">
+        <div part="brand"><slot name="brand"></slot></div>
+        <div part="primary-navigation"><slot name="primary-navigation"></slot></div>
+        <div part="actions"><slot name="actions"></slot></div>
+    </header>
+    <div part="mobile-navigation">
+        <button part="mobile-navigation-toggle" type="button" data-mobile-toggle="navigation" aria-controls="workspace-navigation" aria-expanded="false">
+            <slot name="primary-mobile-label">{{ cms.i18n.ulvia-official.ui-navigation }}</slot>
+        </button>
+        <button part="mobile-contextual-toggle" type="button" data-mobile-toggle="contextual" aria-controls="context-navigation" aria-expanded="false">
+            <slot name="secondary-mobile-label">{{ cms.i18n.ulvia-official.ui-sections }}</slot>
+        </button>
+    </div>
+    <div part="mobile-backdrop">
+        <button
+            part="mobile-backdrop"
+            type="button"
+            data-mobile-toggle-close=""
+            aria-label="{{ cms.i18n.ulvia-official.ui-close-navigation }}"
+            tabindex="-1"
+            hidden
+        ></button>
+    </div>
+    <div part="secondary-navigation" id="workspace-navigation"><slot name="secondary-navigation"></slot></div>
+    <div part="secondary-sidebar" id="context-navigation"><slot name="secondary-sidebar"></slot></div>
+    <main part="content" id="content" tabindex="-1"><slot name="content"></slot></main>
+    <footer part="footer"><slot name="footer"></slot></footer>
+</div>
