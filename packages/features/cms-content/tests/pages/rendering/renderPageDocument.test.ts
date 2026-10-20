@@ -15,7 +15,8 @@ describe("renderPageDocument", () => {
                         return [
                             {
                                 id: "atlas-card",
-                                templateHTML: "<article><slot></slot></article>",
+                                kind: "component" as const,
+                                markupHTML: "<article><slot></slot></article>",
                                 uses: ["atlas-action"],
                             },
                             { id: "atlas-action" },

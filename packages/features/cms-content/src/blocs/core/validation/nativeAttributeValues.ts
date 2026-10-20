@@ -130,6 +130,16 @@ export function dynamicInternalHrefIssue(value: string): string | null {
     if (!expressions) {
         return "dynamic native link interpolation is invalid";
     }
+    if (/^\s*\{\{\s*[\w$.-]+\s*\|\s*internalUrl\s*\}\}\s*$/u.test(value)) {
+        try {
+            const node = parseBindingExpression(expressions[0]!);
+            return node.kind === "filter" && node.name === "internalUrl" && !node.argument
+                ? null
+                : "dynamic native links require a valid internalUrl filter";
+        } catch {
+            return "dynamic native link interpolation is invalid";
+        }
+    }
     const firstToken = value.indexOf("{{");
     const query = value.indexOf("?");
     const fragment = value.indexOf("#");

@@ -16,8 +16,8 @@ describe("expandCompositions", () => {
         expandCompositions(document.body, [
             {
                 id: "site-layout",
-                compositionHTML:
-                    '<header><a href="/">Home</a></header><slot name="content"></slot><footer>Legal</footer>',
+                kind: "composition" as const,
+                markupHTML: '<header><a href="/">Home</a></header><slot name="content"></slot><footer>Legal</footer>',
             },
         ]);
 
@@ -36,7 +36,8 @@ describe("expandCompositions", () => {
         expandCompositions(document.body, [
             {
                 id: "test-card",
-                templateHTML:
+                kind: "component" as const,
+                markupHTML:
                     '<template cms-root cms-query="catalog:shared as data"></template><slot name="title"></slot><section><p>Shared copy</p></section>',
             },
         ]);
@@ -53,7 +54,8 @@ describe("expandCompositions", () => {
         expandCompositions(document.body, [
             {
                 id: "test-tabs",
-                templateHTML:
+                kind: "component" as const,
+                markupHTML:
                     '<a id="details-tab" href="#details" aria-controls="details">Details</a><section id="details" aria-labelledby="details-tab"></section>',
             },
         ]);
@@ -73,7 +75,11 @@ describe("expandCompositions", () => {
             '<div cms-bloc=\"test-banner\"><span slot="message">First</span></div><div cms-bloc=\"test-banner\"><span slot="message">Second</span></div>',
         );
         expandCompositions(document.body, [
-            { id: "test-banner", compositionHTML: '<section><p>Updated</p><slot name="message"></slot></section>' },
+            {
+                id: "test-banner",
+                kind: "composition" as const,
+                markupHTML: '<section><p>Updated</p><slot name="message"></slot></section>',
+            },
         ]);
 
         expect(Array.from(document.querySelectorAll("section")).map((section) => section.textContent)).toEqual([
@@ -91,12 +97,14 @@ describe("expandCompositions", () => {
         expandCompositions(document.body, [
             {
                 id: "outer-shell",
-                compositionHTML:
+                kind: "composition" as const,
+                markupHTML:
                     '<div cms-bloc=\"inner-navigation\"><slot name="navigation" slot="items"></slot></div><slot></slot>',
             },
             {
                 id: "inner-navigation",
-                compositionHTML: '<nav><slot name="items"></slot></nav>',
+                kind: "composition" as const,
+                markupHTML: '<nav><slot name="items"></slot></nav>',
             },
         ]);
 
@@ -110,7 +118,13 @@ describe("expandCompositions", () => {
 
         expandCompositions(
             document.body,
-            [{ id: "site-shell", compositionHTML: '<header>Brand</header><slot name="content"></slot>' }],
+            [
+                {
+                    id: "site-shell",
+                    kind: "composition" as const,
+                    markupHTML: '<header>Brand</header><slot name="content"></slot>',
+                },
+            ],
             "preview",
         );
 
@@ -129,7 +143,8 @@ describe("expandCompositions", () => {
         expandCompositions(document.body, [
             {
                 id: "account-form",
-                compositionHTML: "<div data-cms-composition-controller><form></form></div>",
+                kind: "composition" as const,
+                markupHTML: "<div data-cms-composition-controller><form></form></div>",
             },
         ]);
 
@@ -145,8 +160,8 @@ describe("expandCompositions", () => {
         expandCompositions(document.body, [
             {
                 id: "site-header",
-                compositionHTML:
-                    '<nav data-cms-composition-controller><slot name="actions" slot="actions"></slot></nav>',
+                kind: "composition" as const,
+                markupHTML: '<nav data-cms-composition-controller><slot name="actions" slot="actions"></slot></nav>',
             },
         ]);
 

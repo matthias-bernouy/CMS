@@ -144,11 +144,10 @@ export function createContentReader(repository: CmsRepository, options: ContentR
         getRenderableBlocs: async () =>
             (await repository.getBlocsList({ includeHidden: true })).map((bloc) => ({
                 id: bloc.id,
-                ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
-                ...(bloc.templateHTML ? { templateHTML: bloc.templateHTML } : {}),
+                kind: bloc.kind,
+                markupHTML: bloc.markupHTML,
                 ...(bloc.uses?.length ? { uses: [...bloc.uses] } : {}),
                 root: bloc.root,
-                ...(bloc.content ? { content: structuredClone(bloc.content) } : {}),
                 ...(bloc.styleCSS ? { styleCSS: bloc.styleCSS } : {}),
                 ...(bloc.styleCollectionId ? { styleCollectionId: bloc.styleCollectionId } : {}),
                 hasBehavior: bloc.hasBehavior,

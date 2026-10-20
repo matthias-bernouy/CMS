@@ -1,10 +1,8 @@
-import { parseHTML } from "linkedom";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
-import { expandCompositions } from "cms-content/blocs/core/composition/expandCompositions";
-import { validateStateQueryGraph } from "cms-content/blocs/core/markup/bindings/operation/stateGraph";
 import type { TBloc } from "cms-content/blocs/interfaces/blocs";
 import type { BlocSettings } from "cms-content/pages/interfaces/document";
 import { validatePageDocument } from "cms-content/blocs/core/markup/validation/documents/pageDocument";
+import { validateExpandedPageDocument } from "cms-content/blocs/core/markup/validation/documents/expandedPageDocument";
 import {
     resolveBindingAnalysisOptions,
     type ContentBindingValidationOptions,
@@ -15,10 +13,9 @@ export type ContentRefsReader = {
     getBlocsList(options?: { includeHidden?: boolean }): Promise<
         Array<{
             id: string;
-            compositionHTML?: TBloc["compositionHTML"];
-            templateHTML?: TBloc["templateHTML"];
+            kind: TBloc["kind"];
+            markupHTML: TBloc["markupHTML"];
             root: TBloc["root"];
-            content?: TBloc["content"];
             slots?: TBloc["slots"];
             settings?: BlocSettings;
         }>
@@ -47,10 +44,9 @@ export async function assertContentRefsExist(
     const contracts = (blocs: typeof completeCatalogue) =>
         blocs.map((bloc) => ({
             id: bloc.id,
-            kind: bloc.compositionHTML === undefined ? ("component" as const) : ("composition" as const),
+            kind: bloc.kind,
             slots: bloc.slots ?? {},
             root: bloc.root,
-            ...(bloc.content ? { content: bloc.content } : {}),
             ...(bloc.settings ? { settings: bloc.settings } : {}),
         }));
     const visibleContracts = contracts(registeredBlocs);
@@ -66,12 +62,12 @@ export async function assertContentRefsExist(
             ...(await resolveBindingAnalysisOptions(document.queries, document.mutations, bindingOptions)),
         });
     }
-    const { document: expandedDocument } = parseHTML("<!DOCTYPE html><html><body></body></html>");
-    expandedDocument.body.innerHTML = document.html;
     try {
-        expandCompositions(expandedDocument.body, completeCatalogue);
-        validateStateQueryGraph(expandedDocument.body);
+        validateExpandedPageDocument(document.html, completeCatalogue);
     } catch (error) {
+        if (error instanceof ContentValidationError) {
+            throw error;
+        }
         throw new ContentValidationError(
             "content",
             error instanceof Error ? error.message : "invalid automatic state query graph",

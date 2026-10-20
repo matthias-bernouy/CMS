@@ -6,7 +6,6 @@ import { nativeElementAttributesIssue } from "cms-content/blocs/core/markup/vali
 export type ManagedNativeElementContract = {
     id: string;
     root: ManagedNativeElement;
-    content?: ManagedNativeElement;
 };
 
 /** Returns the first managed-native structure issue found in an HTML fragment. */
@@ -32,35 +31,9 @@ export function managedNativeElementIssue(
             if (nativeIssue) {
                 return `bloc "${contract.id}" has invalid native root: ${nativeIssue}`;
             }
-            const rootIssue = elementContractIssue(host, contract.root, true);
+            const rootIssue = managedNativeElementContractIssue(host, contract.root, true);
             if (rootIssue) {
                 return `bloc "${contract.id}" ${rootIssue}`;
-            }
-            if (host.localName.toLowerCase() === "a") {
-                if (!host.hasAttribute("href")) {
-                    return `bloc "${contract.id}" requires its native <a> root to declare href`;
-                }
-                if (hasInteractiveDescendant(host)) {
-                    return `bloc "${contract.id}" cannot nest interactive content inside its native <a> root`;
-                }
-            }
-            if (contract.content) {
-                const children = Array.from(host.children).filter((child) => !child.hasAttribute("cms-bloc"));
-                if (children.length !== 1) {
-                    return `bloc "${contract.id}" requires exactly one Page-owned native child`;
-                }
-                const content = children[0]!;
-                if (content.hasAttribute("slot")) {
-                    return `bloc "${contract.id}" Page-owned native child cannot target a slot`;
-                }
-                const contentIssue = elementContractIssue(content, contract.content, false);
-                if (contentIssue) {
-                    return `bloc "${contract.id}" content ${contentIssue}`;
-                }
-                const semanticIssue = interactiveRootIssue(content, contract.id);
-                if (semanticIssue) {
-                    return semanticIssue;
-                }
             }
         }
     }
@@ -68,19 +41,11 @@ export function managedNativeElementIssue(
     return null;
 }
 
-function interactiveRootIssue(element: Element, id: string): string | null {
-    if (element.localName.toLowerCase() !== "a") {
-        return null;
-    }
-    if (!element.hasAttribute("href")) {
-        return `bloc "${id}" requires its native <a> content to declare href`;
-    }
-    return hasInteractiveDescendant(element)
-        ? `bloc "${id}" cannot nest interactive content inside its native <a> content`
-        : null;
-}
-
-function elementContractIssue(element: Element, contract: ManagedNativeElement, root: boolean): string | null {
+export function managedNativeElementContractIssue(
+    element: Element,
+    contract: ManagedNativeElement,
+    root = false,
+): string | null {
     const tag = element.localName.toLowerCase();
     if (!contract.accepts.includes(tag as (typeof contract.accepts)[number])) {
         return `requires an accepted native ${root ? "root" : "element"} (${contract.accepts
@@ -98,7 +63,18 @@ function elementContractIssue(element: Element, contract: ManagedNativeElement, 
         tag,
         { allowUnknown: root },
     );
-    return issue ? `has invalid native attributes: ${issue}` : null;
+    if (issue) {
+        return `has invalid native attributes: ${issue}`;
+    }
+    if (tag === "a") {
+        if (!element.hasAttribute("href")) {
+            return `requires its native <a> ${root ? "root" : "element"} to declare href`;
+        }
+        if (hasInteractiveDescendant(element)) {
+            return `cannot nest interactive content inside its native <a> ${root ? "root" : "element"}`;
+        }
+    }
+    return null;
 }
 
 function hasInteractiveDescendant(anchor: Element): boolean {

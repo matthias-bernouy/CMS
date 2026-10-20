@@ -13,9 +13,10 @@ export type PageSlotAccept =
     | { readonly kind: "component"; readonly tag: string }
     | { readonly kind: "any-component" }
     | { readonly kind: "plain-text" }
-    | { readonly kind: "native-content"; readonly profile: PageNativeContentProfile };
+    | { readonly kind: "native-content"; readonly profile: PageNativeContentProfile }
+    | ({ readonly kind: "native-element" } & ManagedNativeElement);
 
-export type PageNativeContentProfile = "inline" | "prose";
+export type PageNativeContentProfile = "phrasing" | "inline" | "prose";
 
 export type ManagedNativeElementTag =
     | "article"
@@ -141,7 +142,5 @@ export interface PageBlocContract {
     readonly slots: Readonly<Record<string, PageSlot>>;
     /** Native element contract for the element carrying `cms-bloc`. */
     readonly root: ManagedNativeElement;
-    /** Optional single Page-owned native child for wrapper Blocs such as enriched form controls. */
-    readonly content?: ManagedNativeElement;
     readonly settings?: BlocSettings;
 }

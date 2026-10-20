@@ -35,7 +35,8 @@ test("editor catalogue projects deterministic authoring contracts", async () => 
             group: "Content",
             catalogueOrder: 10,
             description: "A hero composition.",
-            compositionHTML: '<section><slot name="content"></slot></section>',
+            kind: "composition" as const,
+            markupHTML: '<section><slot name="content"></slot></section>',
             ownership: { kind: "site-builder" as const, definitionId: "hero" },
         },
     ];

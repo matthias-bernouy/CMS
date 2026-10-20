@@ -47,6 +47,8 @@ export function siteBlocDefinition(overrides: Partial<SiteBlocDefinition> = {}):
 export function siteBlocArtifact(overrides: Partial<TBloc> = {}): TBloc {
     return {
         id: "site-feature-panel",
+        kind: "component",
+        markupHTML: "<slot></slot>",
         name: "Feature panel",
         group: "Site",
         description: "A composed site bloc",

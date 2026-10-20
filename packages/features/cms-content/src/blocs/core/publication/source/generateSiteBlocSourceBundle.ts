@@ -1,19 +1,19 @@
 import type { SiteBlocDefinition, SiteBlocSnapshot } from "cms-content/blocs/interfaces/blocs";
 import { validateSiteBlocSnapshot } from "cms-content/blocs/core/validation";
 import { canonicalSiteBlocDefinition, normalizeSiteBlocSnapshot } from "./canonicalSiteBloc";
-import { serializeSiteBlocDefault, serializeSiteBlocTemplate } from "./siteBlocHtml";
+import { serializeSiteBlocDefault, serializeSiteBlocMarkup } from "./siteBlocHtml";
 
 export function generateSiteBlocSourceBundle(
     definition: SiteBlocDefinition,
     snapshot?: SiteBlocSnapshot,
-): Record<"manifest.json" | "template.html" | "default.html" | "builder.json", string> {
+): Record<"manifest.json" | "markup.html" | "default.html" | "builder.json", string> {
     const selected = validateSiteBlocSnapshot(
         normalizeSiteBlocSnapshot(snapshot ?? publishedSnapshot(definition)),
         definition.tag,
     );
     return {
         "manifest.json": manifestSource(definition.tag, selected),
-        "template.html": serializeSiteBlocTemplate(selected),
+        "markup.html": serializeSiteBlocMarkup(selected),
         "default.html": serializeSiteBlocDefault(definition.tag, selected.defaultContent),
         "builder.json": canonicalSiteBlocDefinition(definition),
     };
@@ -30,7 +30,7 @@ function manifestSource(tag: string, snapshot: SiteBlocSnapshot): string {
     return `${JSON.stringify(
         {
             "default-tag": tag,
-            composition: "./template.html",
+            markup: "./markup.html",
             defaultContent: "./default.html",
             meta: { title: snapshot.name, description: snapshot.description },
         },

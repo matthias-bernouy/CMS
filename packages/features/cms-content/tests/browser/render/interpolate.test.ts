@@ -130,6 +130,26 @@ describe("interpolateString — filters (injected)", () => {
         expect(interpolateString("{{ date | dateLong }}", s(value), filters)).toBe("26 août 2026");
         expect(interpolateString("{{ date | dateLong(requestedLocale) }}", s(value), filters)).toBe("August 26, 2026");
     });
+
+    test("keeps only same-origin path URLs with the internalUrl filter", () => {
+        expect(
+            interpolateString("{{ destination | internalUrl }}", s({ destination: "/files/photo?a=1#preview" })),
+        ).toBe("/files/photo?a=1#preview");
+        expect(interpolateString("{{ destination | internalUrl }}", s({ destination: "/files/../photo" }))).toBe(
+            "/photo",
+        );
+
+        for (const destination of [
+            "https://example.test/photo",
+            "//example.test/photo",
+            "javascript:alert(1)",
+            "/files\\photo",
+            "/files/photo name",
+            "/files/photo\nname",
+        ]) {
+            expect(interpolateString("{{ destination | internalUrl }}", s({ destination }))).toBe("");
+        }
+    });
 });
 
 describe("interpolateString — `value` reserved word via scope", () => {

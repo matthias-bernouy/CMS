@@ -28,6 +28,7 @@ export {
     type PageDocumentValidationResult,
     type UnresolvedPageDocumentBloc,
 } from "cms-content/blocs/core/markup/validation/documents/pageDocument";
+export { validateExpandedPageDocument } from "cms-content/blocs/core/markup/validation/documents/expandedPageDocument";
 export {
     validateBlocDocument,
     type BlocDocumentContract,

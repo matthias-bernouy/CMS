@@ -131,7 +131,7 @@ function validateHosts(
 function validateManagedNative(html: string, blocs: readonly PageDocumentBlocContract[]): void {
     const issue = managedNativeElementIssue(
         html,
-        blocs.map((bloc) => ({ id: bloc.id, root: bloc.root, content: bloc.content })),
+        blocs.map((bloc) => ({ id: bloc.id, root: bloc.root })),
     );
     if (issue) {
         throw new ContentValidationError("content", issue);

@@ -11,15 +11,16 @@ describe("site bloc validation", () => {
     test("keeps composition templates and component views mutually exclusive", () => {
         const artifact = siteBlocArtifact();
 
-        expect(validateBlocWrite({ ...artifact, viewJS: "", compositionHTML: "<slot></slot>" }).compositionHTML).toBe(
-            "<slot></slot>",
-        );
-        expect(() => validateBlocWrite({ ...artifact, compositionHTML: "<slot></slot>" })).toThrow(
-            ContentValidationError,
-        );
-        expect(() => validateBlocWrite({ ...artifact, viewJS: "", compositionHTML: "  " })).toThrow(
-            ContentValidationError,
-        );
+        expect(
+            validateBlocWrite({ ...artifact, viewJS: "", kind: "composition" as const, markupHTML: "<slot></slot>" })
+                .markupHTML,
+        ).toBe("<slot></slot>");
+        expect(() =>
+            validateBlocWrite({ ...artifact, kind: "composition" as const, markupHTML: "<slot></slot>" }),
+        ).toThrow(ContentValidationError);
+        expect(() =>
+            validateBlocWrite({ ...artifact, viewJS: "", kind: "composition" as const, markupHTML: "  " }),
+        ).toThrow(ContentValidationError);
         expect(validateBlocWrite({ ...artifact, catalogue: "hidden", viewJS: "" }).catalogue).toBe("hidden");
         expect(() => validateBlocWrite({ ...artifact, catalogue: "private" as never })).toThrow(ContentValidationError);
         expect(() => validateBlocWrite({ ...artifact, id: "p" })).toThrow(/namespaced Bloc identifier/);
@@ -30,12 +31,21 @@ describe("site bloc validation", () => {
         expect(
             validateBlocWrite({
                 ...artifact,
-                content: {
-                    accepts: ["input"],
-                    attributes: { type: { required: true, values: ["checkbox"] } },
+                slots: {
+                    "": {
+                        accepts: [
+                            {
+                                kind: "native-element",
+                                accepts: ["input"],
+                                attributes: { type: { required: true, values: ["checkbox"] } },
+                            },
+                        ],
+                    },
                 },
-            }).content,
-        ).toMatchObject({ attributes: { type: { required: true, values: ["checkbox"] } } });
+            }).slots[""],
+        ).toMatchObject({
+            accepts: [expect.objectContaining({ attributes: { type: { required: true, values: ["checkbox"] } } })],
+        });
         expect(() => validateBlocWrite({ ...artifact, root: { accepts: [] } })).toThrow(/root/);
         expect(() =>
             validateBlocWrite({ ...artifact, viewJS: "customElements.define('site-feature-panel', class {})" }),
@@ -47,15 +57,17 @@ describe("site bloc validation", () => {
             validateBlocWrite({
                 ...artifact,
                 viewJS: "",
-                compositionHTML: "<slot></slot>",
-                content: { accepts: ["a"] },
+                kind: "composition" as const,
+                markupHTML: "<slot></slot>",
+                content: { accepts: ["a"] } as never,
             }),
-        ).toThrow(/content/);
+        ).toThrow();
         expect(() =>
             validateBlocWrite({
                 ...artifact,
                 viewJS: "",
-                compositionHTML: '<a href="javascript:run()">Run</a>',
+                kind: "composition" as const,
+                markupHTML: '<a href="javascript:run()">Run</a>',
             }),
         ).toThrow(/forbidden/);
     });

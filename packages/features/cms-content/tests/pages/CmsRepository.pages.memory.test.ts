@@ -94,7 +94,8 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
                         name: "Archived layout",
                         group: "",
                         description: "",
-                        compositionHTML: "<main><slot></slot></main>",
+                        kind: "composition" as const,
+                        markupHTML: "<main><slot></slot></main>",
                         uses: ["shared-card"],
                         root: { accepts: ["a"] },
                         ownership: { kind: "code-managed" as const },
@@ -106,7 +107,8 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
         expect(await reader.getRenderableBlocs()).toEqual([
             {
                 id: "archived-layout",
-                compositionHTML: "<main><slot></slot></main>",
+                kind: "composition" as const,
+                markupHTML: "<main><slot></slot></main>",
                 uses: ["shared-card"],
                 root: { accepts: ["a"] },
             },

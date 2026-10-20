@@ -7,10 +7,10 @@ describe("generateSiteBlocSourceBundle", () => {
     test("generates the exact four composition source files", () => {
         const source = generateSiteBlocSourceBundle(definition());
 
-        expect(Object.keys(source)).toEqual(["manifest.json", "template.html", "default.html", "builder.json"]);
+        expect(Object.keys(source)).toEqual(["manifest.json", "markup.html", "default.html", "builder.json"]);
         expect(source["manifest.json"]).toBe(`{
     "default-tag": "site-hero",
-    "composition": "./template.html",
+    "markup": "./markup.html",
     "defaultContent": "./default.html",
     "meta": {
         "title": "Hero",
@@ -18,7 +18,7 @@ describe("generateSiteBlocSourceBundle", () => {
     }
 }
 `);
-        expect(source["template.html"]).toBe(
+        expect(source["markup.html"]).toBe(
             '<div cms-bloc=\"basic-container\" aria-label="A &quot;&lt;&amp;" width="wide" data-cms-composition-controller><slot name="title" slot="title"></slot><slot></slot></div>\n',
         );
         expect(source["default.html"]).toBe(
@@ -34,13 +34,13 @@ describe("generateSiteBlocSourceBundle", () => {
     test("forwards a nested named site slot to its parent bloc", () => {
         const source = generateSiteBlocSourceBundle(definition());
 
-        expect(source["template.html"]).toContain('<slot name="title" slot="title"></slot>');
+        expect(source["markup.html"]).toContain('<slot name="title" slot="title"></slot>');
     });
 
     test("marks the first root bloc as the host behavior controller", () => {
         const source = generateSiteBlocSourceBundle(definition());
 
-        expect(source["template.html"]).toContain(
+        expect(source["markup.html"]).toContain(
             '<div cms-bloc=\"basic-container\" aria-label="A &quot;&lt;&amp;" width="wide" data-cms-composition-controller>',
         );
     });
@@ -72,8 +72,8 @@ describe("generateSiteBlocSourceBundle", () => {
             throw new Error("Expected fixture root bloc");
         }
         changedRoot.children.reverse();
-        expect(generateSiteBlocSourceBundle(definition(), nodeOrderChanged)["template.html"]).not.toBe(
-            first["template.html"],
+        expect(generateSiteBlocSourceBundle(definition(), nodeOrderChanged)["markup.html"]).not.toBe(
+            first["markup.html"],
         );
     });
 

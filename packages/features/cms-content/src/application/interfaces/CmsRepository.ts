@@ -26,15 +26,14 @@ export type BlocListItemResponse = {
     catalogueOrder?: number;
     description: string;
     thumbnail?: TBloc["thumbnail"];
-    compositionHTML?: string;
-    templateHTML?: string;
+    kind: TBloc["kind"];
+    markupHTML: string;
     defaultContent?: string;
     slots?: TBloc["slots"];
     settings?: TBloc["settings"];
     catalogue?: TBloc["catalogue"];
     uses?: TBloc["uses"];
     root: TBloc["root"];
-    content?: TBloc["content"];
     styleCSS?: TBloc["styleCSS"];
     styleCollectionId?: TBloc["styleCollectionId"];
     hasBehavior: boolean;

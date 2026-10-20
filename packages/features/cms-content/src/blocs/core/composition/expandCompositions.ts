@@ -15,15 +15,19 @@ const FALLBACK_END = "cms-composition-slot-fallback-end:";
 const COMPONENT_OUTPUT_START = "cms-component-output-start";
 const COMPONENT_OUTPUT_END = "cms-component-output-end";
 
-export type CompositionDefinition = { id: string; compositionHTML?: string; templateHTML?: string };
+export type CompositionDefinition = {
+    id: string;
+    kind: "component" | "composition";
+    markupHTML: string;
+};
 export type CompositionExpansionMode = "render" | "preview";
-type Template = { html: string; retainHost: boolean };
+type ExpansionMarkup = { html: string; retainHost: boolean };
 
 /**
- * Expands registered composition templates into real light DOM.
+ * Expands registered Bloc markup into real light DOM.
  *
  * Pure compositions replace their annotated root in rendered output. Component
- * templates keep the native root carrying `cms-bloc`.
+ * markup keeps the native root carrying `cms-bloc`.
  * Preview mode retains page-owned children separately from generated markup.
  */
 export function expandCompositions(
@@ -31,38 +35,38 @@ export function expandCompositions(
     definitions: readonly CompositionDefinition[],
     mode: CompositionExpansionMode = "render",
 ): void {
-    const templates = new Map<string, Template>(
-        definitions.flatMap((definition) => {
-            const html = definition.compositionHTML ?? definition.templateHTML;
-            return html ? [[definition.id.toLowerCase(), { html, retainHost: !!definition.templateHTML }]] : [];
-        }),
+    const markups = new Map<string, ExpansionMarkup>(
+        definitions.map((definition) => [
+            definition.id.toLowerCase(),
+            { html: definition.markupHTML, retainHost: definition.kind === "component" },
+        ]),
     );
-    if (templates.size === 0) {
+    if (markups.size === 0) {
         return;
     }
 
     const expanded = new WeakSet<Element>();
     const idScope = createTemplateIdScope(root);
-    const expansionLimit = templates.size * 100 + 1_000;
+    const expansionLimit = markups.size * 100 + 1_000;
     for (let count = 0; count < expansionLimit; count++) {
-        const host = nextComposition(root, templates, expanded);
+        const host = nextComposition(root, markups, expanded);
         if (!host) {
             return;
         }
         expanded.add(host);
-        expandHost(host, templates.get(host.getAttribute("cms-bloc")!)!, mode, idScope);
+        expandHost(host, markups.get(host.getAttribute("cms-bloc")!)!, mode, idScope);
     }
     throw new Error("Composition expansion exceeded its safety limit; check for a recursive composition dependency");
 }
 
 function nextComposition(
     root: ParentNode,
-    templates: ReadonlyMap<string, Template>,
+    markups: ReadonlyMap<string, ExpansionMarkup>,
     expanded: WeakSet<Element>,
 ): Element | null {
     for (const element of Array.from(root.querySelectorAll("[cms-bloc]"))) {
         const id = element.getAttribute("cms-bloc")?.toLowerCase();
-        if (id && templates.has(id) && !expanded.has(element) && !element.hasAttribute(COMPOSITION_RUNTIME_ATTRIBUTE)) {
+        if (id && markups.has(id) && !expanded.has(element) && !element.hasAttribute(COMPOSITION_RUNTIME_ATTRIBUTE)) {
             return element;
         }
     }
@@ -71,7 +75,7 @@ function nextComposition(
 
 function expandHost(
     host: Element,
-    definition: Template,
+    definition: ExpansionMarkup,
     mode: CompositionExpansionMode,
     idScope: TemplateIdScope,
 ): void {

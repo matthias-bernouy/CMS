@@ -24,7 +24,7 @@ export async function getCmsEditorCatalogue(
             name: bloc.name,
             group: bloc.group,
             description: bloc.description,
-            kind: bloc.compositionHTML ? "composition" : "component",
+            kind: bloc.kind,
             ownership: bloc.ownership.kind,
             order: bloc.catalogueOrder ?? 0,
             defaultContent: bloc.defaultContent ?? "",
@@ -32,7 +32,6 @@ export async function getCmsEditorCatalogue(
                 slots: bloc.slots ?? {},
                 settings: bloc.settings ?? [],
                 ...(bloc.root ? { root: bloc.root } : {}),
-                ...(bloc.content ? { content: bloc.content } : {}),
             }),
         }),
     );

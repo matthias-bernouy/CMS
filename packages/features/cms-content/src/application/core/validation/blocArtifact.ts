@@ -27,9 +27,7 @@ export async function validateBlocArtifact(
     const validated = validateBlocDocument(
         {
             ...contract,
-            ...(bloc.compositionHTML === undefined && bloc.templateHTML === undefined
-                ? {}
-                : { fixedContent: bloc.compositionHTML ?? bloc.templateHTML }),
+            fixedContent: bloc.markupHTML,
             ...(bloc.defaultContent === undefined ? {} : { defaultContent: bloc.defaultContent }),
         },
         catalogue,
@@ -52,11 +50,7 @@ export async function validateBlocArtifact(
     }
     const artifact: TBloc = {
         ...bloc,
-        ...(validated.fixedContent === undefined
-            ? {}
-            : bloc.compositionHTML === undefined
-              ? { templateHTML: validated.fixedContent }
-              : { compositionHTML: validated.fixedContent }),
+        markupHTML: validated.fixedContent ?? bloc.markupHTML,
         ...(validated.defaultContent === undefined ? {} : { defaultContent: validated.defaultContent }),
     };
     assertAcyclicBlocDependencies([...catalogueBlocs, artifact]);
@@ -80,14 +74,13 @@ function validateComposedStateQueries(catalogue: readonly CompositionDefinition[
 }
 
 function pageDocumentContract(
-    bloc: Pick<TBloc, "id" | "compositionHTML" | "root" | "content" | "settings" | "slots">,
+    bloc: Pick<TBloc, "id" | "kind" | "root" | "settings" | "slots">,
 ): PageDocumentBlocContract {
     return {
         id: bloc.id,
-        kind: bloc.compositionHTML === undefined ? "component" : "composition",
+        kind: bloc.kind,
         slots: bloc.slots ?? {},
         root: bloc.root,
-        ...(bloc.content === undefined ? {} : { content: bloc.content }),
         ...(bloc.settings === undefined ? {} : { settings: bloc.settings }),
     };
 }

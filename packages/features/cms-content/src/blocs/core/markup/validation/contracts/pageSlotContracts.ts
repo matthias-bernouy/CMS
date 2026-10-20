@@ -1,30 +1,12 @@
 import type { PageBlocContract, PageSlot, PageSlotAccept } from "cms-content/pages/interfaces/document";
+import { managedNativeElementContractIssue } from "cms-content/blocs/core/markup/validation/managedNativeElements";
 
 type ContractElement = Element & { readonly children: HTMLCollectionOf<ContractElement> };
 type ContractBloc = PageBlocContract;
 
-const INLINE_ROOTS = new Set([
-    "a",
-    "abbr",
-    "b",
-    "br",
-    "cite",
-    "code",
-    "em",
-    "figcaption",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "label",
-    "p",
-    "small",
-    "span",
-    "strong",
-]);
-const INLINE_DESCENDANTS = new Set(["a", "abbr", "b", "br", "cite", "code", "em", "small", "span", "strong"]);
+const PHRASING = new Set(["a", "abbr", "b", "br", "cite", "code", "em", "small", "span", "strong"]);
+const INLINE_ROOTS = new Set([...PHRASING, "figcaption", "h1", "h2", "h3", "h4", "h5", "h6", "label", "p"]);
+const INLINE_DESCENDANTS = PHRASING;
 const PROSE_ROOTS = new Set([...INLINE_ROOTS, "blockquote", "div", "ol", "p", "pre", "ul"]);
 const PROSE_DESCENDANTS = new Set([...PROSE_ROOTS, "li"]);
 export function blocHostContractIssue(
@@ -35,23 +17,19 @@ export function blocHostContractIssue(
     allowTemplateSlots = false,
     allowOwnedNative = false,
 ): string | null {
-    if (bloc.content) {
-        const authored = Array.from(host.childNodes).filter(
-            (node) => node.nodeType === 1 || (node.nodeType === 3 && Boolean(node.textContent?.trim())),
-        );
-        if (authored.length !== 1 || authored[0]?.nodeType !== 1) {
-            return `<${bloc.id}> requires exactly one Page-owned native child`;
-        }
-        if ((authored[0] as Element).hasAttribute("cms-bloc")) {
-            return `<${bloc.id}> managed native content cannot be another Bloc`;
-        }
-        return null;
-    }
     const slots = bloc.slots ?? {};
     const counts = new Map<string, number>();
     for (const node of Array.from(host.childNodes)) {
         if (node.nodeType === 3 && node.textContent?.trim()) {
-            return `<${bloc.id}> contains text outside a declared Bloc slot`;
+            const slot = slots[""];
+            if (!slot) {
+                return `<${bloc.id}> contains text outside a declared Bloc slot`;
+            }
+            if (!allowOwnedNative && !(slot.accepts ?? []).some(acceptsText)) {
+                return `<${bloc.id}> default slot does not accept text`;
+            }
+            counts.set("", (counts.get("") ?? 0) + 1);
+            continue;
         }
         if (node.nodeType !== 1) {
             continue;
@@ -108,8 +86,19 @@ function slotChildIssue(
     if (allowOwnedNative) {
         return null;
     }
-    if (!accepts.some((accept) => acceptsNativeElement(accept, child))) {
-        return `does not accept native <${tag}>`;
+    const managedContracts = accepts.filter(
+        (accept): accept is Extract<PageSlotAccept, { kind: "native-element" }> =>
+            accept.kind === "native-element" &&
+            accept.accepts.includes(child.localName.toLowerCase() as (typeof accept.accepts)[number]),
+    );
+    if (managedContracts.length > 0) {
+        const issues = managedContracts.map((accept) => managedNativeElementContractIssue(child, accept));
+        return issues.some((issue) => issue === null)
+            ? null
+            : (issues[0] ?? `does not accept native <${child.localName.toLowerCase()}>`);
+    }
+    if (!accepts.some((accept) => acceptsNativeContent(accept, child, allowTemplateSlots))) {
+        return `does not accept native <${child.localName.toLowerCase()}>`;
     }
     return null;
 }
@@ -124,7 +113,7 @@ function acceptsCustomBloc(accept: PageSlotAccept, tag: string, bloc: ContractBl
     return false;
 }
 
-function acceptsNativeElement(accept: PageSlotAccept, element: ContractElement): boolean {
+function acceptsNativeContent(accept: PageSlotAccept, element: ContractElement, allowTemplateSlots: boolean): boolean {
     const tag = element.localName.toLowerCase();
     if (accept.kind === "plain-text") {
         return tag === "span" && element.children.length === 0;
@@ -132,17 +121,25 @@ function acceptsNativeElement(accept: PageSlotAccept, element: ContractElement):
     if (accept.kind !== "native-content") {
         return false;
     }
-    const roots = accept.profile === "inline" ? INLINE_ROOTS : PROSE_ROOTS;
-    const descendants = accept.profile === "inline" ? INLINE_DESCENDANTS : PROSE_DESCENDANTS;
-    return roots.has(tag) && nativeSubtreeMatches(element, descendants);
+    const roots = accept.profile === "phrasing" ? PHRASING : accept.profile === "inline" ? INLINE_ROOTS : PROSE_ROOTS;
+    const descendants = accept.profile === "prose" ? PROSE_DESCENDANTS : INLINE_DESCENDANTS;
+    return roots.has(tag) && nativeSubtreeMatches(element, descendants, allowTemplateSlots);
 }
 
-function nativeSubtreeMatches(element: ContractElement, allowed: ReadonlySet<string>): boolean {
+function acceptsText(accept: PageSlotAccept): boolean {
+    return accept.kind === "plain-text" || accept.kind === "native-content";
+}
+
+function nativeSubtreeMatches(
+    element: ContractElement,
+    allowed: ReadonlySet<string>,
+    allowTemplateSlots: boolean,
+): boolean {
     for (const child of Array.from(element.children)) {
         if (
-            child.hasAttribute("slot") ||
-            !allowed.has(child.localName.toLowerCase()) ||
-            !nativeSubtreeMatches(child, allowed)
+            (child.hasAttribute("slot") && !(allowTemplateSlots && child.localName === "slot")) ||
+            (!allowed.has(child.localName.toLowerCase()) && !(allowTemplateSlots && child.localName === "slot")) ||
+            !nativeSubtreeMatches(child, allowed, allowTemplateSlots)
         ) {
             return false;
         }

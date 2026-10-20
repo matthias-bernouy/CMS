@@ -5,7 +5,7 @@ import { definition } from "./fixtures";
 describe("generated site Bloc source", () => {
     test("represents a composition without an unnecessary browser runtime", () => {
         const source = generateSiteBlocSourceBundle(definition());
-        expect(source["template.html"]).toContain('<slot name="title" slot="title"></slot>');
+        expect(source["markup.html"]).toContain('<slot name="title" slot="title"></slot>');
         expect(source["default.html"]).toBe(
             '<div cms-bloc="site-hero"><h1 cms-bloc="basic-heading-1" slot="title">Hello</h1><p cms-bloc="basic-paragraph">Body</p></div>\n',
         );
@@ -47,7 +47,7 @@ describe("generated site Bloc source", () => {
                 },
             ],
         });
-        expect(bound["template.html"]).toContain('cms-query="catalog:items as items"');
+        expect(bound["markup.html"]).toContain('cms-query="catalog:items as items"');
 
         for (const attributes of [{ "cms-query": "https://example.com/items" }, { "cms-ready": "" }]) {
             expect(() =>
@@ -159,7 +159,7 @@ describe("generated site Bloc source", () => {
             ],
         });
 
-        expect(source["template.html"]).toContain("Morrow &amp; &lt;Co&gt;");
+        expect(source["markup.html"]).toContain("Morrow &amp; &lt;Co&gt;");
     });
 
     test("enforces native placement and form contracts at the source-bundle boundary", () => {

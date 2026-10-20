@@ -6,11 +6,10 @@ import type { RenderingSettings } from "cms-content/settings/interfaces/settings
 
 export type RenderableBloc = {
     id: string;
-    compositionHTML?: string;
-    templateHTML?: string;
+    kind: TBloc["kind"];
+    markupHTML: string;
     uses?: readonly string[];
     root: TBloc["root"];
-    content?: TBloc["content"];
     styleCSS?: string;
     styleCollectionId?: string;
     hasBehavior: boolean;

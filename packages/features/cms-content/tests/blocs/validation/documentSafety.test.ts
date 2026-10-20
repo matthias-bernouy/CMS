@@ -6,7 +6,7 @@ import { validatePageDocument } from "cms-content/blocs/core/markup/validation/d
 import { BLOC_DOCUMENT_LIMITS } from "cms-content/blocs/core/markup/validation/documents/blocBudgets";
 import { siteBlocArtifact } from "../siteBlocFixture";
 
-const fixed = (html: string) => validateBlocContentMarkup(html, { field: "templateHTML", kind: "fixed" });
+const fixed = (html: string) => validateBlocContentMarkup(html, { field: "markupHTML", kind: "fixed" });
 
 describe("Bloc document accessibility", () => {
     test("accepts controlled implementation accessibility attributes", () => {
@@ -31,21 +31,31 @@ describe("declarative native dialogs", () => {
     const action = {
         id: "fixture-action",
         kind: "component" as const,
-        slots: {},
+        slots: {
+            "": { accepts: [{ kind: "native-element" as const, accepts: ["button" as const] }], min: 1, max: 1 },
+        },
         root: { accepts: ["div" as const] },
-        content: { accepts: ["button" as const] },
     };
     const dialog = {
         id: "fixture-dialog",
         kind: "component" as const,
-        slots: {},
+        slots: {
+            "": { accepts: [{ kind: "native-element" as const, accepts: ["dialog" as const] }], min: 1, max: 1 },
+        },
         root: { accepts: ["div" as const] },
-        content: { accepts: ["dialog" as const] },
+    };
+    const heading = {
+        id: "fixture-heading",
+        kind: "component" as const,
+        slots: {
+            "": { accepts: [{ kind: "native-content" as const, profile: "phrasing" as const }], min: 1 },
+        },
+        root: { accepts: ["h2" as const] },
     };
     const validate = (content: string) =>
         validateBlocDocument(
             { id: "fixture-owner", kind: "composition", slots: {}, root: { accepts: ["div"] }, fixedContent: content },
-            [action, dialog],
+            [action, dialog, heading],
         );
 
     test("accepts an addressable Light DOM dialog without component JavaScript", () => {
@@ -53,7 +63,7 @@ describe("declarative native dialogs", () => {
             validate(`
                 <div cms-bloc=\"fixture-action\"><button type="button" command="show-modal" commandfor="create-dialog">Open</button></div>
                 <div cms-bloc=\"fixture-dialog\"><dialog id="create-dialog" aria-labelledby="create-title">
-                    <h2 id="create-title">Create</h2>
+                    <h2 cms-bloc="fixture-heading" id="create-title">Create</h2>
                     <div cms-bloc=\"fixture-action\"><button type="button" command="close" commandfor="create-dialog">Close</button></div>
                 </dialog></div>
             `),
@@ -66,7 +76,7 @@ describe("declarative native dialogs", () => {
             "missing id",
         ],
         [
-            '<h2 id="target">Heading</h2><div cms-bloc=\"fixture-action\"><button type="button" command="show-modal" commandfor="target">Open</button></div>',
+            '<h2 cms-bloc="fixture-heading" id="target">Heading</h2><div cms-bloc=\"fixture-action\"><button type="button" command="show-modal" commandfor="target">Open</button></div>',
             "must be a <dialog>",
         ],
         [
@@ -91,6 +101,29 @@ describe("declarative native dialogs", () => {
         ],
     ])("rejects invalid native dialog relationships", (content, message) => {
         expect(() => validate(content)).toThrow(message);
+    });
+});
+
+describe("fixed heading ownership", () => {
+    const heading = {
+        id: "fixture-heading",
+        kind: "component" as const,
+        slots: {
+            "": { accepts: [{ kind: "native-content" as const, profile: "phrasing" as const }], min: 1 },
+        },
+        root: { accepts: ["h1" as const, "h2" as const] },
+    };
+    const validate = (fixedContent: string) =>
+        validateBlocDocument(
+            { id: "fixture-owner", kind: "composition", slots: {}, root: { accepts: ["div"] }, fixedContent },
+            [heading],
+        );
+
+    test("requires fixed headings to be explicit registered Blocs", () => {
+        expect(() => validate("<h2>Title</h2>")).toThrow("place an explicit heading Bloc");
+        expect(() => validate('<h2 cms-bloc="fixture-heading">Title</h2>')).not.toThrow();
+        expect(() => validate('<h3 cms-bloc="fixture-heading">Title</h3>')).toThrow("accepted native root");
+        expect(() => validate('<h2 cms-bloc="fixture-unknown">Title</h2>')).toThrow("unknown local bloc");
     });
 });
 

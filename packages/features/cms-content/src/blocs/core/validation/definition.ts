@@ -9,9 +9,38 @@ import { assertBlocArtifactBudgets } from "cms-content/blocs/core/markup/validat
 import { blocSettingAttributeNameIssue } from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";
 import type { BlocOwnership, SiteBlocDefinition, TBloc, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
 
+const BLOC_WRITE_KEYS = new Set<keyof TBlocWrite>([
+    "id",
+    "kind",
+    "name",
+    "group",
+    "catalogueOrder",
+    "description",
+    "thumbnail",
+    "catalogue",
+    "uses",
+    "root",
+    "styleCSS",
+    "styleCollectionId",
+    "viewJS",
+    "markupHTML",
+    "defaultContent",
+    "slots",
+    "settings",
+    "ownership",
+    "source",
+]);
+
 export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (!isRecord(value)) {
         throw new ContentValidationError("bloc", "object expected");
+    }
+    if ("content" in value) {
+        throw new ContentValidationError("bloc", "content is not a Bloc contract; declare the default slot instead");
+    }
+    const unknownKey = Object.keys(value).find((key) => !BLOC_WRITE_KEYS.has(key as keyof TBlocWrite));
+    if (unknownKey !== undefined) {
+        throw new ContentValidationError("bloc", `unknown field ${unknownKey}`);
     }
     if (value.ownership !== undefined) {
         validateOwnership(value.ownership);
@@ -28,14 +57,11 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (!isValidCustomElementTag(bloc.id)) {
         throw new ContentValidationError("id", "valid lower-case namespaced Bloc identifier expected");
     }
-    if (bloc.compositionHTML !== undefined && !bloc.compositionHTML.trim()) {
-        throw new ContentValidationError("compositionHTML", "non-empty HTML expected");
+    if (bloc.kind !== "component" && bloc.kind !== "composition") {
+        throw new ContentValidationError("kind", "component or composition expected");
     }
-    if (bloc.templateHTML !== undefined && !bloc.templateHTML.trim()) {
-        throw new ContentValidationError("templateHTML", "non-empty HTML expected");
-    }
-    if (bloc.templateHTML !== undefined && bloc.compositionHTML !== undefined) {
-        throw new ContentValidationError("bloc", "templateHTML and compositionHTML are mutually exclusive");
+    if (typeof bloc.markupHTML !== "string" || !bloc.markupHTML.trim()) {
+        throw new ContentValidationError("markupHTML", "non-empty HTML expected");
     }
     if ((bloc.styleCSS === undefined) !== (bloc.styleCollectionId === undefined)) {
         throw new ContentValidationError("styleCSS", "styleCSS and styleCollectionId must be supplied together");
@@ -46,11 +72,11 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (bloc.styleCollectionId !== undefined && !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(bloc.styleCollectionId)) {
         throw new ContentValidationError("styleCollectionId", "valid lower-case collection identifier expected");
     }
-    if (bloc.compositionHTML !== undefined && bloc.styleCSS !== undefined) {
-        throw new ContentValidationError("bloc", "styleCSS and compositionHTML are mutually exclusive");
+    if (bloc.kind === "composition" && bloc.styleCSS !== undefined) {
+        throw new ContentValidationError("bloc", "styleCSS is forbidden for compositions");
     }
-    if (bloc.compositionHTML !== undefined && bloc.viewJS.trim()) {
-        throw new ContentValidationError("bloc", "viewJS and compositionHTML are mutually exclusive");
+    if (bloc.kind === "composition" && bloc.viewJS.trim()) {
+        throw new ContentValidationError("bloc", "viewJS is forbidden for compositions");
     }
     validateManagedNativeElement(bloc.root, "root");
     for (const setting of bloc.settings ?? []) {
@@ -59,26 +85,11 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
             throw new ContentValidationError("settings", issue);
         }
     }
-    if (bloc.content !== undefined) {
-        validateManagedNativeElement(bloc.content, "content");
-        if (bloc.compositionHTML !== undefined) {
-            throw new ContentValidationError("content", "composition Blocs cannot manage a Page-owned native child");
-        }
-    }
-    if (bloc.compositionHTML !== undefined) {
-        bloc.compositionHTML = validateBlocContentMarkup(bloc.compositionHTML, {
-            field: "compositionHTML",
-            kind: "fixed",
-            ownerTag: bloc.id,
-        }).html;
-    }
-    if (bloc.templateHTML !== undefined) {
-        bloc.templateHTML = validateBlocContentMarkup(bloc.templateHTML, {
-            field: "templateHTML",
-            kind: "fixed",
-            ownerTag: bloc.id,
-        }).html;
-    }
+    bloc.markupHTML = validateBlocContentMarkup(bloc.markupHTML, {
+        field: "markupHTML",
+        kind: "fixed",
+        ownerTag: bloc.id,
+    }).html;
     if (bloc.defaultContent !== undefined) {
         bloc.defaultContent = validateBlocContentMarkup(bloc.defaultContent, {
             field: "defaultContent",
@@ -101,7 +112,7 @@ function validateBlocRuntime(source: string): void {
     }
 }
 
-function validateManagedNativeElement(value: TBloc["root"], field: "root" | "content"): void {
+function validateManagedNativeElement(value: TBloc["root"], field: "root"): void {
     if (value === undefined) {
         throw new ContentValidationError(field, "a native element contract is required");
     }

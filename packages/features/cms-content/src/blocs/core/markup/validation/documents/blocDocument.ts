@@ -49,7 +49,7 @@ export function validateBlocDocument(
             kind: "fixed",
             ownerTag: bloc.id,
         });
-        validateFragment(fixed.html, bloc.id, known, unresolved);
+        validateFragment(fixed.html, bloc.id, known, unresolved, bloc.kind === "component");
         validateBindings(fixed.html, bindingOptions);
     }
     if (bloc.defaultContent !== undefined) {
@@ -85,19 +85,28 @@ function validateFragment(
     ownerTag: string,
     known: ReadonlyMap<string, PageDocumentBlocContract>,
     unresolved: ReadonlySet<string>,
+    allowOwnedNative: boolean,
 ): void {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = html;
     validateReferences(html, document, ownerTag, known, unresolved);
     validateHostAttributes(document, known, unresolved, true, true);
     validateManagedNative(html, known);
+    for (const heading of Array.from(document.body.querySelectorAll("h1, h2, h3, h4, h5, h6"))) {
+        if (!heading.hasAttribute("cms-bloc")) {
+            throw new ContentValidationError(
+                "fixedContent",
+                `fixed Bloc markup cannot own <${heading.localName}>; place an explicit heading Bloc instead`,
+            );
+        }
+    }
     for (const host of Array.from(document.body.querySelectorAll("*"))) {
         const tag = host.getAttribute("cms-bloc")?.toLowerCase();
         const contract = tag ? known.get(tag) : undefined;
         if (!contract) {
             continue;
         }
-        const issue = blocHostContractIssue(host, contract, known, unresolved, true, true);
+        const issue = blocHostContractIssue(host, contract, known, unresolved, true, allowOwnedNative);
         if (issue) {
             throw new ContentValidationError("fixedContent", issue);
         }
@@ -186,7 +195,7 @@ function validateHostAttributes(
 function validateManagedNative(html: string, known: ReadonlyMap<string, PageDocumentBlocContract>): void {
     const issue = managedNativeElementIssue(
         html,
-        [...known.values()].map((bloc) => ({ id: bloc.id, root: bloc.root, content: bloc.content })),
+        [...known.values()].map((bloc) => ({ id: bloc.id, root: bloc.root })),
     );
     if (issue) {
         throw new ContentValidationError("content", issue);

@@ -30,7 +30,10 @@ export {
     type AssetsManifest,
     type PageAssetContext,
 } from "cms-content/blocs/core/assets/resolvePageAssets";
-export { expandCompositions } from "cms-content/blocs/core/composition/expandCompositions";
+export {
+    expandCompositions,
+    type CompositionDefinition,
+} from "cms-content/blocs/core/composition/expandCompositions";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 export {
     collectionBlocStyleCacheKey,

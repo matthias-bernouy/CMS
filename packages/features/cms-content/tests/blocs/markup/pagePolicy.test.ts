@@ -6,10 +6,24 @@ const repository: any = {
     getBlocsList: async () => [
         {
             id: "fixture-card",
+            kind: "component",
+            markupHTML: '<slot name="body"></slot>',
             root: { accepts: ["div"] },
             slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
         },
-        { id: "fixture-action", root: { accepts: ["div"] }, content: { accepts: ["button", "a"] } },
+        {
+            id: "fixture-action",
+            kind: "component",
+            markupHTML: "<slot></slot>",
+            root: { accepts: ["div"] },
+            slots: {
+                "": {
+                    accepts: [{ kind: "native-element", accepts: ["button", "a"] }],
+                    min: 1,
+                    max: 1,
+                },
+            },
+        },
     ],
 };
 

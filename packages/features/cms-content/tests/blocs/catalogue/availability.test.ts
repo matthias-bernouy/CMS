@@ -11,6 +11,8 @@ describe("bloc catalogue availability", () => {
             description: "",
             catalogue: "hidden",
             viewJS: "cmsRuntime.registerBloc('collection-card', { mount() {} });",
+            kind: "component",
+            markupHTML: "<slot></slot>",
             ownership: { kind: "code-managed" },
         });
 

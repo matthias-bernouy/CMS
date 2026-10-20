@@ -31,6 +31,7 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
         getBlocsList: async () =>
             (opts.blocs ?? []).map((id) => ({
                 id,
+                kind: "component" as const,
                 name: id,
                 group: "",
                 description: "",
@@ -55,8 +56,28 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
                           },
                       }
                     : {}),
-                ...(id === "fixture-button" ? { content: { accepts: ["button" as const] } } : {}),
-                ...(id === "fixture-image" ? { content: { accepts: ["img" as const] } } : {}),
+                ...(id === "fixture-button"
+                    ? {
+                          slots: {
+                              "": {
+                                  accepts: [{ kind: "native-element" as const, accepts: ["button" as const] }],
+                              },
+                          },
+                      }
+                    : {}),
+                ...(id === "fixture-image"
+                    ? {
+                          slots: {
+                              "": { accepts: [{ kind: "native-element" as const, accepts: ["img" as const] }] },
+                          },
+                      }
+                    : {}),
+                markupHTML:
+                    id === "fixture-card"
+                        ? '<slot name="image"></slot>'
+                        : id === "fixture-newsletter-card"
+                          ? '<slot name="title"></slot><slot name="actions"></slot><slot name="illustration"></slot><slot name="label"></slot><slot name="criteria"></slot>'
+                          : "<slot></slot>",
             })),
     } as unknown as CmsRepository;
     return { repo: new ValidatingCmsRepository(inner), calls };
@@ -88,6 +109,8 @@ describe("ValidatingCmsRepository — pages", () => {
             description: "",
             viewJS: "cmsRuntime.registerBloc('fixture-unused', { mount() {} })",
             ownership: { kind: "code-managed" as const },
+            kind: "component" as const,
+            markupHTML: "<slot></slot>",
             uses,
             root: { accepts: ["div" as const] },
         });
@@ -145,6 +168,8 @@ describe("ValidatingCmsRepository — pages", () => {
             description: "",
             viewJS: "cmsRuntime.registerBloc('fixture-card', { mount() {} })",
             ownership: { kind: "code-managed" as const },
+            kind: "component" as const,
+            markupHTML: "<slot></slot>",
             slots: {},
             root: { accepts: ["div" as const] },
         };
@@ -261,8 +286,10 @@ describe("ValidatingCmsRepository — pages", () => {
             group: "",
             description: "",
             ownership: { kind: "code-managed" },
+            kind: "component",
+            markupHTML: "<slot></slot>",
             root: { accepts: ["div"] },
-            content: { accepts: ["span"] },
+            slots: { "": { accepts: [{ kind: "native-element", accepts: ["span"] }] } },
             viewJS: "cmsRuntime.registerBloc('fixture-query', { mount() {} })",
         });
 
@@ -304,7 +331,8 @@ describe("ValidatingCmsRepository — blocs", () => {
             group: "",
             description: "",
             ownership: { kind: "code-managed" as const },
-            templateHTML: queryDocument(body),
+            kind: "component" as const,
+            markupHTML: queryDocument(body),
             root: { accepts: ["div"] as const },
             viewJS: "cmsRuntime.registerBloc('fixture-query', { mount() {} })",
         });
@@ -329,8 +357,10 @@ describe("ValidatingCmsRepository — blocs", () => {
                 description: "",
                 ownership: { kind: "code-managed" },
                 viewJS: "cmsRuntime.registerBloc('fixture-default-query', { mount() {} })",
+                kind: "component",
+                markupHTML: "<slot></slot>",
                 root: { accepts: ["div"] },
-                content: { accepts: ["span"] },
+                slots: { "": { accepts: [{ kind: "native-element", accepts: ["span"] }] } },
                 defaultContent: '<span cms-query="catalog:list as pages"></span>',
             }),
         ).rejects.toThrow("cannot be resolved to an exact contract schema");
@@ -338,14 +368,15 @@ describe("ValidatingCmsRepository — blocs", () => {
 
     test("rejects cycles across persisted Bloc dependencies", async () => {
         const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
-        const composition = (id: string, compositionHTML: string) => ({
+        const composition = (id: string, markupHTML: string) => ({
             id,
             name: id,
             group: "",
             description: "",
             viewJS: "",
             ownership: { kind: "code-managed" as const },
-            compositionHTML,
+            kind: "composition" as const,
+            markupHTML,
             root: { accepts: ["div"] as const },
         });
         await repo.createBloc(composition("fixture-child", "<slot></slot>"));
@@ -362,6 +393,8 @@ describe("ValidatingCmsRepository — blocs", () => {
             description: "",
             viewJS: "export {}",
             ownership: { kind: "code-managed" as const },
+            kind: "component" as const,
+            markupHTML: "<slot></slot>",
             uses,
             root: { accepts: ["div"] as const },
         });
@@ -380,6 +413,8 @@ describe("ValidatingCmsRepository — blocs", () => {
             description: "",
             viewJS: "cmsRuntime.registerBloc('fixture-child', { mount() {} })",
             ownership: { kind: "code-managed" },
+            kind: "component",
+            markupHTML: "<slot></slot>",
             slots: {},
             root: { accepts: ["div"] },
         });
@@ -391,6 +426,8 @@ describe("ValidatingCmsRepository — blocs", () => {
                 description: "",
                 viewJS: "cmsRuntime.registerBloc('fixture-shell', { mount() {} })",
                 ownership: { kind: "code-managed" },
+                kind: "component",
+                markupHTML: '<slot name="body"></slot>',
                 slots: { body: { accepts: [{ kind: "component", tag: "fixture-child" }] } },
                 uses: ["fixture-child"],
                 root: { accepts: ["div"] },

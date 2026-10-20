@@ -4,8 +4,7 @@ import { extractRefs } from "cms-content/blocs/core/markup/contentRefs";
 export type BlocDependencyNode = {
     readonly id: string;
     readonly uses?: readonly string[];
-    readonly compositionHTML?: string;
-    readonly templateHTML?: string;
+    readonly markupHTML: string;
     readonly defaultContent?: string;
 };
 
@@ -44,7 +43,7 @@ export function assertAcyclicBlocDependencies(blocs: readonly BlocDependencyNode
 
 function dependenciesOf(bloc: BlocDependencyNode): string[] {
     const dependencies = new Set(bloc.uses ?? []);
-    for (const markup of [bloc.compositionHTML, bloc.templateHTML, bloc.defaultContent]) {
+    for (const markup of [bloc.markupHTML, bloc.defaultContent]) {
         if (markup) {
             for (const dependency of extractRefs(markup).blocs) {
                 dependencies.add(dependency);

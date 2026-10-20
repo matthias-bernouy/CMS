@@ -9,6 +9,8 @@ export type BlocOwnership = { kind: "site-builder"; definitionId: string } | { k
 
 export type TBloc = {
     id: string;
+    /** Explicit rendering semantics; never inferred from the markup field. */
+    kind: "component" | "composition";
     name: string;
     group: string;
     /** Optional stable order supplied by an external contribution catalogue. */
@@ -22,21 +24,13 @@ export type TBloc = {
     uses?: readonly string[];
     /** Allowed native tags for the element carrying `cms-bloc`. */
     root: ManagedNativeElement;
-    /** Optional single Page-owned native child managed by a wrapper Bloc. */
-    content?: ManagedNativeElement;
     /** Validated, fully scoped CSS ready to serve without JavaScript execution. */
     styleCSS?: string;
     /** Collection owning this immutable style fragment. */
     styleCollectionId?: string;
     viewJS: string;
-    /**
-     * Server-rendered light-DOM template. A bloc carrying this field is a
-     * composition: its authored host is expanded before delivery and it does
-     * does not need client behavior of its own.
-     */
-    compositionHTML?: string;
-    /** Fixed Light DOM owned by a retained Bloc whose native root survives rendering. */
-    templateHTML?: string;
+    /** Fixed authored markup expanded according to `kind`. */
+    markupHTML: string;
     /** Initial page-owned children supplied when this bloc is inserted. */
     defaultContent?: string;
     /** Named Page-owned substitution slots offered by a contributed Bloc. */

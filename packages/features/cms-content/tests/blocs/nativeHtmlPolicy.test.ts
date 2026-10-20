@@ -330,4 +330,20 @@ describe("platform native HTML policy", () => {
             ).toThrow(/dynamic native link/);
         }
     });
+
+    test("accepts a whole dynamic same-site link only through internalUrl", () => {
+        expect(
+            nativeAttributeSetIssue("a", {
+                href: "{{ file.url | internalUrl }}",
+            }),
+        ).toBeNull();
+
+        for (const href of [
+            "{{ file.url }}",
+            "/files/{{ file.url | internalUrl }}",
+            "{{ file.url | internalUrl(other.path) }}",
+        ]) {
+            expect(nativeAttributeSetIssue("a", { href })).toMatch(/dynamic native link/);
+        }
+    });
 });

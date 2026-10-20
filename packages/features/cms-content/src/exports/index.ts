@@ -209,7 +209,7 @@ export { SiteBlocPublicationQueue } from "cms-content/blocs/core/publication/Sit
 export { generateSiteBlocSourceBundle } from "cms-content/blocs/core/publication/source/generateSiteBlocSourceBundle";
 export {
     serializeSiteBlocDefault,
-    serializeSiteBlocTemplate,
+    serializeSiteBlocMarkup,
 } from "cms-content/blocs/core/publication/source/siteBlocHtml";
 export {
     validateBlocWrite,

@@ -15,7 +15,7 @@ const TAG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const ATTRIBUTE = /^[A-Za-z_:][A-Za-z0-9_.:-]*$/;
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
-export function serializeSiteBlocTemplate(snapshot: SiteBlocSnapshot): string {
+export function serializeSiteBlocMarkup(snapshot: SiteBlocSnapshot): string {
     const slots = slotMap(snapshot.slots);
     const usedSlots = new Set<string>();
     const controller = snapshot.structure.find((node) => node.kind === "bloc");
