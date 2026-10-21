@@ -35,9 +35,9 @@ The official repository currently contains:
 - one provider-only CMS-instance discovery contract with two capabilities that
   the `ulvia.official` data-plane manifest does not claim;
 - the `ulvia.official` provider manifest;
-- the `ulvia-official` collection with 92 Blocs, 119 theme tokens and thirteen
-  Pages: ten administration routes plus login, email-confirmation and
-  password-reset Pages.
+- the `ulvia-official` collection with 91 Blocs, 119 theme tokens, thirteen
+  verified SVG icon assets and thirteen Pages: ten administration routes plus
+  login, email-confirmation and password-reset Pages.
 
 The supported package dependency direction is:
 
@@ -105,7 +105,7 @@ advisory audit because it requires current registry access.
 
 ### Collections And Content
 
-- Collections can recursively author Blocs, translations, texts, theme tokens,
+- Collections can recursively author Blocs, translations, texts, theme entries,
   assets, administration or public Pages, migrations and selective dependency
   imports.
 - Namespace and reference validation covers Blocs, tokens, texts, assets,
@@ -129,6 +129,9 @@ advisory audit because it requires current registry access.
 - Collection assets are recursively discovered, size-limited, content-inspected
   and served with explicit MIME handling, `nosniff`, conditional requests and
   HTTP byte ranges.
+- Bounded presentation-only SVG assets receive an explicit inline profile.
+  Authored HTML references them through empty `svg[cms-svg]` elements that the
+  server expands after revalidation; raw authored SVG geometry is forbidden.
 - Generic binary inspection, blob storage and image transforms live in
   Foundation and are reused by content and gateway features.
 - Public collection assets are exact immutable release resources rather than
@@ -266,7 +269,7 @@ Collection admission currently enforces, among other constraints:
 | Pages | 256 |
 | Dependencies | 128 |
 | Theme categories | 64 |
-| Theme tokens | 4,096 |
+| Theme entries | 4,096 |
 | Migrations | 512 |
 | Operations per migration | 512 |
 | One collection asset | 10 MiB |

@@ -21,11 +21,34 @@ presentation. Dark values follow `prefers-color-scheme` and may be forced with
 
 ## Collection Theme Sources
 
-`theme/definition.json` orders recursively discovered category files. Token
-defaults may reference local tokens or tokens explicitly imported from a
-collection dependency. Admission rejects unknown variables, type-incompatible
-aliases and cycles. Labels and descriptions are translation keys resolved from
-the collection's administration translations.
+`theme/definition.json` orders recursively discovered category files. Each
+category has one `entries` array. An entry is either a translated theme token
+or a typed `font-face`. Token defaults may reference local tokens or tokens
+explicitly imported from a collection dependency. Admission rejects unknown
+variables, type-incompatible aliases and cycles. Labels and descriptions are
+translation keys resolved from the collection's administration translations.
+
+A font face points to one local WOFF2 asset:
+
+```json
+{
+    "id": "interface-regular",
+    "type": "font-face",
+    "asset": "fonts/interface-regular.woff2",
+    "family": "interface",
+    "style": "normal",
+    "weight": "400",
+    "display": "swap"
+}
+```
+
+The projected family is prefixed with the collection namespace, for example
+`ulvia-official-interface`. Theme CSS emits the verified `@font-face`
+declaration using the immutable installed-asset URL. Browsers see every declared
+face in the stylesheet but download only faces needed by rendered text and CSS.
+Collections therefore still avoid declaring unused families and weights.
+Font faces are implementation details of their collection theme rather than
+independently imported resources, so they do not carry resource generations.
 
 The release command also scans Bloc styles. Variables in a collection or
 dependency namespace must be declared theme tokens or explicit Bloc custom

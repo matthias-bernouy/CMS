@@ -1,7 +1,7 @@
 # Collections
 
 Collections are immutable, provider-neutral release artifacts. They contribute
-Blocs, Pages, texts, theme tokens and assets to a site. The repository admits
+Blocs, Pages, texts, theme entries and assets to a site. The repository admits
 and stores releases; installation projects their resources into Content.
 
 ## Authored Layout
@@ -25,6 +25,7 @@ collection/
 ├── theme/definition.json
 ├── theme/**/*.json
 ├── assets/**/*
+├── assets/definition.json           # optional generation overrides
 └── migrations/**/<from>-to-<to>.json
 ```
 
@@ -91,6 +92,54 @@ wildcards.
 All local and imported references, cycles, capability requirements and theme
 token references are checked before the release becomes visible.
 
+## Assets And SVG
+
+The release command discovers every file below `assets/`. Its normalized
+lowercase relative path is its immutable collection-local ID:
+
+```text
+assets/icons/check.svg       -> icons/check.svg
+assets/fonts/interface.woff2 -> fonts/interface.woff2
+```
+
+Assets are not declared in the collection `definition.json`. The optional
+`assets/definition.json` is metadata for the scanner itself and accepts only
+generation overrides:
+
+```json
+{
+    "generations": {
+        "icons/check.svg": 2
+    }
+}
+```
+
+The scanner derives the media type, byte length and digest. Admission verifies
+the exact byte set and recognizable media signatures. A small,
+presentation-only SVG is additionally granted the `inline-svg` profile after
+its geometry has passed bounded parsing. Active elements, text, external
+references, IDs, classes, styles, arbitrary colors and raw XML features are
+rejected from that profile.
+
+Authored Page and Bloc HTML never contains SVG geometry. It declares an empty
+reference instead:
+
+```html
+<svg
+    cms-svg="{{ cms.asset.example.icons/check.svg }}"
+    role="img"
+    aria-label="Completed"
+></svg>
+```
+
+Decorative icons use `aria-hidden="true"` and no label. The server resolves,
+revalidates and expands the immutable SVG before returning HTML; the browser
+does not fetch or execute an icon script. Collection-authored references must
+use a local asset or an explicitly imported exported asset, and the selected
+release must expose the `inline-svg` profile. A site-owned Page may also
+reference a canonical same-site `/.cms/call/` URL, but the response must be an
+anonymous immutable SVG with a strong ETag.
+
 ## Releases And Installation
 
 ```bash
@@ -113,7 +162,7 @@ be represented by explicit migration operations.
 
 The principal current limits are 8 MiB for the canonical collection document,
 512 Blocs, 1,024 assets, 4,096 texts, 256 Pages, 128 dependencies, 64 theme
-categories and 4,096 theme tokens. One asset is limited to 10 MiB and the
+categories and 4,096 theme entries. One asset is limited to 10 MiB and the
 release asset total to 50 MiB. Slots, settings, requirements, migrations and
 operations have their own bounded counts.
 

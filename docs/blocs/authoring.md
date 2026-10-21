@@ -103,6 +103,22 @@ variables are rejected when the release is admitted. Runtime
 `style.setProperty()` calls follow the same ownership rule and require a static
 literal variable name.
 
+## SVG Icons
+
+Do not put SVG geometry in `markup.html`, `default.html`, Page HTML or
+behavior code. Store the source below the collection's `assets/` tree and
+reference it from an empty native element:
+
+```html
+<svg cms-svg="{{ cms.asset.example.icons/search.svg }}" aria-hidden="true"></svg>
+```
+
+Use `role="img"` with a nonempty `aria-label` for informative artwork.
+Admission requires the referenced asset to carry the verified `inline-svg`
+profile. The server expands its geometry during rendering while retaining the
+Page-owned accessibility attributes. See [Collections](collections.md) for the
+asset profile and cross-collection import rules.
+
 ## Optional Behavior
 
 Most Blocs need no JavaScript. When native HTML and bindings are insufficient,
@@ -123,7 +139,8 @@ observation and explicit native form-control connections. The build wrapper
 registers the function with `bloc-runtime.js`; authored code never calls
 `customElements.define()`. Behavior mounts on the real native `cms-bloc` root
 and must return cleanup for listeners or observers. Shadow DOM APIs and direct
-Location mutation are rejected.
+Location mutation are rejected. Direct SVG construction is also rejected;
+behavior can control the surrounding Bloc but does not own vector markup.
 
 ## Page Boundary
 
