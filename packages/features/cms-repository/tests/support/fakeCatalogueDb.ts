@@ -9,14 +9,34 @@ class Collection {
 
     async createIndex(): Promise<void> {}
 
-    async findOne(filter: Filter, options?: { projection?: { _id?: number } }): Promise<Document | null> {
+    async findOne(filter: Filter, options?: { projection?: Record<string, 0 | 1> }): Promise<Document | null> {
         const document = [...this.documents.values()].find((candidate) => matches(candidate, filter));
         if (!document) {
             return null;
         }
         const cloned = cloneDocument(document);
-        if (options?.projection?._id === 0) {
-            delete (cloned as Partial<Document>)._id;
+        const projection = options?.projection;
+        if (!projection) {
+            return cloned;
+        }
+        const included = Object.entries(projection)
+            .filter(([, value]) => value === 1)
+            .map(([key]) => key);
+        if (included.length > 0) {
+            const selected = Object.fromEntries(
+                included
+                    .filter((key) => key in cloned)
+                    .map((key) => [key, cloneDocument(cloned[key as keyof Document])]),
+            );
+            if (projection._id !== 0 && !("_id" in selected)) {
+                selected._id = cloned._id;
+            }
+            return selected as Document;
+        }
+        for (const [key, value] of Object.entries(projection)) {
+            if (value === 0) {
+                delete (cloned as Record<string, unknown>)[key];
+            }
         }
         return cloned;
     }

@@ -62,17 +62,16 @@ export class CollectionStore {
         const installations = state.installations.filter(({ collectionId }) => collectionIds.has(collectionId));
         const releases = await Promise.all(
             installations.map(async (installation) => {
-                const artifact = await this.storage.getReleaseMetadata(installation.digest);
-                if (!artifact || artifact.release.collectionId !== installation.collectionId) {
+                const manifest = await this.storage.getAssetManifest(installation.digest);
+                if (!manifest || manifest.collectionId !== installation.collectionId) {
                     throw new Error("Installed collection artifact is missing or inconsistent");
                 }
-                validateStoredCollectionInstallation(installation, artifact.release);
-                return { installation, release: artifact.release };
+                return { installation, manifest };
             }),
         );
         const results: InstalledCollectionAssetMetadata[] = [];
-        for (const { installation, release } of releases) {
-            for (const asset of release.assets) {
+        for (const { installation, manifest } of releases) {
+            for (const asset of manifest.assets) {
                 if (requested.has(`${installation.collectionId}\0${asset.id}`)) {
                     results.push({ collectionId: installation.collectionId, digest: installation.digest, asset });
                 }

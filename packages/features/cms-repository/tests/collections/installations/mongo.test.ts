@@ -23,7 +23,7 @@ async function artifact(bytes = new Uint8Array([1, 2, 3])) {
     return { admitted: await admitCollectionRelease(source, [{ id: "payload.bin", bytes }]), bytes };
 }
 
-test("Mongo collection storage reverifies release and asset bytes on every read", async () => {
+test("Mongo collection storage validates releases on admission and checks stored chunks on reads", async () => {
     const db = fakeCatalogueDb();
     const storage = new MongoCollectionStorage(db);
     const { admitted, bytes } = await artifact();
@@ -36,6 +36,11 @@ test("Mongo collection storage reverifies release and asset bytes on every read"
         digest: admitted.digest,
         release: admitted.release,
     });
+    expect(await storage.getAssetManifest(admitted.digest)).toEqual({
+        digest: admitted.digest,
+        collectionId: admitted.release.collectionId,
+        assets: admitted.release.assets,
+    });
     expect(await storage.getAsset(admitted.digest, "payload.bin")).toEqual(bytes);
 
     const assets = db.collection<Record<string, unknown>>("collection_asset_chunks");
@@ -46,7 +51,7 @@ test("Mongo collection storage reverifies release and asset bytes on every read"
     await expect(storage.getAsset(admitted.digest, "payload.bin")).rejects.toThrow("chunk digest mismatch");
 });
 
-test("Mongo collection storage rejects a release whose persisted identity was altered", async () => {
+test("Mongo collection storage audits the complete artifact only when explicitly materialized", async () => {
     const db = fakeCatalogueDb();
     const storage = new MongoCollectionStorage(db);
     const { admitted, bytes } = await artifact();
@@ -63,7 +68,9 @@ test("Mongo collection storage rejects a release whose persisted identity was al
     translations["en-US"]!["collection.name"] = "Tampered";
     await releases.replaceOne({ _id: stored!._id }, stored!);
 
-    await expect(storage.getReleaseMetadata(admitted.digest)).rejects.toThrow("release digest mismatch");
+    expect(
+        (await storage.getReleaseMetadata(admitted.digest))?.release.translations["en-US"]?.["collection.name"],
+    ).toBe("Tampered");
     await expect(storage.getRelease(admitted.digest)).rejects.toThrow("release digest mismatch");
 });
 

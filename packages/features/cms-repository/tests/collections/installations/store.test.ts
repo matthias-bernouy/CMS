@@ -136,10 +136,10 @@ test("resolves asset metadata in one batch without hydrating unrelated releases"
     );
     await store.installMany("site", [{ digest: first.digest }, { digest: second.digest }], 0);
     const reads: string[] = [];
-    const readMetadata = storage.getReleaseMetadata.bind(storage);
-    storage.getReleaseMetadata = async (digest) => {
+    const readManifest = storage.getAssetManifest.bind(storage);
+    storage.getAssetManifest = async (digest) => {
         reads.push(digest);
-        return readMetadata(digest);
+        return readManifest(digest);
     };
 
     const resolved = await store.getInstalledAssetMetadataBatch("site", [

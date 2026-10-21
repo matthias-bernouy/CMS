@@ -1,7 +1,4 @@
-import {
-    verifyStoredCollectionArtifact,
-    verifyStoredCollectionRelease,
-} from "../../../core/admission/collectionArtifact";
+import { verifyStoredCollectionArtifact } from "../../../core/admission/collectionArtifact";
 import { assertBlobRange, type BlobRange } from "@bernouy/blob-store";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../../../core/limits";
 import { parseCollectionSiteState } from "../../core/siteState";
@@ -50,8 +47,18 @@ export class MemoryCollectionStorage implements CollectionStorage {
         if (!artifact) {
             return null;
         }
-        const verified = await verifyStoredCollectionRelease(artifact.release, artifact.digest, this.limits);
-        return structuredClone({ digest: verified.digest, release: verified.release });
+        return structuredClone({ digest: artifact.digest, release: artifact.release });
+    }
+    async getAssetManifest(digest: string) {
+        const artifact = this.releases.get(digest);
+        if (!artifact) {
+            return null;
+        }
+        return structuredClone({
+            digest: artifact.digest,
+            collectionId: artifact.release.collectionId,
+            assets: artifact.release.assets,
+        });
     }
     async getAsset(digest: string, assetId: string, range?: BlobRange) {
         const asset = this.releases.get(digest)?.assets.find((item) => item.id === assetId);

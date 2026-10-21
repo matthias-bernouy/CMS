@@ -10,6 +10,11 @@ export type StoredCollectionRelease = {
     assets: readonly StoredCollectionAsset[];
 };
 export type StoredCollectionReleaseMetadata = Omit<StoredCollectionRelease, "assets">;
+export type StoredCollectionAssetManifest = {
+    digest: string;
+    collectionId: string;
+    assets: readonly CollectionAssetDefinition[];
+};
 export type CollectionInstallation = {
     collectionId: string;
     digest: string;
@@ -36,6 +41,7 @@ export interface CollectionStorage {
     putRelease(artifact: StoredCollectionRelease): Promise<void>;
     getRelease(digest: string): Promise<StoredCollectionRelease | null>;
     getReleaseMetadata(digest: string): Promise<StoredCollectionReleaseMetadata | null>;
+    getAssetManifest(digest: string): Promise<StoredCollectionAssetManifest | null>;
     getAsset(digest: string, assetId: string, range?: BlobRange): Promise<Uint8Array | null>;
     readSite(siteId: string): Promise<CollectionSiteState>;
     compareAndSet(siteId: string, expected: number, next: CollectionSiteState): Promise<boolean>;

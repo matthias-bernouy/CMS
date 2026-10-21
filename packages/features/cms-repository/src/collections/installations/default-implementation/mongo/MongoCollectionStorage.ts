@@ -4,14 +4,21 @@ import {
     verifyStoredCollectionArtifact,
     verifyStoredCollectionRelease,
 } from "../../../core/admission/collectionArtifact";
-import { snapshotCollectionAssets, verifyCollectionAssets } from "../../../core/admission/assets";
+import { parseAssets } from "../../../core/parsing/assets";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../../../core/limits";
+import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import { parseCollectionSiteState } from "../../core/siteState";
 import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../../interfaces/store";
 import { readAssetChunks, storeAssetChunks, type AssetChunkDocument } from "./assetChunks";
 import { assertMongoBsonDocumentSize } from "./bsonSize";
 
-type ReleaseDocument = { _id: string; digest: unknown; release: unknown; state?: "pending" | "ready" };
+type ReleaseDocument = {
+    _id: string;
+    digest: unknown;
+    release: unknown;
+    assetManifest?: unknown;
+    state?: "pending" | "ready";
+};
 type SiteDocument = { _id: string; revision: unknown; installations: unknown };
 
 export class MongoCollectionStorage implements CollectionStorage {
@@ -58,6 +65,7 @@ export class MongoCollectionStorage implements CollectionStorage {
                     _id: verified.digest,
                     digest: verified.digest,
                     release: verified.release,
+                    assetManifest: assetManifest(verified.release),
                     state: "pending",
                 };
                 assertMongoBsonDocumentSize(pending, "Collection release");
@@ -81,7 +89,7 @@ export class MongoCollectionStorage implements CollectionStorage {
         }
         const completed = await this.releases.updateOne(
             { _id: verified.digest, state: "pending" },
-            { $set: { state: "ready" } },
+            { $set: { state: "ready", assetManifest: assetManifest(verified.release) } },
         );
         if (completed.matchedCount !== 1) {
             if (!(await this.getRelease(verified.digest))) {
@@ -122,30 +130,38 @@ export class MongoCollectionStorage implements CollectionStorage {
         if (!value || value.state === "pending") {
             return null;
         }
-        if (value._id !== digest || value.digest !== digest) {
-            throw new TypeError("Stored collection release identity is inconsistent");
+        assertStoredDocumentIdentity(value, digest);
+        assertStoredReleaseShape(value.release);
+        return { digest, release: structuredClone(value.release as CollectionRelease) };
+    }
+    async getAssetManifest(digest: string) {
+        const value = await this.releases.findOne(
+            { _id: digest },
+            { projection: { _id: 1, digest: 1, assetManifest: 1, state: 1 } },
+        );
+        if (!value || value.state === "pending") {
+            return null;
         }
-        const verified = await verifyStoredCollectionRelease(value.release, value.digest, this.limits);
-        return { digest: verified.digest, release: verified.release };
+        assertStoredDocumentIdentity(value, digest);
+        if (!isRecord(value.assetManifest) || typeof value.assetManifest.collectionId !== "string") {
+            throw new TypeError("Stored collection asset manifest is inconsistent");
+        }
+        return {
+            digest,
+            collectionId: value.assetManifest.collectionId,
+            assets: parseAssets(value.assetManifest.assets, this.limits),
+        };
     }
     async getAsset(digest: string, assetId: string, range?: BlobRange) {
-        const artifact = await this.getReleaseMetadata(digest);
-        const declaration = artifact?.release.assets.find((asset) => asset.id === assetId);
-        if (!artifact || !declaration) {
+        const manifest = await this.getAssetManifest(digest);
+        const declaration = manifest?.assets.find((asset) => asset.id === assetId);
+        if (!manifest || !declaration) {
             return null;
         }
         if (range) {
             assertBlobRange(range, declaration.byteLength);
         }
-        const bytes = await readAssetChunks(this.assets, digest, declaration, range);
-        if (!bytes) {
-            return null;
-        }
-        if (!range) {
-            const snapshots = snapshotCollectionAssets([declaration], [{ id: assetId, bytes }], this.limits);
-            await verifyCollectionAssets([declaration], snapshots);
-        }
-        return bytes;
+        return readAssetChunks(this.assets, digest, declaration, range);
     }
     async readSite(siteId: string) {
         const value = await this.sites.findOne({ _id: siteId }, { projection: { _id: 0 } });
@@ -190,7 +206,7 @@ export class MongoCollectionStorage implements CollectionStorage {
                     await verifyStoredCollectionArtifact(metadata.release, assets, digest, this.limits);
                     await this.releases.updateOne(
                         { _id: document._id, state: "pending" },
-                        { $set: { state: "ready" } },
+                        { $set: { state: "ready", assetManifest: assetManifest(metadata.release) } },
                     );
                     continue;
                 }
@@ -203,4 +219,29 @@ export class MongoCollectionStorage implements CollectionStorage {
             await this.releases.deleteOne({ _id: document._id, state: "pending" });
         }
     }
+}
+
+function assetManifest(release: CollectionRelease) {
+    return { collectionId: release.collectionId, assets: release.assets };
+}
+
+function assertStoredDocumentIdentity(value: ReleaseDocument, digest: string): void {
+    if (value._id !== digest || value.digest !== digest) {
+        throw new TypeError("Stored collection release identity is inconsistent");
+    }
+}
+
+function assertStoredReleaseShape(value: unknown): void {
+    if (
+        !isRecord(value) ||
+        value.kind !== "collection" ||
+        value.protocol !== "ulvia-collection/v1" ||
+        value.schemaDialect !== "ulvia-schema/v1"
+    ) {
+        throw new TypeError("Stored collection release is inconsistent");
+    }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
