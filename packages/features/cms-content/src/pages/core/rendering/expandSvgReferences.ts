@@ -5,11 +5,10 @@ const MAX_REFERENCES = 256;
 const MAX_UNIQUE_SOURCES = 64;
 const MAX_EXPANDED_BYTES = 1024 * 1024;
 const MAX_EXPANDED_ELEMENTS = 4_096;
-const RESOLUTION_CONCURRENCY = 8;
 
 export async function expandSvgReferences(
     root: Element,
-    resolve: (source: string) => Promise<string | Uint8Array>,
+    resolve: (sources: readonly string[]) => Promise<ReadonlyMap<string, string | Uint8Array>>,
 ): Promise<void> {
     const references = Array.from(root.querySelectorAll(`svg[${CMS_SVG_ATTRIBUTE}]`)).map((element) => {
         const source = element.getAttribute(CMS_SVG_ATTRIBUTE);
@@ -29,7 +28,7 @@ export async function expandSvgReferences(
     if (sources.length > MAX_UNIQUE_SOURCES) {
         throw new Error(`Rendered document exceeds its ${MAX_UNIQUE_SOURCES} unique cms-svg source budget`);
     }
-    const fragments = await resolveFragments(sources, occurrences, resolve);
+    const fragments = resolveFragments(sources, occurrences, await resolve(sources));
     for (const { element, source } of references) {
         const fragment = fragments.get(source)!;
         element.setAttribute("viewBox", fragment.viewBox);
@@ -41,32 +40,27 @@ export async function expandSvgReferences(
     }
 }
 
-async function resolveFragments(
+function resolveFragments(
     sources: readonly string[],
     occurrences: ReadonlyMap<string, number>,
-    resolve: (source: string) => Promise<string | Uint8Array>,
-): Promise<Map<string, InlineSvgAsset>> {
+    resolved: ReadonlyMap<string, string | Uint8Array>,
+): Map<string, InlineSvgAsset> {
     const fragments = new Map<string, InlineSvgAsset>();
     let totalBytes = 0;
     let totalElements = 0;
-    let cursor = 0;
-    const worker = async () => {
-        for (;;) {
-            const index = cursor++;
-            const source = sources[index];
-            if (source === undefined) {
-                return;
-            }
-            const fragment = parseInlineSvgAsset(await resolve(source));
-            const count = occurrences.get(source)!;
-            totalBytes += fragment.byteLength * count;
-            totalElements += fragment.elementCount * count;
-            if (totalBytes > MAX_EXPANDED_BYTES || totalElements > MAX_EXPANDED_ELEMENTS) {
-                throw new Error("Rendered document exceeds its cumulative cms-svg expansion budget");
-            }
-            fragments.set(source, fragment);
+    for (const source of sources) {
+        const value = resolved.get(source);
+        if (value === undefined) {
+            throw new Error(`Rendered cms-svg source was not resolved: ${source}`);
         }
-    };
-    await Promise.all(Array.from({ length: Math.min(RESOLUTION_CONCURRENCY, sources.length) }, worker));
+        const fragment = parseInlineSvgAsset(value);
+        const count = occurrences.get(source)!;
+        totalBytes += fragment.byteLength * count;
+        totalElements += fragment.elementCount * count;
+        if (totalBytes > MAX_EXPANDED_BYTES || totalElements > MAX_EXPANDED_ELEMENTS) {
+            throw new Error("Rendered document exceeds its cumulative cms-svg expansion budget");
+        }
+        fragments.set(source, fragment);
+    }
     return fragments;
 }

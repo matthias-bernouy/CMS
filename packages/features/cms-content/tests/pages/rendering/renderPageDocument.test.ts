@@ -75,9 +75,14 @@ describe("renderPageDocument", () => {
                     getRenderableBlocs: async () => [],
                     getBlocViewJS: async () => null,
                 },
-                resolveSvgSource: async (source) => {
-                    expect(source).toBe("{{ cms.asset.atlas.icons/check.svg }}");
-                    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m5 12 4 4L19 6" /></svg>';
+                resolveSvgSources: async (sources) => {
+                    expect(sources).toEqual(["{{ cms.asset.atlas.icons/check.svg }}"]);
+                    return new Map([
+                        [
+                            sources[0]!,
+                            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m5 12 4 4L19 6" /></svg>',
+                        ],
+                    ]);
                 },
             },
         );
@@ -109,9 +114,9 @@ describe("renderPageDocument", () => {
                     getRenderableBlocs: async () => [],
                     getBlocViewJS: async () => null,
                 },
-                resolveSvgSource: async () => {
+                resolveSvgSources: async (sources) => {
                     calls += 1;
-                    return '<svg viewBox="0 0 24 24"><path d="M0 0"></path></svg>';
+                    return new Map([[sources[0]!, '<svg viewBox="0 0 24 24"><path d="M0 0"></path></svg>']]);
                 },
             },
         );
@@ -139,7 +144,8 @@ describe("renderPageDocument", () => {
                         getRenderableBlocs: async () => [],
                         getBlocViewJS: async () => null,
                     },
-                    resolveSvgSource: async () => `<svg viewBox="0 0 24 24">${geometry}</svg>`,
+                    resolveSvgSources: async (sources) =>
+                        new Map([[sources[0]!, `<svg viewBox="0 0 24 24">${geometry}</svg>`]]),
                 },
             ),
         ).rejects.toThrow("cumulative cms-svg expansion budget");

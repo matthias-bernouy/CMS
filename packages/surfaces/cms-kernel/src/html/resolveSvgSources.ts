@@ -1,18 +1,43 @@
 import { parseCollectionAssetReference } from "@bernouy/cms-content/rendering";
 import { createCapabilityHttpHandler } from "@bernouy/cms-gateway/http/handlers";
-import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
+import { resolveInstalledCollectionAssetSources } from "@bernouy/cms-repository/collections/assets";
 import { serveInstalledCollectionAsset } from "@bernouy/cms-repository/collections/http";
 import { compress, getOrGenerateEntryAsync } from "@bernouy/http-runner";
 import type KernelCms from "cms-kernel/KernelCms";
 import { resolveRequestActor } from "cms-kernel/http/pages/access/resolveRequestActor";
 
 const MAX_INLINE_SVG_BYTES = 64 * 1024;
+const RESOLUTION_CONCURRENCY = 8;
 
-export async function resolveSvgSource(kernel: KernelCms, source: string): Promise<Uint8Array> {
-    const collectionAsset = parseCollectionAssetReference(source) !== null;
-    const url = collectionAsset
-        ? await resolveInstalledCollectionAssets(source, kernel.collectionAssets, kernel.basePath)
-        : source;
+export async function resolveSvgSources(
+    kernel: KernelCms,
+    sources: readonly string[],
+): Promise<ReadonlyMap<string, Uint8Array>> {
+    const uniqueSources = [...new Set(sources)];
+    const collectionSources = uniqueSources.filter((source) => parseCollectionAssetReference(source) !== null);
+    const collectionUrls = await resolveInstalledCollectionAssetSources(
+        collectionSources,
+        kernel.collectionAssets,
+        kernel.basePath,
+    );
+    const resolved = new Map<string, Uint8Array>();
+    let cursor = 0;
+    const worker = async () => {
+        for (;;) {
+            const source = uniqueSources[cursor++];
+            if (source === undefined) {
+                return;
+            }
+            const collectionAsset = collectionUrls.has(source);
+            const url = collectionUrls.get(source) ?? source;
+            resolved.set(source, await resolveSvgUrl(kernel, url, collectionAsset));
+        }
+    };
+    await Promise.all(Array.from({ length: Math.min(RESOLUTION_CONCURRENCY, uniqueSources.length) }, worker));
+    return resolved;
+}
+
+async function resolveSvgUrl(kernel: KernelCms, url: string, collectionAsset: boolean): Promise<Uint8Array> {
     const entry = await getOrGenerateEntryAsync(`inline-svg:${url}`, kernel.cache, async () => {
         const response = await readSvgResponse(kernel, url, collectionAsset);
         assertImmutableSvgResponse(response);

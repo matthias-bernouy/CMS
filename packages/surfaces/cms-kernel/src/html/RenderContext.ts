@@ -14,7 +14,7 @@ import type { AssetsManifest } from "@bernouy/cms-content/rendering";
 export type RenderContext = {
     content: ContentReader;
     resolveContributedAssets?: (input: string) => Promise<string>;
-    resolveSvgSource?: (source: string) => Promise<string | Uint8Array>;
+    resolveSvgSources?: (sources: readonly string[]) => Promise<ReadonlyMap<string, string | Uint8Array>>;
     prepareBody?: (body: Element) => void | Promise<void>;
     resolveAssets: (usedTags: string[], renderableBlocs: readonly RenderableBloc[]) => Promise<AssetsManifest>;
     /** Public stable URL emitted as `<link rel="icon">`. */

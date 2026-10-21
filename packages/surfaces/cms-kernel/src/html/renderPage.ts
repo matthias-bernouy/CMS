@@ -44,7 +44,7 @@ export async function renderPage(
         repository: ctx.content,
         language: settings.site.language || "en",
         resolveContributedAssets: ctx.resolveContributedAssets,
-        resolveSvgSource: ctx.resolveSvgSource,
+        resolveSvgSources: ctx.resolveSvgSources,
         // A browser may fetch an interpolated img src before the deferred
         // binding runtime executes. Keep those network attributes inert.
         prepareBody: async (body) => {

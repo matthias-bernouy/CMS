@@ -13,7 +13,7 @@ export interface PageDocumentRenderContext {
     readonly language: string;
     readonly contentTexts?: readonly ContentTextSource[];
     readonly resolveContributedAssets?: (input: string) => Promise<string>;
-    readonly resolveSvgSource?: (source: string) => Promise<string | Uint8Array>;
+    readonly resolveSvgSources?: (sources: readonly string[]) => Promise<ReadonlyMap<string, string | Uint8Array>>;
     readonly prepareBody?: (body: Element) => void | Promise<void>;
 }
 
@@ -40,8 +40,8 @@ export async function renderPageDocument(
         context.language,
         context.repository.getContentTexts ? await context.repository.getContentTexts() : (context.contentTexts ?? []),
     );
-    if (context.resolveSvgSource) {
-        await expandSvgReferences(body, context.resolveSvgSource);
+    if (context.resolveSvgSources) {
+        await expandSvgReferences(body, context.resolveSvgSources);
     }
     if (context.resolveContributedAssets) {
         body.innerHTML = await context.resolveContributedAssets(body.innerHTML);

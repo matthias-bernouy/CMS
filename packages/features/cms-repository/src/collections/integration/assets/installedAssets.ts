@@ -14,13 +14,25 @@ export async function resolveInstalledCollectionAssets(
     source: InstalledCollectionAssetSource | undefined,
     basePath: string,
 ): Promise<string> {
+    return (await resolveInstalledCollectionAssetSources([input], source, basePath)).get(input)!;
+}
+
+/** Resolves every immutable collection-asset expression with one metadata read. */
+export async function resolveInstalledCollectionAssetSources(
+    inputs: readonly string[],
+    source: InstalledCollectionAssetSource | undefined,
+    basePath: string,
+): Promise<ReadonlyMap<string, string>> {
+    const uniqueInputs = [...new Set(inputs)];
     const references = new Set<string>();
-    replaceCollectionAssetExpressions(input, (collectionId, assetId) => {
-        references.add(referenceKey(collectionId, assetId));
-        return "";
-    });
+    for (const input of uniqueInputs) {
+        replaceCollectionAssetExpressions(input, (collectionId, assetId) => {
+            references.add(referenceKey(collectionId, assetId));
+            return "";
+        });
+    }
     if (references.size === 0) {
-        return input;
+        return new Map(uniqueInputs.map((input) => [input, input]));
     }
     if (!source) {
         throw new Error("Collection asset serving is not configured");
@@ -42,13 +54,18 @@ export async function resolveInstalledCollectionAssets(
             );
         }),
     );
-    return replaceCollectionAssetExpressions(input, (collectionId, assetId) => {
-        const url = urls.get(referenceKey(collectionId, assetId));
-        if (!url) {
-            throw new Error(`Unknown installed collection asset: ${collectionId}.${assetId}`);
-        }
-        return url;
-    });
+    return new Map(
+        uniqueInputs.map((input) => [
+            input,
+            replaceCollectionAssetExpressions(input, (collectionId, assetId) => {
+                const url = urls.get(referenceKey(collectionId, assetId));
+                if (!url) {
+                    throw new Error(`Unknown installed collection asset: ${collectionId}.${assetId}`);
+                }
+                return url;
+            }),
+        ]),
+    );
 }
 
 function referenceKey(collectionId: string, assetId: string): string {
