@@ -38,11 +38,11 @@ describe("collection migration maintenance HTTP guard", () => {
     test("keeps recovery and diagnostic capabilities available", async () => {
         for (const capability of [
             "ulvia.cms.collections/get-migration",
+            "ulvia.cms.collections/get-operation",
+            "ulvia.cms.collections/list-operations",
             "ulvia.cms.collections/migration-status",
             "ulvia.cms.collections/resume-migration",
             "ulvia.cms.collections/rollback-migration",
-            "ulvia.cms.jobs/get",
-            "ulvia.cms.jobs/list",
         ]) {
             const response = await guard(
                 new Request(`https://site.test/cms/.cms/call/${capability}`, { method: "POST" }),

@@ -70,6 +70,25 @@
                     }
                 ]
             }
+        },
+        {
+            "id": "list-operations",
+            "capabilityId": "list-operations",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {
+                "limit": 25
+            },
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/items",
+                        "present": true
+                    }
+                ]
+            }
         }
     ]
 }

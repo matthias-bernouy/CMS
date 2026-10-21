@@ -129,12 +129,12 @@ export async function inspectDiagnostics(page: Page): Promise<void> {
     await adminPageLink(page, "diagnostics").click();
     await page.getByRole("heading", { name: "Diagnostics", exact: true }).waitFor();
     await page.locator("#migration-health").waitFor();
-    await page.locator('a[href="#job-health"]').click();
-    await page.waitForURL(/#job-health$/u);
-    const jobs = page.locator('section[cms-query*="ulvia.cms.jobs:list"]');
-    await jobs
-        .locator('p[cms-condition*="jobs.data.items.length"]')
-        .or(jobs.locator('article[role="listitem"]'))
+    await page.locator('a[href="#collection-operation-health"]').click();
+    await page.waitForURL(/#collection-operation-health$/u);
+    const operations = page.locator('section[cms-query*="ulvia.cms.collections:list-operations"]');
+    await operations
+        .locator('p[cms-condition*="operations.data.items.length"]')
+        .or(operations.locator('article[role="listitem"]'))
         .first()
         .waitFor();
     await page.locator('a[href="#provider-health"]').click();

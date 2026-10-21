@@ -17,7 +17,10 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
                 { unique: true, name: "provider_operation_release_idempotency" },
             ),
             this.#records.createIndex({ status: 1, "lease.expiresAt": 1 }, { name: "provider_operation_recovery" }),
-            this.#records.createIndex({ siteId: 1, _id: -1 }, { name: "provider_operation_site_history" }),
+            this.#records.createIndex(
+                { siteId: 1, contractId: 1, _id: -1 },
+                { name: "provider_operation_contract_history" },
+            ),
         ]);
         try {
             await this.#records.dropIndex("provider_operation_idempotency");
@@ -56,9 +59,14 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
         return document ? fromDocument(document) : null;
     }
 
-    async list(siteId: string, cursor: string | undefined, limit: number): Promise<ProviderOperationPage> {
+    async list(
+        siteId: string,
+        contractId: string,
+        cursor: string | undefined,
+        limit: number,
+    ): Promise<ProviderOperationPage> {
         const documents = await this.#records
-            .find({ siteId, ...(cursor ? { _id: { $lt: cursor } } : {}) })
+            .find({ siteId, contractId, ...(cursor ? { _id: { $lt: cursor } } : {}) })
             .sort({ _id: -1 })
             .limit(limit + 1)
             .toArray();

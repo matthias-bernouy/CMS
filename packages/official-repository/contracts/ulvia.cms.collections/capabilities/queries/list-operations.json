@@ -1,5 +1,5 @@
 {
-    "id": "list",
+    "id": "list-operations",
     "access": "admin",
     "behavior": {
         "effect": "query",
@@ -29,18 +29,15 @@
                 "items": {
                     "type": "object",
                     "properties": {
-                        "id": {
+                        "operationId": {
                             "type": "string",
                             "format": "uuid",
                             "maxLength": 36
                         },
-                        "contractId": {
-                            "type": "string",
-                            "maxLength": 128
-                        },
                         "capabilityId": {
                             "type": "string",
-                            "maxLength": 128
+                            "enum": ["apply-migration", "resume-migration", "rollback-migration"],
+                            "maxLength": 18
                         },
                         "status": {
                             "type": "string",
@@ -67,7 +64,7 @@
                             "maxLength": 64
                         }
                     },
-                    "required": ["id", "contractId", "capabilityId", "status", "revision", "createdAt", "updatedAt"]
+                    "required": ["operationId", "capabilityId", "status", "revision", "createdAt", "updatedAt"]
                 }
             },
             "nextCursor": {
@@ -86,7 +83,7 @@
     "binding": {
         "transport": "http",
         "method": "QUERY",
-        "path": "/list",
+        "path": "/operations",
         "input": {
             "body": true
         },

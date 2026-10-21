@@ -54,19 +54,19 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             environment: environment(targetData, false),
             log: () => undefined,
         });
-        const jobsVersion = await definitionVersion(join(repositoryRoot, "contracts", "ulvia.cms.jobs"));
-        const jobsCoordinate = `ulvia.official/ulvia.cms.jobs@${jobsVersion}`;
-        await runCli(["yank", "contract", jobsCoordinate, "--reason", "Temporarily unavailable"], {
+        const accessVersion = await definitionVersion(join(repositoryRoot, "contracts", "ulvia.cms.access"));
+        const accessCoordinate = `ulvia.official/ulvia.cms.access@${accessVersion}`;
+        await runCli(["yank", "contract", accessCoordinate, "--reason", "Temporarily unavailable"], {
             environment: environment(sourceData, true),
             log: () => undefined,
         });
         expect(
             ((await (await fetch(`${server.url}/v1/providers`)).json()) as { releases: unknown[] }).releases,
         ).toHaveLength(1);
-        expect((await fetch(`${server.url}/v1/contracts/ulvia.official/ulvia.cms.jobs/${jobsVersion}`)).status).toBe(
-            200,
-        );
-        await runCli(["restore", "contract", jobsCoordinate], {
+        expect(
+            (await fetch(`${server.url}/v1/contracts/ulvia.official/ulvia.cms.access/${accessVersion}`)).status,
+        ).toBe(200);
+        await runCli(["restore", "contract", accessCoordinate], {
             environment: environment(sourceData, true),
             log: () => undefined,
         });

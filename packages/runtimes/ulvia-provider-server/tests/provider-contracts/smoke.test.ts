@@ -106,9 +106,9 @@ test("all administration capability areas dispatch outputs matching their offici
 
     const calls = [
         ["ulvia.cms.collections", "list", {}],
+        ["ulvia.cms.collections", "list-operations", {}],
         ["ulvia.cms.collections", "migration-status", {}],
         ["ulvia.cms.files", "namespace.create", { name: "Smoke files", defaultVisibility: "private" }],
-        ["ulvia.cms.jobs", "list", {}],
         ["ulvia.cms.content", "localization.get", {}],
         ["ulvia.cms.content", "theme.get", {}],
         ["ulvia.cms.providers", "list", {}],

@@ -5,7 +5,7 @@ import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publi
 import { compileContractSource } from "../../src/release/authored/contract";
 
 test("pull rejects an admitted release served under another coordinate", async () => {
-    const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.cms.jobs");
+    const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.cms.collections");
     const admission = await admitContractReleaseJson(await compileContractSource(source));
     const server = Bun.serve({
         hostname: "127.0.0.1",

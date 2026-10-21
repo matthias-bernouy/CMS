@@ -37,7 +37,7 @@
         {
             "contractId": "ulvia.cms.collections",
             "version": "1.0.0",
-            "digest": "sha256:c7f4eb95873a9a97ce734eb991ca3a5404bc95a6f167e45e88f7bf4486bcea02",
+            "digest": "sha256:fd8fec2c23ca41df24d329e5e8e258657fc322bbd12136c4c108760ef144eb64",
             "requires": []
         },
         {
@@ -50,12 +50,6 @@
             "contractId": "ulvia.cms.files",
             "version": "1.0.0",
             "digest": "sha256:fa9e6aac42c7c466a44ff10f39e77ae6941508bf105d87dc54dbd6c7a6d57fcc",
-            "requires": []
-        },
-        {
-            "contractId": "ulvia.cms.jobs",
-            "version": "1.0.0",
-            "digest": "sha256:27a89ae82a8417ce80df81fffe5e98355bbcc6c1d0cb3321ac3881c3b95d519a",
             "requires": []
         },
         {

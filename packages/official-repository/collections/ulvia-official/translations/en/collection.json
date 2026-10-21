@@ -13,7 +13,7 @@
     "page.collection-migration.name": "Collection migration",
     "page.details.description": "Browse, create and edit site Pages through revision-checked provider capabilities.",
     "page.details.name": "Pages",
-    "page.diagnostics.description": "Inspect maintenance, durable jobs and provider connectivity.",
+    "page.diagnostics.description": "Inspect maintenance, collection operations and provider connectivity.",
     "page.diagnostics.name": "Diagnostics",
     "page.files.description": "Browse and organize the author file library.",
     "page.files.name": "Files",

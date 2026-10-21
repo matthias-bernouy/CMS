@@ -5,7 +5,7 @@ import {
     type ProviderCapabilityInvocationContext,
 } from "@bernouy/ulvia-provider";
 import { ProviderOperationExecutor, MemoryProviderOperationStore } from "@bernouy/ulvia-provider";
-import { registerJobCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { registerCollectionOperationCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -249,20 +249,40 @@ test("Provider operations retain their instance resource until execution finishe
     await waitUntil(() => released === 1);
 });
 
-test("the jobs contract exposes a completed result only from its detail query", async () => {
+test("the collections contract exposes a completed operation result only from its detail query", async () => {
     const store = new MemoryProviderOperationStore();
     const executor = new ProviderOperationExecutor(store);
-    executor.register("ulvia.cms.collections", "apply", async () => ({ migrationId: "migration-1" }));
-    const queued = await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    executor.register("ulvia.cms.collections", "apply-migration", async () => ({
+        migrationId: "00000000-0000-4000-8000-000000000003",
+        status: "completed",
+        collectionRevision: 2,
+        totalPages: 1,
+        operationCount: 1,
+    }));
+    const queued = await executor.enqueue("ulvia.cms.collections", "apply-migration", {}, context);
+    executor.register("ulvia.cms.content", "rebuild", async () => ({ rebuilt: true }));
+    const unrelated = await executor.enqueue("ulvia.cms.content", "rebuild", {}, context);
     await expectTerminal(store, queued.operationId, "succeeded");
+    await expectTerminal(store, unrelated.operationId, "succeeded");
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerJobCapabilities(dispatcher, executor);
+    registerCollectionOperationCapabilities(dispatcher, executor);
 
-    const detail = record(await dispatcher.invoke("ulvia.cms.jobs", "get", { jobId: queued.operationId }, context));
-    expect(JSON.parse(String(detail.resultJson))).toEqual({ migrationId: "migration-1" });
-    const listed = record(await dispatcher.invoke("ulvia.cms.jobs", "list", {}, context));
-    expect(Array.isArray(listed.items)).toBe(true);
-    expect((listed.items as unknown[])[0]).not.toHaveProperty("resultJson");
+    const detail = record(
+        await dispatcher.invoke("ulvia.cms.collections", "get-operation", { operationId: queued.operationId }, context),
+    );
+    expect(detail.result).toEqual({
+        migrationId: "00000000-0000-4000-8000-000000000003",
+        status: "completed",
+        collectionRevision: 2,
+        totalPages: 1,
+        operationCount: 1,
+    });
+    const listed = record(await dispatcher.invoke("ulvia.cms.collections", "list-operations", {}, context));
+    expect(listed.items).toHaveLength(1);
+    expect((listed.items as unknown[])[0]).not.toHaveProperty("result");
+    await expect(
+        dispatcher.invoke("ulvia.cms.collections", "get-operation", { operationId: unrelated.operationId }, context),
+    ).rejects.toMatchObject({ code: "NOT_FOUND", status: 404 });
 });
 
 async function expectTerminal(store: MemoryProviderOperationStore, id: string, status: "succeeded" | "failed") {

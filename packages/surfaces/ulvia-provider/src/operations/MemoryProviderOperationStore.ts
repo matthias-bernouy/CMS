@@ -26,9 +26,17 @@ export class MemoryProviderOperationStore implements ProviderOperationStore {
         return record?.siteId === siteId ? clone(record) : null;
     }
 
-    async list(siteId: string, cursor: string | undefined, limit: number): Promise<ProviderOperationPage> {
+    async list(
+        siteId: string,
+        contractId: string,
+        cursor: string | undefined,
+        limit: number,
+    ): Promise<ProviderOperationPage> {
         const records = [...this.#records.values()]
-            .filter((record) => record.siteId === siteId && (!cursor || record.id < cursor))
+            .filter(
+                (record) =>
+                    record.siteId === siteId && record.contractId === contractId && (!cursor || record.id < cursor),
+            )
             .sort((left, right) => right.id.localeCompare(left.id))
             .slice(0, limit + 1);
         const hasMore = records.length > limit;

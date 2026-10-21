@@ -4,6 +4,7 @@ import type { CmsCollectionDependencies } from "../../ports";
 import { projectMigrationPlan, projectMigrationResult, projectSnapshot, projectInstalled } from "./projection";
 import { collectionCommand, integer, parseConfiguration, requiredText, targets } from "./support";
 import type { CollectionSources } from "./sources";
+import { registerCollectionOperationCapabilities } from "./operations";
 
 export function registerCollectionCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -11,6 +12,7 @@ export function registerCollectionCapabilities(
     operations?: ProviderOperationExecutor,
     sources?: CollectionSources,
 ): void {
+    registerCollectionOperationCapabilities(dispatcher, operations);
     dispatcher.register("ulvia.cms.collections", "list", async (_input, context) => {
         const snapshot = await dependencies.collections.snapshot(context.siteId);
         return projectSnapshot(snapshot);

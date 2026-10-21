@@ -10,7 +10,6 @@ export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalo
         "ulvia.cms.collections",
         "ulvia.cms.content",
         "ulvia.cms.files",
-        "ulvia.cms.jobs",
         "ulvia.cms.providers",
     ]) {
         const directory = resolve(import.meta.dir, `../../../official-repository/contracts/${contractId}`);

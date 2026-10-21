@@ -5,11 +5,11 @@ const AVAILABLE_PREFIXES = ["/login", "/.cms/assets", "/.cms/collections"];
 const AVAILABLE_PATHS = new Set(["/favicon.ico", "/.cms/blocset", "/.cms/blocstyles", "/.cms/style"]);
 const RECOVERY_CAPABILITIES = new Set([
     "ulvia.cms.collections/get-migration",
+    "ulvia.cms.collections/get-operation",
+    "ulvia.cms.collections/list-operations",
     "ulvia.cms.collections/migration-status",
     "ulvia.cms.collections/resume-migration",
     "ulvia.cms.collections/rollback-migration",
-    "ulvia.cms.jobs/get",
-    "ulvia.cms.jobs/list",
 ]);
 
 export function createCollectionMaintenanceGuard(options: {

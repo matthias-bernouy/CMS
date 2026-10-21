@@ -174,7 +174,7 @@ runtime conformance evidence. Installation and site-selection models belong to
 the [providers domain](../providers/README.md), which consumes the contracts
 facade; contracts do not depend on provider or installation state.
 Whole-installation dependency planning, migrations, rollback, HTTP execution,
-durable job persistence and idempotent replay context remain outside this
+durable operation persistence and idempotent replay context remain outside this
 contract-admission domain. A provider deployment does not implicitly upgrade a
 site's selected release. See the [package overview](../../README.md) for public
 entry points.

@@ -9,7 +9,6 @@ import { registerAccessCapabilities } from "./access";
 import { registerCollectionCapabilities } from "./collections";
 import { registerContentCapabilities } from "./content";
 import { registerFileCapabilities } from "./files";
-import { registerJobCapabilities } from "./jobs";
 import { registerProviderCapabilities } from "./providers";
 import type { CollectionSources } from "./collections/sources";
 import type { ProviderOperationExecutor } from "../operations/ProviderOperationExecutor";
@@ -32,7 +31,6 @@ export function registerOfficialProviderCapabilities(
     }
     registerProviderCapabilities(dispatcher, gateway, providerManagement);
     registerAccessCapabilities(dispatcher, dependencies, gateway);
-    registerJobCapabilities(dispatcher, operations);
 }
 
 export {
@@ -40,10 +38,10 @@ export {
     registerCollectionCapabilities,
     registerContentCapabilities,
     registerFileCapabilities,
-    registerJobCapabilities,
     registerProviderCapabilities,
 };
 export { CollectionSources } from "./collections/sources";
+export { registerCollectionOperationCapabilities } from "./collections/operations";
 export type {
     CmsFileWorkspace,
     UlviaProviderDependencies,

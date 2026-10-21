@@ -3,7 +3,9 @@
     <p slot="description">{{ cms.i18n.ulvia-official.ui-live-operational-signals-from-the-selected-cms-contracts }}</p>
     <div cms-bloc="ulvia-official-route-tabs" size="sm" label="{{ cms.i18n.ulvia-official.ui-diagnostics }}" slot="page-navigation">
         <a cms-bloc="ulvia-official-route-tab" slot="items" href="#migration-health"><span>{{ cms.i18n.ulvia-official.ui-content-maintenance }}</span></a>
-        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#job-health"><span>{{ cms.i18n.ulvia-official.ui-durable-jobs }}</span></a>
+        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#collection-operation-health"
+            ><span>{{ cms.i18n.ulvia-official.ui-collection-operations }}</span></a
+        >
         <a cms-bloc="ulvia-official-route-tab" slot="items" href="#provider-health"><span>{{ cms.i18n.ulvia-official.ui-provider-installations }}</span></a>
     </div>
     <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
@@ -54,36 +56,48 @@
             </div>
         </section>
         <section
-            id="job-health"
+            id="collection-operation-health"
             role="tabpanel"
             slot="items"
-            aria-labelledby="job-health-title"
-            cms-query="ulvia.cms.jobs:list as jobs"
+            aria-labelledby="collection-operation-health-title"
+            cms-query="ulvia.cms.collections:list-operations as operations"
             cms-query-input='{"limit":{"from":"literal","value":50}}'
         >
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
-                <h2 cms-bloc="ulvia-official-heading" slot="content" id="job-health-title">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</h2>
-                <p slot="content" role="status" cms-condition="jobs.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-durable-jobs }}</p>
-                <div cms-match="jobs.outcome.kind" slot="content">
+                <h2 cms-bloc="ulvia-official-heading" slot="content" id="collection-operation-health-title">
+                    {{ cms.i18n.ulvia-official.ui-collection-operations }}
+                </h2>
+                <p slot="content" role="status" cms-condition="operations.activity === 'fetching'">
+                    {{ cms.i18n.ulvia-official.ui-reading-collection-operations }}
+                </p>
+                <div cms-match="operations.outcome.kind" slot="content">
                     <span cms-case='"none"'></span>
-                    <div cms-match="jobs.outcome.code" cms-case='"error"'>
-                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
+                    <div cms-match="operations.outcome.code" cms-case='"error"'>
+                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                            {{ cms.i18n.ulvia-official.ui-collection-operation-diagnostics-are-unavailable }}
+                        </p>
                     </div>
                     <div cms-bloc="ulvia-official-stack" gap="sm" cms-case='"success"'>
-                        <p slot="items" cms-condition="jobs.data.items.length === 0">{{ cms.i18n.ulvia-official.ui-no-durable-jobs }}</p>
-                        <div cms-bloc="ulvia-official-stack" role="list" gap="sm" cms-condition="jobs.data.items.length > 0" slot="items">
-                            <article slot="items" cms-repeat="jobs.data.items as job" role="listitem">
+                        <p slot="items" cms-condition="operations.data.items.length === 0">
+                            {{ cms.i18n.ulvia-official.ui-no-collection-operations }}
+                        </p>
+                        <div cms-bloc="ulvia-official-stack" role="list" gap="sm" cms-condition="operations.data.items.length > 0" slot="items">
+                            <article slot="items" cms-repeat="operations.data.items as operation" role="listitem">
                                 <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center">
                                     <div slot="items">
-                                        <strong>{{ job.contractId }} {{ cms.i18n.ulvia-official.ui-copy }} {{ job.capabilityId }}</strong>
-                                        <p>{{ job.updatedAt | dateLong }}</p>
+                                        <strong>{{ operation.capabilityId }}</strong>
+                                        <p>{{ operation.updatedAt | dateLong }}</p>
                                     </div>
-                                    <div cms-bloc="ulvia-official-badge" tone="neutral" slot="items"><span slot="label">{{ job.status }}</span></div>
+                                    <div cms-bloc="ulvia-official-badge" tone="neutral" slot="items">
+                                        <span slot="label">{{ operation.status }}</span>
+                                    </div>
                                 </div>
                             </article>
                         </div>
                     </div>
-                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
+                    <p role="alert" cms-case='"failure"'>
+                        {{ cms.i18n.ulvia-official.ui-collection-operation-diagnostics-are-unavailable }}
+                    </p>
                 </div>
             </div>
         </section>

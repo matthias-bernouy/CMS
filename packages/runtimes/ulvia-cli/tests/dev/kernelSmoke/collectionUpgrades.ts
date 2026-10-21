@@ -49,11 +49,13 @@ async function waitForMaintenanceCompletion(page: Page): Promise<void> {
         .locator("#migration-health")
         .innerText()
         .catch(() => "unavailable");
-    const jobs = await page
-        .locator("#job-health")
+    const operations = await page
+        .locator("#collection-operation-health")
         .innerText()
         .catch(() => "unavailable");
-    throw new Error(`Collection migration did not leave maintenance mode.\nMigration: ${migration}\nJobs: ${jobs}`);
+    throw new Error(
+        `Collection migration did not leave maintenance mode.\nMigration: ${migration}\nOperations: ${operations}`,
+    );
 }
 
 function collectionReleaseCard(page: Page, identity: string) {

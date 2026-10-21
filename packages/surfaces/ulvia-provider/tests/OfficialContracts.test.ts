@@ -22,10 +22,9 @@ import { NOOP_LOGGER } from "@bernouy/logging";
 const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
     ["ulvia.cms.access", "list-users", "QUERY", "/list-users", {}],
-    ["ulvia.cms.collections", "list", "GET", "/list", undefined],
+    ["ulvia.cms.collections", "list-operations", "QUERY", "/operations", {}],
     ["ulvia.cms.content", "site.get", "GET", "/site", undefined],
     ["ulvia.cms.files", "namespace.create", "POST", "/namespaces", { name: "Test", defaultVisibility: "private" }],
-    ["ulvia.cms.jobs", "list", "QUERY", "/list", {}],
     ["ulvia.cms.providers", "list", "GET", "/list", undefined],
 ] as const;
 

@@ -1,0 +1,5 @@
+{
+    "capabilityId": "get-operation",
+    "errorCode": "INVALID_INPUT",
+    "reason": "The portable smoke suite does not prescribe an invalid collection operation identity."
+}

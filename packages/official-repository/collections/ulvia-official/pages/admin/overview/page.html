@@ -114,23 +114,25 @@
                     </section>
                     <section
                         slot="items"
-                        cms-query="ulvia.cms.jobs:list as jobs"
+                        cms-query="ulvia.cms.collections:list-operations as operations"
                         cms-query-input='{"limit":{"from":"literal","value":100}}'
-                        aria-label="{{ cms.i18n.ulvia-official.ui-durable-jobs }}"
+                        aria-label="{{ cms.i18n.ulvia-official.ui-collection-operations }}"
                     >
-                        <p role="status" aria-live="polite" cms-condition="jobs.activity === 'fetching'">
-                            {{ cms.i18n.ulvia-official.ui-reading-durable-jobs }}
+                        <p role="status" aria-live="polite" cms-condition="operations.activity === 'fetching'">
+                            {{ cms.i18n.ulvia-official.ui-reading-collection-operations }}
                         </p>
-                        <div cms-match="jobs.outcome.kind">
+                        <div cms-match="operations.outcome.kind">
                             <span cms-case='"none"'></span>
-                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
-                            <div cms-case='"error"' cms-match="jobs.outcome.code">
-                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-job-diagnostics-are-unavailable }}</p>
+                            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-collection-operation-diagnostics-are-unavailable }}</p>
+                            <div cms-case='"error"' cms-match="operations.outcome.code">
+                                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                                    {{ cms.i18n.ulvia-official.ui-collection-operation-diagnostics-are-unavailable }}
+                                </p>
                             </div>
                             <div cms-bloc="ulvia-official-surface" radius="sm" padding="sm" appearance="outlined" cms-case='"success"'>
                                 <div cms-bloc="ulvia-official-stat" size="sm" slot="content">
-                                    <strong slot="value">{{ jobs.data.items.length }}</strong>
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-durable-jobs }}</span>
+                                    <strong slot="value">{{ operations.data.items.length }}</strong>
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-collection-operations }}</span>
                                     <span slot="description">{{ cms.i18n.ulvia-official.ui-recent-activity }}</span>
                                 </div>
                             </div>

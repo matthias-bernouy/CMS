@@ -28,7 +28,7 @@ export interface ProviderOperationPage {
 export interface ProviderOperationStore {
     createOrGet(record: ProviderOperationRecord): Promise<{ record: ProviderOperationRecord; created: boolean }>;
     get(siteId: string, id: string): Promise<ProviderOperationRecord | null>;
-    list(siteId: string, cursor: string | undefined, limit: number): Promise<ProviderOperationPage>;
+    list(siteId: string, contractId: string, cursor: string | undefined, limit: number): Promise<ProviderOperationPage>;
     listRecoverable(now: string, limit: number): Promise<readonly ProviderOperationRecord[]>;
     claim(id: string, expectedRevision: number, token: string, expiresAt: string, now: string): Promise<boolean>;
     renew(id: string, token: string, expiresAt: string, now: string): Promise<boolean>;

@@ -10,8 +10,8 @@
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.jobs",
-            "capabilityId": "list",
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "list-operations",
             "versionRange": "^1.0.0"
         },
         {
