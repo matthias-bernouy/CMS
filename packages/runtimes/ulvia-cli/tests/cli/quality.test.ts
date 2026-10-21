@@ -113,6 +113,46 @@ test("the official collection passes its source quality contract", async () => {
     const grid = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-grid");
     expect(grid?.style).toContain("repeat(auto-fit, minmax(min(100%, 18rem), 1fr))");
 
+    const dataTable = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-data-table");
+    expect(dataTable).toMatchObject({ kind: "component", root: { accepts: ["div"] } });
+    expect(dataTable?.runtime?.viewJS).toBeUndefined();
+    expect(dataTable?.slots).toMatchObject({
+        caption: { min: 1, max: 1 },
+        columns: { min: 1 },
+        rows: {},
+    });
+    expect(dataTable?.style).toContain("overflow-x: auto");
+    expect(dataTable?.style).toContain("min-width: 36rem");
+
+    const columnHeader = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-data-table-column-header");
+    const rowHeader = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-data-table-row-header");
+    expect(columnHeader).toMatchObject({
+        catalogue: "hidden",
+        root: { accepts: ["th"], attributes: { scope: { required: true, values: ["col"] } } },
+    });
+    expect(rowHeader).toMatchObject({
+        catalogue: "hidden",
+        root: { accepts: ["th"], attributes: { scope: { required: true, values: ["row"] } } },
+    });
+    expect(() =>
+        validatePageDocument(
+            '<div cms-bloc="ulvia-official-data-table"><span slot="caption">Users</span><th cms-bloc="ulvia-official-data-table-column-header" scope="row" slot="columns">Name</th></div>',
+            artifact.release.blocs,
+        ),
+    ).toThrow("scope");
+    expect(() =>
+        validatePageDocument(
+            '<div cms-bloc="ulvia-official-data-table"><span slot="caption">Users</span><th cms-bloc="ulvia-official-data-table-column-header" scope="col" slot="columns">Name</th><tr cms-bloc="ulvia-official-data-table-row" slot="rows"><td slot="cells">Ada</td></tr></div>',
+            artifact.release.blocs,
+        ),
+    ).toThrow("does not accept native <td>");
+    expect(() =>
+        validatePageDocument(
+            '<div cms-bloc="ulvia-official-data-table"><th cms-bloc="ulvia-official-data-table-column-header" scope="col" slot="columns">Name</th></div>',
+            artifact.release.blocs,
+        ),
+    ).toThrow('slot "caption" requires at least 1 item');
+
     const panel = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-panel");
     expect(panel?.style).toContain("flex-wrap: wrap");
     expect(panel?.style).toContain("flex: 1 1 10rem");

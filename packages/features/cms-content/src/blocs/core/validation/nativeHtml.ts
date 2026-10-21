@@ -195,6 +195,7 @@ const PLATFORM_NATIVE_CONTENT_TAG_SET = new Set<string>([
     ...PLATFORM_NATIVE_SEMANTIC_TAGS,
     ...PLATFORM_NATIVE_RICH_TEXT_TAGS,
     ...MANAGED_NATIVE_ELEMENT_TAGS,
+    "caption",
     "details",
     "fieldset",
     "iframe",

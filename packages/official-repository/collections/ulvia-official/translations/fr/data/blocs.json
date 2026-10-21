@@ -1,0 +1,13 @@
+{
+    "bloc.category.data": "Données",
+    "bloc.data-table.description": "Un tableau de données natif et accessible avec débordement adaptatif et en-têtes explicites de lignes et de colonnes",
+    "bloc.data-table.label": "Tableau de données",
+    "bloc.data-table-cell.description": "Une cellule de données native appartenant à une ligne de tableau",
+    "bloc.data-table-cell.label": "Cellule de tableau",
+    "bloc.data-table-column-header.description": "Un en-tête de colonne natif appartenant à un tableau de données",
+    "bloc.data-table-column-header.label": "En-tête de colonne",
+    "bloc.data-table-row.description": "Une ligne native appartenant à un tableau de données",
+    "bloc.data-table-row.label": "Ligne de tableau",
+    "bloc.data-table-row-header.description": "Un en-tête de ligne natif appartenant à une ligne de tableau",
+    "bloc.data-table-row-header.label": "En-tête de ligne"
+}

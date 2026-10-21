@@ -1,0 +1,21 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-data-table-row",
+    "label": "bloc.data-table-row.label",
+    "description": "bloc.data-table-row.description",
+    "catalogue": "hidden",
+    "uses": ["ulvia-official-data-table-cell", "ulvia-official-data-table-row-header"],
+    "requires": [],
+    "slots": {
+        "cells": {
+            "accepts": [
+                { "kind": "component", "tag": "ulvia-official-data-table-cell" },
+                { "kind": "component", "tag": "ulvia-official-data-table-row-header" }
+            ],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["tr"]
+    }
+}

@@ -1,0 +1,39 @@
+[
+    {
+        "id": "density",
+        "label": "setting.density.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "default",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "compact", "label": "setting.option.compact" },
+                { "value": "default", "label": "setting.option.default" },
+                { "value": "comfortable", "label": "setting.option.comfortable" }
+            ]
+        }
+    },
+    {
+        "id": "caption-visibility",
+        "label": "setting.caption-visibility.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "visible",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "visible", "label": "setting.option.visible" },
+                { "value": "hidden", "label": "setting.option.visually-hidden" }
+            ]
+        }
+    },
+    {
+        "id": "striped-rows",
+        "label": "setting.striped-rows.label",
+        "group": "setting.group.appearance",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    }
+]

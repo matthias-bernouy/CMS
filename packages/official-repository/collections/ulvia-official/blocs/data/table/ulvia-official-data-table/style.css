@@ -1,0 +1,92 @@
+:scope {
+    --ulvia-official-data-table-cell-padding-block: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-data-table-cell-padding-inline: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-data-table-cell-border: var(--ulvia-official-border-width, 1px) solid
+        var(--ulvia-official-border-subtle, #e2e9e6);
+    --ulvia-official-data-table-column-header-padding-block: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-data-table-column-header-padding-inline: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-data-table-row-header-padding-block: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-data-table-row-header-padding-inline: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-data-table-row-header-border: var(--ulvia-official-border-width, 1px) solid
+        var(--ulvia-official-border-subtle, #e2e9e6);
+    --ulvia-official-data-table-row-stripe: transparent;
+    --ulvia-official-data-table-row-hover: color-mix(
+        in srgb,
+        var(--ulvia-official-background-subtle, #f3f7f5) 72%,
+        transparent
+    );
+    display: block;
+    min-width: 0;
+    font-family: var(--ulvia-official-font-family-main, inherit);
+}
+
+[part="viewport"] {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+    border-radius: var(--ulvia-official-radius-lg, 0.75rem);
+    background: var(--ulvia-official-background-base, #fff);
+    box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(20 40 32 / 5%));
+}
+
+[part="table"] {
+    width: 100%;
+    min-width: 36rem;
+    border-spacing: 0;
+    border-collapse: separate;
+    color: var(--ulvia-official-text-primary, #17211d);
+    background: var(--ulvia-official-background-base, #fff);
+    font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+}
+
+[part="caption"] {
+    padding: var(--ulvia-official-spacing-md, 1rem);
+    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+    color: var(--ulvia-official-text-primary, #17211d);
+    font-size: var(--ulvia-official-font-size-md, 1rem);
+    font-weight: var(--ulvia-official-font-weight-semibold, 600);
+    text-align: start;
+}
+
+[part="head"] {
+    color: var(--ulvia-official-text-secondary, #4f625a);
+    background: var(--ulvia-official-background-subtle, #f3f7f5);
+}
+
+:scope[density="compact"] {
+    --ulvia-official-data-table-cell-padding-block: var(--ulvia-official-spacing-xs, 0.5rem);
+    --ulvia-official-data-table-cell-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-data-table-column-header-padding-block: var(--ulvia-official-spacing-xs, 0.5rem);
+    --ulvia-official-data-table-column-header-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
+    --ulvia-official-data-table-row-header-padding-block: var(--ulvia-official-spacing-xs, 0.5rem);
+    --ulvia-official-data-table-row-header-padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
+}
+
+:scope[density="comfortable"] {
+    --ulvia-official-data-table-cell-padding-block: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-data-table-cell-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-data-table-column-header-padding-block: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-data-table-column-header-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-data-table-row-header-padding-block: var(--ulvia-official-spacing-md, 1rem);
+    --ulvia-official-data-table-row-header-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);
+}
+
+:scope[striped-rows] {
+    --ulvia-official-data-table-row-stripe: color-mix(
+        in srgb,
+        var(--ulvia-official-background-subtle, #f3f7f5) 58%,
+        transparent
+    );
+}
+
+:scope[caption-visibility="hidden"] [part="caption"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}

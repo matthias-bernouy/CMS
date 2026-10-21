@@ -1,0 +1,22 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-data-table-column-header",
+    "label": "bloc.data-table-column-header.label",
+    "description": "bloc.data-table-column-header.description",
+    "catalogue": "hidden",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "default": {
+            "accepts": [{ "kind": "any-component" }, { "kind": "native-content", "profile": "inline" }],
+            "min": 1
+        }
+    },
+    "root": {
+        "accepts": ["th"],
+        "attributes": {
+            "scope": { "required": true, "values": ["col"] }
+        },
+        "defaults": { "scope": "col" }
+    }
+}

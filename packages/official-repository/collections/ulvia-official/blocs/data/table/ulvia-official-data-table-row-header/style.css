@@ -1,0 +1,19 @@
+:scope {
+    padding: var(--ulvia-official-data-table-row-header-padding-block, 0.75rem)
+        var(--ulvia-official-data-table-row-header-padding-inline, 1rem);
+    border-bottom: var(--ulvia-official-data-table-row-header-border, 1px solid #e2e9e6);
+    color: var(--ulvia-official-text-primary, #17211d);
+    font-weight: var(--ulvia-official-font-weight-semibold, 600);
+    line-height: var(--ulvia-official-line-height-normal, 1.5);
+    text-align: start;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+:scope[text-align="center"] {
+    text-align: center;
+}
+
+:scope[text-align="end"] {
+    text-align: end;
+}

@@ -3,6 +3,8 @@ import {
     ContentValidationError,
     isNativeHtmlTag,
     isPlatformAuthorableNativeTag,
+    isPlatformNativeAttributeAllowed,
+    isPlatformNativeContentTag,
     isSiteBlocNativeStructureTag,
     validateSiteBlocSnapshot,
 } from "@bernouy/cms-content";
@@ -22,6 +24,14 @@ describe("platform native HTML policy", () => {
         expect(isSiteBlocNativeStructureTag("form")).toBe(true);
         expect(isSiteBlocNativeStructureTag("div")).toBe(false);
         expect(isSiteBlocNativeStructureTag("table")).toBe(false);
+    });
+
+    test("admits accessible native table structure inside an owning component", () => {
+        expect(isPlatformNativeContentTag("caption")).toBe(true);
+        expect(isPlatformNativeAttributeAllowed("th", "scope")).toBe(true);
+        expect(isPlatformNativeAttributeAllowed("th", "abbr")).toBe(false);
+        expect(isPlatformNativeAttributeAllowed("td", "headers")).toBe(false);
+        expect(isPlatformNativeAttributeAllowed("td", "align")).toBe(false);
     });
 
     test("keeps semantic native structure out of published artifact dependencies", () => {

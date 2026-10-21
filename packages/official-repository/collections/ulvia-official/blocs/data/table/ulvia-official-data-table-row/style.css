@@ -1,0 +1,18 @@
+:scope {
+    color: inherit;
+    background: transparent;
+    transition: background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
+}
+
+:scope:nth-child(even) {
+    background: var(--ulvia-official-data-table-row-stripe, transparent);
+}
+
+:scope:is(:hover, :focus-within) {
+    background: var(--ulvia-official-data-table-row-hover, transparent);
+}
+
+:scope:last-child {
+    --ulvia-official-data-table-cell-border: 0;
+    --ulvia-official-data-table-row-header-border: 0;
+}

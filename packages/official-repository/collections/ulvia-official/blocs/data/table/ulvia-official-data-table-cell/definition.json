@@ -1,0 +1,21 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-data-table-cell",
+    "label": "bloc.data-table-cell.label",
+    "description": "bloc.data-table-cell.description",
+    "catalogue": "hidden",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "default": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "native-content", "profile": "prose" },
+                { "kind": "native-element", "accepts": ["form", "svg"] }
+            ]
+        }
+    },
+    "root": {
+        "accepts": ["td"]
+    }
+}

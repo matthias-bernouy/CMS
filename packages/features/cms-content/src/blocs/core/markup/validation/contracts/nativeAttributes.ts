@@ -62,6 +62,7 @@ const PLATFORM_NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> 
         "maxlength",
         "aria-label",
     ]),
+    th: new Set(["scope"]),
     track: new Set(["src", "kind", "srclang", "label", "default"]),
 };
 
