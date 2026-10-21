@@ -23,13 +23,13 @@
     ],
     "requires": [
         {
-            "contractId": "ulvia.cms.localization",
-            "capabilityId": "get-texts",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "localization.texts.get",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.localization",
-            "capabilityId": "save-text",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "localization.text.save",
             "versionRange": "^1.0.0"
         }
     ],

@@ -1,17 +1,6 @@
-import type { TSystem } from "@bernouy/cms-content";
 import type { TUser } from "@bernouy/cms-auth";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityInvocationContext } from "../../dispatch/registry";
 import type { UlviaProviderGateway } from "../../ports";
-
-export function projectSite(system: TSystem, revision: number) {
-    return {
-        revision,
-        name: system.site.name,
-        host: system.site.host,
-        language: system.site.language,
-        visible: system.site.visible,
-    };
-}
 
 export function projectUser(user: TUser, administrator: { enabled: boolean; revision: number }) {
     return {

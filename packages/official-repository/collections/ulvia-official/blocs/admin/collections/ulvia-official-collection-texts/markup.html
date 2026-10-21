@@ -1,5 +1,5 @@
 <section
-    cms-query="ulvia.cms.localization:get-texts as collectionTexts"
+    cms-query="ulvia.cms.content:localization.texts.get as collectionTexts"
     cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia-official-collection"},"locale":{"from":"state","key":"@param:ulvia-official-locale","optional":true},"group":{"from":"state","key":"@param:ulvia-official-group","optional":true},"search":{"from":"state","key":"@param:ulvia-official-search","optional":true}}'
     cms-query-listen="@param:ulvia-official-collection @param:ulvia-official-locale @param:ulvia-official-group @param:ulvia-official-search @page:ulvia-official-collection-texts-mutation/lastSuccess/requestId"
 >
@@ -92,7 +92,7 @@
                     <div cms-bloc="ulvia-official-stack" gap="sm" slot="actions">
                         <form
                             slot="items"
-                            cms-mutation="ulvia.cms.localization:save-text as savedText"
+                            cms-mutation="ulvia.cms.content:localization.text.save as savedText"
                             cms-sync="@page:ulvia-official-collection-texts-mutation"
                             cms-sync-select="lastSuccess.requestId"
                             cms-mutation-reset="false"

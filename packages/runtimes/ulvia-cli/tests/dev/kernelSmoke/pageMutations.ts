@@ -7,9 +7,9 @@ export async function submitRevisionMutation(
 ): Promise<void> {
     const revision = form.locator('input[name="expectedRevision"]');
     const initialRevision = await revision.inputValue();
-    const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/get"));
+    const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/pages.get"));
     const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes(`ulvia.cms.pages/${capability}`)),
+        page.waitForResponse((candidate) => candidate.url().includes(`ulvia.cms.content/pages.${capability}`)),
         form.locator('button[type="submit"]').click(),
     ]);
     if (!response.ok()) {
@@ -25,10 +25,10 @@ export async function submitPageMutation(page: Page, capability: string, visible
     page.on("response", recordResponse);
     try {
         const reload = page
-            .waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/get"))
+            .waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/pages.get"))
             .catch(() => null);
         const [response] = await Promise.all([
-            page.waitForResponse((candidate) => candidate.url().includes(`ulvia.cms.pages/${capability}`)),
+            page.waitForResponse((candidate) => candidate.url().includes(`ulvia.cms.content/pages.${capability}`)),
             mutationButton(page, capability, visible).click(),
         ]);
         if (response.ok() && !(await reload)) {
@@ -64,7 +64,7 @@ function mutationButton(page: Page, capability: string, visible: boolean) {
         return page.locator('[cms-bloc="ulvia-official-page-editor"] button[data-save]');
     }
     return page
-        .locator(`form[cms-mutation^="ulvia.cms.pages:${capability} "]`)
+        .locator(`form[cms-mutation^="ulvia.cms.content:pages.${capability} "]`)
         .filter({ has: page.locator(`input[name="visible"][value="${visible}"]`) })
         .locator('button[type="submit"]');
 }

@@ -82,19 +82,19 @@ export async function inspectResponsiveAdministration(page: Page, kernelOrigin: 
 
 export async function mutateSettings(page: Page): Promise<void> {
     await adminPageLink(page, "settings").click();
-    const generalSubmit = 'form[cms-mutation^="ulvia.cms.access:update-site "] button[type="submit"]';
+    const generalSubmit = 'form[cms-mutation^="ulvia.cms.content:site.update "] button[type="submit"]';
     await waitUntilEnabled(page, generalSubmit);
     await page.locator("#settings-general").waitFor();
     await page.locator("#settings-site-name").fill("Smoke CMS");
     const languageRevision = page.locator(
-        'form[cms-mutation^="ulvia.cms.localization:update-languages "] input[name="expectedRevision"]',
+        'form[cms-mutation^="ulvia.cms.content:localization.update "] input[name="expectedRevision"]',
     );
     const initialLanguageRevision = await languageRevision.inputValue();
     const languageRefresh = page.waitForResponse((candidate) =>
-        candidate.url().includes("ulvia.cms.localization/overview"),
+        candidate.url().includes("ulvia.cms.content/localization.get"),
     );
     const [generalResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.access/update-site")),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/site.update")),
         page.locator(generalSubmit).click(),
     ]);
     if (!generalResponse.ok()) {
@@ -102,7 +102,7 @@ export async function mutateSettings(page: Page): Promise<void> {
     }
     await page
         .locator(
-            'form[cms-mutation^="ulvia.cms.access:update-site "] p[cms-condition*="savedSite.outcome.kind === \'success\'"]',
+            'form[cms-mutation^="ulvia.cms.content:site.update "] p[cms-condition*="savedSite.outcome.kind === \'success\'"]',
         )
         .waitFor();
     await languageRefresh;
@@ -110,8 +110,8 @@ export async function mutateSettings(page: Page): Promise<void> {
     await page.locator('a[href="#settings-languages"]').click();
     await page.locator("#settings-default-language").fill("fr-FR");
     const [languagesResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.localization/update-languages")),
-        page.locator('form[cms-mutation^="ulvia.cms.localization:update-languages "] button[type="submit"]').click(),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/localization.update")),
+        page.locator('form[cms-mutation^="ulvia.cms.content:localization.update "] button[type="submit"]').click(),
     ]);
     if (!languagesResponse.ok()) {
         throw new Error(
@@ -120,7 +120,7 @@ export async function mutateSettings(page: Page): Promise<void> {
     }
     await page
         .locator(
-            'form[cms-mutation^="ulvia.cms.localization:update-languages "] p[cms-condition*="savedLanguages.outcome.kind === \'success\'"]',
+            'form[cms-mutation^="ulvia.cms.content:localization.update "] p[cms-condition*="savedLanguages.outcome.kind === \'success\'"]',
         )
         .waitFor();
 }

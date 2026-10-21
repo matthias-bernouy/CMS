@@ -23,23 +23,23 @@
     ],
     "requires": [
         {
-            "contractId": "ulvia.cms.theme",
-            "capabilityId": "get",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "theme.get",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.theme",
-            "capabilityId": "activate",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "theme.activate",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.theme",
-            "capabilityId": "save-token",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "theme.token.save",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.theme",
-            "capabilityId": "reset-token",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "theme.token.reset",
             "versionRange": "^1.0.0"
         }
     ],

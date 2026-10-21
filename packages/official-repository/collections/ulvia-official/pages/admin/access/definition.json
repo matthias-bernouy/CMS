@@ -11,7 +11,7 @@
         },
         {
             "contractId": "ulvia.cms.access",
-            "capabilityId": "overview",
+            "capabilityId": "list-users",
             "versionRange": "^1.0.0"
         },
         {

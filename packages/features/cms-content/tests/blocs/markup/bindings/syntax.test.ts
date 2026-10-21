@@ -78,12 +78,12 @@ describe("binding syntax", () => {
     });
 
     test("requires one logical target and safe name for queries", () => {
-        expect(asQuery({ contractId: "ulvia.cms.pages", capabilityId: "list", name: "pages" })).toBe(
-            "ulvia.cms.pages:list as pages",
+        expect(asQuery({ contractId: "ulvia.cms.content", capabilityId: "pages.list", name: "pages" })).toBe(
+            "ulvia.cms.content:pages.list as pages",
         );
-        expect(parseQuery(" ulvia.cms.pages:list as pages ")).toEqual({
-            contractId: "ulvia.cms.pages",
-            capabilityId: "list",
+        expect(parseQuery(" ulvia.cms.content:pages.list as pages ")).toEqual({
+            contractId: "ulvia.cms.content",
+            capabilityId: "pages.list",
             name: "pages",
         });
         expect(asQuery({ sync: { scope: "page", key: "ulvia-official-pages" }, name: "pages" })).toBe(
@@ -94,11 +94,11 @@ describe("binding syntax", () => {
             name: "user",
         });
         for (const value of [
-            "ulvia.cms.pages:list",
-            "/.cms/call/ulvia.cms.pages/list as pages",
-            "ulvia.cms.pages:list as cms",
-            "ulvia.cms.pages:list as page-list",
-            "ulvia.cms.pages:list as $pages",
+            "ulvia.cms.content:pages.list",
+            "/.cms/call/ulvia.cms.content/pages.list as pages",
+            "ulvia.cms.content:pages.list as cms",
+            "ulvia.cms.content:pages.list as page-list",
+            "ulvia.cms.content:pages.list as $pages",
             "@page:Ulvia-pages as pages",
             "@global:ulvia-pages as pages",
         ]) {
@@ -107,18 +107,18 @@ describe("binding syntax", () => {
     });
 
     test("requires one command target and explicit name for mutations", () => {
-        expect(asMutation({ contractId: "ulvia.cms.pages", capabilityId: "update", name: "saved" })).toBe(
-            "ulvia.cms.pages:update as saved",
+        expect(asMutation({ contractId: "ulvia.cms.content", capabilityId: "pages.update", name: "saved" })).toBe(
+            "ulvia.cms.content:pages.update as saved",
         );
-        expect(parseMutation(" ulvia.cms.pages:update as saved ")).toEqual({
-            contractId: "ulvia.cms.pages",
-            capabilityId: "update",
+        expect(parseMutation(" ulvia.cms.content:pages.update as saved ")).toEqual({
+            contractId: "ulvia.cms.content",
+            capabilityId: "pages.update",
             name: "saved",
         });
         for (const value of [
-            "ulvia.cms.pages:update",
-            "/.cms/call/ulvia.cms.pages/update as saved",
-            "ulvia.cms.pages:update as cms",
+            "ulvia.cms.content:pages.update",
+            "/.cms/call/ulvia.cms.content/pages.update as saved",
+            "ulvia.cms.content:pages.update as cms",
             "@page:ulvia-official-page as saved",
         ]) {
             expect(parseMutation(value)).toBeNull();
@@ -155,7 +155,7 @@ describe("binding syntax", () => {
         );
         for (const value of [
             "",
-            "ulvia.cms.pages:list as pages",
+            "ulvia.cms.content:pages.list as pages",
             "@page:ulvia-official-pages pages",
             "@page:ulvia-official-pages as cms",
             "@page:ulvia-official-pages as pages @page:ulvia-official-pages as duplicate",

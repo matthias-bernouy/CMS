@@ -9,12 +9,12 @@ afterEach(resetDom);
 
 test("a Provider query with input uses the logical QUERY transport", () => {
     const query = el(`<section
-        cms-query="ulvia.cms.pages:list as pages"
+        cms-query="ulvia.cms.content:pages.list as pages"
         cms-query-input='{"limit":{"from":"literal","value":20}}'
     ></section>`);
 
     expect(queryRequest(query)).toEqual({
-        url: "/.cms/query/ulvia.cms.pages/list",
+        url: "/.cms/query/ulvia.cms.content/pages.list",
         init: {
             method: "QUERY",
             headers: { "content-type": "application/json" },
@@ -44,7 +44,7 @@ test("a Provider query input builds nested objects and arrays from typed paths",
 test("a Provider query omits absent optional query parameters", () => {
     location.href = "http://localhost/?site-collection=ulvia&site-theme-mode=";
     const query = el(`<section
-        cms-query="ulvia.cms.theme:get as theme"
+        cms-query="ulvia.cms.content:theme.get as theme"
         cms-query-input='{
             "collectionId":{"from":"state","key":"@param:site-collection"},
             "profileId":{"from":"state","key":"@param:site-theme-profile","optional":true},
@@ -101,10 +101,10 @@ test("a Provider query waits for required synchronized input", async () => {
 });
 
 test("a Provider query without input uses the cache-compatible logical GET transport", () => {
-    const query = el('<section cms-query="ulvia.cms.pages:list as pages"></section>');
+    const query = el('<section cms-query="ulvia.cms.content:pages.list as pages"></section>');
 
     expect(queryRequest(query)).toEqual({
-        url: "/.cms/query/ulvia.cms.pages/list",
+        url: "/.cms/query/ulvia.cms.content/pages.list",
         init: { method: "GET" },
     });
 });

@@ -5,8 +5,8 @@
     "description": "page.overview.description",
     "requires": [
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "list",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.list",
             "versionRange": "^1.0.0"
         },
         {

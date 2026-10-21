@@ -19,7 +19,7 @@ const REQUEST_BY_CAPABILITY = {
 
 export async function callCapability<T>(capabilityId: PageEditorCapability, input: unknown): Promise<T> {
     const { method, route } = REQUEST_BY_CAPABILITY[capabilityId];
-    const response = await fetch(`/.cms/${route}/ulvia.cms.pages/${encodeURIComponent(capabilityId)}`, {
+    const response = await fetch(`/.cms/${route}/ulvia.cms.content/pages.${encodeURIComponent(capabilityId)}`, {
         method,
         headers: {
             Accept: "application/json",

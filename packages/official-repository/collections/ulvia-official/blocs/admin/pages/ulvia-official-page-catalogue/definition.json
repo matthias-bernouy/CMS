@@ -22,13 +22,13 @@
     ],
     "requires": [
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "list",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.list",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "create",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.create",
             "versionRange": "^1.0.0"
         }
     ],

@@ -7,12 +7,10 @@ import type {
 } from "../ports";
 import { registerAccessCapabilities } from "./access";
 import { registerCollectionCapabilities } from "./collections";
+import { registerContentCapabilities } from "./content";
 import { registerFileCapabilities } from "./files";
 import { registerJobCapabilities } from "./jobs";
-import { registerPageCapabilities } from "./pages";
 import { registerProviderCapabilities } from "./providers";
-import { registerLocalizationCapabilities } from "./site-configuration/localization";
-import { registerThemeCapabilities } from "./site-configuration/theme";
 import type { CollectionSources } from "./collections/sources";
 import type { ProviderOperationExecutor } from "../operations/ProviderOperationExecutor";
 import type { CmsFilesService } from "@bernouy/cms-files";
@@ -27,13 +25,11 @@ export function registerOfficialProviderCapabilities(
     files?: CmsFilesService,
     fileWorkspace?: CmsFileWorkspace,
 ): void {
-    registerPageCapabilities(dispatcher, dependencies);
+    registerContentCapabilities(dispatcher, dependencies);
     registerCollectionCapabilities(dispatcher, dependencies, operations, collectionSources);
     if (files) {
         registerFileCapabilities(dispatcher, files, fileWorkspace);
     }
-    registerThemeCapabilities(dispatcher, dependencies);
-    registerLocalizationCapabilities(dispatcher, dependencies);
     registerProviderCapabilities(dispatcher, gateway, providerManagement);
     registerAccessCapabilities(dispatcher, dependencies, gateway);
     registerJobCapabilities(dispatcher, operations);
@@ -42,12 +38,10 @@ export function registerOfficialProviderCapabilities(
 export {
     registerAccessCapabilities,
     registerCollectionCapabilities,
+    registerContentCapabilities,
     registerFileCapabilities,
     registerJobCapabilities,
-    registerLocalizationCapabilities,
-    registerPageCapabilities,
     registerProviderCapabilities,
-    registerThemeCapabilities,
 };
 export { CollectionSources } from "./collections/sources";
 export type {

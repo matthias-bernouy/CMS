@@ -4,7 +4,7 @@ import { submitPageMutation, submitRevisionMutation } from "./pageMutations";
 export async function mutateRoute(page: Page): Promise<void> {
     await page.locator('a[href="#page-routes"]').click();
     await page.waitForURL(/#page-routes$/u);
-    const form = page.locator('form[cms-mutation^="ulvia.cms.pages:update-route "]').first();
+    const form = page.locator('form[cms-mutation^="ulvia.cms.content:pages.update-route "]').first();
     await form.waitFor();
     const path = form.locator('input[name="path"]');
     await path.fill(await path.inputValue());
@@ -14,7 +14,7 @@ export async function mutateRoute(page: Page): Promise<void> {
 export async function mutateSeo(page: Page): Promise<void> {
     await page.locator('a[href="#page-search"]').click();
     await page.waitForURL(/#page-search$/u);
-    const form = page.locator('form[cms-mutation^="ulvia.cms.pages:update-seo "]').first();
+    const form = page.locator('form[cms-mutation^="ulvia.cms.content:pages.update-seo "]').first();
     await form.waitFor();
     await form.locator('input[name="title"]').fill("Smoke Page SEO");
     await form.locator('textarea[name="description"]').fill("Smoke Page search description.");
@@ -53,8 +53,8 @@ export async function deleteSmokePage(page: Page, kernelOrigin: string): Promise
     await page.locator('a[href="#page-danger"]').click();
     await page.waitForURL(/#page-danger$/u);
     const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/delete")),
-        page.locator('form[cms-mutation^="ulvia.cms.pages:delete "] button[type="submit"]').click(),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/pages.delete")),
+        page.locator('form[cms-mutation^="ulvia.cms.content:pages.delete "] button[type="submit"]').click(),
     ]);
     if (!response.ok()) {
         throw new Error(`Page deletion failed (${response.status()}).`);

@@ -26,7 +26,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     await page.locator("#new-page-path").fill("/smoke-page");
     await Promise.all([
         page.waitForURL(/\/admin\/pages\?ulvia-official-page-id=/u),
-        page.locator('form[cms-mutation^="ulvia.cms.pages:create "] button[type="submit"]').click(),
+        page.locator('form[cms-mutation^="ulvia.cms.content:pages.create "] button[type="submit"]').click(),
     ]);
     const detailUrl = page.url();
     await page
@@ -93,12 +93,12 @@ async function fillLatestVisibleElementContent(page: Page, value: string): Promi
 }
 
 async function submitPageDetails(page: Page) {
-    const form = page.locator('form[cms-mutation="ulvia.cms.pages:update as saved"]');
+    const form = page.locator('form[cms-mutation="ulvia.cms.content:pages.update as saved"]');
     const revision = form.locator('input[name="expectedRevision"]');
     const initialRevision = await revision.inputValue();
-    const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/get"));
+    const reload = page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/pages.get"));
     const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.pages/update")),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/pages.update")),
         form.locator('button[type="submit"]').click(),
     ]);
     if (response.ok()) {

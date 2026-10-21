@@ -21,7 +21,7 @@
                 <section
                     id="page-detail"
                     slot="content"
-                    cms-query="ulvia.cms.pages:get as selected"
+                    cms-query="ulvia.cms.content:pages.get as selected"
                     cms-query-input='{"id":{"from":"state","key":"@param:ulvia-official-page-id"}}'
                     cms-query-listen="@param:ulvia-official-page-id @page:ulvia-official-page-detail-mutation/lastSuccess/requestId"
                 >
@@ -53,7 +53,7 @@
                             >
                                 <form
                                     slot="content"
-                                    cms-mutation="ulvia.cms.pages:update as saved"
+                                    cms-mutation="ulvia.cms.content:pages.update as saved"
                                     cms-sync="@page:ulvia-official-page-detail-mutation"
                                     cms-sync-select="lastSuccess.requestId"
                                     cms-mutation-reset="false"
@@ -144,7 +144,7 @@
                                     <form
                                         slot="items"
                                         cms-repeat="selected.data.routes as route"
-                                        cms-mutation="ulvia.cms.pages:update-route as mutation"
+                                        cms-mutation="ulvia.cms.content:pages.update-route as mutation"
                                         cms-sync="@page:ulvia-official-page-detail-mutation"
                                         cms-sync-select="lastSuccess.requestId"
                                         cms-mutation-reset="false"
@@ -198,7 +198,7 @@
                                     <form
                                         slot="items"
                                         cms-repeat="selected.data.seoEntries as entry"
-                                        cms-mutation="ulvia.cms.pages:update-seo as mutation"
+                                        cms-mutation="ulvia.cms.content:pages.update-seo as mutation"
                                         cms-sync="@page:ulvia-official-page-detail-mutation"
                                         cms-sync-select="lastSuccess.requestId"
                                         cms-mutation-reset="false"
@@ -277,7 +277,7 @@
                                     <form
                                         slot="items"
                                         cms-condition="selected.data.visible === false"
-                                        cms-mutation="ulvia.cms.pages:publish as publication"
+                                        cms-mutation="ulvia.cms.content:pages.publish as publication"
                                         cms-sync="@page:ulvia-official-page-detail-mutation"
                                         cms-sync-select="lastSuccess.requestId"
                                     >
@@ -302,7 +302,7 @@
                                     <form
                                         slot="items"
                                         cms-condition="selected.data.visible"
-                                        cms-mutation="ulvia.cms.pages:publish as publication"
+                                        cms-mutation="ulvia.cms.content:pages.publish as publication"
                                         cms-sync="@page:ulvia-official-page-detail-mutation"
                                         cms-sync-select="lastSuccess.requestId"
                                     >
@@ -329,7 +329,7 @@
                             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="page-danger" role="tabpanel">
                                 <h2 cms-bloc="ulvia-official-heading" slot="content">{{ cms.i18n.ulvia-official.ui-danger-zone }}</h2>
                                 <p slot="content">{{ cms.i18n.ulvia-official.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit }}</p>
-                                <form slot="content" cms-mutation="ulvia.cms.pages:delete as deletion" cms-mutation-redirect="/admin/pages">
+                                <form slot="content" cms-mutation="ulvia.cms.content:pages.delete as deletion" cms-mutation-redirect="/admin/pages">
                                     <input type="hidden" name="id" value="{{ selected.data.id }}">
                                     <input type="hidden" name="expectedRevision" value="{{ selected.data.revision }}" cms-form-value-type="number">
                                     <button cms-bloc="ulvia-official-action" tone="danger" variant="outline" type="submit">

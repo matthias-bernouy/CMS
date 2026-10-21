@@ -15,7 +15,7 @@ describe("Form mutation — submit request", () => {
         }) as typeof fetch;
         const host = el(`
             <div>
-                <form cms-mutation="ulvia.cms.pages:create as created">
+                <form cms-mutation="ulvia.cms.content:pages.create as created">
                     <input name="title" value="Welcome">
                     <p class="result" cms-condition="created.outcome.kind === 'success'">{{ created.data.id }}</p>
                 </form>
@@ -28,7 +28,7 @@ describe("Form mutation — submit request", () => {
         const result = await mutationFormRequest(host, "created");
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/.cms/call/ulvia.cms.pages/create");
+        expect(captured.url).toBe("http://localhost/.cms/call/ulvia.cms.content/pages.create");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.headers).toEqual(expect.any(Headers));
         expect(JSON.parse(String(captured.init?.body))).toEqual({ title: "Welcome" });

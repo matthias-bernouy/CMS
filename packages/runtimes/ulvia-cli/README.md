@@ -152,11 +152,9 @@ resources manually, release the CMS contracts before the manifest:
 ```bash
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.access
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.collections
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.content
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.files
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.localization
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.jobs
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.theme
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.pages
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.providers
 bun run ulvia -- release packages/official-repository/contracts/ulvia.provider.cms-instances
 bun run ulvia -- release packages/official-repository/providers/ulvia.official

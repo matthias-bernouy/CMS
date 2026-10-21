@@ -1,0 +1,14 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.content",
+    "name": "CMS Content",
+    "description": "Manage site settings, pages, localization and themes for one provider-selected CMS instance.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "pages",
+        "categories": ["administration", "content"]
+    }
+}

@@ -1,0 +1,5 @@
+{
+    "capabilityId": "pages.rename",
+    "errorCode": "INVALID_TITLE",
+    "reason": "Core title normalization is stricter than the provider-neutral string schema."
+}

@@ -18,8 +18,9 @@ import type {
 import type { ContractSelection, ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import type { FileReference, NamespaceRecord } from "@bernouy/cms-files";
 
-export interface CmsPageDependencies {
+export interface CmsContentDependencies {
     readonly repo: CmsRepository;
+    readonly collections: CollectionStore;
 }
 
 export interface CmsCollectionDependencies {
@@ -27,18 +28,7 @@ export interface CmsCollectionDependencies {
     readonly collectionMigrations: CollectionMigrationService;
 }
 
-export interface CmsThemeDependencies {
-    readonly repo: CmsRepository;
-    readonly collections: CollectionStore;
-}
-
-export interface CmsLocalizationDependencies {
-    readonly repo: CmsRepository;
-    readonly collections: CollectionStore;
-}
-
 export interface CmsAccessDependencies {
-    readonly repo: CmsRepository;
     readonly users: UsersRepository;
     readonly credentials: LocalCredentialStore;
     readonly pats: PatRepository;
@@ -56,11 +46,7 @@ export interface CmsAccessDependencies {
     >;
 }
 
-export type UlviaProviderDependencies = CmsPageDependencies &
-    CmsCollectionDependencies &
-    CmsThemeDependencies &
-    CmsLocalizationDependencies &
-    CmsAccessDependencies;
+export type UlviaProviderDependencies = CmsContentDependencies & CmsCollectionDependencies & CmsAccessDependencies;
 
 type UlviaProviderAdministratorState = Readonly<{
     sub: string;

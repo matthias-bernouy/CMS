@@ -80,7 +80,7 @@ describe("Ulvia CLI", () => {
             await writeOfficialBootstrapArtifacts(bundle);
             await bootstrapOfficialRepository(root, bundle);
             const artifacts = new LocalArtifactFiles(root);
-            expect((await artifacts.list("contracts")).map(({ id }) => id)).toContain("ulvia.cms.pages");
+            expect((await artifacts.list("contracts")).map(({ id }) => id)).toContain("ulvia.cms.content");
             expect((await artifacts.list("providers")).map(({ id }) => id)).toEqual(["ulvia.official"]);
             expect(
                 (await new LocalCollectionRepository(root).list()).map(({ release }) => release.collectionId),

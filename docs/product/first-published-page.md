@@ -48,7 +48,7 @@ namespace key, select a provider or install a required official dependency.
 | --- | --- | --- |
 | Fresh local startup and credential discovery | `ulvia dev` and `ulvia dev credentials` | Implemented |
 | Administrator sign-in | Kernel browser smoke | Implemented |
-| Page creation | `ulvia.cms.pages/create` through an administration Page | Implemented |
+| Page creation | `ulvia.cms.content/pages.create` through an administration Page | Implemented |
 | Blank Page creation | New Pages start with an empty document and no implicit Bloc | Implemented |
 | Landing/Content starter selection | No authored starter catalogue is exposed yet | Missing |
 | Visual Bloc insertion and editing | Page editor catalogue, outline, settings, move/duplicate/remove controls and browser smoke | Implemented for top-level Blocs |

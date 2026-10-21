@@ -54,7 +54,7 @@ describe("collection migration maintenance HTTP guard", () => {
 
     test("fences other capabilities with a locked response", async () => {
         const response = await guard(
-            new Request("https://site.test/cms/.cms/call/ulvia.cms.pages/create", { method: "POST" }),
+            new Request("https://site.test/cms/.cms/call/ulvia.cms.content/pages.create", { method: "POST" }),
             next,
         );
         expect(response.status).toBe(423);

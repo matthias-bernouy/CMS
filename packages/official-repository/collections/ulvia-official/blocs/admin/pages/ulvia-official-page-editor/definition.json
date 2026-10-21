@@ -9,18 +9,18 @@
     "uses": ["ulvia-official-heading"],
     "requires": [
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "get",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.get",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "update",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.update",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "editor-catalogue",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.editor-catalogue",
             "versionRange": "^1.0.0"
         }
     ],

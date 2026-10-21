@@ -3,8 +3,8 @@
     "protocol": "ulvia-provider/v1",
     "schemaDialect": "ulvia-schema/v1",
     "contractId": "ulvia.cms.access",
-    "name": "CMS Access And Settings",
-    "description": "Authenticate actors and manage CMS membership, administrator grants and non-secret site settings.",
+    "name": "CMS Access",
+    "description": "Authenticate actors and manage CMS membership and administrator grants.",
     "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": {

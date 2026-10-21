@@ -1,11 +1,7 @@
 import { expect, test } from "bun:test";
 import { defaultSystem } from "@bernouy/cms-content";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import {
-    registerAccessCapabilities,
-    registerLocalizationCapabilities,
-    registerThemeCapabilities,
-} from "@bernouy/ulvia-provider/capabilities";
+import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -14,7 +10,7 @@ const context = {
     providerId: "ulvia.official",
 };
 
-test("access overview retries until settings and revision belong to one snapshot", async () => {
+test("content site reads retry until settings and revision belong to one snapshot", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const oldSystem = defaultSystem();
     oldSystem.site.name = "Old";
@@ -22,20 +18,15 @@ test("access overview retries until settings and revision belong to one snapshot
     currentSystem.site.name = "Current";
     const revisions = [1, 2, 2, 2];
     const systems = [oldSystem, currentSystem];
-    registerAccessCapabilities(
-        dispatcher,
-        {
-            repo: {
-                getSystemRevision: async () => revisions.shift() ?? 2,
-                getSystem: async () => structuredClone(systems.shift() ?? currentSystem),
-            },
-            users: { list: async () => ({ users: [], total: 0, page: 1, limit: 50, hasMore: false }) },
+    registerContentCapabilities(dispatcher, {
+        repo: {
+            getSystemRevision: async () => revisions.shift() ?? 2,
+            getSystem: async () => structuredClone(systems.shift() ?? currentSystem),
         } as never,
-        { administrators: { list: async () => [] } } as never,
-    );
+    } as never);
 
-    const output = await dispatcher.invoke("ulvia.cms.access", "overview", {}, context);
-    expect(output.site).toMatchObject({ name: "Current", revision: 2 });
+    const output = await dispatcher.invoke("ulvia.cms.content", "site.get", {}, context);
+    expect(output).toMatchObject({ name: "Current", revision: 2 });
 });
 
 test("settings commands return the revision committed by their own compare-and-swap", async () => {
@@ -60,31 +51,30 @@ test("settings commands return the revision committed by their own compare-and-s
         },
     };
     const core = { repo } as never;
-    registerAccessCapabilities(dispatcher, core, undefined);
-    registerLocalizationCapabilities(dispatcher, core);
+    registerContentCapabilities(dispatcher, core);
 
     const site = await dispatcher.invoke(
-        "ulvia.cms.access",
-        "update-site",
+        "ulvia.cms.content",
+        "site.update",
         { expectedRevision: 4, name: "Renamed" },
         context,
     );
     expect(site).toMatchObject({ revision: 5, name: "Renamed" });
 
     const languages = await dispatcher.invoke(
-        "ulvia.cms.localization",
-        "update-languages",
+        "ulvia.cms.content",
+        "localization.update",
         { expectedRevision: 5, language: "fr", additionalLanguages: ["en"], activeLanguages: ["fr", "en"] },
         context,
     );
     expect(languages).toMatchObject({ revision: 6, language: "fr", activeLanguages: ["fr", "en"] });
 });
 
-test("localization overview uses the collection locale before a fresh site selects its language", async () => {
+test("localization settings use the collection locale before a fresh site selects its language", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const system = defaultSystem();
     system.site.language = "";
-    registerLocalizationCapabilities(dispatcher, {
+    registerContentCapabilities(dispatcher, {
         repo: {
             getSystemRevision: async () => 1,
             getSystem: async () => structuredClone(system),
@@ -118,7 +108,7 @@ test("localization overview uses the collection locale before a fresh site selec
         },
     } as never);
 
-    const output = await dispatcher.invoke("ulvia.cms.localization", "overview", {}, context);
+    const output = await dispatcher.invoke("ulvia.cms.content", "localization.get", {}, context);
     expect(output.language).toBe("en");
 });
 
@@ -152,7 +142,7 @@ test("localization reads and saves canonical text-first multilingual overrides",
             },
         },
     });
-    registerLocalizationCapabilities(dispatcher, {
+    registerContentCapabilities(dispatcher, {
         repo: {
             getSystemRevision: async () => 2,
             getSystem: async () => {
@@ -174,8 +164,8 @@ test("localization reads and saves canonical text-first multilingual overrides",
     } as never);
 
     const initial = await dispatcher.invoke(
-        "ulvia.cms.localization",
-        "get-texts",
+        "ulvia.cms.content",
+        "localization.texts.get",
         { collectionId: "example", locale: "fr" },
         context,
     );
@@ -187,8 +177,8 @@ test("localization reads and saves canonical text-first multilingual overrides",
     });
 
     const saved = await dispatcher.invoke(
-        "ulvia.cms.localization",
-        "save-text",
+        "ulvia.cms.content",
+        "localization.text.save",
         {
             collectionId: "example",
             expectedRevision: 4,
@@ -208,8 +198,8 @@ test("localization reads and saves canonical text-first multilingual overrides",
     expect(textOverrides).toEqual({ greeting: { en: "Hello site", fr: "Salut" } });
 
     await dispatcher.invoke(
-        "ulvia.cms.localization",
-        "save-text",
+        "ulvia.cms.content",
+        "localization.text.save",
         { collectionId: "example", expectedRevision: 5, locale: "fr", textId: "greeting", value: "" },
         context,
     );
@@ -220,7 +210,7 @@ test("theme reads compose the authoritative token catalogues from installed coll
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const system = defaultSystem();
     system.site.language = "fr";
-    registerThemeCapabilities(dispatcher, {
+    registerContentCapabilities(dispatcher, {
         repo: {
             getSystemRevision: async () => 3,
             getSystem: async () => structuredClone(system),
@@ -275,7 +265,7 @@ test("theme reads compose the authoritative token catalogues from installed coll
         },
     } as never);
 
-    const output = await dispatcher.invoke("ulvia.cms.theme", "get", { collectionId: "example" }, context);
+    const output = await dispatcher.invoke("ulvia.cms.content", "theme.get", { collectionId: "example" }, context);
     expect(output).toMatchObject({
         revision: 3,
         collectionId: "example",
@@ -293,8 +283,8 @@ test("theme reads compose the authoritative token catalogues from installed coll
     });
 
     const saved = await dispatcher.invoke(
-        "ulvia.cms.theme",
-        "save-token",
+        "ulvia.cms.content",
+        "theme.token.save",
         {
             expectedRevision: 3,
             themeId: "default",

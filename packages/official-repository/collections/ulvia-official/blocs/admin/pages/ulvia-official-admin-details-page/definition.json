@@ -25,33 +25,33 @@
     ],
     "requires": [
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "get",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.get",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "update",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.update",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "update-route",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.update-route",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "update-seo",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.update-seo",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "publish",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.publish",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "delete",
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.delete",
             "versionRange": "^1.0.0"
         }
     ],

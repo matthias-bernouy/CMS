@@ -4,7 +4,6 @@ import {
     ProviderCapabilityResponse,
     type ProviderCapabilityInvocationContext,
 } from "@bernouy/ulvia-provider";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { registerAccessCapabilities } from "@bernouy/ulvia-provider/capabilities";
 import { InMemoryUsersRepository } from "@bernouy/cms-auth";
 
@@ -37,7 +36,6 @@ test("access capabilities protect the caller and cleanly remove another member",
         },
     };
     const core = {
-        repo: new InMemoryCmsRepository(),
         users,
         credentials: {},
         pats: { list: async () => [], revoke: async () => false },
@@ -49,7 +47,7 @@ test("access capabilities protect the caller and cleanly remove another member",
     };
     registerAccessCapabilities(dispatcher, core as never, gateway as never);
 
-    expect(await dispatcher.invoke("ulvia.cms.access", "overview", {}, context)).toMatchObject({
+    expect(await dispatcher.invoke("ulvia.cms.access", "list-users", {}, context)).toMatchObject({
         users: [
             { sub: "local:admin", administrator: true, administratorRevision: 1 },
             { sub: "external:member", administrator: false, administratorRevision: 0 },

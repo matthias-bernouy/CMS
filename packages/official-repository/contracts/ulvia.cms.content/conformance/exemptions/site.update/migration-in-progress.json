@@ -1,0 +1,5 @@
+{
+    "capabilityId": "site.update",
+    "errorCode": "MIGRATION_IN_PROGRESS",
+    "reason": "Portable conformance does not prescribe how a disposable runner holds an active collection migration fence during a site settings update."
+}

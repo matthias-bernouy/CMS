@@ -4,7 +4,7 @@
     <section
         id="pages-list"
         slot="content"
-        cms-query="ulvia.cms.pages:list as pages"
+        cms-query="ulvia.cms.content:pages.list as pages"
         cms-query-input='{"limit":{"from":"literal","value":100}}'
         cms-query-listen="@page:ulvia-official-pages-mutation/lastSuccess/requestId"
         aria-labelledby="page-catalogue-title"
@@ -95,7 +95,7 @@
                 <p slot="items">{{ cms.i18n.ulvia-official.ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it }}</p>
                 <form
                     slot="items"
-                    cms-mutation="ulvia.cms.pages:create as created"
+                    cms-mutation="ulvia.cms.content:pages.create as created"
                     cms-sync="@page:ulvia-official-pages-mutation"
                     cms-sync-select="lastSuccess.requestId"
                     cms-mutation-redirect="/admin/pages?ulvia-official-page-id={{ created.data.id | urlencode }}"

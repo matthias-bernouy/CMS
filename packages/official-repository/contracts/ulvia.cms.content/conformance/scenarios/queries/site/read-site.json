@@ -1,0 +1,27 @@
+{
+    "id": "read-site",
+    "description": "Verify the non-secret site settings exposed by a fresh CMS tenant.",
+    "calls": [
+        {
+            "id": "site",
+            "capabilityId": "site.get",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/revision",
+                        "present": true
+                    },
+                    {
+                        "path": "/name",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,4 @@
+{
+    "capabilityId": "pages.update",
+    "reason": "Mutation requires a suite-owned Page fixture and revision."
+}

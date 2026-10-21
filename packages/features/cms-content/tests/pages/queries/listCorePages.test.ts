@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryCmsRepository, listCmsPages, PageRevisionConflictError, renameCmsPage } from "@bernouy/cms-content";
 
-describe("ulvia.cms.pages/list implementation", () => {
+describe("ulvia.cms.content/pages.list implementation", () => {
     test("projects bounded, cursor-based Page metadata", async () => {
         const repository = new InMemoryCmsRepository();
         await repository.insertPage("/public", "Public");
@@ -23,7 +23,7 @@ describe("ulvia.cms.pages/list implementation", () => {
     });
 });
 
-describe("ulvia.cms.pages/rename implementation", () => {
+describe("ulvia.cms.content/pages.rename implementation", () => {
     test("renames with optimistic concurrency and makes an exact retry naturally idempotent", async () => {
         const repository = new InMemoryCmsRepository();
         await repository.insertPage("/public", "Before");

@@ -3,16 +3,16 @@
         id="settings-general"
         role="tabpanel"
         slot="items"
-        cms-query="ulvia.cms.access:overview as settingsAccess"
+        cms-query="ulvia.cms.content:site.get as settingsSite"
         cms-query-listen="@page:ulvia-official-settings-mutation/lastSuccess/requestId"
         cms-query-input='{"limit":{"from":"literal","value":1}}'
     >
-        <p role="status" aria-live="polite" cms-condition="settingsAccess.activity === 'fetching'">
+        <p role="status" aria-live="polite" cms-condition="settingsSite.activity === 'fetching'">
             {{ cms.i18n.ulvia-official.ui-working }}
         </p>
-        <div cms-match="settingsAccess.outcome.kind">
+        <div cms-match="settingsSite.outcome.kind">
             <span cms-case='"none"' hidden></span>
-            <div cms-case='"error"' cms-match="settingsAccess.outcome.code">
+            <div cms-case='"error"' cms-match="settingsSite.outcome.code">
                 <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
                     {{ cms.i18n.ulvia-official.ui-request-failed }}
                 </p>
@@ -20,12 +20,12 @@
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" cms-case='"success"'>
                 <form
                     slot="content"
-                    cms-mutation="ulvia.cms.access:update-site as savedSite"
+                    cms-mutation="ulvia.cms.content:site.update as savedSite"
                     cms-sync="@page:ulvia-official-settings-mutation"
                     cms-sync-select="lastSuccess.requestId"
                     cms-mutation-reset="false"
                 >
-                    <input type="hidden" name="expectedRevision" value="{{ settingsAccess.data.site.revision }}" cms-form-value-type="number">
+                    <input type="hidden" name="expectedRevision" value="{{ settingsSite.data.revision }}" cms-form-value-type="number">
                     <div cms-bloc="ulvia-official-stack" gap="lg">
                         <header slot="items">
                             <p>{{ cms.i18n.ulvia-official.ui-site }}</p>
@@ -41,7 +41,7 @@
                                     id="settings-site-name"
                                     type="text"
                                     name="name"
-                                    value="{{ settingsAccess.data.site.name }}"
+                                    value="{{ settingsSite.data.name }}"
                                     maxlength="160"
                                     autocomplete="organization"
                                     required
@@ -58,7 +58,7 @@
                                     id="settings-public-host"
                                     type="text"
                                     name="host"
-                                    value="{{ settingsAccess.data.site.host }}"
+                                    value="{{ settingsSite.data.host }}"
                                     placeholder="{{ cms.i18n.ulvia-official.ui-public-host-placeholder }}"
                                     maxlength="2048"
                                     inputmode="url"
@@ -72,10 +72,10 @@
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-site-availability-help }}</span>
                             <div cms-bloc="ulvia-official-select" slot="control">
                                 <select id="settings-site-visibility" name="visible" cms-form-value-type="boolean">
-                                    <option value="true" selected="{{ settingsAccess.data.site.visible }}">
+                                    <option value="true" selected="{{ settingsSite.data.visible }}">
                                         {{ cms.i18n.ulvia-official.ui-public }}
                                     </option>
-                                    <option value="false" selected="{{ settingsAccess.data.site.visible === false }}">
+                                    <option value="false" selected="{{ settingsSite.data.visible === false }}">
                                         {{ cms.i18n.ulvia-official.ui-private }}
                                     </option>
                                 </select>
@@ -103,6 +103,7 @@
                         <div cms-case='"error"' cms-match="savedSite.outcome.code">
                             <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                             <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"MIGRATION_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                             <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                         </div>
                         <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
@@ -119,7 +120,7 @@
         id="settings-languages"
         role="tabpanel"
         slot="items"
-        cms-query="ulvia.cms.localization:overview as settingsLocalization"
+        cms-query="ulvia.cms.content:localization.get as settingsLocalization"
         cms-query-listen="@page:ulvia-official-settings-mutation/lastSuccess/requestId"
     >
         <p role="status" aria-live="polite" cms-condition="settingsLocalization.activity === 'fetching'">
@@ -135,7 +136,7 @@
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" cms-case='"success"'>
                 <form
                     slot="content"
-                    cms-mutation="ulvia.cms.localization:update-languages as savedLanguages"
+                    cms-mutation="ulvia.cms.content:localization.update as savedLanguages"
                     cms-sync="@page:ulvia-official-settings-mutation"
                     cms-sync-select="lastSuccess.requestId"
                     cms-mutation-reset="false"

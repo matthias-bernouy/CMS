@@ -19,9 +19,9 @@ variant.
 
 The underlying repository supports revision-checked path matrices and localized
 SEO. The former `/api/page/seo` route and its static panel have been removed.
-The current `ulvia.cms.pages@1.0.0` administration flow creates a Page, manages its
-title, description, content, tags, publication, per-language routes and
-localized SEO, and exposes the admitted Bloc catalogue used by the Page editor.
+The current `pages.*` capabilities in `ulvia.cms.content@1.0.0` create a Page,
+manage its title, description, content, tags, publication, per-language routes
+and localized SEO, and expose the admitted Bloc catalogue used by the Page editor.
 All of those flows use versioned capabilities rather than private `/api/*`
 transports.
 

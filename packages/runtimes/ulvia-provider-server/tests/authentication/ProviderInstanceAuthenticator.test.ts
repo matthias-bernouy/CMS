@@ -31,9 +31,9 @@ describe("ProviderInstanceAuthenticator", () => {
             version: 1,
             requestId: "00000000-0000-4000-8000-000000000001",
             instanceId: INSTANCE_ID,
-            contractId: "ulvia.cms.pages",
+            contractId: "ulvia.cms.content",
             contractVersion: "1.0.0",
-            capabilityId: "list",
+            capabilityId: "pages.list",
             issuedAt,
             expiresAt: issuedAt + 30,
         });

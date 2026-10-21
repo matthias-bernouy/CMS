@@ -1,0 +1,4 @@
+{
+    "capabilityId": "pages.create",
+    "reason": "The official smoke suite remains read-only across provider implementations."
+}

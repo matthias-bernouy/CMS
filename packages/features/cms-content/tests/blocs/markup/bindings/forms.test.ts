@@ -27,7 +27,7 @@ function repository() {
 describe("declarative form contracts", () => {
     test("accepts the compact mutation grammar without transport attributes", () => {
         expect(
-            nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutation, "ulvia.cms.pages:update as saved"),
+            nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.mutation, "ulvia.cms.content:pages.update as saved"),
         ).toBeNull();
         expect(
             nativeBindingAttributeIssue(

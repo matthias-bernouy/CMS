@@ -14,7 +14,7 @@ import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { CmsFilesService } from "@bernouy/cms-files";
 import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
 
-test("all eight administration domains dispatch outputs matching their official contracts", async () => {
+test("all administration capability areas dispatch outputs matching their official contracts", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const now = new Date("2026-10-06T12:00:00.000Z");
     const system = defaultSystem();
@@ -56,7 +56,7 @@ test("all eight administration domains dispatch outputs matching their official 
                         report: {
                             implementations: [
                                 {
-                                    contractId: "ulvia.cms.pages",
+                                    contractId: "ulvia.cms.content",
                                     version: "1.0.0",
                                     digest: `sha256:${"a".repeat(64)}`,
                                     status: "ready",
@@ -73,7 +73,7 @@ test("all eight administration domains dispatch outputs matching their official 
                 plan: {
                     selections: [
                         {
-                            contractId: "ulvia.cms.pages",
+                            contractId: "ulvia.cms.content",
                             version: "1.0.0",
                             digest: `sha256:${"a".repeat(64)}`,
                             installationId: "official",
@@ -109,10 +109,10 @@ test("all eight administration domains dispatch outputs matching their official 
         ["ulvia.cms.collections", "migration-status", {}],
         ["ulvia.cms.files", "namespace.create", { name: "Smoke files", defaultVisibility: "private" }],
         ["ulvia.cms.jobs", "list", {}],
-        ["ulvia.cms.localization", "overview", {}],
-        ["ulvia.cms.theme", "get", {}],
+        ["ulvia.cms.content", "localization.get", {}],
+        ["ulvia.cms.content", "theme.get", {}],
         ["ulvia.cms.providers", "list", {}],
-        ["ulvia.cms.access", "overview", {}],
+        ["ulvia.cms.access", "list-users", {}],
     ] as const;
     for (const [contractId, capabilityId, input] of calls) {
         const release = await load(contractId);

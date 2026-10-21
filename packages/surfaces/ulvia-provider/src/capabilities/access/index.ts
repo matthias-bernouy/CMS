@@ -1,4 +1,3 @@
-import { readSystemSnapshot } from "@bernouy/cms-content";
 import { deleteUserCompletely } from "@bernouy/cms-auth/management";
 import {
     capabilityResponse,
@@ -6,12 +5,10 @@ import {
     type ProviderCapabilityRegistry,
 } from "../../dispatch/registry";
 import type { CmsAccessDependencies, UlviaProviderGateway } from "../../ports";
-import { registerAccessConfigurationCapabilities } from "./configuration";
 import {
     accessCommand,
     actorSubject,
     administratorState,
-    projectSite,
     projectUser,
     requiredGateway,
     requiredText,
@@ -96,19 +93,6 @@ export function registerAccessCapabilities(
             return { confirmed: true };
         }),
     );
-    dispatcher.register("ulvia.cms.access", "overview", async (input) => {
-        const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 50;
-        const [site, page] = await Promise.all([
-            readSystemSnapshot(dependencies.repo),
-            dependencies.users.list({ pagination: { page: 1, limit } }),
-        ]);
-        const administrators = await Promise.all(page.users.map((user) => administratorState(gateway, user.sub)));
-        return {
-            site: projectSite(site.system, site.revision),
-            users: page.users.map((user, index) => projectUser(user, administrators[index]!)),
-            totalUsers: page.total,
-        };
-    });
     dispatcher.register("ulvia.cms.access", "list-users", async (input) => {
         const page = await dependencies.users.list({
             ...(typeof input.search === "string" ? { search: input.search } : {}),
@@ -179,7 +163,6 @@ export function registerAccessCapabilities(
             return { sub, deleted: true };
         }),
     );
-    registerAccessConfigurationCapabilities(dispatcher, dependencies);
 }
 
 async function accountAction<T>(action: () => Promise<T>): Promise<T> {

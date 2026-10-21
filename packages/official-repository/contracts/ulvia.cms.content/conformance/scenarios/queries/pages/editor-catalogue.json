@@ -1,0 +1,22 @@
+{
+    "id": "editor-catalogue",
+    "calls": [
+        {
+            "id": "page-blocs",
+            "capabilityId": "pages.editor-catalogue",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/items",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

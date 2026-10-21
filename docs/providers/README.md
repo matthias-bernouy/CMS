@@ -153,8 +153,10 @@ do not give collection JavaScript direct access to credentials.
 
 `/admin/collections` exposes repository discovery, installation, configuration
 and migration through `ulvia.cms.collections`; collection theme editing uses
-`ulvia.cms.theme` and language/text editing uses `ulvia.cms.localization`.
-`/admin/settings` and `/admin/access` cover site and administrator settings.
+the `theme.*` capabilities of `ulvia.cms.content`, and language/text editing
+uses its `localization.*` capabilities. `/admin/settings` uses the same content
+contract for non-secret site configuration; `/admin/access` only covers members,
+authentication and administrator grants.
 Provider health remains the last validated runtime
 observation shown by these Pages, not an implicit live probe of every
 capability. Every collection request uses the common

@@ -31,7 +31,7 @@
         {
             "contractId": "ulvia.cms.access",
             "version": "1.0.0",
-            "digest": "sha256:61fee8562e4b72a8a7cdd216cc541d47263f4919b7b3a92bc92797e99f8029eb",
+            "digest": "sha256:4e08148852f667c662ee768388017a4d05c750384ab5c12c1b78a95e95e64b46",
             "requires": []
         },
         {
@@ -41,9 +41,9 @@
             "requires": []
         },
         {
-            "contractId": "ulvia.cms.localization",
+            "contractId": "ulvia.cms.content",
             "version": "1.0.0",
-            "digest": "sha256:e588415389e6a61418de058d230e7aea0ef1153329686049cff4cc3c68897347",
+            "digest": "sha256:4264c62b463f9a9a0866843f9e875544a43c8f463cdd9bd6c4a23a8400438fba",
             "requires": []
         },
         {
@@ -59,21 +59,9 @@
             "requires": []
         },
         {
-            "contractId": "ulvia.cms.pages",
-            "version": "1.0.0",
-            "digest": "sha256:5861aa84cd305cc2a634b28f0649b3b20793e5ce7d4777efe4fdaa91ca1c1248",
-            "requires": []
-        },
-        {
             "contractId": "ulvia.cms.providers",
             "version": "1.0.0",
             "digest": "sha256:5135038a1d09fd82c682571f20e6d1f02feff26ba998797fcc4a76a6bd8250b2",
-            "requires": []
-        },
-        {
-            "contractId": "ulvia.cms.theme",
-            "version": "1.0.0",
-            "digest": "sha256:84ab33385113a421c545d4d74416e0e22751a42183d51caa759d62a935ba6d0b",
             "requires": []
         }
     ]

@@ -1,30 +1,7 @@
 {
     "id": "read-core-state",
-    "description": "Verify the portable, non-destructive administration projections exposed by a fresh CMS tenant.",
+    "description": "Verify the portable membership projection exposed by a fresh CMS tenant.",
     "calls": [
-        {
-            "id": "overview",
-            "capabilityId": "overview",
-            "actor": {
-                "kind": "admin"
-            },
-            "input": {
-                "limit": 25
-            },
-            "expect": {
-                "kind": "success",
-                "checks": [
-                    {
-                        "path": "/site",
-                        "present": true
-                    },
-                    {
-                        "path": "/users",
-                        "present": true
-                    }
-                ]
-            }
-        },
         {
             "id": "list-users",
             "capabilityId": "list-users",

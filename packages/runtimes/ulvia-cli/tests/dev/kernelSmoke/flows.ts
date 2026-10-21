@@ -149,16 +149,16 @@ async function mutateCollections(page: Page): Promise<void> {
     const themeValue = page.locator("#collection-theme-token-value");
     await themeValue.waitFor();
     await themeValue.fill(await themeValue.inputValue());
-    await page.locator('form[cms-mutation^="ulvia.cms.theme:save-token "] button[type="submit"]').click();
+    await page.locator('form[cms-mutation^="ulvia.cms.content:theme.token.save "] button[type="submit"]').click();
     await page
         .locator(
-            'form[cms-mutation^="ulvia.cms.theme:save-token "] p[cms-condition*="savedThemeToken.outcome.kind === \'success\'"]',
+            'form[cms-mutation^="ulvia.cms.content:theme.token.save "] p[cms-condition*="savedThemeToken.outcome.kind === \'success\'"]',
         )
         .waitFor();
-    const resetTheme = page.locator('form[cms-mutation^="ulvia.cms.theme:reset-token "]');
+    const resetTheme = page.locator('form[cms-mutation^="ulvia.cms.content:theme.token.reset "]');
     await resetTheme.waitFor();
     const [resetResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.theme/reset-token")),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/theme.token.reset")),
         resetTheme.locator('button[type="submit"]').click(),
     ]);
     if (!resetResponse.ok()) {
@@ -166,12 +166,12 @@ async function mutateCollections(page: Page): Promise<void> {
     }
     await page.locator('a[href="#collection-texts"]').click();
     await page.waitForURL(/#collection-texts$/u);
-    const textForm = page.locator('form[cms-mutation^="ulvia.cms.localization:save-text "]').first();
+    const textForm = page.locator('form[cms-mutation^="ulvia.cms.content:localization.text.save "]').first();
     await textForm.waitFor();
     const textValue = textForm.locator('textarea[name="value"]');
     await textValue.fill(await textValue.inputValue());
     const [textResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.localization/save-text")),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/localization.text.save")),
         textForm.locator('button[type="submit"]').click(),
     ]);
     if (!textResponse.ok()) {

@@ -18,7 +18,7 @@ export interface CmsPagesListOutput {
     readonly nextCursor?: string;
 }
 
-/** Provider-neutral implementation of `ulvia.cms.pages/list`. */
+/** Provider-neutral implementation of `ulvia.cms.content/pages.list`. */
 export async function listCmsPages(
     repository: Pick<CmsRepository, "scanPages">,
     input: CmsPagesListInput,

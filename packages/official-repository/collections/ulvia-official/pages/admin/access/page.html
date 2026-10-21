@@ -5,7 +5,7 @@
         cms-bloc="ulvia-official-section"
         id="access-overview"
         slot="content"
-        cms-query="ulvia.cms.access:overview as access"
+        cms-query="ulvia.cms.access:list-users as access"
         cms-query-input='{"limit":{"from":"literal","value":100}}'
         cms-query-listen="@page:ulvia-official-access-mutation/lastSuccess/requestId"
     >
@@ -25,7 +25,7 @@
                     <div id="access-members" slot="items">
                         <header>
                             <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-members }}</h2>
-                            <p>{{ access.data.totalUsers }} {{ cms.i18n.ulvia-official.ui-total-users }}</p>
+                            <p>{{ access.data.total }} {{ cms.i18n.ulvia-official.ui-total-users }}</p>
                         </header>
                         <div cms-bloc="ulvia-official-list" role="list">
                             <div cms-bloc="ulvia-official-list-item" role="listitem" cms-repeat="access.data.users as user" slot="items">
@@ -40,7 +40,7 @@
                                     <span slot="items">{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }}</span>
                                     <small slot="items"
                                         >{{ cms.i18n.ulvia-official.ui-last-seen }}
-                                        {{ user.lastSeenAt | dateLong(access.data.site.language) }}</small
+                                        {{ user.lastSeenAt | dateLong }}</small
                                     >
                                 </div>
                                 <div cms-bloc="ulvia-official-cluster" justify="end" items-align="center" slot="actions">
