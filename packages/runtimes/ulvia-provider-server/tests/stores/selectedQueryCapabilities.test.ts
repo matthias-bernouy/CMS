@@ -4,6 +4,7 @@ import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/s
 import { ContentValidationError } from "@bernouy/cms-content";
 import {
     selectedCapabilityResolver,
+    selectedPublicSvgCapabilityValidator,
     selectedQueryCapabilityResolver,
 } from "../../src/runtime/stores/selectedQueryCapabilities";
 
@@ -67,7 +68,78 @@ describe("selected query capability resolution", () => {
             resolve([{ contractId: "forms", capabilityId: "submission.create", effect: "command" }]),
         ).rejects.toBeInstanceOf(ContentValidationError);
     });
+
+    test("accepts only a selected public GET binding with a non-null SVG binary response", async () => {
+        const validate = selectedPublicSvgCapabilityValidator(
+            "default",
+            selections("sha256:" + "a".repeat(64)),
+            svgReleases("sha256:" + "a".repeat(64), "public", ["image/svg+xml"]),
+        );
+
+        await expect(validate([{ contractId: "catalog", bindingPath: "/icons/check" }])).resolves.toBeUndefined();
+    });
+
+    test("rejects authenticated and non-SVG binary bindings before authored content is stored", async () => {
+        const authenticated = selectedPublicSvgCapabilityValidator(
+            "default",
+            selections("sha256:" + "a".repeat(64)),
+            svgReleases("sha256:" + "a".repeat(64), "authenticated", ["image/svg+xml"]),
+        );
+        const wrongMedia = selectedPublicSvgCapabilityValidator(
+            "default",
+            selections("sha256:" + "a".repeat(64)),
+            svgReleases("sha256:" + "a".repeat(64), "public", ["image/png"]),
+        );
+
+        await expect(authenticated([{ contractId: "catalog", bindingPath: "/icons/check" }])).rejects.toThrow(
+            "not an available public",
+        );
+        await expect(wrongMedia([{ contractId: "catalog", bindingPath: "/icons/check" }])).rejects.toThrow(
+            "not an available public",
+        );
+    });
 });
+
+function svgReleases(
+    digest: string,
+    access: "admin" | "authenticated" | "public",
+    contentTypes: string[],
+): ReleaseCatalogue {
+    return {
+        get: async () =>
+            ({
+                admission: {
+                    digest,
+                    release: {
+                        contractId: "catalog",
+                        version: "1.0.0",
+                        capabilities: [
+                            {
+                                id: "icon",
+                                access,
+                                behavior: { effect: "query", execution: "sync" },
+                                input: {
+                                    type: "object",
+                                    properties: { name: { type: "string", maxLength: 64 } },
+                                    required: ["name"],
+                                },
+                                output: { type: "binary", maxBytes: 65_536 },
+                                errors: [],
+                                binding: {
+                                    transport: "http",
+                                    method: "GET",
+                                    path: "/icons/{name}",
+                                    input: { path: { name: "name" } },
+                                    response: { successStatuses: [200], errorStatuses: {}, contentTypes },
+                                },
+                            },
+                        ],
+                    },
+                },
+                publishedAt: "2026-01-01T00:00:00.000Z",
+            }) as never,
+    } as ReleaseCatalogue;
+}
 
 function selections(digest: string): ContractSelectionStore {
     return {

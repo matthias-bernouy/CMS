@@ -40,7 +40,7 @@ import {
     MongoProviderManifestCatalogue,
 } from "@bernouy/cms-repository/providers/mongo";
 import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
-import { selectedCapabilityResolver } from "./selectedQueryCapabilities";
+import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from "./selectedQueryCapabilities";
 import type { Logger } from "@bernouy/logging";
 
 const SCOPE_ID = "default";
@@ -99,6 +99,8 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         {
             resolveCapabilities: selectedCapabilityResolver(SCOPE_ID, selections, releases),
             requireQueryCapabilityResolution: true,
+            validateSvgCapabilities: selectedPublicSvgCapabilityValidator(SCOPE_ID, selections, releases),
+            requireSvgCapabilityResolution: true,
         },
     );
     await validatePageLinks(validatedRepo, pageRoutes, SCOPE_ID);
