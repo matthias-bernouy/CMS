@@ -90,7 +90,10 @@ export {
     verifyStoredCollectionRelease,
 } from "cms-repository/collections/core/admission/collectionArtifact";
 export { collectionAssetRepresentationVersion } from "cms-repository/collections/core/admission/assets";
-export { replaceCollectionAssetExpressions } from "cms-repository/collections/core/texts/expressions";
+export {
+    replaceCollectionAssetExpressions,
+    rewriteCollectionAssetReferences,
+} from "cms-repository/collections/core/texts/expressions";
 export {
     collectionPageRequirements,
     pageRequirements,

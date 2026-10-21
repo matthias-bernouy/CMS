@@ -22,12 +22,12 @@ test("renames collection text references and their site overrides together", () 
 
 test("renames qualified collection asset references without touching another owner", () => {
     const migrated = migratePageContent(
-        '<img src="{{ cms.asset.atlas.old.svg }}"><a href="{{ cms.asset.other.old.svg }}">Download</a>',
-        [{ kind: "rename-asset", from: "old.svg", to: "new.svg" }],
+        '<svg cms-svg="{{ cms.asset.atlas.icons/old.svg }}"></svg><a href="{{ cms.asset.other.icons/old.svg }}">Download</a>',
+        [{ kind: "rename-asset", from: "icons/old.svg", to: "icons/new.svg" }],
         "atlas",
     );
 
     expect(migrated.applied).toBe(1);
-    expect(migrated.content).toContain("{{ cms.asset.atlas.new.svg }}");
-    expect(migrated.content).toContain("{{ cms.asset.other.old.svg }}");
+    expect(migrated.content).toContain("{{ cms.asset.atlas.icons/new.svg }}");
+    expect(migrated.content).toContain("{{ cms.asset.other.icons/old.svg }}");
 });

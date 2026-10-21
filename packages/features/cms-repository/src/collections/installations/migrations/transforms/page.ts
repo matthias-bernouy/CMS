@@ -1,4 +1,8 @@
-import { collectionThemeTokenId, type CollectionMigrationOperation } from "@bernouy/cms-repository/collections";
+import {
+    collectionThemeTokenId,
+    rewriteCollectionAssetReferences,
+    type CollectionMigrationOperation,
+} from "@bernouy/cms-repository/collections";
 import { parseHTML } from "linkedom";
 import { replaceThemeTokenReference } from "./themeTokenReferences";
 
@@ -68,16 +72,13 @@ function renameAssetReferences(
     to: string,
 ): { content: string; applied: number } {
     let applied = 0;
-    const migrated = content.replace(
-        /\{\{\s*cms\.asset\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\s*\}\}/gu,
-        (expression, owner: string, assetId: string) => {
-            if (owner !== collectionId || assetId !== from) {
-                return expression;
-            }
-            applied += 1;
-            return `{{ cms.asset.${collectionId}.${to} }}`;
-        },
-    );
+    const migrated = rewriteCollectionAssetReferences(content, (owner, assetId) => {
+        if (owner !== collectionId || assetId !== from) {
+            return undefined;
+        }
+        applied += 1;
+        return { collectionId, assetId: to };
+    });
     return { content: migrated, applied };
 }
 
