@@ -1,5 +1,6 @@
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
-import type { ThemeSettings, ThemeSource, ThemeToken } from "cms-content/theme/interfaces/theme";
+import type { ThemeFontFace, ThemeSettings, ThemeSource, ThemeToken } from "cms-content/theme/interfaces/theme";
+import { parseCollectionAssetReference } from "cms-content/blocs/core/markup/security/collectionAssetExpression";
 
 const IDENTIFIER = /^[a-z][a-z0-9-]*$/;
 const TOKEN_TYPES = new Set(["color", "font-family", "length", "number", "shadow", "value"]);
@@ -16,10 +17,15 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
     const variables = new Set<string>();
     const sourceIds = new Set<string>();
     const integrationOwners = new Set<string>();
+    const fontFaceIds = new Set<string>();
     const tokenSources = new Map<string, ThemeSource>();
     const variableSources = new Map<string, { source: ThemeSource; token: ThemeToken }>();
     for (const source of settings.sources) {
         validateSource(source, sourceIds, integrationOwners);
+        for (const face of source.fontFaces ?? []) {
+            validateFontFace(source, face);
+            assertUnique(fontFaceIds, face.id, "font-face id");
+        }
     }
     for (const source of settings.sources) {
         for (const token of source.categories.flatMap((category) => category.tokens)) {
@@ -64,6 +70,40 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
         throw new ContentValidationError("theme", "active theme does not exist.");
     }
     return structuredClone(settings);
+}
+
+function validateFontFace(source: ThemeSource, face: ThemeFontFace): void {
+    assertIdentifier("font-face id", face.id);
+    assertIdentifier("font-face family", face.family);
+    if (source.owner?.kind !== "contribution") {
+        throw new ContentValidationError("theme", `font-face requires a contribution owner: ${face.id}`);
+    }
+    const prefix = `${source.owner.contributionId}-`;
+    if (!face.id.startsWith(prefix) || !face.family.startsWith(prefix)) {
+        throw new ContentValidationError(
+            "theme",
+            `font-face names are not derived from their contribution: ${face.id}`,
+        );
+    }
+    const asset = parseCollectionAssetReference(face.source);
+    if (!asset || asset.collectionId !== source.owner.contributionId) {
+        throw new ContentValidationError("theme", `font-face source must be an immutable collection asset: ${face.id}`);
+    }
+    if (!["normal", "italic", "oblique"].includes(face.style)) {
+        throw new ContentValidationError("theme", `invalid font-face style: ${face.id}`);
+    }
+    if (!["auto", "block", "swap", "fallback", "optional"].includes(face.display)) {
+        throw new ContentValidationError("theme", `invalid font-face display: ${face.id}`);
+    }
+    const weights = face.weight.split(" ").map(Number);
+    if (
+        weights.length < 1 ||
+        weights.length > 2 ||
+        weights.some((weight) => !Number.isSafeInteger(weight) || weight < 1 || weight > 1_000) ||
+        (weights.length === 2 && weights[0]! > weights[1]!)
+    ) {
+        throw new ContentValidationError("theme", `invalid font-face weight: ${face.id}`);
+    }
 }
 
 function assertOwnerIsolation(

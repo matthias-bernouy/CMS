@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { validateBloc, validateBlocTag } from "@bernouy/cms-repository/collections/build";
+import { compileBlocStyle, validateBloc, validateBlocTag } from "@bernouy/cms-repository/collections/build";
 
 describe("validateBlocTag", () => {
     test.each([["my-card"], ["a-b"], ["app-v2"], ["base-card"], ["super-cool-bloc"]])("accepts %p", (tag) => {
@@ -31,6 +31,15 @@ describe("validateBlocTag", () => {
 });
 
 describe("validateBloc — source patterns", () => {
+    test("requires collection assets for every authored CSS URL", () => {
+        expect(() =>
+            compileBlocStyle("my-bloc", ':scope { background: url("data:image/svg+xml,%3Csvg/%3E"); }'),
+        ).toThrow("must use immutable collection assets");
+        expect(() =>
+            compileBlocStyle("my-bloc", ':scope { background: url("{{ cms.asset.my-collection.icons/check.svg }}"); }'),
+        ).not.toThrow();
+    });
+
     test("accepts source without customElements.define", () => {
         const r = validateBloc({
             tag: "my-bloc",
@@ -90,6 +99,15 @@ describe("validateBloc — source patterns", () => {
     ])("rejects removed Shadow DOM APIs", (viewSource) => {
         const result = validateBloc({ tag: "my-bloc", viewSource });
         expect(result.errors).toEqual([expect.stringContaining("Shadow DOM APIs are forbidden")]);
+    });
+
+    test.each([
+        [`export function mount() { return document.createElementNS("http://www.w3.org/2000/svg", "svg"); }`],
+        [`export function mount() { return document.createElement("svg"); }`],
+        [`export function mount(root) { root.innerHTML = "<svg viewBox='0 0 1 1'></svg>"; }`],
+    ])("rejects SVG markup created by behavior", (viewSource) => {
+        const result = validateBloc({ tag: "my-bloc", viewSource });
+        expect(result.errors).toEqual([expect.stringContaining("programmatic SVG markup is forbidden")]);
     });
 });
 

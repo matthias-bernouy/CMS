@@ -4,6 +4,7 @@ import { invalid } from "../errors";
 import type { CollectionLimits } from "../limits";
 import { parseCollectionBlocTag } from "../namespace";
 import { array, identifier, integer, keys, record, string, unique } from "../values";
+import { parseAssetId } from "../parsing/assets";
 
 const OPERATION_KEYS = {
     "rename-bloc": ["kind", "from", "to"],
@@ -120,7 +121,7 @@ function parseOperation(value: unknown, collectionId: string, path: string): Col
 }
 
 function asset(value: unknown, path: string): string {
-    return identifier(value, path);
+    return parseAssetId(value, path);
 }
 
 function scalar(value: unknown, path: string): string {

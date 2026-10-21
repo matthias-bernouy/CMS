@@ -45,7 +45,7 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
                           {
                               id: "colors",
                               label: "theme.category.colors.label",
-                              tokens: [
+                              entries: [
                                   {
                                       id: tokenId,
                                       label: "theme.token.accent.label",
@@ -211,7 +211,7 @@ test("installs only declared public resources from compatible collection depende
                 {
                     id: "layout",
                     label: "theme.category.layout.label",
-                    tokens: [
+                    entries: [
                         {
                             id: "gap",
                             label: "theme.token.gap.label",
@@ -225,6 +225,60 @@ test("installs only declared public resources from compatible collection depende
     });
     await store.install("types", foundationArtifact.digest, 0);
     await expect(store.install("types", wrongType.digest, 1)).rejects.toThrow("cannot use color token");
+});
+
+test("requires imported cms-svg assets to expose the verified inline profile", async () => {
+    const bytes = new TextEncoder().encode(
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12h16" /></svg>',
+    );
+    const asset = {
+        id: "icons/rule.svg",
+        mediaType: "image/svg+xml",
+        byteLength: bytes.byteLength,
+        digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
+    };
+    const foundation = {
+        ...release("foundation", "1.0.0", "foundation-card"),
+        assets: [asset],
+        exports: { blocs: [], themeTokens: [], assets: [asset.id] },
+    };
+    const baseConsumer = release("consumer", "1.0.0", "consumer-card");
+    const consumer = {
+        ...baseConsumer,
+        blocs: [
+            {
+                ...baseConsumer.blocs[0]!,
+                markup: '<svg cms-svg="{{ cms.asset.foundation.icons/rule.svg }}" aria-hidden="true"></svg>',
+            },
+        ],
+        dependencies: [
+            {
+                collectionId: "foundation",
+                publisherId: "atlas.official",
+                versionRange: "^1.0.0",
+                imports: {
+                    blocs: [],
+                    themeTokens: [],
+                    assets: [{ id: asset.id, generation: 1 }],
+                },
+            },
+        ],
+    };
+
+    const rejectedStore = new CollectionStore(new MemoryCollectionStorage());
+    const unprofiled = await rejectedStore.importRelease(foundation, [{ id: asset.id, bytes }]);
+    const dependent = await rejectedStore.importRelease(consumer);
+    await rejectedStore.install("site", unprofiled.digest, 0);
+    await expect(rejectedStore.install("site", dependent.digest, 1)).rejects.toThrow("not an admitted inline SVG");
+
+    const acceptedStore = new CollectionStore(new MemoryCollectionStorage());
+    const profiled = await acceptedStore.importRelease(
+        { ...foundation, assets: [{ ...asset, profiles: ["inline-svg"] }] },
+        [{ id: asset.id, bytes }],
+    );
+    const acceptedDependent = await acceptedStore.importRelease(consumer);
+    await acceptedStore.install("site", profiled.digest, 0);
+    await expect(acceptedStore.install("site", acceptedDependent.digest, 1)).resolves.toMatchObject({ revision: 2 });
 });
 
 test("admits imported Blocs under the same Page grammar", async () => {

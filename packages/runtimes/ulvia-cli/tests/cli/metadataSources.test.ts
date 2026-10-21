@@ -82,7 +82,7 @@ test("source export wildcards expand into explicit immutable resource lists", ()
 });
 
 function category(id: string) {
-    return { id, label: `theme.category.${id}.label`, tokens: [] };
+    return { id, label: `theme.category.${id}.label`, entries: [] };
 }
 
 async function temporaryDirectory(): Promise<string> {

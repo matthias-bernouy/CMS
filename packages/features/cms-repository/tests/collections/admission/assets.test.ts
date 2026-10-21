@@ -145,6 +145,41 @@ describe("collection assets", () => {
         ).resolves.toBeUndefined();
     });
 
+    test("admits only verified SVG geometry into the inline-svg profile", async () => {
+        const safe = new TextEncoder().encode(
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12h16" /></svg>',
+        );
+        const definition = {
+            ...(await declaration("icons/rule.svg", safe)),
+            mediaType: "image/svg+xml",
+            profiles: ["inline-svg" as const],
+        };
+        const parsed = parseAssets([definition], limits);
+        await expect(
+            verifyCollectionAssets(
+                parsed,
+                snapshotCollectionAssets(parsed, [{ id: definition.id, bytes: safe }], limits),
+            ),
+        ).resolves.toBeUndefined();
+
+        const active = new TextEncoder().encode('<svg viewBox="0 0 24 24"><script>alert(1)</script></svg>');
+        const activeDefinition = {
+            ...(await declaration("icons/active.svg", active)),
+            mediaType: "image/svg+xml",
+            profiles: ["inline-svg" as const],
+        };
+        const activeParsed = parseAssets([activeDefinition], limits);
+        await expect(
+            verifyCollectionAssets(
+                activeParsed,
+                snapshotCollectionAssets(activeParsed, [{ id: activeDefinition.id, bytes: active }], limits),
+            ),
+        ).rejects.toThrow("element is forbidden");
+        expect(() => parseAssets([{ ...emptyAsset, profiles: ["inline-svg"] }], limits)).toThrow(
+            "requires image/svg+xml",
+        );
+    });
+
     test("snapshots every caller buffer before the first asynchronous hash", async () => {
         const first = new Uint8Array([1, 2, 3]);
         const second = new Uint8Array([4, 5, 6]);

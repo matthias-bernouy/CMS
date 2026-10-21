@@ -13,6 +13,7 @@ export type OfficialBootstrapArtifacts = Readonly<{
     provider: string;
     providerDigest: string;
     collection: string;
+    collectionAssets: readonly Readonly<{ id: string; bytes: Uint8Array }>[];
 }>;
 
 export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstrapArtifacts> {
@@ -53,6 +54,12 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
         provider: provider.canonicalJson,
         providerDigest: provider.digest,
         collection: collection.canonicalJson,
+        collectionAssets: await Promise.all(
+            collection.assets.map(async ({ id, bytes }) => ({
+                id,
+                bytes: new Uint8Array(await bytes.arrayBuffer()),
+            })),
+        ),
     };
 }
 
@@ -73,11 +80,18 @@ export async function writeOfficialBootstrapArtifacts(
     }
     const provider = "providers/ulvia.official/definition.json";
     const collection = "collections/ulvia-official/release.json";
+    const collectionAssets = artifacts.collectionAssets.map(({ id }) => ({
+        id,
+        path: `collections/ulvia-official/assets/${id}`,
+    }));
     await writeArtifact(root, provider, artifacts.provider);
     await writeArtifact(root, collection, artifacts.collection);
+    for (const [index, asset] of artifacts.collectionAssets.entries()) {
+        await writeBytes(root, collectionAssets[index]!.path, asset.bytes);
+    }
     await writeFile(
         join(root, "index.json"),
-        `${JSON.stringify({ contracts: contractPaths, provider, collection }, null, 4)}\n`,
+        `${JSON.stringify({ contracts: contractPaths, provider, collection, collectionAssets }, null, 4)}\n`,
     );
 }
 
@@ -85,6 +99,12 @@ async function writeArtifact(root: string, path: string, bytes: string): Promise
     const target = join(root, path);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, `${bytes}\n`);
+}
+
+async function writeBytes(root: string, path: string, bytes: Uint8Array): Promise<void> {
+    const target = join(root, path);
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, bytes);
 }
 
 async function directories(root: string): Promise<string[]> {

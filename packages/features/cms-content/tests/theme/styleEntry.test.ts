@@ -43,4 +43,40 @@ describe("Theme style entry", () => {
         expect(css.indexOf("@layer cms-foundation")).toBeLessThan(css.indexOf(":root {"));
         expect(system.theme.sources.some((source) => source.id === "integration-brand-kit")).toBeFalse();
     });
+
+    test("resolves immutable font assets before publishing theme CSS", async () => {
+        const system = defaultSystem();
+        system.theme.sources.push({
+            id: "contribution-atlas",
+            label: "Atlas",
+            supportsModes: false,
+            owner: { kind: "contribution", contributionId: "atlas" },
+            categories: [],
+            fontFaces: [
+                {
+                    id: "atlas-interface",
+                    family: "atlas-interface",
+                    source: "{{ cms.asset.atlas.fonts/interface.woff2 }}",
+                    style: "normal",
+                    weight: "400",
+                    display: "swap",
+                },
+            ],
+        });
+        const reader = { getRenderingSettings: async () => system } as ContentReader;
+
+        const entry = await generateStyleEntry(reader, [], async (input) => {
+            expect(input).toContain("{{ cms.asset.atlas.fonts/interface.woff2 }}");
+            return input.replace(
+                "{{ cms.asset.atlas.fonts/interface.woff2 }}",
+                "/.cms/collections/atlas/assets/fonts%2Finterface.woff2?v=sha256-test",
+            );
+        });
+        const css = new TextDecoder().decode(entry.raw);
+
+        expect(css).toContain(
+            'src: url("/.cms/collections/atlas/assets/fonts%2Finterface.woff2?v=sha256-test") format("woff2");',
+        );
+        expect(css).not.toContain("cms.asset");
+    });
 });

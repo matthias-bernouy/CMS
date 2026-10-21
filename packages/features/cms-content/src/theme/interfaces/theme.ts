@@ -37,11 +37,23 @@ export type ThemeCategory = {
     tokens: ThemeToken[];
 };
 
+export type ThemeFontFace = {
+    id: string;
+    /** Final CSS family name, already namespaced by its contributor. */
+    family: string;
+    /** Immutable server-resolved collection asset expression. */
+    source: string;
+    style: "normal" | "italic" | "oblique";
+    weight: string;
+    display: "auto" | "block" | "swap" | "fallback" | "optional";
+};
+
 export type ThemeSource = {
     id: string;
     label: string;
     supportsModes: boolean;
     categories: ThemeCategory[];
+    fontFaces?: ThemeFontFace[];
     /** Provider ownership. Independent, author-managed sources omit this field. */
     owner?: ThemeSourceOwner;
 };

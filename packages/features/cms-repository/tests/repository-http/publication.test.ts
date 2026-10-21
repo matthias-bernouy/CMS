@@ -19,7 +19,7 @@ const directories: string[] = [];
 test("publication metadata carries expanded collection documents and asset indexes", () => {
     const canonicalJson = JSON.stringify({ value: "x".repeat(3 * 1024 * 1024) });
     const assets = Array.from({ length: 257 }, (_, index) => ({
-        id: `asset-${index}`,
+        id: index === 0 ? "icons/search.svg" : `asset-${index}`,
         byteLength: 0,
         digest: `sha256:${"0".repeat(64)}` as const,
     }));

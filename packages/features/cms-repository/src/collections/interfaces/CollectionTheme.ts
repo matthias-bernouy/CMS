@@ -13,13 +13,27 @@ export type CollectionThemeToken = {
     readonly defaults: Readonly<{ light: string; dark?: string }>;
 };
 
+export type CollectionThemeFontFace = {
+    readonly id: string;
+    readonly type: "font-face";
+    /** Collection-local WOFF2 asset path. */
+    readonly asset: string;
+    /** Logical family name; emitted CSS is namespaced by the collection. */
+    readonly family: string;
+    readonly style: "normal" | "italic" | "oblique";
+    readonly weight: string;
+    readonly display: "auto" | "block" | "swap" | "fallback" | "optional";
+};
+
+export type CollectionThemeEntry = CollectionThemeToken | CollectionThemeFontFace;
+
 export type CollectionThemeCategory = {
     readonly id: string;
     /** Collection translation key. */
     readonly label: CollectionTranslationKey;
     /** Collection translation key. */
     readonly description?: CollectionTranslationKey;
-    readonly tokens: readonly CollectionThemeToken[];
+    readonly entries: readonly CollectionThemeEntry[];
 };
 
 /** Immutable catalogue. Site-owned theme values remain in settings. */

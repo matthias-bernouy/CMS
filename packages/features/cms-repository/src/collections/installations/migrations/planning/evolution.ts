@@ -52,7 +52,9 @@ export function dependencyIssues(
             const blocGenerations = new Map(target.blocs.map((item) => [item.id, item.generation ?? 1]));
             const tokenGenerations = new Map(
                 target.theme?.categories.flatMap((category) =>
-                    category.tokens.map((item) => [item.id, item.generation ?? 1] as const),
+                    category.entries
+                        .filter((entry) => entry.type !== "font-face")
+                        .map((item) => [item.id, item.generation ?? 1] as const),
                 ) ?? [],
             );
             const textGenerations = new Map((target.texts ?? []).map((item) => [item.id, item.generation ?? 1]));

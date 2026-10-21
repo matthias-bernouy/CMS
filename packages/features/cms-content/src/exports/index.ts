@@ -112,6 +112,7 @@ export type {
     ThemeCategoryContribution,
     ThemeCategory,
     ThemeDefinition,
+    ThemeFontFace,
     ThemeMode,
     ThemeSettings,
     ThemeSource,
@@ -286,7 +287,11 @@ export type { ProjectedIndexingDiscoveryItem } from "cms-content/pages/core/inde
 
 // ── Validation (rules live here; the decorator is the unbypassable barrier) ─
 export { ValidatingCmsRepository } from "cms-content/application/core/ValidatingCmsRepository";
-export type { ContentBindingValidationOptions } from "cms-content/application/core/validation/bindingCapabilities";
+export type {
+    ContentBindingValidationOptions,
+    SvgCapabilityValidator,
+} from "cms-content/application/core/validation/bindingCapabilities";
+export type { SvgCapabilityTarget } from "cms-content/blocs/core/markup/security/svgReference";
 export {
     assertContentRefsExist,
     type ContentRefsReader,

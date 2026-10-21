@@ -11,6 +11,7 @@ import type {
 import { digestUploadFile, readUploadResult, writeUploadResult, writeUploadStream } from "./uploadFiles";
 import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
 import { acquireFilesystemLease, FilesystemLeaseBusyError } from "../core/lock";
+import { assetFileName } from "../core/assetFiles";
 
 const SCHEMA = "ulvia.repository-upload.v1";
 const UPLOAD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
@@ -89,7 +90,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         if (contentDigest !== asset.digest || (contentLength !== undefined && contentLength !== asset.byteLength)) {
             throw new Error("Publication upload asset metadata does not match its declaration");
         }
-        const destination = join(this.directory(uploadId), "assets", assetId);
+        const destination = join(this.directory(uploadId), "assets", assetFileName(assetId));
         const temporary = `${destination}.${randomUUID()}.tmp`;
         try {
             const actual = await writeUploadStream(temporary, body, asset.byteLength);
@@ -134,7 +135,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             }
             const assets = document.manifest.assets.map((asset) => ({
                 id: asset.id,
-                bytes: Bun.file(join(this.directory(uploadId), "assets", asset.id)),
+                bytes: Bun.file(join(this.directory(uploadId), "assets", assetFileName(asset.id))),
             }));
             const result = await publish({
                 kind: document.manifest.kind,
@@ -201,7 +202,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
     private async verifiedAssetIds(document: UploadDocument): Promise<string[]> {
         const verified: string[] = [];
         for (const asset of document.manifest.assets) {
-            const path = join(this.directory(document.uploadId), "assets", asset.id);
+            const path = join(this.directory(document.uploadId), "assets", assetFileName(asset.id));
             const metadata = await stat(path).catch(() => null);
             if (!metadata?.isFile() || metadata.size !== asset.byteLength) {
                 continue;

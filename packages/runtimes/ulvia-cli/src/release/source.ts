@@ -1,6 +1,4 @@
-import { readFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
-import { sha256Digest } from "@bernouy/binary-media";
 import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { loadCollectionBlocs } from "./blocSources";
@@ -8,6 +6,7 @@ import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTrans
 import { loadCollectionTexts } from "./textSources";
 import { loadCollectionMigrations } from "./migrationSources";
 import { scanFileSourceTree } from "./authored/sourceTree";
+import { loadCollectionAssets } from "./assetSources";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
 export async function prepareCollectionRelease(directory: string, contracts?: ReleaseCatalogue) {
@@ -23,7 +22,12 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     const pages = await loadPages(join(collectionRoot, "pages"));
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
     const migrations = await loadCollectionMigrations(join(collectionRoot, "migrations"));
-    const assets = await loadAssets(join(collectionRoot, "assets"), definition.assets);
+    if (Object.hasOwn(definition, "assets")) {
+        throw new Error(
+            "Collection source assets are discovered from assets/ and must not be declared in definition.json",
+        );
+    }
+    const assets = await loadCollectionAssets(join(collectionRoot, "assets"));
     const exports = expandCollectionSourceExports(definition.exports, {
         blocs: ids(blocs, (bloc) => bloc.catalogue !== "hidden"),
         themeTokens: themeTokenIds(theme),
@@ -57,75 +61,11 @@ function ids(values: readonly unknown[], include: (value: Record<string, unknown
 }
 
 function themeTokenIds(value: unknown): string[] {
-    const categories = (value as { categories?: { tokens?: unknown[] }[] } | undefined)?.categories ?? [];
-    return categories.flatMap((category) => ids(category.tokens ?? []));
-}
-
-async function loadAssets(directory: string, value: unknown) {
-    const declarations = value === undefined ? [] : value;
-    if (!Array.isArray(declarations)) {
-        throw new Error("Collection source assets must be an array");
-    }
-    const files = (await scanFileSourceTree(directory)).map(({ relativePath }) => relativePath);
-    const seenIds = new Set<string>();
-    const seenSources = new Set<string>();
-    const bundle: { id: string; bytes: Uint8Array }[] = [];
-    const definitions = [];
-    for (const [index, value] of declarations.entries()) {
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
-            throw new Error(`Collection source asset ${index} must be an object`);
-        }
-        const source = value as Record<string, unknown>;
-        if (Object.keys(source).some((key) => !["id", "source", "generation", "mediaType"].includes(key))) {
-            throw new Error(`Collection source asset ${index} accepts only id, source, generation and mediaType`);
-        }
-        if (
-            typeof source.id !== "string" ||
-            source.id.length > 96 ||
-            !/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(source.id) ||
-            typeof source.mediaType !== "string" ||
-            seenIds.has(source.id)
-        ) {
-            throw new Error(`Collection source asset ${index} requires a unique id and mediaType`);
-        }
-        const sourcePath = collectionAssetSourcePath(source.source, source.id, index);
-        if (seenSources.has(sourcePath)) {
-            throw new Error(`Collection source asset ${index} reuses source ${sourcePath}`);
-        }
-        seenIds.add(source.id);
-        seenSources.add(sourcePath);
-        const bytes = await readFile(join(directory, ...sourcePath.split("/")));
-        bundle.push({ id: source.id, bytes });
-        definitions.push({
-            id: source.id,
-            ...(source.generation === undefined ? {} : { generation: source.generation }),
-            mediaType: source.mediaType,
-            byteLength: bytes.byteLength,
-            digest: await sha256Digest(bytes),
-        });
-    }
-    const extras = files.filter((file) => !seenSources.has(file));
-    if (extras.length || files.filter((file) => seenSources.has(file)).length !== declarations.length) {
-        throw new Error("Collection assets directory must exactly match the source declarations");
-    }
-    return { definitions, bundle };
-}
-
-function collectionAssetSourcePath(value: unknown, fallback: string, index: number): string {
-    const source = value === undefined ? fallback : value;
-    if (typeof source !== "string" || source.length === 0 || source.length > 512 || source.includes("\\")) {
-        throw new Error(`Collection source asset ${index} has an invalid source path`);
-    }
-    const segments = source.split("/");
-    if (
-        source.startsWith("/") ||
-        segments.some(
-            (segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(segment) || segment === "." || segment === "..",
-        )
-    ) {
-        throw new Error(`Collection source asset ${index} has an invalid source path`);
-    }
-    return source;
+    const categories =
+        (value as { categories?: { entries?: Record<string, unknown>[] }[] } | undefined)?.categories ?? [];
+    return categories.flatMap((category) =>
+        ids((category.entries ?? []).filter((entry) => entry.type !== "font-face")),
+    );
 }
 
 async function loadPages(directory: string): Promise<unknown[]> {

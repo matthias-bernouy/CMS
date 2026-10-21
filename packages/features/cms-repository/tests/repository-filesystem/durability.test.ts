@@ -7,6 +7,7 @@ import {
     acquireFilesystemLease,
     FilesystemRepositoryPublicationUploadStore,
     recoverRepositoryStorage,
+    withRepositoryWriteLock,
 } from "@bernouy/cms-repository/repository/filesystem";
 
 const roots: string[] = [];
@@ -27,6 +28,35 @@ test("recovers a stale lease only when its owner process is gone", async () => {
     await lease.assertOwnership();
     await lease.release();
     expect(await exists(path)).toBeFalse();
+});
+
+test("repository write operations wait for one another instead of failing under concurrency", async () => {
+    const root = await temporaryRoot();
+    const order: string[] = [];
+    let releaseFirst!: () => void;
+    let markStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+        markStarted = resolve;
+    });
+    const released = new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+    });
+    const first = withRepositoryWriteLock(root, async () => {
+        order.push("first-started");
+        markStarted();
+        await released;
+        order.push("first-finished");
+    });
+    await started;
+    const second = withRepositoryWriteLock(root, async () => {
+        order.push("second-started");
+    });
+    await Bun.sleep(25);
+    expect(order).toEqual(["first-started"]);
+
+    releaseFirst();
+    await Promise.all([first, second]);
+    expect(order).toEqual(["first-started", "first-finished", "second-started"]);
 });
 
 test("a crashed upload commit lease is recoverable and expired staging is pruned", async () => {

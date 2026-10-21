@@ -2,7 +2,8 @@ import { parse, walk } from "css-tree";
 
 const FORBIDDEN = /:host\b|::slotted\b|:global\b/u;
 const NESTED_BLOC_SELECTOR = /\[cms-bloc\b/u;
-const COLLECTION_ASSET_URL = /^\{\{\s*cms\.asset\.[a-z][a-z0-9-]*\.[a-z][a-z0-9.-]*\s*\}\}$/u;
+const COLLECTION_ASSET_URL =
+    /^\{\{\s*cms\.asset\.[a-z][a-z0-9-]*\.[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*\s*\}\}$/u;
 
 /** Validate authored CSS and close it around one Light DOM Bloc boundary. */
 export function compileBlocStyle(id: string, source: string): string {
@@ -28,8 +29,8 @@ export function compileBlocStyle(id: string, source: string): string {
         if (node.type === "TypeSelector" && ["html", "body", "head"].includes(node.name.toLowerCase())) {
             throw new Error(`Bloc ${id} CSS cannot address document elements`);
         }
-        if (node.type === "Url" && !node.value.startsWith("data:") && !COLLECTION_ASSET_URL.test(node.value)) {
-            throw new Error(`Bloc ${id} CSS URLs must use immutable collection assets or inline data URLs`);
+        if (node.type === "Url" && !COLLECTION_ASSET_URL.test(node.value)) {
+            throw new Error(`Bloc ${id} CSS URLs must use immutable collection assets`);
         }
         if (node.type === "Declaration" && ["animation", "animation-name"].includes(node.property.toLowerCase())) {
             throw new Error(`Bloc ${id} CSS animations require a future namespaced animation contract`);

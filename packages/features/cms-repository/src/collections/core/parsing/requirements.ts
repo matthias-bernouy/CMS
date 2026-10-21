@@ -12,6 +12,7 @@ import { array, identifier, integer, keys, ordinal, record, string, unique } fro
 import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
 import { textIdentifier } from "../texts/validation";
 import { parseDefaultPath } from "./pages/document";
+import { parseAssetId } from "./assets";
 
 export function parseRequirements(
     value: unknown,
@@ -281,7 +282,7 @@ function parseResourceSelection(
 }
 
 function assetIdentifier(value: unknown, path: string): string {
-    return identifier(value, path);
+    return parseAssetId(value, path);
 }
 
 function contractIdentifier(value: unknown, maximum: number, path: string): string {

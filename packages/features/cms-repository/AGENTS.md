@@ -280,7 +280,9 @@ models and validation for CMS-owned installations and site selections.
   Structural markup validation must use a parser. It is not a renderer,
   sanitizer, binding/CSS compiler or permission proof; never treat an admitted
   authored bundle as trusted executable content.
-- Verify asset IDs, exact byte sets, per-asset and aggregate sizes, and digests.
+- Verify normalized path asset IDs, exact byte sets, per-asset and aggregate
+  sizes, digests and declared profiles. The `inline-svg` profile is granted
+  only after parsing the bounded presentation-only geometry vocabulary.
   Snapshot every supplied buffer before any asynchronous work. Returned bytes
   are immutable Blobs; do not retain mutable caller-owned buffers.
 - Requirements belong to resources. Require one non-yanked contract witness
@@ -318,7 +320,7 @@ models and validation for CMS-owned installations and site selections.
   excludes platform-owned roots, prefixes every Bloc identifier and derives
   global theme token IDs and CSS variables. Validate derived identities during
   collection admission rather than waiting for installation or compilation.
-- Collection theme categories, tokens and Pages are admitted
+- Collection theme categories, entries and Pages are admitted
   and included in the release digest. Cross-collection dependencies import only explicitly
   exported Bloc tags, collection-local theme token IDs, server text IDs and immutable
   asset IDs from one publisher and bounded version range. Every import pins the
@@ -327,7 +329,15 @@ models and validation for CMS-owned installations and site selections.
 - Theme defaults may reference local or selectively imported tokens. Reject
   dangling references and local cycles; exact token aliases must preserve types,
   including across the installed dependency graph.
-- Collection asset expressions keep the owner namespace (`cms.asset.<collection>.<asset>`).
+- Theme entries are either ordinary translated tokens or typed `font-face`
+  entries backed by a local WOFF2 asset. Font faces are projected to
+  collection-prefixed CSS family names; they are not theme-token imports or
+  independently generated resources.
+- Collection asset expressions keep the owner namespace
+  (`cms.asset.<collection>.<relative/path>`).
+- Authored SVG elements are empty `svg[cms-svg]` references. Raw inline SVG is
+  forbidden. Collection-authored references must resolve to a local or
+  explicitly imported asset carrying the verified `inline-svg` profile.
 - Collection asset admission verifies declared size, digest, and recognizable media signatures. Installed asset
   metadata can be resolved in batches without hydrating unrelated releases or binary payloads.
   Export controls dependency authority, while the Kernel may serve any installed immutable

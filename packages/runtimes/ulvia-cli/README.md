@@ -121,7 +121,16 @@ category IDs. Category files may be organized recursively below `theme/`; the
 scanner finds them by their internal `id`, while the manifest remains the only
 source of display order. A category filename must match its ID, duplicate IDs
 and orphan files reject, and category/token metadata uses the shared translation
-keys.
+keys. Categories use an `entries` array containing ordinary tokens and optional
+typed `font-face` entries backed by local WOFF2 assets.
+
+Collection assets are discovered recursively below `assets/`; their lowercase
+relative paths are their stable IDs. They are not declared in the collection
+`definition.json`. An optional root `assets/definition.json` accepts only a
+`generations` object keyed by those paths. The compiler derives media type,
+size and digest. Safe presentation-only SVG files receive the `inline-svg`
+profile automatically; other SVGs remain downloadable assets but cannot be
+expanded into authored Page DOM.
 
 Collection texts use recursive `texts/definitions/**/*.json` arrays for stable
 IDs and administration metadata, plus recursive

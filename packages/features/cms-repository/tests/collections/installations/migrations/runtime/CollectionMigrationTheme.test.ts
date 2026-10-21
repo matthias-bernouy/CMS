@@ -138,7 +138,7 @@ function themedRelease(version: string, tokenId: string, value: string): Record<
                 {
                     id: "colors",
                     label: "theme.category.colors.label",
-                    tokens: [
+                    entries: [
                         {
                             id: tokenId,
                             label: `theme.token.${tokenId}.label`,

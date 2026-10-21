@@ -41,8 +41,10 @@ function collectReferences(release: CollectionRelease): Reference[] {
             const path = `$.theme.categories[${categoryIndex}]`;
             references.push(reference(category.label, `${path}.label`, 120));
             optional(references, category.description, `${path}.description`, 500);
-            for (const [tokenIndex, token] of category.tokens.entries()) {
-                const tokenPath = `${path}.tokens[${tokenIndex}]`;
+            for (const [tokenIndex, token] of category.entries
+                .filter((entry) => entry.type !== "font-face")
+                .entries()) {
+                const tokenPath = `${path}.entries[${tokenIndex}]`;
                 references.push(reference(token.label, `${tokenPath}.label`, 120));
                 optional(references, token.description, `${tokenPath}.description`, 500);
             }

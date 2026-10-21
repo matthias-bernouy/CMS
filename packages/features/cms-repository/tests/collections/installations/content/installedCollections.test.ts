@@ -279,7 +279,7 @@ test("installed collection theme contributes immutable tokens to editing and pub
                 {
                     id: "colors",
                     label: "theme.category.colors.label",
-                    tokens: [
+                    entries: [
                         {
                             id: "accent",
                             label: "theme.token.accent.label",

@@ -18,7 +18,23 @@ export function collectionThemeSource(release: CollectionRelease, locale?: strin
         id: collectionThemeSourceId(release.collectionId),
         label: resolveCollectionTranslation(release, release.theme.label, locale),
         supportsModes: release.theme.categories.some((category) =>
-            category.tokens.some((token) => token.defaults.dark !== undefined),
+            category.entries.some((entry) => entry.type !== "font-face" && entry.defaults.dark !== undefined),
+        ),
+        fontFaces: release.theme.categories.flatMap((category) =>
+            category.entries.flatMap((entry) =>
+                entry.type === "font-face"
+                    ? [
+                          {
+                              id: `${release.collectionId}-${entry.id}`,
+                              family: `${release.collectionId}-${entry.family}`,
+                              source: `{{ cms.asset.${release.collectionId}.${entry.asset} }}`,
+                              style: entry.style,
+                              weight: entry.weight,
+                              display: entry.display,
+                          },
+                      ]
+                    : [],
+            ),
         ),
         owner: {
             kind: "contribution",
@@ -31,14 +47,22 @@ export function collectionThemeSource(release: CollectionRelease, locale?: strin
             description: category.description
                 ? resolveCollectionTranslation(release, category.description, locale)
                 : "",
-            tokens: category.tokens.map((token) => ({
-                id: collectionThemeTokenId(release.collectionId, token.id),
-                variable: collectionThemeTokenId(release.collectionId, token.id),
-                label: resolveCollectionTranslation(release, token.label, locale),
-                description: token.description ? resolveCollectionTranslation(release, token.description, locale) : "",
-                type: token.type,
-                defaults: { ...token.defaults },
-            })),
+            tokens: category.entries.flatMap((entry) =>
+                entry.type === "font-face"
+                    ? []
+                    : [
+                          {
+                              id: collectionThemeTokenId(release.collectionId, entry.id),
+                              variable: collectionThemeTokenId(release.collectionId, entry.id),
+                              label: resolveCollectionTranslation(release, entry.label, locale),
+                              description: entry.description
+                                  ? resolveCollectionTranslation(release, entry.description, locale)
+                                  : "",
+                              type: entry.type,
+                              defaults: { ...entry.defaults },
+                          },
+                      ],
+            ),
         })),
     };
 }

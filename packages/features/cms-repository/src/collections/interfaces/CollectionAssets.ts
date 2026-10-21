@@ -1,3 +1,5 @@
+type CollectionAssetProfile = "inline-svg";
+
 export interface CollectionAssetDefinition {
     readonly id: string;
     /** Independent public-contract generation for selective consumers. */
@@ -5,6 +7,7 @@ export interface CollectionAssetDefinition {
     readonly mediaType: string;
     readonly byteLength: number;
     readonly digest: `sha256:${string}`;
+    readonly profiles?: readonly CollectionAssetProfile[];
 }
 
 export interface CollectionBundleAsset {

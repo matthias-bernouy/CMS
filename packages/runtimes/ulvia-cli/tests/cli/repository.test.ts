@@ -40,7 +40,25 @@ test("local repository lists immutable metadata and serves matching release byte
         expect((await admitCollectionRelease(bundle.release, bundle.assets, { contracts })).digest).toBe(
             entries[0]!.digest,
         );
-        expect(bundle.assets).toEqual([]);
+        expect(bundle.assets.map(({ id }) => id)).toEqual(
+            [...bundle.assets.map(({ id }) => id)].sort((left, right) => left.localeCompare(right)),
+        );
+        expect(bundle.assets).toHaveLength(53);
+        expect(bundle.assets.map(({ id }) => id)).toContain("icons/navigation/collections.svg");
+        expect(bundle.assets.map(({ id }) => id)).toContain("fonts/sans/inter/normal.woff2");
+        expect(bundle.assets.map(({ id }) => id)).toContain("fonts/serif/source-serif-4/italic.woff2");
+        const svgAssets = bundle.release.assets.filter((asset) => asset.mediaType === "image/svg+xml");
+        expect(svgAssets.find((asset) => asset.id === "icons/controls/check-white.svg")?.profiles).toBeUndefined();
+        expect(
+            svgAssets
+                .filter((asset) => asset.id !== "icons/controls/check-white.svg")
+                .every((asset) => asset.profiles?.includes("inline-svg")),
+        ).toBe(true);
+        expect(
+            bundle.release.assets
+                .filter((asset) => asset.id.endsWith(".woff2"))
+                .every((asset) => asset.mediaType === "font/woff2" && asset.profiles === undefined),
+        ).toBe(true);
         const release = bundle.release;
         expect(entries[0]?.blocCount).toBe(release.blocs.length);
         expect(release.exports?.blocs).toEqual(
@@ -50,7 +68,21 @@ test("local repository lists immutable metadata and serves matching release byte
                 .sort(),
         );
         expect(release.exports?.themeTokens).toHaveLength(119);
-        expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(119);
+        expect(release.exports?.assets).toEqual(bundle.assets.map(({ id }) => id));
+        const themeEntries = release.theme?.categories.flatMap((category) => category.entries) ?? [];
+        expect(themeEntries.filter((entry) => entry.type === "font-face")).toHaveLength(23);
+        expect(themeEntries.filter((entry) => entry.type !== "font-face")).toHaveLength(119);
+        expect(themeEntries.find((entry) => entry.id === "inter-normal")).toMatchObject({
+            asset: "fonts/sans/inter/normal.woff2",
+            family: "inter",
+            weight: "100 900",
+        });
+        expect(themeEntries.find((entry) => entry.id === "font-family-main")).toMatchObject({
+            defaults: { light: expect.stringContaining('"ulvia-official-inter"') },
+        });
+        expect(themeEntries.find((entry) => entry.id === "font-family-secondary")).toMatchObject({
+            defaults: { light: expect.stringContaining('"ulvia-official-source-serif-4"') },
+        });
         expect(release.pages?.some((page) => page.id === "catalog" || page.id === "resources")).toBe(false);
         const action = release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
         expect(action?.kind).toBe("component");
@@ -177,14 +209,6 @@ test("collection source assets keep their verified bytes through the repository 
             name: "collection.name",
             locale: "en",
             exports: "*",
-            assets: [
-                {
-                    id: "brand-mark",
-                    source: "icons/brand/mark.svg",
-                    generation: 2,
-                    mediaType: "image/svg+xml",
-                },
-            ],
         };
         const definitionPath = join(sourceRoot, "definition.json");
         await writeFile(definitionPath, JSON.stringify(definition));
@@ -216,10 +240,14 @@ test("collection source assets keep their verified bytes through the repository 
             }),
         );
         await writeFile(join(sourceRoot, "assets", "icons", "brand", "mark.svg"), bytes);
+        await writeFile(
+            join(sourceRoot, "assets", "definition.json"),
+            JSON.stringify({ generations: { "icons/brand/mark.svg": 2 } }),
+        );
 
         const artifact = await prepareCollectionRelease(sourceRoot);
         expect(artifact.release.assets[0]).toMatchObject({
-            id: "brand-mark",
+            id: "icons/brand/mark.svg",
             generation: 2,
             mediaType: "image/svg+xml",
             byteLength: bytes.byteLength,
@@ -228,7 +256,7 @@ test("collection source assets keep their verified bytes through the repository 
         expect(artifact.release.exports).toEqual({
             blocs: ["asset-example-card"],
             themeTokens: [],
-            assets: ["brand-mark"],
+            assets: ["icons/brand/mark.svg"],
         });
         expect(new Uint8Array(await artifact.assets[0]!.bytes.arrayBuffer())).toEqual(bytes);
 
@@ -239,19 +267,18 @@ test("collection source assets keep their verified bytes through the repository 
             const remote = new HttpCollectionRepository("local", server.url);
             const bundle = await remote.get((await remote.list())[0]!);
             expect(bundle.release.assets[0]).toEqual(artifact.release.assets[0]);
-            expect(bundle.assets).toEqual([{ id: "brand-mark", bytes }]);
+            expect(bundle.assets).toEqual([{ id: "icons/brand/mark.svg", bytes }]);
             expect((await admitCollectionRelease(bundle.release, bundle.assets)).digest).toBe(artifact.digest);
         } finally {
             server.stop();
         }
 
-        definition.assets[0]!.source = "../outside.svg";
-        await writeFile(definitionPath, JSON.stringify(definition));
-        await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("invalid source path");
-        definition.assets[0]!.source = "icons/brand/mark.svg";
-        await writeFile(definitionPath, JSON.stringify(definition));
         await writeFile(join(sourceRoot, "assets", "icons", "unused.svg"), bytes);
-        await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("exactly match");
+        const withDiscoveredAsset = await prepareCollectionRelease(sourceRoot);
+        expect(withDiscoveredAsset.release.assets.map(({ id }) => id)).toEqual([
+            "icons/brand/mark.svg",
+            "icons/unused.svg",
+        ]);
         await unlink(join(sourceRoot, "assets", "icons", "unused.svg"));
 
         const pageRoot = join(sourceRoot, "pages", "control", "overview");

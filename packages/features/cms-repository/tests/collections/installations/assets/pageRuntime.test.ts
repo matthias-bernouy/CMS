@@ -58,7 +58,6 @@ function runtimeWith(content: ContentReader, collectionAssets: Parameters<typeof
     const cache = new InMemoryCache();
     cache.set(blocRuntimeCacheKey("/.cms/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
-    cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
     return { basePath: "", cmsPathPrefix: "/.cms", cache, content, collectionAssets };
 }
 

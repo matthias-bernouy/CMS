@@ -204,7 +204,7 @@ function release(version: string, blocId: string, extended: boolean): Record<str
                       {
                           id: "colors",
                           label: "theme.category.label",
-                          tokens: [
+                          entries: [
                               {
                                   id: "brand",
                                   label: "theme.token.label",

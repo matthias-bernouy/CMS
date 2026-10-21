@@ -130,7 +130,7 @@ describe("collection release parsing", () => {
         });
         source.theme = {
             label: "theme.label",
-            categories: [{ id: "colors", label: "theme.category.label", tokens }],
+            categories: [{ id: "colors", label: "theme.category.label", entries: tokens }],
         };
         source.exports = { blocs: [], themeTokens: tokens.map(({ id }) => id) };
         const release = parseCollectionRelease(source, {
@@ -253,7 +253,7 @@ describe("collection release parsing", () => {
                         id: "colors",
                         label: "theme.category.colors.label",
                         description: "theme.category.colors.description",
-                        tokens: [
+                        entries: [
                             {
                                 id: "accent",
                                 label: "theme.token.accent.label",
@@ -270,8 +270,8 @@ describe("collection release parsing", () => {
         expect(parsed.theme?.label).toBe("theme.label");
         expect(parsed.theme?.categories[0]?.label).toBe("theme.category.colors.label");
         expect(resolveCollectionTranslation(parsed, parsed.theme!.label)).toBe("Atlas theme");
-        expect(parsed.theme?.categories[0]?.tokens[0]?.id).toBe("accent");
-        expect(collectionThemeTokenId(parsed.collectionId, parsed.theme!.categories[0]!.tokens[0]!.id)).toBe(
+        expect(parsed.theme?.categories[0]?.entries[0]?.id).toBe("accent");
+        expect(collectionThemeTokenId(parsed.collectionId, parsed.theme!.categories[0]!.entries[0]!.id)).toBe(
             "atlas-accent",
         );
     });
@@ -286,7 +286,7 @@ describe("collection release parsing", () => {
             }),
             theme: {
                 label: "theme.label",
-                categories: [{ id: "values", label: "theme.category.values.label", tokens }],
+                categories: [{ id: "values", label: "theme.category.values.label", entries: tokens }],
             },
         });
         const token = (id: string, type: string, light: string) => ({
@@ -314,6 +314,65 @@ describe("collection release parsing", () => {
         ).toThrow("cyclic theme token");
     });
 
+    test("declares font faces as typed theme entries backed by local WOFF2 assets", () => {
+        const source = collectionDocument({
+            "theme.category.typography.label": "Typography",
+            "theme.label": "Atlas theme",
+            "theme.token.body.label": "Body font",
+        });
+        source.assets = [
+            {
+                id: "fonts/interface.woff2",
+                mediaType: "font/woff2",
+                byteLength: 0,
+                digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            },
+        ];
+        source.theme = {
+            label: "theme.label",
+            categories: [
+                {
+                    id: "typography",
+                    label: "theme.category.typography.label",
+                    entries: [
+                        {
+                            id: "interface",
+                            type: "font-face",
+                            asset: "fonts/interface.woff2",
+                            family: "interface",
+                            style: "normal",
+                            weight: "100 900",
+                            display: "swap",
+                        },
+                        {
+                            id: "body",
+                            label: "theme.token.body.label",
+                            type: "font-family",
+                            defaults: { light: '"atlas-interface", sans-serif' },
+                        },
+                    ],
+                },
+            ],
+        };
+
+        const parsed = parseCollectionRelease(source);
+        expect(parsed.theme?.categories[0]?.entries[0]).toMatchObject({
+            type: "font-face",
+            asset: "fonts/interface.woff2",
+            family: "interface",
+            weight: "100 900",
+        });
+
+        (source.theme as { categories: { entries: Record<string, unknown>[] }[] }).categories[0]!
+            .entries[0]!.generation = 2;
+        expect(() => parseCollectionRelease(source)).toThrow('unknown property "generation"');
+        delete (source.theme as { categories: { entries: Record<string, unknown>[] }[] }).categories[0]!.entries[0]!
+            .generation;
+
+        (source.assets as Record<string, unknown>[])[0]!.mediaType = "font/ttf";
+        expect(() => parseCollectionRelease(source)).toThrow("local WOFF2 asset");
+    });
+
     test("enforces ownership of Bloc CSS variables", () => {
         const source = collectionDocument({
             "theme.category.colors.label": "Colors",
@@ -326,7 +385,7 @@ describe("collection release parsing", () => {
                 {
                     id: "colors",
                     label: "theme.category.colors.label",
-                    tokens: [
+                    entries: [
                         {
                             id: "accent",
                             label: "theme.token.accent.label",
@@ -387,7 +446,7 @@ describe("collection release parsing", () => {
                 {
                     id: "colors",
                     label: "theme.category.colors.label",
-                    tokens: [
+                    entries: [
                         {
                             id: "surface",
                             label: "theme.token.surface.label",
@@ -414,7 +473,7 @@ describe("collection release parsing", () => {
                 {
                     id: "colors",
                     label: "theme.category.colors.label",
-                    tokens: [
+                    entries: [
                         {
                             id: "accent",
                             label: "theme.token.accent.label",

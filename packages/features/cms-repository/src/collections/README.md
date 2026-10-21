@@ -209,7 +209,7 @@ its effective route.
 
 ## Publication and installation
 
-The local release command turns source asset declarations into immutable size
+The local release command discovers files below `assets/`, turns them into immutable size
 and digest metadata, stores exact bytes beside canonical JSON, and serves each
 asset through a bounded immutable HTTP route. CMS import fetches the complete
 bundle, repeats admission with the contract catalogue, stores assets outside the

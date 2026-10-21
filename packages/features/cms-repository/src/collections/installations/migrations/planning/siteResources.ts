@@ -81,7 +81,7 @@ function collectionResourceKeys(releases: readonly CollectionRelease[]): Set<str
             keys.add(resourceKey("bloc", release.collectionId, bloc.id));
         }
         for (const category of release.theme?.categories ?? []) {
-            for (const token of category.tokens) {
+            for (const token of category.entries.filter((entry) => entry.type !== "font-face")) {
                 keys.add(
                     resourceKey(
                         "theme-token",

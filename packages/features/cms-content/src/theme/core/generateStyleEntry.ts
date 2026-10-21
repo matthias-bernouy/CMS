@@ -36,9 +36,10 @@ const DOCUMENT_FOUNDATION = `@layer cms-foundation {
 export async function generateStyleEntry(
     reader: Pick<ContentReader, "getRenderingSettings">,
     contributions: readonly IntegrationThemeContribution[] = [],
+    resolveAssets: (input: string) => Promise<string> = async (input) => input,
 ): Promise<CacheEntry> {
     const settings = await reader.getRenderingSettings();
     const theme = composeThemeSettings(settings.theme, contributions);
     const css = [DOCUMENT_FOUNDATION, generateThemeCss(theme)].filter(Boolean).join("\n\n");
-    return compress(css, "text/css");
+    return compress(await resolveAssets(css), "text/css");
 }

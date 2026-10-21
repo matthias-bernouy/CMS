@@ -119,7 +119,7 @@ function previousResources(): Record<string, unknown> {
                 {
                     id: "brand",
                     label: "collection.name",
-                    tokens: [
+                    entries: [
                         {
                             id: "accent",
                             label: "token.accent",

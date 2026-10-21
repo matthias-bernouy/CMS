@@ -17,8 +17,12 @@ import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
 import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
 import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
 import { pruneRepository } from "../core/recovery";
+import { assetFileName } from "../core/assetFiles";
+import { ImmutableJsonCache } from "../core/immutableJsonCache";
 
 export class LocalCollectionRepository {
+    private readonly metadataCache = new ImmutableJsonCache<VerifiedCollectionReleaseMetadata>();
+
     constructor(private readonly root: string) {}
 
     async store(artifact: AdmittedCollectionRelease): Promise<boolean> {
@@ -40,7 +44,7 @@ export class LocalCollectionRepository {
         if (artifact.assets.length) {
             await ensureDurableDirectory(assetDirectory, this.root);
             for (const asset of artifact.assets) {
-                const path = join(assetDirectory, asset.id);
+                const path = join(assetDirectory, assetFileName(asset.id));
                 await writeImmutableFile(
                     path,
                     asset.bytes,
@@ -110,7 +114,7 @@ export class LocalCollectionRepository {
         }
         const assets = metadata.release.assets.map(({ id }) => ({
             id,
-            bytes: Bun.file(join(this.assetDirectory(metadata.canonicalJson), id)),
+            bytes: Bun.file(join(this.assetDirectory(metadata.canonicalJson), assetFileName(id))),
         }));
         return verifyStoredCollectionArtifact(metadata.release, assets, metadata.digest);
     }
@@ -126,12 +130,18 @@ export class LocalCollectionRepository {
         const path = this.releasePath(publisherId, collectionId, version);
         const bytes = await readFile(path).catch((error: NodeJS.ErrnoException) => {
             if (error.code === "ENOENT") {
+                this.metadataCache.delete(path);
                 return null;
             }
             throw error;
         });
         if (!bytes) {
             return null;
+        }
+        const canonicalJson = bytes.toString("utf8");
+        const cached = this.metadataCache.get(path, canonicalJson);
+        if (cached) {
+            return cached;
         }
         const parsed = parseCollectionReleaseJson(bytes);
         const artifact = await verifyStoredCollectionRelease(parsed, `sha256:${releaseHash(bytes)}`);
@@ -143,7 +153,7 @@ export class LocalCollectionRepository {
         ) {
             throw new Error(`Corrupt local release: ${publisherId}/${collectionId}/${version}`);
         }
-        return artifact;
+        return this.metadataCache.set(path, canonicalJson, artifact);
     }
 
     async getAsset(
@@ -157,7 +167,7 @@ export class LocalCollectionRepository {
         if (!metadata || !definition) {
             return null;
         }
-        const bytes = Bun.file(join(this.assetDirectory(metadata.canonicalJson), assetId));
+        const bytes = Bun.file(join(this.assetDirectory(metadata.canonicalJson), assetFileName(assetId)));
         const snapshots = snapshotCollectionAssets([definition], [{ id: assetId, bytes }], {
             ...DEFAULT_COLLECTION_LIMITS,
             maxBundleBytes: DEFAULT_COLLECTION_LIMITS.maxAssetBytes,

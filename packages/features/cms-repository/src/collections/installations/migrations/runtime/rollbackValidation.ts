@@ -173,7 +173,9 @@ function collectionTokenIds(releases: readonly CollectionRelease[]): Set<string>
     return new Set(
         releases.flatMap((release) =>
             (release.theme?.categories ?? []).flatMap((category) =>
-                category.tokens.map((token) => collectionThemeTokenId(release.collectionId, token.id)),
+                category.entries
+                    .filter((entry) => entry.type !== "font-face")
+                    .map((token) => collectionThemeTokenId(release.collectionId, token.id)),
             ),
         ),
     );

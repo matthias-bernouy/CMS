@@ -8,6 +8,7 @@ import type { CollectionInstallation, CollectionStorage } from "../interfaces/st
 import { pageLinks, pageLinkSources } from "../../core/parsing/pages/references";
 import { validateExpandedPageDocument, validatePageDocument } from "@bernouy/cms-content/page-document";
 import { collectionPageDefinitions } from "../../core/parsing/pages/definitions";
+import { validateInstalledCollectionSvgReferences } from "../../core/validation/markup/assets";
 
 export async function assertInstallableCollectionResources(
     storage: CollectionStorage,
@@ -34,7 +35,9 @@ export function assertCollectionResourceIsolation(releases: readonly CollectionR
         for (const bloc of release.blocs) {
             assertUnique(blocTags, bloc.id, "Bloc tag");
         }
-        for (const token of release.theme?.categories.flatMap((category) => category.tokens) ?? []) {
+        for (const token of release.theme?.categories.flatMap((category) =>
+            category.entries.filter((entry) => entry.type !== "font-face"),
+        ) ?? []) {
             assertUnique(themeTokens, collectionThemeTokenId(release.collectionId, token.id), "theme token");
         }
         for (const page of release.pages ?? []) {
@@ -101,6 +104,13 @@ function assertCollectionDependencies(releases: readonly CollectionRelease[]): v
     for (const release of releases) {
         validateDependencies(release, byId);
         validateCollectionStateBindings(release, byId);
+        try {
+            validateInstalledCollectionSvgReferences(release, byId);
+        } catch (error) {
+            reject(
+                error instanceof Error ? error.message : `Collection ${release.collectionId} has an invalid SVG asset`,
+            );
+        }
         visit(release.collectionId, byId, visiting, visited, []);
     }
 }
@@ -131,7 +141,9 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
         const exportedTokens = new Set(target.exports?.themeTokens ?? []);
         const targetTokens = new Map(
             target.theme?.categories.flatMap((category) =>
-                category.tokens.map((token) => [token.id, token.generation ?? 1] as const),
+                category.entries
+                    .filter((entry) => entry.type !== "font-face")
+                    .map((token) => [token.id, token.generation ?? 1] as const),
             ) ?? [],
         );
         for (const token of dependency.imports.themeTokens) {
@@ -192,7 +204,9 @@ function validateImportedThemeTypes(release: CollectionRelease, byId: ReadonlyMa
             const target = byId.get(dependency.collectionId)!;
             const tokens = new Map(
                 (target.theme?.categories ?? []).flatMap((category) =>
-                    category.tokens.map((token) => [token.id, token] as const),
+                    category.entries
+                        .filter((entry) => entry.type !== "font-face")
+                        .map((token) => [token.id, token] as const),
                 ),
             );
             return dependency.imports.themeTokens.map(
@@ -200,7 +214,9 @@ function validateImportedThemeTypes(release: CollectionRelease, byId: ReadonlyMa
             );
         }),
     );
-    for (const token of release.theme?.categories.flatMap((category) => category.tokens) ?? []) {
+    for (const token of release.theme?.categories.flatMap((category) =>
+        category.entries.filter((entry) => entry.type !== "font-face"),
+    ) ?? []) {
         for (const value of Object.values(token.defaults)) {
             const match = /^var\(\s*--([a-z][a-z0-9-]*)\s*\)$/iu.exec(value);
             const target = match ? imported.get(match[1]!) : undefined;

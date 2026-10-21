@@ -26,9 +26,13 @@ Local Ulvia CMS development runtime.
 - Collection text sources recursively merge definition arrays separately from
   `locales/<locale>/` value objects. Bloc discovery recursively traverses pure
   grouping directories and stops at a folder-owned `definition.json`.
-- Collection assets may live recursively below `assets/`; their authored
-  `source` path is compilation-only and remains independent from the stable
-  public asset ID.
+- Collection assets are discovered recursively below `assets/`; the normalized
+  lowercase relative path is their stable collection-local ID. Do not declare
+  them in the collection `definition.json`. An optional root
+  `assets/definition.json` contains only per-path generation overrides.
+- Safe presentation-only SVG assets are admitted with the `inline-svg` profile
+  automatically. Invalid or richer SVG files remain ordinary downloadable
+  assets and cannot be expanded through `cms-svg`.
 - Authored collection exports may use `"*"` globally or for one resource kind.
   Expand it to exact public resource IDs before admission, never place a wildcard
   in the immutable release, and never accept wildcard dependency imports.

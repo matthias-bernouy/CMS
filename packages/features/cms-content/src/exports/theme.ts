@@ -1,5 +1,6 @@
 export type {
     ThemeDefinition,
+    ThemeFontFace,
     ThemeMode,
     ThemeSettings,
     ThemeSource,

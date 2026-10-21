@@ -1,9 +1,16 @@
-import type { CollectionTheme, CollectionThemeToken, CollectionThemeTokenType } from "../../interfaces/CollectionTheme";
+import type {
+    CollectionTheme,
+    CollectionThemeEntry,
+    CollectionThemeFontFace,
+    CollectionThemeToken,
+    CollectionThemeTokenType,
+} from "../../interfaces/CollectionTheme";
 import type { CollectionDependency } from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import type { CollectionLimits } from "../limits";
 import { collectionThemeSourceId, collectionThemeTokenId } from "../namespace";
 import { array, identifier, integer, keys, record, string, unique } from "../values";
+import { parseAssetId } from "./assets";
 
 const TYPES = new Set<CollectionThemeTokenType>(["color", "font-family", "length", "number", "shadow", "value"]);
 const NAME = /^[a-z][a-z0-9-]*$/;
@@ -43,42 +50,17 @@ export function parseCollectionTheme(
     const categories = array(source.categories, limits.maxThemeCategories, "$.theme.categories").map((entry, index) => {
         const path = `$.theme.categories[${index}]`;
         const category = record(entry, path);
-        keys(category, ["id", "label", "description", "tokens"], path);
-        const tokens = array(category.tokens, limits.maxThemeTokens, `${path}.tokens`).map((item, offset) => {
-            const tokenPath = `${path}.tokens[${offset}]`;
-            const token = record(item, tokenPath);
-            keys(token, ["id", "generation", "label", "description", "type", "defaults"], tokenPath);
-            if (!TYPES.has(token.type as CollectionThemeTokenType)) {
-                invalid("unsupported token type", `${tokenPath}.type`);
-            }
-            const defaults = record(token.defaults, `${tokenPath}.defaults`);
-            keys(defaults, ["light", "dark"], `${tokenPath}.defaults`);
-            const id = name(token.id, `${tokenPath}.id`);
-            collectionThemeTokenId(collectionId, id);
-            return {
-                id,
-                generation:
-                    token.generation === undefined
-                        ? 1
-                        : integer(token.generation, 1, Number.MAX_SAFE_INTEGER, `${tokenPath}.generation`),
-                label: label(token.label, `${tokenPath}.label`),
-                ...(token.description === undefined
-                    ? {}
-                    : { description: string(token.description, 500, `${tokenPath}.description`) }),
-                type: token.type as CollectionThemeTokenType,
-                defaults: {
-                    light: css(defaults.light, `${tokenPath}.defaults.light`),
-                    ...(defaults.dark === undefined ? {} : { dark: css(defaults.dark, `${tokenPath}.defaults.dark`) }),
-                },
-            } satisfies CollectionThemeToken;
-        });
-        unique(
-            tokens.map((token) => token.id),
-            `${path}.tokens`,
+        keys(category, ["id", "label", "description", "entries"], path);
+        const entries = array(category.entries, limits.maxThemeTokens, `${path}.entries`).map((item, offset) =>
+            parseThemeEntry(item, collectionId, `${path}.entries[${offset}]`),
         );
-        tokenCount += tokens.length;
+        unique(
+            entries.map((entry) => entry.id),
+            `${path}.entries`,
+        );
+        tokenCount += entries.length;
         if (tokenCount > limits.maxThemeTokens) {
-            invalid(`theme must define at most ${limits.maxThemeTokens} tokens`, "$.theme.categories");
+            invalid(`theme must define at most ${limits.maxThemeTokens} entries`, "$.theme.categories");
         }
         return {
             id: name(category.id, `${path}.id`),
@@ -86,7 +68,7 @@ export function parseCollectionTheme(
             ...(category.description === undefined
                 ? {}
                 : { description: string(category.description, 500, `${path}.description`) }),
-            tokens,
+            entries,
         };
     });
     unique(
@@ -94,12 +76,81 @@ export function parseCollectionTheme(
         "$.theme.categories",
     );
     unique(
-        categories.flatMap((category) => category.tokens.map((token) => token.id)),
-        "$.theme.tokens",
+        categories.flatMap((category) => category.entries.map((entry) => entry.id)),
+        "$.theme.entries",
     );
     const theme = { label: label(source.label, "$.theme.label"), categories };
     validateThemeReferences(theme, collectionId, dependencies);
     return theme;
+}
+
+function parseThemeEntry(value: unknown, collectionId: string, path: string): CollectionThemeEntry {
+    const source = record(value, path);
+    if (source.type === "font-face") {
+        keys(source, ["id", "type", "asset", "family", "style", "weight", "display"], path);
+        const style = string(source.style, 16, `${path}.style`);
+        const display = string(source.display, 16, `${path}.display`);
+        const weight = string(source.weight, 16, `${path}.weight`);
+        if (!["normal", "italic", "oblique"].includes(style)) {
+            invalid("unsupported font style", `${path}.style`);
+        }
+        if (!["auto", "block", "swap", "fallback", "optional"].includes(display)) {
+            invalid("unsupported font display", `${path}.display`);
+        }
+        if (!validFontWeight(weight)) {
+            invalid("must be a font weight from 1 to 1000 or an ascending range", `${path}.weight`);
+        }
+        return {
+            id: name(source.id, `${path}.id`),
+            type: "font-face",
+            asset: parseAssetId(source.asset, `${path}.asset`),
+            family: name(source.family, `${path}.family`),
+            style: style as CollectionThemeFontFace["style"],
+            weight,
+            display: display as CollectionThemeFontFace["display"],
+        };
+    }
+    keys(source, ["id", "generation", "label", "description", "type", "defaults"], path);
+    if (!TYPES.has(source.type as CollectionThemeTokenType)) {
+        invalid("unsupported theme entry type", `${path}.type`);
+    }
+    const defaults = record(source.defaults, `${path}.defaults`);
+    keys(defaults, ["light", "dark"], `${path}.defaults`);
+    const id = name(source.id, `${path}.id`);
+    collectionThemeTokenId(collectionId, id);
+    return {
+        id,
+        generation: generation(source.generation, path),
+        label: label(source.label, `${path}.label`),
+        ...(source.description === undefined
+            ? {}
+            : { description: string(source.description, 500, `${path}.description`) }),
+        type: source.type as CollectionThemeTokenType,
+        defaults: {
+            light: css(defaults.light, `${path}.defaults.light`),
+            ...(defaults.dark === undefined ? {} : { dark: css(defaults.dark, `${path}.defaults.dark`) }),
+        },
+    };
+}
+
+function generation(value: unknown, path: string): number {
+    return value === undefined ? 1 : integer(value, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`);
+}
+
+function validFontWeight(value: string): boolean {
+    const weights = value.split(" ");
+    if (weights.length < 1 || weights.length > 2 || weights.some((weight) => !/^\d{1,4}$/u.test(weight))) {
+        return false;
+    }
+    const numbers = weights.map(Number);
+    return (
+        numbers.every((weight) => weight >= 1 && weight <= 1_000) &&
+        (numbers.length === 1 || numbers[0]! <= numbers[1]!)
+    );
+}
+
+export function isThemeToken(entry: CollectionThemeEntry): entry is CollectionThemeToken {
+    return entry.type !== "font-face";
 }
 
 function validateThemeReferences(
@@ -107,7 +158,7 @@ function validateThemeReferences(
     collectionId: string,
     dependencies: readonly CollectionDependency[],
 ): void {
-    const tokens = theme.categories.flatMap((category) => category.tokens);
+    const tokens = theme.categories.flatMap((category) => category.entries.filter(isThemeToken));
     const local = new Map(tokens.map((token) => [collectionThemeTokenId(collectionId, token.id), token]));
     const imported = new Set(
         dependencies.flatMap((dependency) =>
@@ -116,18 +167,21 @@ function validateThemeReferences(
     );
     const graph = new Map(tokens.map((token) => [token.id, new Set<string>()]));
     for (const [categoryIndex, category] of theme.categories.entries()) {
-        for (const [tokenIndex, token] of category.tokens.entries()) {
+        for (const [entryIndex, entry] of category.entries.entries()) {
+            if (!isThemeToken(entry)) {
+                continue;
+            }
             for (const mode of ["light", "dark"] as const) {
-                const value = token.defaults[mode];
+                const value = entry.defaults[mode];
                 if (value === undefined) {
                     continue;
                 }
-                const path = `$.theme.categories[${categoryIndex}].tokens[${tokenIndex}].defaults.${mode}`;
+                const path = `$.theme.categories[${categoryIndex}].entries[${entryIndex}].defaults.${mode}`;
                 for (const variable of references(value)) {
                     const target = local.get(variable);
                     if (target) {
-                        graph.get(token.id)!.add(target.id);
-                        validateReferenceType(token, target, value, variable, path);
+                        graph.get(entry.id)!.add(target.id);
+                        validateReferenceType(entry, target, value, variable, path);
                         continue;
                     }
                     if (imported.has(variable)) {

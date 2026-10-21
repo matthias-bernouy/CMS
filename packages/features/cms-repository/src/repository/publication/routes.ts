@@ -1,4 +1,5 @@
 import type { RemoteCoordinate, RepositoryArtifactKind } from "./types";
+import { isPublicationAssetId } from "./protocol";
 
 export function parsePublicationUploadPath(path: string): { uploadId: string; assetId?: string } | null {
     const parts = path.split("/");
@@ -8,9 +9,7 @@ export function parsePublicationUploadPath(path: string): { uploadId: string; as
     if (parts.length === 6 && parts[1] === "v1" && parts[2] === "publication-uploads" && parts[4] === "assets") {
         try {
             const assetId = decodeURIComponent(parts[5]!);
-            return validUploadId(parts[3]) && /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/u.test(assetId)
-                ? { uploadId: parts[3]!, assetId }
-                : null;
+            return validUploadId(parts[3]) && isPublicationAssetId(assetId) ? { uploadId: parts[3]!, assetId } : null;
         } catch {
             return null;
         }

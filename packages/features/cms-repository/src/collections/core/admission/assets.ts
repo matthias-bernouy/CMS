@@ -12,7 +12,9 @@ import {
 } from "@bernouy/binary-media";
 import { CollectionValidationError } from "cms-repository/collections/core/errors";
 import type { CollectionLimits } from "cms-repository/collections/core/limits";
-import { array, identifier, keys, ordinal, record } from "cms-repository/collections/core/values";
+import { array, keys, ordinal, record } from "cms-repository/collections/core/values";
+import { parseAssetId } from "cms-repository/collections/core/parsing/assets";
+import { parseInlineSvgAsset } from "@bernouy/cms-content/page-document";
 
 function mismatch(message: string, path: string): never {
     throw new CollectionValidationError("asset_mismatch", message, path);
@@ -43,7 +45,7 @@ export function snapshotCollectionAssets(
         const path = `$.assets[${index}]`;
         const asset = record(item, path);
         keys(asset, ["id", "bytes"], path);
-        const id = identifier(asset.id, `${path}.id`);
+        const id = parseAssetId(asset.id, `${path}.id`);
         const declaration = declared.get(id);
         if (!declaration || seen.has(id)) {
             mismatch("asset set contains an undeclared or duplicate identifier", `${path}.id`);
@@ -90,6 +92,13 @@ export async function verifyCollectionAssets(
         const mediaIssue = mediaTypeIssue(declaration.mediaType, content);
         if (mediaIssue) {
             mismatch(mediaIssue, path);
+        }
+        if (declaration.profiles?.includes("inline-svg")) {
+            try {
+                parseInlineSvgAsset(content);
+            } catch (error) {
+                mismatch(error instanceof Error ? error.message : "invalid inline SVG asset", `${path}.profiles`);
+            }
         }
     }
 }

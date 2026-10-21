@@ -7,6 +7,8 @@ import { syncDirectory } from "./durable";
 const LEASE_SCHEMA = "ulvia.filesystem-lease.v1";
 const STALE_AFTER_MS = 10 * 60 * 1_000;
 const HEARTBEAT_MS = 60 * 1_000;
+const WRITE_LOCK_WAIT_MS = 30 * 1_000;
+const WRITE_LOCK_RETRY_MS = 10;
 
 type LeaseDocument = Readonly<{
     schema: typeof LEASE_SCHEMA;
@@ -32,11 +34,25 @@ type FilesystemLeaseOptions = Readonly<{ createParent?: boolean }>;
 /** Serialize repository metadata and publication mutations across local processes. */
 export async function withRepositoryWriteLock<T>(root: string, operation: () => Promise<T>): Promise<T> {
     await mkdir(root, { recursive: true, mode: 0o700 });
-    const lease = await acquireFilesystemLease(join(root, ".write-lock"));
+    const lease = await waitForFilesystemLease(join(root, ".write-lock"));
     try {
         return await operation();
     } finally {
         await lease.release();
+    }
+}
+
+async function waitForFilesystemLease(path: string): Promise<FilesystemLease> {
+    const deadline = Date.now() + WRITE_LOCK_WAIT_MS;
+    for (;;) {
+        try {
+            return await acquireFilesystemLease(path);
+        } catch (error) {
+            if (!(error instanceof FilesystemLeaseBusyError) || Date.now() >= deadline) {
+                throw error;
+            }
+            await new Promise((resolve) => setTimeout(resolve, WRITE_LOCK_RETRY_MS));
+        }
     }
 }
 

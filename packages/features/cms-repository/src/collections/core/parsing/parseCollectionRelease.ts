@@ -5,7 +5,7 @@ import { CollectionValidationError, invalid, translateCollectionError } from "..
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
 import { identifier, integer, keys, record, string } from "../values";
 import { collectionThemeTokenId, parseCollectionNamespace } from "../namespace";
-import { parseCollectionTheme } from "./theme";
+import { isThemeToken, parseCollectionTheme } from "./theme";
 import { parseCollectionTexts } from "../texts/parseCollectionTexts";
 import { parseAssets } from "./assets";
 import { parseBlocs } from "./blocs/parseBlocs";
@@ -87,6 +87,14 @@ export function parseCollectionRelease(
             source.theme === undefined
                 ? undefined
                 : parseCollectionTheme(source.theme, collectionId, limits, dependencies ?? []);
+        for (const face of theme?.categories.flatMap((category) =>
+            category.entries.filter((entry) => entry.type === "font-face"),
+        ) ?? []) {
+            const asset = assets.find((candidate) => candidate.id === face.asset);
+            if (!asset || asset.mediaType !== "font/woff2") {
+                invalid("font-face must reference a local WOFF2 asset", `$.theme.font-face.${face.id}.asset`);
+            }
+        }
         const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits);
         const importedBlocs = new Set(
             dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? [],
@@ -96,7 +104,9 @@ export function parseCollectionRelease(
             importedBlocs,
             themeVariables: new Set([
                 ...(theme?.categories.flatMap((category) =>
-                    category.tokens.map((token) => collectionThemeTokenId(collectionId, token.id)),
+                    category.entries
+                        .filter(isThemeToken)
+                        .map((token) => collectionThemeTokenId(collectionId, token.id)),
                 ) ?? []),
                 ...(dependencies?.flatMap((dependency) =>
                     dependency.imports.themeTokens.map(({ id }) => collectionThemeTokenId(dependency.collectionId, id)),
@@ -126,7 +136,7 @@ export function parseCollectionRelease(
         validateCollectionAssetReferences(
             blocs,
             collectionId,
-            new Set(assets.map((asset) => asset.id)),
+            new Map(assets.map((asset) => [asset.id, asset])),
             new Map(
                 (dependencies ?? []).map((dependency) => [
                     dependency.collectionId,
@@ -141,7 +151,11 @@ export function parseCollectionRelease(
             validateCollectionExports(
                 exports,
                 new Set(blocs.map((bloc) => bloc.id)),
-                new Set(theme?.categories.flatMap((category) => category.tokens.map((token) => token.id)) ?? []),
+                new Set(
+                    theme?.categories.flatMap((category) =>
+                        category.entries.filter(isThemeToken).map((token) => token.id),
+                    ) ?? [],
+                ),
                 new Set(texts?.map((text) => text.id) ?? []),
                 new Set(assets.map((asset) => asset.id)),
                 new Set(pages?.map((page) => page.id) ?? []),

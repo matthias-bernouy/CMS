@@ -1,5 +1,11 @@
 import { expect, test } from "bun:test";
-import { CollectionStore, MemoryCollectionStorage } from "../../../src/exports/collections/installations";
+import {
+    assertCompatibleCollectionUpgrade,
+    CollectionStore,
+    collectionUpgradeBreakingResources,
+    MemoryCollectionStorage,
+} from "../../../src/exports/collections/installations";
+import type { CollectionRelease } from "../../../src/exports/collections";
 import { collectionDocument } from "../fixtures";
 
 function release(version: string) {
@@ -17,7 +23,7 @@ function release(version: string) {
                 {
                     id: "colors",
                     label: "theme.category.colors.label",
-                    tokens: [
+                    entries: [
                         {
                             id: "accent",
                             label: "theme.token.accent.label",
@@ -52,13 +58,13 @@ test("upgrades preserve existing slot contracts and theme token types", async ()
     await expect(store.upgrade("site", withChangedSlot.digest, 1, "local")).rejects.toThrow("slot contract");
 
     const changedToken = release("1.2.0");
-    changedToken.theme.categories[0]!.tokens[0]!.type = "value";
+    changedToken.theme.categories[0]!.entries[0]!.type = "value";
     const withChangedToken = await store.importRelease(changedToken);
     await expect(store.upgrade("site", withChangedToken.digest, 1, "local")).rejects.toThrow("theme token");
 
     const compatible = release("1.3.0");
-    compatible.theme.categories[0]!.tokens[0]!.defaults.light = "#654321";
-    compatible.theme.categories[0]!.tokens.push({
+    compatible.theme.categories[0]!.entries[0]!.defaults.light = "#654321";
+    compatible.theme.categories[0]!.entries.push({
         id: "surface",
         label: "theme.token.surface.label",
         type: "color",
@@ -66,6 +72,40 @@ test("upgrades preserve existing slot contracts and theme token types", async ()
     });
     const admitted = await store.importRelease(compatible);
     await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
+});
+
+test("asset profiles may expand but cannot remove an existing rendering guarantee", () => {
+    const previous = release("1.0.0");
+    previous.assets = [
+        {
+            id: "icons/check.svg",
+            mediaType: "image/svg+xml",
+            byteLength: 1,
+            digest: `sha256:${"0".repeat(64)}`,
+        },
+    ];
+    const expanded = structuredClone(previous);
+    expanded.version = "1.1.0";
+    expanded.assets[0]!.profiles = ["inline-svg"];
+
+    expect(() =>
+        assertCompatibleCollectionUpgrade(
+            previous as unknown as CollectionRelease,
+            expanded as unknown as CollectionRelease,
+        ),
+    ).not.toThrow();
+    expect(
+        collectionUpgradeBreakingResources(
+            expanded as unknown as CollectionRelease,
+            previous as unknown as CollectionRelease,
+        ),
+    ).toEqual([
+        {
+            kind: "asset",
+            id: "icons/check.svg",
+            reason: "asset icons/check.svg was removed or changed",
+        },
+    ]);
 });
 
 test("simple upgrades cannot bypass a resource generation migration", async () => {

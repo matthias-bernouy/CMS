@@ -118,6 +118,43 @@ describe("structured themes", () => {
         expect(settings.themes[0]!.values).toEqual({ light: {}, dark: {} });
     });
 
+    test("emits verified contribution font faces before theme variables", () => {
+        const settings = defaultThemeSettings();
+        addCustomToken(settings, "brand-accent", "color");
+        settings.themes[0]!.values.light["brand-accent"] = "#16634d";
+        settings.sources.push({
+            id: "contribution-atlas",
+            label: "Atlas",
+            supportsModes: false,
+            owner: { kind: "contribution", contributionId: "atlas" },
+            fontFaces: [
+                {
+                    id: "atlas-interface",
+                    family: "atlas-interface",
+                    source: "{{ cms.asset.atlas.fonts/interface.woff2 }}",
+                    style: "normal",
+                    weight: "100 900",
+                    display: "swap",
+                },
+            ],
+            categories: [],
+        });
+
+        const validated = validateThemeSettings(settings);
+        const css = generateThemeCss(validated);
+
+        expect(css).toContain('@font-face {\n  font-family: "atlas-interface";');
+        expect(css).toContain('src: url("{{ cms.asset.atlas.fonts/interface.woff2 }}") format("woff2");');
+        expect(css).toContain("font-weight: 100 900;");
+        expect(css.indexOf("@font-face")).toBeLessThan(css.indexOf(":root"));
+
+        validated.sources.at(-1)!.fontFaces![0]!.source = "https://example.com/font.woff2";
+        expect(() => validateThemeSettings(validated)).toThrow("immutable collection asset");
+
+        validated.sources.at(-1)!.fontFaces![0]!.source = "{{ cms.asset.other.fonts/interface.woff2 }}";
+        expect(() => validateThemeSettings(validated)).toThrow("immutable collection asset");
+    });
+
     test("rejects theme links between separately owned integrations", () => {
         const settings = defaultThemeSettings();
         settings.sources.push(

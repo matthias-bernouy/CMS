@@ -85,7 +85,7 @@ function parseReference(request: Request, basePath: string) {
             .split("/")
             .map(decodeURIComponent);
         const valid = /^[a-z][a-z0-9-]{0,95}$/u.test(collectionId ?? "");
-        const validAsset = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(assetId ?? "");
+        const validAsset = /^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/u.test(assetId ?? "");
         if (segment !== "assets" || extra.length > 0 || !valid || !validAsset) {
             return null;
         }

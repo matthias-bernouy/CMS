@@ -97,10 +97,12 @@ function acceptIncludes(candidate: CollectionSlotAccept, previous: CollectionSlo
 function assertThemeCompatibility(previous: CollectionRelease, next: CollectionRelease): void {
     const nextTokens = new Map(
         (next.theme?.categories ?? []).flatMap((category) =>
-            category.tokens.map((token) => [token.id, token] as const),
+            category.entries.filter((entry) => entry.type !== "font-face").map((token) => [token.id, token] as const),
         ),
     );
-    for (const token of previous.theme?.categories.flatMap((category) => category.tokens) ?? []) {
+    for (const token of previous.theme?.categories.flatMap((category) =>
+        category.entries.filter((entry) => entry.type !== "font-face"),
+    ) ?? []) {
         const replacement = nextTokens.get(token.id);
         if (!replacement || replacement.type !== token.type) {
             reject(`Upgrade removes or changes existing theme token ${token.id}`);
@@ -145,7 +147,11 @@ function assertAssetCompatibility(previous: CollectionRelease, next: CollectionR
     const nextAssets = new Map(next.assets.map((asset) => [asset.id, asset]));
     for (const asset of previous.assets) {
         const replacement = nextAssets.get(asset.id);
-        if (!replacement || replacement.mediaType !== asset.mediaType) {
+        if (
+            !replacement ||
+            replacement.mediaType !== asset.mediaType ||
+            !assetProfilesInclude(replacement.profiles ?? [], asset.profiles ?? [])
+        ) {
             reject(`Upgrade removes or changes existing asset ${asset.id}`);
         }
     }
@@ -169,10 +175,12 @@ export function collectionUpgradeBreakingResources(
     }
     const nextTokens = new Map(
         (next.theme?.categories ?? []).flatMap((category) =>
-            category.tokens.map((token) => [token.id, token] as const),
+            category.entries.filter((entry) => entry.type !== "font-face").map((token) => [token.id, token] as const),
         ),
     );
-    for (const token of previous.theme?.categories.flatMap((category) => category.tokens) ?? []) {
+    for (const token of previous.theme?.categories.flatMap((category) =>
+        category.entries.filter((entry) => entry.type !== "font-face"),
+    ) ?? []) {
         const replacement = nextTokens.get(token.id);
         if (!replacement || replacement.type !== token.type) {
             changes.push({
@@ -198,7 +206,11 @@ export function collectionUpgradeBreakingResources(
     const nextAssets = new Map(next.assets.map((asset) => [asset.id, asset]));
     for (const asset of previous.assets) {
         const replacement = nextAssets.get(asset.id);
-        if (!replacement || replacement.mediaType !== asset.mediaType) {
+        if (
+            !replacement ||
+            replacement.mediaType !== asset.mediaType ||
+            !assetProfilesInclude(replacement.profiles ?? [], asset.profiles ?? [])
+        ) {
             changes.push({ kind: "asset", id: asset.id, reason: `asset ${asset.id} was removed or changed` });
         }
     }
@@ -223,6 +235,10 @@ export function collectionUpgradeBreakingResources(
         }
     }
     return changes;
+}
+
+function assetProfilesInclude(next: readonly string[], previous: readonly string[]): boolean {
+    return previous.every((profile) => next.includes(profile));
 }
 
 function assertStateCompatibility(previous: CollectionRelease, next: CollectionRelease): void {

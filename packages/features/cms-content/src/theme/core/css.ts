@@ -13,6 +13,22 @@ export function generateThemeCss(settings: ThemeSettings | undefined): string {
     const light = declarations(theme.values.light, tokens, "light");
     const dark = declarations(theme.values.dark, tokens, "dark");
     const chunks: string[] = [];
+    const fontFaces = settings.sources.flatMap((source) => source.fontFaces ?? []);
+    if (fontFaces.length) {
+        chunks.push(
+            fontFaces
+                .map(
+                    (face) => `@font-face {
+  font-family: "${face.family}";
+  src: url("${face.source}") format("woff2");
+  font-style: ${face.style};
+  font-weight: ${face.weight};
+  font-display: ${face.display};
+}`,
+                )
+                .join("\n\n"),
+        );
+    }
     if (light) {
         chunks.push(`:root {\n${light}\n}`);
     }

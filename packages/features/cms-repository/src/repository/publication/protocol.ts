@@ -103,7 +103,7 @@ function parseUploadAsset(value: unknown) {
         !plainRecord(value) ||
         Object.keys(value).some((key) => !["id", "byteLength", "digest"].includes(key)) ||
         typeof value.id !== "string" ||
-        !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/u.test(value.id) ||
+        !isPublicationAssetId(value.id) ||
         !Number.isSafeInteger(value.byteLength) ||
         (value.byteLength as number) < 0 ||
         (value.byteLength as number) > MAX_PUBLICATION_ASSET_BYTES ||
@@ -116,6 +116,16 @@ function parseUploadAsset(value: unknown) {
         byteLength: value.byteLength as number,
         digest: value.digest,
     };
+}
+
+export function isPublicationAssetId(value: string): boolean {
+    return (
+        value.length > 0 &&
+        value.length <= 512 &&
+        !value.includes("\\") &&
+        !value.startsWith("/") &&
+        value.split("/").every((segment) => /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/u.test(segment))
+    );
 }
 
 function isKind(value: unknown): value is RepositoryArtifactKind {

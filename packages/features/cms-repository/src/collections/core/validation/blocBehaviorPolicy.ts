@@ -6,6 +6,15 @@ export function validateForbiddenBlocBehavior(source: string, label: string): re
     if (/\battachShadow\s*\(|\.\s*shadowRoot\b/u.test(source)) {
         errors.push(`${label}: Shadow DOM APIs are forbidden — mount behavior on the native \`cms-bloc\` root.`);
     }
+    if (
+        /\bcreateElementNS\s*\(\s*["'`]http:\/\/www\.w3\.org\/2000\/svg["'`]/u.test(source) ||
+        /\bcreateElement\s*\(\s*["'`]svg["'`]/u.test(source) ||
+        /<svg(?:\s|>)/iu.test(source)
+    ) {
+        errors.push(
+            `${label}: programmatic SVG markup is forbidden — declare an empty \`<svg cms-svg="…">\` backed by an admitted asset.`,
+        );
+    }
     const locationMutations: readonly [name: string, pattern: RegExp][] = [
         ["location.href = …", /\blocation\s*\.\s*href\s*=/u],
         ["window.location.href = …", /\bwindow\s*\.\s*location\s*\.\s*href\s*=/u],

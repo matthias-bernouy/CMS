@@ -58,7 +58,9 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
     }));
     for (const { category, categoryIndex, token, tokenIndex } of release.theme?.categories.flatMap(
         (category, categoryIndex) =>
-            category.tokens.map((token, tokenIndex) => ({ category, categoryIndex, token, tokenIndex })),
+            category.entries
+                .filter((entry) => entry.type !== "font-face")
+                .map((token, tokenIndex) => ({ category, categoryIndex, token, tokenIndex })),
     ) ?? []) {
         resources.push({
             kind: "theme-token",
@@ -94,7 +96,12 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
             kind: "asset" as const,
             id: asset.id,
             generation: asset.generation ?? 1,
-            contract: { id: asset.id, generation: asset.generation ?? 1, mediaType: asset.mediaType },
+            contract: {
+                id: asset.id,
+                generation: asset.generation ?? 1,
+                mediaType: asset.mediaType,
+                profiles: asset.profiles ?? [],
+            },
             implementation: {
                 byteLength: asset.byteLength,
                 digest: asset.digest,
