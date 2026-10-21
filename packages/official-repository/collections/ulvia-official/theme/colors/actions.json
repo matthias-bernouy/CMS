@@ -2,7 +2,7 @@
     "id": "actions",
     "label": "theme.category.actions.label",
     "description": "theme.category.actions.description",
-    "tokens": [
+    "entries": [
         {
             "id": "primary",
             "label": "theme.token.primary.label",

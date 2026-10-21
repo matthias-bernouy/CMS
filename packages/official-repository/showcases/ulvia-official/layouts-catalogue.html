@@ -1,5 +1,5 @@
 <div sticky-header="" width="full" layout="dual-sidebar" cms-bloc="ulvia-official-app-shell">
-    <span tone="primary" size="lg" name="layout" slot="brand" cms-bloc="ulvia-official-icon"></span>
+    <svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/layout.svg }}" aria-hidden="true" slot="brand"></svg>
     <strong slot="brand">Ulvia Console</strong>
     <span slot="primary-mobile-label">Layouts</span>
     <span slot="secondary-mobile-label">Overview</span>
@@ -8,19 +8,22 @@
         <div divider="" slot="sections" cms-bloc="ulvia-official-navigation-section">
             <span slot="label">Content</span>
             <a emphasis="default" active="" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/catalogue"
-                ><span slot="content" tone="current" size="md" name="layout" cms-bloc="ulvia-official-icon"></span><span slot="content">Layouts</span></a
+                ><svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/layout.svg }}" aria-hidden="true" slot="content"></svg
+                ><span slot="content">Layouts</span></a
             >
             <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/forms/catalogue"
-                ><span slot="content" tone="current" size="md" name="pages" cms-bloc="ulvia-official-icon"></span><span slot="content">Forms</span></a
+                ><svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/pages.svg }}" aria-hidden="true" slot="content"></svg
+                ><span slot="content">Forms</span></a
             >
             <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/forms/contact"
-                ><span slot="content" tone="current" size="md" name="users" cms-bloc="ulvia-official-icon"></span><span slot="content">Contact</span></a
+                ><svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/users.svg }}" aria-hidden="true" slot="content"></svg
+                ><span slot="content">Contact</span></a
             >
         </div>
         <div slot="sections" cms-bloc="ulvia-official-navigation-section">
             <span slot="label">Workspace</span>
             <div count="4" expanded="" slot="items" cms-bloc="ulvia-official-navigation-group">
-                <span tone="current" size="md" name="collections" slot="icon" cms-bloc="ulvia-official-icon"></span>
+                <svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/collections.svg }}" aria-hidden="true" slot="icon"></svg>
                 <span slot="label">Collection tools</span>
                 <a emphasis="default" active="" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/catalogue"
                     ><span slot="content">Release</span></a
@@ -40,10 +43,11 @@
         <div slot="sections" cms-bloc="ulvia-official-navigation-section">
             <span slot="label">Collection</span>
             <a emphasis="default" active="" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/catalogue"
-                ><span slot="content" tone="current" size="md" name="dashboard" cms-bloc="ulvia-official-icon"></span><span slot="content">Overview</span></a
+                ><svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/dashboard.svg }}" aria-hidden="true" slot="content"></svg
+                ><span slot="content">Overview</span></a
             >
             <div count="3" expanded="" slot="items" cms-bloc="ulvia-official-navigation-group">
-                <span tone="current" size="md" name="layout" slot="icon" cms-bloc="ulvia-official-icon"></span>
+                <svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/layout.svg }}" aria-hidden="true" slot="icon"></svg>
                 <span slot="label">Resources</span>
                 <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/components"><span slot="content">Blocks</span></a>
                 <a emphasis="default" slot="items" cms-bloc="ulvia-official-navigation-item" href="/layouts/theme"><span slot="content">Theme tokens</span></a>
@@ -56,7 +60,7 @@
 
     <div density="default" appearance="plain" width="xl" slot="content" cms-bloc="ulvia-official-page-shell">
         <div justify="start" items-align="center" gap="sm" slot="breadcrumb" cms-bloc="ulvia-official-cluster">
-            <span tone="muted" size="sm" name="collections" slot="items" cms-bloc="ulvia-official-icon"></span>
+            <svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/collections.svg }}" aria-hidden="true" slot="items"></svg>
             <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose">
                 <span slot="content">Collections / Ulvia Official / Release 1.0</span>
             </div>
@@ -70,7 +74,7 @@
         </div>
         <div justify="end" items-align="center" gap="sm" slot="actions" cms-bloc="ulvia-official-cluster">
             <a size="md" tone="primary" variant="filled" slot="items" cms-bloc="ulvia-official-action" href="/layouts/components"
-                ><span><span tone="current" size="sm" name="layout" cms-bloc="ulvia-official-icon"></span><span>Explore components</span></span></a
+                ><svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/layout.svg }}" aria-hidden="true"></svg>Explore components</a
             >
         </div>
         <div label="Layout catalogue sections" size="md" tabs-align="start" appearance="underline" slot="navigation" cms-bloc="ulvia-official-route-tabs">
@@ -85,7 +89,7 @@
                 <div density="default" appearance="elevated" slot="items" cms-bloc="ulvia-official-panel">
                     <h2 text-align="start" size="md" slot="header" cms-bloc="ulvia-official-heading">Collection health</h2>
                     <a size="sm" tone="neutral" variant="ghost" slot="actions" cms-bloc="ulvia-official-action" href="/layouts/details"
-                        ><span><span tone="current" size="sm" name="health" cms-bloc="ulvia-official-icon"></span><span>View review</span></span></a
+                        ><svg cms-svg="{{ cms.asset.ulvia-official.icons/feedback/health.svg }}" aria-hidden="true"></svg>View review</a
                     >
                     <div gap="md" columns="4" slot="content" cms-bloc="ulvia-official-grid">
                         <div text-align="start" slot="items" cms-bloc="ulvia-official-stat">
@@ -121,7 +125,7 @@
                                     </div>
                                 </div>
                                 <div justify="start" items-align="center" gap="sm" slot="items" cms-bloc="ulvia-official-cluster">
-                                    <span tone="primary" size="sm" name="check" slot="items" cms-bloc="ulvia-official-icon"></span>
+                                    <svg cms-svg="{{ cms.asset.ulvia-official.icons/feedback/check.svg }}" aria-hidden="true" slot="items"></svg>
                                     <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Ready</strong></div>
                                 </div>
                             </div>
@@ -137,7 +141,7 @@
                                     </div>
                                 </div>
                                 <div justify="start" items-align="center" gap="sm" slot="items" cms-bloc="ulvia-official-cluster">
-                                    <span tone="primary" size="sm" name="check" slot="items" cms-bloc="ulvia-official-icon"></span>
+                                    <svg cms-svg="{{ cms.asset.ulvia-official.icons/feedback/check.svg }}" aria-hidden="true" slot="items"></svg>
                                     <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Ready</strong></div>
                                 </div>
                             </div>
@@ -153,7 +157,7 @@
                                     </div>
                                 </div>
                                 <div justify="start" items-align="center" gap="sm" slot="items" cms-bloc="ulvia-official-cluster">
-                                    <span tone="primary" size="sm" name="check" slot="items" cms-bloc="ulvia-official-icon"></span>
+                                    <svg cms-svg="{{ cms.asset.ulvia-official.icons/feedback/check.svg }}" aria-hidden="true" slot="items"></svg>
                                     <div size="sm" measure="wide" slot="items" cms-bloc="ulvia-official-prose"><strong slot="content">Ready</strong></div>
                                 </div>
                             </div>

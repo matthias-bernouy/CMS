@@ -2,7 +2,7 @@
     "id": "motion",
     "label": "theme.category.motion.label",
     "description": "theme.category.motion.description",
-    "tokens": [
+    "entries": [
         {
             "id": "duration-fast",
             "label": "theme.token.duration-fast.label",

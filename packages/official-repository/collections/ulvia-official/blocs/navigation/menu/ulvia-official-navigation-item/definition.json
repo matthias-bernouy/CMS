@@ -5,7 +5,7 @@
     "description": "bloc.navigation-item.description",
     "category": "bloc.category.navigation",
     "order": 50,
-    "uses": ["ulvia-official-icon"],
+    "uses": [],
     "requires": [],
     "slots": {
         "content": {
@@ -16,6 +16,10 @@
                 {
                     "kind": "native-content",
                     "profile": "inline"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["svg"]
                 }
             ]
         }

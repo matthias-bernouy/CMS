@@ -41,6 +41,11 @@
     white-space: normal;
     cursor: pointer;
 }
+:scope > svg {
+    width: 1.125em;
+    height: 1.125em;
+    flex: 0 0 1.125em;
+}
 :scope:hover:not(:disabled) {
     background: var(--ulvia-official-action-background-hover);
 }

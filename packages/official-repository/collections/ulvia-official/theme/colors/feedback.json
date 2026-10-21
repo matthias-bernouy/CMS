@@ -2,7 +2,7 @@
     "id": "feedback",
     "label": "theme.category.feedback.label",
     "description": "theme.category.feedback.description",
-    "tokens": [
+    "entries": [
         {
             "id": "success",
             "label": "theme.token.success.label",

@@ -2,14 +2,14 @@
     "id": "typography",
     "label": "theme.category.typography.label",
     "description": "theme.category.typography.description",
-    "tokens": [
+    "entries": [
         {
             "id": "font-family-main",
             "label": "theme.token.font-family-main.label",
             "description": "theme.token.font-family-main.description",
             "type": "font-family",
             "defaults": {
-                "light": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
+                "light": "\"ulvia-official-inter\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
             }
         },
         {
@@ -18,7 +18,7 @@
             "description": "theme.token.font-family-secondary.description",
             "type": "font-family",
             "defaults": {
-                "light": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
+                "light": "\"ulvia-official-source-serif-4\", Georgia, \"Times New Roman\", serif"
             }
         },
         {
@@ -189,6 +189,213 @@
             "defaults": {
                 "light": "0.025em"
             }
+        },
+        {
+            "id": "inter-normal",
+            "type": "font-face",
+            "asset": "fonts/sans/inter/normal.woff2",
+            "family": "inter",
+            "style": "normal",
+            "weight": "100 900",
+            "display": "swap"
+        },
+        {
+            "id": "inter-italic",
+            "type": "font-face",
+            "asset": "fonts/sans/inter/italic.woff2",
+            "family": "inter",
+            "style": "italic",
+            "weight": "100 900",
+            "display": "swap"
+        },
+        {
+            "id": "manrope-normal",
+            "type": "font-face",
+            "asset": "fonts/sans/manrope/normal.woff2",
+            "family": "manrope",
+            "style": "normal",
+            "weight": "200 800",
+            "display": "swap"
+        },
+        {
+            "id": "source-sans-3-normal",
+            "type": "font-face",
+            "asset": "fonts/sans/source-sans-3/normal.woff2",
+            "family": "source-sans-3",
+            "style": "normal",
+            "weight": "200 900",
+            "display": "swap"
+        },
+        {
+            "id": "source-sans-3-italic",
+            "type": "font-face",
+            "asset": "fonts/sans/source-sans-3/italic.woff2",
+            "family": "source-sans-3",
+            "style": "italic",
+            "weight": "200 900",
+            "display": "swap"
+        },
+        {
+            "id": "public-sans-normal",
+            "type": "font-face",
+            "asset": "fonts/sans/public-sans/normal.woff2",
+            "family": "public-sans",
+            "style": "normal",
+            "weight": "100 900",
+            "display": "swap"
+        },
+        {
+            "id": "public-sans-italic",
+            "type": "font-face",
+            "asset": "fonts/sans/public-sans/italic.woff2",
+            "family": "public-sans",
+            "style": "italic",
+            "weight": "100 900",
+            "display": "swap"
+        },
+        {
+            "id": "ibm-plex-sans-normal",
+            "type": "font-face",
+            "asset": "fonts/sans/ibm-plex-sans/normal.woff2",
+            "family": "ibm-plex-sans",
+            "style": "normal",
+            "weight": "100 700",
+            "display": "swap"
+        },
+        {
+            "id": "ibm-plex-sans-italic",
+            "type": "font-face",
+            "asset": "fonts/sans/ibm-plex-sans/italic.woff2",
+            "family": "ibm-plex-sans",
+            "style": "italic",
+            "weight": "100 700",
+            "display": "swap"
+        },
+        {
+            "id": "atkinson-hyperlegible-next-normal",
+            "type": "font-face",
+            "asset": "fonts/sans/atkinson-hyperlegible-next/normal.woff2",
+            "family": "atkinson-hyperlegible-next",
+            "style": "normal",
+            "weight": "200 800",
+            "display": "swap"
+        },
+        {
+            "id": "atkinson-hyperlegible-next-italic",
+            "type": "font-face",
+            "asset": "fonts/sans/atkinson-hyperlegible-next/italic.woff2",
+            "family": "atkinson-hyperlegible-next",
+            "style": "italic",
+            "weight": "200 800",
+            "display": "swap"
+        },
+        {
+            "id": "source-serif-4-normal",
+            "type": "font-face",
+            "asset": "fonts/serif/source-serif-4/normal.woff2",
+            "family": "source-serif-4",
+            "style": "normal",
+            "weight": "200 900",
+            "display": "swap"
+        },
+        {
+            "id": "source-serif-4-italic",
+            "type": "font-face",
+            "asset": "fonts/serif/source-serif-4/italic.woff2",
+            "family": "source-serif-4",
+            "style": "italic",
+            "weight": "200 900",
+            "display": "swap"
+        },
+        {
+            "id": "lora-normal",
+            "type": "font-face",
+            "asset": "fonts/serif/lora/normal.woff2",
+            "family": "lora",
+            "style": "normal",
+            "weight": "400 700",
+            "display": "swap"
+        },
+        {
+            "id": "lora-italic",
+            "type": "font-face",
+            "asset": "fonts/serif/lora/italic.woff2",
+            "family": "lora",
+            "style": "italic",
+            "weight": "400 700",
+            "display": "swap"
+        },
+        {
+            "id": "merriweather-normal",
+            "type": "font-face",
+            "asset": "fonts/serif/merriweather/normal.woff2",
+            "family": "merriweather",
+            "style": "normal",
+            "weight": "300 900",
+            "display": "swap"
+        },
+        {
+            "id": "merriweather-italic",
+            "type": "font-face",
+            "asset": "fonts/serif/merriweather/italic.woff2",
+            "family": "merriweather",
+            "style": "italic",
+            "weight": "300 900",
+            "display": "swap"
+        },
+        {
+            "id": "libre-baskerville-normal",
+            "type": "font-face",
+            "asset": "fonts/serif/libre-baskerville/normal.woff2",
+            "family": "libre-baskerville",
+            "style": "normal",
+            "weight": "400 700",
+            "display": "swap"
+        },
+        {
+            "id": "libre-baskerville-italic",
+            "type": "font-face",
+            "asset": "fonts/serif/libre-baskerville/italic.woff2",
+            "family": "libre-baskerville",
+            "style": "italic",
+            "weight": "400 700",
+            "display": "swap"
+        },
+        {
+            "id": "noto-serif-normal",
+            "type": "font-face",
+            "asset": "fonts/serif/noto-serif/normal.woff2",
+            "family": "noto-serif",
+            "style": "normal",
+            "weight": "100 900",
+            "display": "swap"
+        },
+        {
+            "id": "noto-serif-italic",
+            "type": "font-face",
+            "asset": "fonts/serif/noto-serif/italic.woff2",
+            "family": "noto-serif",
+            "style": "italic",
+            "weight": "100 900",
+            "display": "swap"
+        },
+        {
+            "id": "newsreader-normal",
+            "type": "font-face",
+            "asset": "fonts/serif/newsreader/normal.woff2",
+            "family": "newsreader",
+            "style": "normal",
+            "weight": "200 800",
+            "display": "swap"
+        },
+        {
+            "id": "newsreader-italic",
+            "type": "font-face",
+            "asset": "fonts/serif/newsreader/italic.woff2",
+            "family": "newsreader",
+            "style": "italic",
+            "weight": "200 800",
+            "display": "swap"
         }
     ]
 }

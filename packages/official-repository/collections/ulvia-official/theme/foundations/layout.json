@@ -2,7 +2,7 @@
     "id": "layout",
     "label": "theme.category.layout.label",
     "description": "theme.category.layout.description",
-    "tokens": [
+    "entries": [
         {
             "id": "content-width-sm",
             "label": "theme.token.content-width-sm.label",

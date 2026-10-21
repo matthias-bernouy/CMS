@@ -21,9 +21,12 @@
     box-shadow: var(--ulvia-official-card-shadow);
 }
 [part="media"] {
-    --ulvia-official-icon-inherited-size: 3rem;
-    --ulvia-official-icon-inherited-margin: auto;
     margin: 0;
+}
+[part="media"] svg {
+    width: 3rem;
+    height: 3rem;
+    margin: auto;
 }
 [part="content"] {
     display: flex;

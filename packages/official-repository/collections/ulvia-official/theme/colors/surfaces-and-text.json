@@ -2,7 +2,7 @@
     "id": "surfaces-and-text",
     "label": "theme.category.surfaces-and-text.label",
     "description": "theme.category.surfaces-and-text.description",
-    "tokens": [
+    "entries": [
         {
             "id": "background-base",
             "label": "theme.token.background-base.label",

@@ -19,7 +19,7 @@
                 },
                 {
                     "kind": "native-element",
-                    "accepts": ["div", "header", "section", "article", "fieldset", "form"]
+                    "accepts": ["div", "header", "section", "article", "fieldset", "form", "svg"]
                 }
             ]
         }

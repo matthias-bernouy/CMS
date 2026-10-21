@@ -18,6 +18,11 @@
 [part="trigger"] {
     display: contents;
 }
+[part="trigger"] svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: 0 0 1.125rem;
+}
 button[part~="trigger"] {
     position: relative;
     display: flex;

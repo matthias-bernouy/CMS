@@ -33,7 +33,7 @@
                     cms-repeat="catalogue.data.releases as release"
                     slot="items"
                 >
-                    <span cms-bloc="ulvia-official-icon" tone="current" size="lg" name="collections" slot="media"></span>
+                    <svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/collections.svg }}" aria-hidden="true" slot="media"></svg>
                     <span slot="eyebrow">{{ release.publisherId }} {{ release.version }}</span>
                     <h3 cms-bloc="ulvia-official-heading" slot="title">{{ release.name }}</h3>
                     <div cms-bloc="ulvia-official-stack" gap="md" slot="body">

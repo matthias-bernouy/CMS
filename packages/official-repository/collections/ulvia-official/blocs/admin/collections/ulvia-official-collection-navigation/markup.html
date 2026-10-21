@@ -9,7 +9,7 @@
         <div cms-bloc="ulvia-official-navigation-section" slot="sections">
             <span slot="label">{{ cms.i18n.ulvia-official.ui-collection-catalogue }}</span>
             <a cms-bloc="ulvia-official-navigation-item" slot="items" href="/admin/collections">
-                <span slot="content" cms-bloc="ulvia-official-icon" tone="current" size="sm" name="collections"></span>
+                <svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/collections.svg }}" aria-hidden="true" slot="content"></svg>
                 <span slot="content">{{ cms.i18n.ulvia-official.ui-explore-collections }}</span>
             </a>
         </div>

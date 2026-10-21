@@ -2,7 +2,7 @@
     "id": "spacing",
     "label": "theme.category.spacing.label",
     "description": "theme.category.spacing.description",
-    "tokens": [
+    "entries": [
         {
             "id": "spacing-none",
             "label": "theme.token.spacing-none.label",

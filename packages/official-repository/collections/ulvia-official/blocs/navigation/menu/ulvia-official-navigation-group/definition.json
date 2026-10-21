@@ -5,14 +5,14 @@
     "description": "bloc.navigation-group.description",
     "category": "bloc.category.navigation",
     "order": 45,
-    "uses": ["ulvia-official-icon", "ulvia-official-navigation-item"],
+    "uses": ["ulvia-official-navigation-item"],
     "requires": [],
     "slots": {
         "icon": {
             "accepts": [
                 {
-                    "kind": "component",
-                    "tag": "ulvia-official-icon"
+                    "kind": "native-element",
+                    "accepts": ["svg"]
                 }
             ],
             "max": 1

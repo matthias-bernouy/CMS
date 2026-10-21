@@ -6,12 +6,7 @@
     "category": "bloc.category.administration",
     "order": 9,
     "catalogue": "hidden",
-    "uses": [
-        "ulvia-official-icon",
-        "ulvia-official-navigation-item",
-        "ulvia-official-navigation-menu",
-        "ulvia-official-navigation-section"
-    ],
+    "uses": ["ulvia-official-navigation-item", "ulvia-official-navigation-menu", "ulvia-official-navigation-section"],
     "requires": [
         {
             "contractId": "ulvia.cms.collections",

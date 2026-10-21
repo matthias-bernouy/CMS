@@ -38,6 +38,13 @@ Text definitions and per-locale values are separate recursive trees below
 `texts/`; Bloc folders may be grouped recursively below `blocs/`. These source
 paths never become release identities.
 
+Collection assets are the exception: every file below `assets/` uses its
+normalized lowercase relative path as its stable local ID. Assets are discovered
+automatically rather than repeated in `definition.json`. The official icon
+library consists of verified presentation-only SVG files and authored markup
+references them through empty `svg[cms-svg]` elements; it has no icon-specific
+Bloc or behavior module.
+
 The Ulvia Official collection publishes a selective public surface: foundational
 layout and content components, reusable content items, composed page sections,
 and the theme tokens they consume. Compositions declare their exact local Bloc

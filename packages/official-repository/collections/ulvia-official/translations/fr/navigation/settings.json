@@ -7,6 +7,7 @@
     "setting.item-count.help": "Définissez zéro pour masquer le badge de décompte",
     "setting.item-count.label": "Nombre d’éléments",
     "setting.navigation-label.label": "Libellé de navigation accessible",
+    "setting.option.muted": "Atténuée",
     "setting.option.pills": "Pastilles",
     "setting.option.underline": "Soulignement"
 }

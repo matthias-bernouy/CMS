@@ -112,12 +112,8 @@ input:disabled {
     height: 1.125rem;
     color: var(--ulvia-official-text-muted, #68766f);
     background: currentColor;
-    -webkit-mask:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.75' y='4.25' width='14.5' height='13' rx='2.25'/%3E%3Cpath d='M6.25 2.5v3.5M13.75 2.5V6M2.75 8h14.5M6 11.25h.01M10 11.25h.01M14 11.25h.01M6 14.5h.01M10 14.5h.01'/%3E%3C/svg%3E")
-        center / contain no-repeat;
-    mask:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.75' y='4.25' width='14.5' height='13' rx='2.25'/%3E%3Cpath d='M6.25 2.5v3.5M13.75 2.5V6M2.75 8h14.5M6 11.25h.01M10 11.25h.01M14 11.25h.01M6 14.5h.01M10 14.5h.01'/%3E%3C/svg%3E")
-        center / contain no-repeat;
+    -webkit-mask: url("{{ cms.asset.ulvia-official.icons/controls/calendar.svg }}") center / contain no-repeat;
+    mask: url("{{ cms.asset.ulvia-official.icons/controls/calendar.svg }}") center / contain no-repeat;
 }
 [part="date-trigger"]:hover:not(:disabled) {
     border-color: var(--ulvia-official-border-strong, #737985);
@@ -175,12 +171,8 @@ input:disabled {
     height: 1rem;
     content: "";
     background: currentColor;
-    -webkit-mask:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12.5 4.5-5.5 5.5 5.5 5.5'/%3E%3C/svg%3E")
-        center / contain no-repeat;
-    mask:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12.5 4.5-5.5 5.5 5.5 5.5'/%3E%3C/svg%3E")
-        center / contain no-repeat;
+    -webkit-mask: url("{{ cms.asset.ulvia-official.icons/controls/chevron-left.svg }}") center / contain no-repeat;
+    mask: url("{{ cms.asset.ulvia-official.icons/controls/chevron-left.svg }}") center / contain no-repeat;
 }
 [part="next-month"]::before {
     transform: rotate(180deg);

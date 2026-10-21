@@ -2,7 +2,7 @@
     "id": "borders-and-shape",
     "label": "theme.category.borders-and-shape.label",
     "description": "theme.category.borders-and-shape.description",
-    "tokens": [
+    "entries": [
         {
             "id": "border-width",
             "label": "theme.token.border-width.label",

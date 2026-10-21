@@ -5,18 +5,18 @@
     "description": "bloc.card.description",
     "category": "bloc.category.components",
     "order": 10,
-    "uses": ["ulvia-official-action", "ulvia-official-heading", "ulvia-official-icon", "ulvia-official-image"],
+    "uses": ["ulvia-official-action", "ulvia-official-heading", "ulvia-official-image"],
     "requires": [],
     "slots": {
         "media": {
             "accepts": [
                 {
                     "kind": "component",
-                    "tag": "ulvia-official-icon"
+                    "tag": "ulvia-official-image"
                 },
                 {
-                    "kind": "component",
-                    "tag": "ulvia-official-image"
+                    "kind": "native-element",
+                    "accepts": ["svg"]
                 }
             ],
             "max": 1

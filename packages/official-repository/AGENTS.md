@@ -18,6 +18,9 @@
   `translations/<locale>/`; paths organize authorship and never prefix keys.
 - Theme category files may be grouped recursively below `theme/`. Keep their
   filename and internal stable ID equal; `theme/definition.json` owns ordering.
+- Collection assets are files below `assets/`; their lowercase relative paths
+  are their IDs. Do not duplicate their metadata in the collection definition.
+  Use `assets/definition.json` only when a path needs a generation other than one.
 - Split collection texts between recursive `texts/definitions/` metadata and
   `texts/locales/<locale>/` content trees. Group Bloc folders recursively below
   `blocs/`; source paths never contribute to stable text or Bloc IDs.
@@ -32,6 +35,9 @@
 - Keep admitted collection exports explicit. Authored sources may use the CLI's
   `"*"` shorthand, but the admitted release must show exactly which public Blocs,
   tokens, texts and assets form its API. Never use wildcard dependency imports.
+- Icons are ordinary verified SVG assets referenced from empty
+  `<svg cms-svg="{{ cms.asset.<collection>.<path> }}">` elements. Do not restore
+  icon-specific JavaScript, raw authored SVG geometry or an icon-only Bloc.
 - Every Bloc declares a native `root` contract and Pages identify it with
   `cms-bloc`. A Bloc that owns one Page-authored native child declares it as a
   bounded default slot with `kind: "native-element"`; there is no separate

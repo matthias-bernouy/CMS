@@ -8,6 +8,11 @@
 [part="item"] {
     display: contents;
 }
+[part="item"] > svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: 0 0 1.125rem;
+}
 :scope {
     position: relative;
     display: flex;

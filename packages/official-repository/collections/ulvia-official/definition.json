@@ -41,7 +41,6 @@
             "ulvia-official-grid",
             "ulvia-official-heading",
             "ulvia-official-hero",
-            "ulvia-official-icon",
             "ulvia-official-image",
             "ulvia-official-input",
             "ulvia-official-link",
@@ -231,7 +230,8 @@
             "stat-two-value",
             "title"
         ],
-        "pages": ["access", "collections", "details", "overview", "providers", "settings"]
+        "pages": ["access", "collections", "details", "overview", "providers", "settings"],
+        "assets": "*"
     },
     "states": [
         {
@@ -428,6 +428,5 @@
         { "id": "theme-search", "scope": "param", "schema": { "type": "string", "maxLength": 512 } },
         { "id": "theme-token", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
         { "id": "version", "scope": "param", "schema": { "type": "string", "maxLength": 128 } }
-    ],
-    "assets": []
+    ]
 }

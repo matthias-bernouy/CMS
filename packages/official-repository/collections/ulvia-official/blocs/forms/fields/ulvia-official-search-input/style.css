@@ -30,12 +30,8 @@
     width: var(--ulvia-official-search-input-search-icon-size);
     height: var(--ulvia-official-search-input-search-icon-size);
     background: currentColor;
-    -webkit-mask:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='8.5' cy='8.5' r='5.25'/%3E%3Cpath d='m12.5 12.5 4 4'/%3E%3C/svg%3E")
-        center / contain no-repeat;
-    mask:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='8.5' cy='8.5' r='5.25'/%3E%3Cpath d='m12.5 12.5 4 4'/%3E%3C/svg%3E")
-        center / contain no-repeat;
+    -webkit-mask: url("{{ cms.asset.ulvia-official.icons/actions/search.svg }}") center / contain no-repeat;
+    mask: url("{{ cms.asset.ulvia-official.icons/actions/search.svg }}") center / contain no-repeat;
 }
 :scope:focus-within [part="icon-shell"] {
     color: var(--ulvia-official-primary, #086c55);

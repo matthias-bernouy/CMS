@@ -16,6 +16,10 @@
                 {
                     "kind": "native-content",
                     "profile": "inline"
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["svg"]
                 }
             ],
             "max": 1

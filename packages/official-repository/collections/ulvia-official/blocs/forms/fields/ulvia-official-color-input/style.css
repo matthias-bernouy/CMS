@@ -76,12 +76,8 @@ input {
     color: var(--ulvia-official-text-muted, #68766f);
     background: currentColor;
     transition: transform var(--ulvia-official-duration-fast, 120ms);
-    -webkit-mask:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.5 7.75 4.5 4.5 4.5-4.5'/%3E%3C/svg%3E")
-        center / contain no-repeat;
-    mask:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.5 7.75 4.5 4.5 4.5-4.5'/%3E%3C/svg%3E")
-        center / contain no-repeat;
+    -webkit-mask: url("{{ cms.asset.ulvia-official.icons/controls/chevron-down.svg }}") center / contain no-repeat;
+    mask: url("{{ cms.asset.ulvia-official.icons/controls/chevron-down.svg }}") center / contain no-repeat;
 }
 :scope[data-open] [part="indicator"] {
     transform: rotate(180deg);

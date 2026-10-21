@@ -9,7 +9,10 @@
     "requires": [],
     "slots": {
         "default": {
-            "accepts": [{ "kind": "native-content", "profile": "phrasing" }],
+            "accepts": [
+                { "kind": "native-content", "profile": "phrasing" },
+                { "kind": "native-element", "accepts": ["svg"] }
+            ],
             "min": 1
         }
     },

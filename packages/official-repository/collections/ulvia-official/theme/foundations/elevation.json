@@ -2,7 +2,7 @@
     "id": "elevation",
     "label": "theme.category.elevation.label",
     "description": "theme.category.elevation.description",
-    "tokens": [
+    "entries": [
         {
             "id": "shadow-none",
             "label": "theme.token.shadow-none.label",
