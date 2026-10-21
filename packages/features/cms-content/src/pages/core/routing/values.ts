@@ -1,9 +1,11 @@
 import type { PageReference, RegisteredPageRoute } from "cms-content/pages/interfaces/routing";
 import type { PageRoute } from "cms-content/pages/interfaces/pages";
 import { validatePagePath } from "cms-content/pages/core/validation/page";
+import { isValidPathFormat } from "cms-content/application/core/validation/predicates";
 
 const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const sitePageId = /^[0-9A-Za-z][0-9A-Za-z._:-]{0,199}$/u;
+const RESERVED_PAGE_PATH_PREFIXES = ["/.cms", "/api", "/assets", "/auth"] as const;
 
 export function validatePageReference(page: PageReference): PageReference {
     if (page.kind === "site") {
@@ -69,10 +71,19 @@ export function pageRouteClaims(route: Pick<RegisteredPageRoute, "defaultPath" |
 
 export function validateRegisteredPagePath(value: string): string {
     const path = validatePagePath(value);
-    if (["/.cms", "/api", "/assets", "/auth"].some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
+    if (isReservedPagePath(path)) {
         throw new TypeError("Page path is reserved by the kernel.");
     }
     return path;
+}
+
+/** Non-throwing request-boundary check for paths that can exist in the Page route registry. */
+export function isValidRegisteredPagePath(value: string): boolean {
+    return isValidPathFormat(value) && !isReservedPagePath(value);
+}
+
+function isReservedPagePath(path: string): boolean {
+    return RESERVED_PAGE_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 }
 
 export function clonePageRoute(route: RegisteredPageRoute): RegisteredPageRoute {

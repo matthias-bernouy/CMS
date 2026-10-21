@@ -65,6 +65,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
               resolvePageReference: async (reference) =>
                   storedPages.find((page) => reference.kind === "site" && page.id === reference.pageId)?.path ?? null,
               resolveRenderableRoute: async (path) => {
+                  storedLookups.push(path);
                   const page = storedPages.find((item) => item.path === path);
                   return page
                       ? {

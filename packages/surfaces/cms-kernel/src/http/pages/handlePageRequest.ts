@@ -1,4 +1,5 @@
 import type KernelCms from "cms-kernel/KernelCms";
+import { isValidRegisteredPagePath } from "@bernouy/cms-content/page-path";
 import { renderRef } from "cms-kernel/http/pages/renderRef";
 import { serveRenderablePage } from "cms-kernel/http/pages/serveRenderablePage";
 
@@ -17,6 +18,9 @@ export async function handlePageRequest(req: Request, kernel: KernelCms): Promis
     const prefix = kernel.cmsPathPrefix;
     if (pathname === prefix || pathname.startsWith(prefix + "/")) {
         return new Response("Not Found", { status: 404 });
+    }
+    if (!isValidRegisteredPagePath(pathname)) {
+        return renderRef(req, kernel, "notFound", 404, "Page not found");
     }
 
     const storedRoute = await kernel.content.resolveRenderableRoute(pathname);
