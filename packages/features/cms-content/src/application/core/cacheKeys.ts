@@ -14,6 +14,6 @@ export const CMS_CACHE_KEYS = {
     js: (url: string) => `js:${url}`,
     html: (url: string) => `html:${url}`,
     font: (url: string) => `font:${url}`,
-    /** The single theme CSS served at `/style`. */
-    STYLE: "style:main",
+    /** Theme CSS for one immutable rendering revision. */
+    style: (renderingRevision: string) => `style:main:rendering:${renderingRevision}`,
 } as const;

@@ -58,6 +58,13 @@ export function createContentReader(repository: CmsRepository, options: ContentR
     };
     return {
         getContentRevision: async () => (await repository.getContentContributions?.())?.revision ?? 0,
+        getRenderingRevision: async () => {
+            const [contentRevision, systemRevision] = await Promise.all([
+                repository.getContentContributions?.().then((contributions) => contributions.revision) ?? 0,
+                repository.getSystemRevision?.() ?? 0,
+            ]);
+            return JSON.stringify([contentRevision, systemRevision]);
+        },
         getContentTexts: async () => [...((await repository.getContentContributions?.())?.texts ?? [])],
         getRenderablePage,
         getRenderablePages,

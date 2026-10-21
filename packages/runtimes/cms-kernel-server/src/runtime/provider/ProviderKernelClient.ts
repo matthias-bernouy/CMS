@@ -176,6 +176,7 @@ function remoteContent(client: ProviderKernelClient): ContentReader {
             }));
         },
         getContentRevision: () => client.query("content.revision"),
+        getRenderingRevision: () => client.query("content.rendering-revision"),
         getRenderablePage: (path) => client.query("content.renderable-page", { path }),
         getRenderablePages: () => client.query("content.renderable-pages"),
         resolvePageReference: (reference) => client.query("content.resolve-page-reference", { reference }),

@@ -10,6 +10,7 @@ export const KERNEL_PROVIDER_PROTOCOL = "ulvia-kernel-provider/v1" as const;
 export const KERNEL_PROVIDER_QUERY_OPERATIONS = [
     "content.texts",
     "content.revision",
+    "content.rendering-revision",
     "content.renderable-page",
     "content.renderable-pages",
     "content.resolve-page-reference",

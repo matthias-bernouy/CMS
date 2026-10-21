@@ -110,6 +110,8 @@ async function executeQuery(
             return projectContentTexts(content);
         case "content.revision":
             return (await content.getContentRevision?.()) ?? 0;
+        case "content.rendering-revision":
+            return (await content.getRenderingRevision?.()) ?? (await content.getContentRevision?.()) ?? 0;
         case "content.renderable-page":
             return content.getRenderablePage(text(input.path));
         case "content.renderable-pages":

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
 import { blocRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
-import { resolvePageAssets } from "@bernouy/cms-content/rendering";
+import { digestContentRevision, resolvePageAssets } from "@bernouy/cms-content/rendering";
 
 const system = defaultSystem();
 system.initializationStep = 1;
@@ -49,7 +49,14 @@ async function resolveAssets(content: ContentReader, tags: string[]) {
     const cache = new InMemoryCache();
     cache.set(blocRuntimeCacheKey("/.cms/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
-    cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
+    cache.set(
+        CMS_CACHE_KEYS.style(
+            await digestContentRevision(
+                (await content.getRenderingRevision?.()) ?? (await content.getContentRevision?.()) ?? 0,
+            ),
+        ),
+        compress("body{}", "text/css"),
+    );
     return resolvePageAssets(
         {
             content,
@@ -62,6 +69,27 @@ async function resolveAssets(content: ContentReader, tags: string[]) {
 }
 
 describe("resolvePageAssets", () => {
+    test("versions the global stylesheet with the content revision", async () => {
+        const content = repositoryWith({ pageContent: "<p>Hello</p>", blocTags: [] });
+        content.getContentRevision = async () => 42;
+
+        const assets = await resolveAssets(content, []);
+
+        expect(assets.styleUrl).toMatch(/\/\.cms\/style\?r=sha256:[0-9a-f]{64}&v=[0-9a-f]{10}$/u);
+    });
+
+    test("changes the global stylesheet URL when rendering settings change alone", async () => {
+        const content = repositoryWith({ pageContent: "<p>Hello</p>", blocTags: [] });
+        content.getContentRevision = async () => 42;
+        content.getRenderingRevision = async () => "42:1";
+        const first = await resolveAssets(content, []);
+
+        content.getRenderingRevision = async () => "42:2";
+        const second = await resolveAssets(content, []);
+
+        expect(first.styleUrl.split("&v=")[0]).not.toBe(second.styleUrl.split("&v=")[0]);
+    });
+
     test("reads the renderable Bloc catalogue once on a cold resolution", async () => {
         const content = repositoryWith({
             pageContent: '<section cms-bloc="collection-card"></section>',

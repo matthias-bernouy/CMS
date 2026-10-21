@@ -19,7 +19,6 @@ const system: TSystem = {
         visible: true,
         host: "",
         language: "",
-        theme: "",
         notFound: null,
         forbidden: null,
         serverError: null,
@@ -29,6 +28,11 @@ const system: TSystem = {
             contributionId: "ulvia-official",
             pageId: "login",
         },
+    },
+    theme: {
+        activeThemeId: "default",
+        sources: [],
+        themes: [{ id: "default", name: "Default", values: { light: {}, dark: {} } }],
     },
     security: { connectExtras: [], mediaExtras: [] },
 };
@@ -96,7 +100,6 @@ export async function mountPage(options: {
     const cache = new InMemoryCache();
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
-    cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
     const repository = pageRepository(
         options.content,
         options.systemPages,

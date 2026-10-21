@@ -72,6 +72,8 @@ export type PublishedRouteResolution =
 export interface ContentReader {
     getContentTexts?(): Promise<ContentTextSource[]>;
     getContentRevision?(): Promise<number | string>;
+    /** Revision of every input that changes the global rendered stylesheet. */
+    getRenderingRevision?(): Promise<number | string>;
     getRenderablePage(path: string): Promise<RenderablePage | null>;
     getRenderablePages(): Promise<RenderablePage[]>;
     resolvePageReference(reference: PageReference): Promise<string | null>;

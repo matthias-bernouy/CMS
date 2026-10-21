@@ -1,14 +1,8 @@
 import type KernelCms from "cms-kernel/KernelCms";
-import { serveBlocSet, serveBlocStyles } from "@bernouy/cms-content/http";
+import { serveBlocSet, serveBlocStyles, serveThemeStyle } from "@bernouy/cms-content/http";
 import serveFavicon from "cms-kernel/http/assets/serveFavicon";
 import { serveBindingCoreRuntime, serveBlocRuntime } from "@bernouy/cms-content/http";
-import {
-    generateStyleEntry,
-    CMS_CACHE_KEYS,
-    PUBLISHED_PAGE_SNAPSHOT_ROUTE,
-    servePublishedPageSnapshot,
-} from "@bernouy/cms-content/rendering";
-import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
+import { PUBLISHED_PAGE_SNAPSHOT_ROUTE, servePublishedPageSnapshot } from "@bernouy/cms-content/rendering";
 import {
     CMS_CAPABILITY_CALL_ROUTE,
     CMS_CAPABILITY_QUERY_ROUTE,
@@ -125,19 +119,13 @@ export function mountKernelRoutes(kernel: KernelCms) {
     runner.addEndpoint("GET", FAVICON_ROUTE, serveFavicon);
     runner.addEndpoint("HEAD", FAVICON_ROUTE, serveFavicon);
 
-    // `generateStyleEntry` is the same producer `resolveAssets` uses for the
-    // `?v=<hash>` link, so served bytes match. Source secrets stay unwired
-    // unless the composition root explicitly provides a resolver; otherwise a
-    // `secret`-sourced header yields a clean 500 and unconfigured sources
-    // yields 501.
-    runner.addEndpoint("GET", "/.cms/style", (req) =>
-        cachedResponseAsync(
-            req,
-            CMS_CACHE_KEYS.STYLE,
-            kernel.cache,
-            async () => generateStyleEntry(kernel.content),
-            publicAssetCacheControl(req),
-        ),
+    runner.addEndpoint("GET", "/.cms/style", (request) =>
+        serveThemeStyle(request, {
+            content: kernel.content,
+            cache: kernel.cache,
+            resolveContributedAssets: (input) =>
+                resolveInstalledCollectionAssets(input, kernel.collectionAssets, kernel.basePath),
+        }),
     );
 
     if (kernel.capabilityGateway || kernel.capabilityHandler) {

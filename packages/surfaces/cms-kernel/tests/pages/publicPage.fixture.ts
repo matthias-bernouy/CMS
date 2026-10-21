@@ -45,7 +45,6 @@ export function mountPublicPages(options: HarnessOptions = {}) {
     const cache = new TtlCache();
     cache.set(blocRuntimeCacheKey("/.cms/assets/bloc-runtime.js"), cacheEntry("text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), cacheEntry("text/javascript"));
-    cache.set(CMS_CACHE_KEYS.STYLE, cacheEntry("text/css"));
     const storedPages = [...(options.storedPages ?? [])];
     const storedLookups: string[] = [];
     const repository: ContentReader = options.repository
@@ -171,11 +170,15 @@ const SYSTEM: TSystem = {
         visible: true,
         host: "https://example.test",
         language: "en",
-        theme: "",
         notFound: null,
         forbidden: null,
         serverError: null,
         login: null,
+    },
+    theme: {
+        activeThemeId: "default",
+        sources: [],
+        themes: [{ id: "default", name: "Default", values: { light: {}, dark: {} } }],
     },
     security: { connectExtras: [], mediaExtras: [] },
 };

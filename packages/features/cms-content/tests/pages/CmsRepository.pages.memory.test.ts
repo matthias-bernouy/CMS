@@ -83,6 +83,21 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
         expect((await reader.getRenderingSettings()).site.host).not.toBe("https://mutated.test");
     });
 
+    test("rendering revision includes both contributed content and system settings", async () => {
+        let contentRevision = 3;
+        let systemRevision = 5;
+        const reader = createContentReader({
+            getContentContributions: async () => ({ revision: contentRevision, pages: [], texts: [] }),
+            getSystemRevision: async () => systemRevision,
+        } as never);
+
+        const initial = await reader.getRenderingRevision!();
+        systemRevision += 1;
+        expect(await reader.getRenderingRevision!()).not.toBe(initial);
+        contentRevision += 1;
+        expect(await reader.getRenderingRevision!()).not.toBe(initial);
+    });
+
     test("public reader retains hidden rendering artifacts without authoring fields", async () => {
         let includeHidden = false;
         const reader = createContentReader({

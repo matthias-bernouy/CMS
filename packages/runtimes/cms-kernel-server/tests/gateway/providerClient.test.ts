@@ -20,6 +20,7 @@ test("projects every content read through the versioned Provider query endpoint"
     expect(texts[0]?.resolve("fr")).toEqual({ title: "Boutique" });
     expect(texts[0]?.resolve("de")).toEqual({ title: "Shop" });
     await client.content.getContentRevision();
+    await client.content.getRenderingRevision!();
     await client.content.getRenderablePage("/about");
     await client.content.getRenderablePages();
     await client.content.resolvePageReference({ path: "/about" });
@@ -36,6 +37,7 @@ test("projects every content read through the versioned Provider query endpoint"
     expect(requests.map((request) => request.body?.operation)).toEqual([
         "content.texts",
         "content.revision",
+        "content.rendering-revision",
         "content.renderable-page",
         "content.renderable-pages",
         "content.resolve-page-reference",
