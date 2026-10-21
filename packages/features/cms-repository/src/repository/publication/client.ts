@@ -1,3 +1,4 @@
+import { isSha256Digest } from "@bernouy/binary-media";
 import { parseCollectionReleaseJson } from "cms-repository/exports/collections/index";
 import { admitConformanceEvidenceJson, parseContractReleaseJson } from "cms-repository/exports/contracts/index";
 import { parseProviderManifestJson } from "cms-repository/exports/providers/index";
@@ -142,7 +143,7 @@ export class RemoteRepositoryClient {
         }
         const bytes = await boundedResponseBytes(response, maxBytes);
         const digestHeader = response.headers.get("etag")?.replace(/^"|"$/gu, "");
-        if (!digest(digestHeader)) {
+        if (!isSha256Digest(digestHeader)) {
             throw new Error("Repository response has no valid immutable digest");
         }
         return { bytes, digest: digestHeader };
@@ -180,8 +181,4 @@ function readCoordinate(kind: RepositoryArtifactKind, canonicalJson: string): Om
 function releasePath(coordinate: RemoteCoordinate): string {
     const type = coordinate.kind === "provider-manifest" ? "providers" : `${coordinate.kind}s`;
     return `v1/${type}/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}`;
-}
-
-function digest(value: unknown): value is string {
-    return typeof value === "string" && /^sha256:[0-9a-f]{64}$/u.test(value);
 }

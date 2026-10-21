@@ -1,8 +1,8 @@
+import { isSha256Digest } from "@bernouy/binary-media";
 import type { RepositoryArtifactEntry, RepositoryArtifactKind, RepositoryArtifactReference } from "./interfaces";
 import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/u;
-const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 const CATALOGUE_TOKEN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
 const CURSOR = /^[A-Za-z0-9_-]{1,1024}$/u;
@@ -21,7 +21,7 @@ export function validProviderReference(reference: RepositoryArtifactReference): 
         validIdentifier(reference.publisherId) &&
         validIdentifier(reference.id) &&
         isCanonicalSemVer(reference.version) &&
-        DIGEST.test(reference.digest)
+        isSha256Digest(reference.digest)
     );
 }
 
@@ -68,7 +68,7 @@ export function parseProviderCataloguePage(
             typeof item.version !== "string" ||
             !isCanonicalSemVer(item.version) ||
             typeof item.digest !== "string" ||
-            !DIGEST.test(item.digest) ||
+            !isSha256Digest(item.digest) ||
             typeof item.name !== "string" ||
             item.name.length === 0 ||
             item.name.length > 128 ||

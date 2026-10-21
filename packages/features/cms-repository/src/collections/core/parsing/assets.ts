@@ -1,4 +1,5 @@
 import type { CollectionAssetDefinition } from "cms-repository/collections/interfaces/CollectionAssets";
+import { isSha256Digest } from "@bernouy/binary-media";
 import { invalid } from "cms-repository/collections/core/errors";
 import type { CollectionLimits } from "cms-repository/collections/core/limits";
 import {
@@ -13,7 +14,6 @@ import {
 } from "cms-repository/collections/core/values";
 
 const MEDIA_TYPE = /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/;
-const SHA256 = /^sha256:[0-9a-f]{64}$/;
 
 export function parseAssets(value: unknown, limits: Readonly<CollectionLimits>): readonly CollectionAssetDefinition[] {
     let totalBytes = 0;
@@ -36,10 +36,10 @@ export function parseAssets(value: unknown, limits: Readonly<CollectionLimits>):
         }
         totalBytes += byteLength;
         const digest = string(source.digest, 71, `${path}.digest`);
-        if (!SHA256.test(digest)) {
+        if (!isSha256Digest(digest)) {
             invalid("must be a lowercase SHA-256 digest", `${path}.digest`);
         }
-        return Object.freeze({ id, generation, mediaType, byteLength, digest: digest as `sha256:${string}` });
+        return Object.freeze({ id, generation, mediaType, byteLength, digest });
     });
     unique(
         assets.map((asset) => asset.id),

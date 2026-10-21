@@ -1,6 +1,7 @@
 export { binaryByteLength, readBinaryBytes, snapshotBinary, type BinaryInput } from "binary-media/core/bytes";
 export {
     binaryRepresentationFingerprint,
+    isSha256Digest,
     sha256Digest,
     sha256Hex,
     type Sha256Digest,

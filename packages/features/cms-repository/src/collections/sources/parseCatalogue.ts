@@ -1,9 +1,9 @@
+import { isSha256Digest } from "@bernouy/binary-media";
 import type { CollectionRepositoryEntry } from "./interfaces";
 import { isCollectionNamespace } from "../core/namespace";
 import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
-const DIGEST = /^sha256:[0-9a-f]{64}$/;
 const CURSOR = /^[A-Za-z0-9_-]{1,1024}$/u;
 
 export type CollectionCataloguePage = Readonly<{
@@ -21,7 +21,7 @@ export function validCollectionReference(reference: {
         validIdentifier(reference.publisherId) &&
         isCollectionNamespace(reference.collectionId) &&
         isCanonicalSemVer(reference.version) &&
-        DIGEST.test(reference.digest)
+        isSha256Digest(reference.digest)
     );
 }
 
@@ -72,7 +72,7 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
             typeof entry.version !== "string" ||
             !isCanonicalSemVer(entry.version) ||
             typeof entry.digest !== "string" ||
-            !DIGEST.test(entry.digest)
+            !isSha256Digest(entry.digest)
         ) {
             throw new TypeError("Invalid repository release identity");
         }

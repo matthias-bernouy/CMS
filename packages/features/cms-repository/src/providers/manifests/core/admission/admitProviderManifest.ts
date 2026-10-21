@@ -1,4 +1,5 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
+import { isSha256Digest } from "@bernouy/binary-media";
 import { DEFAULT_PROVIDER_MANIFEST_LIMITS, type ProviderManifestLimits } from "../limits";
 import type { ProviderManifest } from "../../interfaces/ProviderManifest";
 import { parseProviderManifest, parseProviderManifestJson } from "../parsing/parseProviderManifest";
@@ -53,7 +54,7 @@ export async function computeProviderManifestDigest(
 }
 
 export function isProviderManifestDigest(value: string): value is ProviderManifestDigest {
-    return /^sha256:[0-9a-f]{64}$/.test(value);
+    return isSha256Digest(value);
 }
 
 async function admitParsedManifest(

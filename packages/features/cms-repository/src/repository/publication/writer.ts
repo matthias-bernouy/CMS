@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isSha256Digest } from "@bernouy/binary-media";
 import { signRepositoryContentDigest, signRepositoryRequest } from "./auth";
 import { encodePublicationUpload, type PublicationUploadManifest } from "./protocol";
 import type {
@@ -38,7 +39,7 @@ export class RemoteRepositoryWriter {
             },
         );
         const value = await this.mutateBytes("POST", `v1/publication-uploads/${created.uploadId}`, new Uint8Array());
-        if (!plainRecord(value) || typeof value.added !== "boolean" || !digest(value.digest)) {
+        if (!plainRecord(value) || typeof value.added !== "boolean" || !isSha256Digest(value.digest)) {
             throw new Error("Repository returned an invalid publication result");
         }
         return { added: value.added, digest: value.digest };
@@ -156,10 +157,6 @@ function uploadReceipt(value: unknown): value is PublicationUploadReceipt {
     );
 }
 
-function digest(value: unknown): value is string {
-    return typeof value === "string" && /^sha256:[0-9a-f]{64}$/u.test(value);
-}
-
 function evidencePublicationResult(value: unknown): value is ConformanceEvidencePublicationResult {
     return (
         plainRecord(value) &&
@@ -167,7 +164,7 @@ function evidencePublicationResult(value: unknown): value is ConformanceEvidence
         typeof value.contractId === "string" &&
         typeof value.evidenceId === "string" &&
         typeof value.added === "boolean" &&
-        digest(value.digest)
+        isSha256Digest(value.digest)
     );
 }
 

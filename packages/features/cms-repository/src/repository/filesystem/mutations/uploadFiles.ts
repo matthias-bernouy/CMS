@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { open, readFile, rm } from "node:fs/promises";
+import { isSha256Digest } from "@bernouy/binary-media";
 import type { RepositoryPublicationResult } from "cms-repository/repository/publication/types";
 import { durableRename, durableWriteFile } from "../core/durable";
 
@@ -73,7 +74,7 @@ export async function readUploadResult(path: string): Promise<RepositoryPublicat
         !value ||
         !["collection", "contract", "provider-manifest"].includes(value.kind) ||
         typeof value.added !== "boolean" ||
-        !/^sha256:[0-9a-f]{64}$/u.test(value.digest)
+        !isSha256Digest(value.digest)
     ) {
         throw new Error("Invalid publication upload result");
     }

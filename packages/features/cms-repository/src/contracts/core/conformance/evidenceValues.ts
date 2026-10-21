@@ -1,7 +1,7 @@
 import type { ReleaseDigest } from "cms-repository/contracts/core/admission/digest";
+import { isSha256Digest } from "@bernouy/binary-media";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
-const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 
 export function evidenceArray<T>(
     value: unknown,
@@ -38,7 +38,10 @@ export function text(value: unknown, label: string, pattern?: RegExp, maximum = 
 }
 
 export function digest(value: unknown, label: string): ReleaseDigest {
-    return text(value, label, DIGEST, 71) as ReleaseDigest;
+    if (!isSha256Digest(value)) {
+        fail(`Invalid ${label}`);
+    }
+    return value;
 }
 
 export function integer(value: unknown, minimum: number, maximum: number, label: string): number {

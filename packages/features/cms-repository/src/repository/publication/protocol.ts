@@ -1,3 +1,4 @@
+import { isSha256Digest } from "@bernouy/binary-media";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/getBytes";
 import type { PublicationUploadManifest, RepositoryArtifactKind } from "./types";
@@ -106,15 +107,14 @@ function parseUploadAsset(value: unknown) {
         !Number.isSafeInteger(value.byteLength) ||
         (value.byteLength as number) < 0 ||
         (value.byteLength as number) > MAX_PUBLICATION_ASSET_BYTES ||
-        typeof value.digest !== "string" ||
-        !/^sha256:[0-9a-f]{64}$/u.test(value.digest)
+        !isSha256Digest(value.digest)
     ) {
         throw new Error("Invalid publication upload asset");
     }
     return {
         id: value.id,
         byteLength: value.byteLength as number,
-        digest: value.digest as `sha256:${string}`,
+        digest: value.digest,
     };
 }
 

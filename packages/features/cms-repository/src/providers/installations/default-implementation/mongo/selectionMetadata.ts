@@ -1,8 +1,7 @@
+import { isSha256Digest } from "@bernouy/binary-media";
 import type { Collection } from "mongodb";
 import { installationSelectionDigest, installationSelectionRevisionFromDigests } from "../../core/selectionRevision";
 import type { InstallationDocument } from "./record";
-
-const DIGEST_PATTERN = /^sha256:[0-9a-f]{64}$/;
 
 /** Reads small revision metadata and lazily upgrades pre-digest documents. */
 export async function mongoInstallationSelectionRevision(
@@ -17,7 +16,7 @@ export async function mongoInstallationSelectionRevision(
         let needsRetry = false;
         for (const record of records) {
             if (record.selectionDigest !== undefined) {
-                if (!DIGEST_PATTERN.test(record.selectionDigest)) {
+                if (!isSha256Digest(record.selectionDigest)) {
                     throw new Error("Stored provider installation has invalid selection digest");
                 }
                 continue;

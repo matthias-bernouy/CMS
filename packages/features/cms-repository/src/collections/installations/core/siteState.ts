@@ -1,3 +1,4 @@
+import { isSha256Digest } from "@bernouy/binary-media";
 import { canonicalIJsonBytes } from "cms-repository/exports/contracts/protocol";
 import { validateSchemaValue } from "cms-repository/exports/contracts/schema";
 import { parseCollectionNamespace } from "../../core/namespace";
@@ -8,7 +9,6 @@ import type { CollectionInstallation, CollectionSiteState, CollectionStorage } f
 
 const MAX_INSTALLATIONS = 256;
 const MAX_STATE_BYTES = 2 * 1024 * 1024;
-const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 
 export function parseCollectionSiteState(value: unknown): CollectionSiteState {
     if (canonicalIJsonBytes(value, 64).byteLength > MAX_STATE_BYTES) {
@@ -31,7 +31,7 @@ function parseInstallation(value: unknown, index: number): CollectionInstallatio
     const source = record(value, path);
     keys(source, ["collectionId", "digest", "repositoryId", "configuration", "textOverrides"], path);
     const digest = source.digest;
-    if (typeof digest !== "string" || !DIGEST.test(digest)) {
+    if (!isSha256Digest(digest)) {
         throw new TypeError(`${path}.digest must be a SHA-256 digest`);
     }
     return {
