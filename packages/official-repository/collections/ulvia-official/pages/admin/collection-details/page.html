@@ -13,7 +13,7 @@
     </div>
     <section
         slot="content"
-        cms-query="ulvia.cms.collections:get as collection"
+        cms-query="ulvia.cms.installations:get-collection-installation as collection"
         cms-query-input='{"collectionId":{"from":"state","key":"@param:ulvia-official-collection"}}'
         cms-query-listen="@param:ulvia-official-collection @page:ulvia-official-collection-configuration-mutation/lastSuccess/requestId"
     >
@@ -98,7 +98,7 @@
                         <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
                             <form
                                 slot="content"
-                                cms-mutation="ulvia.cms.collections:update-configuration as mutation"
+                                cms-mutation="ulvia.cms.installations:update-collection-configuration as mutation"
                                 cms-sync="@page:ulvia-official-collection-configuration-mutation"
                                 cms-sync-select="lastSuccess.requestId"
                                 cms-mutation-reset="false"

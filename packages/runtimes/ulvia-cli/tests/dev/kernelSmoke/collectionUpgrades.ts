@@ -3,7 +3,7 @@ import type { Page } from "playwright";
 export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
     const compatible = collectionReleaseCard(page, "ulvia.test 1.1.0");
     const [upgradeResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.collections/upgrade")),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.installations/upgrade-collection")),
         compatible.getByRole("button", { name: /^(Try compatible upgrade|Essayer l’upgrade compatible)$/u }).click(),
     ]);
     if (!upgradeResponse.ok()) {
@@ -15,7 +15,9 @@ export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
     await migration.getByRole("link", { name: /^(Plan migration|Planifier la migration)$/u }).click();
     await page.getByRole("heading", { name: /^(Migration preview|Aperçu de la migration)$/u }).waitFor();
     const [migrationResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.collections/apply-migration")),
+        page.waitForResponse((candidate) =>
+            candidate.url().includes("ulvia.cms.installations/apply-collection-migration"),
+        ),
         page.getByRole("button", { name: /^(Apply migration|Appliquer la migration)$/u }).click(),
     ]);
     if (!migrationResponse.ok()) {

@@ -5,7 +5,7 @@ export {
     type UlviaProviderOptions,
 } from "./transport/UlviaProvider";
 export { registerOfficialProviderCapabilities } from "./capabilities";
-export { CollectionSources } from "./capabilities/collections/sources";
+export { CollectionSources } from "./capabilities/installations/sources";
 export type {
     CmsAccessDependencies,
     CmsCollectionDependencies,

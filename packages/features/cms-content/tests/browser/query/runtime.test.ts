@@ -27,7 +27,7 @@ test("a Provider query with input uses the logical QUERY transport", () => {
 test("a Provider query input builds nested objects and arrays from typed paths", () => {
     location.href = "http://localhost/?site-repository=official&site-collection=ulvia&site-version=2.0.0";
     const query = el(`<section
-        cms-query="ulvia.cms.collections:plan-migration as plan"
+        cms-query="ulvia.cms.installations:plan-collection-migration as plan"
         cms-query-input='{
             "targets[0][repositoryId]":{"from":"state","key":"@param:site-repository"},
             "targets[0][collectionId]":{"from":"state","key":"@param:site-collection"},

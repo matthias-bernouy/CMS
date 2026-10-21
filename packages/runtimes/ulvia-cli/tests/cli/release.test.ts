@@ -9,13 +9,9 @@ import { resolveCollectionTranslation } from "@bernouy/cms-repository/collection
 test("release publishes a folder explicitly, survives CLI runs, and prune clears only the repository", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-cli-release-"));
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
-    const coreContracts = [
-        "ulvia.cms.access",
-        "ulvia.cms.collections",
-        "ulvia.cms.content",
-        "ulvia.cms.files",
-        "ulvia.cms.providers",
-    ].map((id) => resolve(import.meta.dir, `../../../../official-repository/contracts/${id}`));
+    const coreContracts = ["ulvia.cms.access", "ulvia.cms.installations", "ulvia.cms.content", "ulvia.cms.files"].map(
+        (id) => resolve(import.meta.dir, `../../../../official-repository/contracts/${id}`),
+    );
     const definition = (await Bun.file(join(source, "definition.json")).json()) as {
         version: string;
         exports: { blocs: string[]; texts: string[] };

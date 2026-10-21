@@ -52,8 +52,12 @@ export async function mutateProviders(page: Page): Promise<void> {
     await page.waitForURL(/#contract-routing$/u);
     await page.locator("#contract-routing").waitFor();
     const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.providers/replace-selections")),
-        page.locator('form[cms-mutation^="ulvia.cms.providers:replace-selections "] button[type="submit"]').click(),
+        page.waitForResponse((candidate) =>
+            candidate.url().includes("ulvia.cms.installations/replace-contract-selections"),
+        ),
+        page
+            .locator('form[cms-mutation^="ulvia.cms.installations:replace-contract-selections "] button[type="submit"]')
+            .click(),
     ]);
     if (!response.ok()) {
         throw new Error(`Contract routing flow failed (${response.status()}).`);
@@ -63,7 +67,7 @@ export async function mutateProviders(page: Page): Promise<void> {
     const installation = page.locator("#provider-installations [role=listitem]").first();
     for (const action of ["disable", "revoke"]) {
         const button = installation
-            .locator('form[cms-mutation^="ulvia.cms.providers:set-status "]')
+            .locator('form[cms-mutation^="ulvia.cms.installations:set-provider-status "]')
             .filter({ has: page.locator(`input[name="action"][value="${action}"]`) })
             .locator('button[type="submit"]');
         if (await button.isEnabled()) {

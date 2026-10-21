@@ -73,7 +73,11 @@
                             </div>
                         </div>
                     </section>
-                    <section slot="items" cms-query="ulvia.cms.collections:catalogue as collections" aria-label="{{ cms.i18n.ulvia-official.ui-collections }}">
+                    <section
+                        slot="items"
+                        cms-query="ulvia.cms.installations:list-available-collections as collections"
+                        aria-label="{{ cms.i18n.ulvia-official.ui-collections }}"
+                    >
                         <p role="status" aria-live="polite" cms-condition="collections.activity === 'fetching'">
                             {{ cms.i18n.ulvia-official.ui-reading-collection-catalogue }}
                         </p>
@@ -93,7 +97,11 @@
                             </div>
                         </div>
                     </section>
-                    <section slot="items" cms-query="ulvia.cms.providers:list as providers" aria-label="{{ cms.i18n.ulvia-official.ui-providers }}">
+                    <section
+                        slot="items"
+                        cms-query="ulvia.cms.installations:list-provider-installations as providers"
+                        aria-label="{{ cms.i18n.ulvia-official.ui-providers }}"
+                    >
                         <p role="status" aria-live="polite" cms-condition="providers.activity === 'fetching'">
                             {{ cms.i18n.ulvia-official.ui-reading-provider-state }}
                         </p>
@@ -114,7 +122,7 @@
                     </section>
                     <section
                         slot="items"
-                        cms-query="ulvia.cms.collections:list-operations as operations"
+                        cms-query="ulvia.cms.installations:list-operations as operations"
                         cms-query-input='{"limit":{"from":"literal","value":100}}'
                         aria-label="{{ cms.i18n.ulvia-official.ui-collection-operations }}"
                     >

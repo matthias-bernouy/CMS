@@ -14,7 +14,7 @@
             role="tabpanel"
             slot="items"
             aria-labelledby="migration-health-title"
-            cms-query="ulvia.cms.collections:migration-status as migrations"
+            cms-query="ulvia.cms.installations:get-collection-migration-status as migrations"
             cms-query-input='{"limit":{"from":"literal","value":20}}'
         >
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
@@ -60,7 +60,7 @@
             role="tabpanel"
             slot="items"
             aria-labelledby="collection-operation-health-title"
-            cms-query="ulvia.cms.collections:list-operations as operations"
+            cms-query="ulvia.cms.installations:list-operations as operations"
             cms-query-input='{"limit":{"from":"literal","value":50}}'
         >
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
@@ -101,7 +101,13 @@
                 </div>
             </div>
         </section>
-        <section id="provider-health" role="tabpanel" slot="items" aria-labelledby="provider-health-title" cms-query="ulvia.cms.providers:list as providers">
+        <section
+            id="provider-health"
+            role="tabpanel"
+            slot="items"
+            aria-labelledby="provider-health-title"
+            cms-query="ulvia.cms.installations:list-provider-installations as providers"
+        >
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
                 <h2 cms-bloc="ulvia-official-heading" slot="content" id="provider-health-title">{{ cms.i18n.ulvia-official.ui-provider-installations }}</h2>
                 <p slot="content" role="status" cms-condition="providers.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-provider-state }}</p>

@@ -5,13 +5,7 @@ import { compileContractSource } from "../src/release/authored/contract";
 
 export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalogue> {
     const catalogue = new InMemoryReleaseCatalogue();
-    for (const contractId of [
-        "ulvia.cms.access",
-        "ulvia.cms.collections",
-        "ulvia.cms.content",
-        "ulvia.cms.files",
-        "ulvia.cms.providers",
-    ]) {
+    for (const contractId of ["ulvia.cms.access", "ulvia.cms.installations", "ulvia.cms.content", "ulvia.cms.files"]) {
         const directory = resolve(import.meta.dir, `../../../official-repository/contracts/${contractId}`);
         await catalogue.publish(await admitContractReleaseJson(await compileContractSource(directory)));
     }

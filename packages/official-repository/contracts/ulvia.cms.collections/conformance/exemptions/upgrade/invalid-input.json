@@ -1,5 +1,0 @@
-{
-    "capabilityId": "upgrade",
-    "errorCode": "INVALID_INPUT",
-    "reason": "The portable smoke suite does not prescribe a mutable repository fixture."
-}

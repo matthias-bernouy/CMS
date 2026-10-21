@@ -5,18 +5,18 @@
     "description": "page.diagnostics.description",
     "requires": [
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "migration-status",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "get-collection-migration-status",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.collections",
+            "contractId": "ulvia.cms.installations",
             "capabilityId": "list-operations",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.providers",
-            "capabilityId": "list",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-provider-installations",
             "versionRange": "^1.0.0"
         }
     ]

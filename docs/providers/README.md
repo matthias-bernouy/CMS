@@ -143,8 +143,12 @@ Routes are mounted only when their dependencies are configured. Binary reads,
 including Files representations, use the same generic route.
 Dynamic SEO invokes the gateway directly; see [page indexing](../surfaces/page-indexing.md).
 The `/admin/providers` Page lists provider installations and their exact
-contract selections. The `ulvia.cms.providers` capabilities provide bounded
-list/detail, selection replacement and lifecycle-status mutations. Manifest
+contract selections. The `ulvia.cms.installations` contract is the shared
+administrative boundary for provider and collection installations. Its
+capabilities provide bounded list/detail, selection replacement, collection
+lifecycle and provider-status mutations. The control Provider's own
+`ulvia.cms.installations` selection is pinned; ordinary contracts remain
+replaceable. Manifest
 import and provider connection approval are application workflows owned by
 `cms-repository`: the host obtains an exact runtime report, validates it against
 the admitted manifest, persists the credential through the injected secret
@@ -152,7 +156,7 @@ store and records an observation. These workflows are not a second protocol and
 do not give collection JavaScript direct access to credentials.
 
 `/admin/collections` exposes repository discovery, installation, configuration
-and migration through `ulvia.cms.collections`; collection theme editing uses
+and migration through `ulvia.cms.installations`; collection theme editing uses
 the `theme.*` capabilities of `ulvia.cms.content`, and language/text editing
 uses its `localization.*` capabilities. `/admin/settings` uses the same content
 contract for non-secret site configuration; `/admin/access` only covers members,

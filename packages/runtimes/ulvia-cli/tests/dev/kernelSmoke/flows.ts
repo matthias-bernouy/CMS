@@ -125,7 +125,7 @@ async function mutateCollections(page: Page): Promise<void> {
     const initialRelease = collectionReleaseCard(page, "ulvia.test 1.0.0");
     await initialRelease.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
     const installResponse = page.waitForResponse((candidate) =>
-        candidate.url().includes("ulvia.cms.collections/install"),
+        candidate.url().includes("ulvia.cms.installations/install-collection"),
     );
     await initialRelease.getByRole("button", { name: /^(Install|Installer)$/u }).click();
     if (!(await installResponse).ok()) {

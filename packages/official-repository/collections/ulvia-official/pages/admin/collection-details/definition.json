@@ -5,13 +5,13 @@
     "description": "page.collection-details.description",
     "requires": [
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "get",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "get-collection-installation",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "update-configuration",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "update-collection-configuration",
             "versionRange": "^1.0.0"
         }
     ]

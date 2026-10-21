@@ -20,23 +20,23 @@ test("Provider operations deduplicate the same input and reject a changed replay
     const store = new MemoryProviderOperationStore();
     const executor = new ProviderOperationExecutor(store);
     let calls = 0;
-    executor.register("ulvia.cms.collections", "apply", async (input) => {
+    executor.register("ulvia.cms.installations", "apply", async (input) => {
         calls += 1;
         return { applied: input.target };
     });
 
-    const first = await executor.enqueue("ulvia.cms.collections", "apply", { target: "2.0.0" }, context);
-    const replay = await executor.enqueue("ulvia.cms.collections", "apply", { target: "2.0.0" }, context);
+    const first = await executor.enqueue("ulvia.cms.installations", "apply", { target: "2.0.0" }, context);
+    const replay = await executor.enqueue("ulvia.cms.installations", "apply", { target: "2.0.0" }, context);
     expect(replay).toEqual(first);
     await expectTerminal(store, first.operationId, "succeeded");
     expect(calls).toBe(1);
 
     await expect(
-        executor.enqueue("ulvia.cms.collections", "apply", { target: "3.0.0" }, context),
+        executor.enqueue("ulvia.cms.installations", "apply", { target: "3.0.0" }, context),
     ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT", status: 409 });
 
     const nextRelease = await executor.enqueue(
-        "ulvia.cms.collections",
+        "ulvia.cms.installations",
         "apply",
         { target: "3.0.0" },
         { ...context, contractVersion: "2.0.0" },
@@ -51,7 +51,7 @@ test("Provider operation recovery reclaims an expired lease and records failures
     await store.createOrGet({
         id: "00000000-0000-7000-8000-000000000010",
         siteId: "default",
-        contractId: "ulvia.cms.collections",
+        contractId: "ulvia.cms.installations",
         capabilityId: "resume",
         idempotencyKey: "resume-1",
         inputDigest: `sha256:${"0".repeat(64)}`,
@@ -64,7 +64,7 @@ test("Provider operation recovery reclaims an expired lease and records failures
         lease: { token: "dead-worker", expiresAt: "2026-10-06T10:00:01.000Z" },
     });
     const executor = new ProviderOperationExecutor(store, () => new Date("2026-10-06T10:01:00.000Z"));
-    executor.register("ulvia.cms.collections", "resume", async () => {
+    executor.register("ulvia.cms.installations", "resume", async () => {
         throw new Error("boom");
     });
 
@@ -80,12 +80,12 @@ test("Provider operations report technical failures without exposing their input
         onFailure: (observation, error) => failures.push({ observation, error }),
     });
     const failure = new Error("database unavailable");
-    executor.register("ulvia.cms.collections", "apply", async () => {
+    executor.register("ulvia.cms.installations", "apply", async () => {
         throw failure;
     });
 
     const queued = await executor.enqueue(
-        "ulvia.cms.collections",
+        "ulvia.cms.installations",
         "apply",
         { administratorPassword: "must-never-be-observed" },
         context,
@@ -96,7 +96,7 @@ test("Provider operations report technical failures without exposing their input
     expect(failures[0]).toMatchObject({
         observation: {
             operationId: queued.operationId,
-            contractId: "ulvia.cms.collections",
+            contractId: "ulvia.cms.installations",
             capabilityId: "apply",
             requestId: context.requestId,
             errorCode: "OPERATION_FAILED",
@@ -114,11 +114,11 @@ test("Provider operations report expected domain rejections without a technical 
     const executor = new ProviderOperationExecutor(store, undefined, {
         onFailure: (observation, error) => failures.push({ observation, error }),
     });
-    executor.register("ulvia.cms.collections", "apply", async () => {
+    executor.register("ulvia.cms.installations", "apply", async () => {
         throw new ProviderCapabilityDispatchError("COLLECTION_CONFLICT", 409);
     });
 
-    const queued = await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    const queued = await executor.enqueue("ulvia.cms.installations", "apply", {}, context);
     await expectTerminal(store, queued.operationId, "failed");
 
     expect(failures).toEqual([
@@ -166,7 +166,7 @@ test("Provider operations abort cooperative work when lease renewal is lost", as
     const store = new LostLeaseStore();
     const executor = new ProviderOperationExecutor(store, () => new Date(), { leaseMs: 9 });
     let aborted = false;
-    executor.register("ulvia.cms.collections", "apply", async (_input, _context, execution) => {
+    executor.register("ulvia.cms.installations", "apply", async (_input, _context, execution) => {
         await new Promise<void>((resolve) => {
             execution.signal.addEventListener(
                 "abort",
@@ -180,7 +180,7 @@ test("Provider operations abort cooperative work when lease renewal is lost", as
         execution.throwIfLeaseLost();
     });
 
-    const queued = await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    const queued = await executor.enqueue("ulvia.cms.installations", "apply", {}, context);
     for (let attempt = 0; attempt < 50 && !aborted; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 1));
     }
@@ -197,13 +197,13 @@ test("Provider operation shutdown drains active work and rejects new work", asyn
         finish = resolve;
     });
     let started = false;
-    executor.register("ulvia.cms.collections", "apply", async () => {
+    executor.register("ulvia.cms.installations", "apply", async () => {
         started = true;
         await completion;
         return { applied: true };
     });
 
-    await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    await executor.enqueue("ulvia.cms.installations", "apply", {}, context);
     await waitUntil(() => started);
     let stopped = false;
     const stopping = executor.stop().then(() => {
@@ -216,7 +216,7 @@ test("Provider operation shutdown drains active work and rejects new work", asyn
     await stopping;
     expect(stopped).toBe(true);
     await expect(
-        executor.enqueue("ulvia.cms.collections", "apply", {}, { ...context, idempotencyKey: "after-stop" }),
+        executor.enqueue("ulvia.cms.installations", "apply", {}, { ...context, idempotencyKey: "after-stop" }),
     ).rejects.toMatchObject({ code: "PROVIDER_SHUTTING_DOWN", status: 503 });
 });
 
@@ -236,12 +236,12 @@ test("Provider operations retain their instance resource until execution finishe
     const completion = new Promise<void>((resolve) => {
         finish = resolve;
     });
-    executor.register("ulvia.cms.collections", "apply", async () => {
+    executor.register("ulvia.cms.installations", "apply", async () => {
         await completion;
         return { applied: true };
     });
 
-    const queued = await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    const queued = await executor.enqueue("ulvia.cms.installations", "apply", {}, context);
     await waitUntil(() => retained === 1);
     expect(released).toBe(0);
     finish();
@@ -249,17 +249,17 @@ test("Provider operations retain their instance resource until execution finishe
     await waitUntil(() => released === 1);
 });
 
-test("the collections contract exposes a completed operation result only from its detail query", async () => {
+test("the installations contract exposes a completed operation result only from its detail query", async () => {
     const store = new MemoryProviderOperationStore();
     const executor = new ProviderOperationExecutor(store);
-    executor.register("ulvia.cms.collections", "apply-migration", async () => ({
+    executor.register("ulvia.cms.installations", "apply-collection-migration", async () => ({
         migrationId: "00000000-0000-4000-8000-000000000003",
         status: "completed",
         collectionRevision: 2,
         totalPages: 1,
         operationCount: 1,
     }));
-    const queued = await executor.enqueue("ulvia.cms.collections", "apply-migration", {}, context);
+    const queued = await executor.enqueue("ulvia.cms.installations", "apply-collection-migration", {}, context);
     executor.register("ulvia.cms.content", "rebuild", async () => ({ rebuilt: true }));
     const unrelated = await executor.enqueue("ulvia.cms.content", "rebuild", {}, context);
     await expectTerminal(store, queued.operationId, "succeeded");
@@ -268,7 +268,12 @@ test("the collections contract exposes a completed operation result only from it
     registerCollectionOperationCapabilities(dispatcher, executor);
 
     const detail = record(
-        await dispatcher.invoke("ulvia.cms.collections", "get-operation", { operationId: queued.operationId }, context),
+        await dispatcher.invoke(
+            "ulvia.cms.installations",
+            "get-operation",
+            { operationId: queued.operationId },
+            context,
+        ),
     );
     expect(detail.result).toEqual({
         migrationId: "00000000-0000-4000-8000-000000000003",
@@ -277,11 +282,11 @@ test("the collections contract exposes a completed operation result only from it
         totalPages: 1,
         operationCount: 1,
     });
-    const listed = record(await dispatcher.invoke("ulvia.cms.collections", "list-operations", {}, context));
+    const listed = record(await dispatcher.invoke("ulvia.cms.installations", "list-operations", {}, context));
     expect(listed.items).toHaveLength(1);
     expect((listed.items as unknown[])[0]).not.toHaveProperty("result");
     await expect(
-        dispatcher.invoke("ulvia.cms.collections", "get-operation", { operationId: unrelated.operationId }, context),
+        dispatcher.invoke("ulvia.cms.installations", "get-operation", { operationId: unrelated.operationId }, context),
     ).rejects.toMatchObject({ code: "NOT_FOUND", status: 404 });
 });
 

@@ -1,5 +1,5 @@
 <section
-    cms-query="ulvia.cms.collections:catalogue as catalogue"
+    cms-query="ulvia.cms.installations:list-available-collections as catalogue"
     cms-query-listen="@page:ulvia-official-collection-catalogue-mutation/lastSuccess/requestId"
     cms-query-refresh="focus reconnect"
 >
@@ -50,7 +50,7 @@
                         <form
                             slot="items"
                             cms-condition="release.action === 'install'"
-                            cms-mutation="ulvia.cms.collections:install as mutation"
+                            cms-mutation="ulvia.cms.installations:install-collection as mutation"
                             cms-sync="@page:ulvia-official-collection-catalogue-mutation"
                             cms-sync-select="lastSuccess.requestId"
                         >
@@ -87,7 +87,7 @@
                         <div cms-bloc="ulvia-official-cluster" gap="sm" cms-condition="release.action === 'upgrade'" slot="items">
                             <form
                                 slot="items"
-                                cms-mutation="ulvia.cms.collections:upgrade as mutation"
+                                cms-mutation="ulvia.cms.installations:upgrade-collection as mutation"
                                 cms-sync="@page:ulvia-official-collection-catalogue-mutation"
                                 cms-sync-select="lastSuccess.requestId"
                             >

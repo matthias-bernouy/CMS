@@ -22,14 +22,16 @@ import { NOOP_LOGGER } from "@bernouy/logging";
 const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
     ["ulvia.cms.access", "list-users", "QUERY", "/list-users", {}],
-    ["ulvia.cms.collections", "list-operations", "QUERY", "/operations", {}],
+    ["ulvia.cms.installations", "list-operations", "QUERY", "/operations", {}],
     ["ulvia.cms.content", "site.get", "GET", "/site", undefined],
     ["ulvia.cms.files", "namespace.create", "POST", "/namespaces", { name: "Test", defaultVisibility: "private" }],
-    ["ulvia.cms.providers", "list", "GET", "/list", undefined],
+    ["ulvia.cms.installations", "list-provider-installations", "GET", "/list-provider-installations", undefined],
 ] as const;
 
 test("mounts and dispatches every official CMS contract release", async () => {
-    const contracts = await Promise.all(ROUTES.map(([contractId]) => loadOfficialContract(contractId)));
+    const contracts = await Promise.all(
+        [...new Set(ROUTES.map(([contractId]) => contractId))].map(loadOfficialContract),
+    );
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     for (const { release } of contracts) {
         for (const capability of release.capabilities) {
@@ -95,7 +97,9 @@ test("mounts and dispatches every official CMS contract release", async () => {
 });
 
 test("the official adapters implement the complete declared capability matrix", async () => {
-    const contracts = await Promise.all(ROUTES.map(([contractId]) => loadOfficialContract(contractId)));
+    const contracts = await Promise.all(
+        [...new Set(ROUTES.map(([contractId]) => contractId))].map(loadOfficialContract),
+    );
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const operations = new ProviderOperationExecutor(new MemoryProviderOperationStore());
     registerOfficialProviderCapabilities(

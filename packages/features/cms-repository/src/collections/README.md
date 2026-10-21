@@ -224,7 +224,7 @@ digest. Setting presentation metadata and order may evolve; slot cardinalities
 and accepted native tags may widen but cannot invalidate existing content.
 Collection configuration is mutable per site through a schema-validated,
 revision-checked store operation exposed by the administrator-only
-`ulvia.cms.collections/update-configuration` capability.
+`ulvia.cms.installations/update-collection-configuration` capability.
 
 Every independently consumable resource has a positive generation and derived
 contract/implementation SHA-256 digests. The collection SemVer and immutable

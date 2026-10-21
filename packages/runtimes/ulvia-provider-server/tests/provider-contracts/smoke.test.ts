@@ -105,13 +105,13 @@ test("all administration capability areas dispatch outputs matching their offici
     );
 
     const calls = [
-        ["ulvia.cms.collections", "list", {}],
-        ["ulvia.cms.collections", "list-operations", {}],
-        ["ulvia.cms.collections", "migration-status", {}],
+        ["ulvia.cms.installations", "list-collection-installations", {}],
+        ["ulvia.cms.installations", "list-operations", {}],
+        ["ulvia.cms.installations", "get-collection-migration-status", {}],
         ["ulvia.cms.files", "namespace.create", { name: "Smoke files", defaultVisibility: "private" }],
         ["ulvia.cms.content", "localization.get", {}],
         ["ulvia.cms.content", "theme.get", {}],
-        ["ulvia.cms.providers", "list", {}],
+        ["ulvia.cms.installations", "list-provider-installations", {}],
         ["ulvia.cms.access", "list-users", {}],
     ] as const;
     for (const [contractId, capabilityId, input] of calls) {

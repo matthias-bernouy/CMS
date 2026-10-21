@@ -10,18 +10,18 @@
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "catalogue",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-available-collections",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.collections",
+            "contractId": "ulvia.cms.installations",
             "capabilityId": "list-operations",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.providers",
-            "capabilityId": "list",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-provider-installations",
             "versionRange": "^1.0.0"
         }
     ]

@@ -5,13 +5,13 @@
     "description": "page.collection-migration.description",
     "requires": [
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "plan-migration",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "plan-collection-migration",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "apply-migration",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "apply-collection-migration",
             "versionRange": "^1.0.0"
         }
     ]

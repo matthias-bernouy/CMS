@@ -1,4 +1,7 @@
-<section cms-query="ulvia.cms.providers:list as providers" cms-query-listen="@page:ulvia-official-providers-mutation/lastSuccess/requestId">
+<section
+    cms-query="ulvia.cms.installations:list-provider-installations as providers"
+    cms-query-listen="@page:ulvia-official-providers-mutation/lastSuccess/requestId"
+>
     <div role="status" aria-live="polite" cms-condition="providers.activity === 'fetching'">
         <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-reading-provider-configuration }}</h2>
     </div>
@@ -53,7 +56,7 @@
                             <form
                                 slot="items"
                                 cms-condition="installation.status === 'enabled'"
-                                cms-mutation="ulvia.cms.providers:set-status as mutation"
+                                cms-mutation="ulvia.cms.installations:set-provider-status as mutation"
                                 cms-sync="@page:ulvia-official-providers-mutation"
                                 cms-sync-select="lastSuccess.requestId"
                             >
@@ -89,7 +92,7 @@
                             <form
                                 slot="items"
                                 cms-condition="installation.status === 'disabled'"
-                                cms-mutation="ulvia.cms.providers:set-status as mutation"
+                                cms-mutation="ulvia.cms.installations:set-provider-status as mutation"
                                 cms-sync="@page:ulvia-official-providers-mutation"
                                 cms-sync-select="lastSuccess.requestId"
                             >
@@ -118,7 +121,7 @@
                             <summary>{{ cms.i18n.ulvia-official.ui-revoke }}</summary>
                             <p>{{ cms.i18n.ulvia-official.ui-revocation-is-terminal-and-deletes-stored-credentials }}</p>
                             <form
-                                cms-mutation="ulvia.cms.providers:set-status as mutation"
+                                cms-mutation="ulvia.cms.installations:set-provider-status as mutation"
                                 cms-sync="@page:ulvia-official-providers-mutation"
                                 cms-sync-select="lastSuccess.requestId"
                             >
@@ -162,7 +165,7 @@
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="contract-routing" role="tabpanel">
                 <form
                     slot="content"
-                    cms-mutation="ulvia.cms.providers:replace-selections as mutation"
+                    cms-mutation="ulvia.cms.installations:replace-contract-selections as mutation"
                     cms-sync="@page:ulvia-official-providers-mutation"
                     cms-sync-select="lastSuccess.requestId"
                     cms-mutation-reset="false"

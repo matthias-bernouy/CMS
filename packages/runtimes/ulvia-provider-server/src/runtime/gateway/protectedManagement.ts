@@ -1,35 +1,48 @@
 import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import type { OfficialInstanceProfile, ProviderInstanceRecord, UlviaProviderManagement } from "@bernouy/ulvia-provider";
 
+const CONTROL_CONTRACT_ID = "ulvia.cms.installations";
+
 export function createProtectedProviderManagement(
     management: ProviderManagement,
     instance: ProviderInstanceRecord,
     profile: OfficialInstanceProfile,
 ): UlviaProviderManagement {
+    const controlInstallation = async () => {
+        const state = await management.list();
+        const installation = state.installations.find(
+            (candidate) => candidate.providerId === profile.manifest.providerId && candidate.accountId === instance.id,
+        );
+        if (!installation) {
+            throw policyError("control_installation_missing");
+        }
+        return installation;
+    };
     return {
         replaceSelections: async (input) => {
-            const state = await management.list();
-            const system = state.installations.find(
-                (candidate) =>
-                    candidate.providerId === profile.manifest.providerId && candidate.accountId === instance.id,
-            );
-            if (!system) {
-                throw policyError("system_installation_missing");
+            const control = await controlInstallation();
+            const contract = profile.contracts.find((candidate) => candidate.contractId === CONTROL_CONTRACT_ID);
+            if (!contract) {
+                throw policyError("control_contract_missing");
             }
-            for (const contract of profile.contracts) {
-                const selection = input.selections.find((candidate) => candidate.contractId === contract.contractId);
-                if (
-                    !selection ||
-                    selection.installationId !== system.id ||
-                    selection.version !== contract.version ||
-                    selection.digest !== contract.digest
-                ) {
-                    throw policyError("system_selection_protected");
-                }
+            const selection = input.selections.find((candidate) => candidate.contractId === CONTROL_CONTRACT_ID);
+            if (
+                !selection ||
+                selection.installationId !== control.id ||
+                selection.version !== contract.version ||
+                selection.digest !== contract.digest
+            ) {
+                throw policyError("control_selection_protected");
             }
             return management.replaceSelections(input);
         },
-        setStatus: (input) => management.setStatus(input),
+        setStatus: async (input) => {
+            const control = await controlInstallation();
+            if (input.installationId === control.id) {
+                throw policyError("control_installation_protected");
+            }
+            return management.setStatus(input);
+        },
     };
 }
 

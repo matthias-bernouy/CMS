@@ -4,12 +4,12 @@ import type { CollectionMigrationService } from "cms-repository/collections/inst
 const AVAILABLE_PREFIXES = ["/login", "/.cms/assets", "/.cms/collections"];
 const AVAILABLE_PATHS = new Set(["/favicon.ico", "/.cms/blocset", "/.cms/blocstyles", "/.cms/style"]);
 const RECOVERY_CAPABILITIES = new Set([
-    "ulvia.cms.collections/get-migration",
-    "ulvia.cms.collections/get-operation",
-    "ulvia.cms.collections/list-operations",
-    "ulvia.cms.collections/migration-status",
-    "ulvia.cms.collections/resume-migration",
-    "ulvia.cms.collections/rollback-migration",
+    "ulvia.cms.installations/get-collection-migration",
+    "ulvia.cms.installations/get-operation",
+    "ulvia.cms.installations/list-operations",
+    "ulvia.cms.installations/get-collection-migration-status",
+    "ulvia.cms.installations/resume-collection-migration",
+    "ulvia.cms.installations/rollback-collection-migration",
 ]);
 
 export function createCollectionMaintenanceGuard(options: {

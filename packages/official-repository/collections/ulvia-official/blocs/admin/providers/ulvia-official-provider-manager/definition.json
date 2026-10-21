@@ -21,18 +21,18 @@
     ],
     "requires": [
         {
-            "contractId": "ulvia.cms.providers",
-            "capabilityId": "list",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-provider-installations",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.providers",
-            "capabilityId": "replace-selections",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "replace-contract-selections",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.providers",
-            "capabilityId": "set-status",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "set-provider-status",
             "versionRange": "^1.0.0"
         }
     ],

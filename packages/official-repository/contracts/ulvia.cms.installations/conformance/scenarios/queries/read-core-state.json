@@ -1,0 +1,119 @@
+{
+    "id": "read-core-state",
+    "description": "Verify the portable, non-destructive administration projections exposed by a fresh CMS tenant.",
+    "calls": [
+        {
+            "id": "list-collection-installations",
+            "capabilityId": "list-collection-installations",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/revision",
+                        "present": true
+                    },
+                    {
+                        "path": "/items",
+                        "present": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "list-available-collections",
+            "capabilityId": "list-available-collections",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/revision",
+                        "present": true
+                    },
+                    {
+                        "path": "/releases",
+                        "present": true
+                    },
+                    {
+                        "path": "/installed",
+                        "present": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "get-collection-migration-status",
+            "capabilityId": "get-collection-migration-status",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {
+                "limit": 25
+            },
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/maintenance",
+                        "present": true
+                    },
+                    {
+                        "path": "/migrations",
+                        "present": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "list-operations",
+            "capabilityId": "list-operations",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {
+                "limit": 25
+            },
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/items",
+                        "present": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "list-provider-installations",
+            "capabilityId": "list-provider-installations",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/selectionRevision",
+                        "present": true
+                    },
+                    {
+                        "path": "/installations",
+                        "present": true
+                    },
+                    {
+                        "path": "/selections",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

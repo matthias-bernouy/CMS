@@ -1,6 +1,6 @@
 import { expect, mock, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { CollectionSources, registerCollectionCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { CollectionSources, registerCollectionInstallationCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 const digest = `sha256:${"a".repeat(64)}`;
 const reference = {
@@ -83,7 +83,7 @@ test("collection catalogue identifies only releases with site configuration", as
 
 test("collection details expose translated metadata and the installed bloc catalogue", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionCapabilities(dispatcher, {
+    registerCollectionInstallationCapabilities(dispatcher, {
         collections: {
             snapshot: async () => ({
                 revision: 7,
@@ -129,7 +129,12 @@ test("collection details expose translated metadata and the installed bloc catal
     } as never);
 
     await expect(
-        dispatcher.invoke("ulvia.cms.collections", "get", { collectionId: "sample" }, context),
+        dispatcher.invoke(
+            "ulvia.cms.installations",
+            "get-collection-installation",
+            { collectionId: "sample" },
+            context,
+        ),
     ).resolves.toMatchObject({
         revision: 7,
         name: "Sample collection",
@@ -193,7 +198,7 @@ test("collection commands stage installs and require migrations for generation c
         get: async () => ({ release: targetRelease, assets: [] }),
     };
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    registerCollectionCapabilities(
+    registerCollectionInstallationCapabilities(
         dispatcher,
         core as never,
         undefined,
@@ -201,9 +206,19 @@ test("collection commands stage installs and require migrations for generation c
     );
 
     await expect(
-        dispatcher.invoke("ulvia.cms.collections", "install", { expectedRevision: 0, targets: [reference] }, context),
+        dispatcher.invoke(
+            "ulvia.cms.installations",
+            "install-collection",
+            { expectedRevision: 0, targets: [reference] },
+            context,
+        ),
     ).resolves.toMatchObject({ revision: 1 });
     await expect(
-        dispatcher.invoke("ulvia.cms.collections", "upgrade", { expectedRevision: 1, target: reference }, context),
+        dispatcher.invoke(
+            "ulvia.cms.installations",
+            "upgrade-collection",
+            { expectedRevision: 1, target: reference },
+            context,
+        ),
     ).rejects.toMatchObject({ code: "MIGRATION_REQUIRED", status: 409 });
 });

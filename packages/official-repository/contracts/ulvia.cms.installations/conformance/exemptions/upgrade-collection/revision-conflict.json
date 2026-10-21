@@ -1,0 +1,5 @@
+{
+    "capabilityId": "upgrade-collection",
+    "errorCode": "REVISION_CONFLICT",
+    "reason": "The portable smoke suite does not orchestrate concurrent collection mutations."
+}

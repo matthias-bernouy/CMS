@@ -18,18 +18,18 @@
     ],
     "requires": [
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "catalogue",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-available-collections",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "install",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "install-collection",
             "versionRange": "^1.0.0"
         },
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "upgrade",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "upgrade-collection",
             "versionRange": "^1.0.0"
         }
     ],

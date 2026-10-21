@@ -1,5 +1,0 @@
-{
-    "capabilityId": "upgrade",
-    "errorCode": "CORE_UNAVAILABLE",
-    "reason": "A runner-independent suite must not prescribe how a provider disconnects its repository or managed Core."
-}

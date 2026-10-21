@@ -131,7 +131,7 @@ export async function inspectDiagnostics(page: Page): Promise<void> {
     await page.locator("#migration-health").waitFor();
     await page.locator('a[href="#collection-operation-health"]').click();
     await page.waitForURL(/#collection-operation-health$/u);
-    const operations = page.locator('section[cms-query*="ulvia.cms.collections:list-operations"]');
+    const operations = page.locator('section[cms-query*="ulvia.cms.installations:list-operations"]');
     await operations
         .locator('p[cms-condition*="operations.data.items.length"]')
         .or(operations.locator('article[role="listitem"]'))

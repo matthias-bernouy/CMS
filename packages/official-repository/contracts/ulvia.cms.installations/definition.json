@@ -1,0 +1,14 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.installations",
+    "name": "CMS Installations",
+    "description": "Inspect and administer the collection installations, provider installations and contract selections of one CMS instance.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "installations",
+        "categories": ["administration", "content", "infrastructure"]
+    }
+}

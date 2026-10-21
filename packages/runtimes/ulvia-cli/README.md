@@ -13,7 +13,7 @@ bun run ulvia -- dev reset --yes
 bun run ulvia -- release packages/official-repository/collections/ulvia-official
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
-bun run ulvia -- push contract ulvia.official/ulvia.cms.collections@1.0.0 --repository https://repository.example
+bun run ulvia -- push contract ulvia.official/ulvia.cms.installations@1.0.0 --repository https://repository.example
 bun run ulvia -- pull collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
 bun run ulvia -- yank collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example --reason "Superseded"
 bun run ulvia -- restore collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
@@ -151,10 +151,9 @@ resources manually, release the CMS contracts before the manifest:
 
 ```bash
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.access
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.collections
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.installations
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.content
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.files
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.providers
 bun run ulvia -- release packages/official-repository/contracts/ulvia.provider.cms-instances
 bun run ulvia -- release packages/official-repository/providers/ulvia.official
 bun run ulvia -- dev new

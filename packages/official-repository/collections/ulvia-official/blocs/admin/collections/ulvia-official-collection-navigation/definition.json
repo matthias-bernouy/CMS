@@ -9,8 +9,8 @@
     "uses": ["ulvia-official-navigation-item", "ulvia-official-navigation-menu", "ulvia-official-navigation-section"],
     "requires": [
         {
-            "contractId": "ulvia.cms.collections",
-            "capabilityId": "catalogue",
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-available-collections",
             "versionRange": "^1.0.0"
         }
     ],
