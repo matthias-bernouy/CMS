@@ -257,7 +257,7 @@ test("theme reads compose the authoritative token catalogues from installed coll
                                     {
                                         id: "colors",
                                         label: "category.colors",
-                                        tokens: [
+                                        entries: [
                                             {
                                                 id: "primary",
                                                 label: "token.primary",

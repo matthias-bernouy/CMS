@@ -44,6 +44,7 @@ async function repositoryFixture() {
         contracts: string[];
         provider: string;
         collection: string;
+        collectionAssets: Array<{ id: string; path: string }>;
     };
     const catalogue = new InMemoryReleaseCatalogue();
     const entries: RepositoryArtifactEntry[] = [];
@@ -78,7 +79,10 @@ async function repositoryFixture() {
     });
     bytes.set(`provider-manifest:${manifest.manifest.providerId}`, manifestBytes);
     const collectionValue = JSON.parse(await readFile(resolve(ROOT, index.collection), "utf8"));
-    const collection = await admitCollectionRelease(collectionValue, [], { contracts: catalogue });
+    const collectionAssets = await Promise.all(
+        index.collectionAssets.map(async ({ id, path }) => ({ id, bytes: await readFile(resolve(ROOT, path)) })),
+    );
+    const collection = await admitCollectionRelease(collectionValue, collectionAssets, { contracts: catalogue });
     const providers: ProviderRepositorySource = {
         id: "official",
         list: async (kind) => entries.filter((entry) => entry.kind === kind),
@@ -99,7 +103,7 @@ async function repositoryFixture() {
                 hasTheme: collection.release.theme !== undefined,
             },
         ],
-        get: async () => ({ release: collectionValue, assets: [] }),
+        get: async () => ({ release: collectionValue, assets: collectionAssets }),
     };
     return {
         providers,
