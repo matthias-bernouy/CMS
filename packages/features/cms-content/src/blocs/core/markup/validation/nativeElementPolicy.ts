@@ -15,6 +15,7 @@ import {
     isSupportedAriaAttribute,
 } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
 import { boundAttributeValueIssue } from "cms-content/blocs/core/markup/validation/contracts/attributeBindings";
+import { CMS_SVG_ATTRIBUTE, svgReferenceIssue } from "cms-content/blocs/core/markup/security/svgReference";
 
 export type NativePolicyElement = {
     readonly localName: string;
@@ -100,6 +101,16 @@ export function nativeElementAttributesIssue(
         return attributes.src || allowIncompleteMedia ? null : "native image source must reference a CMS media item";
     }
     if (tag === "svg") {
+        if (element.getAttribute(CMS_SVG_ATTRIBUTE) === null) {
+            return `native <svg> requires ${CMS_SVG_ATTRIBUTE}`;
+        }
+        if (
+            Array.from(element.childNodes).some(
+                (node) => node.nodeType === 1 || (node.nodeType === 3 && Boolean(node.textContent?.trim())),
+            )
+        ) {
+            return `native <svg> with ${CMS_SVG_ATTRIBUTE} must be empty`;
+        }
         return accessibleSvgIssue(attributes);
     }
     if (
@@ -132,7 +143,7 @@ function nativeAttributesIssue(
         if (blocRoot && name === "cms-bloc") {
             continue;
         }
-        if ((tag !== "svg" && name !== name.toLowerCase()) || CONTROL_CHARACTER.test(value)) {
+        if (name !== name.toLowerCase() || CONTROL_CHARACTER.test(value)) {
             return `attribute "${name}" is not safe on native <${tag}>`;
         }
         if (
@@ -147,6 +158,16 @@ function nativeAttributesIssue(
         }
         if (isCmsBindingAttribute(name)) {
             const issue = nativeBindingAttributeIssue(name, value);
+            if (issue) {
+                return issue;
+            }
+            continue;
+        }
+        if (name === CMS_SVG_ATTRIBUTE) {
+            if (tag !== "svg") {
+                return `${CMS_SVG_ATTRIBUTE} is allowed only on native <svg>`;
+            }
+            const issue = svgReferenceIssue(value);
             if (issue) {
                 return issue;
             }
@@ -206,9 +227,6 @@ function nativeAttributesIssue(
             if (issue) {
                 return issue;
             }
-        }
-        if (tag === "svg" && name !== "slot") {
-            continue;
         }
         if (!isPlatformNativeAttributeAllowed(tag, name)) {
             return `attribute "${name}" is not allowed on native <${tag}>`;

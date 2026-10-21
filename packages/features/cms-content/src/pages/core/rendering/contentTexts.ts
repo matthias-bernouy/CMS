@@ -1,4 +1,5 @@
 import { isUserFacingTextAttribute } from "./userFacingTextAttributes";
+import { parseCollectionAssetExpression } from "cms-content/blocs/core/markup/security/collectionAssetExpression";
 
 export interface ContentTextSource {
     readonly namespace: string;
@@ -21,7 +22,7 @@ export function replaceContentTextExpressions(
         const end = input.indexOf("}}", start + 2);
         const expression = input.slice(start + 2, end === -1 ? undefined : end).trim();
         const text = /^cms\.i18n\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})$/u.exec(expression);
-        const asset = /^cms\.asset\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)$/u.test(expression);
+        const asset = parseCollectionAssetExpression(expression);
         if (!text) {
             if (/^cms(?:$|[^\w$-])/u.test(expression) && !asset) {
                 throw new TypeError("Expected a supported reserved CMS expression");

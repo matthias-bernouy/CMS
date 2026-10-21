@@ -12,6 +12,7 @@ import {
     resolveBindingAnalysisOptions,
     type ContentBindingValidationOptions,
 } from "cms-content/application/core/validation/bindingCapabilities";
+import { validateSvgCapabilityReferences } from "cms-content/application/core/validation/svgCapabilities";
 
 type BlocCatalogueReader = Pick<CmsRepository, "getBlocsList">;
 
@@ -32,6 +33,7 @@ export async function validateBlocArtifact(
         },
         catalogue,
     );
+    await validateSvgCapabilityReferences([validated.fixedContent, validated.defaultContent], bindingOptions);
     if (
         bindingOptions.resolveCapabilities ||
         bindingOptions.resolveQueryCapabilities ||

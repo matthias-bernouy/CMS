@@ -288,6 +288,7 @@ describe("ValidatingCmsRepository — pages", () => {
             ownership: { kind: "code-managed" },
             kind: "component",
             markupHTML: "<slot></slot>",
+            viewJS: "",
             root: { accepts: ["div"] },
             slots: { "": { accepts: [{ kind: "native-element", accepts: ["span"] }] } },
             viewJS: "cmsRuntime.registerBloc('fixture-query', { mount() {} })",
@@ -305,6 +306,62 @@ describe("ValidatingCmsRepository — pages", () => {
                 `<div cms-bloc=\"fixture-query\">${queryDocument("<span>{{ pages.data.missing }}</span>")}</div>`,
             ),
         ).rejects.toThrow("is not declared by the output schema");
+    });
+
+    test("resolves every capability-backed cms-svg before storing a Page", async () => {
+        const targets: string[] = [];
+        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+            requireSvgCapabilityResolution: true,
+            validateSvgCapabilities: async (requested) => {
+                targets.push(...requested.map(({ contractId, bindingPath }) => `${contractId}${bindingPath}`));
+            },
+        });
+        await repo.createBloc({
+            id: "fixture-icon-host",
+            name: "Icon host",
+            group: "",
+            description: "",
+            ownership: { kind: "code-managed" },
+            kind: "component",
+            markupHTML: "<slot></slot>",
+            viewJS: "",
+            root: { accepts: ["div"] },
+            slots: { "": { accepts: [{ kind: "native-element", accepts: ["svg"] }] } },
+        });
+
+        await repo.insertPage(
+            "/icon",
+            "Icon",
+            '<div cms-bloc="fixture-icon-host"><svg cms-svg="/.cms/call/media/icons/check" aria-hidden="true"></svg></div>',
+        );
+
+        expect(targets).toEqual(["media/icons/check"]);
+    });
+
+    test("rejects a capability-backed cms-svg when strict resolution is unavailable", async () => {
+        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+            requireSvgCapabilityResolution: true,
+        });
+        await repo.createBloc({
+            id: "fixture-icon-host",
+            name: "Icon host",
+            group: "",
+            description: "",
+            ownership: { kind: "code-managed" },
+            kind: "component",
+            markupHTML: "<slot></slot>",
+            viewJS: "",
+            root: { accepts: ["div"] },
+            slots: { "": { accepts: [{ kind: "native-element", accepts: ["svg"] }] } },
+        });
+
+        await expect(
+            repo.insertPage(
+                "/icon",
+                "Icon",
+                '<div cms-bloc="fixture-icon-host"><svg cms-svg="/.cms/call/media/icons/check" aria-hidden="true"></svg></div>',
+            ),
+        ).rejects.toThrow("require an exact selected public SVG capability");
     });
 });
 

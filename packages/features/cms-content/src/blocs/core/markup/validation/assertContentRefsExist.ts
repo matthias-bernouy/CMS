@@ -7,6 +7,7 @@ import {
     resolveBindingAnalysisOptions,
     type ContentBindingValidationOptions,
 } from "cms-content/application/core/validation/bindingCapabilities";
+import { validateSvgCapabilityReferences } from "cms-content/application/core/validation/svgCapabilities";
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {
@@ -52,6 +53,7 @@ export async function assertContentRefsExist(
     const visibleContracts = contracts(registeredBlocs);
     const hiddenContracts = contracts(hiddenBlocs);
     const document = validatePageDocument(content, visibleContracts, { hiddenBlocs: hiddenContracts });
+    await validateSvgCapabilityReferences([document.html], bindingOptions);
     if (
         bindingOptions.resolveCapabilities ||
         bindingOptions.resolveQueryCapabilities ||

@@ -290,5 +290,7 @@ export function isCmsMediaSource(value: string): boolean {
 }
 
 export function isContributedAssetSource(value: string): boolean {
-    return /^\{\{\s*cms\.asset\.[a-z][a-z0-9-]{0,95}\.[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*\s*\}\}$/u.test(value);
+    return /^\{\{\s*cms\.asset\.[a-z][a-z0-9-]{0,95}\.[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*\s*\}\}$/u.test(
+        value,
+    );
 }

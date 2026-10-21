@@ -26,6 +26,7 @@ export {
 } from "cms-content/blocs/core/assets/groupBlocsBySignature";
 export {
     collectionBlocsetCacheKey,
+    digestContentRevision,
     resolvePageAssets,
     type AssetsManifest,
     type PageAssetContext,
@@ -60,6 +61,7 @@ export {
     servePublishedPageSnapshot,
 } from "cms-content/pages/http/publishedPageSnapshot";
 export { sanitizeDomTree } from "cms-content/blocs/core/markup/security/sanitizeDomTree";
+export { parseCollectionAssetReference } from "cms-content/blocs/core/markup/security/collectionAssetExpression";
 export { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
 
 export { renderContentTexts, replaceContentTextExpressions } from "cms-content/pages/core/rendering/contentTexts";

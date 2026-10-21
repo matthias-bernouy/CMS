@@ -4,6 +4,7 @@ import { FAVICON_ROUTE } from "cms-kernel/http/assets/favicon";
 import type { RenderContext } from "cms-kernel/html/RenderContext";
 import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
 import { resolvePageLinks } from "cms-kernel/http/pages/pageLinks";
+import { resolveSvgSource } from "cms-kernel/html/resolveSvgSource";
 
 /**
  * Build a `RenderContext` for the live serving path. Assets are resolved
@@ -16,6 +17,7 @@ export function makeRuntimeRenderContext(kernel: KernelCms): RenderContext {
         content: kernel.content,
         resolveContributedAssets: (input) =>
             resolveInstalledCollectionAssets(input, kernel.collectionAssets, kernel.basePath),
+        resolveSvgSource: (source) => resolveSvgSource(kernel, source),
         prepareBody: (body) => resolvePageLinks(body, kernel),
         resolveAssets: (usedTags, renderableBlocs) =>
             resolvePageAssets(

@@ -17,6 +17,7 @@ import { analyzeBindingExpression, factsForMatchCase } from "./expressions";
 import { resolveBindingPath } from "./paths";
 import type { BindingAnalysisOptions, BindingCapability } from "./types";
 import { validateOperationCoverage } from "./coverage";
+import { parseCollectionAssetExpression } from "cms-content/blocs/core/markup/security/collectionAssetExpression";
 
 const IGNORED_ATTRIBUTES = new Set<string>([
     CMS_BINDING_ATTRIBUTES.query,
@@ -146,6 +147,9 @@ function validateInterpolations(
                 ? withFact(facts, `${operationName}.outcome.kind`, "success")
                 : facts;
         for (const expression of interpolationExpressions(element.getAttribute(attribute) ?? "") ?? []) {
+            if (isServerAssetExpression(expression)) {
+                continue;
+            }
             analyzeBindingExpression(expression, scope, attributeFacts);
         }
     }
@@ -154,9 +158,16 @@ function validateInterpolations(
             continue;
         }
         for (const expression of interpolationExpressions(node.textContent ?? "") ?? []) {
+            if (isServerAssetExpression(expression)) {
+                continue;
+            }
             analyzeBindingExpression(expression, scope, facts);
         }
     }
+}
+
+function isServerAssetExpression(expression: string): boolean {
+    return parseCollectionAssetExpression(expression) !== null;
 }
 
 function repeatedVariable(variable: BindingVariable, path: string): BindingVariable {

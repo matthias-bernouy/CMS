@@ -5,11 +5,16 @@ import type {
     BindingCapabilityTarget,
     BindingQueryCapabilityResolver,
 } from "cms-content/blocs/core/markup/validation/bindingAnalysis";
+import type { SvgCapabilityTarget } from "cms-content/blocs/core/markup/security/svgReference";
+
+export type SvgCapabilityValidator = (targets: readonly SvgCapabilityTarget[]) => Promise<void>;
 
 export interface ContentBindingValidationOptions {
     readonly resolveCapabilities?: BindingCapabilityResolver;
     readonly resolveQueryCapabilities?: BindingQueryCapabilityResolver;
     readonly requireQueryCapabilityResolution?: boolean;
+    readonly validateSvgCapabilities?: SvgCapabilityValidator;
+    readonly requireSvgCapabilityResolution?: boolean;
 }
 
 export async function resolveBindingAnalysisOptions(

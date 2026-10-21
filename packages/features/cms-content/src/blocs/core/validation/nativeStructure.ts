@@ -12,6 +12,7 @@ import {
 } from "cms-content/blocs/core/validation/nativeBindings";
 import { nativeAttributeSetIssue } from "cms-content/blocs/core/validation/nativeAttributeValues";
 import type { SiteBlocNode } from "cms-content/blocs/interfaces/blocs";
+import { CMS_SVG_ATTRIBUTE, svgReferenceIssue } from "cms-content/blocs/core/markup/security/svgReference";
 
 export function validateNativeSiteBlocNode(
     node: Extract<SiteBlocNode, { kind: "bloc" }>,
@@ -33,6 +34,14 @@ export function validateNativeSiteBlocNode(
     }
     const staticAttributes: Record<string, string> = {};
     for (const [attribute, value] of Object.entries(node.attributes)) {
+        if (attribute === CMS_SVG_ATTRIBUTE) {
+            const issue =
+                node.tag === "svg" ? svgReferenceIssue(value) : `${CMS_SVG_ATTRIBUTE} is allowed only on <svg>`;
+            if (issue) {
+                throw new ContentValidationError(field, issue);
+            }
+            continue;
+        }
         if (isCmsBindingAttribute(attribute)) {
             continue;
         }
@@ -46,6 +55,9 @@ export function validateNativeSiteBlocNode(
             throw new ContentValidationError(field, "native slot placement must target a named custom-element slot");
         }
         staticAttributes[attribute] = value;
+    }
+    if (node.tag === "svg" && node.attributes[CMS_SVG_ATTRIBUTE] === undefined) {
+        throw new ContentValidationError(field, `native <svg> requires ${CMS_SVG_ATTRIBUTE}`);
     }
     const valueIssue = nativeAttributeSetIssue(node.tag, staticAttributes);
     if (valueIssue) {
@@ -79,6 +91,9 @@ export function validateSiteBlocBindingAttributes(node: Extract<SiteBlocNode, { 
     }
     for (const [attribute, value] of Object.entries(node.attributes)) {
         const normalized = attribute.toLowerCase();
+        if (attribute === CMS_SVG_ATTRIBUTE) {
+            continue;
+        }
         if (normalized.startsWith("cms-") && !isCmsBindingAttribute(attribute)) {
             throw new ContentValidationError(field, `attribute "${attribute}" is not a declared CMS binding`);
         }

@@ -162,8 +162,24 @@ describe("platform native HTML policy", () => {
             },
             "loading",
         ],
-        [{ kind: "bloc", tag: "svg", attributes: {}, children: [] }, "decorative native SVG"],
-        [{ kind: "bloc", tag: "svg", attributes: { role: "img" }, children: [] }, "accessible label"],
+        [
+            {
+                kind: "bloc",
+                tag: "svg",
+                attributes: { "cms-svg": "{{ cms.asset.fixture.icons/logo.svg }}" },
+                children: [],
+            },
+            "decorative native SVG",
+        ],
+        [
+            {
+                kind: "bloc",
+                tag: "svg",
+                attributes: { "cms-svg": "{{ cms.asset.fixture.icons/logo.svg }}", role: "img" },
+                children: [],
+            },
+            "accessible label",
+        ],
         [{ kind: "bloc", tag: "section", attributes: { "aria-label": "" }, children: [] }, "must not be empty"],
         [
             {
@@ -241,13 +257,20 @@ describe("platform native HTML policy", () => {
                         {
                             kind: "bloc",
                             tag: "svg",
-                            attributes: { role: "img", "aria-label": "Company logo" },
+                            attributes: {
+                                "cms-svg": "{{ cms.asset.fixture.icons/logo.svg }}",
+                                role: "img",
+                                "aria-label": "Company logo",
+                            },
                             children: [],
                         },
                         {
                             kind: "bloc",
                             tag: "svg",
-                            attributes: { "aria-hidden": "true" },
+                            attributes: {
+                                "cms-svg": "{{ cms.asset.fixture.icons/divider.svg }}",
+                                "aria-hidden": "true",
+                            },
                             children: [],
                         },
                     ],

@@ -6,12 +6,14 @@ import { CMS_BINDING_ATTRIBUTES } from "cms-content/blocs/core/markup/bindings";
 import { sanitizeDomTree } from "cms-content/blocs/core/markup/security/sanitizeDomTree";
 import { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
 import { renderContentTexts, type ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
+import { expandSvgReferences } from "cms-content/pages/core/rendering/expandSvgReferences";
 
 export interface PageDocumentRenderContext {
     readonly repository: Pick<ContentReader, "getBlocViewJS" | "getContentTexts" | "getRenderableBlocs">;
     readonly language: string;
     readonly contentTexts?: readonly ContentTextSource[];
     readonly resolveContributedAssets?: (input: string) => Promise<string>;
+    readonly resolveSvgSource?: (source: string) => Promise<string | Uint8Array>;
     readonly prepareBody?: (body: Element) => void | Promise<void>;
 }
 
@@ -38,6 +40,9 @@ export async function renderPageDocument(
         context.language,
         context.repository.getContentTexts ? await context.repository.getContentTexts() : (context.contentTexts ?? []),
     );
+    if (context.resolveSvgSource) {
+        await expandSvgReferences(body, context.resolveSvgSource);
+    }
     if (context.resolveContributedAssets) {
         body.innerHTML = await context.resolveContributedAssets(body.innerHTML);
     }

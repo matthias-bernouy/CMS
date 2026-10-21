@@ -3,6 +3,7 @@ import { isCmsBindingAttribute } from "cms-content/blocs/core/validation/nativeB
 import { isDeclaredPlatformNativeAttributeAllowed } from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";
 import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
 import { nativeAttributeValueIssue } from "cms-content/blocs/core/validation/nativeAttributeValues";
+import { CMS_SVG_ATTRIBUTE, svgReferenceIssue } from "cms-content/blocs/core/markup/security/svgReference";
 
 export const MANAGED_NATIVE_ELEMENT_TAGS = [
     "article",
@@ -60,6 +61,16 @@ export function managedNativeAttributesIssue(
 ): string | null {
     if (tag && !options.allowUnknown) {
         for (const [name, value] of Object.entries(attributes)) {
+            if (name === CMS_SVG_ATTRIBUTE) {
+                if (tag !== "svg") {
+                    return `${CMS_SVG_ATTRIBUTE} is allowed only on native <svg>`;
+                }
+                const issue = svgReferenceIssue(value);
+                if (issue) {
+                    return issue;
+                }
+                continue;
+            }
             const accessibilityIssue =
                 name === "role"
                     ? implementationAccessibilityAttributeIssue(name, value)

@@ -59,3 +59,16 @@ export {
     managedNativeAttributesIssue,
 } from "cms-content/blocs/core/markup/validation/contracts/managedNativePolicy";
 export { blocSettingAttributeNameIssue } from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";
+export {
+    parseInlineSvgAsset,
+    type InlineSvgAsset,
+} from "cms-content/blocs/core/markup/security/inlineSvg";
+export {
+    CMS_SVG_ATTRIBUTE,
+    svgReferenceIssue,
+} from "cms-content/blocs/core/markup/security/svgReference";
+export {
+    parseCollectionAssetExpression,
+    parseCollectionAssetReference,
+    type CollectionAssetExpression,
+} from "cms-content/blocs/core/markup/security/collectionAssetExpression";
