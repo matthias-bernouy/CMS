@@ -47,6 +47,7 @@ describe("production Kernel mounting", () => {
                 editorialPages: token("editorial-pages"),
                 collectionAssets: token("collection-assets"),
                 sitemap: async () => new Response(),
+                robots: async () => new Response(),
             },
             gateway: {
                 invoker: token("invoker"),

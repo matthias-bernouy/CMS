@@ -1,0 +1,37 @@
+{
+    "id": "delivery.robots",
+    "description": "Read the current robots policy generated from Content delivery settings.",
+    "access": "public",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
+    "output": {
+        "type": "binary",
+        "maxBytes": 1048576
+    },
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/delivery/robots",
+        "input": {},
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": [],
+            "errorStatuses": {
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

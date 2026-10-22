@@ -5,6 +5,7 @@ import {
     type ProviderCapabilityInvocationContext,
 } from "@bernouy/ulvia-provider";
 import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { defaultSystem } from "@bernouy/cms-content";
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -13,11 +14,22 @@ const context: ProviderCapabilityInvocationContext = {
     providerId: "ulvia.official",
 };
 
-test("Content delivery exposes bounded projections and immutable collection asset bytes", async () => {
+test("Content delivery exposes bounded projections and public resources", async () => {
     const dispatcher = new DefaultProviderCapabilityDispatcher();
+    const system = defaultSystem();
     registerContentCapabilities(dispatcher, {
         repo: {
             getContentContributions: async () => ({ revision: 7, pages: [], texts: [] }),
+            getSystem: async () => ({
+                ...system,
+                site: {
+                    ...system.site,
+                    host: "https://example.test",
+                    language: "en",
+                    activeLanguages: [],
+                    visible: true,
+                },
+            }),
         },
         collections: {
             getInstalledAssetMetadata: async () => ({
@@ -52,6 +64,15 @@ test("Content delivery exposes bounded projections and immutable collection asse
     )) as ProviderBinaryResult;
     expect(resource.contentType).toBe("text/plain");
     expect(await new Response(resource.stream).text()).toBe("set");
+
+    const robots = (await dispatcher.invoke(
+        "ulvia.cms.content",
+        "delivery.robots",
+        {},
+        context,
+    )) as ProviderBinaryResult;
+    expect(robots.contentType).toBe("text/plain; charset=utf-8");
+    expect(await new Response(robots.stream).text()).toContain("Sitemap: https://example.test/sitemap.xml");
 });
 
 test("Content delivery rejects stale collection asset digests", async () => {

@@ -1,5 +1,5 @@
 import type { ContentReader } from "@bernouy/cms-content/rendering";
-import { createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-content/seo/http";
+import { createRobotsHandler, createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-content/seo/http";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import {
     ProviderCapabilityDispatchError,
@@ -24,11 +24,29 @@ export function registerContentResourceCapabilities(
         logger,
     });
     const sitemapChunk = createSitemapChunkHandler({ store: dependencies.sitemapStore, basePath: "", logger });
+    const robots = createRobotsHandler({
+        content,
+        basePath: "",
+        cmsPathPrefix: "/.cms",
+        collectionAssetsPath: "/.cms/collections",
+        publicRuntimePaths: [
+            "/.cms/style",
+            "/.cms/blocstyles",
+            "/.cms/blocset",
+            "/.cms/assets/bloc-runtime.js",
+            "/.cms/assets/cms-binding-core.js",
+        ],
+        capabilityCallsEnabled: true,
+        logger,
+    });
     dispatcher.register("ulvia.cms.content", "delivery.sitemap", async (input) => {
         const path = requiredText(input.path);
         const request = new Request(`http://content.local${path}`);
         return responseResource(path === "/sitemap.xml" ? await sitemap(request) : await sitemapChunk(request));
     });
+    dispatcher.register("ulvia.cms.content", "delivery.robots", async () =>
+        responseResource(await robots(new Request("http://content.local/robots.txt"))),
+    );
 }
 
 async function readCollectionAsset(

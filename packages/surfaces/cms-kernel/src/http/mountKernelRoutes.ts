@@ -40,21 +40,23 @@ import { applySessionEffect } from "cms-kernel/http/session/applySessionEffect";
  */
 export function mountKernelRoutes(kernel: KernelCms) {
     const runner = kernel.runner;
-    const robotsHandler = createRobotsHandler({
-        content: kernel.content,
-        basePath: kernel.basePath,
-        cmsPathPrefix: kernel.cmsPathPrefix,
-        collectionAssetsPath: `${kernel.basePath}${COLLECTION_ASSETS_ROUTE}`,
-        publicRuntimePaths: [
-            `${kernel.cmsPathPrefix}/style`,
-            `${kernel.cmsPathPrefix}/blocstyles`,
-            `${kernel.cmsPathPrefix}/blocset`,
-            `${kernel.cmsPathPrefix}/assets/bloc-runtime.js`,
-            `${kernel.cmsPathPrefix}/assets/cms-binding-core.js`,
-        ],
-        capabilityCallsEnabled: !!(kernel.capabilityGateway || kernel.capabilityHandler),
-        logger: kernel.logger,
-    });
+    const robotsHandler =
+        kernel.robotsHandler ??
+        createRobotsHandler({
+            content: kernel.content,
+            basePath: kernel.basePath,
+            cmsPathPrefix: kernel.cmsPathPrefix,
+            collectionAssetsPath: `${kernel.basePath}${COLLECTION_ASSETS_ROUTE}`,
+            publicRuntimePaths: [
+                `${kernel.cmsPathPrefix}/style`,
+                `${kernel.cmsPathPrefix}/blocstyles`,
+                `${kernel.cmsPathPrefix}/blocset`,
+                `${kernel.cmsPathPrefix}/assets/bloc-runtime.js`,
+                `${kernel.cmsPathPrefix}/assets/cms-binding-core.js`,
+            ],
+            capabilityCallsEnabled: !!(kernel.capabilityGateway || kernel.capabilityHandler),
+            logger: kernel.logger,
+        });
     const sitemapHandler =
         kernel.sitemapHandler ??
         createSitemapHandler({

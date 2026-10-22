@@ -42,6 +42,7 @@ export type KernelCmsConfig = {
     collectionAssetHandler?: (request: Request) => Promise<Response>;
     sitemapHandler?: (request: Request) => Promise<Response>;
     sitemapChunkHandler?: (request: Request) => Promise<Response>;
+    robotsHandler?: (request: Request) => Promise<Response>;
     sitemapStore?: BlobStore;
     logger: Logger;
 };

@@ -23,6 +23,7 @@ export default class KernelCms {
     readonly collectionAssetHandler;
     readonly sitemapHandler;
     readonly sitemapChunkHandler;
+    readonly robotsHandler;
     readonly sitemapStore?: BlobStore;
     readonly enforcePageCsp: boolean;
     readonly basePath: string;
@@ -46,6 +47,7 @@ export default class KernelCms {
         this.collectionAssetHandler = config.collectionAssetHandler;
         this.sitemapHandler = config.sitemapHandler;
         this.sitemapChunkHandler = config.sitemapChunkHandler;
+        this.robotsHandler = config.robotsHandler;
         this.sitemapStore = config.sitemapStore;
         this.enforcePageCsp = config.enforcePageCsp ?? true;
         this.logger = config.logger;

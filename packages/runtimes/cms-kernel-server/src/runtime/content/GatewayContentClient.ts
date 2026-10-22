@@ -64,12 +64,20 @@ export class GatewayContentClient {
     }
 
     async sitemap(request: Request): Promise<Response> {
+        return this.readResource("delivery.sitemap", { path: new URL(request.url).pathname }, request);
+    }
+
+    async robots(request: Request): Promise<Response> {
+        return this.readResource("delivery.robots", {}, request);
+    }
+
+    private async readResource(capabilityId: string, input: Readonly<Record<string, unknown>>, request: Request) {
         try {
             const result = await this.gateway.invoke({
                 siteId: "default",
                 contractId: "ulvia.cms.content",
-                capabilityId: "delivery.sitemap",
-                input: { path: new URL(request.url).pathname },
+                capabilityId,
+                input,
                 actor: { kind: "system", serviceId: "cms-kernel" },
             });
             if (result.kind === "declared-error") {
@@ -79,11 +87,11 @@ export class GatewayContentClient {
                 });
             }
             if (result.kind !== "binary") {
-                throw new TypeError("Content sitemap returned a non-binary response");
+                throw new TypeError("Content resource returned a non-binary response");
             }
             return binaryResponse(result, request.method === "HEAD");
         } catch (error) {
-            this.logger.error("content.delivery.sitemap.failed", { path: new URL(request.url).pathname }, error);
+            this.logger.error("content.delivery.resource.failed", { capabilityId }, error);
             return new Response("Service Unavailable", {
                 status: 503,
                 headers: { "cache-control": "no-store" },

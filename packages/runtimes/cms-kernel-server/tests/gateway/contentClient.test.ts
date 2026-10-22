@@ -86,7 +86,7 @@ test("projects all Kernel content reads through the selected Content capability"
     expect(invocations.every((invocation) => invocation.actor.kind === "system")).toBeTrue();
 });
 
-test("streams collection assets and sitemap resources through Content capabilities", async () => {
+test("streams collection assets, sitemap, and robots resources through Content capabilities", async () => {
     const invocations: GatewayInvocation[] = [];
     const gateway = {
         invoke: async (invocation: GatewayInvocation): Promise<GatewayResult> => {
@@ -102,7 +102,13 @@ test("streams collection assets and sitemap resources through Content capabiliti
                     ],
                 });
             }
-            const bytes = new TextEncoder().encode(invocation.capabilityId === "delivery.sitemap" ? "<xml/>" : "asset");
+            const body =
+                invocation.capabilityId === "delivery.sitemap"
+                    ? "<xml/>"
+                    : invocation.capabilityId === "delivery.robots"
+                      ? "User-agent: *\nAllow: /\n"
+                      : "asset";
+            const bytes = new TextEncoder().encode(body);
             return {
                 kind: "binary",
                 requestId: crypto.randomUUID(),
@@ -132,11 +138,14 @@ test("streams collection assets and sitemap resources through Content capabiliti
     const sitemap = await client.sitemap(new Request("https://site.test/sitemap.xml"));
     expect(await sitemap.text()).toBe("<xml/>");
     expect(sitemap.headers.get("cache-control")).toBe("public, no-cache");
+    const robots = await client.robots(new Request("https://site.test/robots.txt"));
+    expect(await robots.text()).toBe("User-agent: *\nAllow: /\n");
 
     expect(invocations.map(({ capabilityId }) => capabilityId)).toEqual([
         "delivery.read",
         "delivery.collection-asset",
         "delivery.sitemap",
+        "delivery.robots",
     ]);
     expect(invocations[1]?.input).toEqual({
         collectionId: "collection-a",

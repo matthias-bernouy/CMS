@@ -41,6 +41,7 @@ export async function mountProductionKernel(
         collectionAssets: content.collectionAssets,
         sitemapHandler: content.sitemap.bind(content),
         sitemapChunkHandler: content.sitemap.bind(content),
+        robotsHandler: content.robots.bind(content),
         logger,
     });
     runner.start({ port: env.KERNEL_PORT, hostname: env.KERNEL_HOST });
