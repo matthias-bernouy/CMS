@@ -30,6 +30,7 @@ export type {
     CapabilityMockOutcome,
     CapabilityDeprecation,
     ContractFixtureAssetDefinition,
+    ContractParentReference,
     ContractRelease,
 } from "cms-repository/contracts/interfaces/ContractRelease";
 export {
@@ -79,3 +80,7 @@ export type {
     ConformanceEvidence,
     ConformanceScenarioEvidence,
 } from "cms-repository/contracts/interfaces/ConformanceEvidence";
+export {
+    findImplementedContract,
+    resolveContractLineage,
+} from "cms-repository/contracts/core/compatibility/lineage/resolveLineage";

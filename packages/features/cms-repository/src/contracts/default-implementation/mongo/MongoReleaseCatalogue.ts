@@ -6,6 +6,7 @@ import { verifyAdmission } from "../../core/admission/verifyAdmission";
 import { verifyEvolution } from "../../core/catalogue/verifyEvolution";
 import { verifyRequirements } from "../../core/catalogue/verifyRequirements";
 import { compareSemVer } from "../../core/compatibility/semver";
+import { verifySpecialization } from "../../core/compatibility/lineage/verifySpecialization";
 import { ReleaseValidationError } from "../../core/protocol/errors";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../../core/protocol/limits";
 import { catalogueRevision } from "../../core/protocol/revision";
@@ -108,7 +109,9 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
             if (head && head.versions.length >= 2048) {
                 throw new ReleaseValidationError("invalid_contract", "contract has too many published releases");
             }
-            verifyRequirements(admission.release, await this.list());
+            const catalogue = await this.list();
+            verifyRequirements(admission.release, catalogue);
+            verifySpecialization(admission.release, catalogue);
             verifyEvolution(
                 admission.release,
                 head ? await recordsForHead(head, this.#artifacts, this.#limits) : [],

@@ -7,3 +7,7 @@ export type {
 } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 export { planContractPublications } from "cms-repository/contracts/core/catalogue/planPublications";
 export { publishContractSet } from "cms-repository/contracts/core/catalogue/publishContractSet";
+export {
+    findImplementedContract,
+    resolveContractLineage,
+} from "cms-repository/contracts/core/compatibility/lineage/resolveLineage";

@@ -15,6 +15,7 @@ import { verifyStoredContractReleaseJson } from "cms-repository/contracts/core/a
 import { normalizeReleaseDeprecation, normalizeReleaseYank } from "./normalizeReleaseMetadata";
 import { verifyRequirements } from "cms-repository/contracts/core/catalogue/verifyRequirements";
 import { verifyEvolution } from "cms-repository/contracts/core/catalogue/verifyEvolution";
+import { verifySpecialization } from "cms-repository/contracts/core/compatibility/lineage/verifySpecialization";
 
 export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
     readonly #byDigest = new Map<ReleaseDigest, CatalogueContractRelease>();
@@ -59,6 +60,7 @@ export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
         }
         this.#assertPublisher(contractId, verified.release.publisherId);
         verifyRequirements(verified.release, [...this.#byKey.values()]);
+        verifySpecialization(verified.release, [...this.#byKey.values()]);
         verifyEvolution(verified.release, [...this.#byKey.values()], this.#limits);
         const record = freezeRecord(verified, publishedAt);
         this.#byKey.set(key, record);

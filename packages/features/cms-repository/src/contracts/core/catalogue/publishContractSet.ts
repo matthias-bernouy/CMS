@@ -11,6 +11,7 @@ export async function publishContractSet(
     while (pending.length) {
         const pendingContractIds = new Set(pending.map(({ release }) => release.contractId));
         const readyIndexes = pending.flatMap((admission, index) =>
+            (!admission.release.extends || !pendingContractIds.has(admission.release.extends.contractId)) &&
             admission.release.capabilities.every((capability) =>
                 (capability.requires ?? []).every(
                     ({ contractId }) =>

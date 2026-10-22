@@ -31,6 +31,7 @@ export function parseContractRelease(
             "contractId",
             "name",
             "description",
+            "extends",
             "version",
             "publisherId",
             "catalogue",
@@ -69,13 +70,16 @@ export function parseContractRelease(
     validateDeprecationReferences(capabilities);
     const description = optionalString(record.description, "$.description", "invalid_contract", 4096);
     const catalogue = parseCatalogueMetadata(record.catalogue);
+    const contractId = parseIdentifier(record.contractId, "$.contractId", 96);
+    const parent = parseParentReference(record.extends, contractId);
     const release: ContractRelease = {
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        contractId: parseIdentifier(record.contractId, "$.contractId", 96),
+        contractId,
         name: expectString(record.name, "$.name", "invalid_contract", 128),
         ...(description ? { description } : {}),
+        ...(parent ? { extends: parent } : {}),
         version: parseSemVer(record.version, "$.version"),
         publisherId: parseIdentifier(record.publisherId, "$.publisherId", 96),
         ...(catalogue ? { catalogue } : {}),
@@ -100,6 +104,27 @@ export function parseContractRelease(
     }
     // Retained mock literals must belong to the release, not freeze or alias caller data.
     return deepFreeze(structuredClone(release)) as ContractRelease;
+}
+
+function parseParentReference(value: unknown, contractId: string): ContractRelease["extends"] {
+    if (value === undefined) {
+        return undefined;
+    }
+    const record = expectRecord(value, "$.extends", "invalid_contract");
+    rejectUnknownKeys(record, ["contractId", "version", "digest"], "$.extends", "invalid_contract");
+    const parentContractId = parseIdentifier(record.contractId, "$.extends.contractId", 96);
+    if (parentContractId === contractId) {
+        throw new ReleaseValidationError("invalid_contract", "a contract cannot extend itself", "$.extends.contractId");
+    }
+    const digest = expectString(record.digest, "$.extends.digest", "invalid_contract", 71);
+    if (!/^sha256:[0-9a-f]{64}$/u.test(digest)) {
+        throw new ReleaseValidationError("invalid_contract", "must be a SHA-256 release digest", "$.extends.digest");
+    }
+    return {
+        contractId: parentContractId,
+        version: parseSemVer(record.version, "$.extends.version"),
+        digest: digest as `sha256:${string}`,
+    };
 }
 
 function validateResponseEffectAuthority(release: ContractRelease): void {

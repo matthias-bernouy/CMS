@@ -6,6 +6,7 @@ import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
 import type { CatalogueContractRelease, ReleaseCatalogue } from "../../interfaces/ReleaseCatalogue";
 import { verifyEvolution } from "./verifyEvolution";
 import { verifyRequirements } from "./verifyRequirements";
+import { verifySpecialization } from "../compatibility/lineage/verifySpecialization";
 
 const PLANNED_AT = "1970-01-01T00:00:00.000Z";
 
@@ -19,7 +20,7 @@ export async function planContractPublications(
     const verified = await Promise.all(admissions.map((admission) => verifyAdmission(admission, snapshotLimits)));
     const published = [...(await catalogue.list())];
     const planned: CatalogueContractRelease[] = [];
-    const candidates = [...verified].sort((left, right) => compareSemVer(left.release.version, right.release.version));
+    const candidates = orderCandidatesByLineage(verified);
     for (const admission of candidates) {
         const { contractId, version, publisherId } = admission.release;
         const existing = [...published, ...planned].find(
@@ -47,6 +48,7 @@ export async function planContractPublications(
             );
         }
         verifyEvolution(admission.release, [...published, ...planned], snapshotLimits);
+        verifySpecialization(admission.release, [...published, ...planned]);
         planned.push(Object.freeze({ admission, publishedAt: PLANNED_AT }));
     }
     const complete = [...published, ...planned];
@@ -54,6 +56,25 @@ export async function planContractPublications(
         verifyRequirements(record.admission.release, complete);
     }
     return orderByRequirements(planned, published);
+}
+
+function orderCandidatesByLineage(admissions: readonly AdmittedContractRelease[]): AdmittedContractRelease[] {
+    const pending = [...admissions];
+    const ordered: AdmittedContractRelease[] = [];
+    while (pending.length > 0) {
+        const pendingIds = new Set(pending.map(({ release }) => release.contractId));
+        const ready = pending
+            .filter(({ release }) => !release.extends || !pendingIds.has(release.extends.contractId))
+            .sort((left, right) => compareSemVer(left.release.version, right.release.version));
+        if (ready.length === 0) {
+            throw new ReleaseValidationError("invalid_contract", "contract inheritance contains a cycle");
+        }
+        for (const admission of ready) {
+            pending.splice(pending.indexOf(admission), 1);
+            ordered.push(admission);
+        }
+    }
+    return ordered;
 }
 
 function orderByRequirements(

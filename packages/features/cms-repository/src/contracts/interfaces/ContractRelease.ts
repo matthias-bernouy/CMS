@@ -59,6 +59,13 @@ interface ContractCatalogueMetadata {
     readonly icon?: string;
 }
 
+/** Exact immutable parent implemented by this specialized contract. */
+export interface ContractParentReference {
+    readonly contractId: string;
+    readonly version: string;
+    readonly digest: ReleaseDigest;
+}
+
 /** A mandatory, provider-neutral capability needed to fulfill this capability. */
 export interface CapabilityRequirement {
     readonly contractId: string;
@@ -91,6 +98,7 @@ export interface ContractRelease {
     readonly fixtureAssets?: readonly ContractFixtureAssetDefinition[];
     readonly contractId: string;
     readonly description?: string;
+    readonly extends?: ContractParentReference;
     readonly kind: "contract";
     readonly name: string;
     readonly protocol: "ulvia-provider/v1";

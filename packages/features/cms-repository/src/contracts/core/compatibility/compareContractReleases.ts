@@ -12,6 +12,7 @@ export type CompatibilityIssueCode =
     | "capability_removed"
     | "contract_id_changed"
     | "insufficient_version_bump"
+    | "parent_changed"
     | "publisher_changed"
     | "schema_changed"
     | "version_not_increased";
@@ -50,6 +51,15 @@ export function compareContractReleases(
     }
     if (previous.publisherId !== next.publisherId) {
         issues.push({ code: "publisher_changed", message: "publisher ownership cannot change between releases" });
+    }
+    if (JSON.stringify(previous.extends) !== JSON.stringify(next.extends)) {
+        requiredBump = "major";
+        issues.push({
+            code: "parent_changed",
+            message: "changed the exact parent contract",
+            path: "extends",
+            requiredBump: "major",
+        });
     }
     const previousCapabilities = new Map(previous.capabilities.map((capability) => [capability.id, capability]));
     const nextCapabilities = new Map(next.capabilities.map((capability) => [capability.id, capability]));
