@@ -2,7 +2,7 @@ import { parseQuery } from "cms-content/blocs/core/markup/bindings/operation";
 import { QUERY_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import { BindingRenderer } from "../../reactive/renderer/BindingRenderer";
-import { captureBindingContent } from "../../reactive/renderer/bindingContent";
+import { captureBindingContent, cloneBindingContent } from "../../reactive/renderer/bindingContent";
 import {
     parseSyncAttribute,
     parseSyncSelectionAttribute,
@@ -53,7 +53,13 @@ export class Query {
         filters: FilterMap = {},
         private readonly options: QueryOptions = {},
     ) {
-        this.renderer = new BindingRenderer(element, captureBindingContent(element), filters);
+        const importsOnly = !element.hasAttribute(QUERY_ATTR);
+        this.renderer = new BindingRenderer(
+            element,
+            importsOnly ? cloneBindingContent(element) : captureBindingContent(element),
+            filters,
+            importsOnly ? { inPlace: true } : {},
+        );
         this.imports = new QueryImports(element, () => this.render());
     }
 
