@@ -47,7 +47,8 @@ export function nextPageRoute(
     change: { readonly defaultPath?: string; readonly overridePath?: string | null },
 ): RegisteredPageRoute {
     const defaultPath = validateRegisteredPagePath(change.defaultPath ?? route.defaultPath);
-    const overridePath = change.overridePath === undefined ? route.overridePath : (change.overridePath ?? undefined);
+    const overridePath =
+        change.overridePath === undefined ? (route.overridePath ?? undefined) : (change.overridePath ?? undefined);
     if (overridePath !== undefined) {
         validateRegisteredPagePath(overridePath);
     }
@@ -55,12 +56,13 @@ export function nextPageRoute(
     const aliases = [...new Set([...(route.aliases ?? []), route.defaultPath, route.path])]
         .filter((candidate) => candidate !== defaultPath && candidate !== path)
         .sort();
+    const { aliases: _aliases, overridePath: _overridePath, ...base } = route;
     return {
-        ...route,
+        ...base,
         defaultPath,
-        ...(overridePath ? { overridePath } : { overridePath: undefined }),
+        ...(overridePath ? { overridePath } : {}),
         path,
-        ...(aliases.length > 0 ? { aliases } : { aliases: undefined }),
+        ...(aliases.length > 0 ? { aliases } : {}),
         revision: route.revision + 1,
     };
 }
