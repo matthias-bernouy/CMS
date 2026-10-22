@@ -84,23 +84,29 @@ export class EditablePageDocument {
 
     editableContent(index: number, item?: EditorCatalogueItem): string {
         const element = this.elements()[index];
-        if (!element) {
+        const managed = item && managedContent(authoringContract(item));
+        if (!element || !managed) {
             return "";
         }
-        const managed = item && managedContent(authoringContract(item));
-        return managed ? (this.managedContent(element, managed)?.innerHTML ?? "") : element.innerHTML;
+        return this.textTarget(element, managed)?.textContent ?? "";
     }
 
     updateContent(index: number, content: string, item?: EditorCatalogueItem): void {
         const element = this.elements()[index];
-        if (!element) {
+        const managed = item && managedContent(authoringContract(item));
+        if (!element || !managed) {
             return;
         }
-        const managed = item && managedContent(authoringContract(item));
-        const target = managed ? this.managedContent(element, managed) : element;
+        const target = this.textTarget(element, managed);
         if (target) {
-            target.innerHTML = content;
+            target.textContent = content;
         }
+    }
+
+    isTextEditable(index: number, item?: EditorCatalogueItem): boolean {
+        const element = this.elements()[index];
+        const managed = item && managedContent(authoringContract(item));
+        return Boolean(element && managed && this.textTarget(element, managed));
     }
 
     updateAttribute(index: number, name: string, value: string | boolean): void {
@@ -139,5 +145,10 @@ export class EditablePageDocument {
                 child.getAttribute("slot") === (contract.slot || null) &&
                 (acceptedTags.length === 0 || acceptedTags.includes(child.localName)),
         );
+    }
+
+    private textTarget(element: HTMLElement, contract: ManagedContent): HTMLElement | undefined {
+        const target = this.managedContent(element, contract);
+        return target && target.children.length === 0 ? target : undefined;
     }
 }

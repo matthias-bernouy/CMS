@@ -231,7 +231,7 @@
             "stat-two-value",
             "title"
         ],
-        "pages": ["access", "collections", "details", "overview", "providers", "settings"],
+        "pages": ["access", "collections", "overview", "page-details", "page-editor", "pages", "providers", "settings"],
         "assets": "*"
     },
     "states": [
@@ -254,6 +254,7 @@
             }
         },
         { "id": "auth-token", "scope": "param", "schema": { "type": "string", "maxLength": 4096 } },
+        { "id": "browser-risk", "scope": "param", "schema": { "type": "string", "maxLength": 80 } },
         { "id": "collection", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
         {
             "id": "collection-catalogue-mutation",
@@ -349,6 +350,7 @@
             }
         },
         { "id": "page-id", "scope": "param", "schema": { "type": "string", "maxLength": 128 } },
+        { "id": "pages-cursor", "scope": "param", "schema": { "type": "string", "maxLength": 256 } },
         {
             "id": "pages-mutation",
             "scope": "page",
@@ -366,6 +368,12 @@
                 },
                 "required": ["lastSuccess"]
             }
+        },
+        { "id": "pages-query", "scope": "param", "schema": { "type": "string", "maxLength": 120 } },
+        {
+            "id": "pages-visibility",
+            "scope": "param",
+            "schema": { "type": "string", "maxLength": 9, "enum": ["all", "published", "draft"] }
         },
         {
             "id": "providers-mutation",

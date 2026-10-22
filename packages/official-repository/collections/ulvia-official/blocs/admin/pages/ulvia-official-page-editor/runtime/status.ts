@@ -2,22 +2,25 @@ import { CapabilityError } from "./client";
 
 export class EditorStatus {
     private busy = false;
+    private readonly disabledState = new WeakMap<HTMLButtonElement, boolean>();
 
     constructor(private readonly root: HTMLElement) {}
 
-    async run(task: () => Promise<void>): Promise<void> {
+    async run(task: () => Promise<void>): Promise<boolean> {
         if (this.busy) {
-            return;
+            return false;
         }
         this.busy = true;
         this.setBusy(true);
         try {
             await task();
+            return true;
         } catch (error) {
             const suffix = error instanceof CapabilityError ? ` (${error.code})` : "";
             const fallback =
                 this.root.querySelector<HTMLElement>('[data-copy="request-failed"]')?.textContent?.trim() ?? "";
             this.notice(`${error instanceof Error ? error.message : fallback}${suffix}`, true);
+            return false;
         } finally {
             this.setBusy(false);
             this.busy = false;
@@ -33,7 +36,13 @@ export class EditorStatus {
     private setBusy(busy: boolean): void {
         this.required("[part=editor]").setAttribute("aria-busy", String(busy));
         for (const button of this.root.querySelectorAll<HTMLButtonElement>("button")) {
-            button.disabled = busy;
+            if (busy) {
+                this.disabledState.set(button, button.disabled);
+                button.disabled = true;
+            } else {
+                button.disabled = this.disabledState.get(button) ?? false;
+                this.disabledState.delete(button);
+            }
         }
     }
 

@@ -1,0 +1,7 @@
+{
+    "id": "page-editor",
+    "defaultPath": "/admin/pages/edit",
+    "name": "page.page-editor.name",
+    "description": "page.page-editor.description",
+    "requires": []
+}

@@ -1,0 +1,18 @@
+{
+    "id": "pages",
+    "defaultPath": "/admin/pages",
+    "name": "page.pages.name",
+    "description": "page.pages.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.create",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

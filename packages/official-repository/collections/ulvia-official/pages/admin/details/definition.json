@@ -1,7 +1,0 @@
-{
-    "id": "details",
-    "defaultPath": "/admin/pages",
-    "name": "page.details.name",
-    "description": "page.details.description",
-    "requires": []
-}

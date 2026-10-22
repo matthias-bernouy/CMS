@@ -54,7 +54,7 @@ describe("EditablePageDocument", () => {
         expect(page.serialize()).toBe('<div cms-bloc="ulvia-official-field"><input type="text" name="field"></div>');
     });
 
-    test("edits a single named native-content slot without removing its structure", () => {
+    test("does not flatten structured rich content into a plain text field", () => {
         const page = new EditablePageDocument("");
         const prose: EditorCatalogueItem = {
             ...heading,
@@ -67,11 +67,12 @@ describe("EditablePageDocument", () => {
         };
         const index = page.add(prose);
 
-        expect(page.editableContent(index, prose)).toBe("<p>Default prose</p>");
-        page.updateContent(index, "<p>Updated prose</p>", prose);
+        expect(page.isTextEditable(index, prose)).toBe(false);
+        expect(page.editableContent(index, prose)).toBe("");
+        page.updateContent(index, "Updated prose", prose);
 
         expect(page.serialize()).toBe(
-            '<div cms-bloc="ulvia-official-prose"><div slot="content"><p>Updated prose</p></div></div>',
+            '<div cms-bloc="ulvia-official-prose"><div slot="content"><p>Default prose</p></div></div>',
         );
     });
 });

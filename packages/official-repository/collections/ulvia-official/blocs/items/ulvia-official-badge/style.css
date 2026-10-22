@@ -16,6 +16,7 @@
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     font-weight: 700;
     line-height: 1;
+    white-space: nowrap;
 }
 
 :scope[tone="info"] [part="badge"] {

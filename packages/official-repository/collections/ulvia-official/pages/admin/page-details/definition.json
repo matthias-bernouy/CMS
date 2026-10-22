@@ -1,28 +1,8 @@
 {
-    "kind": "composition",
-    "id": "ulvia-official-admin-details-page",
-    "label": "page.details.name",
-    "description": "page.details.description",
-    "category": "bloc.category.administration",
-    "catalogue": "hidden",
-    "uses": [
-        "ulvia-official-action",
-        "ulvia-official-admin-workspace",
-        "ulvia-official-badge",
-        "ulvia-official-cluster",
-        "ulvia-official-control-group",
-        "ulvia-official-field",
-        "ulvia-official-form-actions",
-        "ulvia-official-heading",
-        "ulvia-official-input",
-        "ulvia-official-page-catalogue",
-        "ulvia-official-page-editor",
-        "ulvia-official-route-tab",
-        "ulvia-official-route-tabs",
-        "ulvia-official-stack",
-        "ulvia-official-surface",
-        "ulvia-official-textarea"
-    ],
+    "id": "page-details",
+    "defaultPath": "/admin/pages/detail",
+    "name": "page.page-details.name",
+    "description": "page.page-details.description",
     "requires": [
         {
             "contractId": "ulvia.cms.content",
@@ -54,9 +34,5 @@
             "capabilityId": "pages.delete",
             "versionRange": "^1.0.0"
         }
-    ],
-    "slots": {},
-    "root": {
-        "accepts": ["div"]
-    }
+    ]
 }

@@ -66,7 +66,7 @@ async function signIn(
     await page.getByLabel(/^(Email address|Adresse e-mail)$/u).fill(credentials.adminEmail);
     await page.getByLabel(/^(Password|Mot de passe)$/u).fill(credentials.adminPassword);
     const loginResponse = page.waitForResponse((response) =>
-        response.url().includes("/.cms/call/ulvia.cms.access/login-password"),
+        response.url().includes("/.cms/mutation/ulvia.cms.access/login-password"),
     );
     await page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click();
     const response = await loginResponse;

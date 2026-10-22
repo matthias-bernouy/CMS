@@ -12,9 +12,9 @@ type PageEditorCapability = "editor-catalogue" | "get" | "update";
 const REQUEST_BY_CAPABILITY = {
     "editor-catalogue": { route: "query", method: "GET" },
     get: { route: "query", method: "QUERY" },
-    update: { route: "call", method: "POST" },
+    update: { route: "mutation", method: "POST" },
 } as const satisfies Readonly<
-    Record<PageEditorCapability, { route: "call" | "query"; method: "GET" | "POST" | "QUERY" }>
+    Record<PageEditorCapability, { route: "mutation" | "query"; method: "GET" | "POST" | "QUERY" }>
 >;
 
 export async function callCapability<T>(capabilityId: PageEditorCapability, input: unknown): Promise<T> {

@@ -20,6 +20,16 @@
                 {
                     "kind": "native-element",
                     "accepts": ["div", "header", "section", "article", "fieldset", "form", "svg"]
+                },
+                {
+                    "kind": "native-element",
+                    "accepts": ["input"],
+                    "attributes": {
+                        "type": {
+                            "required": true,
+                            "values": ["hidden"]
+                        }
+                    }
                 }
             ]
         }

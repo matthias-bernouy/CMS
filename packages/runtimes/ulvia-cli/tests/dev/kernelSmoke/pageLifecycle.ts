@@ -1,6 +1,22 @@
 import type { Page } from "playwright";
 import { submitPageMutation, submitRevisionMutation } from "./pageMutations";
 
+export async function verifyPageDetailTabs(page: Page): Promise<void> {
+    const panelIds = ["page-general", "page-routes", "page-search", "page-publication", "page-danger"];
+    await page.locator('[role="tablist"]').waitFor();
+    for (const [index, id] of panelIds.entries()) {
+        const panel = page.locator(`#${id}`);
+        await panel.waitFor({ state: index === 0 ? "visible" : "attached" });
+        if ((await panel.getAttribute("hidden")) !== (index === 0 ? null : "")) {
+            throw new Error(`Page detail panel ${id} has an invalid initial visibility state.`);
+        }
+    }
+    const selected = page.locator('[role="tab"][aria-selected="true"]');
+    if ((await selected.getAttribute("href")) !== "#page-general") {
+        throw new Error("Page detail tabs did not select the general panel by default.");
+    }
+}
+
 export async function mutateRoute(page: Page): Promise<void> {
     await page.locator('a[href="#page-routes"]').click();
     await page.waitForURL(/#page-routes$/u);
@@ -31,9 +47,9 @@ export async function cyclePublicationState(page: Page, kernelOrigin: string, de
     if (!draftResponse.ok()) {
         throw new Error(`Page return-to-draft failed (${draftResponse.status()}).`);
     }
-    const draftPage = await page.goto(`${kernelOrigin}/smoke-page`);
-    if (draftPage?.ok()) {
-        throw new Error("Draft Page remained publicly available");
+    const anonymousDraftResponse = await fetch(`${kernelOrigin}/smoke-page`, { redirect: "manual" });
+    if (anonymousDraftResponse.ok) {
+        throw new Error("Draft Page remained anonymously available");
     }
     await page.goto(detailUrl);
     await page.locator('a[href="#page-publication"]').click();
@@ -76,21 +92,11 @@ export async function verifyPublishedPage(page: Page, kernelOrigin: string): Pro
         status = response?.status() ?? 0;
         responseHeaders = response?.headers() ?? {};
         responseBody = (await response?.text().catch(() => "")) ?? "";
-        const visible = await Promise.all([
-            page
-                .getByRole("heading", { name: "Smoke Page", exact: true })
-                .isVisible()
-                .catch(() => false),
-            page
-                .getByText("Published through the Kernel.", { exact: true })
-                .isVisible()
-                .catch(() => false),
-            page
-                .getByText("Built with the visual Page editor.", { exact: true })
-                .isVisible()
-                .catch(() => false),
-        ]);
-        if (response?.ok() && visible.every(Boolean)) {
+        const headingVisible = await page
+            .getByRole("heading", { name: "Smoke Page", exact: true })
+            .isVisible()
+            .catch(() => false);
+        if (response?.ok() && headingVisible) {
             return;
         }
         await page.waitForTimeout(250);

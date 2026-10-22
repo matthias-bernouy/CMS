@@ -12,20 +12,14 @@
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-back-to-pages",
-        "label": "text.ui-back-to-pages.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.pages"
-    },
-    {
         "id": "ui-create-a-page",
         "label": "text.ui-create-a-page.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-create-and-manage-site-pages-through-the-selected-ulvia-provider",
-        "label": "text.ui-create-and-manage-site-pages-through-the-selected-ulvia-provider.label",
+        "id": "ui-create-and-organize-your-site-pages",
+        "label": "text.ui-create-and-organize-your-site-pages.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
     },
@@ -128,12 +122,6 @@
     {
         "id": "ui-page-details",
         "label": "text.ui-page-details.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.pages"
-    },
-    {
-        "id": "ui-page-document",
-        "label": "text.ui-page-document.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
     },
@@ -384,12 +372,6 @@
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-element-content",
-        "label": "text.ui-element-content.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.pages"
-    },
-    {
         "id": "ui-move-up",
         "label": "text.ui-move-up.label",
         "category": "text.category.admin",
@@ -414,24 +396,6 @@
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-advanced-document-source",
-        "label": "text.ui-advanced-document-source.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.pages"
-    },
-    {
-        "id": "ui-html-document",
-        "label": "text.ui-html-document.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.pages"
-    },
-    {
-        "id": "ui-apply-source-to-draft",
-        "label": "text.ui-apply-source-to-draft.label",
-        "category": "text.category.admin",
-        "group": "text.group.admin.pages"
-    },
-    {
         "id": "ui-the-page-identity-is-missing",
         "label": "text.ui-the-page-identity-is-missing.label",
         "category": "text.category.admin",
@@ -450,14 +414,200 @@
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-document-saved-reloading-the-page",
-        "label": "text.ui-document-saved-reloading-the-page.label",
+        "id": "ui-unsaved-document-changes",
+        "label": "text.ui-unsaved-document-changes.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-unsaved-document-changes",
-        "label": "text.ui-unsaved-document-changes.label",
+        "id": "ui-actions",
+        "label": "text.ui-actions.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-adjust-the-filters-or-create-a-page",
+        "label": "text.ui-adjust-the-filters-or-create-a-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-all-pages",
+        "label": "text.ui-all-pages.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-back-to-page-details",
+        "label": "text.ui-back-to-page-details.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-cancel",
+        "label": "text.ui-cancel.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-delete-this-page",
+        "label": "text.ui-delete-this-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-desktop",
+        "label": "text.ui-desktop.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-details",
+        "label": "text.ui-details.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-document-saved",
+        "label": "text.ui-document-saved.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-edit-content",
+        "label": "text.ui-edit-content.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-general",
+        "label": "text.ui-general.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-mobile",
+        "label": "text.ui-mobile.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-next-pages",
+        "label": "text.ui-next-pages.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-no-pages-found",
+        "label": "text.ui-no-pages-found.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-page",
+        "label": "text.ui-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-page-information-saved",
+        "label": "text.ui-page-information-saved.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-page-structure",
+        "label": "text.ui-page-structure.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-preview-language",
+        "label": "text.ui-preview-language.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-preview-size",
+        "label": "text.ui-preview-size.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-route-saved",
+        "label": "text.ui-route-saved.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-search-metadata-saved",
+        "label": "text.ui-search-metadata-saved.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-search-pages",
+        "label": "text.ui-search-pages.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-site-pages",
+        "label": "text.ui-site-pages.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-static-page-composition",
+        "label": "text.ui-static-page-composition.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-status",
+        "label": "text.ui-status.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-tablet",
+        "label": "text.ui-tablet.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-text-content",
+        "label": "text.ui-text-content.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-the-route-is-invalid",
+        "label": "text.ui-the-route-is-invalid.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-the-search-metadata-is-invalid",
+        "label": "text.ui-the-search-metadata-is-invalid.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-this-action-cannot-be-undone",
+        "label": "text.ui-this-action-cannot-be-undone.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-this-route-is-already-used-by-another-page",
+        "label": "text.ui-this-route-is-already-used-by-another-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-visibility",
+        "label": "text.ui-visibility.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
     }

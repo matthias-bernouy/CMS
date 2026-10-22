@@ -1,5 +1,5 @@
 import type { Page } from "playwright";
-import { cyclePublicationState, mutateRoute, mutateSeo } from "./pageLifecycle";
+import { cyclePublicationState, mutateRoute, mutateSeo, verifyPageDetailTabs } from "./pageLifecycle";
 import { submitPageMutation, waitForRevisionChange } from "./pageMutations";
 
 export async function mutatePages(page: Page, kernelOrigin: string): Promise<void> {
@@ -25,12 +25,11 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
         });
     await page.locator("#new-page-path").fill("/smoke-page");
     await Promise.all([
-        page.waitForURL(/\/admin\/pages\?ulvia-official-page-id=/u),
+        page.waitForURL(/\/admin\/pages\/detail\?ulvia-official-page-id=/u),
         page.locator('form[cms-mutation^="ulvia.cms.content:pages.create "] button[type="submit"]').click(),
     ]);
     const detailUrl = page.url();
     await page
-        .locator("#page-general")
         .getByRole("heading", { name: "Smoke Page", exact: true })
         .waitFor()
         .catch(async (error) => {
@@ -38,6 +37,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
                 `${error instanceof Error ? error.message : String(error)}\nURL: ${page.url()}\nPage: ${await page.locator("body").innerText()}`,
             );
         });
+    await verifyPageDetailTabs(page);
     await page.locator("#page-description").fill("Updated before editing the document.");
     const detailsResponse = await submitPageDetails(page);
     if (!detailsResponse.ok()) {
@@ -45,8 +45,10 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     }
     await mutateRoute(page);
     await mutateSeo(page);
-    await page.locator('a[href="#page-content"]').click();
-    await page.waitForURL(/#page-content$/u);
+    await page.locator('a[href^="/admin/pages/edit?ulvia-official-page-id="]').click();
+    await page.waitForURL(/\/admin\/pages\/edit\?ulvia-official-page-id=/u);
+    const openCatalogue = page.locator("button[data-open-catalogue]");
+    await openCatalogue.click();
     const addHeading = page.locator('button[data-add="ulvia-official-heading"]');
     await addHeading.waitFor();
     await waitUntilEnabled(addHeading, "Page editor did not become ready");
@@ -56,15 +58,11 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     }
     await addHeading.click();
     await fillLatestVisibleElementContent(page, "Smoke Page");
-    const addProse = page.locator('button[data-add="ulvia-official-prose"]');
-    await addProse.click();
-    await fillLatestVisibleElementContent(page, "Published through the Kernel.");
-    await addProse.click();
-    await fillLatestVisibleElementContent(page, "Built with the visual Page editor.");
     const saveResponse = await submitPageMutation(page, "update");
     if (!saveResponse.ok()) {
         throw new Error(`Page update failed (${saveResponse.status()}).`);
     }
+    await page.goto(detailUrl);
     await page.locator('a[href="#page-publication"]').click();
     await page.waitForURL(/#page-publication$/u);
     const publishResponse = await submitPageMutation(page, "publish");

@@ -4,12 +4,24 @@ const OPTIONAL_REGIONS = ["breadcrumb", "actions", "description", "navigation", 
 
 class Controller {
     private readonly scope: ReturnType<typeof createBlocScope>;
+    private readonly observer: MutationObserver;
+
     constructor(private readonly blocRoot: HTMLElement) {
         this.scope = createBlocScope(this.blocRoot);
+        this.observer = new MutationObserver(this.sync);
     }
 
     connect(): void {
         this.sync();
+        this.observer.observe(this.blocRoot, {
+            childList: true,
+            characterData: true,
+            subtree: true,
+        });
+    }
+
+    disconnect(): void {
+        this.observer.disconnect();
     }
 
     private readonly sync = (): void => {
@@ -38,4 +50,5 @@ function hasMeaningfulContent(node: Node): boolean {
 export function mount(root: HTMLElement): void | (() => void) {
     const controller = new Controller(root);
     controller.connect();
+    return () => controller.disconnect();
 }

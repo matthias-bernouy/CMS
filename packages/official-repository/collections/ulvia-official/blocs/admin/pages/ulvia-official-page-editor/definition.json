@@ -6,6 +6,19 @@
     "category": "bloc.category.administration",
     "order": 10,
     "catalogue": "hidden",
+    "browser": {
+        "frames": {
+            "origins": ["self"],
+            "sandbox": [
+                "allow-downloads",
+                "allow-forms",
+                "allow-modals",
+                "allow-popups",
+                "allow-same-origin",
+                "allow-scripts"
+            ]
+        }
+    },
     "uses": ["ulvia-official-heading"],
     "requires": [
         {
