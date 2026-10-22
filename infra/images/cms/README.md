@@ -142,7 +142,7 @@ chmod 600 .env
 ```dotenv
 DOMAIN=client.example.com
 CMS_IMAGE=bernouy/cms:2026.10.12-1
-ULVIA_INSTANCE_TOKEN=<credentials.instanceAccessToken>
+CMS_INSTALLATIONS_PROVIDER_TOKEN=<credentials.instanceAccessToken>
 ```
 
 ```bash

@@ -8,8 +8,8 @@ export type RuntimeEnv = {
     KERNEL_PORT: number;
     KERNEL_HOST: string;
     KERNEL_PUBLIC_URL: string;
-    ULVIA_PROVIDER_URL: string;
-    ULVIA_INSTANCE_TOKEN: string;
+    CMS_INSTALLATIONS_PROVIDER_URL: string;
+    CMS_INSTALLATIONS_PROVIDER_TOKEN: string;
 };
 
 export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
@@ -50,19 +50,22 @@ function parseListenerHost(raw: string | undefined, name: string): string {
 
 function parseUlviaProviderConfig(
     source: RuntimeEnvSource,
-): Pick<RuntimeEnv, "ULVIA_PROVIDER_URL" | "ULVIA_INSTANCE_TOKEN"> {
-    const token = source.ULVIA_INSTANCE_TOKEN;
-    requiredEnv(source, "ULVIA_INSTANCE_TOKEN");
+): Pick<RuntimeEnv, "CMS_INSTALLATIONS_PROVIDER_URL" | "CMS_INSTALLATIONS_PROVIDER_TOKEN"> {
+    const token = source.CMS_INSTALLATIONS_PROVIDER_TOKEN;
+    requiredEnv(source, "CMS_INSTALLATIONS_PROVIDER_TOKEN");
     try {
         if (token !== token?.trim()) {
             throw new TypeError("token whitespace");
         }
         assertProviderConnectionToken(token!);
     } catch {
-        throw new Error("ULVIA_INSTANCE_TOKEN is invalid");
+        throw new Error("CMS_INSTALLATIONS_PROVIDER_TOKEN is invalid");
     }
     return {
-        ULVIA_PROVIDER_URL: parseHttpUrl(requiredEnv(source, "ULVIA_PROVIDER_URL"), "ULVIA_PROVIDER_URL"),
-        ULVIA_INSTANCE_TOKEN: token!,
+        CMS_INSTALLATIONS_PROVIDER_URL: parseHttpUrl(
+            requiredEnv(source, "CMS_INSTALLATIONS_PROVIDER_URL"),
+            "CMS_INSTALLATIONS_PROVIDER_URL",
+        ),
+        CMS_INSTALLATIONS_PROVIDER_TOKEN: token!,
     };
 }

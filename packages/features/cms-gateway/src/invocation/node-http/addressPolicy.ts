@@ -5,8 +5,12 @@ export interface ResolvedAddress {
     readonly family: 4 | 6;
 }
 
-/** Reject every non-public target, except canonical HTTP loopback installations. */
-export function selectGatewayAddress(origin: URL, addresses: readonly ResolvedAddress[]): ResolvedAddress {
+/** Reject every non-public target unless the composition root explicitly owns a private Provider network. */
+export function selectGatewayAddress(
+    origin: URL,
+    addresses: readonly ResolvedAddress[],
+    allowPrivateAddresses = false,
+): ResolvedAddress {
     if (addresses.length === 0) {
         throw new TypeError("provider hostname did not resolve");
     }
@@ -27,11 +31,27 @@ export function selectGatewayAddress(origin: URL, addresses: readonly ResolvedAd
             if (!isLoopbackLiteral(candidate.address)) {
                 throw new TypeError("loopback origin resolved outside loopback");
             }
-        } else if (!isPublicAddress(candidate)) {
-            throw new TypeError("provider DNS returned a non-public address");
+        } else {
+            const isPublic = isPublicAddress(candidate);
+            const isPrivate = allowPrivateAddresses && isPrivateNetworkAddress(candidate);
+            if (!isPublic && !isPrivate) {
+                throw new TypeError("provider DNS returned a non-public address");
+            }
+            if (origin.protocol === "http:" && isPublic) {
+                throw new TypeError("public provider origins require HTTPS");
+            }
         }
     }
     return addresses[0]!;
+}
+
+function isPrivateNetworkAddress(candidate: ResolvedAddress): boolean {
+    if (candidate.family === 4) {
+        const [a, b] = candidate.address.split(".").map(Number);
+        return a === 10 || (a === 172 && b! >= 16 && b! <= 31) || (a === 192 && b === 168);
+    }
+    const first = Number.parseInt(candidate.address.split(":", 1)[0] ?? "", 16);
+    return Number.isInteger(first) && (first & 0xfe00) === 0xfc00;
 }
 
 export function isLoopbackLiteral(value: string): boolean {

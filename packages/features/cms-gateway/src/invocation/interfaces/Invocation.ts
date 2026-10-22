@@ -49,6 +49,7 @@ export interface GatewayRouteResolver {
 export interface GatewayTransportRequest {
     readonly requestId: string;
     readonly instanceId: string;
+    readonly installationId: string;
     readonly endpoint: string;
     readonly providerTokenRef: string;
     readonly release: ContractRelease;

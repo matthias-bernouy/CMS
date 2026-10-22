@@ -16,7 +16,11 @@ import { ACTOR_CREDENTIAL_HEADER, encodeActorCredential } from "cms-gateway/prot
 
 export interface NodeGatewayHttpNetworkOptions {
     /** Resolves a host-owned credential reference without exposing its value to the gateway core. */
-    readonly resolveToken: (reference: string) => Promise<string>;
+    readonly resolveToken?: (reference: string) => Promise<string>;
+    /** Delegates creation of the exact outbound Bearer without exposing a durable Provider credential. */
+    readonly authorize?: (request: GatewayHttpExchange) => Promise<string>;
+    /** Opt-in for a runtime whose selected Providers live on its controlled private network. */
+    readonly allowPrivateAddresses?: boolean;
     readonly resolveAddresses?: (hostname: string) => Promise<readonly ResolvedAddress[]>;
     readonly sendPinned?: (request: PinnedHttpRequest) => Promise<Response>;
 }
@@ -25,6 +29,9 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
     readonly #options: NodeGatewayHttpNetworkOptions;
 
     constructor(options: NodeGatewayHttpNetworkOptions) {
+        if (Boolean(options.resolveToken) === Boolean(options.authorize)) {
+            throw new TypeError("exactly one Provider authorization strategy is required");
+        }
         this.#options = options;
     }
 
@@ -32,7 +39,11 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
         const origin = new URL(request.origin);
         if (
             origin.origin !== request.origin ||
-            (origin.protocol !== "https:" && !(origin.protocol === "http:" && isLoopbackLiteral(origin.hostname)))
+            (origin.protocol !== "https:" &&
+                !(
+                    origin.protocol === "http:" &&
+                    (isLoopbackLiteral(origin.hostname) || this.#options.allowPrivateAddresses)
+                ))
         ) {
             throw new TypeError("provider origin is invalid");
         }
@@ -52,28 +63,8 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
             () => (this.#options.resolveAddresses ?? defaultResolveAddresses)(hostname),
             request.signal,
         );
-        const address = selectGatewayAddress(origin, addresses);
-        const token = await withAbort(() => this.#options.resolveToken(request.providerTokenRef), request.signal);
-        try {
-            assertProviderInvocationSecret(token);
-        } catch {
-            throw new TypeError("provider credential is unavailable");
-        }
-        const nowSeconds = Math.floor(Date.now() / 1_000);
-        const authorization =
-            request.authentication.kind === "provider-control"
-                ? token
-                : signProviderInvocationToken(token, {
-                      version: 1,
-                      requestId: request.requestId,
-                      instanceId: request.authentication.instanceId,
-                      contractId: request.authentication.contractId,
-                      contractVersion: request.authentication.contractVersion,
-                      capabilityId: request.authentication.capabilityId,
-                      ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
-                      issuedAt: nowSeconds,
-                      expiresAt: nowSeconds + 30,
-                  });
+        const address = selectGatewayAddress(origin, addresses, this.#options.allowPrivateAddresses);
+        const authorization = await withAbort(() => this.#authorization(request), request.signal);
         return (this.#options.sendPinned ?? sendPinnedHttpRequest)({
             url,
             address,
@@ -83,9 +74,42 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
             signal: request.signal,
         });
     }
+
+    async #authorization(request: GatewayHttpExchange): Promise<string> {
+        if (this.#options.authorize) {
+            if (request.authentication.kind !== "capability") {
+                throw new TypeError("brokered Provider authorization is restricted to capability invocations");
+            }
+            const authorization = await this.#options.authorize(request);
+            if (!authorization || authorization.length > 4096 || /[\x00-\x20\x7f]/.test(authorization)) {
+                throw new TypeError("provider authorization is unavailable");
+            }
+            return authorization;
+        }
+        const token = await this.#options.resolveToken!(request.providerTokenRef);
+        try {
+            assertProviderInvocationSecret(token);
+        } catch {
+            throw new TypeError("provider credential is unavailable");
+        }
+        const nowSeconds = Math.floor(Date.now() / 1_000);
+        return request.authentication.kind === "provider-control"
+            ? token
+            : signProviderInvocationToken(token, {
+                  version: 1,
+                  requestId: request.requestId,
+                  instanceId: request.authentication.instanceId,
+                  contractId: request.authentication.contractId,
+                  contractVersion: request.authentication.contractVersion,
+                  capabilityId: request.authentication.capabilityId,
+                  ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
+                  issuedAt: nowSeconds,
+                  expiresAt: nowSeconds + 30,
+              });
+    }
 }
 
-const PROVIDER_CONTROL_PATHS = new Set(["/ulvia/report", "/ulvia/kernel/v1/handshake"]);
+const PROVIDER_CONTROL_PATHS = new Set(["/ulvia/report"]);
 
 async function defaultResolveAddresses(hostname: string): Promise<readonly ResolvedAddress[]> {
     const family = isIP(hostname);

@@ -3,6 +3,7 @@ import { InMemoryCache } from "@bernouy/http-runner";
 import { PRODUCTION_KERNEL_RUNTIME, type ProductionKernelRuntime } from "./kernelRuntime";
 import type { ProviderKernelClient } from "./provider/ProviderKernelClient";
 import type { Logger } from "@bernouy/logging";
+import type { createKernelGateway } from "./gateway/createKernelGateway";
 
 export type { ProductionKernelRuntime } from "./kernelRuntime";
 
@@ -13,6 +14,7 @@ export type ProductionKernelHandle = {
 type MountOptions = {
     env: RuntimeEnv;
     provider: ProviderKernelClient;
+    gateway: ReturnType<typeof createKernelGateway>;
     logger: Logger;
 };
 
@@ -20,21 +22,22 @@ export async function mountProductionKernel(
     options: MountOptions,
     runtime: ProductionKernelRuntime = PRODUCTION_KERNEL_RUNTIME,
 ): Promise<ProductionKernelHandle> {
-    const { env, provider, logger } = options;
+    const { env, provider, gateway, logger } = options;
     const runner = new runtime.Runner({ logger });
     new runtime.Kernel({
         runner,
         content: provider.content,
         editorialPages: provider.editorialPages,
-        resolveActor: (request) => provider.resolveActor(request),
+        resolveActor: gateway.resolveActor,
         sessionCookie: { secure: env.KERNEL_PUBLIC_URL.startsWith("https:") },
         cache: new InMemoryCache(),
         enforcePageCsp: env.MODE !== "DEV",
-        capabilityGateway: provider.gateway,
-        pageCapabilities: provider.pageCapabilities,
-        capabilityHandler: provider.capability,
-        mutationHandler: provider.declarativeMutation,
-        queryHandler: provider.declarativeQuery,
+        capabilityGateway: {
+            siteId: "default",
+            invoker: gateway.invoker,
+            resolveCapability: gateway.resolveCapability,
+        },
+        pageCapabilities: gateway.pageCapabilities,
         collectionAssetHandler: provider.collectionAsset,
         collectionAssets: provider.collectionAssets,
         sitemapHandler: provider.sitemap,
@@ -44,7 +47,7 @@ export async function mountProductionKernel(
     runner.start({ port: env.KERNEL_PORT, hostname: env.KERNEL_HOST });
     logger.info("kernel.started", {
         publicUrl: env.KERNEL_PUBLIC_URL,
-        providerUrl: env.ULVIA_PROVIDER_URL,
+        installationsProviderUrl: env.CMS_INSTALLATIONS_PROVIDER_URL,
     });
     return {
         async stop() {

@@ -45,7 +45,7 @@ export const composeTest = dockerComposeAvailable ? test : test.skip;
 
 export const requiredCmsEnvironment = {
     CMS_IMAGE: "registry.example.test/bernouy/cms:2026.07.15",
-    ULVIA_INSTANCE_TOKEN: "g".repeat(48),
+    CMS_INSTALLATIONS_PROVIDER_TOKEN: "g".repeat(48),
 };
 
 export const requiredInfrastructureEnvironment = {

@@ -39,18 +39,19 @@ describe("production Kernel mounting", () => {
                 KERNEL_PORT: 3100,
                 KERNEL_HOST: "127.0.0.1",
                 KERNEL_PUBLIC_URL: "https://www.example.test",
-                ULVIA_PROVIDER_URL: "https://provider.example.test",
-                ULVIA_INSTANCE_TOKEN: "opaque-ulvia-instance-token",
+                CMS_INSTALLATIONS_PROVIDER_URL: "https://provider.example.test",
+                CMS_INSTALLATIONS_PROVIDER_TOKEN: "opaque-ulvia-instance-token",
             },
             provider: {
                 content: token("content"),
-                resolveActor: async () => ({ kind: "anonymous" }),
-                gateway: token("gateway"),
-                pageCapabilities: token("page-capabilities"),
-                capability: async () => new Response(),
-                declarativeQuery: async () => new Response(),
                 collectionAsset: async () => new Response(),
                 sitemap: async () => new Response(),
+            },
+            gateway: {
+                invoker: token("invoker"),
+                resolveCapability: async () => null,
+                resolveActor: async () => ({ kind: "anonymous" }),
+                pageCapabilities: token("page-capabilities"),
             },
             logger: logs.logger,
         };
@@ -63,9 +64,15 @@ describe("production Kernel mounting", () => {
             runner: expect.any(FakeRunner),
             resolveActor: expect.any(Function),
             sessionCookie: { secure: true },
-            capabilityGateway: options.provider.gateway,
-            queryHandler: options.provider.declarativeQuery,
+            capabilityGateway: {
+                siteId: "default",
+                invoker: options.gateway.invoker,
+                resolveCapability: options.gateway.resolveCapability,
+            },
+            pageCapabilities: options.gateway.pageCapabilities,
         });
+        expect(kernelConfig).not.toHaveProperty("capabilityHandler");
+        expect(kernelConfig).not.toHaveProperty("queryHandler");
         expect(events).toContain('start:{"port":3100,"hostname":"127.0.0.1"}');
         expect(logs.records.some((record) => record.event === "kernel.started")).toBeTrue();
 

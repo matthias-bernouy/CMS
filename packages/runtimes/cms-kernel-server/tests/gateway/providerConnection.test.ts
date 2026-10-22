@@ -1,56 +1,37 @@
 import { expect, test } from "bun:test";
-import { fetchProviderHandshake } from "../../src/runtime/gateway/fetchProviderReport";
+import { fetchInstallationsProviderReport } from "../../src/runtime/gateway/fetchProviderReport";
 import { ProviderKernelTransport } from "../../src/runtime/provider/ProviderKernelTransport";
-import { ProviderKernelClient } from "../../src/runtime/provider/ProviderKernelClient";
-import { NOOP_LOGGER } from "@bernouy/logging";
 
-test("provider handshakes accept the configured private service endpoint", async () => {
+test("the public Provider report accepts a compatible installations control contract", async () => {
     const requests: Array<{ url: string; init?: RequestInit }> = [];
     const report = providerReport();
-    const handshake = {
-        protocol: "ulvia-kernel-provider/v1",
-        instance: { id: report.instanceId, status: "ready", revision: 3 },
-        activeProfile: { id: "ulvia.official", version: "1.0.0" },
-        contentRevision: "revision:".padEnd(1_024, "x"),
-        runtime: report,
-    };
     const endpoint = "http://ulvia-provider:5103";
     const token = "provider-token-at-least-twenty";
     const transport = new ProviderKernelTransport(endpoint, token, (async (url, init) => {
         requests.push({ url: url.toString(), init });
-        return Response.json(handshake);
+        return Response.json(report);
     }) as typeof fetch);
-    const result = await fetchProviderHandshake(transport);
+    const result = await fetchInstallationsProviderReport(transport);
 
-    expect(result).toEqual(handshake);
-    expect(requests[0]?.url).toBe("http://ulvia-provider:5103/ulvia/kernel/v1/handshake");
+    expect(result).toEqual(report);
+    expect(requests[0]?.url).toBe("http://ulvia-provider:5103/ulvia/report");
     expect(new Headers(requests[0]?.init?.headers).get("authorization")).toBe(`Bearer ${token}`);
     expect(() => new ProviderKernelTransport("https://api.provider.example", "invalid")).toThrow(
         "Invalid provider token",
     );
 });
 
-test("provider handshakes reject incomplete runtime reports and mismatched instances", async () => {
+test("the public Provider report rejects incompatible installations control contracts", async () => {
     const report = providerReport();
-    const handshake = {
-        protocol: "ulvia-kernel-provider/v1",
-        instance: { id: "instance:other", status: "ready", revision: 1 },
-        activeProfile: { id: "ulvia.official", version: "1.0.0" },
-        contentRevision: 1,
-        runtime: report,
-    };
     const endpoint = "http://ulvia-provider:5103";
     const token = "provider-token-at-least-twenty";
-    const transport = new ProviderKernelTransport(endpoint, token, (async () =>
-        Response.json(handshake)) as typeof fetch);
+    const transport = new ProviderKernelTransport(endpoint, token, (async () => Response.json(report)) as typeof fetch);
 
-    await expect(fetchProviderHandshake(transport)).rejects.toThrow("Provider handshake is invalid");
-    handshake.instance.id = report.instanceId;
-    handshake.runtime = {} as ReturnType<typeof providerReport>;
-    await expect(fetchProviderHandshake(transport)).rejects.toThrow("Provider handshake is invalid");
-    handshake.runtime = report;
-    handshake.activeProfile.version = "1.0.0-01";
-    await expect(fetchProviderHandshake(transport)).rejects.toThrow("Provider handshake is invalid");
+    report.implementations[0]!.status = "unavailable";
+    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("compatible control contract");
+    report.implementations[0]!.status = "ready";
+    report.implementations[0]!.digest = `sha256:${"b".repeat(64)}`;
+    await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("compatible control contract");
 });
 
 test("provider forwarding preserves streaming and removes hop-by-hop headers", async () => {
@@ -89,33 +70,6 @@ test("provider forwarding preserves streaming and removes hop-by-hop headers", a
     expect(await response.text()).toBe("stream");
 });
 
-test("logical Page queries preserve GET or QUERY across the private Provider boundary", async () => {
-    const requests: Array<{ url: string; init?: RequestInit }> = [];
-    const transport = new ProviderKernelTransport(
-        "http://ulvia-provider:5103",
-        "provider-token-at-least-twenty",
-        (async (url, init) => {
-            requests.push({ url: url.toString(), init });
-            return Response.json({ items: [] });
-        }) as typeof fetch,
-    );
-    const client = new ProviderKernelClient(transport, "http://kernel.test", NOOP_LOGGER);
-    const request = new Request("http://kernel.test/.cms/query/catalog.items/list", {
-        method: "QUERY",
-        headers: { "content-type": "application/json", cookie: "cms-session=session-a" },
-        body: '{"limit":20}',
-    });
-
-    const response = await client.declarativeQuery(request);
-
-    expect(response.status).toBe(200);
-    expect(requests[0]?.url).toBe("http://ulvia-provider:5103/ulvia/kernel/v1/queries/catalog.items/list");
-    expect(requests[0]?.init?.method).toBe("QUERY");
-    expect(new Headers(requests[0]?.init?.headers).get("authorization")).toBe("Bearer provider-token-at-least-twenty");
-    expect(new Headers(requests[0]?.init?.headers).get("cookie")).toBe("cms-session=session-a");
-    expect(await new Response(requests[0]?.init?.body).text()).toBe('{"limit":20}');
-});
-
 function providerReport() {
     return {
         protocol: "ulvia-provider/v1",
@@ -126,9 +80,9 @@ function providerReport() {
         manifest: { version: "1.0.0", digest: `sha256:${"a".repeat(64)}` },
         implementations: [
             {
-                contractId: "catalog.items",
+                contractId: "ulvia.cms.installations",
                 version: "1.0.0",
-                digest: `sha256:${"b".repeat(64)}`,
+                digest: "sha256:447e0bd013efd0a1f78d9fde6c175f03429ef443cd69c285427aec95ed350e1f",
                 status: "ready",
             },
         ],

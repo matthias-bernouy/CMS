@@ -82,10 +82,36 @@ describe("capability gateway", () => {
         expect(scope.sent).toHaveLength(1);
         expect(scope.sent[0]).toMatchObject({
             instanceId: "instance:account-a",
+            installationId: "install-a",
             endpoint: "https://provider.example.com",
             providerTokenRef: "${PROVIDER_TOKEN}",
             input: { term: "one" },
         });
+    });
+
+    test("accepts an HTTP Provider origin only when the admitted manifest pins that private-network origin", async () => {
+        const fixture = await gatewayRoute();
+        const origin = "http://provider.internal:5103";
+        const route = {
+            ...fixture,
+            manifest: {
+                ...fixture.manifest,
+                admission: {
+                    ...fixture.manifest.admission,
+                    manifest: {
+                        ...fixture.manifest.admission.manifest,
+                        endpoint: { allowedOrigins: [origin] },
+                    },
+                },
+            },
+            installation: {
+                ...fixture.installation,
+                installation: { ...fixture.installation.installation, endpoint: origin },
+            },
+        };
+        const scope = harness(route);
+        await expect(scope.gateway.invoke(invocation())).resolves.toMatchObject({ kind: "success" });
+        expect(scope.sent[0]?.endpoint).toBe(origin);
     });
 
     test("snapshots input before waiting for route resolution", async () => {

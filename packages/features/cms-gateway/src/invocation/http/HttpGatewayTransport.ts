@@ -14,6 +14,7 @@ import { decodeSessionEffect } from "cms-gateway/protocol/TrustedCapabilityEffec
 
 export interface GatewayHttpExchange extends PreparedHttpInvocation {
     readonly requestId: string;
+    readonly installationId?: string;
     readonly providerTokenRef: string;
     readonly authentication:
         | { readonly kind: "provider-control" }
@@ -78,6 +79,7 @@ export class HttpGatewayTransport implements GatewayTransport {
         const exchange: GatewayHttpExchange = {
             ...prepared,
             requestId: request.requestId,
+            installationId: request.installationId,
             providerTokenRef: request.providerTokenRef,
             authentication: {
                 kind: "capability",

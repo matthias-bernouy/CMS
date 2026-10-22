@@ -81,8 +81,8 @@ export async function startLocalKernel(
             KERNEL_PORT: String(ports.kernel),
             KERNEL_HOST: "127.0.0.1",
             KERNEL_PUBLIC_URL: kernelUrl,
-            ULVIA_PROVIDER_URL: `http://127.0.0.1:${ports.provider}`,
-            ULVIA_INSTANCE_TOKEN: instance.token,
+            CMS_INSTALLATIONS_PROVIDER_URL: `http://127.0.0.1:${ports.provider}`,
+            CMS_INSTALLATIONS_PROVIDER_TOKEN: instance.token,
             ULVIA_LOG_FILE: join(paths.logs, "kernel.ndjson"),
         },
     });

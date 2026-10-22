@@ -56,7 +56,7 @@ test("node transport rejects a forged literal address and reserved headers", asy
     expect(sent).toBe(0);
 });
 
-test("provider control credentials are limited to report and Kernel handshake metadata", async () => {
+test("provider control credentials are limited to the public runtime report", async () => {
     const sent: string[] = [];
     const network = new NodeGatewayHttpNetwork({
         resolveAddresses: async () => [{ address: "8.8.8.8", family: 4 }],
@@ -76,11 +76,10 @@ test("provider control credentials are limited to report and Kernel handshake me
         signal: new AbortController().signal,
     };
     await network.exchange({ ...request, pathAndQuery: "/ulvia/report" });
-    await network.exchange({ ...request, pathAndQuery: "/ulvia/kernel/v1/handshake" });
-    await expect(network.exchange({ ...request, pathAndQuery: "/ulvia/kernel/v1/query" })).rejects.toThrow(
+    await expect(network.exchange({ ...request, pathAndQuery: "/ulvia/kernel/v1/handshake" })).rejects.toThrow(
         "metadata endpoints",
     );
-    expect(sent).toEqual(["/ulvia/report", "/ulvia/kernel/v1/handshake"]);
+    expect(sent).toEqual(["/ulvia/report"]);
 });
 
 test("node transport aborts DNS and secret lookups that outlast the request deadline", async () => {
@@ -151,4 +150,33 @@ test("address policy refuses private, mapped, and documentation ranges", () => {
     }
     expect(selectGatewayAddress(origin, [{ address: "8.8.8.8", family: 4 }]).address).toBe("8.8.8.8");
     expect(selectGatewayAddress(origin, [{ address: "2606:4700::1111", family: 6 }]).address).toBe("2606:4700::1111");
+});
+
+test("a composition root can explicitly admit its controlled private Provider network", async () => {
+    const origin = new URL("http://provider.internal:5103");
+    expect(selectGatewayAddress(origin, [{ address: "172.20.0.8", family: 4 }], true).address).toBe("172.20.0.8");
+    const network = new NodeGatewayHttpNetwork({
+        allowPrivateAddresses: true,
+        resolveAddresses: async () => [{ address: "172.20.0.8", family: 4 }],
+        resolveToken: async () => "instance-access-token-that-is-long-enough",
+        sendPinned: async () => Response.json({}),
+    });
+    await expect(
+        network.exchange({
+            origin: origin.origin,
+            pathAndQuery: "/ulvia/report",
+            method: "GET",
+            headers: {},
+            requestId: "request-private-network",
+            providerTokenRef: "token-ref",
+            authentication: { kind: "provider-control" },
+            signal: new AbortController().signal,
+        }),
+    ).resolves.toBeInstanceOf(Response);
+    expect(() =>
+        selectGatewayAddress(new URL("http://metadata.internal"), [{ address: "169.254.169.254", family: 4 }], true),
+    ).toThrow("non-public");
+    expect(() =>
+        selectGatewayAddress(new URL("http://public.example"), [{ address: "8.8.8.8", family: 4 }], true),
+    ).toThrow("require HTTPS");
 });

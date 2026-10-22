@@ -12,8 +12,8 @@ services:
             KERNEL_PORT: "3000"
             KERNEL_HOST: 0.0.0.0
             KERNEL_PUBLIC_URL: "https://${DOMAIN:?DOMAIN must be set}"
-            ULVIA_PROVIDER_URL: http://ulvia-provider:5103
-            ULVIA_INSTANCE_TOKEN: ${ULVIA_INSTANCE_TOKEN:?ULVIA_INSTANCE_TOKEN must be set}
+            CMS_INSTALLATIONS_PROVIDER_URL: http://ulvia-provider:5103
+            CMS_INSTALLATIONS_PROVIDER_TOKEN: ${CMS_INSTALLATIONS_PROVIDER_TOKEN:?CMS_INSTALLATIONS_PROVIDER_TOKEN must be set}
             VIRTUAL_HOST: ${DOMAIN}
             VIRTUAL_PORT: "3000"
             ACME_HOST: ${DOMAIN}

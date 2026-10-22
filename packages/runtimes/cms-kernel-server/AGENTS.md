@@ -5,24 +5,28 @@ Production runtime composition root.
 ## Responsibilities
 
 - Read environment variables.
-- Validate the versioned handshake with an independently running Provider.
-- Project the Provider's instance-scoped read and HTTP APIs into the Kernel.
+- Validate the public report and compatible `ulvia.cms.installations` release
+  exposed by the independently running installations Provider.
+- Compose the provider-neutral Gateway locally from remote route, identity,
+  audit and invocation-token capabilities.
+- Project the remaining Provider-owned content reads, collection assets and
+  sitemap resources into the Kernel.
 - Instantiate only the stateless Kernel HTTP composition.
 - Refuse to start unless the Provider instance and official resources were provisioned beforehand.
 
 ## Rules
 
-- Keep the Kernel process stateless. It receives only its public URL, Provider
-  endpoint and opaque instance access token; persistence, authentication,
-  gateway state, files and migrations remain Provider-owned.
+- Keep the Kernel process stateless. It receives only its public URL,
+  installations Provider endpoint and opaque control token; persistence,
+  authentication state, Gateway state, files and migrations remain behind
+  contracts.
 - Validate required environment early and fail fast.
 - Never log secrets, passwords, PATs, KEKs, DEKs, or session signing material.
-- Consume the instance access Bearer at the Provider boundary. Never expose it
-  to capability actor authentication or confuse it with Provider invocation
-  credentials.
+- Consume the installations control Bearer only at that Provider boundary.
+  Never send it to a selected capability Provider: request a scoped,
+  short-lived invocation token through `ulvia.cms.installations`.
 - Changes here usually need an integration-style test or a clear manual
   verification path.
-- Inject only remote read/proxy boundaries into Kernel. Authoring,
-  installations, sitemap state, actor resolution and authentication mutations
-  stay behind the Provider instance API and official contract bindings.
+- Resolve request actors and public capability calls through the local Gateway.
+  Do not add private Gateway operations to the Provider instance API.
 - Never mount or start the Ulvia Provider surface from this package.

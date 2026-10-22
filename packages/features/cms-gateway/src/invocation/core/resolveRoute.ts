@@ -32,7 +32,7 @@ export function resolveRoute(route: GatewayRoute, siteId: string, contractId: st
             approved.endpoint !== origin ||
             endpoint.username ||
             endpoint.password ||
-            (endpoint.protocol !== "https:" && !(endpoint.protocol === "http:" && isLoopback(endpoint.hostname)))
+            (endpoint.protocol !== "https:" && endpoint.protocol !== "http:")
         ) {
             throw new TypeError("not a canonical origin");
         }
@@ -62,8 +62,4 @@ export function resolveRoute(route: GatewayRoute, siteId: string, contractId: st
         throw new GatewayError("not_ready", "selected provider release has no fresh ready observation");
     }
     return document;
-}
-
-function isLoopback(hostname: string): boolean {
-    return hostname === "[::1]" || /^127(?:\.\d{1,3}){3}$/.test(hostname);
 }

@@ -110,6 +110,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
             const response = await this.#options.transport.send({
                 requestId,
                 instanceId,
+                installationId: route.installation.installation.id,
                 endpoint: route.installation.installation.endpoint,
                 providerTokenRef: route.installation.installation.providerTokenRef,
                 release,

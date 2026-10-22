@@ -56,12 +56,9 @@ test("projects every content read through the versioned Provider query endpoint"
     expect(requests.every((request) => request.url.pathname === "/ulvia/kernel/v1/query")).toBe(true);
 });
 
-test("projects gateway, Page access and collection assets", async () => {
+test("projects collection asset metadata while bytes remain streamed", async () => {
     const { client, requests } = clientFixture(() => Response.json({ value: true }));
 
-    await client.pageCapabilities.requiredAccess({ page: { path: "/admin" } } as never);
-    await client.gateway.invoker.invoke({} as never);
-    await client.gateway.invoker.resolveHttp({} as never);
     await client.collectionAssets.store.getInstalledAssetMetadata("ignored", "collection-a", "asset-a");
     await client.collectionAssets.store.getInstalledAssetMetadataBatch("ignored", [
         {
@@ -75,28 +72,18 @@ test("projects gateway, Page access and collection assets", async () => {
     expect(requests.map((request) => request.body?.operation)).toContain("assets.metadata-batch");
 });
 
-test("forwards every streaming endpoint with its canonical Provider path", async () => {
+test("forwards remaining content-owned streaming endpoints with their canonical Provider paths", async () => {
     const { client, requests } = clientFixture(() => new Response("ok"));
-    await client.capability(new Request("https://kernel.test/.cms/call/catalog.items/list?limit=10"));
-    await client.declarativeMutation(
-        new Request("https://kernel.test/.cms/mutation/catalog.items/create", { method: "POST" }),
-    );
-    await client.declarativeQuery(
-        new Request("https://kernel.test/.cms/query/catalog.items/list", { method: "QUERY" }),
-    );
     await client.collectionAsset(
         new Request("https://kernel.test/.cms/collections/collection-a/assets/logo.svg?download=1"),
     );
     await client.sitemap(new Request("https://kernel.test/sitemap-1.xml"));
 
     expect(requests.map((request) => `${request.url.pathname}${request.url.search}`)).toEqual([
-        "/ulvia/kernel/v1/call/catalog.items/list?limit=10",
-        "/ulvia/kernel/v1/mutations/catalog.items/create",
-        "/ulvia/kernel/v1/queries/catalog.items/list",
         "/ulvia/kernel/v1/collections/collection-a/assets/logo.svg?download=1",
         "/ulvia/kernel/v1/sitemap/resource",
     ]);
-    expect(new Headers(requests[4]?.init.headers).get("x-ulvia-original-path")).toBe("/sitemap-1.xml");
+    expect(new Headers(requests[1]?.init.headers).get("x-ulvia-original-path")).toBe("/sitemap-1.xml");
 });
 
 test("propagates the current request id through queries and forwarded requests", async () => {
@@ -110,19 +97,11 @@ test("propagates the current request id through queries and forwarded requests",
 
     await runWithRequestContext(inbound, async () => {
         await client.query("content.revision");
-        await client.capability(
-            new Request("https://kernel.test/.cms/call/catalog.items/list", {
-                headers: {
-                    [REQUEST_ID_HEADER]: "ea7a3428-a45e-48d1-8a1c-bc61921ff0b5",
-                    "x-ulvia-request-id": "provider-operation-id",
-                },
-            }),
-        );
+        await client.collectionAsset(new Request("https://kernel.test/.cms/collections/shop/assets/logo.svg"));
     });
 
     expect(new Headers(requests[0]?.init.headers).get(REQUEST_ID_HEADER)).toBe(requestId);
     expect(new Headers(requests[1]?.init.headers).get(REQUEST_ID_HEADER)).toBe(requestId);
-    expect(new Headers(requests[1]?.init.headers).get("x-ulvia-request-id")).toBe("provider-operation-id");
 });
 
 test("identifies failed Provider query operations without logging their inputs", async () => {

@@ -1,6 +1,4 @@
 import type { ContentReader, RenderablePage } from "@bernouy/cms-content/rendering";
-import type { PageCapabilityAccessPort } from "@bernouy/cms-gateway/analysis";
-import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
 import type { KernelProviderQuery, KernelProviderQueryOperation } from "@bernouy/ulvia-provider/kernel";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
 import type { ProviderKernelTransport } from "./ProviderKernelTransport";
@@ -12,12 +10,7 @@ export class ProviderKernelClient {
     readonly editorialPages: {
         resolveRoute(path: string): Promise<{ readonly page: RenderablePage; readonly language: string } | null>;
     };
-    readonly pageCapabilities: PageCapabilityAccessPort;
     readonly collectionAssets: InstalledCollectionAssetSource;
-    readonly gateway: {
-        siteId: string;
-        invoker: GatewayInvoker;
-    };
 
     constructor(
         private readonly transport: ProviderKernelTransport,
@@ -26,16 +19,6 @@ export class ProviderKernelClient {
         this.content = remoteContent(this);
         this.editorialPages = {
             resolveRoute: (path) => this.query("content.editorial-route", { path }),
-        };
-        this.pageCapabilities = {
-            requiredAccess: (page) => this.query("page.capability-access", { page }),
-        };
-        this.gateway = {
-            siteId: "default",
-            invoker: {
-                invoke: (invocation) => this.query("gateway.invoke", { invocation }),
-                resolveHttp: (request) => this.query("gateway.resolve-http", { request }),
-            },
         };
         this.collectionAssets = {
             siteId: "default",
@@ -84,55 +67,6 @@ export class ProviderKernelClient {
             throw error;
         }
     }
-
-    async resolveActor(request: Request): Promise<GatewayActor> {
-        const headers = new Headers(request.headers);
-        headers.set("content-type", "application/json");
-        const response = await this.forward(
-            "/ulvia/kernel/v1/call/ulvia.cms.access/resolve-actor",
-            new Request(request.url, { method: "GET", headers }),
-            undefined,
-            10_000,
-        );
-        if (!response.ok) {
-            throw new ProviderQueryError(response.status);
-        }
-        const value: unknown = await response.json();
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
-            throw new TypeError("Access actor response is invalid");
-        }
-        const actor = value as Record<string, unknown>;
-        if (actor.state === "anonymous" && Object.keys(actor).length === 1) {
-            return { kind: "anonymous" };
-        }
-        if (
-            actor.state !== "authenticated" ||
-            typeof actor.subjectId !== "string" ||
-            typeof actor.administrator !== "boolean" ||
-            !Number.isSafeInteger(actor.authorizationRevision)
-        ) {
-            throw new TypeError("Access actor response is invalid");
-        }
-        return {
-            kind: actor.administrator ? "administrator" : "user",
-            subjectId: actor.subjectId,
-        };
-    }
-
-    capability = (request: Request): Promise<Response> =>
-        this.forward(
-            `/ulvia/kernel/v1/call${new URL(request.url).pathname.slice("/.cms/call".length)}${new URL(request.url).search}`,
-            request,
-        );
-
-    declarativeMutation = (request: Request): Promise<Response> =>
-        this.forward(
-            `/ulvia/kernel/v1/mutations${new URL(request.url).pathname.slice("/.cms/mutation".length)}`,
-            request,
-        );
-
-    declarativeQuery = (request: Request): Promise<Response> =>
-        this.forward(`/ulvia/kernel/v1/queries${new URL(request.url).pathname.slice("/.cms/query".length)}`, request);
 
     collectionAsset = (request: Request): Promise<Response> =>
         this.forward(

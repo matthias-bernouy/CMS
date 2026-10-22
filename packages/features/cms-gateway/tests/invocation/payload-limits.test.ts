@@ -36,6 +36,7 @@ test("the default provider response budget includes a contract-sized Page docume
     const response = await transport.send({
         requestId: "00000000-0000-4000-8000-000000000001",
         instanceId: "instance:account-a",
+        installationId: "installation-a",
         endpoint: "https://provider.example.com",
         providerTokenRef: "${PROVIDER_TOKEN}",
         release: route.release.admission.release,

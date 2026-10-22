@@ -1,5 +1,7 @@
 import { mountProductionKernel } from "./runtime/mountKernel";
-import { fetchProviderHandshake } from "./runtime/gateway/fetchProviderReport";
+import { ControlProviderClient } from "./runtime/gateway/ControlProviderClient";
+import { createKernelGateway } from "./runtime/gateway/createKernelGateway";
+import { fetchInstallationsProviderReport } from "./runtime/gateway/fetchProviderReport";
 import { ProviderKernelClient } from "./runtime/provider/ProviderKernelClient";
 import { ProviderKernelTransport } from "./runtime/provider/ProviderKernelTransport";
 import { readRuntimeEnv } from "./runtimeEnv";
@@ -15,10 +17,14 @@ try {
 
 async function startKernel(): Promise<void> {
     const env = readRuntimeEnv(process.env);
-    const transport = new ProviderKernelTransport(env.ULVIA_PROVIDER_URL, env.ULVIA_INSTANCE_TOKEN);
-    await fetchProviderHandshake(transport);
+    const transport = new ProviderKernelTransport(
+        env.CMS_INSTALLATIONS_PROVIDER_URL,
+        env.CMS_INSTALLATIONS_PROVIDER_TOKEN,
+    );
+    await fetchInstallationsProviderReport(transport);
+    const gateway = createKernelGateway(new ControlProviderClient(transport));
     const provider = new ProviderKernelClient(transport, logger);
-    const kernel = await mountProductionKernel({ env, provider, logger });
+    const kernel = await mountProductionKernel({ env, provider, gateway, logger });
 
     let stopping = false;
     const shutdown = async (signal: string) => {

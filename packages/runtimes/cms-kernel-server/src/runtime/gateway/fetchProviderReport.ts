@@ -1,18 +1,41 @@
-import { assertKernelProviderHandshake } from "@bernouy/ulvia-provider/kernel";
-import { ProviderKernelTransport } from "../provider/ProviderKernelTransport";
+import {
+    parseProviderRuntimeReportJson,
+    type ProviderRuntimeReport,
+} from "@bernouy/cms-repository/providers/installations";
+import type { ProviderKernelTransport } from "../provider/ProviderKernelTransport";
 
-/** A bounded probe over the operator-configured private Kernel-to-Provider transport. */
-export async function fetchProviderHandshake(transport: ProviderKernelTransport) {
-    const signal = AbortSignal.timeout(5_000);
-    const response = await transport.request("/ulvia/kernel/v1/handshake", {
+const INSTALLATIONS_CONTRACT = {
+    contractId: "ulvia.cms.installations",
+    version: "1.0.0",
+    digest: "sha256:447e0bd013efd0a1f78d9fde6c175f03429ef443cd69c285427aec95ed350e1f",
+} as const;
+
+/** Validates the stable public Provider report before the Kernel accepts its control capabilities. */
+export async function fetchInstallationsProviderReport(
+    transport: ProviderKernelTransport,
+): Promise<ProviderRuntimeReport> {
+    const response = await transport.request("/ulvia/report", {
         method: "GET",
         headers: { accept: "application/json" },
-        signal,
+        signal: AbortSignal.timeout(5_000),
     });
     if (!response.ok || !response.body) {
-        throw new Error(`Provider handshake request failed (${response.status})`);
+        throw new Error(`Installations Provider report request failed (${response.status})`);
     }
-    const reader = response.body.getReader();
+    const report = parseProviderRuntimeReportJson(await readBoundedReport(response));
+    const implementation = report.implementations.find(
+        (candidate) =>
+            candidate.contractId === INSTALLATIONS_CONTRACT.contractId &&
+            candidate.version === INSTALLATIONS_CONTRACT.version,
+    );
+    if (implementation?.digest !== INSTALLATIONS_CONTRACT.digest || implementation.status !== "ready") {
+        throw new Error("Installations Provider does not expose the compatible control contract");
+    }
+    return report;
+}
+
+async function readBoundedReport(response: Response): Promise<Uint8Array> {
+    const reader = response.body!.getReader();
     const chunks: Uint8Array[] = [];
     let size = 0;
     try {
@@ -24,7 +47,7 @@ export async function fetchProviderHandshake(transport: ProviderKernelTransport)
             size += part.value.byteLength;
             if (size > 256 * 1024) {
                 await reader.cancel();
-                throw new Error("Provider handshake is too large");
+                throw new Error("Installations Provider report is too large");
             }
             chunks.push(part.value);
         }
@@ -37,7 +60,5 @@ export async function fetchProviderHandshake(transport: ProviderKernelTransport)
         bytes.set(chunk, offset);
         offset += chunk.byteLength;
     }
-    const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
-    assertKernelProviderHandshake(value);
-    return value;
+    return bytes;
 }

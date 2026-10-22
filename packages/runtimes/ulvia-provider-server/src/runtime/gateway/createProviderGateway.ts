@@ -13,6 +13,7 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
     const routes = new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests });
     const resolveSecret = createSecretResolver(stores.secrets);
     const network = new NodeGatewayHttpNetwork({
+        allowPrivateAddresses: true,
         resolveToken: async (reference) => {
             const token = await resolveSecret(reference);
             if (!token) {

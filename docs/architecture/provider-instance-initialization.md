@@ -14,14 +14,15 @@ Ulvia Provider owns:
   instance;
 - idempotent provisioning, transition recovery and the initial administrator
   grant;
-- resolution of an instance token to the isolated instance context used by
-  Provider and Kernel-protocol calls.
+- resolution of an installations control token to the isolated instance context
+  used by public contract calls.
 
 One Kernel serves one already-provisioned instance. It owns Page rendering,
-public HTTP presentation and application of validated response effects. Content,
-accounts, session tokens, files, gateway state, installation state and migration
-journals remain behind the Provider. Kernel knows neither the Provider operator
-secret nor another instance's identity or credentials.
+public HTTP presentation, provider-neutral Gateway execution and application of
+validated response effects. Content, accounts, session tokens, files, Gateway
+state, installation state and migration journals remain behind contracts. Kernel
+knows neither the Provider operator secret nor another instance's identity or
+credentials.
 
 ## Local Flow
 
@@ -36,8 +37,8 @@ starts this sequence:
 4. Let the Provider create or resume the instance, generate its opaque token and
    isolated storage key, then install the exact official profile.
 5. Persist the returned Kernel connection inside the private environment.
-6. Start Kernel with its public URL, Provider URL and
-   `ULVIA_INSTANCE_TOKEN` only.
+6. Start Kernel with its public URL, installations Provider URL and
+   `CMS_INSTALLATIONS_PROVIDER_TOKEN` only.
 7. Report readiness after Kernel can authenticate and serve the installed
    official Pages.
 

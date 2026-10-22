@@ -11,8 +11,8 @@ describe("per-instance Compose rendering", () => {
 
         expect(Object.keys(config.services)).toEqual(["cms"]);
         expect(cms.environment).toMatchObject({
-            ULVIA_PROVIDER_URL: "http://ulvia-provider:5103",
-            ULVIA_INSTANCE_TOKEN: "g".repeat(48),
+            CMS_INSTALLATIONS_PROVIDER_URL: "http://ulvia-provider:5103",
+            CMS_INSTALLATIONS_PROVIDER_TOKEN: "g".repeat(48),
         });
         expect(cms.environment?.MONGO_URL).toBeUndefined();
         expect(cms.environment?.CMS_FILES_DIR).toBeUndefined();
