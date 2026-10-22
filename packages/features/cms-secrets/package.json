@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-secrets",
     "version": "0.1.0",
-    "description": "CMS secret metadata, lifecycle and administrator/runtime resolution.",
+    "description": "Credential-scoped CMS secret namespaces, lifecycle and explicit value resolution.",
     "license": "MIT",
     "type": "module",
     "main": "./src/exports/index.ts",

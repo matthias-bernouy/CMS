@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "contractId": "ulvia.cms.secrets",
     "name": "CMS Secrets",
-    "description": "Manage encrypted CMS secrets and resolve values only for authorized provider installations.",
+    "description": "Manage credential-owned secret namespaces and encrypted CMS secret values.",
     "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": {

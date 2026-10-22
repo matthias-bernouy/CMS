@@ -1,40 +1,55 @@
 {
-    "id": "create",
-    "description": "Create an encrypted secret and return only its metadata.",
+    "id": "secrets.create",
+    "description": "Create an encrypted secret inside one credential-owned namespace.",
     "access": "admin",
     "behavior": { "effect": "command", "idempotency": "keyed", "execution": "sync" },
     "input": {
         "type": "object",
         "properties": {
+            "namespaceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "namespaceKey": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 512 },
             "name": { "type": "string", "minLength": 1, "maxLength": 96 },
             "value": { "type": "string", "sensitive": true, "minLength": 1, "maxLength": 16384 }
         },
-        "required": ["name", "value"]
+        "required": ["namespaceId", "namespaceKey", "name", "value"]
     },
     "output": {
         "type": "object",
         "properties": {
+            "namespaceId": { "type": "string", "maxLength": 128 },
             "secretId": { "type": "string", "maxLength": 160 },
             "name": { "type": "string", "maxLength": 96 },
             "version": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
-            "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 }
+            "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+            "rotatedAt": { "type": "string", "format": "date-time", "maxLength": 40, "nullable": true }
         },
-        "required": ["secretId", "name", "version", "createdAt"]
+        "required": ["namespaceId", "secretId", "name", "version", "createdAt", "rotatedAt"]
     },
     "errors": [
         { "code": "INVALID_INPUT", "retryable": false },
+        { "code": "NOT_AUTHORIZED", "retryable": false },
+        { "code": "NOT_FOUND", "retryable": false },
         { "code": "ALREADY_EXISTS", "retryable": false },
         { "code": "CORE_UNAVAILABLE", "retryable": true }
     ],
     "binding": {
         "transport": "http",
         "method": "POST",
-        "path": "/create",
-        "input": { "body": true },
+        "path": "/namespaces/{namespaceId}/secrets",
+        "input": {
+            "path": { "namespaceId": "namespaceId" },
+            "body": { "properties": ["namespaceKey", "name", "value"] }
+        },
         "response": {
             "successStatuses": [201],
             "contentTypes": ["application/json"],
-            "errorStatuses": { "INVALID_INPUT": 422, "ALREADY_EXISTS": 409, "CORE_UNAVAILABLE": 503 }
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_AUTHORIZED": 403,
+                "NOT_FOUND": 404,
+                "ALREADY_EXISTS": 409,
+                "CORE_UNAVAILABLE": 503
+            }
         }
     }
 }

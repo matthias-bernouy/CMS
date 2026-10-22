@@ -55,7 +55,7 @@
         {
             "contractId": "ulvia.cms.secrets",
             "version": "1.0.0",
-            "digest": "sha256:a0f3c20e137fb16caa12914b9c4a3358ac34225f8deca4be4240cf36fadd2bff",
+            "digest": "sha256:8b99e4c308f2acbdba11ff1dd2b10cd21488451eae8442a49166025c398bfb20",
             "requires": []
         }
     ]

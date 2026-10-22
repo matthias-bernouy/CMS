@@ -1,15 +1,17 @@
 {
-    "id": "delete",
-    "description": "Delete a secret by identifier and expected version.",
+    "id": "secrets.delete",
+    "description": "Delete one secret from a credential-owned namespace.",
     "access": "admin",
     "behavior": { "effect": "command", "idempotency": "natural", "execution": "sync" },
     "input": {
         "type": "object",
         "properties": {
+            "namespaceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "namespaceKey": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 512 },
             "secretId": { "type": "string", "minLength": 1, "maxLength": 160 },
             "expectedVersion": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
         },
-        "required": ["secretId", "expectedVersion"]
+        "required": ["namespaceId", "namespaceKey", "secretId", "expectedVersion"]
     },
     "output": {
         "type": "object",
@@ -18,18 +20,28 @@
     },
     "errors": [
         { "code": "INVALID_INPUT", "retryable": false },
+        { "code": "NOT_AUTHORIZED", "retryable": false },
         { "code": "VERSION_CONFLICT", "retryable": false },
         { "code": "CORE_UNAVAILABLE", "retryable": true }
     ],
     "binding": {
         "transport": "http",
         "method": "DELETE",
-        "path": "/secrets/{secretId}",
-        "input": { "path": { "secretId": "secretId" }, "query": { "expectedVersion": "expectedVersion" } },
+        "path": "/namespaces/{namespaceId}/secrets/{secretId}",
+        "input": {
+            "path": { "namespaceId": "namespaceId", "secretId": "secretId" },
+            "query": { "expectedVersion": "expectedVersion" },
+            "body": { "properties": ["namespaceKey"] }
+        },
         "response": {
             "successStatuses": [200],
             "contentTypes": ["application/json"],
-            "errorStatuses": { "INVALID_INPUT": 422, "VERSION_CONFLICT": 409, "CORE_UNAVAILABLE": 503 }
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_AUTHORIZED": 403,
+                "VERSION_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
         }
     }
 }

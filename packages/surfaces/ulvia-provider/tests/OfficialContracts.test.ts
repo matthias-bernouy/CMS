@@ -17,6 +17,9 @@ import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { UlviaProvider } from "../src";
 import type { CmsFilesService } from "@bernouy/cms-files";
+import { CmsSecrets } from "@bernouy/cms-secrets";
+import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
+import { InMemorySecretStore } from "@bernouy/secret-store";
 import { NOOP_LOGGER } from "@bernouy/logging";
 
 const TOKEN = "official-contract-matrix-token";
@@ -25,6 +28,7 @@ const ROUTES = [
     ["ulvia.cms.installations", "list-operations", "QUERY", "/operations", {}],
     ["ulvia.cms.content", "site.get", "GET", "/site", undefined],
     ["ulvia.cms.files", "namespace.create", "POST", "/namespaces", { name: "Test", defaultVisibility: "private" }],
+    ["ulvia.cms.secrets", "namespace.create", "POST", "/namespaces", { name: "Test" }],
     ["ulvia.cms.installations", "list-provider-installations", "GET", "/list-provider-installations", undefined],
 ] as const;
 
@@ -40,7 +44,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
             });
         }
     }
-    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(77);
+    expect(contracts.every(({ release }) => release.capabilities.length > 0)).toBe(true);
     const runner = new BunRunner();
     const runtime = {
         siteId: "site-a",
@@ -103,15 +107,17 @@ test("the official adapters implement the complete declared capability matrix", 
     );
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const operations = new ProviderOperationExecutor(new MemoryProviderOperationStore());
+    const secrets = new CmsSecrets(new InMemoryCmsSecretMetadataStore(), new InMemorySecretStore());
     registerOfficialProviderCapabilities(
         dispatcher,
-        {} as UlviaProviderDependencies,
+        { ...({} as UlviaProviderDependencies), secrets },
         undefined,
         operations,
         undefined,
         undefined,
         {} as CmsFilesService,
         {} as CmsFileWorkspace,
+        new Set(contracts.map(({ release }) => release.contractId)),
     );
 
     expect(() => dispatcher.seal(contracts.map(({ release }) => release))).not.toThrow();

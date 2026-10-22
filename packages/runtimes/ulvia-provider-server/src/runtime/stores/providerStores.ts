@@ -160,7 +160,11 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
             secretCrypto,
         }),
     );
-    const secretMetadata = new MongoCmsSecretMetadataStore(db.collection("cms_secret_metadata"));
+    const secretMetadata = new MongoCmsSecretMetadataStore({
+        secrets: db.collection("cms_secret_metadata"),
+        namespaces: db.collection("cms_secret_namespaces"),
+        namespaceKeys: db.collection("cms_secret_namespace_keys"),
+    });
     await secretMetadata.init();
     const cmsSecrets = new CmsSecrets(secretMetadata, secrets);
     const identities = new MongoIdentityService(db);

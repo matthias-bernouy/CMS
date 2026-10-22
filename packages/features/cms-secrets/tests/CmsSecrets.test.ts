@@ -1,63 +1,133 @@
 import { describe, expect, test } from "bun:test";
-import { CmsSecretConflict, CmsSecretNotFound, CmsSecrets } from "@bernouy/cms-secrets";
+import { CmsSecretConflict, CmsSecretNotAuthorized, CmsSecretNotFound, CmsSecrets } from "@bernouy/cms-secrets";
 import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 
 describe("CmsSecrets", () => {
-    test("stores values outside public metadata and resolves them by id", async () => {
+    test("stores values inside an explicit credential-owned namespace", async () => {
         const secrets = fixture();
+        const namespace = await createNamespace(secrets, "payments");
 
-        const created = await secrets.create("payment-token", "first-value");
+        const created = await secrets.create(
+            namespace.namespaceId,
+            namespace.namespaceKey,
+            "payment-token",
+            "first-value",
+        );
 
-        expect(created).toEqual({
-            secretId: "secret-id",
+        expect(created).toMatchObject({
+            namespaceId: namespace.namespaceId,
+            secretId: "secret-1",
             name: "payment-token",
             version: 1,
             createdAt: "2026-10-22T10:00:00.000Z",
             rotatedAt: null,
         });
-        expect(JSON.stringify(await secrets.get(created.secretId))).not.toContain("first-value");
-        expect(await secrets.resolve(created.secretId)).toEqual({
-            secretId: "secret-id",
+        expect(
+            JSON.stringify(await secrets.get(namespace.namespaceId, namespace.namespaceKey, created.secretId)),
+        ).not.toContain("first-value");
+        expect(await secrets.resolve(namespace.namespaceId, namespace.namespaceKey, created.secretId)).toMatchObject({
+            namespaceId: namespace.namespaceId,
+            secretId: "secret-1",
             version: 1,
             value: "first-value",
         });
     });
 
-    test("rotates with optimistic version control", async () => {
+    test("scopes credentials by namespace and permission", async () => {
         const secrets = fixture();
-        const created = await secrets.create("payment-token", "first-value");
+        const payments = await createNamespace(secrets, "payments");
+        const email = await createNamespace(secrets, "email");
+        const created = await secrets.create(payments.namespaceId, payments.namespaceKey, "payment-token", "value");
+        const metadataKey = await secrets.createNamespaceKey({
+            namespaceId: payments.namespaceId,
+            namespaceKey: payments.namespaceKey,
+            permissions: ["secrets.metadata.read"],
+        });
 
-        const rotated = await secrets.rotate(created.secretId, 1, "second-value");
+        expect(await secrets.get(payments.namespaceId, metadataKey.namespaceKey, created.secretId)).toMatchObject({
+            name: "payment-token",
+        });
+        await expect(
+            secrets.resolve(payments.namespaceId, metadataKey.namespaceKey, created.secretId),
+        ).rejects.toBeInstanceOf(CmsSecretNotAuthorized);
+        await expect(secrets.get(email.namespaceId, payments.namespaceKey, created.secretId)).rejects.toBeInstanceOf(
+            CmsSecretNotFound,
+        );
+    });
+
+    test("rotates and revokes namespace credentials", async () => {
+        const secrets = fixture();
+        const namespace = await createNamespace(secrets, "payments");
+        const scoped = await secrets.createNamespaceKey({
+            namespaceId: namespace.namespaceId,
+            namespaceKey: namespace.namespaceKey,
+            permissions: ["secrets.resolve"],
+        });
+        const replacement = await secrets.rotateNamespaceKey(
+            namespace.namespaceId,
+            namespace.namespaceKey,
+            scoped.keyId,
+        );
+
+        await expect(secrets.resolve(namespace.namespaceId, scoped.namespaceKey, "missing")).rejects.toBeInstanceOf(
+            CmsSecretNotAuthorized,
+        );
+        await secrets.revokeNamespaceKey(namespace.namespaceId, namespace.namespaceKey, replacement.keyId);
+        await expect(
+            secrets.resolve(namespace.namespaceId, replacement.namespaceKey, "missing"),
+        ).rejects.toBeInstanceOf(CmsSecretNotAuthorized);
+    });
+
+    test("rotates secret values with optimistic version control", async () => {
+        const secrets = fixture();
+        const namespace = await createNamespace(secrets, "payments");
+        const created = await secrets.create(namespace.namespaceId, namespace.namespaceKey, "token", "first");
+
+        const rotated = await secrets.rotate(
+            namespace.namespaceId,
+            namespace.namespaceKey,
+            created.secretId,
+            1,
+            "second",
+        );
 
         expect(rotated.version).toBe(2);
-        expect(await secrets.resolve(created.secretId)).toMatchObject({ version: 2, value: "second-value" });
-        await expect(secrets.rotate(created.secretId, 1, "stale-value")).rejects.toBeInstanceOf(CmsSecretConflict);
-        expect(await secrets.resolve(created.secretId)).toMatchObject({ version: 2, value: "second-value" });
+        await expect(
+            secrets.rotate(namespace.namespaceId, namespace.namespaceKey, created.secretId, 1, "stale"),
+        ).rejects.toBeInstanceOf(CmsSecretConflict);
+        expect(await secrets.resolve(namespace.namespaceId, namespace.namespaceKey, created.secretId)).toMatchObject({
+            version: 2,
+            value: "second",
+        });
     });
 
-    test("deletes metadata and encrypted value together", async () => {
+    test("deletes every encrypted value with its namespace", async () => {
         const secrets = fixture();
-        const created = await secrets.create("payment-token", "value");
+        const namespace = await createNamespace(secrets, "payments");
+        const created = await secrets.create(namespace.namespaceId, namespace.namespaceKey, "token", "value");
 
-        expect(await secrets.delete(created.secretId, 1)).toBe(true);
-        await expect(secrets.resolve(created.secretId)).rejects.toBeInstanceOf(CmsSecretNotFound);
-        expect(await secrets.delete(created.secretId, 1)).toBe(false);
-    });
+        await secrets.deleteNamespace(namespace.namespaceId, namespace.namespaceKey);
 
-    test("rejects duplicate names", async () => {
-        const secrets = fixture();
-        await secrets.create("payment-token", "first");
-
-        await expect(secrets.create("payment-token", "second")).rejects.toBeInstanceOf(CmsSecretConflict);
+        await expect(
+            secrets.resolve(namespace.namespaceId, namespace.namespaceKey, created.secretId),
+        ).rejects.toBeInstanceOf(CmsSecretNotAuthorized);
     });
 });
 
 function fixture(): CmsSecrets {
+    let nextId = 0;
     return new CmsSecrets(
         new InMemoryCmsSecretMetadataStore(),
         new InMemorySecretStore(),
-        () => "secret-id",
+        () => `secret-${++nextId}`,
         () => new Date("2026-10-22T10:00:00.000Z"),
     );
+}
+
+function createNamespace(secrets: CmsSecrets, name: string) {
+    return secrets.createNamespace({
+        name,
+        createdBy: { kind: "administrator", id: "admin-1" },
+    });
 }
