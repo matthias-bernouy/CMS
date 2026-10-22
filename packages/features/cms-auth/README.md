@@ -8,7 +8,10 @@ tokens, signed sessions, public account flows, and membership persistence.
 - `@bernouy/cms-auth` exposes adapter-light contracts, in-memory implementations,
   session-token handling, credential resolution and account-flow composition.
 - `/management` contains administration operations.
-- `/mongo` and `/smtp` are composition-root adapters.
+- `/mongo` contains composition-root persistence adapters.
+
+Delivery transports belong to `@bernouy/cms-emailer`. Authentication only
+composes account-specific messages and sends them through the Emailer port.
 
 The package exposes no HTTP routes. Provider surfaces map its operations to an
 admitted access contract; the browser-facing Kernel only applies validated

@@ -1,7 +1,7 @@
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
 import { compileConformanceSource, prepareConformanceSource } from "../release/authored/conformance";
 import { resolveConformanceDependencies } from "../release/authored/conformanceDependencies";
@@ -25,9 +25,11 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
     for (const id of contractIds) {
         const directory = join(root, "contracts", id);
         const { admission } = await prepareContractSource(directory);
-        await catalogue.publish(admission);
-        contracts[id] = admission.canonicalJson;
         admissions.set(`${admission.release.contractId}@${admission.release.version}`, admission);
+    }
+    const publicationOrder = await publishContractSet(catalogue, [...admissions.values()]);
+    for (const admission of publicationOrder) {
+        contracts[admission.release.contractId] = admission.canonicalJson;
     }
     for (const id of contractIds) {
         const directory = join(root, "contracts", id);
@@ -69,9 +71,7 @@ export async function writeOfficialBootstrapArtifacts(
     const artifacts = await buildOfficialBootstrapArtifacts();
     await rm(root, { recursive: true, force: true });
     const contractPaths: string[] = [];
-    for (const [id, bytes] of Object.entries(artifacts.contracts).sort(([left], [right]) =>
-        left.localeCompare(right),
-    )) {
+    for (const [id, bytes] of Object.entries(artifacts.contracts)) {
         const path = id.startsWith("ulvia.cms.")
             ? `contracts/cms/${id}/definition.json`
             : `contracts/${id}/definition.json`;

@@ -1,11 +1,4 @@
-import {
-    createPublicAuthActions,
-    LocalAuthentication,
-    SignedCookieCodec,
-    SubjectResolver,
-    TemplatedAuthEmailComposer,
-} from "@bernouy/cms-auth";
-import { ConfiguredEmailer } from "@bernouy/cms-auth/smtp";
+import { createPublicAuthActions, LocalAuthentication, SignedCookieCodec, SubjectResolver } from "@bernouy/cms-auth";
 import type { ProviderStores } from "../stores/providerStores";
 
 export async function createInstanceAuth(stores: ProviderStores, kernelUrl: string) {
@@ -21,13 +14,7 @@ export async function createInstanceAuth(stores: ProviderStores, kernelUrl: stri
         credentials: stores.credentials,
         users: stores.users,
         tokens: stores.authTokens,
-        emailer: new ConfiguredEmailer({
-            readSettings: async () => (await stores.repo.getSystem()).email,
-            secrets: stores.contractSecrets.access,
-        }),
-        emailComposer: new TemplatedAuthEmailComposer({
-            readTemplates: async () => (await stores.repo.getSystem()).email.templates,
-        }),
+        emailer: stores.emailer,
         siteName: "Ulvia CMS",
         authEmailCooldownSeconds: 300,
     };

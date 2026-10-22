@@ -1,10 +1,10 @@
-import type { AuthEmailRecipient, OutboundEmail } from "cms-auth/email/interfaces/Emailer";
+import type { EmailRecipient, OutboundEmail } from "@bernouy/cms-emailer";
 
 export type AuthEmailKind = "email_verification" | "password_reset";
 
 export type AuthEmailComposeInput = {
     kind: AuthEmailKind;
-    to: AuthEmailRecipient;
+    to: EmailRecipient;
     actionUrl: string;
     token: string;
     expiresAt: Date;

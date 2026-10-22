@@ -2,6 +2,7 @@ import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
 import { admitContractReleaseJson, type ContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson, verifyStoredProviderManifestJson } from "@bernouy/cms-repository/providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
 import type { OfficialInstanceProfile } from "@bernouy/ulvia-provider";
@@ -51,9 +52,7 @@ export async function loadOfficialArtifacts(
             return admission;
         }),
     );
-    for (const admission of admissions) {
-        await catalogue.publish(admission);
-    }
+    await publishContractSet(catalogue, admissions);
     const manifest = await admitProviderManifestJson(manifestBytes, catalogue);
     if (manifest.digest !== manifestEntry.digest) {
         throw new Error(

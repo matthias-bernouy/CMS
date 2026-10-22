@@ -8,6 +8,7 @@ import type {
 import { registerAccessCapabilities } from "./access";
 import { registerContentCapabilities } from "./content";
 import { registerFileCapabilities } from "./files";
+import { registerEmailerCapabilities } from "./emailer";
 import { registerInstallationCapabilities } from "./installations";
 import { registerSecretCapabilities } from "./secrets";
 import type { CollectionSources } from "./installations/sources";
@@ -40,16 +41,21 @@ export function registerOfficialProviderCapabilities(
     if (dependencies.secrets && enabledContractIds?.has("ulvia.cms.secrets")) {
         registerSecretCapabilities(dispatcher, dependencies.secrets);
     }
+    if (dependencies.emailer && enabledContractIds?.has("ulvia.cms.emailer")) {
+        registerEmailerCapabilities(dispatcher, { emailer: dependencies.emailer });
+    }
     registerAccessCapabilities(dispatcher, dependencies, gateway);
 }
 
 export {
     registerAccessCapabilities,
     registerContentCapabilities,
+    registerEmailerCapabilities,
     registerFileCapabilities,
     registerInstallationCapabilities,
     registerSecretCapabilities,
 };
+export type { CmsEmailerDependencies } from "./emailer";
 export {
     CollectionSources,
     registerCollectionInstallationCapabilities,

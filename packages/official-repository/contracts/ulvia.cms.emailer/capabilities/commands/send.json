@@ -1,0 +1,50 @@
+{
+    "id": "emailer.send",
+    "description": "Deliver one fully composed outbound email through the configured transport.",
+    "access": "admin",
+    "behavior": { "effect": "command", "idempotency": "keyed", "execution": "sync" },
+    "input": {
+        "type": "object",
+        "properties": {
+            "toEmail": { "type": "string", "format": "email", "maxLength": 320 },
+            "toName": { "type": "string", "maxLength": 160 },
+            "subject": { "type": "string", "minLength": 1, "maxLength": 998 },
+            "text": { "type": "string", "minLength": 1, "maxLength": 1048576 },
+            "html": { "type": "string", "minLength": 1, "maxLength": 1048576 }
+        },
+        "required": ["toEmail", "subject", "text"]
+    },
+    "output": {
+        "type": "object",
+        "properties": { "sent": { "type": "boolean" } },
+        "required": ["sent"]
+    },
+    "errors": [
+        { "code": "INVALID_INPUT", "retryable": false },
+        { "code": "EMAIL_DISABLED", "retryable": false },
+        { "code": "CORE_UNAVAILABLE", "retryable": true }
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.secrets",
+            "versionRange": "^1.0.0",
+            "capabilityId": "secrets.get-metadata-by-name"
+        },
+        {
+            "contractId": "ulvia.cms.secrets",
+            "versionRange": "^1.0.0",
+            "capabilityId": "secrets.resolve"
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/send",
+        "input": { "body": true },
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "INVALID_INPUT": 422, "EMAIL_DISABLED": 409, "CORE_UNAVAILABLE": 503 }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "name": "@bernouy/cms-emailer",
+    "version": "0.1.0",
+    "description": "Provider-neutral outbound email delivery and secret-backed SMTP configuration.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./smtp": "./src/exports/smtp.ts"
+    },
+    "dependencies": {
+        "@bernouy/secret-store": "workspace:*",
+        "nodemailer": "^10.0.10"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

@@ -1,11 +1,6 @@
 import type { TPageRef } from "cms-content/pages/interfaces/pages";
 import type { ThemeSettings } from "cms-content/theme/interfaces/theme";
 
-type TEmailTemplate = {
-    subject: string;
-    html: string;
-};
-
 export type SiteOrganizationAddress = {
     streetAddress: string;
     postalCode: string;
@@ -83,29 +78,6 @@ export type TSystem = {
         connectExtras: string[];
         /** Extra origins for `media-src` (`<video>` / `<audio>`). */
         mediaExtras: string[];
-    };
-
-    /**
-     * Runtime outbound email configuration. The password is deliberately a
-     * secret reference, never a raw value stored in the system settings.
-     */
-    email: {
-        enabled: boolean;
-        fromEmail: string;
-        fromName: string;
-        replyTo: string;
-        transport: "smtp";
-        smtp: {
-            host: string;
-            port: number;
-            secure: boolean;
-            username: string;
-            passwordSecretRef: string;
-        };
-        templates: {
-            emailVerification: TEmailTemplate;
-            passwordReset: TEmailTemplate;
-        };
     };
 };
 

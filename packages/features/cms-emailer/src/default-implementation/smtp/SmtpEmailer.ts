@@ -1,7 +1,7 @@
-import type { AuthEmailRecipient, Emailer, OutboundEmail } from "cms-auth/email/interfaces/Emailer";
+import type { EmailRecipient, Emailer, OutboundEmail } from "cms-emailer/interfaces/Emailer";
 import { createTransport } from "nodemailer";
 
-export type SmtpEmailerConfig = {
+export type SmtpEmailerConfig = Readonly<{
     host: string;
     port: number;
     secure: boolean;
@@ -11,26 +11,23 @@ export type SmtpEmailerConfig = {
     fromName?: string;
     replyTo?: string;
     transportFactory?: SmtpTransportFactory;
-};
+}>;
 
-export type SmtpTransportConfig = {
+export type SmtpTransportConfig = Readonly<{
     host: string;
     port: number;
     secure: boolean;
-    auth: {
-        user: string;
-        pass: string;
-    };
-};
+    auth: Readonly<{ user: string; pass: string }>;
+}>;
 
-export type SmtpSendMailInput = {
+export type SmtpSendMailInput = Readonly<{
     from: string;
     to: string;
     subject: string;
     text: string;
     html?: string;
     replyTo?: string;
-};
+}>;
 
 export type SmtpTransport = {
     sendMail(input: SmtpSendMailInput): Promise<unknown>;
@@ -40,6 +37,10 @@ export type SmtpTransportFactory = (config: SmtpTransportConfig) => SmtpTranspor
 
 export class SmtpEmailer implements Emailer {
     constructor(private readonly config: SmtpEmailerConfig) {}
+
+    async isEnabled(): Promise<boolean> {
+        return true;
+    }
 
     async send(input: OutboundEmail): Promise<void> {
         const transport = await this.createTransport();
@@ -58,23 +59,15 @@ export class SmtpEmailer implements Emailer {
             host: this.config.host,
             port: this.config.port,
             secure: this.config.secure,
-            auth: {
-                user: this.config.username,
-                pass: this.config.password,
-            },
+            auth: { user: this.config.username, pass: this.config.password },
         };
-        if (this.config.transportFactory) {
-            return this.config.transportFactory(transportConfig);
-        }
-        return createNodemailerTransport(transportConfig);
+        return this.config.transportFactory
+            ? this.config.transportFactory(transportConfig)
+            : createTransport(transportConfig);
     }
 }
 
-function createNodemailerTransport(config: SmtpTransportConfig): SmtpTransport {
-    return createTransport(config);
-}
-
-function formatMailbox(input: AuthEmailRecipient): string {
+function formatMailbox(input: EmailRecipient): string {
     const name = input.displayName?.trim();
     if (!name) {
         return input.email;

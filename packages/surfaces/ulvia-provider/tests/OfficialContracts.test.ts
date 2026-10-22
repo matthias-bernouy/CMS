@@ -21,12 +21,14 @@ import { CmsSecrets } from "@bernouy/cms-secrets";
 import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { NOOP_LOGGER } from "@bernouy/logging";
+import { ConfiguredEmailer } from "@bernouy/cms-emailer/smtp";
 
 const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
     ["ulvia.cms.access", "list-users", "QUERY", "/list-users", {}],
     ["ulvia.cms.installations", "list-operations", "QUERY", "/operations", {}],
     ["ulvia.cms.content", "site.get", "GET", "/site", undefined],
+    ["ulvia.cms.emailer", "emailer.configuration.get", "GET", "/configuration", undefined],
     ["ulvia.cms.files", "namespace.create", "POST", "/namespaces", { name: "Test", defaultVisibility: "private" }],
     ["ulvia.cms.secrets", "namespace.create", "POST", "/namespaces", { name: "Test" }],
     ["ulvia.cms.installations", "list-provider-installations", "GET", "/list-provider-installations", undefined],
@@ -118,9 +120,10 @@ test("the official adapters implement the complete declared capability matrix", 
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const operations = new ProviderOperationExecutor(new MemoryProviderOperationStore());
     const secrets = new CmsSecrets(new InMemoryCmsSecretMetadataStore(), new InMemorySecretStore());
+    const emailer = new ConfiguredEmailer({ secrets: new InMemorySecretStore() });
     registerOfficialProviderCapabilities(
         dispatcher,
-        { ...({} as UlviaProviderDependencies), secrets },
+        { ...({} as UlviaProviderDependencies), emailer, secrets },
         undefined,
         operations,
         undefined,

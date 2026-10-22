@@ -3,7 +3,7 @@ import type {
     AuthEmailComposer,
     AuthEmailKind,
 } from "cms-auth/email/interfaces/AuthEmailComposer";
-import type { OutboundEmail } from "cms-auth/email/interfaces/Emailer";
+import type { OutboundEmail } from "@bernouy/cms-emailer";
 import { DefaultAuthEmailComposer } from "cms-auth/email/default-implementation/DefaultAuthEmailComposer";
 
 export type RuntimeAuthEmailTemplate = {

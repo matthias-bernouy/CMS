@@ -5,7 +5,6 @@ import type {
 } from "cms-content/settings/interfaces/settings";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { validateThemeSettings } from "cms-content/theme/core";
-import { validateEmailSettings } from "cms-content/settings/core/validation/email";
 import { validateSiteOrganizationPatch } from "cms-content/settings/core/validation/organization";
 import { validatePageReference } from "cms-content/pages/core/routing/values";
 
@@ -17,8 +16,7 @@ type SiteSettingsPatch = Omit<Partial<TSystem["site"]>, "organization"> & {
     organization?: SiteOrganizationPatch;
 };
 
-type SettingsPatch = Omit<Partial<TSystem>, "email" | "site"> & {
-    email?: Partial<TSystem["email"]>;
+type SettingsPatch = Omit<Partial<TSystem>, "site"> & {
     site?: SiteSettingsPatch;
 };
 
@@ -77,10 +75,6 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
             security.mediaExtras = validateOrigins("mediaExtras", security.mediaExtras);
         }
         normalized.security = security;
-    }
-
-    if (patch.email) {
-        normalized.email = validateEmailSettings(patch.email);
     }
 
     if (patch.theme) {

@@ -8,14 +8,12 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./management": "./src/exports/management.ts",
-        "./mongo": "./src/exports/mongo.ts",
-        "./smtp": "./src/exports/smtp.ts"
+        "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
+        "@bernouy/cms-emailer": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
-        "@bernouy/rate-limiter": "workspace:*",
-        "@bernouy/secret-store": "workspace:*",
-        "nodemailer": "^10.0.10"
+        "@bernouy/rate-limiter": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

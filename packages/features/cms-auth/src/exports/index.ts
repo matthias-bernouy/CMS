@@ -5,8 +5,8 @@
  * in-memory stores. Administrative mutations have an explicit ./management
  * entrypoint.
  *
- * Browser-safe helpers live under ./browser. Mongo and SMTP adapters live
- * under ./mongo and ./smtp for composition roots; neither is loaded here.
+ * Browser-safe helpers live under ./browser. Mongo adapters live under
+ * ./mongo for composition roots; they are not loaded here.
  */
 
 // ── Authentication ─────────────────────────────────────────────────────
@@ -65,11 +65,6 @@ export type {
     NewAuthToken,
 } from "cms-auth/tokens/one-time/interfaces/AuthTokenStore";
 export type {
-    Emailer,
-    AuthEmailRecipient,
-    OutboundEmail,
-} from "cms-auth/email/interfaces/Emailer";
-export type {
     AuthEmailComposer,
     AuthEmailKind,
     AuthEmailComposeInput,
@@ -80,8 +75,6 @@ export { InMemoryUsersRepository } from "cms-auth/accounts/default-implementatio
 export { InMemoryLocalCredentialStore } from "cms-auth/providers/default-implementation/memory/InMemoryLocalCredentialStore";
 export { InMemoryPatRepository } from "cms-auth/tokens/personal-access/default-implementation/memory/InMemoryPatRepository";
 export { InMemoryAuthTokenStore } from "cms-auth/tokens/one-time/default-implementation/memory/InMemoryAuthTokenStore";
-export { InMemoryEmailer } from "cms-auth/email/default-implementation/memory/InMemoryEmailer";
-export { ConsoleEmailer } from "cms-auth/email/default-implementation/ConsoleEmailer";
 export {
     TemplatedAuthEmailComposer,
     type RuntimeAuthEmailTemplate,

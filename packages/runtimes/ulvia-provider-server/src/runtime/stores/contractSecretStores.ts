@@ -1,5 +1,5 @@
 import { CmsSecretNamespaceStore, type CmsSecrets, type SecretNamespacePermission } from "@bernouy/cms-secrets";
-import { ValidatingSecretStore, type SecretReader, type SecretStore } from "@bernouy/secret-store";
+import { ValidatingSecretStore, type SecretStore } from "@bernouy/secret-store";
 
 type StoredNamespaceAuthority = Readonly<{
     namespaceId: string;
@@ -14,19 +14,18 @@ type NamespaceDefinition = Readonly<{
 }>;
 
 export type ContractSecretStores = Readonly<{
-    access: SecretReader;
+    emailer: SecretStore;
     files: SecretStore;
     installations: SecretStore;
 }>;
 
-const READ_PERMISSIONS = ["secrets.metadata.read", "secrets.resolve"] as const;
-const WRITE_PERMISSIONS = [...READ_PERMISSIONS, "secrets.write", "secrets.delete"] as const;
+const WRITE_PERMISSIONS = ["secrets.metadata.read", "secrets.resolve", "secrets.write", "secrets.delete"] as const;
 
 const DEFINITIONS = {
-    access: {
-        bootstrapKey: "CMS_SECRET_NAMESPACE_ACCESS",
-        name: "ulvia.cms.access",
-        permissions: READ_PERMISSIONS,
+    emailer: {
+        bootstrapKey: "CMS_SECRET_NAMESPACE_EMAILER",
+        name: "ulvia.cms.emailer",
+        permissions: WRITE_PERMISSIONS,
     },
     files: {
         bootstrapKey: "CMS_SECRET_NAMESPACE_FILES",

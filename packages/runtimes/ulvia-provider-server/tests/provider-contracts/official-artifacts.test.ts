@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
 import { loadOfficialArtifacts } from "../../src/runtime/instances/officialArtifacts";
@@ -50,10 +50,11 @@ async function repositoryFixture() {
     const entries: RepositoryArtifactEntry[] = [];
     const bytes = new Map<string, Uint8Array>();
     const contractDigests = new Map<string, string>();
+    const admissions = [];
     for (const path of index.contracts) {
         const source = await readFile(resolve(ROOT, path));
         const admission = await admitContractReleaseJson(source);
-        await catalogue.publish(admission);
+        admissions.push(admission);
         contractDigests.set(admission.release.contractId, admission.digest);
         entries.push({
             repositoryId: "official",
@@ -66,6 +67,7 @@ async function repositoryFixture() {
         });
         bytes.set(`contract:${admission.release.contractId}`, source);
     }
+    await publishContractSet(catalogue, admissions);
     const manifestBytes = await readFile(resolve(ROOT, index.provider));
     const manifest = await admitProviderManifestJson(manifestBytes, catalogue);
     entries.push({

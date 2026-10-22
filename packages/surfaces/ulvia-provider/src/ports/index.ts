@@ -21,6 +21,7 @@ import type {
 import type { ContractSelection, ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import type { FileReference, NamespaceRecord } from "@bernouy/cms-files";
 import type { CmsSecrets } from "@bernouy/cms-secrets";
+import type { Emailer, EmailerAdministration } from "@bernouy/cms-emailer";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { Logger } from "@bernouy/logging";
 
@@ -57,7 +58,10 @@ export interface CmsAccessDependencies {
 
 export type UlviaProviderDependencies = CmsContentDependencies &
     CmsCollectionDependencies &
-    CmsAccessDependencies & { readonly secrets?: CmsSecrets };
+    CmsAccessDependencies & {
+        readonly emailer?: Emailer & EmailerAdministration;
+        readonly secrets?: CmsSecrets;
+    };
 
 type UlviaProviderAdministratorState = Readonly<{
     sub: string;

@@ -15,6 +15,7 @@
         { "path": "../../foundation/rate-limiter" },
         { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-content" },
+        { "path": "../../features/cms-emailer" },
         { "path": "../../features/cms-files" },
         { "path": "../../features/cms-gateway" },
         { "path": "../../features/cms-repository" },

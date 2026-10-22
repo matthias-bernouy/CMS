@@ -41,7 +41,8 @@ already been published to a registry.
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues, authored collection admission, content projections, migrations and the explicit collection build toolchain. |
 | `@bernouy/cms-gateway` | Authorized provider-neutral capability invocation, identities and streaming binary transport. |
 | `@bernouy/cms-secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
-| `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, signed session tokens, account lifecycle and email composition. It exposes no HTTP routes. |
+| `@bernouy/cms-emailer` | Outbound email delivery, secret-backed delivery configuration and the official SMTP implementation. |
+| `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, signed session tokens, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
 Collection Pages are admitted resources. The Kernel mounts their shared route
 registry, rendering and revisioned execution-plan activation alongside
@@ -52,10 +53,10 @@ Collection Bloc compilation is available only through the explicit
 source serialization remains in `cms-content` because it publishes mutable CMS
 content rather than an immutable collection release.
 
-The old `cms-sources`, `cms-source-images`, `cms-identities` and `cms-secrets`
-packages are absent. Provider invocation and identities belong to Gateway;
-file and image semantics belong to Files providers; generic binary inspection,
-blob storage, secret storage and image processing belong to Foundation.
+The old `cms-sources`, `cms-source-images` and `cms-identities` packages are
+absent. Provider invocation and identities belong to Gateway; file and image
+semantics belong to Files providers; generic binary inspection, encrypted value
+storage and image processing belong to Foundation.
 Declarative reads use `cms-query`; native form commands use `cms-mutation`.
 The removed `cms-source` transport grammar is not accepted.
 

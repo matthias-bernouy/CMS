@@ -7,7 +7,6 @@ describe("public site organization", () => {
         const publicOrganization = projectPublicSiteOrganization(settings);
 
         expect(publicOrganization).toEqual(settings.site.organization);
-        expect(JSON.stringify(publicOrganization)).not.toContain("SMTP_PASSWORD");
         expect(JSON.stringify(publicOrganization)).not.toContain("private-api.example.com");
     });
 
@@ -37,7 +36,6 @@ function organizationSettings(): TSystem {
         },
         sameAs: ["https://social.example.com/example"],
     };
-    settings.email.smtp.passwordSecretRef = "SMTP_PASSWORD";
     settings.security.connectExtras = ["https://private-api.example.com"];
     return settings;
 }

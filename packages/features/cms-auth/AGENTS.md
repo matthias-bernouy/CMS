@@ -10,7 +10,7 @@ signed session tokens, public account flows, and membership stores.
 - `sessions/`: signed session-token issuance and verification. Cookie policy
   belongs to the Kernel boundary that applies a validated session effect.
 - `tokens/`: separate personal-access and one-time token contracts and stores.
-- `email/`: transport-neutral composition/errors and optional SMTP delivery.
+- `email/`: authentication-owned verification and password-reset composition.
 - `application/`: cross-domain account/public flows and credential resolution.
   It receives runtime-selected stores and exposes no routes.
 - `exports/`: curated package entrypoints. Tests follow the same domain grouping.
@@ -26,9 +26,9 @@ the exact same operation.
   in-memory stores and public account action composition. Management mutations
   use `@bernouy/cms-auth/management`.
 - `@bernouy/cms-auth/mongo` exposes Mongo repositories for composition roots.
-- `@bernouy/cms-auth/smtp` exposes SMTP/configured email delivery for runtime
-  composition roots only.
-- This package may depend on `@bernouy/secret-store`,
+- Outbound delivery belongs to `@bernouy/cms-emailer`; this package authors
+  authentication messages through its published `Emailer` port.
+- This package may depend on `@bernouy/cms-emailer`,
   `@bernouy/envelope-crypto`, and `@bernouy/rate-limiter`; it must not import
   HTTP runners, surfaces or runtimes.
 

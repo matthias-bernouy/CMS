@@ -86,14 +86,16 @@ served independently by `official-repository-server`. See
 ### Authentication
 
 `cms-auth` groups accounts, local credential proof, signed session tokens,
-personal access tokens, one-time tokens, email and account-lifecycle
-composition. The Provider runtime builds these operations and exposes them
-through the required `ulvia.cms.access` contract. The Kernel owns no auth
-capabilities or auth persistence: it resolves one request actor through Access
-and applies validated semantic session effects.
+personal access tokens, one-time tokens, authentication email composition and
+account-lifecycle operations. The Provider runtime exposes them through the
+required `ulvia.cms.access` contract. Access delegates delivery to the selected
+`ulvia.cms.emailer` implementation; Emailer owns transport configuration and
+stores it inside its isolated `ulvia.cms.secrets` namespace. The Kernel owns no
+auth capabilities or auth persistence: it resolves one request actor through
+Access and applies validated semantic session effects.
 
-Mongo and SMTP adapters are explicit runtime imports. Secret storage is generic infrastructure in
-`@bernouy/secret-store` under Foundation.
+Mongo and SMTP adapters are explicit runtime imports. The generic encrypted
+value store remains Foundation infrastructure behind `cms-secrets`.
 
 ## Surface And Runtime Composition
 

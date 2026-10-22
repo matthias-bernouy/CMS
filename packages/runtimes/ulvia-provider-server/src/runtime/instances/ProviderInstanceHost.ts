@@ -193,6 +193,7 @@ export class ProviderInstanceHost {
                 dispatcher,
                 {
                     ...stores,
+                    emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
                     resolvePageRoute: (path: string) => stores.pageRoutes.resolve(gateway.siteId, path),
                     sitemapStore: stores.sitemapStore,

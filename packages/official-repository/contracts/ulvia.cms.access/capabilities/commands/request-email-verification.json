@@ -14,6 +14,13 @@
         "required": ["sent"]
     },
     "errors": [{ "code": "INVALID_INPUT", "retryable": false }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.emailer",
+            "versionRange": "^1.0.0",
+            "capabilityId": "emailer.send"
+        }
+    ],
     "binding": {
         "transport": "http",
         "method": "POST",

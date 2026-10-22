@@ -1,9 +1,4 @@
-export type EmailConfigurationErrorCode =
-    | "disabled"
-    | "invalid_configuration"
-    | "unsupported_transport"
-    | "invalid_secret_reference"
-    | "missing_secret";
+export type EmailConfigurationErrorCode = "disabled" | "invalid_configuration";
 
 export class EmailConfigurationError extends Error {
     constructor(

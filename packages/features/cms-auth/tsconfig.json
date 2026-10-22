@@ -10,10 +10,10 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
+        { "path": "../cms-emailer" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../foundation/logging" },
         { "path": "../../foundation/envelope-crypto" },
-        { "path": "../../foundation/rate-limiter" },
-        { "path": "../../foundation/secret-store" }
+        { "path": "../../foundation/rate-limiter" }
     ]
 }

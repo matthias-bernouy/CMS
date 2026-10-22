@@ -31,18 +31,12 @@
         {
             "contractId": "ulvia.cms.access",
             "version": "1.0.0",
-            "digest": "sha256:4e08148852f667c662ee768388017a4d05c750384ab5c12c1b78a95e95e64b46",
+            "digest": "sha256:adf1117612ed250c03fabf00ef6ce8cf8b05d9e8893a8f172daedd0dd8ee4fd0",
             "requires": [
                 {
-                    "contractId": "ulvia.cms.secrets",
+                    "contractId": "ulvia.cms.emailer",
                     "versionRange": "^1.0.0",
-                    "capabilityId": "secrets.get-metadata-by-name",
-                    "optional": false
-                },
-                {
-                    "contractId": "ulvia.cms.secrets",
-                    "versionRange": "^1.0.0",
-                    "capabilityId": "secrets.resolve",
+                    "capabilityId": "emailer.send",
                     "optional": false
                 }
             ]
@@ -89,6 +83,37 @@
             "version": "1.0.0",
             "digest": "sha256:4df6e5212be76033c6e788cb6c79f54d828278951115ced96698caccc32f5edb",
             "requires": []
+        },
+        {
+            "contractId": "ulvia.cms.emailer",
+            "version": "1.0.0",
+            "digest": "sha256:651013318b33ef410f4b8ba036668a0f128acaef223aa1dd03ea31288205336c",
+            "requires": [
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.get-metadata-by-name",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.resolve",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.create",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.rotate",
+                    "optional": false
+                }
+            ]
         },
         {
             "contractId": "ulvia.cms.files",

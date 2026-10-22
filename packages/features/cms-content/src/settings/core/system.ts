@@ -20,29 +20,7 @@ export function defaultSystem(): TSystem {
         },
         theme: defaultThemeSettings(),
         security: { connectExtras: [], mediaExtras: [] },
-        email: {
-            enabled: false,
-            fromEmail: "",
-            fromName: "",
-            replyTo: "",
-            transport: "smtp",
-            smtp: {
-                host: "",
-                port: 587,
-                secure: false,
-                username: "",
-                passwordSecretRef: "",
-            },
-            templates: {
-                emailVerification: emptyEmailTemplate(),
-                passwordReset: emptyEmailTemplate(),
-            },
-        },
     };
-}
-
-function emptyEmailTemplate() {
-    return { subject: "", html: "" };
 }
 
 function emptySiteOrganization(): TSystem["site"]["organization"] {
@@ -96,28 +74,6 @@ export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): T
             merged.site.activeLanguages = (merged.site.activeLanguages ?? []).filter((language) =>
                 selected.has(language.toLowerCase()),
             );
-        } else if (section === "email" && typeof value === "object" && value !== null) {
-            const email = value as Partial<TSystem["email"]>;
-            const currentEmail = current.email ?? defaultSystem().email;
-            const currentTemplates = currentEmail.templates ?? defaultSystem().email.templates;
-            merged.email = {
-                ...currentEmail,
-                ...email,
-                smtp: {
-                    ...currentEmail.smtp,
-                    ...(email.smtp ?? {}),
-                },
-                templates: {
-                    emailVerification: {
-                        ...currentTemplates.emailVerification,
-                        ...(email.templates?.emailVerification ?? {}),
-                    },
-                    passwordReset: {
-                        ...currentTemplates.passwordReset,
-                        ...(email.templates?.passwordReset ?? {}),
-                    },
-                },
-            };
         } else if (typeof value === "object" && value !== null) {
             (merged as any)[section] = {
                 ...(current as any)[section],

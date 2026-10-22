@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
     InMemoryAuthTokenStore,
-    InMemoryEmailer,
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
     signupLocalUser,
     type PublicAuthFlowConfig,
 } from "@bernouy/cms-auth";
+import { InMemoryEmailer } from "@bernouy/cms-emailer";
 import { prepareSignupLocalUser } from "cms-auth/application/core/public-flows/flows";
 
 describe("signup activation", () => {

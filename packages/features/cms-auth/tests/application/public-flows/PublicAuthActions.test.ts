@@ -2,10 +2,10 @@ import { expect, test } from "bun:test";
 import {
     createPublicAuthActions,
     InMemoryAuthTokenStore,
-    InMemoryEmailer,
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
 } from "@bernouy/cms-auth";
+import { InMemoryEmailer } from "@bernouy/cms-emailer";
 
 test("public auth exposes only account lifecycle operations used by Access", () => {
     const config = {

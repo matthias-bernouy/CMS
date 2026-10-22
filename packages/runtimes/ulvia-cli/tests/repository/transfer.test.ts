@@ -5,7 +5,9 @@ import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { startLocalRepository } from "../../src/runtime/repository";
+import { prepareContractSource } from "../../src/release/authored/contract";
 import { NOOP_LOGGER } from "@bernouy/logging";
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 
 test("CLI push and pull preserve every official artifact kind through a remote repository", async () => {
     const sourceData = await mkdtemp(join(tmpdir(), "ulvia-push-source-"));
@@ -18,7 +20,10 @@ test("CLI push and pull preserve every official artifact kind through a remote r
     const providerDefinition = (await Bun.file(join(providerDirectory, "definition.json")).json()) as {
         implementations: Array<{ contractId: string }>;
     };
-    const contractIds = providerDefinition.implementations.map(({ contractId }) => contractId);
+    const contractIds = await publicationOrder(
+        repositoryRoot,
+        providerDefinition.implementations.map(({ contractId }) => contractId),
+    );
     const environment = (data: string, writable: boolean) => ({
         ULVIA_DATA_DIR: data,
         ULVIA_REPOSITORY_URL: server.url,
@@ -117,4 +122,15 @@ test("CLI push and pull preserve every official artifact kind through a remote r
 
 async function definitionVersion(directory: string): Promise<string> {
     return ((await Bun.file(join(directory, "definition.json")).json()) as { version: string }).version;
+}
+
+async function publicationOrder(repositoryRoot: string, contractIds: readonly string[]): Promise<readonly string[]> {
+    const admissions = await Promise.all(
+        contractIds.map(async (contractId) => {
+            const directory = join(repositoryRoot, "contracts", contractId);
+            return (await prepareContractSource(directory)).admission;
+        }),
+    );
+    const ordered = await publishContractSet(new InMemoryReleaseCatalogue(), admissions);
+    return ordered.map(({ release }) => release.contractId);
 }

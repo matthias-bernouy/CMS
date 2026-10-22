@@ -3,11 +3,11 @@ import {
     confirmEmailVerification,
     confirmPasswordReset,
     InMemoryAuthTokenStore,
-    InMemoryEmailer,
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
     type PublicAuthFlowConfig,
 } from "@bernouy/cms-auth";
+import { InMemoryEmailer } from "@bernouy/cms-emailer";
 
 describe("public auth mutation failure boundaries", () => {
     test("allows email verification to retry after the credential write fails", async () => {

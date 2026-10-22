@@ -26,6 +26,9 @@
             "path": "packages/features/cms-auth"
         },
         {
+            "path": "packages/features/cms-emailer"
+        },
+        {
             "path": "packages/foundation/secret-store"
         },
         {
