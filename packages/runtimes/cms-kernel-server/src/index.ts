@@ -6,6 +6,7 @@ import { ProviderKernelClient } from "./runtime/provider/ProviderKernelClient";
 import { ProviderKernelTransport } from "./runtime/provider/ProviderKernelTransport";
 import { readRuntimeEnv } from "./runtimeEnv";
 import { createKernelLogger } from "./runtime/logger";
+import { GatewayContentClient } from "./runtime/content/GatewayContentClient";
 
 const logger = createKernelLogger(process.env);
 try {
@@ -23,8 +24,9 @@ async function startKernel(): Promise<void> {
     );
     await fetchInstallationsProviderReport(transport);
     const gateway = createKernelGateway(new ControlProviderClient(transport));
+    const content = new GatewayContentClient(gateway.invoker, logger);
     const provider = new ProviderKernelClient(transport, logger);
-    const kernel = await mountProductionKernel({ env, provider, gateway, logger });
+    const kernel = await mountProductionKernel({ env, provider, content, gateway, logger });
 
     let stopping = false;
     const shutdown = async (signal: string) => {

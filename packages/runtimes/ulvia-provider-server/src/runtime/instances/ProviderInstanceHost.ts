@@ -202,6 +202,7 @@ export class ProviderInstanceHost {
                 {
                     ...stores,
                     secrets: stores.cmsSecrets,
+                    resolvePageRoute: (path: string) => stores.pageRoutes.resolve(gateway.siteId, path),
                     authentication: authentication.auth,
                     accountLifecycle: authentication.accountLifecycle,
                 },

@@ -1,0 +1,16 @@
+{
+    "id": "read-delivery-revision",
+    "description": "Verify that the CMS surface can read a Content delivery projection through its selected Provider.",
+    "calls": [
+        {
+            "id": "read",
+            "capabilityId": "delivery.read",
+            "actor": { "kind": "admin" },
+            "input": { "operation": "content.revision" },
+            "expect": {
+                "kind": "success",
+                "checks": [{ "path": "/chunks", "present": true }]
+            }
+        }
+    ]
+}

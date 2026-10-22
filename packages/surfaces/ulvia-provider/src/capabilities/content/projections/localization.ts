@@ -1,5 +1,5 @@
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
-import type { CmsContentDependencies } from "../../ports";
+import type { CmsContentDependencies } from "../../../ports";
 
 type CollectionInstallation = Awaited<
     ReturnType<CmsContentDependencies["collections"]["snapshot"]>

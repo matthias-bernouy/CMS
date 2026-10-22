@@ -3,7 +3,7 @@ import { composeCollectionThemes } from "@bernouy/cms-repository/collections/con
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { CmsContentDependencies } from "../../ports";
 import { configurationCommand, optionalText, requiredText, revision } from "./support";
-import { projectThemeWorkspace } from "./themeProjection";
+import { projectThemeWorkspace } from "./projections/theme";
 
 export function registerThemeCapabilities(
     dispatcher: ProviderCapabilityRegistry,

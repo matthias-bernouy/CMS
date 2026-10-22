@@ -43,9 +43,13 @@ describe("production Kernel mounting", () => {
                 CMS_INSTALLATIONS_PROVIDER_TOKEN: "opaque-ulvia-instance-token",
             },
             provider: {
-                content: token("content"),
                 collectionAsset: async () => new Response(),
                 sitemap: async () => new Response(),
+            },
+            content: {
+                content: token("content"),
+                editorialPages: token("editorial-pages"),
+                collectionAssets: token("collection-assets"),
             },
             gateway: {
                 invoker: token("invoker"),
@@ -60,7 +64,9 @@ describe("production Kernel mounting", () => {
         expect(events.slice(0, 3)).toEqual(["runner", "kernel", 'start:{"port":3100,"hostname":"127.0.0.1"}']);
 
         expect(kernelConfig).toMatchObject({
-            content: options.provider.content,
+            content: options.content.content,
+            editorialPages: options.content.editorialPages,
+            collectionAssets: options.content.collectionAssets,
             runner: expect.any(FakeRunner),
             resolveActor: expect.any(Function),
             sessionCookie: { secure: true },

@@ -4,6 +4,7 @@ import { registerLocalizationCapabilities } from "./localization";
 import { registerPageCapabilities } from "./pages";
 import { registerSiteCapabilities } from "./site";
 import { registerThemeCapabilities } from "./theme";
+import { registerContentDeliveryCapabilities } from "./delivery";
 
 export function registerContentCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -13,4 +14,5 @@ export function registerContentCapabilities(
     registerPageCapabilities(dispatcher, dependencies);
     registerLocalizationCapabilities(dispatcher, dependencies);
     registerThemeCapabilities(dispatcher, dependencies);
+    registerContentDeliveryCapabilities(dispatcher, dependencies);
 }

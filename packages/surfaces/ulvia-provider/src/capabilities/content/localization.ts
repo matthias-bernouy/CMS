@@ -1,7 +1,7 @@
 import { readSystemSnapshot } from "@bernouy/cms-content";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { CmsContentDependencies } from "../../ports";
-import { projectTextCatalogue } from "./localizationProjection";
+import { projectTextCatalogue } from "./projections/localization";
 import { configurationCommand, language, languages, optionalText, requiredText, revision } from "./support";
 
 export function registerLocalizationCapabilities(

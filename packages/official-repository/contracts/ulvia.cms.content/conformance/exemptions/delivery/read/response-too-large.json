@@ -1,0 +1,5 @@
+{
+    "capabilityId": "delivery.read",
+    "errorCode": "RESPONSE_TOO_LARGE",
+    "reason": "A portable suite cannot require a disposable tenant to exceed the bounded Gateway response envelope."
+}
