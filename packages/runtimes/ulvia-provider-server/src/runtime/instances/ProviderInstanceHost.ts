@@ -1,6 +1,5 @@
 import { join } from "node:path";
 import { mkdir } from "node:fs/promises";
-import { createContentReader } from "@bernouy/cms-content/rendering";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
@@ -22,7 +21,6 @@ import type { ProviderRuntimeEnv } from "../../runtimeEnv";
 import type { EncryptedInstanceCredentials } from "../authentication/EncryptedInstanceCredentials";
 import { createProviderGateway } from "../gateway/createProviderGateway";
 import { createProtectedProviderManagement } from "../gateway/protectedManagement";
-import { createInstanceKernelApi } from "../kernel/InstanceKernelApi";
 import { MongoProviderOperationStore } from "../provider-operations/MongoProviderOperationStore";
 import { RecoverySupervisor } from "../recovery/RecoverySupervisor";
 import { createProviderStores, type ProviderStores } from "../stores/providerStores";
@@ -87,12 +85,6 @@ export class ProviderInstanceHost {
             resource: {
                 ...lease.resource.runtime,
                 report: providerReport(instance, this.requiredProfile(instance.profile.id, instance.profile.version)),
-                instance: {
-                    id: instance.id,
-                    status: instance.status,
-                    revision: instance.revision,
-                    profile: instance.profile,
-                },
             },
             release: lease.release,
         };
@@ -203,6 +195,8 @@ export class ProviderInstanceHost {
                     ...stores,
                     secrets: stores.cmsSecrets,
                     resolvePageRoute: (path: string) => stores.pageRoutes.resolve(gateway.siteId, path),
+                    sitemapStore: stores.sitemapStore,
+                    logger: this.logger.child({ instanceId: instance.id, component: "content-delivery" }),
                     authentication: authentication.auth,
                     accountLifecycle: authentication.accountLifecycle,
                 },
@@ -222,13 +216,6 @@ export class ProviderInstanceHost {
             );
             await operationRecovery.start(false);
             const activeRecovery = operationRecovery;
-            const content = createContentReader(stores.repo, {
-                resolvePageRoute: (path) => stores.pageRoutes.resolve(gateway.siteId, path),
-            });
-            const kernel = await createInstanceKernelApi(
-                { stores, gateway },
-                this.logger.child({ instanceId: instance.id }),
-            );
             return {
                 stores,
                 gateway,
@@ -246,14 +233,6 @@ export class ProviderInstanceHost {
                     siteId: SITE_ID,
                     report,
                     dispatcher,
-                    instance: {
-                        id: instance.id,
-                        status: instance.status,
-                        revision: instance.revision,
-                        profile: instance.profile,
-                    },
-                    contentRevision: async () => (await content.getContentRevision?.()) ?? instance.revision,
-                    kernel,
                 },
             };
         } catch (error) {

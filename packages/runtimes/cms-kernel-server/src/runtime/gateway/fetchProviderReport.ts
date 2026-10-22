@@ -2,7 +2,7 @@ import {
     parseProviderRuntimeReportJson,
     type ProviderRuntimeReport,
 } from "@bernouy/cms-repository/providers/installations";
-import type { ProviderKernelTransport } from "../provider/ProviderKernelTransport";
+import type { InstallationsProviderTransport } from "./InstallationsProviderTransport";
 
 const INSTALLATIONS_CONTRACT = {
     contractId: "ulvia.cms.installations",
@@ -12,7 +12,7 @@ const INSTALLATIONS_CONTRACT = {
 
 /** Validates the stable public Provider report before the Kernel accepts its control capabilities. */
 export async function fetchInstallationsProviderReport(
-    transport: ProviderKernelTransport,
+    transport: InstallationsProviderTransport,
 ): Promise<ProviderRuntimeReport> {
     const response = await transport.request("/ulvia/report", {
         method: "GET",

@@ -1,0 +1,5 @@
+{
+    "capabilityId": "delivery.sitemap",
+    "errorCode": "NOT_FOUND",
+    "reason": "Immutable sitemap chunk identities exist only after provider-specific snapshot materialization."
+}

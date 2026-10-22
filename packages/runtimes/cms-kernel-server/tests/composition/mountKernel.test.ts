@@ -42,14 +42,11 @@ describe("production Kernel mounting", () => {
                 CMS_INSTALLATIONS_PROVIDER_URL: "https://provider.example.test",
                 CMS_INSTALLATIONS_PROVIDER_TOKEN: "opaque-ulvia-instance-token",
             },
-            provider: {
-                collectionAsset: async () => new Response(),
-                sitemap: async () => new Response(),
-            },
             content: {
                 content: token("content"),
                 editorialPages: token("editorial-pages"),
                 collectionAssets: token("collection-assets"),
+                sitemap: async () => new Response(),
             },
             gateway: {
                 invoker: token("invoker"),

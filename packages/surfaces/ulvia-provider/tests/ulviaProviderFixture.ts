@@ -7,7 +7,6 @@ import type {
     UlviaProviderInstanceRuntime,
     UlviaProviderOptions,
 } from "@bernouy/ulvia-provider";
-import type { KernelInstanceApi } from "@bernouy/ulvia-provider/kernel";
 
 export const PROVIDER_TOKEN = "ulvia-provider-token-that-is-long-enough";
 export const PROVIDER_INSTANCE_ID = "instance:fixture-a";
@@ -20,21 +19,12 @@ export function providerOptions(
     contracts: readonly Awaited<ReturnType<typeof contractRelease>>[],
     dispatcher: DefaultProviderCapabilityDispatcher,
     instanceId = PROVIDER_INSTANCE_ID,
-    kernelOverrides: Partial<KernelInstanceApi> = {},
     logger: Logger = NOOP_LOGGER,
 ): UlviaProviderOptions {
     const runtime: UlviaProviderInstanceRuntime = {
         siteId: "default",
         report: { ...providerReport(...contracts), instanceId },
         dispatcher,
-        instance: {
-            id: instanceId,
-            status: "ready",
-            revision: 1,
-            profile: { id: "ulvia.official", version: "1.0.0" },
-        },
-        contentRevision: async () => 1,
-        kernel: kernelApi(kernelOverrides),
     };
     return {
         contracts: contracts.map(({ release }) => release),
@@ -51,18 +41,6 @@ export function providerOptions(
                 return null;
             }
         },
-    };
-}
-
-function kernelApi(overrides: Partial<KernelInstanceApi>): KernelInstanceApi {
-    return {
-        query: async () => null,
-        handleCapability: async () => new Response(null, { status: 404 }),
-        handleMutation: async () => new Response(null, { status: 404 }),
-        handleQuery: async () => new Response(null, { status: 404 }),
-        handleCollectionAsset: async () => new Response(null, { status: 404 }),
-        handleSitemap: async () => new Response(null, { status: 404 }),
-        ...overrides,
     };
 }
 

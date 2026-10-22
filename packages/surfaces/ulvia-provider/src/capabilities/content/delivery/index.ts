@@ -1,6 +1,7 @@
 import { createContentReader, type ContentReader, type RenderablePage } from "@bernouy/cms-content/rendering";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import type { CmsContentDependencies } from "../../../ports";
+import { registerContentResourceCapabilities } from "./resources";
 
 const CHUNK_LENGTH = 1024 * 1024;
 const MAX_CHUNKS = 7;
@@ -19,6 +20,7 @@ export function registerContentDeliveryCapabilities(
         const value = await executeDeliveryRead(operation, input, content, dependencies);
         return encodeDeliveryValue(value);
     });
+    registerContentResourceCapabilities(dispatcher, dependencies, content);
 }
 
 async function executeDeliveryRead(

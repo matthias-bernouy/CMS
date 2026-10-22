@@ -50,21 +50,6 @@ test("mounts and dispatches every official CMS contract release", async () => {
         siteId: "site-a",
         dispatcher,
         report: report(contracts),
-        instance: {
-            id: "instance:contract-matrix",
-            status: "ready" as const,
-            revision: 1,
-            profile: { id: "ulvia.official", version: "1.0.0" },
-        },
-        contentRevision: async () => 1,
-        kernel: {
-            query: async () => null,
-            handleCapability: async () => new Response(null, { status: 404 }),
-            handleMutation: async () => new Response(null, { status: 404 }),
-            handleQuery: async () => new Response(null, { status: 404 }),
-            handleCollectionAsset: async () => new Response(null, { status: 404 }),
-            handleSitemap: async () => new Response(null, { status: 404 }),
-        },
     };
     new UlviaProvider(runner, {
         contracts: contracts.map(({ release }) => release),

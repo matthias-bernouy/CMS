@@ -9,8 +9,8 @@ Production runtime composition root.
   exposed by the independently running installations Provider.
 - Compose the provider-neutral Gateway locally from remote route, identity,
   audit and invocation-token capabilities.
-- Project the remaining Provider-owned content reads, collection assets and
-  sitemap resources into the Kernel.
+- Resolve Content reads, collection assets and sitemap resources through the
+  selected `ulvia.cms.content` capabilities.
 - Instantiate only the stateless Kernel HTTP composition.
 - Refuse to start unless the Provider instance and official resources were provisioned beforehand.
 

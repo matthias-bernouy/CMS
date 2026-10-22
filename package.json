@@ -36,7 +36,6 @@
     },
     "devDependencies": {
         "@bernouy/binary-media": "workspace:*",
-        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",

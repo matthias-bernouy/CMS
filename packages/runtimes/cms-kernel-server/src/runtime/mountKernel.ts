@@ -1,7 +1,6 @@
 import type { RuntimeEnv } from "../runtimeEnv";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { PRODUCTION_KERNEL_RUNTIME, type ProductionKernelRuntime } from "./kernelRuntime";
-import type { ProviderKernelClient } from "./provider/ProviderKernelClient";
 import type { Logger } from "@bernouy/logging";
 import type { createKernelGateway } from "./gateway/createKernelGateway";
 import type { GatewayContentClient } from "./content/GatewayContentClient";
@@ -14,7 +13,6 @@ export type ProductionKernelHandle = {
 
 type MountOptions = {
     env: RuntimeEnv;
-    provider: ProviderKernelClient;
     content: GatewayContentClient;
     gateway: ReturnType<typeof createKernelGateway>;
     logger: Logger;
@@ -24,7 +22,7 @@ export async function mountProductionKernel(
     options: MountOptions,
     runtime: ProductionKernelRuntime = PRODUCTION_KERNEL_RUNTIME,
 ): Promise<ProductionKernelHandle> {
-    const { env, provider, content, gateway, logger } = options;
+    const { env, content, gateway, logger } = options;
     const runner = new runtime.Runner({ logger });
     new runtime.Kernel({
         runner,
@@ -40,10 +38,9 @@ export async function mountProductionKernel(
             resolveCapability: gateway.resolveCapability,
         },
         pageCapabilities: gateway.pageCapabilities,
-        collectionAssetHandler: provider.collectionAsset,
         collectionAssets: content.collectionAssets,
-        sitemapHandler: provider.sitemap,
-        sitemapChunkHandler: provider.sitemap,
+        sitemapHandler: content.sitemap.bind(content),
+        sitemapChunkHandler: content.sitemap.bind(content),
         logger,
     });
     runner.start({ port: env.KERNEL_PORT, hostname: env.KERNEL_HOST });

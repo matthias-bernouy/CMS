@@ -1,5 +1,5 @@
 import type { GatewayCommandAuditEvent } from "@bernouy/cms-gateway/audit";
-import type { ProviderKernelTransport } from "../provider/ProviderKernelTransport";
+import type { InstallationsProviderTransport } from "./InstallationsProviderTransport";
 
 const CONTROL_CONTRACT_ID = "ulvia.cms.installations";
 const CONTROL_CONTRACT_VERSION = "1.0.0";
@@ -11,7 +11,7 @@ export type IssuedProviderInvocation = Readonly<{
 }>;
 
 export class ControlProviderClient {
-    constructor(private readonly transport: ProviderKernelTransport) {}
+    constructor(private readonly transport: InstallationsProviderTransport) {}
 
     async getGatewayRoute(contractId: string): Promise<string | null> {
         const response = await this.invoke("gateway.route.get", "QUERY", "/gateway/route", { contractId }, true);

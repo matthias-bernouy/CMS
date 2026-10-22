@@ -70,7 +70,7 @@ and serves admitted copies from a separate persistent volume.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/ulvia-provider` | Authenticated provider report, versioned private Kernel protocol, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous operation execution for admitted `ulvia.cms.*` contracts. |
+| `@bernouy/ulvia-provider` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous operation execution for admitted `ulvia.cms.*` contracts. |
 | `@bernouy/cms-kernel` | Stateless HTTP mounting and Page presentation for site and contributed Pages, request-actor resolution and injected feature handlers. |
 | `@bernouy/cms-kernel-server` | Stateless HTTP composition for one pre-provisioned instance, connected only by Provider URL and opaque instance access token. |
 | `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, instance-scoped persistence/auth/gateway/files, exact profile transitions and recovery, operator API and Ulvia Provider listener. |

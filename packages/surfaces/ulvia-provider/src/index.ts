@@ -24,6 +24,7 @@ export {
     type ProviderCapabilityHandler,
     type ProviderCapabilityInvocationContext,
     type ProviderCapabilityRegistry,
+    type ProviderBinaryResult,
 } from "./dispatch/registry";
 export { ProviderOperationExecutor } from "./operations/ProviderOperationExecutor";
 export { MemoryProviderOperationStore } from "./operations/MemoryProviderOperationStore";

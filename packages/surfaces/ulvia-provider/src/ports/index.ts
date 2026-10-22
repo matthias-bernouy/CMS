@@ -21,11 +21,15 @@ import type {
 import type { ContractSelection, ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import type { FileReference, NamespaceRecord } from "@bernouy/cms-files";
 import type { CmsSecrets } from "@bernouy/cms-secrets";
+import type { BlobStore } from "@bernouy/blob-store";
+import type { Logger } from "@bernouy/logging";
 
 export interface CmsContentDependencies {
     readonly repo: CmsRepository;
     readonly collections: CollectionStore;
     readonly resolvePageRoute?: (path: string) => Promise<RegisteredPageRoute | null>;
+    readonly sitemapStore?: BlobStore;
+    readonly logger?: Logger;
 }
 
 export interface CmsCollectionDependencies {

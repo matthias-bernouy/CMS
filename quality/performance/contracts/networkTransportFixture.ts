@@ -10,7 +10,7 @@ import {
     UlviaProvider,
     type UlviaProviderInstanceRuntime,
 } from "@bernouy/ulvia-provider";
-import type { KernelInstanceApi } from "@bernouy/ulvia-provider/kernel";
+import { NOOP_LOGGER } from "@bernouy/logging";
 import {
     NETWORK_INSTANCE_ID,
     NETWORK_SITE_ID,
@@ -83,17 +83,10 @@ function providerOptions(admission: AdmittedContractRelease, dispatcher: Default
         siteId: NETWORK_SITE_ID,
         report: runtimeReport(admission, `sha256:${"0".repeat(64)}`),
         dispatcher,
-        instance: {
-            id: NETWORK_INSTANCE_ID,
-            status: "ready",
-            revision: 1,
-            profile: { id: "ulvia.official", version: "1.0.0" },
-        },
-        contentRevision: async () => 1,
-        kernel: emptyKernel(),
     };
     return {
         contracts: [admission.release],
+        logger: NOOP_LOGGER,
         authenticateControlToken: async (token: string) =>
             token === NETWORK_TOKEN ? { resource: runtime, release: () => undefined } : null,
         authenticateInvocationToken: async (token: string) => {
@@ -106,17 +99,5 @@ function providerOptions(admission: AdmittedContractRelease, dispatcher: Default
                 return null;
             }
         },
-    };
-}
-
-function emptyKernel(): KernelInstanceApi {
-    const notFound = async () => new Response(null, { status: 404 });
-    return {
-        query: async () => null,
-        handleAuth: notFound,
-        handleCapability: notFound,
-        handleQuery: notFound,
-        handleCollectionAsset: notFound,
-        handleSitemap: notFound,
     };
 }

@@ -2,8 +2,7 @@ import { mountProductionKernel } from "./runtime/mountKernel";
 import { ControlProviderClient } from "./runtime/gateway/ControlProviderClient";
 import { createKernelGateway } from "./runtime/gateway/createKernelGateway";
 import { fetchInstallationsProviderReport } from "./runtime/gateway/fetchProviderReport";
-import { ProviderKernelClient } from "./runtime/provider/ProviderKernelClient";
-import { ProviderKernelTransport } from "./runtime/provider/ProviderKernelTransport";
+import { InstallationsProviderTransport } from "./runtime/gateway/InstallationsProviderTransport";
 import { readRuntimeEnv } from "./runtimeEnv";
 import { createKernelLogger } from "./runtime/logger";
 import { GatewayContentClient } from "./runtime/content/GatewayContentClient";
@@ -18,15 +17,14 @@ try {
 
 async function startKernel(): Promise<void> {
     const env = readRuntimeEnv(process.env);
-    const transport = new ProviderKernelTransport(
+    const transport = new InstallationsProviderTransport(
         env.CMS_INSTALLATIONS_PROVIDER_URL,
         env.CMS_INSTALLATIONS_PROVIDER_TOKEN,
     );
     await fetchInstallationsProviderReport(transport);
     const gateway = createKernelGateway(new ControlProviderClient(transport));
     const content = new GatewayContentClient(gateway.invoker, logger);
-    const provider = new ProviderKernelClient(transport, logger);
-    const kernel = await mountProductionKernel({ env, provider, content, gateway, logger });
+    const kernel = await mountProductionKernel({ env, content, gateway, logger });
 
     let stopping = false;
     const shutdown = async (signal: string) => {

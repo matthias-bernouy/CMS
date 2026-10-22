@@ -6,13 +6,13 @@
     "type": "module",
     "exports": {
         ".": "./src/index.ts",
-        "./capabilities": "./src/capabilities/index.ts",
-        "./kernel": "./src/kernel/protocol.ts"
+        "./capabilities": "./src/capabilities/index.ts"
     },
     "architecture": {
         "layer": "surfaces"
     },
     "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",

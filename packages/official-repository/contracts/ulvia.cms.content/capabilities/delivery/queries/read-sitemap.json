@@ -1,0 +1,52 @@
+{
+    "id": "delivery.sitemap",
+    "description": "Read the current sitemap index or one immutable sitemap snapshot chunk.",
+    "access": "public",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+            }
+        },
+        "required": ["path"]
+    },
+    "output": {
+        "type": "binary",
+        "maxBytes": 1073741824
+    },
+    "errors": [
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/delivery/sitemap",
+        "input": {
+            "query": {
+                "path": "path"
+            }
+        },
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": [],
+            "errorStatuses": {
+                "NOT_FOUND": 404,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

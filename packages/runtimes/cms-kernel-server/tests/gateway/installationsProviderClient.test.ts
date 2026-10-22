@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { ControlProviderClient } from "../../src/runtime/gateway/ControlProviderClient";
-import { ProviderKernelTransport } from "../../src/runtime/provider/ProviderKernelTransport";
+import { InstallationsProviderTransport } from "../../src/runtime/gateway/InstallationsProviderTransport";
 
 describe("Installations Provider control capabilities", () => {
     test("uses declared contract bindings and returns only validated outputs", async () => {
@@ -71,7 +71,7 @@ describe("Installations Provider control capabilities", () => {
 });
 
 function client(requests: Array<{ url: string; init?: RequestInit }>, respond: () => Response): ControlProviderClient {
-    const transport = new ProviderKernelTransport(
+    const transport = new InstallationsProviderTransport(
         "http://installations-provider:5103",
         "installations-provider-token",
         (async (url, init) => {

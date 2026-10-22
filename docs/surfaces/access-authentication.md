@@ -41,8 +41,8 @@ namespace or special browser transport:
 ```
 
 The browser sends either the `cms-session` cookie or an
-`Authorization: Bearer` credential. Kernel forwards exactly one opaque,
-typed credential to the private Provider protocol for `resolve-actor`; it does
+`Authorization: Bearer` credential. Kernel forwards exactly one opaque, typed
+credential to the selected `ulvia.cms.access/resolve-actor` capability; it does
 not forward arbitrary browser Cookie or Authorization headers to every
 capability. A Bearer credential has precedence and never falls back to a cookie
 when invalid. Actor resolution is memoized only for the lifetime of the current
@@ -50,8 +50,8 @@ request.
 
 The Provider resolves the credential through `cms-auth`, joins the membership
 with the administrator grant and returns the trusted actor state. Subsequent
-capability calls carry that actor through the private Kernel protocol; callers
-cannot choose their own subject or administrator flag.
+capability calls are authorized and dispatched by Gateway; callers cannot
+choose their own subject or administrator flag.
 
 ## Session Effects
 

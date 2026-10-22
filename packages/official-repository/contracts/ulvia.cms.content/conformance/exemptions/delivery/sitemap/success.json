@@ -1,0 +1,4 @@
+{
+    "capabilityId": "delivery.sitemap",
+    "reason": "A fresh portable tenant does not guarantee a public canonical host or a materialized sitemap snapshot."
+}

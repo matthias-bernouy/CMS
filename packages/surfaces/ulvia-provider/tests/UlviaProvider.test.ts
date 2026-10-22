@@ -16,104 +16,6 @@ import {
 } from "./ulviaProviderFixture";
 
 describe("UlviaProvider", () => {
-    test("handshakes with the Kernel and separates control from actor authentication", async () => {
-        const contract = await contractRelease();
-        const dispatcher = new DefaultProviderCapabilityDispatcher();
-        const forwarded: Array<{
-            authorization: string | null;
-            privateHeader: string | null;
-            originalOriginHeader: string | null;
-            origin: string;
-            cookie: string | null;
-        }> = [];
-        const forwardedMutations: string[] = [];
-        const forwardedQueries: Array<{ method: string; path: string; authorization: string | null }> = [];
-        const runner = new BunRunner();
-        new UlviaProvider(
-            runner,
-            providerOptions([contract], dispatcher, PROVIDER_INSTANCE_ID, {
-                handleCapability: async (request) => {
-                    forwarded.push({
-                        authorization: request.headers.get("authorization"),
-                        privateHeader: request.headers.get("x-ulvia-actor-authorization"),
-                        originalOriginHeader: request.headers.get("x-ulvia-original-origin"),
-                        origin: new URL(request.url).origin,
-                        cookie: request.headers.get("cookie"),
-                    });
-                    return Response.json({ ok: true });
-                },
-                handleMutation: async (request) => {
-                    forwardedMutations.push(new URL(request.url).pathname);
-                    return Response.json({ ok: true });
-                },
-                handleQuery: async (request) => {
-                    forwardedQueries.push({
-                        method: request.method,
-                        path: new URL(request.url).pathname,
-                        authorization: request.headers.get("authorization"),
-                    });
-                    return Response.json({ items: [] });
-                },
-            }),
-        );
-        const server = serveForTest(runner);
-        try {
-            expect((await server.request("GET", "/ulvia/kernel/v1/handshake")).status).toBe(401);
-            const handshake = await server.request("GET", "/ulvia/kernel/v1/handshake", {
-                headers: reportAuthorization(),
-            });
-            expect(handshake.status).toBe(200);
-            expect(await handshake.json()).toMatchObject({
-                protocol: "ulvia-kernel-provider/v1",
-                instance: { id: PROVIDER_INSTANCE_ID, status: "ready", revision: 1 },
-                activeProfile: { id: "ulvia.official", version: "1.0.0" },
-                contentRevision: 1,
-            });
-
-            const response = await server.request("POST", "/ulvia/kernel/v1/call/ulvia.cms.fixture/echo", {
-                headers: {
-                    ...reportAuthorization(),
-                    "x-ulvia-actor-authorization": "Bearer user-pat",
-                    "x-ulvia-original-origin": "http://kernel.test",
-                    cookie: "cms-session=session-token",
-                },
-            });
-            expect(response.status).toBe(200);
-            expect(forwarded).toEqual([
-                {
-                    authorization: "Bearer user-pat",
-                    privateHeader: null,
-                    originalOriginHeader: null,
-                    origin: "http://kernel.test",
-                    cookie: "cms-session=session-token",
-                },
-            ]);
-            const mutation = await server.request("POST", "/ulvia/kernel/v1/mutations/ulvia.cms.fixture/echo", {
-                headers: reportAuthorization(),
-            });
-            expect(mutation.status).toBe(200);
-            expect(forwardedMutations).toEqual(["/ulvia/kernel/v1/mutations/ulvia.cms.fixture/echo"]);
-            const query = await server.request("QUERY", "/ulvia/kernel/v1/queries/catalog.items/list", {
-                headers: {
-                    ...reportAuthorization(),
-                    "content-type": "application/json",
-                    "x-ulvia-actor-authorization": "Bearer user-pat",
-                },
-                body: '{"limit":20}',
-            });
-            expect(query.status).toBe(200);
-            expect(forwardedQueries).toEqual([
-                {
-                    method: "QUERY",
-                    path: "/ulvia/kernel/v1/queries/catalog.items/list",
-                    authorization: "Bearer user-pat",
-                },
-            ]);
-        } finally {
-            server.stop();
-        }
-    });
-
     test("authenticates the report and dispatches declared HTTP bindings", async () => {
         const contract = await contractRelease();
         const dispatcher = new DefaultProviderCapabilityDispatcher();
@@ -215,7 +117,7 @@ describe("UlviaProvider", () => {
         });
         const memory = createMemoryLogger({ service: "provider-test", level: "debug" });
         const runner = new BunRunner();
-        new UlviaProvider(runner, providerOptions([contract], dispatcher, PROVIDER_INSTANCE_ID, {}, memory.logger));
+        new UlviaProvider(runner, providerOptions([contract], dispatcher, PROVIDER_INSTANCE_ID, memory.logger));
         const server = serveForTest(runner);
         try {
             const response = await server.request("POST", "/v1/provider/echo/record-1", {

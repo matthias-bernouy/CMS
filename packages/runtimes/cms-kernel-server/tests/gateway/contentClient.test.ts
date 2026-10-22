@@ -21,7 +21,15 @@ test("projects all Kernel content reads through the selected Content capability"
                               },
                           ],
                       }
-                    : operation;
+                    : operation === "assets.metadata"
+                      ? {
+                            collectionId: "collection-a",
+                            digest: "sha256:digest-a",
+                            asset: { id: "asset-a", mediaType: "text/plain", byteLength: 5 },
+                        }
+                      : operation === "assets.metadata-batch"
+                        ? []
+                        : operation;
             return {
                 kind: "success",
                 requestId: crypto.randomUUID(),
@@ -78,6 +86,67 @@ test("projects all Kernel content reads through the selected Content capability"
     expect(invocations.every((invocation) => invocation.actor.kind === "system")).toBeTrue();
 });
 
+test("streams collection assets and sitemap resources through Content capabilities", async () => {
+    const invocations: GatewayInvocation[] = [];
+    const gateway = {
+        invoke: async (invocation: GatewayInvocation): Promise<GatewayResult> => {
+            invocations.push(invocation);
+            if (invocation.capabilityId === "delivery.read") {
+                return success({
+                    chunks: [
+                        JSON.stringify({
+                            collectionId: "collection-a",
+                            digest: "sha256:digest-a",
+                            asset: { id: "asset-a", mediaType: "text/plain", byteLength: 5 },
+                        }),
+                    ],
+                });
+            }
+            const bytes = new TextEncoder().encode(invocation.capabilityId === "delivery.sitemap" ? "<xml/>" : "asset");
+            return {
+                kind: "binary",
+                requestId: crypto.randomUUID(),
+                status: 200,
+                stream: new Response(bytes).body!,
+                contentType: invocation.capabilityId === "delivery.sitemap" ? "application/xml" : "text/plain",
+                contentLength: bytes.byteLength,
+                responseHeaders: { "cache-control": "public, no-cache" },
+            };
+        },
+    };
+    const client = new GatewayContentClient(gateway as never, createMemoryLogger().logger);
+    const metadata = await client.collectionAssets.store.getInstalledAssetMetadata(
+        "default",
+        "collection-a",
+        "asset-a",
+    );
+    expect(metadata?.digest).toBe("sha256:digest-a");
+    expect(
+        new TextDecoder().decode(
+            await client.collectionAssets.store.getReleaseAsset("sha256:digest-a", "asset-a", {
+                start: 1,
+                end: 3,
+            }),
+        ),
+    ).toBe("asset");
+    const sitemap = await client.sitemap(new Request("https://site.test/sitemap.xml"));
+    expect(await sitemap.text()).toBe("<xml/>");
+    expect(sitemap.headers.get("cache-control")).toBe("public, no-cache");
+
+    expect(invocations.map(({ capabilityId }) => capabilityId)).toEqual([
+        "delivery.read",
+        "delivery.collection-asset",
+        "delivery.sitemap",
+    ]);
+    expect(invocations[1]?.input).toEqual({
+        collectionId: "collection-a",
+        assetId: "asset-a",
+        expectedDigest: "sha256:digest-a",
+        rangeStart: 1,
+        rangeEnd: 3,
+    });
+});
+
 test("rejects malformed and declared-error delivery responses", async () => {
     const memory = createMemoryLogger({ service: "kernel", level: "debug" });
     const malformed = new GatewayContentClient(
@@ -103,3 +172,7 @@ test("rejects malformed and declared-error delivery responses", async () => {
     );
     expect(JSON.stringify(memory.records)).not.toContain("/private");
 });
+
+function success(output: unknown): GatewayResult {
+    return { kind: "success", requestId: crypto.randomUUID(), status: 200, output };
+}

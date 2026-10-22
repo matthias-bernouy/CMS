@@ -118,17 +118,16 @@ This analysis controls rendering and caching; it is not a live invocation grant.
 Browser calls are authorized from the trusted actor and the selected
 capability's declared access, without a `Referer` or Page execution pin.
 
-The local Ulvia Provider transport is contract-neutral: `@bernouy/ulvia-provider`
+The Ulvia Provider transport is contract-neutral: `@bernouy/ulvia-provider`
 derives its HTTP routes from admitted contract bindings. The same package
 contains thin official capability adapters that coordinate injected feature
 ports; it does not select stores or persistence adapters. Browsers still use
-the normal Kernel `/.cms/call` route. The stateless Kernel streams that request
-through the authenticated private Provider protocol, where the instance-owned
-gateway performs execution.
+the normal Kernel `/.cms/call` route. The stateless Kernel resolves the selected
+installation and invokes its admitted binding through the local Gateway.
 
 Browser credentials follow a separate, narrow path. Kernel extracts either one
-Bearer credential or the fixed `cms-session` cookie and asks the private
-Provider protocol to execute `ulvia.cms.access:resolve-actor`. The Provider
+Bearer credential or the fixed `cms-session` cookie and asks the selected
+`ulvia.cms.access:resolve-actor` capability to resolve it. The Provider
 receives a typed opaque credential only for that operation, resolves it through
 Access and returns actor state. Kernel then supplies that trusted actor to
 ordinary capability calls. Arbitrary browser Cookie and Authorization headers
@@ -211,8 +210,8 @@ transport rules. See [files and responsive images](../images/README.md).
   file responses already expose a shared-cache policy.
 
 The code establishing the production boundary is
-[ProviderKernelClient](../../packages/runtimes/cms-kernel-server/src/runtime/provider/ProviderKernelClient.ts),
-[InstanceKernelApi](../../packages/runtimes/ulvia-provider-server/src/runtime/kernel/InstanceKernelApi.ts)
+[createKernelGateway](../../packages/runtimes/cms-kernel-server/src/runtime/gateway/createKernelGateway.ts),
+[GatewayContentClient](../../packages/runtimes/cms-kernel-server/src/runtime/content/GatewayContentClient.ts)
 and [mountProductionKernel](../../packages/runtimes/cms-kernel-server/src/runtime/mountKernel.ts).
 The [repository audit](../AUDIT.md) and [deferred platform work](../TODO.md)
 track the remaining implementation and activation gates.

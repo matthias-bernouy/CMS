@@ -1,0 +1,5 @@
+{
+    "capabilityId": "delivery.sitemap",
+    "errorCode": "CORE_UNAVAILABLE",
+    "reason": "A runner-independent suite must not prescribe how a Provider disconnects its Content or sitemap storage."
+}

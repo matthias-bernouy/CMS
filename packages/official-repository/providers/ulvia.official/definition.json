@@ -43,7 +43,7 @@
         {
             "contractId": "ulvia.cms.content",
             "version": "1.0.0",
-            "digest": "sha256:7c97a0995befc4ef7671b3c142b6f0b460bddfb33555218ef1bce2b71e44cd10",
+            "digest": "sha256:1d29457175dfe1187a072fa256655c83e21b2f3c8f6158cc4521c29a0bdc2e49",
             "requires": []
         },
         {

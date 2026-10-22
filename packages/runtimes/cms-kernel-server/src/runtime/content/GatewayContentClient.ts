@@ -2,6 +2,7 @@ import type { ContentReader, RenderablePage } from "@bernouy/cms-content/renderi
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
 import type { Logger } from "@bernouy/logging";
+import type { BlobRange } from "@bernouy/blob-store";
 
 type DeliveryOperation =
     | "content.texts"
@@ -29,6 +30,7 @@ export class GatewayContentClient {
         resolveRoute(path: string): Promise<{ readonly page: RenderablePage; readonly language: string } | null>;
     };
     readonly collectionAssets: InstalledCollectionAssetSource;
+    readonly #collectionByDigest = new Map<string, string>();
 
     constructor(
         private readonly gateway: GatewayInvoker,
@@ -41,15 +43,52 @@ export class GatewayContentClient {
         this.collectionAssets = {
             siteId: "default",
             store: {
-                getInstalledAssetMetadata: (_siteId, collectionId, assetId) =>
-                    this.read("assets.metadata", { collectionId, assetId }),
-                getInstalledAssetMetadataBatch: (_siteId, references) =>
-                    this.read("assets.metadata-batch", { references }),
-                getReleaseAsset: async () => {
-                    throw new Error("Collection asset bytes are streamed through the Content Provider capability");
+                getInstalledAssetMetadata: async (_siteId, collectionId, assetId) => {
+                    const installed = await this.read<CollectionAssetMetadata | null>("assets.metadata", {
+                        collectionId,
+                        assetId,
+                    });
+                    this.rememberCollectionAssets(installed ? [installed] : []);
+                    return installed;
                 },
+                getInstalledAssetMetadataBatch: async (_siteId, references) => {
+                    const installed = await this.read<CollectionAssetMetadata[]>("assets.metadata-batch", {
+                        references,
+                    });
+                    this.rememberCollectionAssets(installed);
+                    return installed;
+                },
+                getReleaseAsset: (digest, assetId, range) => this.readCollectionAsset(digest, assetId, range),
             },
         };
+    }
+
+    async sitemap(request: Request): Promise<Response> {
+        try {
+            const result = await this.gateway.invoke({
+                siteId: "default",
+                contractId: "ulvia.cms.content",
+                capabilityId: "delivery.sitemap",
+                input: { path: new URL(request.url).pathname },
+                actor: { kind: "system", serviceId: "cms-kernel" },
+            });
+            if (result.kind === "declared-error") {
+                return new Response(result.status === 404 ? "Not Found" : "Service Unavailable", {
+                    status: result.status,
+                    headers: { "cache-control": "no-store" },
+                });
+            }
+            if (result.kind !== "binary") {
+                throw new TypeError("Content sitemap returned a non-binary response");
+            }
+            return binaryResponse(result, request.method === "HEAD");
+        } catch (error) {
+            this.logger.error("content.delivery.sitemap.failed", { path: new URL(request.url).pathname }, error);
+            return new Response("Service Unavailable", {
+                status: 503,
+                headers: { "cache-control": "no-store" },
+            });
+        }
     }
 
     async read<T>(operation: DeliveryOperation, input?: unknown): Promise<T> {
@@ -85,7 +124,44 @@ export class GatewayContentClient {
             throw error;
         }
     }
+
+    private async readCollectionAsset(digest: string, assetId: string, range?: BlobRange): Promise<Uint8Array | null> {
+        const collectionId = this.#collectionByDigest.get(digest);
+        if (!collectionId) {
+            throw new TypeError("Collection asset bytes require a preceding metadata resolution");
+        }
+        const result = await this.gateway.invoke({
+            siteId: "default",
+            contractId: "ulvia.cms.content",
+            capabilityId: "delivery.collection-asset",
+            input: {
+                collectionId,
+                assetId,
+                expectedDigest: digest,
+                ...(range ? { rangeStart: range.start, rangeEnd: range.end } : {}),
+            },
+            actor: { kind: "system", serviceId: "cms-kernel" },
+        });
+        if (result.kind === "declared-error" && result.status === 404) {
+            return null;
+        }
+        if (result.kind !== "binary") {
+            throw new TypeError("Content collection asset returned a non-binary response");
+        }
+        return new Uint8Array(await new Response(result.stream).arrayBuffer());
+    }
+
+    private rememberCollectionAssets(installed: readonly CollectionAssetMetadata[]): void {
+        for (const item of installed) {
+            this.#collectionByDigest.set(item.digest, item.collectionId);
+        }
+    }
 }
+
+type CollectionAssetMetadata =
+    Awaited<ReturnType<InstalledCollectionAssetSource["store"]["getInstalledAssetMetadata"]>> extends infer Value
+        ? Exclude<Value, null>
+        : never;
 
 class ContentDeliveryError extends Error {
     constructor(operation: string, status: number) {
@@ -107,6 +183,20 @@ function parseDeliveryOutput<T>(value: unknown): T {
 
 function roundedDuration(durationMs: number): number {
     return Math.round(durationMs * 100) / 100;
+}
+
+function binaryResponse(
+    result: Extract<Awaited<ReturnType<GatewayInvoker["invoke"]>>, { kind: "binary" }>,
+    head: boolean,
+): Response {
+    return new Response(head ? null : result.stream, {
+        status: result.status,
+        headers: {
+            ...result.responseHeaders,
+            "content-type": result.contentType,
+            ...(result.contentLength === undefined ? {} : { "content-length": String(result.contentLength) }),
+        },
+    });
 }
 
 function remoteContent(client: GatewayContentClient): ContentReader {

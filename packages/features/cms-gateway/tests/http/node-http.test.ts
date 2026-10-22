@@ -76,9 +76,9 @@ test("provider control credentials are limited to the public runtime report", as
         signal: new AbortController().signal,
     };
     await network.exchange({ ...request, pathAndQuery: "/ulvia/report" });
-    await expect(network.exchange({ ...request, pathAndQuery: "/ulvia/kernel/v1/handshake" })).rejects.toThrow(
-        "metadata endpoints",
-    );
+    await expect(
+        network.exchange({ ...request, pathAndQuery: "/delivery/sitemap?path=%2Fsitemap.xml" }),
+    ).rejects.toThrow("metadata endpoints");
     expect(sent).toEqual(["/ulvia/report"]);
 });
 

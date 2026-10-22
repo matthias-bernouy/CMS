@@ -1,0 +1,5 @@
+{
+    "capabilityId": "delivery.collection-asset",
+    "errorCode": "INVALID_INPUT",
+    "reason": "Admitted path and range schemas reject malformed collection asset requests before Provider dispatch."
+}

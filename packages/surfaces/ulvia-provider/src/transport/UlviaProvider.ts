@@ -6,28 +6,11 @@ import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { ProviderCapabilityRegistry } from "../dispatch/registry";
 import { createProviderContractRelay } from "./relay";
 import { compileProviderRoutes } from "./routes";
-import {
-    KERNEL_PROVIDER_PROTOCOL,
-    KERNEL_PROVIDER_QUERY_OPERATIONS,
-    type KernelInstanceApi,
-    type KernelProviderHandshake,
-    type KernelProviderQuery,
-} from "../kernel/protocol";
-import { readBoundedRequestBody } from "@bernouy/http-runner";
-import type { ProviderInstanceProfile, ProviderInstanceStatus } from "../instances/types";
 
 export type UlviaProviderInstanceRuntime = Readonly<{
     siteId: string;
     report: ProviderRuntimeReport;
     dispatcher: ProviderCapabilityRegistry;
-    instance: {
-        id: string;
-        status: ProviderInstanceStatus;
-        revision: number;
-        profile: ProviderInstanceProfile;
-    };
-    contentRevision(): Promise<number | string>;
-    kernel: KernelInstanceApi;
 }>;
 
 export type UlviaProviderInstanceLease = Readonly<{
@@ -59,79 +42,6 @@ export class UlviaProvider {
                 return Response.json(lease.resource.report, { headers: { "Cache-Control": "no-store" } });
             } finally {
                 lease.release();
-            }
-        });
-        runner.get("/ulvia/kernel/v1/handshake", async (request) => {
-            const token = bearerToken(request);
-            const lease = token ? await options.authenticateControlToken(token) : null;
-            if (!lease) {
-                return unauthorized();
-            }
-            try {
-                const runtime = lease.resource;
-                const handshake: KernelProviderHandshake = {
-                    protocol: KERNEL_PROVIDER_PROTOCOL,
-                    instance: {
-                        id: runtime.instance.id,
-                        status: runtime.instance.status,
-                        revision: runtime.instance.revision,
-                    },
-                    activeProfile: runtime.instance.profile,
-                    contentRevision: await runtime.contentRevision(),
-                    runtime: runtime.report,
-                };
-                return Response.json(handshake, { headers: { "Cache-Control": "no-store" } });
-            } finally {
-                lease.release();
-            }
-        });
-        runner.post("/ulvia/kernel/v1/query", (request) =>
-            withKernelRuntime(request, options, async (runtime, forwardedRequest) => {
-                const query = await readKernelQuery(forwardedRequest);
-                return Response.json({ value: await runtime.kernel.query(query) }, noStore());
-            }),
-        );
-        runner.group("/ulvia/kernel/v1/call", (callRunner) => {
-            for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const) {
-                callRunner.setDefaultEndpoint(method, (request) =>
-                    withKernelRuntime(request, options, (runtime, forwardedRequest) =>
-                        runtime.kernel.handleCapability(forwardedRequest),
-                    ),
-                );
-            }
-        });
-        runner.group("/ulvia/kernel/v1/queries", (queryRunner) => {
-            for (const method of ["GET", "QUERY"] as const) {
-                queryRunner.setDefaultEndpoint(method, (request) =>
-                    withKernelRuntime(request, options, (runtime, forwardedRequest) =>
-                        runtime.kernel.handleQuery(forwardedRequest),
-                    ),
-                );
-            }
-        });
-        runner.group("/ulvia/kernel/v1/mutations", (mutationRunner) => {
-            mutationRunner.setDefaultEndpoint("POST", (request) =>
-                withKernelRuntime(request, options, (runtime, forwardedRequest) =>
-                    runtime.kernel.handleMutation(forwardedRequest),
-                ),
-            );
-        });
-        runner.group("/ulvia/kernel/v1/collections", (assetRunner) => {
-            for (const method of ["GET", "HEAD"] as const) {
-                assetRunner.setDefaultEndpoint(method, (request) =>
-                    withKernelRuntime(request, options, (runtime, forwardedRequest) =>
-                        runtime.kernel.handleCollectionAsset(forwardedRequest),
-                    ),
-                );
-            }
-        });
-        runner.group("/ulvia/kernel/v1/sitemap", (sitemapRunner) => {
-            for (const method of ["GET", "HEAD"] as const) {
-                sitemapRunner.setDefaultEndpoint(method, (request) =>
-                    withKernelRuntime(request, options, (runtime, forwardedRequest) =>
-                        runtime.kernel.handleSitemap(forwardedRequest),
-                    ),
-                );
             }
         });
         const methods = new Set<HttpMethod>(routes.map(({ capability }) => capability.binding.method));
@@ -202,79 +112,6 @@ function controlInvocationClaims(request: Request, lease: UlviaProviderInstanceL
         issuedAt,
         expiresAt: issuedAt + 30,
     };
-}
-
-async function withKernelRuntime(
-    request: Request,
-    options: UlviaProviderOptions,
-    handler: (runtime: UlviaProviderInstanceRuntime, forwardedRequest: Request) => Promise<Response>,
-): Promise<Response> {
-    const token = bearerToken(request);
-    const lease = token ? await options.authenticateControlToken(token) : null;
-    if (!lease) {
-        return unauthorized();
-    }
-    try {
-        return await handler(lease.resource, kernelForwardedRequest(request));
-    } finally {
-        lease.release();
-    }
-}
-
-function kernelForwardedRequest(request: Request): Request {
-    const headers = new Headers(request.headers);
-    const actorAuthorization = headers.get("x-ulvia-actor-authorization");
-    const originalOrigin = parseOriginalOrigin(headers.get("x-ulvia-original-origin"));
-    headers.delete("authorization");
-    headers.delete("x-ulvia-actor-authorization");
-    headers.delete("x-ulvia-original-origin");
-    if (actorAuthorization) {
-        headers.set("authorization", actorAuthorization);
-    }
-    const forwarded = new Request(request, { headers });
-    if (!originalOrigin) {
-        return forwarded;
-    }
-    const url = new URL(forwarded.url);
-    url.protocol = originalOrigin.protocol;
-    url.hostname = originalOrigin.hostname;
-    url.port = originalOrigin.port;
-    return new Request(url, forwarded);
-}
-
-function parseOriginalOrigin(value: string | null): URL | null {
-    if (!value) {
-        return null;
-    }
-    try {
-        const url = new URL(value);
-        return (url.protocol === "http:" || url.protocol === "https:") && url.origin === value ? url : null;
-    } catch {
-        return null;
-    }
-}
-
-async function readKernelQuery(request: Request): Promise<KernelProviderQuery> {
-    const bytes = await readBoundedRequestBody(request, 64 * 1024);
-    const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-        throw new TypeError("Kernel query is invalid");
-    }
-    const record = value as Record<string, unknown>;
-    if (
-        !KERNEL_PROVIDER_QUERY_OPERATIONS.includes(record.operation as never) ||
-        Object.keys(record).some((key) => key !== "operation" && key !== "input")
-    ) {
-        throw new TypeError("Kernel query is invalid");
-    }
-    return {
-        operation: record.operation as KernelProviderQuery["operation"],
-        ...(Object.hasOwn(record, "input") ? { input: record.input } : {}),
-    };
-}
-
-function noStore(): ResponseInit {
-    return { headers: { "Cache-Control": "private, no-store" } };
 }
 
 function bearerToken(request: Request): string | null {

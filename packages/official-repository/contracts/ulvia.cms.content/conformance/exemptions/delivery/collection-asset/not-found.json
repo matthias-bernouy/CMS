@@ -1,0 +1,5 @@
+{
+    "capabilityId": "delivery.collection-asset",
+    "errorCode": "NOT_FOUND",
+    "reason": "A portable suite has no stable installed collection asset identity or release digest to probe."
+}
