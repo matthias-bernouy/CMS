@@ -14,14 +14,12 @@ import {
 import { handlePageRequest } from "cms-kernel/http/pages/handlePageRequest";
 import { FAVICON_ROUTE } from "cms-kernel/http/assets/favicon";
 import { matchRootSitemapChunkPath } from "@bernouy/cms-content/seo";
-import { createRobotsHandler, createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-content/seo/http";
 import { COLLECTION_ASSETS_ROUTE, resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
 import {
     createCollectionMaintenanceGuard,
     serveInstalledCollectionAsset,
 } from "@bernouy/cms-repository/collections/http";
 import { resolveRequestActor } from "cms-kernel/http/pages/access/resolveRequestActor";
-import { isKernelReservedPath } from "cms-kernel/http/pages/reservedPaths";
 import { applySessionEffect } from "cms-kernel/http/session/applySessionEffect";
 
 /**
@@ -40,38 +38,6 @@ import { applySessionEffect } from "cms-kernel/http/session/applySessionEffect";
  */
 export function mountKernelRoutes(kernel: KernelCms) {
     const runner = kernel.runner;
-    const robotsHandler =
-        kernel.robotsHandler ??
-        createRobotsHandler({
-            content: kernel.content,
-            basePath: kernel.basePath,
-            cmsPathPrefix: kernel.cmsPathPrefix,
-            collectionAssetsPath: `${kernel.basePath}${COLLECTION_ASSETS_ROUTE}`,
-            publicRuntimePaths: [
-                `${kernel.cmsPathPrefix}/style`,
-                `${kernel.cmsPathPrefix}/blocstyles`,
-                `${kernel.cmsPathPrefix}/blocset`,
-                `${kernel.cmsPathPrefix}/assets/bloc-runtime.js`,
-                `${kernel.cmsPathPrefix}/assets/cms-binding-core.js`,
-            ],
-            capabilityCallsEnabled: !!(kernel.capabilityGateway || kernel.capabilityHandler),
-            logger: kernel.logger,
-        });
-    const sitemapHandler =
-        kernel.sitemapHandler ??
-        createSitemapHandler({
-            content: kernel.content,
-            store: kernel.sitemapStore,
-            isReservedPath: (path) => isKernelReservedPath(path, kernel.cmsPathPrefix),
-            logger: kernel.logger,
-        });
-    const sitemapChunkHandler =
-        kernel.sitemapChunkHandler ??
-        createSitemapChunkHandler({
-            store: kernel.sitemapStore,
-            basePath: kernel.basePath,
-            logger: kernel.logger,
-        });
     if (kernel.collections) {
         runner.use(
             createCollectionMaintenanceGuard({
@@ -117,8 +83,8 @@ export function mountKernelRoutes(kernel: KernelCms) {
         });
     }
     runner.addEndpoint("GET", PUBLISHED_PAGE_SNAPSHOT_ROUTE, (req) => servePublishedPageSnapshot(kernel.content, req));
-    runner.addEndpoint("GET", "/robots.txt", robotsHandler);
-    runner.addEndpoint("GET", "/sitemap.xml", sitemapHandler);
+    runner.addEndpoint("GET", "/robots.txt", kernel.robotsHandler);
+    runner.addEndpoint("GET", "/sitemap.xml", kernel.sitemapHandler);
     runner.addEndpoint("GET", FAVICON_ROUTE, serveFavicon);
     runner.addEndpoint("HEAD", FAVICON_ROUTE, serveFavicon);
 
@@ -182,11 +148,13 @@ export function mountKernelRoutes(kernel: KernelCms) {
     }
 
     runner.setDefaultEndpoint("GET", (req) =>
-        isRootSitemapChunkRequest(req, kernel) ? sitemapChunkHandler(req) : handlePageRequest(req, kernel),
+        isRootSitemapChunkRequest(req, kernel) ? kernel.sitemapChunkHandler(req) : handlePageRequest(req, kernel),
     );
     runner.setDefaultEndpoint("HEAD", async (req) =>
         withoutBody(
-            await (isRootSitemapChunkRequest(req, kernel) ? sitemapChunkHandler(req) : handlePageRequest(req, kernel)),
+            await (isRootSitemapChunkRequest(req, kernel)
+                ? kernel.sitemapChunkHandler(req)
+                : handlePageRequest(req, kernel)),
         ),
     );
 }

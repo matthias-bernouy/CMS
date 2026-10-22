@@ -44,12 +44,14 @@ every package must reproduce.
 `application` and `exports`. Its `CmsRepository` is the content
 persistence facade; it is distinct from the `@bernouy/cms-repository` package.
 
-The runtime projects the writable `CmsRepository` into the read-only
-`ContentReader` from `@bernouy/cms-content/rendering` before constructing
-Kernel. Kernel sees only published Pages/routes, projected settings and
-renderable Bloc artifacts.
+The Provider that implements `ulvia.cms.content` projects its writable
+`CmsRepository` into the read-only `ContentReader` from
+`@bernouy/cms-content/rendering`. The production Kernel reads that projection
+through the selected Content delivery capabilities; it never receives the
+writable repository. Kernel sees only published Pages/routes, projected
+settings and renderable Bloc artifacts.
 File references are resolved through the selected `ulvia.cms.files` provider.
-Sitemap storage is an independent runtime dependency.
+Sitemap storage is an independent dependency of the Content provider runtime.
 
 Every page has a monotonic concurrency revision used by authoring and collection
 migrations. This is not user-facing page history. Page publication is
@@ -98,8 +100,9 @@ Mongo and SMTP adapters are explicit runtime imports. Secret storage is generic 
 The Kernel mounts every site or contributed Page and feature-owned HTTP handlers
 on one supplied `Runner`.
 SEO metadata, structured data, dynamic indexing and sitemap materialization are
-owned by `cms-content`; Kernel mounts its robots and sitemap handlers while
-the runtime starts periodic materialization.
+owned by `cms-content`. The selected Content implementation produces robots and
+sitemap resources through declared delivery capabilities; Kernel only mounts
+the injected resource handlers on its public URLs.
 Whether a Page is public, authenticated or administrative is derived by
 statically analyzing its capability requirements; there is no Page surface field or separate
 admin/public route namespace. Ulvia Provider mounts the provider report and the

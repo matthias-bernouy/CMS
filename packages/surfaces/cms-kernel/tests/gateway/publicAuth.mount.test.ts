@@ -4,14 +4,17 @@ import { InMemoryCache } from "@bernouy/http-runner";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import KernelCms from "cms-kernel/KernelCms";
 import { CaptureRunner } from "./support/CaptureRunner";
+import { deliveryHandlers } from "./support/deliveryHandlers";
 
 describe("Kernel authentication boundary", () => {
     test("does not expose authentication endpoints owned by the Access contract", () => {
         const runner = new CaptureRunner();
+        const content = createContentReader(new InMemoryCmsRepository());
         new KernelCms({
             runner,
             cache: new InMemoryCache(),
-            content: createContentReader(new InMemoryCmsRepository()),
+            content,
+            ...deliveryHandlers(content),
             resolveActor: async () => ({ kind: "anonymous" }),
             logger: NOOP_LOGGER,
         });

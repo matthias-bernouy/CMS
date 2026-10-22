@@ -10,8 +10,9 @@ fallbacks onto one provided `Runner`.
 - Kernel consumes the projected `ContentReader` boundary of
   `@bernouy/cms-content`; it must not receive a writable content repository or
   import Mongo, filesystem implementations or runtime composition code.
-- Content projection, request-actor resolution, cache and gateway handlers are
-  injected through config. Authentication remains Provider-owned.
+- Content projection, Content delivery resources, request-actor resolution,
+  cache and gateway handlers are injected through config. Authentication
+  remains Provider-owned.
 - Domain HTTP behavior stays in its owning feature. Kernel supplies request
   context and mounts those handlers; it does not reimplement collection asset,
   capability invocation, browser runtime or SEO behavior.
@@ -26,9 +27,9 @@ fallbacks onto one provided `Runner`.
 - Public rendering reads projected published content. Page access is derived
   by static capability analysis, including administration Pages. This analysis
   is not a live gateway grant.
-- `cms-content` generates and retains sitemap snapshots. Kernel only mounts its
-  injected HTTP handlers. File bytes and representations are served through
-  selected gateway capabilities.
+- `cms-content` generates robots and sitemap resources and retains sitemap
+  snapshots. Kernel only mounts its required injected HTTP handlers. File bytes
+  and representations are served through selected gateway capabilities.
 - Keep temporary route-updating responses non-cacheable. Draft and
   administrative behavior is authorized from capability access, not from a
   separate surface.

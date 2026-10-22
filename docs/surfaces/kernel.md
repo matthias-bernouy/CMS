@@ -13,7 +13,8 @@ The Kernel owns route composition and Page HTTP presentation for:
 - every Page path, resolved from the shared site route registry;
 - `/.cms/call/*`, `/.cms/blocset`, `/.cms/blocstyles` and immutable collection asset routes, whose
   behavior remains in their owning feature packages;
-- sitemap and robots handlers implemented by `cms-content`.
+- sitemap and robots public URLs, whose responses come from the selected
+  `ulvia.cms.content` delivery capabilities.
 
 The two browser assets are mounted explicitly. Adding a file below
 `cms-content/src/browser/` never creates a route. Authentication documents are
@@ -39,3 +40,12 @@ Successful capability forms declare the same kind of URL in
 `cms-mutation-redirect`. Admission keeps the pathname static and permits bounded
 query or fragment interpolation. Before returning HTML, the Kernel resolves
 collection default paths to the current site route override in one batch.
+
+Production Content reads never use a private Provider protocol or a local
+repository shortcut. They invoke the selected `ulvia.cms.content` release
+through the same Gateway as every other contract. Kernel still owns the public
+HTTP presentation boundary: request actor resolution, Page access preflight,
+dynamic indexing calls, response caching, security headers and document-shell
+assembly. Moving that last assembly step behind Content would require a defined
+delegation model for Content to invoke arbitrary selected capabilities during
+server rendering; that model is intentionally not part of the current runtime.

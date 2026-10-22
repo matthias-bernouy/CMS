@@ -1,7 +1,6 @@
 import { mountKernelRoutes } from "cms-kernel/http/mountKernelRoutes";
 import type { KernelCmsConfig } from "cms-kernel/KernelCmsConfig";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
-import type { BlobStore } from "@bernouy/blob-store";
 import type { Logger } from "@bernouy/logging";
 
 export type { KernelCmsConfig } from "cms-kernel/KernelCmsConfig";
@@ -24,7 +23,6 @@ export default class KernelCms {
     readonly sitemapHandler;
     readonly sitemapChunkHandler;
     readonly robotsHandler;
-    readonly sitemapStore?: BlobStore;
     readonly enforcePageCsp: boolean;
     readonly basePath: string;
     readonly cmsPathPrefix: string;
@@ -48,7 +46,6 @@ export default class KernelCms {
         this.sitemapHandler = config.sitemapHandler;
         this.sitemapChunkHandler = config.sitemapChunkHandler;
         this.robotsHandler = config.robotsHandler;
-        this.sitemapStore = config.sitemapStore;
         this.enforcePageCsp = config.enforcePageCsp ?? true;
         this.logger = config.logger;
         this.basePath = config.runner.basePath === "/" ? "" : config.runner.basePath;

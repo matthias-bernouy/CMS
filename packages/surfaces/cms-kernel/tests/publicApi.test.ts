@@ -22,6 +22,9 @@ describe("cms-kernel public API", () => {
                         cache: new TtlCache(),
                         content: createContentReader(new InMemoryCmsRepository()),
                         resolveActor: async () => ({ kind: "anonymous" }),
+                        robotsHandler: async () => new Response("Not Found", { status: 404 }),
+                        sitemapHandler: async () => new Response("Not Found", { status: 404 }),
+                        sitemapChunkHandler: async () => new Response("Not Found", { status: 404 }),
                         logger: NOOP_LOGGER,
                     });
                     if (!(kernel instanceof KernelCms) || typeof runner.defaultHandler("GET", "/") !== "function") {

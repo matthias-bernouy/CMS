@@ -3,6 +3,7 @@ import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content
 import { InMemoryCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import { CaptureRunner } from "../../gateway/support/CaptureRunner";
+import { deliveryHandlers } from "../../gateway/support/deliveryHandlers";
 import { NOOP_LOGGER } from "@bernouy/logging";
 
 describe("Kernel robots", () => {
@@ -13,10 +14,12 @@ describe("Kernel robots", () => {
         await repository.updateSystem({
             site: { ...settings.site, host: "https://canonical.test/store" },
         });
+        const content = createContentReader(repository);
         new KernelCms({
             runner,
             cache: new InMemoryCache(),
-            content: createContentReader(repository),
+            content,
+            ...deliveryHandlers(content, { basePath: "/site", capabilityCallsEnabled: true }),
             resolveActor: async () => ({ kind: "anonymous" }),
             logger: NOOP_LOGGER,
             capabilityGateway: {
@@ -51,10 +54,12 @@ describe("Kernel robots", () => {
     test("omits the sitemap declaration when the canonical host is not configured", async () => {
         const runner = new CaptureRunner();
         const repository = new InMemoryCmsRepository();
+        const content = createContentReader(repository);
         new KernelCms({
             runner,
             cache: new InMemoryCache(),
-            content: createContentReader(repository),
+            content,
+            ...deliveryHandlers(content),
             resolveActor: async () => ({ kind: "anonymous" }),
             logger: NOOP_LOGGER,
         });
@@ -74,10 +79,12 @@ describe("Kernel robots", () => {
         await repository.updateSystem({
             site: { ...settings.site, visible: false, host: "https://canonical.test/private" },
         });
+        const content = createContentReader(repository);
         new KernelCms({
             runner,
             cache: new InMemoryCache(),
-            content: createContentReader(repository),
+            content,
+            ...deliveryHandlers(content, { basePath: "/private" }),
             resolveActor: async () => ({ kind: "anonymous" }),
             logger: NOOP_LOGGER,
         });

@@ -16,6 +16,7 @@ import KernelCms from "cms-kernel/KernelCms";
 import type { KernelCmsConfig } from "cms-kernel/KernelCmsConfig";
 import { blocRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
+import { deliveryHandlers } from "../gateway/support/deliveryHandlers";
 import { NOOP_LOGGER } from "@bernouy/logging";
 
 export function publicPage(id: string, path: string, content = `<p>${id}</p>`): TPage {
@@ -121,6 +122,11 @@ export function mountPublicPages(options: HarnessOptions = {}) {
               resolveCapability: async () => ({ access: "public", version: "1.0.0" }),
           })
         : undefined;
+    const handlers = deliveryHandlers(repository, {
+        basePath: runner.basePath === "/" ? "" : runner.basePath,
+        sitemapStore: options.sitemapStore,
+        capabilityCallsEnabled: !!invoker,
+    });
     const kernel = new KernelCms({
         runner,
         content: repository,
@@ -154,7 +160,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
                   pageCapabilities,
               }
             : {}),
-        sitemapStore: options.sitemapStore,
+        ...handlers,
         logger: NOOP_LOGGER,
     });
     const sitemapService = options.sitemapStore

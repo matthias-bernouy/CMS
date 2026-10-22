@@ -1,4 +1,3 @@
-import type { BlobStore } from "@bernouy/blob-store";
 import type { ContentReader, RenderablePage } from "@bernouy/cms-content/rendering";
 import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
@@ -40,9 +39,8 @@ export type KernelCmsConfig = {
     mutationHandler?: (request: Request) => Promise<Response>;
     queryHandler?: (request: Request) => Promise<Response>;
     collectionAssetHandler?: (request: Request) => Promise<Response>;
-    sitemapHandler?: (request: Request) => Promise<Response>;
-    sitemapChunkHandler?: (request: Request) => Promise<Response>;
-    robotsHandler?: (request: Request) => Promise<Response>;
-    sitemapStore?: BlobStore;
+    sitemapHandler: (request: Request) => Promise<Response>;
+    sitemapChunkHandler: (request: Request) => Promise<Response>;
+    robotsHandler: (request: Request) => Promise<Response>;
     logger: Logger;
 };

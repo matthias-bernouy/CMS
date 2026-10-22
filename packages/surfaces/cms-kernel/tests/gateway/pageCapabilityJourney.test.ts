@@ -11,6 +11,7 @@ import { InMemoryCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { CaptureRunner } from "./support/CaptureRunner";
+import { deliveryHandlers } from "./support/deliveryHandlers";
 
 test("a published Page is analyzed statically and invokes its public capability without a Page grant", async () => {
     const repository: CmsRepository = new ValidatingCmsRepository(new InMemoryCmsRepository());
@@ -41,9 +42,11 @@ test("a published Page is analyzed statically and invokes its public capability 
             contractId === "shop" && capabilityId === "list-products" ? { access: "public", version: "2.3.0" } : null,
     });
     const runner = new CaptureRunner();
+    const content = createContentReader(repository);
     new KernelCms({
         runner,
-        content: createContentReader(repository),
+        content,
+        ...deliveryHandlers(content),
         resolveActor: async () => ({ kind: "anonymous" }),
         cache: new InMemoryCache(),
         capabilityGateway: {

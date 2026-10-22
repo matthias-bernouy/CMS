@@ -1,5 +1,4 @@
 import type { ContentReader, RenderingSettings } from "@bernouy/cms-content/rendering";
-import type { BlobReader, BlobStore as SitemapStore } from "@bernouy/blob-store";
 import type { KernelCmsConfig } from "@bernouy/cms-kernel";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
@@ -8,6 +7,7 @@ declare const settings: RenderingSettings;
 declare const runner: Runner;
 declare const cache: Cache;
 declare const logger: Logger;
+declare const deliveryHandler: (request: Request) => Promise<Response>;
 
 const reader: ContentReader = {
     getRenderablePage: async () => null,
@@ -23,20 +23,14 @@ const reader: ContentReader = {
     getBlocViewJS: async () => null,
     getRenderingSettings: async () => settings,
 };
-const originals: BlobReader = { get: async () => null, head: async () => null };
-const sitemaps: SitemapStore = {
-    ...originals,
-    exists: async () => false,
-    put: async () => ({ size: 0 }),
-    delete: async () => {},
-};
-
 export const config: KernelCmsConfig = {
     content: reader,
     resolveActor: async () => ({ kind: "anonymous" }),
     runner,
     cache,
-    sitemapStore: sitemaps,
+    sitemapHandler: deliveryHandler,
+    sitemapChunkHandler: deliveryHandler,
+    robotsHandler: deliveryHandler,
     logger,
 };
 
@@ -46,6 +40,9 @@ const invalidRepositoryConfig: KernelCmsConfig = {
     resolveActor: async () => ({ kind: "anonymous" }),
     runner,
     cache,
+    sitemapHandler: deliveryHandler,
+    sitemapChunkHandler: deliveryHandler,
+    robotsHandler: deliveryHandler,
     logger,
 };
 void invalidRepositoryConfig;
@@ -61,5 +58,3 @@ reader.getSystem();
 settings.email;
 // @ts-expect-error Authoring-only languages are absent from rendering settings.
 settings.site.additionalLanguages;
-// @ts-expect-error Kernel cannot write an original blob.
-originals.put("original", new Uint8Array());

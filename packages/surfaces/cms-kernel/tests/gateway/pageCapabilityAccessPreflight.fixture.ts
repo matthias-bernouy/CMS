@@ -10,6 +10,7 @@ import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 import { NOOP_LOGGER } from "@bernouy/logging";
+import { deliveryHandlers } from "./support/deliveryHandlers";
 
 const system: TSystem = {
     initializationStep: 1,
@@ -133,6 +134,7 @@ export async function mountPage(options: {
                 return content.resolvePageReference(reference);
             },
         },
+        ...deliveryHandlers(content),
         cache,
         capabilityGateway: {
             siteId: "site-a",
