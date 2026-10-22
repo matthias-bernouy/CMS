@@ -40,7 +40,7 @@ describe("BindingRuntime — lifecycle", () => {
         expect(requests).toEqual([]);
         root.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
         await waitFor(() => requests.length === 1);
-        expect(requests).toEqual(["http://localhost/.cms/call/test.items/save"]);
+        expect(requests).toEqual(["http://localhost/.cms/mutation/test.items/save"]);
         runtime.stop();
     });
 
@@ -62,5 +62,36 @@ describe("BindingRuntime — lifecycle", () => {
         expect(text(root.querySelector("p"))).toBe("{{ user.data.name }}: {{ pages.data.count }}");
         writeSyncValue(pages, undefined);
         writeSyncValue(user, undefined);
+    });
+
+    test("preserves a nested HTTP query inside a query-import boundary", async () => {
+        const filter = { scope: "page", key: "test-pages-filter" } as const;
+        writeSyncValue(filter, "all");
+        const requests: AbortSignal[] = [];
+        globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+            requests.push(init?.signal as AbortSignal);
+            return Response.json({ items: [] });
+        }) as typeof fetch;
+        const root = el(`<div><section cms-queries="@page:test-pages-filter as filter">
+            <span>{{ filter.data }}</span>
+            <div cms-query="ulvia.cms.content:pages.list as pages">
+                <p>{{ pages.data.items.length }}</p>
+            </div>
+        </section></div>`);
+        document.body.appendChild(root);
+        const runtime = new BindingRuntime(root);
+
+        runtime.start();
+        await waitFor(() => text(root.querySelector("p")) === "0");
+        expect(requests).toHaveLength(1);
+        expect(requests[0]?.aborted).toBe(false);
+
+        writeSyncValue(filter, "draft");
+        expect(text(root.querySelector("span"))).toBe("draft");
+        expect(requests).toHaveLength(1);
+        expect(requests[0]?.aborted).toBe(false);
+
+        runtime.stop();
+        writeSyncValue(filter, undefined);
     });
 });

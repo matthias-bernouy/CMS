@@ -10,7 +10,7 @@ import { parseManagedNativeElement } from "./managedNativeElement";
 import { compileBlocStyle } from "../../validation/blocStyleCompilation";
 import { validateCompiledBlocBehavior } from "../../validation/blocBehaviorPolicy";
 import { CMS_BROWSER_RUNTIME_ABI } from "@bernouy/cms-content/runtime-abi";
-import { blocSettingAttributeNameIssue } from "@bernouy/cms-content/page-document";
+import { blocSettingAttributeNameIssue, validateBlocBrowserCapabilities } from "@bernouy/cms-content/page-document";
 
 const common = [
     "kind",
@@ -28,6 +28,7 @@ const common = [
     "root",
     "markup",
     "defaultContent",
+    "browser",
 ];
 
 function optionalText(value: unknown, maximum: number, path: string): string {
@@ -52,6 +53,21 @@ function parseBloc(
     if (source.catalogue !== undefined && source.catalogue !== "listed" && source.catalogue !== "hidden") {
         invalid("must be listed or hidden", `${path}.catalogue`);
     }
+    const markup = string(source.markup, limits.maxMarkupLength, `${path}.markup`);
+    const defaultContent =
+        source.defaultContent === undefined
+            ? undefined
+            : optionalText(source.defaultContent, limits.maxMarkupLength, `${path}.defaultContent`);
+    let browser;
+    try {
+        browser = validateBlocBrowserCapabilities(
+            source.browser,
+            [markup, ...(defaultContent === undefined ? [] : [defaultContent])],
+            `${path}.browser`,
+        );
+    } catch (error) {
+        invalid(error instanceof Error ? error.message : "invalid browser capabilities", `${path}.browser`);
+    }
     const base = {
         id,
         generation:
@@ -72,12 +88,9 @@ function parseBloc(
         requires: parseRequirements(source.requires === undefined ? [] : source.requires, `${path}.requires`, limits),
         slots: parseSlots(source.slots === undefined ? {} : source.slots, `${path}.slots`, limits),
         root: parseManagedNativeElement(source.root, `${path}.root`),
-        markup: string(source.markup, limits.maxMarkupLength, `${path}.markup`),
-        ...(source.defaultContent === undefined
-            ? {}
-            : {
-                  defaultContent: optionalText(source.defaultContent, limits.maxMarkupLength, `${path}.defaultContent`),
-              }),
+        markup,
+        ...(defaultContent === undefined ? {} : { defaultContent }),
+        ...(browser === undefined ? {} : { browser }),
     };
     if (source.kind === "composition") {
         return {

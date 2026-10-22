@@ -150,6 +150,13 @@ describe("interpolateString — filters (injected)", () => {
             expect(interpolateString("{{ destination | internalUrl }}", s({ destination }))).toBe("");
         }
     });
+
+    test("keeps Page iframe URLs same-site with the semantic pageUrl filter", () => {
+        expect(interpolateString("{{ destination | pageUrl }}", s({ destination: "/about?draft=1" }))).toBe(
+            "/about?draft=1",
+        );
+        expect(interpolateString("{{ destination | pageUrl }}", s({ destination: "https://example.test" }))).toBe("");
+    });
 });
 
 describe("interpolateString — `value` reserved word via scope", () => {

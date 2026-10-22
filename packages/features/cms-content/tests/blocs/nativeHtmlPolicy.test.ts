@@ -226,13 +226,42 @@ describe("platform native HTML policy", () => {
         expect(nativeAttributeSetIssue("input", { type: "checkbox", role: "switch" })).toBeNull();
     });
 
-    test("requires fully sandboxed and titled native iframe previews", () => {
-        expect(nativeAttributeSetIssue("iframe", { sandbox: "", title: "Page preview" })).toBeNull();
-        expect(nativeAttributeSetIssue("iframe", { title: "Page preview" })).toContain("sandbox");
-        expect(nativeAttributeSetIssue("iframe", { sandbox: "", title: "" })).toContain("title");
-        expect(nativeAttributeSetIssue("iframe", { sandbox: "allow-scripts", title: "Page preview" })).toContain(
-            "sandbox",
-        );
+    test("requires origin-isolated and titled native iframe previews", () => {
+        expect(nativeAttributeSetIssue("iframe", { src: "/about", sandbox: "", title: "Page preview" })).toBeNull();
+        expect(nativeAttributeSetIssue("iframe", { title: "Page preview" })).toContain("source");
+        expect(nativeAttributeSetIssue("iframe", { src: "/about", sandbox: "", title: "" })).toContain("title");
+        expect(
+            nativeAttributeSetIssue("iframe", {
+                src: "{{ page.path | pageUrl }}",
+                sandbox: "allow-scripts allow-forms",
+                title: "Page preview",
+                loading: "eager",
+                referrerpolicy: "same-origin",
+            }),
+        ).toBeNull();
+        expect(
+            nativeAttributeSetIssue("iframe", { src: "/about", sandbox: "allow-same-origin", title: "Page preview" }),
+        ).toBeNull();
+        expect(
+            nativeAttributeSetIssue("iframe", {
+                src: "/about",
+                sandbox: "allow-top-navigation",
+                title: "Page preview",
+            }),
+        ).toContain("sandbox");
+        expect(
+            nativeAttributeSetIssue("iframe", {
+                src: "javascript:alert(1)",
+                sandbox: "",
+                title: "Page preview",
+            }),
+        ).toContain("source");
+        expect(
+            nativeAttributeSetIssue("iframe", { src: "{{ page.path }}", sandbox: "", title: "Page preview" }),
+        ).toContain("pageUrl");
+        for (const src of ["/\\evil.example", "/preview name", "/preview\nname", "//evil.example"]) {
+            expect(nativeAttributeSetIssue("iframe", { src, sandbox: "", title: "Page preview" })).toContain("source");
+        }
     });
 
     test("accepts the controlled informative and decorative media states", () => {

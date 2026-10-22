@@ -12,6 +12,22 @@ import { mount } from "./compiledTemplateTestUtils";
 afterEach(resetDom);
 
 describe("network-inert image bindings", () => {
+    test("activates a bound iframe source only after interpolation", () => {
+        const template = document.createElement("template");
+        template.innerHTML = `<iframe src="{{ page.path | pageUrl }}" sandbox="" title="Preview"></iframe>`;
+        const host = document.createElement("div");
+        const compiled = CompiledTemplate.fromFragment(template.content);
+        const region = compiled.mount(host, { value: { page: { path: "/about" } } });
+        const iframe = host.querySelector("iframe")!;
+
+        expect(iframe.getAttribute("data-cms-src")).toBe("/about");
+        expect(iframe.getAttribute("src")).toBe("/about");
+        region.update({ value: { page: { path: "https://outside.test" } } });
+        expect(iframe.getAttribute("data-cms-src")).toBe("");
+        expect(iframe.hasAttribute("src")).toBe(false);
+        expect(compiled.cloneRaw().querySelector("iframe")!.getAttribute("src")).toBe("{{ page.path | pageUrl }}");
+    });
+
     test("binds src and srcset without exposing network attributes", () => {
         const { compiled, host, region } = mount(
             `<img src="/media/{{ id }}" srcset="/media/{{ id }}-2x 2x"

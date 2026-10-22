@@ -3,6 +3,8 @@ import {
     DEFAULT_COLLECTION_LIMITS,
     collectionThemeSourceId,
     collectionThemeTokenId,
+    collectionBrowserRisk,
+    collectionBrowserRiskDigest,
     describeCollectionResources,
     isCollectionNamespace,
     parseCollectionRelease,
@@ -166,6 +168,62 @@ describe("collection release parsing", () => {
         expect(() => parseCollectionRelease(source)).toThrow("is only allowed with viewJS");
     });
 
+    test("admits only exact iframe browser capabilities", () => {
+        const source = collectionDocument();
+        const component = (source.blocs as Record<string, unknown>[])[0]!;
+        component.markup =
+            '<section><iframe src="https://maps.example.test" title="{{ label }}" sandbox="allow-same-origin allow-scripts"></iframe><slot name="body"></slot></section>';
+        component.browser = {
+            frames: {
+                origins: ["https://maps.example.test"],
+                sandbox: ["allow-same-origin", "allow-scripts"],
+            },
+        };
+        expect(parseCollectionRelease(source).blocs.find(({ id }) => id === "atlas-panel")?.browser).toEqual(
+            component.browser,
+        );
+
+        delete component.browser;
+        expect(() => parseCollectionRelease(source)).toThrow(/must be declared/);
+        component.browser = {
+            frames: {
+                origins: ["https://other.example.test"],
+                sandbox: ["allow-same-origin", "allow-scripts"],
+            },
+        };
+        expect(() => parseCollectionRelease(source)).toThrow(/must exactly match/);
+    });
+
+    test("reports deterministic browser authority and treats every script as high authority", () => {
+        const plain = parseCollectionRelease(collectionDocument());
+        const source = collectionDocument();
+        const component = (source.blocs as Record<string, unknown>[])[0]!;
+        component.markup =
+            '<section><iframe src="https://maps.example.test" title="{{ label }}" sandbox="allow-same-origin allow-scripts"></iframe><slot name="body"></slot></section>';
+        component.browser = {
+            frames: {
+                origins: ["https://maps.example.test"],
+                sandbox: ["allow-same-origin", "allow-scripts"],
+            },
+        };
+        component.runtime = { browserAbi: "v1", viewJS: "void 0" };
+        const risky = parseCollectionRelease(source);
+        const plainReport = collectionBrowserRisk(plain);
+        const riskyReport = collectionBrowserRisk(risky);
+        expect(plainReport.level).toBe("none");
+        expect(riskyReport).toMatchObject({
+            level: "high",
+            javaScriptBlocs: ["atlas-panel"],
+            externalFrameOrigins: ["https://maps.example.test"],
+            scriptsWithSameOrigin: true,
+        });
+        expect(collectionBrowserRiskDigest(riskyReport)).toMatch(/^sha256:[a-f0-9]{64}$/);
+        component.markup = '<section><slot name="body"></slot></section>';
+        delete component.browser;
+        const scriptOnly = collectionBrowserRisk(parseCollectionRelease(source));
+        expect(scriptOnly).toMatchObject({ level: "high", javaScriptBlocs: ["atlas-panel"], frameBlocs: [] });
+    });
+
     test("rechecks compiled Bloc behavior at collection admission", () => {
         const source = collectionDocument();
         const component = (source.blocs as Record<string, unknown>[])[0]!;
@@ -173,6 +231,7 @@ describe("collection release parsing", () => {
         for (const viewJS of [
             "customElements.define('unsafe-element', class extends HTMLElement {})",
             "document.body.attachShadow({ mode: 'open' })",
+            "document.createElement('iframe')",
             "window.location.href = '/escaped'",
             "try {",
         ]) {

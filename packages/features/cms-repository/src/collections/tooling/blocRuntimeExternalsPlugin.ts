@@ -16,6 +16,7 @@ export const blocRuntimeExternalsPlugin: BunPlugin = {
                     contents: [
                         "export const CMS_BLOC_FORM_CONTROL_READY_EVENT = window.cmsRuntime.CMS_BLOC_FORM_CONTROL_READY_EVENT;",
                         "export const connectBlocFormControl = window.cmsRuntime.connectBlocFormControl;",
+                        "export const requestBlocFormControl = window.cmsRuntime.requestBlocFormControl;",
                         "export const createBlocScope = window.cmsRuntime.createBlocScope;",
                         "export const observeBlocAttributes = window.cmsRuntime.observeBlocAttributes;",
                         "export const registerBloc = window.cmsRuntime.registerBloc;",

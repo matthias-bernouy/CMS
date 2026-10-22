@@ -153,6 +153,7 @@ export function createContentReader(repository: CmsRepository, options: ContentR
                 id: bloc.id,
                 kind: bloc.kind,
                 markupHTML: bloc.markupHTML,
+                ...(bloc.browser ? { browser: bloc.browser } : {}),
                 ...(bloc.uses?.length ? { uses: [...bloc.uses] } : {}),
                 root: bloc.root,
                 ...(bloc.styleCSS ? { styleCSS: bloc.styleCSS } : {}),

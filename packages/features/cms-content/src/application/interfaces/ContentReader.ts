@@ -8,6 +8,7 @@ export type RenderableBloc = {
     id: string;
     kind: TBloc["kind"];
     markupHTML: string;
+    browser?: TBloc["browser"];
     uses?: readonly string[];
     root: TBloc["root"];
     styleCSS?: string;

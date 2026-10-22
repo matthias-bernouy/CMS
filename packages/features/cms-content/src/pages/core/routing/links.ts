@@ -1,4 +1,4 @@
-import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
+import { isSafeNavigationalUrl, normalizeInternalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 import { PageRouteNotFoundError } from "cms-content/pages/core/routing/errors";
 import type {
     PageLinkTarget,
@@ -82,16 +82,28 @@ export function pageContentPaths(content: string): readonly string[] {
             element.getAttribute("cms-mutation-redirect"),
         ),
     ];
-    if (values.length > MAX_PAGE_LINKS) {
+    const frameValues = Array.from(document.querySelectorAll<HTMLIFrameElement>("iframe[src]"), (element) =>
+        element.getAttribute("src"),
+    );
+    if (values.length + frameValues.length > MAX_PAGE_LINKS) {
         throw new TypeError("A Page contains too many links.");
     }
-    return [...new Set(values.flatMap((value) => authoredPagePath(value)))];
+    return [
+        ...new Set([
+            ...values.flatMap((value) => authoredPagePath(value, false)),
+            ...frameValues.flatMap((value) => authoredPagePath(value, true)),
+        ]),
+    ];
 }
 
-function authoredPagePath(value: string | null): string[] {
-    if (!value || value.length > MAX_PAGE_LINK_LENGTH || !value.startsWith("/") || value.startsWith("//")) {
+function authoredPagePath(value: string | null, includeTechnicalRoute: boolean): string[] {
+    if (!value || value.length > MAX_PAGE_LINK_LENGTH) {
         return [];
     }
-    const path = value.split(/[?#]/u, 1)[0]!;
-    return path.startsWith("/.cms/") ? [] : [path];
+    const normalized = normalizeInternalUrl(value);
+    if (normalized === null) {
+        return [];
+    }
+    const path = normalized.split(/[?#]/u, 1)[0]!;
+    return path.startsWith("/.cms/") && !includeTechnicalRoute ? [] : [path];
 }

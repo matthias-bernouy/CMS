@@ -1,7 +1,15 @@
 import { parseBindingExpression } from "cms-content/blocs/core/markup/expression/parser";
 import type { ExpressionNode, ExpressionValueType } from "cms-content/blocs/core/markup/expression/types";
 
-const STABLE_VALUE_FILTERS = new Set(["dateLong", "internalUrl", "json", "minorCurrency", "string", "urlencode"]);
+const STABLE_VALUE_FILTERS = new Set([
+    "dateLong",
+    "internalUrl",
+    "json",
+    "minorCurrency",
+    "pageUrl",
+    "string",
+    "urlencode",
+]);
 
 export function expressionValueType(node: ExpressionNode): ExpressionValueType {
     if (node.kind === "literal") {

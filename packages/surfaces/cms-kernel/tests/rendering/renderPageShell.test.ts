@@ -161,6 +161,65 @@ describe("renderPage — binding core wrapper", () => {
         expect(staticImage?.getAttribute("data-cms-src")).toBeNull();
     });
 
+    test("allows declared HTTPS iframe origins without widening same-site frames", async () => {
+        const context = makeCtx();
+        const repository = context.content as unknown as {
+            getRenderableBlocs: () => Promise<
+                {
+                    id: string;
+                    kind: "component" | "composition";
+                    markupHTML: string;
+                    browser: {
+                        frames: {
+                            origins: string[];
+                            sandbox: ("allow-same-origin" | "allow-scripts")[];
+                        };
+                    };
+                    root: { accepts: ["div"] };
+                    hasBehavior: boolean;
+                }[]
+            >;
+            getBlocViewJS: () => Promise<null>;
+        };
+        repository.getRenderableBlocs = async () => [
+            {
+                id: "example-frame",
+                kind: "composition",
+                markupHTML: '<iframe src="https://maps.example.test/embed" sandbox="" title="Map"></iframe>',
+                browser: { frames: { origins: ["https://maps.example.test"], sandbox: [] } },
+                root: { accepts: ["div"] },
+                hasBehavior: false,
+            },
+            {
+                id: "unused-frame",
+                kind: "component",
+                markupHTML:
+                    '<iframe src="https://unused.example.test/embed" sandbox="allow-same-origin allow-scripts" title="Unused"></iframe>',
+                browser: {
+                    frames: {
+                        origins: ["https://unused.example.test"],
+                        sandbox: ["allow-same-origin", "allow-scripts"],
+                    },
+                },
+                root: { accepts: ["div"] },
+                hasBehavior: false,
+            },
+        ];
+        repository.getBlocViewJS = async () => null;
+        const entry = await renderPage(
+            {
+                ...page,
+                content: '<div cms-bloc="example-frame"></div>',
+            },
+            context,
+        );
+        const { document } = parseHTML(new TextDecoder().decode(entry.raw));
+        const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute("content");
+
+        expect(csp).toContain("frame-src 'self' https://maps.example.test");
+        expect(csp).not.toContain("https://unused.example.test");
+    });
+
     test("resolves platform metadata variables and an explicit noindex state", async () => {
         const ctx = makeCtx();
         const entry = await renderPage(

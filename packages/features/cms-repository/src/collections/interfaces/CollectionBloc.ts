@@ -7,6 +7,7 @@ import type {
     BlocSettings,
     BlocSettingVisibilityRule,
     BlocSettingVisibilityValue,
+    BlocBrowserCapabilities,
     ManagedNativeAttributeConstraint,
     ManagedNativeElement,
     ManagedNativeElementTag,
@@ -53,6 +54,8 @@ interface CollectionBlocBase {
     readonly markup: string;
     /** Editable initial page content, distinct from the fixed composition. */
     readonly defaultContent?: string;
+    /** Exact browser authority exercised by authored iframe elements. */
+    readonly browser?: BlocBrowserCapabilities;
 }
 
 export interface CollectionComponent extends CollectionBlocBase {

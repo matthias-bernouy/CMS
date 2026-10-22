@@ -28,6 +28,7 @@ export type BlocListItemResponse = {
     thumbnail?: TBloc["thumbnail"];
     kind: TBloc["kind"];
     markupHTML: string;
+    browser?: TBloc["browser"];
     defaultContent?: string;
     slots?: TBloc["slots"];
     settings?: TBloc["settings"];
@@ -85,6 +86,10 @@ export type PagesQuery = {
     visible?: "published" | "draft";
     sortBy?: "title" | "path" | "visible";
     sortOrder?: "asc" | "desc";
+    /** Stable Page ID returned by the preceding batch. */
+    afterId?: string;
+    /** Maximum rows projected by the backing store. */
+    limit?: number;
 };
 
 export type PageScan = {

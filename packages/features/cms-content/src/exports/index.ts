@@ -10,6 +10,8 @@
 // ── Entities ───────────────────────────────────────────────────────────
 export type {
     BlocOwnership,
+    BlocBrowserCapabilities,
+    BlocFrameSandboxPermission,
     BlocRecord,
     SiteBlocGroup,
     PresentationImage,
@@ -48,6 +50,7 @@ export {
     CmsPageNotFoundError,
     renameCmsPage,
     type CmsPageRenameInput,
+    type CmsPageRenameOutput,
 } from "cms-content/pages/core/contracts/renamePage";
 export {
     getCmsPage,

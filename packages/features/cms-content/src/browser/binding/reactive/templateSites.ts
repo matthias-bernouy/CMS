@@ -1,5 +1,5 @@
 import { interpolateString, type FilterMap } from "../core/interpolate";
-import { prepareNetworkInertBindings } from "../core/networkBindings";
+import { activateResolvedNetworkBinding, prepareNetworkInertBindings } from "../core/networkBindings";
 import { lookup, type Scope } from "../core/scope";
 import type { CompiledCondition } from "../render/condition";
 import type { RepeatSpec } from "../render/repeat";
@@ -62,6 +62,7 @@ export class AttributeSite implements LiveBindingSite {
         } else if (this.element.getAttribute(this.name) !== next) {
             this.element.setAttribute(this.name, next);
         }
+        activateResolvedNetworkBinding(this.element, this.name, next);
         this.applyControl(next);
     }
     private applyControl(value: string | boolean | null): void {

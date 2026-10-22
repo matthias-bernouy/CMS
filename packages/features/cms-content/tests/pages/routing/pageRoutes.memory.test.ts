@@ -4,6 +4,7 @@ import {
     InMemoryPageRouteRegistry,
     PageRouteCollisionError,
     PageRouteRevisionConflictError,
+    pageContentPaths,
     resolvePageLinkTarget,
     synchronizePageRouteRegistrations,
     type PageReference,
@@ -94,6 +95,15 @@ describe("Page route registry", () => {
         await expect(resolvePageLinkTarget(reader, { kind: "url", url: "javascript:alert(1)" })).rejects.toThrow(
             TypeError,
         );
+    });
+
+    test("treats static same-site iframe destinations as Page routes", () => {
+        expect(
+            pageContentPaths(
+                '<a href="/.cms/help">Help</a><iframe src="/preview"></iframe><iframe src="/.cms/private"></iframe><iframe src="https://maps.example.test"></iframe>',
+            ),
+        ).toEqual(["/preview", "/.cms/private"]);
+        expect(pageContentPaths('<iframe src="/\\evil.example"></iframe>')).toEqual([]);
     });
 
     test("rejects route swaps that would reassign stable authored paths", async () => {

@@ -30,6 +30,7 @@ export function projectBlocList(records: BlocRecord[], options: BlocListOptions 
                       description: bloc.description || "",
                       kind: bloc.kind,
                       markupHTML: bloc.markupHTML,
+                      ...(bloc.browser ? { browser: structuredClone(bloc.browser) } : {}),
                       ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
                       ...(bloc.slots ? { slots: structuredClone(bloc.slots) } : {}),
                       ...(bloc.settings ? { settings: structuredClone(bloc.settings) } : {}),

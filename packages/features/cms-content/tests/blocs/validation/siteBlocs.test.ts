@@ -53,6 +53,9 @@ describe("site bloc validation", () => {
         expect(() => validateBlocWrite({ ...artifact, viewJS: "root.attachShadow({ mode: 'open' })" })).toThrow(
             /Shadow DOM APIs/,
         );
+        expect(() => validateBlocWrite({ ...artifact, viewJS: "document.createElement('iframe')" })).toThrow(
+            /programmatic iframe creation/,
+        );
         expect(() =>
             validateBlocWrite({
                 ...artifact,
@@ -106,6 +109,69 @@ describe("site bloc validation", () => {
         expect(validateBlocWrite(siteBlocArtifact({ settings: [{ ...setting, id: "items-align" }] })).settings).toEqual(
             [{ ...setting, id: "items-align" }],
         );
+    });
+
+    test("requires exact iframe origins and sandbox permissions", () => {
+        const markupHTML =
+            '<iframe src="https://maps.example.test" title="Map" sandbox="allow-same-origin allow-scripts"></iframe>';
+        const browser = {
+            frames: {
+                origins: ["https://maps.example.test"],
+                sandbox: ["allow-same-origin", "allow-scripts"] as const,
+            },
+        };
+        expect(validateBlocWrite(siteBlocArtifact({ markupHTML, browser })).browser).toEqual(browser);
+        expect(() => validateBlocWrite(siteBlocArtifact({ markupHTML }))).toThrow(/must be declared/);
+        expect(() =>
+            validateBlocWrite(
+                siteBlocArtifact({
+                    markupHTML,
+                    browser: { ...browser, frames: { ...browser.frames, origins: ["self"] } },
+                }),
+            ),
+        ).toThrow(/must exactly match/);
+        expect(() =>
+            validateBlocWrite(
+                siteBlocArtifact({
+                    markupHTML,
+                    browser: {
+                        ...browser,
+                        frames: { ...browser.frames, sandbox: ["allow-forms", ...browser.frames.sandbox] },
+                    },
+                }),
+            ),
+        ).toThrow(/must exactly match/);
+    });
+
+    test("treats dynamic internal iframe sources as self", () => {
+        const markupHTML =
+            '<iframe src="{{ preview.path | pageUrl }}" title="Preview" sandbox="allow-same-origin allow-scripts"></iframe>';
+        expect(
+            validateBlocWrite(
+                siteBlocArtifact({
+                    markupHTML,
+                    browser: {
+                        frames: {
+                            origins: ["self"],
+                            sandbox: ["allow-same-origin", "allow-scripts"],
+                        },
+                    },
+                }),
+            ).browser,
+        ).toEqual({
+            frames: { origins: ["self"], sandbox: ["allow-same-origin", "allow-scripts"] },
+        });
+    });
+
+    test("accepts a fully sandboxed iframe with no granted permission", () => {
+        expect(
+            validateBlocWrite(
+                siteBlocArtifact({
+                    markupHTML: '<iframe src="/safe-frame" title="Safe frame" sandbox=""></iframe>',
+                    browser: { frames: { origins: ["self"], sandbox: [] } },
+                }),
+            ).browser,
+        ).toEqual({ frames: { origins: ["self"], sandbox: [] } });
     });
 
     test("accepts only site-prefixed definitions with matching ownership", () => {

@@ -19,6 +19,9 @@ export interface PageDocumentRenderContext {
 
 export interface RenderedPageDocument {
     readonly html: string;
+    /** Every Bloc referenced by the authored Page, including expanded compositions. */
+    readonly referencedTags: readonly string[];
+    /** Blocs still represented in rendered markup and therefore requiring browser assets. */
     readonly usedTags: readonly string[];
     readonly renderableBlocs: readonly RenderableBloc[];
     readonly requiresBindingRuntime: boolean;
@@ -34,6 +37,8 @@ export async function renderPageDocument(
     sanitizeDomTree(body);
 
     const blocList = await context.repository.getRenderableBlocs();
+    const resolveBlocUsage = createBlocUsageResolver(blocList, context.repository);
+    const referencedTags = await resolveBlocUsage(body.innerHTML);
     expandCompositions(body, blocList);
     renderContentTexts(
         body,
@@ -50,9 +55,10 @@ export async function renderPageDocument(
     await context.prepareBody?.(body);
 
     const html = body.innerHTML;
-    const resolvedTags = await createBlocUsageResolver(blocList, context.repository)(html);
+    const resolvedTags = await resolveBlocUsage(html);
     return {
         html,
+        referencedTags,
         usedTags: resolvedTags,
         renderableBlocs: blocList,
         requiresBindingRuntime: hasLiveBindings(body),

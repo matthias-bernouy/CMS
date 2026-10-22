@@ -1,4 +1,4 @@
-import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
+import { isSafeNavigationalUrl, normalizeInternalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 import { interpolationExpressions } from "cms-content/blocs/core/markup/bindings/operation";
 import { parseBindingExpression } from "cms-content/blocs/core/markup/expression/parser";
 import { boundAttributeValueIssue } from "cms-content/blocs/core/markup/validation/contracts/attributeBindings";
@@ -31,6 +31,14 @@ const INPUT_TYPES = new Set([
 const ARIA_CURRENT_VALUES = new Set(["page", "step", "location", "date", "time", "true", "false"]);
 const ARIA_LIVE_VALUES = new Set(["off", "polite", "assertive"]);
 const NATIVE_DIALOG_COMMANDS = new Set(["show-modal", "close"]);
+const SAFE_IFRAME_SANDBOX_TOKENS = new Set([
+    "allow-downloads",
+    "allow-forms",
+    "allow-modals",
+    "allow-popups",
+    "allow-same-origin",
+    "allow-scripts",
+]);
 const STATIC_ELEMENT_ID = /^[A-Za-z][A-Za-z0-9_.:-]{0,127}$/u;
 
 const SAME_TAB_REL = new Set(["", "nofollow", "sponsored", "ugc"]);
@@ -50,6 +58,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
             (normalizedTag === "img" && normalizedAttribute === "src"));
     if (normalizedTag === "a" && normalizedAttribute === "href" && DYNAMIC_TOKEN.test(value) && !contributedAssetUrl) {
         return dynamicInternalHrefIssue(value);
+    }
+    if (normalizedTag === "iframe" && normalizedAttribute === "src" && DYNAMIC_TOKEN.test(value)) {
+        return dynamicPageUrlIssue(value);
     }
     if (DYNAMIC_TOKEN.test(value) && isRuntimeBoundNativeAttribute(normalizedTag, normalizedAttribute)) {
         const issue = boundAttributeValueIssue(value, nativeAttributeBindingKind(normalizedAttribute));
@@ -113,6 +124,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     if (normalizedTag === "form" && normalizedAttribute === "autocomplete") {
         return value === "on" || value === "off" ? null : 'native form autocomplete must be "on" or "off"';
     }
+    if (normalizedTag === "iframe") {
+        return iframeAttributeIssue(normalizedAttribute, value);
+    }
     if (normalizedTag === "img") {
         return imageAttributeIssue(normalizedAttribute, value);
     }
@@ -160,10 +174,29 @@ export function dynamicInternalHrefIssue(value: string): string | null {
     return null;
 }
 
+function dynamicPageUrlIssue(value: string): string | null {
+    if (CONTROL_CHARACTER.test(value) || value.includes("#{") || value.includes("@{")) {
+        return "dynamic native iframe sources require controlled interpolation";
+    }
+    const expressions = interpolationExpressions(value);
+    if (!expressions || expressions.length !== 1 || !/^\s*\{\{.*\}\}\s*$/u.test(value)) {
+        return "dynamic native iframe sources require one complete pageUrl binding";
+    }
+    try {
+        const node = parseBindingExpression(expressions[0]!);
+        return node.kind === "filter" && node.name === "pageUrl" && !node.argument
+            ? null
+            : "dynamic native iframe sources require a valid pageUrl filter";
+    } catch {
+        return "dynamic native iframe source interpolation is invalid";
+    }
+}
+
 function isRuntimeBoundNativeAttribute(tag: string, attribute: string): boolean {
     return (
         nativeAttributeBindingKind(attribute) === "boolean" ||
         attribute.startsWith("aria-") ||
+        (tag === "iframe" && attribute === "title") ||
         attribute === "id" ||
         (tag === "label" && attribute === "for") ||
         (["input", "option", "output", "select", "textarea"].includes(tag) && attribute === "value")
@@ -209,8 +242,17 @@ export function nativeAttributeSetIssue(tag: string, attributes: Readonly<Record
         }
     }
     if (normalizedTag === "iframe") {
-        if (normalizedAttributes.sandbox !== "") {
-            return "native iframes require an empty sandbox attribute";
+        if (!normalizedAttributes.src?.trim()) {
+            return "native iframes require a non-empty source";
+        }
+        const sandbox = normalizedAttributes.sandbox;
+        const tokens = sandbox?.trim() ? sandbox.trim().split(/\s+/u) : [];
+        if (
+            sandbox === undefined ||
+            new Set(tokens).size !== tokens.length ||
+            tokens.some((token) => !SAFE_IFRAME_SANDBOX_TOKENS.has(token))
+        ) {
+            return "native iframe sandbox contains an unsupported permission";
         }
         if (!normalizedAttributes.title?.trim()) {
             return "native iframes require a non-empty title";
@@ -237,6 +279,31 @@ export function nativeAttributeSetIssue(tag: string, attributes: Readonly<Record
         normalizedAttributes.type !== "checkbox"
     ) {
         return 'native role="switch" requires input type="checkbox"';
+    }
+    return null;
+}
+
+function iframeAttributeIssue(attribute: string, value: string): string | null {
+    if (attribute === "src") {
+        if (normalizeInternalUrl(value) !== null) {
+            return null;
+        }
+        try {
+            const url = new URL(value);
+            return url.protocol === "https:" && !url.username && !url.password
+                ? null
+                : "native iframe source must be a same-site path or an HTTPS URL";
+        } catch {
+            return "native iframe source must be a same-site path or an HTTPS URL";
+        }
+    }
+    if (attribute === "loading") {
+        return value === "lazy" || value === "eager" ? null : 'native iframe loading must be "lazy" or "eager"';
+    }
+    if (attribute === "referrerpolicy") {
+        return ["no-referrer", "same-origin", "strict-origin", "strict-origin-when-cross-origin"].includes(value)
+            ? null
+            : "native iframe referrer policy is not controlled";
     }
     return null;
 }

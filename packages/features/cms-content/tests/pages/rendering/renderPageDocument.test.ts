@@ -37,6 +37,7 @@ describe("renderPageDocument", () => {
         expect(rendered.html).toContain('<div cms-bloc="atlas-card"><article>Hello</article></div>');
         expect(rendered.html).not.toContain("script");
         expect(rendered.html).not.toContain("onclick");
+        expect(rendered.referencedTags).toEqual(["atlas-action", "atlas-card"]);
         expect(rendered.usedTags).toEqual(["atlas-action", "atlas-card"]);
         expect(rendered.requiresBindingRuntime).toBe(false);
         expect(rendered.renderableBlocs.map(({ id }) => id)).toEqual(["atlas-card", "atlas-action"]);

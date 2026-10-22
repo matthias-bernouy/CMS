@@ -67,12 +67,21 @@ export async function renderPage(
         ...assets.scriptUrls,
         ...(requiresBindingRuntime ? [assets.bindingCoreUrl] : []),
     ]);
+    const referencedBlocIds = new Set(rendered.referencedTags);
+    const frameHosts = [
+        ...new Set(
+            rendered.renderableBlocs
+                .filter((bloc) => referencedBlocIds.has(bloc.id))
+                .flatMap((bloc) => bloc.browser?.frames.origins ?? [])
+                .filter((origin) => origin !== "self"),
+        ),
+    ];
     const cspExtras = {
         connectExtras: [...settings.security.connectExtras],
         mediaExtras: [...settings.security.mediaExtras],
         styleExtras: styleHosts,
         scriptExtras: scriptHosts,
-        frameExtras: [],
+        frameExtras: frameHosts,
     };
 
     // <head> assembly, in exact document order. Consumer-supplied head

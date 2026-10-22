@@ -7,6 +7,23 @@ import type {
 
 export type BlocOwnership = { kind: "site-builder"; definitionId: string } | { kind: "code-managed" };
 
+export type BlocFrameSandboxPermission =
+    | "allow-downloads"
+    | "allow-forms"
+    | "allow-modals"
+    | "allow-popups"
+    | "allow-same-origin"
+    | "allow-scripts";
+
+export type BlocBrowserCapabilities = {
+    readonly frames: {
+        /** `self` or exact HTTPS origins; paths and wildcards are forbidden. */
+        readonly origins: readonly string[];
+        /** Exact union of sandbox permissions used by the Bloc's iframe elements. */
+        readonly sandbox: readonly BlocFrameSandboxPermission[];
+    };
+};
+
 export type TBloc = {
     id: string;
     /** Explicit rendering semantics; never inferred from the markup field. */
@@ -31,6 +48,8 @@ export type TBloc = {
     viewJS: string;
     /** Fixed authored markup expanded according to `kind`. */
     markupHTML: string;
+    /** Exact browser authority exercised by authored iframe elements. */
+    browser?: BlocBrowserCapabilities;
     /** Initial page-owned children supplied when this bloc is inserted. */
     defaultContent?: string;
     /** Named Page-owned substitution slots offered by a contributed Bloc. */

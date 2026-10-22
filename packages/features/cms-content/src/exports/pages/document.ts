@@ -15,6 +15,7 @@ export type {
     PageSlot,
     PageSlotAccept,
 } from "cms-content/pages/interfaces/document";
+export { forbiddenBlocBehaviorIssues } from "cms-content/blocs/core/validation/definition";
 export {
     validateBlocContentMarkup,
     validatePageContentMarkup,
@@ -59,6 +60,14 @@ export {
     managedNativeAttributesIssue,
 } from "cms-content/blocs/core/markup/validation/contracts/managedNativePolicy";
 export { blocSettingAttributeNameIssue } from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";
+export {
+    BLOC_FRAME_SANDBOX_PERMISSIONS,
+    validateBlocBrowserCapabilities,
+} from "cms-content/blocs/core/markup/validation/documents/browserCapabilities";
+export type {
+    BlocBrowserCapabilities,
+    BlocFrameSandboxPermission,
+} from "cms-content/blocs/interfaces/blocs";
 export {
     parseInlineSvgAsset,
     type InlineSvgAsset,

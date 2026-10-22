@@ -23,6 +23,7 @@
  */
 
 import { lookup, type Scope } from "./scope";
+import { normalizeInternalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 
 export type Filter = (value: unknown, ...args: unknown[]) => unknown;
 export type FilterMap = Record<string, Filter>;
@@ -45,26 +46,12 @@ export function createBuiltinFilters(locale?: string): FilterMap {
     return {
         dateLong: (value, localeOverride) => formatLongDate(value, explicitLocale(localeOverride) ?? normalizedLocale),
         json: (value) => stringifyJson(value),
-        internalUrl: (value) => normalizeInternalUrl(value),
+        internalUrl: (value) => (typeof value === "string" ? (normalizeInternalUrl(value) ?? "") : ""),
+        pageUrl: (value) => (typeof value === "string" ? (normalizeInternalUrl(value) ?? "") : ""),
         minorCurrency: (value, currency) => formatMinorCurrency(value, currency, normalizedLocale),
         string: (value) => stringifyScalar(value),
         urlencode: (value) => encodeURIComponent(value == null ? "" : String(value)),
     };
-}
-
-function normalizeInternalUrl(value: unknown): string {
-    if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
-        return "";
-    }
-    if (/[\u0000-\u0020\u007F]/u.test(value)) {
-        return "";
-    }
-    try {
-        const url = new URL(value, "https://ulvia.invalid");
-        return url.origin === "https://ulvia.invalid" ? `${url.pathname}${url.search}${url.hash}` : "";
-    } catch {
-        return "";
-    }
 }
 
 function explicitLocale(value: unknown): string | undefined {
