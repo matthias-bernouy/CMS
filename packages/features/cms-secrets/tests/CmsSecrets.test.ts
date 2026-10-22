@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { CmsSecretConflict, CmsSecretNotAuthorized, CmsSecretNotFound, CmsSecrets } from "@bernouy/cms-secrets";
+import {
+    CmsSecretConflict,
+    CmsSecretNamespaceStore,
+    CmsSecretNotAuthorized,
+    CmsSecretNotFound,
+    CmsSecrets,
+} from "@bernouy/cms-secrets";
 import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
-import { InMemorySecretStore } from "@bernouy/secret-store";
+import { InMemorySecretStore, ValidatingSecretStore } from "@bernouy/secret-store";
 
 describe("CmsSecrets", () => {
     test("stores values inside an explicit credential-owned namespace", async () => {
@@ -112,6 +118,30 @@ describe("CmsSecrets", () => {
         await expect(
             secrets.resolve(namespace.namespaceId, namespace.namespaceKey, created.secretId),
         ).rejects.toBeInstanceOf(CmsSecretNotAuthorized);
+    });
+
+    test("adapts one namespace to the generic named-secret port", async () => {
+        const secrets = fixture();
+        const namespace = await createNamespace(secrets, "access");
+        const key = await secrets.createNamespaceKey({
+            namespaceId: namespace.namespaceId,
+            namespaceKey: namespace.namespaceKey,
+            permissions: ["secrets.metadata.read", "secrets.resolve", "secrets.write", "secrets.delete"],
+        });
+        const store = new ValidatingSecretStore(
+            new CmsSecretNamespaceStore(secrets, {
+                namespaceId: namespace.namespaceId,
+                namespaceKey: key.namespaceKey,
+            }),
+        );
+
+        expect(await store.get("SMTP_PASSWORD")).toBeNull();
+        await store.set("SMTP_PASSWORD", "first");
+        await store.set("SMTP_PASSWORD", "second");
+        expect(await store.get("SMTP_PASSWORD")).toBe("second");
+        expect(await store.listKeys()).toEqual(["SMTP_PASSWORD"]);
+        await store.delete("SMTP_PASSWORD");
+        expect(await store.get("SMTP_PASSWORD")).toBeNull();
     });
 });
 

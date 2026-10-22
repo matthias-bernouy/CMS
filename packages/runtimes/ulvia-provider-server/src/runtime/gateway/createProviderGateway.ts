@@ -11,7 +11,7 @@ import { createProviderGatewayAccess } from "./access";
 export async function createProviderGateway(stores: ProviderStores, siteId: string) {
     const { db, releases, manifests, installations, selections } = stores;
     const routes = new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests });
-    const resolveSecret = createSecretResolver(stores.secrets);
+    const resolveSecret = createSecretResolver(stores.contractSecrets.installations);
     const network = new NodeGatewayHttpNetwork({
         allowPrivateAddresses: true,
         resolveToken: async (reference) => {

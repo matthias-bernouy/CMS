@@ -44,6 +44,7 @@ import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from
 import type { Logger } from "@bernouy/logging";
 import { CmsSecrets } from "@bernouy/cms-secrets";
 import { MongoCmsSecretMetadataStore } from "@bernouy/cms-secrets/mongo";
+import { createContractSecretStores } from "./contractSecretStores";
 
 const SCOPE_ID = "default";
 
@@ -167,6 +168,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     });
     await secretMetadata.init();
     const cmsSecrets = new CmsSecrets(secretMetadata, secrets);
+    const contractSecrets = await createContractSecretStores(cmsSecrets, secrets);
     const identities = new MongoIdentityService(db);
     await identities.init();
 
@@ -185,8 +187,8 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         pats,
         authTokens,
         rateLimit,
-        secrets,
         cmsSecrets,
+        contractSecrets,
         identities,
         releases,
         manifests,

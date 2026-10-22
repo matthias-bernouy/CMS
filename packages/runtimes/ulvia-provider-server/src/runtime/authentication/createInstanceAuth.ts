@@ -23,7 +23,7 @@ export async function createInstanceAuth(stores: ProviderStores, kernelUrl: stri
         tokens: stores.authTokens,
         emailer: new ConfiguredEmailer({
             readSettings: async () => (await stores.repo.getSystem()).email,
-            secrets: stores.secrets,
+            secrets: stores.contractSecrets.access,
         }),
         emailComposer: new TemplatedAuthEmailComposer({
             readTemplates: async () => (await stores.repo.getSystem()).email.templates,

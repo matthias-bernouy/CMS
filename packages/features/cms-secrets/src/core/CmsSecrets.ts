@@ -92,6 +92,12 @@ export class CmsSecrets {
         return publicSecretMetadata(await this.required(namespaceId, id));
     }
 
+    async getByName(namespaceId: string, namespaceKey: string, name: string): Promise<PublicSecretMetadata | null> {
+        await this.namespaces.authorizeFor(namespaceId, namespaceKey, "secrets.metadata.read");
+        const secret = await this.metadata.findByName(namespaceId, name);
+        return secret ? publicSecretMetadata(secret) : null;
+    }
+
     async list(namespaceId: string, namespaceKey: string, limit: number): Promise<readonly PublicSecretMetadata[]> {
         await this.namespaces.authorizeFor(namespaceId, namespaceKey, "secrets.metadata.read");
         return (await this.metadata.list(namespaceId, limit)).map(publicSecretMetadata);

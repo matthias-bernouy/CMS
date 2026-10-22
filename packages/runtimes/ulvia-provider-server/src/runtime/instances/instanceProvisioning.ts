@@ -90,7 +90,10 @@ async function selectContracts(
     execution: ProviderInstanceTransitionExecution,
 ): Promise<void> {
     execution.throwIfLeaseLost();
-    const state = await composition.management.list();
+    const [state, selected] = await Promise.all([
+        composition.management.list(),
+        composition.gateway.selections.get(composition.gateway.siteId),
+    ]);
     execution.throwIfLeaseLost();
     const installation = state.installations.find(
         (item) =>
@@ -99,14 +102,28 @@ async function selectContracts(
     if (!installation) {
         throw new Error("Official Provider installation is unavailable during provisioning");
     }
-    for (const contract of profile.contracts) {
-        const selected = state.selected.find((item) => item.contractId === contract.contractId);
-        if (selected?.digest === contract.digest && selected.installationId === installation.id) {
-            continue;
-        }
-        await composition.management.selectContract({ installationId: installation.id, ...contract });
-        execution.throwIfLeaseLost();
+    if (
+        profile.contracts.every((contract) =>
+            state.selected.some(
+                (current) =>
+                    current.contractId === contract.contractId &&
+                    current.version === contract.version &&
+                    current.digest === contract.digest &&
+                    current.installationId === installation.id,
+            ),
+        )
+    ) {
+        return;
     }
+    const managedContractIds = new Set(profile.contracts.map(({ contractId }) => contractId));
+    await composition.management.replaceSelections({
+        expectedRevision: selected?.revision ?? 0,
+        selections: [
+            ...(selected?.plan.selections ?? []).filter(({ contractId }) => !managedContractIds.has(contractId)),
+            ...profile.contracts.map((contract) => ({ ...contract, installationId: installation.id })),
+        ],
+    });
+    execution.throwIfLeaseLost();
 }
 
 type ProviderInstallationState = Awaited<

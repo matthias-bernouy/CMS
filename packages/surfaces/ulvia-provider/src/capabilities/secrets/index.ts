@@ -39,6 +39,10 @@ export function registerSecretCapabilities(dispatcher: ProviderCapabilityRegistr
         const namespace = namespaceInput(input);
         return secretCall(() => secrets.get(namespace.id, namespace.key, text(input.secretId)));
     });
+    dispatcher.register("ulvia.cms.secrets", "secrets.get-metadata-by-name", async (input) => {
+        const namespace = namespaceInput(input);
+        return secretCall(() => secrets.getByName(namespace.id, namespace.key, text(input.name)));
+    });
     dispatcher.register("ulvia.cms.secrets", "secrets.list", async (input) => {
         const namespace = namespaceInput(input);
         return secretCall(async () => ({

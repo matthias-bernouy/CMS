@@ -1,0 +1,44 @@
+{
+    "id": "secrets.get-metadata-by-name",
+    "description": "Read secret metadata by its namespace-local name without exposing its value.",
+    "access": "admin",
+    "behavior": { "effect": "query", "execution": "sync" },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespaceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "namespaceKey": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 512 },
+            "name": { "type": "string", "minLength": 1, "maxLength": 96 }
+        },
+        "required": ["namespaceId", "namespaceKey", "name"]
+    },
+    "output": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+            "namespaceId": { "type": "string", "maxLength": 128 },
+            "secretId": { "type": "string", "maxLength": 160 },
+            "name": { "type": "string", "maxLength": 96 },
+            "version": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+            "rotatedAt": { "type": "string", "format": "date-time", "maxLength": 40, "nullable": true }
+        },
+        "required": ["namespaceId", "secretId", "name", "version", "createdAt", "rotatedAt"]
+    },
+    "errors": [
+        { "code": "INVALID_INPUT", "retryable": false },
+        { "code": "NOT_AUTHORIZED", "retryable": false },
+        { "code": "CORE_UNAVAILABLE", "retryable": true }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "QUERY",
+        "path": "/secrets.get-metadata-by-name",
+        "input": { "body": true },
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "INVALID_INPUT": 422, "NOT_AUTHORIZED": 403, "CORE_UNAVAILABLE": 503 }
+        }
+    }
+}

@@ -8,6 +8,9 @@ Production runtime for the official Ulvia Provider.
   aggregate instance runtime.
 - Load exact admitted contract bindings before mounting the Provider and import
   the pinned official profile into each instance during provisioning.
+- Give each secret-consuming contract implementation its own least-privilege
+  `cms-secrets` namespace adapter. Only bootstrap credentials required to open
+  those namespaces may use the runtime's encrypted root secret store directly.
 - Mount only the `@bernouy/ulvia-provider` surface; never mount or start the
   CMS Kernel.
 - Never log Provider tokens or instance secrets.

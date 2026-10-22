@@ -32,13 +32,57 @@
             "contractId": "ulvia.cms.access",
             "version": "1.0.0",
             "digest": "sha256:4e08148852f667c662ee768388017a4d05c750384ab5c12c1b78a95e95e64b46",
-            "requires": []
+            "requires": [
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.get-metadata-by-name",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.resolve",
+                    "optional": false
+                }
+            ]
         },
         {
             "contractId": "ulvia.cms.installations",
             "version": "1.0.0",
             "digest": "sha256:447e0bd013efd0a1f78d9fde6c175f03429ef443cd69c285427aec95ed350e1f",
-            "requires": []
+            "requires": [
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.get-metadata-by-name",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.resolve",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.create",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.rotate",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.delete",
+                    "optional": false
+                }
+            ]
         },
         {
             "contractId": "ulvia.cms.content",
@@ -50,12 +94,37 @@
             "contractId": "ulvia.cms.files",
             "version": "1.0.0",
             "digest": "sha256:fa9e6aac42c7c466a44ff10f39e77ae6941508bf105d87dc54dbd6c7a6d57fcc",
-            "requires": []
+            "requires": [
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.get-metadata-by-name",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.resolve",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.create",
+                    "optional": false
+                },
+                {
+                    "contractId": "ulvia.cms.secrets",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "secrets.rotate",
+                    "optional": false
+                }
+            ]
         },
         {
             "contractId": "ulvia.cms.secrets",
             "version": "1.0.0",
-            "digest": "sha256:8b99e4c308f2acbdba11ff1dd2b10cd21488451eae8442a49166025c398bfb20",
+            "digest": "sha256:e8b9b4f365103f528d66e25297653a565fac8f8d79e9ad96fd77306533904236",
             "requires": []
         }
     ]

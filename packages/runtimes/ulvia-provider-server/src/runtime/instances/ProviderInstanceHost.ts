@@ -164,7 +164,7 @@ export class ProviderInstanceHost {
         try {
             const gateway = await createProviderGateway(stores, SITE_ID);
             const managementForProfile = (profile: OfficialInstanceProfile) =>
-                new ProviderManagement(gateway, stores.secrets, {
+                new ProviderManagement(gateway, stores.contractSecrets.installations, {
                     sources: [this.#providerSource],
                     readReport: async () => providerReport(instance, profile),
                 });
@@ -205,7 +205,7 @@ export class ProviderInstanceHost {
                 createProtectedProviderManagement(management, instance, profile),
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
-                new CmsFileWorkspace(stores.providerFiles, stores.secrets),
+                new CmsFileWorkspace(stores.providerFiles, stores.contractSecrets.files),
                 new Set(profile.contracts.map(({ contractId }) => contractId)),
             );
             operationRecovery = new RecoverySupervisor(

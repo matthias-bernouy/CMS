@@ -33,6 +33,18 @@ test("secret capabilities expose namespace-scoped lifecycle operations", async (
         }),
     ).toMatchObject({ namespaceId: namespace.namespaceId, name: "stripe-token", version: 1 });
     expect(
+        await invoke(dispatcher, "secrets.get-metadata-by-name", {
+            ...namespaceInput(namespace),
+            name: "stripe-token",
+        }),
+    ).toMatchObject({ secretId: created.secretId, name: "stripe-token" });
+    expect(
+        await invoke(dispatcher, "secrets.get-metadata-by-name", {
+            ...namespaceInput(namespace),
+            name: "missing",
+        }),
+    ).toBeNull();
+    expect(
         await invoke(dispatcher, "secrets.resolve", {
             ...namespaceInput(namespace),
             secretId: created.secretId,
