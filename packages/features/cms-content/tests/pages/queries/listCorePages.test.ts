@@ -16,10 +16,38 @@ describe("ulvia.cms.content/pages.list implementation", () => {
         expect(first.items[0]).not.toHaveProperty("content");
     });
 
+    test("keeps pagination stable when several Pages share a title", async () => {
+        const repository = new InMemoryCmsRepository();
+        for (const path of ["/one", "/two", "/three"]) {
+            await repository.insertPage(path, "Same title");
+        }
+
+        const first = await listCmsPages(repository, { limit: 2 });
+        const second = await listCmsPages(repository, { cursor: first.nextCursor, limit: 2 });
+
+        expect([...first.items, ...second.items].map(({ id }) => id)).toHaveLength(3);
+        expect(new Set([...first.items, ...second.items].map(({ id }) => id)).size).toBe(3);
+    });
+
     test("rejects unbounded list inputs", async () => {
         const repository = new InMemoryCmsRepository();
         await expect(listCmsPages(repository, { limit: 101 })).rejects.toThrow(TypeError);
         await expect(listCmsPages(repository, { cursor: "", limit: 1 })).rejects.toThrow(TypeError);
+        await expect(listCmsPages(repository, { query: "x".repeat(121) })).rejects.toThrow(TypeError);
+        await expect(listCmsPages(repository, { visibility: "hidden" as never })).rejects.toThrow(TypeError);
+    });
+
+    test("filters Page metadata without exposing editorial documents", async () => {
+        const repository = new InMemoryCmsRepository();
+        await repository.insertPage("/about", "About");
+        await repository.insertPage("/journal", "Journal");
+        const journal = await repository.getPage("/journal");
+        await repository.updatePage({ id: journal!.id, visible: true }, journal!.revision);
+
+        expect((await listCmsPages(repository, { query: "about" })).items.map(({ title }) => title)).toEqual(["About"]);
+        expect((await listCmsPages(repository, { visibility: "published" })).items.map(({ title }) => title)).toEqual([
+            "Journal",
+        ]);
     });
 });
 

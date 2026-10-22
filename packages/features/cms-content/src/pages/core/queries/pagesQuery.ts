@@ -24,7 +24,12 @@ export function filterAndSortPages(pages: PageMeta[], opts: PagesQuery = {}): Pa
 
     const sortBy = opts.sortBy ?? "title";
     const dir = opts.sortOrder === "desc" ? -1 : 1;
-    return [...rows].sort((a, b) => compareBy(a, b, sortBy) * dir);
+    const sorted = [...rows].sort((a, b) => compareBy(a, b, sortBy) * dir || a.id.localeCompare(b.id) * dir);
+    const start = opts.afterId === undefined ? 0 : sorted.findIndex(({ id }) => id === opts.afterId) + 1;
+    if (opts.afterId !== undefined && start === 0) {
+        throw new TypeError("Invalid Page cursor.");
+    }
+    return sorted.slice(start, opts.limit === undefined ? undefined : start + opts.limit);
 }
 
 function compareBy(a: PageMeta, b: PageMeta, key: "title" | "path" | "visible"): number {

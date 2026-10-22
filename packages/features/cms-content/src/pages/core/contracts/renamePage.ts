@@ -1,13 +1,20 @@
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import { PageRevisionConflictError } from "cms-content/application/core/validation/errors";
 import { validatePageTitle } from "cms-content/pages/core/validation/page";
-import type { CmsPageListItem } from "cms-content/pages/core/contracts/listPages";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 
 export interface CmsPageRenameInput {
     readonly id: string;
     readonly title: string;
     readonly expectedRevision: number;
+}
+
+export interface CmsPageRenameOutput {
+    readonly id: string;
+    readonly revision: number;
+    readonly path: string;
+    readonly title: string;
+    readonly visible: boolean;
 }
 
 export class CmsPageNotFoundError extends Error {
@@ -21,7 +28,7 @@ export class CmsPageNotFoundError extends Error {
 export async function renameCmsPage(
     repository: Pick<CmsRepository, "getPageById" | "updatePage">,
     input: CmsPageRenameInput,
-): Promise<CmsPageListItem> {
+): Promise<CmsPageRenameOutput> {
     if (typeof input.id !== "string" || input.id.length === 0 || input.id.length > 200) {
         throw new TypeError("Invalid Page id.");
     }
@@ -47,7 +54,7 @@ export async function renameCmsPage(
     }
 }
 
-function pageItem(page: TPage): CmsPageListItem {
+function pageItem(page: TPage): CmsPageRenameOutput {
     return {
         id: page.id,
         revision: page.revision,

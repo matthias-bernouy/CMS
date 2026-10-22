@@ -65,12 +65,34 @@ export class MongoCmsRepository extends MongoContentRepository implements CmsRep
         }
 
         const sortField = options.sortBy ?? "title";
-        const sort = { [sortField]: options.sortOrder === "desc" ? -1 : 1 } as Record<string, 1 | -1>;
-        const documents = await this.pages
+        const direction = options.sortOrder === "desc" ? -1 : 1;
+        const sort = { [sortField]: direction, _id: direction } as Record<string, 1 | -1>;
+        if (options.afterId !== undefined) {
+            const cursor = await this.pages.findOne(
+                { ...filter, _id: options.afterId },
+                { projection: { [sortField]: 1 } },
+            );
+            if (!cursor) {
+                throw new TypeError("Invalid Page cursor.");
+            }
+            const value = cursor[sortField as keyof typeof cursor];
+            filter.$and = [
+                {
+                    $or: [
+                        { [sortField]: { [direction > 0 ? "$gt" : "$lt"]: value } },
+                        { [sortField]: value, _id: { [direction > 0 ? "$gt" : "$lt"]: cursor._id } },
+                    ],
+                },
+            ];
+        }
+        let query = this.pages
             .find(filter, { projection: { path: 1, title: 1, tags: 1, visible: 1 } })
             .collation({ locale: "en", strength: 1 })
-            .sort(sort)
-            .toArray();
+            .sort(sort);
+        if (options.limit !== undefined) {
+            query = query.limit(options.limit);
+        }
+        const documents = await query.toArray();
         return documents.map((document) => ({
             id: document._id,
             path: document.path,
