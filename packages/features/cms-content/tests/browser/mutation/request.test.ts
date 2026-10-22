@@ -28,7 +28,7 @@ describe("Form mutation — submit request", () => {
         const result = await mutationFormRequest(host, "created");
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/.cms/call/ulvia.cms.content/pages.create");
+        expect(captured.url).toBe("http://localhost/.cms/mutation/ulvia.cms.content/pages.create");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.headers).toEqual(expect.any(Headers));
         expect(JSON.parse(String(captured.init?.body))).toEqual({ title: "Welcome" });
@@ -71,7 +71,7 @@ describe("Form mutation — submit request", () => {
         await waitFor(() => text(root.querySelector(".success")) === "Created 42");
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/.cms/call/test.users/create");
+        expect(captured.url).toBe("http://localhost/.cms/mutation/test.users/create");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.body).toBe(JSON.stringify({ email: "ada@example.com" }));
         expect(root.querySelector("input")).toBe(input);

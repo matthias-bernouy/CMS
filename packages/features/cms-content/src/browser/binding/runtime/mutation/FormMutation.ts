@@ -160,7 +160,7 @@ function mutationBinding(form: HTMLFormElement): { readonly url: string; readonl
     const mutation = parseMutation(form.getAttribute(MUTATION_ATTR) ?? "");
     if (mutation) {
         return {
-            url: `/.cms/call/${mutation.contractId}/${mutation.capabilityId}`,
+            url: `/.cms/mutation/${mutation.contractId}/${mutation.capabilityId}`,
             alias: mutation.name,
         };
     }

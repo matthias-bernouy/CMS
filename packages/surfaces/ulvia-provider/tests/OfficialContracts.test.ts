@@ -56,6 +56,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
         kernel: {
             query: async () => null,
             handleCapability: async () => new Response(null, { status: 404 }),
+            handleMutation: async () => new Response(null, { status: 404 }),
             handleQuery: async () => new Response(null, { status: 404 }),
             handleCollectionAsset: async () => new Response(null, { status: 404 }),
             handleSitemap: async () => new Response(null, { status: 404 }),

@@ -1,5 +1,5 @@
 import type { BlobStore } from "@bernouy/blob-store";
-import type { ContentReader } from "@bernouy/cms-content/rendering";
+import type { ContentReader, RenderablePage } from "@bernouy/cms-content/rendering";
 import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
 import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
@@ -10,6 +10,9 @@ import type { Logger } from "@bernouy/logging";
 export type KernelCmsConfig = {
     runner: Runner;
     content: ContentReader;
+    editorialPages?: {
+        resolveRoute(path: string): Promise<{ readonly page: RenderablePage; readonly language: string } | null>;
+    };
     resolveActor(request: Request): Promise<GatewayActor>;
     sessionCookie?: { readonly secure?: boolean };
     collections?: {
@@ -34,6 +37,7 @@ export type KernelCmsConfig = {
     };
     pageCapabilities?: PageCapabilityAccessPort;
     capabilityHandler?: (request: Request) => Promise<Response>;
+    mutationHandler?: (request: Request) => Promise<Response>;
     queryHandler?: (request: Request) => Promise<Response>;
     collectionAssetHandler?: (request: Request) => Promise<Response>;
     sitemapHandler?: (request: Request) => Promise<Response>;

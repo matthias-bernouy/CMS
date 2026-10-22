@@ -25,6 +25,7 @@ export async function mountProductionKernel(
     new runtime.Kernel({
         runner,
         content: provider.content,
+        editorialPages: provider.editorialPages,
         resolveActor: (request) => provider.resolveActor(request),
         sessionCookie: { secure: env.KERNEL_PUBLIC_URL.startsWith("https:") },
         cache: new InMemoryCache(),
@@ -32,6 +33,7 @@ export async function mountProductionKernel(
         capabilityGateway: provider.gateway,
         pageCapabilities: provider.pageCapabilities,
         capabilityHandler: provider.capability,
+        mutationHandler: provider.declarativeMutation,
         queryHandler: provider.declarativeQuery,
         collectionAssetHandler: provider.collectionAsset,
         collectionAssets: provider.collectionAssets,

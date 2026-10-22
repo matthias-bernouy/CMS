@@ -38,6 +38,14 @@ type HarnessOptions = Readonly<{
     repository?: ContentReader | CmsRepository;
     collections?: KernelCmsConfig["collections"];
     resolveActor?: (request: Request) => Promise<GatewayActor>;
+    editorialPages?: readonly TPage[];
+    resolveEditorialRoute?: NonNullable<KernelCmsConfig["editorialPages"]>["resolveRoute"];
+    onEditorialLookup?: (path: string) => void;
+    activeLanguages?: readonly string[];
+    contentTexts?: readonly {
+        namespace: string;
+        resolve(locale: string): Readonly<Record<string, string>>;
+    }[];
 }>;
 
 export function mountPublicPages(options: HarnessOptions = {}) {
@@ -68,11 +76,13 @@ export function mountPublicPages(options: HarnessOptions = {}) {
                   storedLookups.push(path);
                   const page = storedPages.find((item) => item.path === path);
                   return page
-                      ? {
-                            kind: "current",
-                            page: renderable(page),
-                            language: page.language ?? SYSTEM.site.language,
-                        }
+                      ? page.visible
+                          ? {
+                                kind: "current",
+                                page: renderable(page),
+                                language: page.language ?? SYSTEM.site.language,
+                            }
+                          : { kind: "unavailable" }
                       : null;
               },
               getPublishedPageById: async (id) => storedPages.find((page) => page.id === id) ?? null,
@@ -80,10 +90,20 @@ export function mountPublicPages(options: HarnessOptions = {}) {
               resolvePublishedRoute: async () => null,
               getRenderableBlocs: async () => [],
               getBlocViewJS: async () => null,
+              getContentTexts: async () => [...(options.contentTexts ?? [])],
               getRenderingSettings: async () =>
-                  options.siteHost === undefined
+                  options.siteHost === undefined && options.activeLanguages === undefined
                       ? SYSTEM
-                      : { ...SYSTEM, site: { ...SYSTEM.site, host: options.siteHost } },
+                      : {
+                            ...SYSTEM,
+                            site: {
+                                ...SYSTEM.site,
+                                ...(options.siteHost === undefined ? {} : { host: options.siteHost }),
+                                ...(options.activeLanguages === undefined
+                                    ? {}
+                                    : { activeLanguages: [...options.activeLanguages] }),
+                            },
+                        },
           };
     const invoker = options.gateway
         ? ({
@@ -103,6 +123,24 @@ export function mountPublicPages(options: HarnessOptions = {}) {
     const kernel = new KernelCms({
         runner,
         content: repository,
+        ...(options.editorialPages || options.resolveEditorialRoute
+            ? {
+                  editorialPages: {
+                      resolveRoute:
+                          options.resolveEditorialRoute ??
+                          (async (path: string) => {
+                              options.onEditorialLookup?.(path);
+                              const page = options.editorialPages?.find((candidate) => candidate.path === path);
+                              return page
+                                  ? {
+                                        page: renderable(page),
+                                        language: page.language ?? SYSTEM.site.language,
+                                    }
+                                  : null;
+                          }),
+                  },
+              }
+            : {}),
         resolveActor: options.resolveActor ?? (async () => ({ kind: "anonymous" })),
         cache,
         collections: options.collections,

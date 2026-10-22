@@ -16,6 +16,7 @@ export async function preflightPageGatewayAccess(
     request: Request,
     renderable: RenderablePage,
     kernel: KernelCms,
+    minimumAccess: PageAccess = "public",
 ): Promise<PageAccessDecision> {
     const capabilityDecision = await capabilityAccess(renderable, kernel);
     if (capabilityDecision.response) {
@@ -26,10 +27,11 @@ export async function preflightPageGatewayAccess(
         return unavailable();
     }
     const isLoginPage = settings.site.login !== null && samePageReference(settings.site.login, renderable.reference);
-    const required =
+    const pageAccess =
         !settings.site.visible && !isLoginPage
             ? highestAccess(capabilityDecision.access, "authenticated")
             : capabilityDecision.access;
+    const required = highestAccess(pageAccess, minimumAccess);
     const decision = await authorizeAccess(request, kernel, required);
     return { ...decision, cacheable: decision.cacheable && !isLoginPage };
 }

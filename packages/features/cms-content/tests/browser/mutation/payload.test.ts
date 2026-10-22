@@ -32,7 +32,7 @@ describe("Form mutation payload", () => {
         await waitFor(() => request !== null);
 
         const captured = request as unknown as { url: string; init?: RequestInit };
-        expect(captured.url).toBe("http://localhost/.cms/call/accounts/login");
+        expect(captured.url).toBe("http://localhost/.cms/mutation/accounts/login");
         expect(JSON.parse(String(captured.init?.body))).toEqual({
             email: "ada@example.com",
             returnTo: "/dashboard",

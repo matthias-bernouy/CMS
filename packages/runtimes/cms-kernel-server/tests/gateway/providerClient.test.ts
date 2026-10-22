@@ -21,6 +21,7 @@ test("projects every content read through the versioned Provider query endpoint"
     expect(texts[0]?.resolve("de")).toEqual({ title: "Shop" });
     await client.content.getContentRevision();
     await client.content.getRenderingRevision!();
+    await client.editorialPages.resolveRoute("/about");
     await client.content.getRenderablePage("/about");
     await client.content.getRenderablePages();
     await client.content.resolvePageReference({ path: "/about" });
@@ -38,6 +39,7 @@ test("projects every content read through the versioned Provider query endpoint"
         "content.texts",
         "content.revision",
         "content.rendering-revision",
+        "content.editorial-route",
         "content.renderable-page",
         "content.renderable-pages",
         "content.resolve-page-reference",
@@ -76,6 +78,9 @@ test("projects gateway, Page access and collection assets", async () => {
 test("forwards every streaming endpoint with its canonical Provider path", async () => {
     const { client, requests } = clientFixture(() => new Response("ok"));
     await client.capability(new Request("https://kernel.test/.cms/call/catalog.items/list?limit=10"));
+    await client.declarativeMutation(
+        new Request("https://kernel.test/.cms/mutation/catalog.items/create", { method: "POST" }),
+    );
     await client.declarativeQuery(
         new Request("https://kernel.test/.cms/query/catalog.items/list", { method: "QUERY" }),
     );
@@ -86,11 +91,12 @@ test("forwards every streaming endpoint with its canonical Provider path", async
 
     expect(requests.map((request) => `${request.url.pathname}${request.url.search}`)).toEqual([
         "/ulvia/kernel/v1/call/catalog.items/list?limit=10",
+        "/ulvia/kernel/v1/mutations/catalog.items/create",
         "/ulvia/kernel/v1/queries/catalog.items/list",
         "/ulvia/kernel/v1/collections/collection-a/assets/logo.svg?download=1",
         "/ulvia/kernel/v1/sitemap/resource",
     ]);
-    expect(new Headers(requests[3]?.init.headers).get("x-ulvia-original-path")).toBe("/sitemap-1.xml");
+    expect(new Headers(requests[4]?.init.headers).get("x-ulvia-original-path")).toBe("/sitemap-1.xml");
 });
 
 test("propagates the current request id through queries and forwarded requests", async () => {

@@ -65,7 +65,7 @@ describe("Form mutation — Access submit", () => {
 
         const captured = request as unknown as { url: string; init?: RequestInit };
         expect(event.defaultPrevented).toBe(true);
-        expect(captured.url).toBe("http://localhost/.cms/call/ulvia.cms.access/login-password");
+        expect(captured.url).toBe("http://localhost/.cms/mutation/ulvia.cms.access/login-password");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.body).toBe(
             JSON.stringify({

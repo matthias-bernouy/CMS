@@ -109,6 +109,13 @@ export class UlviaProvider {
                 );
             }
         });
+        runner.group("/ulvia/kernel/v1/mutations", (mutationRunner) => {
+            mutationRunner.setDefaultEndpoint("POST", (request) =>
+                withKernelRuntime(request, options, (runtime, forwardedRequest) =>
+                    runtime.kernel.handleMutation(forwardedRequest),
+                ),
+            );
+        });
         runner.group("/ulvia/kernel/v1/collections", (assetRunner) => {
             for (const method of ["GET", "HEAD"] as const) {
                 assetRunner.setDefaultEndpoint(method, (request) =>

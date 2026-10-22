@@ -1,4 +1,4 @@
-import type { ContentReader } from "@bernouy/cms-content/rendering";
+import type { ContentReader, RenderablePage } from "@bernouy/cms-content/rendering";
 import type { PageCapabilityAccessPort } from "@bernouy/cms-gateway/analysis";
 import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
 import type { KernelProviderQuery, KernelProviderQueryOperation } from "@bernouy/ulvia-provider/kernel";
@@ -9,6 +9,9 @@ import { currentRequestHeaders } from "@bernouy/http-runner/observability";
 
 export class ProviderKernelClient {
     readonly content: ContentReader;
+    readonly editorialPages: {
+        resolveRoute(path: string): Promise<{ readonly page: RenderablePage; readonly language: string } | null>;
+    };
     readonly pageCapabilities: PageCapabilityAccessPort;
     readonly collectionAssets: InstalledCollectionAssetSource;
     readonly gateway: {
@@ -21,6 +24,9 @@ export class ProviderKernelClient {
         private readonly logger: Logger,
     ) {
         this.content = remoteContent(this);
+        this.editorialPages = {
+            resolveRoute: (path) => this.query("content.editorial-route", { path }),
+        };
         this.pageCapabilities = {
             requiredAccess: (page) => this.query("page.capability-access", { page }),
         };
@@ -116,6 +122,12 @@ export class ProviderKernelClient {
     capability = (request: Request): Promise<Response> =>
         this.forward(
             `/ulvia/kernel/v1/call${new URL(request.url).pathname.slice("/.cms/call".length)}${new URL(request.url).search}`,
+            request,
+        );
+
+    declarativeMutation = (request: Request): Promise<Response> =>
+        this.forward(
+            `/ulvia/kernel/v1/mutations${new URL(request.url).pathname.slice("/.cms/mutation".length)}`,
             request,
         );
 

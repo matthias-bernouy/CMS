@@ -5,8 +5,10 @@ import { serveBindingCoreRuntime, serveBlocRuntime } from "@bernouy/cms-content/
 import { PUBLISHED_PAGE_SNAPSHOT_ROUTE, servePublishedPageSnapshot } from "@bernouy/cms-content/rendering";
 import {
     CMS_CAPABILITY_CALL_ROUTE,
+    CMS_CAPABILITY_MUTATION_ROUTE,
     CMS_CAPABILITY_QUERY_ROUTE,
     createCapabilityHttpHandler,
+    createCapabilityMutationHandler,
     createCapabilityQueryHandler,
 } from "@bernouy/cms-gateway/http/handlers";
 import { handlePageRequest } from "cms-kernel/http/pages/handlePageRequest";
@@ -113,7 +115,6 @@ export function mountKernelRoutes(kernel: KernelCms) {
         });
     }
     runner.addEndpoint("GET", PUBLISHED_PAGE_SNAPSHOT_ROUTE, (req) => servePublishedPageSnapshot(kernel.content, req));
-
     runner.addEndpoint("GET", "/robots.txt", robotsHandler);
     runner.addEndpoint("GET", "/sitemap.xml", sitemapHandler);
     runner.addEndpoint("GET", FAVICON_ROUTE, serveFavicon);
@@ -159,6 +160,21 @@ export function mountKernelRoutes(kernel: KernelCms) {
             );
             queryRunner.setDefaultEndpoint("QUERY", async (request) =>
                 applySessionEffect(await queryHandler(request), kernel.sessionCookie),
+            );
+        });
+    }
+    if (kernel.mutationHandler || kernel.capabilityGateway?.resolveCapability) {
+        const mutationHandler =
+            kernel.mutationHandler ??
+            createCapabilityMutationHandler({
+                ...kernel.capabilityGateway!,
+                resolveCapability: kernel.capabilityGateway!.resolveCapability!,
+                basePath: kernel.basePath,
+                resolveActor: (request) => resolveRequestActor(kernel, request),
+            });
+        runner.group(CMS_CAPABILITY_MUTATION_ROUTE, (mutationRunner) => {
+            mutationRunner.setDefaultEndpoint("POST", async (request) =>
+                applySessionEffect(await mutationHandler(request), kernel.sessionCookie),
             );
         });
     }

@@ -2,6 +2,7 @@ import type KernelCms from "cms-kernel/KernelCms";
 import { isValidRegisteredPagePath } from "@bernouy/cms-content/page-path";
 import { renderRef } from "cms-kernel/http/pages/renderRef";
 import { serveRenderablePage } from "cms-kernel/http/pages/serveRenderablePage";
+import { resolveRequestActor } from "cms-kernel/http/pages/access/resolveRequestActor";
 
 /**
  * Shared entry point for every public page GET registered by Kernel.
@@ -34,7 +35,7 @@ export async function handlePageRequest(req: Request, kernel: KernelCms): Promis
         return renderRef(req, kernel, "notFound", 410, "Page not found", storedRoute.language);
     }
     if (storedRoute?.kind === "unavailable") {
-        return renderRef(req, kernel, "notFound", 404, "Page not found");
+        return serveEditorialRoute(req, pathname, kernel);
     }
     if (storedRoute?.kind === "redirect") {
         return new Response(null, {
@@ -53,4 +54,34 @@ export async function handlePageRequest(req: Request, kernel: KernelCms): Promis
     }
 
     return renderRef(req, kernel, "notFound", 404, "Page not found");
+}
+
+async function serveEditorialRoute(request: Request, pathname: string, kernel: KernelCms): Promise<Response> {
+    if (!kernel.editorialPages) {
+        return renderRef(request, kernel, "notFound", 404, "Page not found");
+    }
+    const actor = await resolveRequestActor(kernel, request).catch(() => null);
+    if (!actor) {
+        return new Response("Service unavailable", {
+            status: 503,
+            headers: { "Cache-Control": "no-store" },
+        });
+    }
+    if (actor.kind !== "administrator") {
+        return renderRef(request, kernel, "notFound", 404, "Page not found");
+    }
+    let route: Awaited<ReturnType<NonNullable<typeof kernel.editorialPages>["resolveRoute"]>>;
+    try {
+        route = await kernel.editorialPages.resolveRoute(pathname);
+    } catch (error) {
+        kernel.logger.error("kernel.page.editorial-route.failed", { pathname }, error);
+        return new Response("Service unavailable", {
+            status: 503,
+            headers: { "Cache-Control": "no-store" },
+        });
+    }
+    if (!route) {
+        return renderRef(request, kernel, "notFound", 404, "Page not found");
+    }
+    return serveRenderablePage(request, route.page, pathname, route.language, kernel, "admin");
 }

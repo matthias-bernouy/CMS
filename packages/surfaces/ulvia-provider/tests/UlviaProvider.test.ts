@@ -26,6 +26,7 @@ describe("UlviaProvider", () => {
             origin: string;
             cookie: string | null;
         }> = [];
+        const forwardedMutations: string[] = [];
         const forwardedQueries: Array<{ method: string; path: string; authorization: string | null }> = [];
         const runner = new BunRunner();
         new UlviaProvider(
@@ -39,6 +40,10 @@ describe("UlviaProvider", () => {
                         origin: new URL(request.url).origin,
                         cookie: request.headers.get("cookie"),
                     });
+                    return Response.json({ ok: true });
+                },
+                handleMutation: async (request) => {
+                    forwardedMutations.push(new URL(request.url).pathname);
                     return Response.json({ ok: true });
                 },
                 handleQuery: async (request) => {
@@ -83,6 +88,11 @@ describe("UlviaProvider", () => {
                     cookie: "cms-session=session-token",
                 },
             ]);
+            const mutation = await server.request("POST", "/ulvia/kernel/v1/mutations/ulvia.cms.fixture/echo", {
+                headers: reportAuthorization(),
+            });
+            expect(mutation.status).toBe(200);
+            expect(forwardedMutations).toEqual(["/ulvia/kernel/v1/mutations/ulvia.cms.fixture/echo"]);
             const query = await server.request("QUERY", "/ulvia/kernel/v1/queries/catalog.items/list", {
                 headers: {
                     ...reportAuthorization(),

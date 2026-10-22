@@ -11,6 +11,7 @@ export const KERNEL_PROVIDER_QUERY_OPERATIONS = [
     "content.texts",
     "content.revision",
     "content.rendering-revision",
+    "content.editorial-route",
     "content.renderable-page",
     "content.renderable-pages",
     "content.resolve-page-reference",
@@ -40,6 +41,7 @@ export type KernelProviderQuery = Readonly<{
 export interface KernelInstanceApi {
     query(query: KernelProviderQuery): Promise<unknown>;
     handleCapability(request: Request): Promise<Response>;
+    handleMutation(request: Request): Promise<Response>;
     handleQuery(request: Request): Promise<Response>;
     handleCollectionAsset(request: Request): Promise<Response>;
     handleSitemap(request: Request): Promise<Response>;

@@ -10,6 +10,7 @@ export default class KernelCms {
     readonly runner;
     readonly cache;
     readonly content: ContentReader;
+    readonly editorialPages;
     readonly resolveActor;
     readonly sessionCookie;
     readonly collections;
@@ -17,6 +18,7 @@ export default class KernelCms {
     readonly capabilityGateway;
     readonly pageCapabilities;
     readonly capabilityHandler;
+    readonly mutationHandler;
     readonly queryHandler;
     readonly collectionAssetHandler;
     readonly sitemapHandler;
@@ -31,6 +33,7 @@ export default class KernelCms {
         this.runner = config.runner;
         this.cache = config.cache;
         this.content = config.content;
+        this.editorialPages = config.editorialPages;
         this.resolveActor = config.resolveActor;
         this.sessionCookie = config.sessionCookie;
         this.collections = config.collections;
@@ -38,6 +41,7 @@ export default class KernelCms {
         this.capabilityGateway = config.capabilityGateway;
         this.pageCapabilities = config.pageCapabilities;
         this.capabilityHandler = config.capabilityHandler;
+        this.mutationHandler = config.mutationHandler;
         this.queryHandler = config.queryHandler;
         this.collectionAssetHandler = config.collectionAssetHandler;
         this.sitemapHandler = config.sitemapHandler;

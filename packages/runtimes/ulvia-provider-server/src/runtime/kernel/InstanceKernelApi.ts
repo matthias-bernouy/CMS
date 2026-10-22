@@ -1,6 +1,10 @@
-import { createContentReader, type ContentReader } from "@bernouy/cms-content/rendering";
+import { createContentReader, type ContentReader, type RenderablePage } from "@bernouy/cms-content/rendering";
 import { PageCapabilityAnalyzer, type PageCapabilityDocument } from "@bernouy/cms-gateway/analysis";
-import { createCapabilityHttpHandler, createCapabilityQueryHandler } from "@bernouy/cms-gateway/http/handlers";
+import {
+    createCapabilityHttpHandler,
+    createCapabilityMutationHandler,
+    createCapabilityQueryHandler,
+} from "@bernouy/cms-gateway/http/handlers";
 import { serveInstalledCollectionAsset } from "@bernouy/cms-repository/collections/http";
 import { createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-seo/http";
 import type { KernelInstanceApi, KernelProviderQuery } from "@bernouy/ulvia-provider/kernel";
@@ -46,6 +50,13 @@ export async function createInstanceKernelApi(
         resolveCapability: gateway.resolvePageCapability,
         resolveActor: (request) => resolveActor(request, gateway.siteId, gateway.invoker),
     });
+    const mutation = createCapabilityMutationHandler({
+        siteId: gateway.siteId,
+        basePath: "",
+        invoker: gateway.invoker,
+        resolveCapability: gateway.resolvePageCapability,
+        resolveActor: (request) => resolveActor(request, gateway.siteId, gateway.invoker),
+    });
     const sitemap = createSitemapHandler({
         content,
         store: stores.sitemapStore,
@@ -56,6 +67,7 @@ export async function createInstanceKernelApi(
     return {
         query: (query) => executeLoggedQuery(query, content, stores, gateway, pageCapabilities, logger),
         handleCapability: (request) => capability(rewritePath(request, "/ulvia/kernel/v1/call", "/.cms/call")),
+        handleMutation: (request) => mutation(rewritePath(request, "/ulvia/kernel/v1/mutations", "/.cms/mutation")),
         handleQuery: (request) => query(rewritePath(request, "/ulvia/kernel/v1/queries", "/.cms/query")),
         handleCollectionAsset: (request) =>
             serveInstalledCollectionAsset(
@@ -112,6 +124,8 @@ async function executeQuery(
             return (await content.getContentRevision?.()) ?? 0;
         case "content.rendering-revision":
             return (await content.getRenderingRevision?.()) ?? (await content.getContentRevision?.()) ?? 0;
+        case "content.editorial-route":
+            return resolveEditorialRoute(text(input.path), stores);
         case "content.renderable-page":
             return content.getRenderablePage(text(input.path));
         case "content.renderable-pages":
@@ -152,6 +166,37 @@ async function executeQuery(
         case "assets.metadata-batch":
             return stores.collections.getInstalledAssetMetadataBatch(gateway.siteId, input.references as never);
     }
+}
+
+async function resolveEditorialRoute(
+    path: string,
+    stores: InstanceComposition["stores"],
+): Promise<{ page: RenderablePage; language: string } | null> {
+    const route = await stores.repo.getPageRoute(path);
+    if (route?.state !== "current") {
+        return null;
+    }
+    const page = await stores.repo.getPageById(route.pageId);
+    if (!page) {
+        return null;
+    }
+    const finalRoute = await stores.repo.getPageRoute(path);
+    if (
+        finalRoute?.state !== "current" ||
+        finalRoute.pageId !== route.pageId ||
+        finalRoute.language !== route.language
+    ) {
+        return null;
+    }
+    return {
+        page: {
+            reference: { kind: "site", pageId: page.id },
+            page: structuredClone({ ...page, path }),
+            source: { kind: "site", pageId: page.id, revision: page.revision },
+            requirements: [...((await stores.repo.getPageRequirements?.(page)) ?? [])],
+        },
+        language: route.language,
+    };
 }
 
 async function projectContentTexts(content: ContentReader) {

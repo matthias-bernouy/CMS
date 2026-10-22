@@ -1,6 +1,10 @@
 import { expect, test } from "bun:test";
 import { GatewayError, type GatewayInvocation } from "@bernouy/cms-gateway";
-import { createCapabilityHttpHandler, createCapabilityQueryHandler } from "@bernouy/cms-gateway/http/handlers";
+import {
+    createCapabilityHttpHandler,
+    createCapabilityMutationHandler,
+    createCapabilityQueryHandler,
+} from "@bernouy/cms-gateway/http/handlers";
 
 test("authenticates provider machine calls independently from users", async () => {
     const calls: GatewayInvocation[] = [];
@@ -190,6 +194,81 @@ test("logical Page queries reject commands, binary results and mutation transpor
         ).status,
     ).toBe(404);
     expect(calls).toEqual([]);
+});
+
+test("logical Page mutations invoke structured commands by capability identity", async () => {
+    const calls: GatewayInvocation[] = [];
+    const handler = createCapabilityMutationHandler({
+        basePath: "",
+        siteId: "site-a",
+        invoker: invoker(calls),
+        resolveActor: async () => ({ kind: "administrator", subjectId: "subject-a" }),
+        resolveCapability: async () => ({
+            access: "admin",
+            effect: "command",
+            idempotency: "none",
+            outputType: "object",
+        }),
+    });
+
+    const response = await handler(
+        new Request("http://site/.cms/mutation/catalog/item.create", {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "x-ulvia-automatic-idempotency-key": "ignored-for-non-keyed-command",
+            },
+            body: '{"title":"One"}',
+        }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(calls).toEqual([
+        expect.objectContaining({
+            actor: { kind: "administrator", subjectId: "subject-a" },
+            contractId: "catalog",
+            capabilityId: "item.create",
+            input: { title: "One" },
+        }),
+    ]);
+});
+
+test("logical keyed mutations require and forward their automatic idempotency key", async () => {
+    const calls: GatewayInvocation[] = [];
+    const handler = createCapabilityMutationHandler({
+        basePath: "",
+        siteId: "site-a",
+        invoker: invoker(calls),
+        resolveActor: async () => ({ kind: "anonymous" }),
+        resolveCapability: async () => ({
+            access: "public",
+            effect: "command",
+            idempotency: "keyed",
+            outputType: "object",
+        }),
+    });
+
+    const missing = await handler(
+        new Request("http://site/.cms/mutation/catalog/item.create", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: "{}",
+        }),
+    );
+    const accepted = await handler(
+        new Request("http://site/.cms/mutation/catalog/item.create", {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "x-ulvia-automatic-idempotency-key": "request-key",
+            },
+            body: "{}",
+        }),
+    );
+
+    expect(missing.status).toBe(400);
+    expect(accepted.status).toBe(200);
+    expect(calls[0]).toMatchObject({ idempotencyKey: "request-key" });
 });
 
 function invoker(calls: GatewayInvocation[]) {

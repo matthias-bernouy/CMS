@@ -15,12 +15,22 @@ export async function serveRenderablePage(
     pathname: string,
     language: string,
     kernel: KernelCms,
+    minimumAccess: PageAccess = "public",
 ): Promise<Response> {
-    const decision = await preflightPageGatewayAccess(request, renderable, kernel);
+    const decision = await preflightPageGatewayAccess(request, renderable, kernel, minimumAccess);
     if (decision.response) {
         return decision.response;
     }
-    return renderIndexedPage(request, renderable.page, pathname, kernel, decision.access, language, decision.cacheable);
+    const response = await renderIndexedPage(
+        request,
+        renderable.page,
+        pathname,
+        kernel,
+        decision.access,
+        language,
+        decision.cacheable,
+    );
+    return embeddablePage(response, language, decision.access);
 }
 
 async function renderIndexedPage(
@@ -99,4 +109,20 @@ function reportPageFailure(
     error: unknown,
 ): void {
     kernel.logger.error("kernel.page.failed", { operation, pathname }, error);
+}
+
+function embeddablePage(response: Response, language: string, access: PageAccess): Response {
+    const headers = new Headers(response.headers);
+    headers.set("Content-Language", language);
+    headers.set("Content-Security-Policy", "frame-ancestors 'self'");
+    headers.set("X-Frame-Options", "SAMEORIGIN");
+    if (access !== "public") {
+        headers.set("Cache-Control", "private, no-store");
+        headers.set("X-Robots-Tag", "noindex, nofollow");
+    }
+    return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+    });
 }

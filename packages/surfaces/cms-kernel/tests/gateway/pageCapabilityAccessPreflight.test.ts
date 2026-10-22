@@ -20,7 +20,7 @@ describe("Kernel page capability access preflight", () => {
         });
         const memberResponse = await member.handler(new Request("http://site/products"));
         expect(memberResponse.status).toBe(200);
-        expect(memberResponse.headers.get("cache-control")).toBe("no-store");
+        expect(memberResponse.headers.get("cache-control")).toBe("private, no-store");
         expect(await memberResponse.text()).toContain("noindex,follow");
     });
 

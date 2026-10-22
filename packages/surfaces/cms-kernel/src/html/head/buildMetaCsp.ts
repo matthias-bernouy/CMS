@@ -15,9 +15,9 @@ import { buildCspContent, type CspExtras } from "@bernouy/http-runner";
  *     re-blocked by a stricter header. Single source of truth = meta.
  *
  * Header-only directives (`frame-ancestors`, `report-uri`, `sandbox`)
- * cannot ride in a meta. Equivalent protection is provided by the static
- * `X-Frame-Options: DENY` header in `SECURITY_HEADERS` (compression.ts)
- * and, in production, by the nginx-level static security headers.
+ * cannot ride in a meta. The HTTP Page responder owns `frame-ancestors` and
+ * `X-Frame-Options`, including the explicit same-origin embedding required by
+ * the administration editor.
  */
 export function buildMetaCsp(document: Document, head: HTMLElement, extras: CspExtras): void {
     const meta = document.createElement("meta");

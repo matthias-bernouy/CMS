@@ -52,6 +52,7 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
                   access: capability.access,
                   version: route.release.admission.release.version,
                   effect: capability.behavior.effect,
+                  idempotency: capability.behavior.effect === "command" ? capability.behavior.idempotency : undefined,
                   outputType: capability.output.type,
               }
             : null;
