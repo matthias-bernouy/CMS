@@ -96,6 +96,31 @@ test("mounts and dispatches every official CMS contract release", async () => {
             expect(response.status, `${contractId}/${capabilityId}`).toBe(503);
             expect(await response.json()).toEqual({ error: { code: "CORE_UNAVAILABLE" } });
         }
+        const controlResponse = await server.request("GET", "/list-provider-installations", {
+            headers: {
+                Authorization: `Bearer ${TOKEN}`,
+                "x-ulvia-request-id": "00000000-0000-4000-8000-000000000099",
+                "x-ulvia-contract-id": "ulvia.cms.installations",
+                "x-ulvia-contract-version": "1.0.0",
+                "x-ulvia-capability-id": "list-provider-installations",
+            },
+        });
+        expect(controlResponse.status).toBe(503);
+        expect(
+            (
+                await server.request("POST", "/namespaces", {
+                    headers: {
+                        Authorization: `Bearer ${TOKEN}`,
+                        "content-type": "application/json",
+                        "x-ulvia-request-id": "00000000-0000-4000-8000-000000000100",
+                        "x-ulvia-contract-id": "ulvia.cms.secrets",
+                        "x-ulvia-contract-version": "1.0.0",
+                        "x-ulvia-capability-id": "namespace.create",
+                    },
+                    body: '{"name":"Forbidden"}',
+                })
+            ).status,
+        ).toBe(401);
     } finally {
         server.stop();
     }

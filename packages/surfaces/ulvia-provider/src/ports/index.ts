@@ -10,6 +10,8 @@ import type {
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
+import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
+import type { GatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type {
     ProviderInstallationStatus,
@@ -71,6 +73,18 @@ export interface UlviaProviderGateway {
     readonly selections: ContractSelectionStore;
     readonly administrators: UlviaProviderAdministratorStore;
     readonly identities: ProviderIdentityService;
+    readonly routes: GatewayRouteResolver;
+    readonly commandAudit: GatewayCommandAuditStore;
+    readonly invocations: {
+        issue(input: {
+            requestId: string;
+            installationId: string;
+            contractId: string;
+            contractVersion: string;
+            capabilityId: string;
+            subjectId?: string;
+        }): Promise<{ token: string; instanceId: string }>;
+    };
 }
 
 export interface UlviaProviderManagement {

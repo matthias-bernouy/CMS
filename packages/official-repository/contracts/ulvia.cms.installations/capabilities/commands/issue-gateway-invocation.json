@@ -1,0 +1,42 @@
+{
+    "id": "gateway.invocation.issue",
+    "description": "Issue one short-lived provider invocation token for the current selected route.",
+    "access": "admin",
+    "behavior": { "effect": "command", "idempotency": "natural", "execution": "sync" },
+    "input": {
+        "type": "object",
+        "properties": {
+            "requestId": { "type": "string", "minLength": 36, "maxLength": 36 },
+            "installationId": { "type": "string", "minLength": 1, "maxLength": 160 },
+            "contractId": { "type": "string", "minLength": 1, "maxLength": 160 },
+            "contractVersion": { "type": "string", "minLength": 5, "maxLength": 64 },
+            "capabilityId": { "type": "string", "minLength": 1, "maxLength": 160 },
+            "subjectId": { "type": "string", "minLength": 1, "maxLength": 256, "nullable": true }
+        },
+        "required": ["requestId", "installationId", "contractId", "contractVersion", "capabilityId"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "token": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 4096 },
+            "instanceId": { "type": "string", "minLength": 1, "maxLength": 160 }
+        },
+        "required": ["token", "instanceId"]
+    },
+    "errors": [
+        { "code": "INVALID_INPUT", "retryable": false },
+        { "code": "NOT_FOUND", "retryable": false },
+        { "code": "CORE_UNAVAILABLE", "retryable": true }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/gateway/invocations",
+        "input": { "body": true },
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "INVALID_INPUT": 422, "NOT_FOUND": 404, "CORE_UNAVAILABLE": 503 }
+        }
+    }
+}

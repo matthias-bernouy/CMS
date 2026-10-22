@@ -143,11 +143,15 @@ export class UlviaProvider {
         for (const method of methods) {
             runner.setDefaultEndpoint(method, async (request) => {
                 const token = bearerToken(request);
-                const authentication = token ? await options.authenticateInvocationToken(token) : null;
-                if (!authentication) {
+                const invocation = token ? await options.authenticateInvocationToken(token) : null;
+                const controlLease = !invocation && token ? await options.authenticateControlToken(token) : null;
+                const claims =
+                    invocation?.claims ?? (controlLease ? controlInvocationClaims(request, controlLease) : null);
+                const lease = invocation?.lease ?? controlLease;
+                if (!lease || !claims) {
+                    controlLease?.release();
                     return unauthorized();
                 }
-                const { lease, claims } = authentication;
                 try {
                     const runtime = lease.resource;
                     let relay = relays.get(runtime.dispatcher);
@@ -171,6 +175,33 @@ export class UlviaProvider {
             });
         }
     }
+}
+
+function controlInvocationClaims(request: Request, lease: UlviaProviderInstanceLease): ProviderInvocationClaims | null {
+    const contractId = request.headers.get("x-ulvia-contract-id");
+    const contractVersion = request.headers.get("x-ulvia-contract-version");
+    const capabilityId = request.headers.get("x-ulvia-capability-id");
+    const requestId = request.headers.get("x-ulvia-request-id");
+    if (
+        contractId !== "ulvia.cms.installations" ||
+        !contractVersion ||
+        !capabilityId ||
+        !requestId ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u.test(requestId)
+    ) {
+        return null;
+    }
+    const issuedAt = Math.floor(Date.now() / 1_000);
+    return {
+        version: 1,
+        requestId,
+        instanceId: lease.resource.report.instanceId,
+        contractId,
+        contractVersion,
+        capabilityId,
+        issuedAt,
+        expiresAt: issuedAt + 30,
+    };
 }
 
 async function withKernelRuntime(

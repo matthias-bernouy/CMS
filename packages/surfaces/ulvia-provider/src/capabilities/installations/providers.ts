@@ -1,5 +1,6 @@
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { UlviaProviderGateway, UlviaProviderManagement } from "../../ports";
+import type { GatewayCommandAuditEvent } from "@bernouy/cms-gateway/audit";
 
 export function registerProviderInstallationCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -66,6 +67,78 @@ export function registerProviderInstallationCapabilities(
             }),
         ),
     );
+    dispatcher.register("ulvia.cms.installations", "gateway.route.get", async (input) => {
+        const active = requiredGateway(gateway);
+        const route = await active.routes.resolve(active.siteId, requiredText(input.contractId));
+        if (!route) {
+            throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
+        }
+        return { route: JSON.stringify(route) };
+    });
+    dispatcher.register("ulvia.cms.installations", "gateway.identity.resolve", async (input) => ({
+        providerSubjectId: await requiredGateway(gateway).identities.getOrCreate(
+            { providerId: requiredText(input.providerId) },
+            requiredText(input.subjectId),
+        ),
+    }));
+    dispatcher.register("ulvia.cms.installations", "gateway.audit.append", async (input) => {
+        const event = auditEvent(input.event);
+        try {
+            await requiredGateway(gateway).commandAudit.append(event);
+        } catch (error) {
+            if (!isDuplicateKey(error)) {
+                throw error;
+            }
+        }
+        return { accepted: true };
+    });
+    dispatcher.register("ulvia.cms.installations", "gateway.invocation.issue", async (input) =>
+        providerCommand(() =>
+            requiredGateway(gateway).invocations.issue({
+                requestId: requiredText(input.requestId),
+                installationId: requiredText(input.installationId),
+                contractId: requiredText(input.contractId),
+                contractVersion: requiredText(input.contractVersion),
+                capabilityId: requiredText(input.capabilityId),
+                ...(input.subjectId === undefined ? {} : { subjectId: requiredText(input.subjectId) }),
+            }),
+        ),
+    );
+}
+
+function auditEvent(value: unknown): GatewayCommandAuditEvent {
+    if (typeof value !== "string") {
+        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+    }
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(value);
+    } catch {
+        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+    }
+    const event = parsed as Record<string, unknown>;
+    const required = [
+        "id",
+        "requestId",
+        "occurredAt",
+        "siteId",
+        "installationId",
+        "contractId",
+        "capabilityId",
+        "actorKind",
+        "stage",
+    ];
+    if (required.some((key) => typeof event[key] !== "string")) {
+        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+    }
+    return structuredClone(event) as unknown as GatewayCommandAuditEvent;
+}
+
+function isDuplicateKey(error: unknown): boolean {
+    return !!error && typeof error === "object" && "code" in error && Number(error.code) === 11000;
 }
 
 function projectInstallation(stored: Awaited<ReturnType<UlviaProviderGateway["installations"]["get"]>> & object) {
@@ -158,7 +231,7 @@ async function providerCommand<T>(operation: () => Promise<T>): Promise<T> {
         }
         const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
         const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
-        if (status === 404 || code === "installation_not_found") {
+        if (status === 404 || code === "installation_not_found" || code === "route_not_found") {
             throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
         }
         if (status === 409 || code === "revision_conflict") {

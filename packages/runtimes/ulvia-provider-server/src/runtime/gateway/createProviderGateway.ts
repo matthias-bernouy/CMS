@@ -3,6 +3,7 @@ import { CapabilityGateway, CatalogueGatewayRouteResolver } from "@bernouy/cms-g
 import { MongoGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit/mongo";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
+import { signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { createSecretResolver } from "@bernouy/secret-store";
 import type { ProviderStores } from "../stores/providerStores";
 import { createProviderGatewayAccess } from "./access";
@@ -57,6 +58,46 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
               }
             : null;
     };
+    const issueInvocation = async (input: {
+        requestId: string;
+        installationId: string;
+        contractId: string;
+        contractVersion: string;
+        capabilityId: string;
+        subjectId?: string;
+    }) => {
+        const route = await routes.resolve(siteId, input.contractId);
+        const release = route?.release.admission.release;
+        const instanceId = route?.installation.observation?.report.instanceId;
+        if (
+            !route ||
+            route.installation.installation.id !== input.installationId ||
+            release?.version !== input.contractVersion ||
+            !release.capabilities.some(({ id }) => id === input.capabilityId) ||
+            !instanceId
+        ) {
+            throw Object.assign(new Error("Gateway invocation route is unavailable"), { code: "route_not_found" });
+        }
+        const secret = await resolveSecret(route.installation.installation.providerTokenRef);
+        if (!secret) {
+            throw new Error("Provider invocation credential is unavailable");
+        }
+        const issuedAt = Math.floor(Date.now() / 1_000);
+        return {
+            instanceId,
+            token: signProviderInvocationToken(secret, {
+                version: 1,
+                requestId: input.requestId,
+                instanceId,
+                contractId: input.contractId,
+                contractVersion: input.contractVersion,
+                capabilityId: input.capabilityId,
+                ...(input.subjectId ? { subjectId: input.subjectId } : {}),
+                issuedAt,
+                expiresAt: issuedAt + 30,
+            }),
+        };
+    };
 
     return {
         siteId,
@@ -67,6 +108,7 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
         routes,
         invoker,
         commandAudit,
+        invocations: { issue: issueInvocation },
         authenticateProvider,
         resolvePageCapability,
         identities,
