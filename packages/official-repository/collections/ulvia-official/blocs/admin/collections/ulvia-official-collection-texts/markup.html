@@ -24,9 +24,9 @@
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items">
                 <div cms-bloc="ulvia-official-grid" gap="md" items-align="end" columns="3" slot="content">
                     <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                        <label slot="label" for="collection-text-locale">
+                        <span slot="label">
                             {{ cms.i18n.ulvia-official.ui-translation-language }}
-                        </label>
+                        </span>
                         <div cms-bloc="ulvia-official-select" slot="control">
                             <select id="collection-text-locale" cms-sync="@param:ulvia-official-locale">
                                 <option
@@ -40,9 +40,9 @@
                         </div>
                     </div>
                     <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                        <label slot="label" for="collection-text-group">
+                        <span slot="label">
                             {{ cms.i18n.ulvia-official.ui-text-group }}
-                        </label>
+                        </span>
                         <div cms-bloc="ulvia-official-select" slot="control">
                             <select id="collection-text-group" cms-sync="@param:ulvia-official-group">
                                 <option
@@ -56,9 +56,9 @@
                         </div>
                     </div>
                     <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                        <label slot="label" for="collection-text-search">
+                        <span slot="label">
                             {{ cms.i18n.ulvia-official.ui-search-texts }}
-                        </label>
+                        </span>
                         <div cms-bloc="ulvia-official-input" slot="control">
                             <input
                                 id="collection-text-search"
@@ -102,9 +102,9 @@
                             <input type="hidden" name="locale" value="{{ collectionTexts.data.locale }}">
                             <input type="hidden" name="textId" value="{{ text.id }}">
                             <div cms-bloc="ulvia-official-field" label-position="hidden">
-                                <label slot="label" for="collection-text-{{ text.id }}">
+                                <span slot="label">
                                     {{ cms.i18n.ulvia-official.ui-site-override }}
-                                </label>
+                                </span>
                                 <div cms-bloc="ulvia-official-textarea" slot="control">
                                     <textarea
                                         id="collection-text-{{ text.id }}"

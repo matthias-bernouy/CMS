@@ -5,7 +5,6 @@
         slot="items"
         cms-query="ulvia.cms.content:site.get as settingsSite"
         cms-query-listen="@page:ulvia-official-settings-mutation/lastSuccess/requestId"
-        cms-query-input='{"limit":{"from":"literal","value":1}}'
     >
         <p role="status" aria-live="polite" cms-condition="settingsSite.activity === 'fetching'">
             {{ cms.i18n.ulvia-official.ui-working }}
@@ -32,9 +31,9 @@
                             <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-general-settings }}</h2>
                         </header>
                         <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                            <label slot="label" for="settings-site-name">
+                            <span slot="label">
                                 {{ cms.i18n.ulvia-official.ui-site-name }}
-                            </label>
+                            </span>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-site-name-help }}</span>
                             <div cms-bloc="ulvia-official-input" slot="control">
                                 <input
@@ -49,9 +48,9 @@
                             </div>
                         </div>
                         <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                            <label slot="label" for="settings-public-host">
+                            <span slot="label">
                                 {{ cms.i18n.ulvia-official.ui-public-host }}
-                            </label>
+                            </span>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-public-host-help }}</span>
                             <div cms-bloc="ulvia-official-input" slot="control">
                                 <input
@@ -66,9 +65,9 @@
                             </div>
                         </div>
                         <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                            <label slot="label" for="settings-site-visibility">
+                            <span slot="label">
                                 {{ cms.i18n.ulvia-official.ui-site-availability }}
-                            </label>
+                            </span>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-site-availability-help }}</span>
                             <div cms-bloc="ulvia-official-select" slot="control">
                                 <select id="settings-site-visibility" name="visible" cms-form-value-type="boolean">
@@ -149,9 +148,9 @@
                             <p>{{ cms.i18n.ulvia-official.ui-site-languages-help }}</p>
                         </header>
                         <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                            <label slot="label" for="settings-default-language">
+                            <span slot="label">
                                 {{ cms.i18n.ulvia-official.ui-default-language }}
-                            </label>
+                            </span>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-default-language-help }}</span>
                             <div cms-bloc="ulvia-official-input" slot="control">
                                 <input
@@ -166,9 +165,9 @@
                             </div>
                         </div>
                         <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                            <label slot="label" for="settings-available-languages">
+                            <span slot="label">
                                 {{ cms.i18n.ulvia-official.ui-available-languages }}
-                            </label>
+                            </span>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-available-languages-help }}</span>
                             <div cms-bloc="ulvia-official-tag-input" add-on-blur="" max-tags="100" separator="," serialization="json" slot="control">
                                 <input
@@ -184,9 +183,9 @@
                             </div>
                         </div>
                         <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                            <label slot="label" for="settings-active-languages">
+                            <span slot="label">
                                 {{ cms.i18n.ulvia-official.ui-active-languages }}
-                            </label>
+                            </span>
                             <span slot="description">{{ cms.i18n.ulvia-official.ui-active-languages-help }}</span>
                             <div cms-bloc="ulvia-official-tag-input" add-on-blur="" max-tags="100" separator="," serialization="json" slot="control">
                                 <input

@@ -21,9 +21,9 @@
             <div cms-bloc="ulvia-official-surface" padding="lg" appearance="subtle" slot="items">
                 <div cms-bloc="ulvia-official-grid" gap="md" items-align="end" columns="3" slot="content">
                     <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                        <label slot="label" for="collection-theme-profile">
+                        <span slot="label">
                             {{ cms.i18n.ulvia-official.ui-theme-profile }}
-                        </label>
+                        </span>
                         <div cms-bloc="ulvia-official-select" slot="control">
                             <select id="collection-theme-profile" cms-sync="@param:ulvia-official-theme-profile">
                                 <option
@@ -37,9 +37,9 @@
                         </div>
                     </div>
                     <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                        <label slot="label" for="collection-theme-mode">
+                        <span slot="label">
                             {{ cms.i18n.ulvia-official.ui-theme-mode }}
-                        </label>
+                        </span>
                         <div cms-bloc="ulvia-official-select" slot="control">
                             <select id="collection-theme-mode" cms-sync="@param:ulvia-official-theme-mode">
                                 <option value="light" selected="{{ collectionTheme.data.mode === 'light' }}">
@@ -52,9 +52,9 @@
                         </div>
                     </div>
                     <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                        <label slot="label" for="collection-theme-search">
+                        <span slot="label">
                             {{ cms.i18n.ulvia-official.ui-search-tokens }}
-                        </label>
+                        </span>
                         <div cms-bloc="ulvia-official-input" slot="control">
                             <input
                                 id="collection-theme-search"
@@ -130,9 +130,9 @@
                         <input type="hidden" name="tokenId" value="{{ collectionTheme.data.token.id }}">
                         <div cms-bloc="ulvia-official-stack" gap="md">
                             <div cms-bloc="ulvia-official-field" label-position="top" slot="items">
-                                <label slot="label" for="collection-theme-token-value">
+                                <span slot="label">
                                     {{ cms.i18n.ulvia-official.ui-token-value }}
-                                </label>
+                                </span>
                                 <div cms-bloc="ulvia-official-input" slot="control">
                                     <input
                                         id="collection-theme-token-value"

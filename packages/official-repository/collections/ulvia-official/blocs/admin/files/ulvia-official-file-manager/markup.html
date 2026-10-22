@@ -37,7 +37,7 @@
                     <p slot="items">{{ cms.i18n.ulvia-official.ui-files-are-validated-and-limited-by-the-server-upload-policy }}</p>
                     <div cms-bloc="ulvia-official-file-upload" visibility="private" slot="items">
                         <div cms-bloc="ulvia-official-field" label-position="top" slot="content">
-                            <label slot="label" for="new-file">{{ cms.i18n.ulvia-official.ui-choose-a-file }}</label>
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-choose-a-file }}</span>
                             <div cms-bloc="ulvia-official-file-input" slot="control">
                                 <div cms-bloc="ulvia-official-file-upload-input" slot="control"><input id="new-file" type="file" name="file" required></div>
                             </div>
@@ -107,7 +107,7 @@
                             >
                                 <input type="hidden" name="fileId" value="{{ file.fileId }}">
                                 <div cms-bloc="ulvia-official-field" label-position="top">
-                                    <label slot="label" for="file-name-{{ file.fileId }}">{{ cms.i18n.ulvia-official.ui-save-name }}</label>
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-save-name }}</span>
                                     <div cms-bloc="ulvia-official-input" slot="control">
                                         <input id="file-name-{{ file.fileId }}" type="text" name="name" value="{{ file.name }}" maxlength="255" required>
                                     </div>
@@ -147,7 +147,7 @@
                             </form>
                             <div cms-bloc="ulvia-official-file-upload" visibility="{{ file.visibility }}" file-id="{{ file.fileId }}" slot="items">
                                 <div cms-bloc="ulvia-official-field" label-position="top" slot="content">
-                                    <label slot="label" for="file-replacement-{{ file.fileId }}">{{ cms.i18n.ulvia-official.ui-replace-content }}</label>
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-replace-content }}</span>
                                     <div cms-bloc="ulvia-official-file-input" variant="compact" slot="control">
                                         <div cms-bloc="ulvia-official-file-upload-input" slot="control">
                                             <input

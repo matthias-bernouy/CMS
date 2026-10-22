@@ -176,7 +176,7 @@
                             <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-contract-routing }}</h3>
                         </header>
                         <div cms-bloc="ulvia-official-field" label-position="top" cms-repeat="providers.data.routes as route" slot="items">
-                            <label slot="label" for="provider-route-{{ route.contractId }}">{{ route.contractId }}</label>
+                            <span slot="label">{{ route.contractId }}</span>
                             <span slot="description">
                                 {{ cms.i18n.ulvia-official.ui-choose-an-exact-immutable-release }}
                             </span>
