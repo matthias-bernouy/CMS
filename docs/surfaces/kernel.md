@@ -13,7 +13,7 @@ The Kernel owns route composition and Page HTTP presentation for:
 - every Page path, resolved from the shared site route registry;
 - `/.cms/call/*`, `/.cms/blocset`, `/.cms/blocstyles` and immutable collection asset routes, whose
   behavior remains in their owning feature packages;
-- sitemap and robots handlers implemented by `cms-seo`.
+- sitemap and robots handlers implemented by `cms-content`.
 
 The two browser assets are mounted explicitly. Adding a file below
 `cms-content/src/browser/` never creates a route. Authentication documents are

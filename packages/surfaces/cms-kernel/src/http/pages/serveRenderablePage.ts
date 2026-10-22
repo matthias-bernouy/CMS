@@ -1,6 +1,6 @@
 import type { RenderablePage, TPage } from "@bernouy/cms-content/rendering";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
-import type { PageRenderMetadata } from "@bernouy/cms-seo";
+import type { PageRenderMetadata } from "@bernouy/cms-content/seo";
 import { cachedResponseAsync, sendCompressed } from "@bernouy/http-runner";
 import type KernelCms from "cms-kernel/KernelCms";
 import { makeRuntimeRenderContext } from "cms-kernel/html/runtimeContext";

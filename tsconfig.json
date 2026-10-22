@@ -44,9 +44,6 @@
             "path": "packages/features/cms-secrets"
         },
         {
-            "path": "packages/features/cms-seo"
-        },
-        {
             "path": "packages/surfaces/cms-kernel"
         },
         {

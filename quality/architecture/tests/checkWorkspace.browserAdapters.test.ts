@@ -8,10 +8,7 @@ describe("browser adapter boundaries", () => {
     test("allows feature handlers in surfaces while keeping transport adapters in runtimes", async () => {
         const root = await createWorkspace({
             "packages/features/content/package.json": manifest("@bernouy/cms-content", {
-                exports: { "./http": "./src/http.ts" },
-            }),
-            "packages/features/seo/package.json": manifest("@bernouy/cms-seo", {
-                exports: { "./http": "./src/http.ts" },
+                exports: { "./http": "./src/http.ts", "./seo/http": "./src/seo-http.ts" },
             }),
             "packages/features/gateway/package.json": manifest("@bernouy/cms-gateway", {
                 exports: {
@@ -29,7 +26,6 @@ describe("browser adapter boundaries", () => {
                 dependencies: {
                     "@bernouy/cms-content": "workspace:*",
                     "@bernouy/cms-gateway": "workspace:*",
-                    "@bernouy/cms-seo": "workspace:*",
                 },
                 exports: { ".": "./src/index.ts", "./browser": "./src/browser.ts" },
             }),
@@ -38,7 +34,7 @@ describe("browser adapter boundaries", () => {
                 "import '@bernouy/cms-gateway/http';",
                 "import '@bernouy/cms-gateway/http/node';",
                 "import '@bernouy/cms-content/http';",
-                "import '@bernouy/cms-seo/http';",
+                "import '@bernouy/cms-content/seo/http';",
             ].join("\n"),
             "packages/surfaces/web/src/browser.ts": "export const browser = true;",
         });

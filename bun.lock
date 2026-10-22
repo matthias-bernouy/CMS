@@ -51,10 +51,13 @@
       "name": "@bernouy/cms-content",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
         "linkedom": "^0.18.13",
       },
       "devDependencies": {
+        "@bernouy/cms-gateway": "workspace:*",
         "@happy-dom/global-registrator": "^20.14.5",
         "@types/bun": "1.4.2",
       },
@@ -121,23 +124,6 @@
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
-        "typescript": "^7.0.2",
-      },
-    },
-    "packages/features/cms-seo": {
-      "name": "@bernouy/cms-seo",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/blob-store": "workspace:*",
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "@bernouy/logging": "workspace:*",
-      },
-      "devDependencies": {
-        "linkedom": "^0.18.13",
-      },
-      "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
@@ -263,7 +249,6 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-seo": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
@@ -285,7 +270,6 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/cms-seo": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
         "linkedom": "^0.18.13",
@@ -336,8 +320,6 @@
     "@bernouy/cms-repository": ["@bernouy/cms-repository@workspace:packages/features/cms-repository"],
 
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
-
-    "@bernouy/cms-seo": ["@bernouy/cms-seo@workspace:packages/features/cms-seo"],
 
     "@bernouy/envelope-crypto": ["@bernouy/envelope-crypto@workspace:packages/foundation/envelope-crypto"],
 

@@ -6,9 +6,9 @@ import { toRelativePath } from "../core/pathUtils";
 const NODE_BUILTINS = new Set(builtinModules.map((module) => module.replace(/^node:/, "")));
 const MOUNTABLE_FEATURE_HANDLERS = new Set([
     "@bernouy/cms-content/http",
+    "@bernouy/cms-content/seo/http",
     "@bernouy/cms-gateway/http/handlers",
     "@bernouy/cms-repository/collections/http",
-    "@bernouy/cms-seo/http",
 ]);
 
 export function checkSurfaceAdapters(

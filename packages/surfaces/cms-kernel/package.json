@@ -19,7 +19,6 @@
         "@bernouy/logging": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-seo": "workspace:*",
         "@bernouy/cms-repository": "workspace:*"
     },
     "devDependencies": {

@@ -13,8 +13,8 @@ import {
 } from "@bernouy/cms-gateway/http/handlers";
 import { handlePageRequest } from "cms-kernel/http/pages/handlePageRequest";
 import { FAVICON_ROUTE } from "cms-kernel/http/assets/favicon";
-import { matchRootSitemapChunkPath } from "@bernouy/cms-seo";
-import { createRobotsHandler, createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-seo/http";
+import { matchRootSitemapChunkPath } from "@bernouy/cms-content/seo";
+import { createRobotsHandler, createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-content/seo/http";
 import { COLLECTION_ASSETS_ROUTE, resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
 import {
     createCollectionMaintenanceGuard,

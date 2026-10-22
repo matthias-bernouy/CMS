@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
-import { sitemapChunkPath } from "@bernouy/cms-seo";
+import { sitemapChunkPath } from "@bernouy/cms-content/seo";
 import { mountPublicPages, publicPage } from "../publicPage.fixture";
 
 describe("Kernel sitemap chunk mounting", () => {

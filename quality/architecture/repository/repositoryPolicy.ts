@@ -33,6 +33,8 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
                     "./theme",
                     "./page-path",
                     "./kernel",
+                    "./seo",
+                    "./seo/http",
                 ],
             },
         },

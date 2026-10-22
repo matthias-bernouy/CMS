@@ -15,7 +15,6 @@
         { "path": "../../foundation/logging" },
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-gateway" },
-        { "path": "../../features/cms-seo" },
         { "path": "../../features/cms-auth" }
         ,{ "path": "../../features/cms-repository" }
     ]

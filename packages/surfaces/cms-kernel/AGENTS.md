@@ -26,7 +26,7 @@ fallbacks onto one provided `Runner`.
 - Public rendering reads projected published content. Page access is derived
   by static capability analysis, including administration Pages. This analysis
   is not a live gateway grant.
-- `cms-seo` generates and retains sitemap snapshots. Kernel only mounts its
+- `cms-content` generates and retains sitemap snapshots. Kernel only mounts its
   injected HTTP handlers. File bytes and representations are served through
   selected gateway capabilities.
 - Keep temporary route-updating responses non-cacheable. Draft and

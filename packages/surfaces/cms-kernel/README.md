@@ -2,7 +2,7 @@
 
 Unified stateless HTTP kernel for Pages, administration, Bloc assets, theme CSS,
 browser runtimes, gateway capabilities, sitemap and robots. SEO domain logic is
-provided by `@bernouy/cms-seo`; this package mounts it.
+provided by `@bernouy/cms-content/seo`; this package mounts it.
 
 The root entrypoint exposes `KernelCms` and its injected configuration types.
 Content reads, request-actor resolution, caching and gateway transports are

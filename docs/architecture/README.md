@@ -98,7 +98,7 @@ Mongo and SMTP adapters are explicit runtime imports. Secret storage is generic 
 The Kernel mounts every site or contributed Page and feature-owned HTTP handlers
 on one supplied `Runner`.
 SEO metadata, structured data, dynamic indexing and sitemap materialization are
-implemented by `cms-seo`; Kernel mounts its robots and sitemap handlers while
+owned by `cms-content`; Kernel mounts its robots and sitemap handlers while
 the runtime starts periodic materialization.
 Whether a Page is public, authenticated or administrative is derived by
 statically analyzing its capability requirements; there is no Page surface field or separate

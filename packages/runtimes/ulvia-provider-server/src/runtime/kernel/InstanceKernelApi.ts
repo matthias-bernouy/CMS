@@ -6,7 +6,7 @@ import {
     createCapabilityQueryHandler,
 } from "@bernouy/cms-gateway/http/handlers";
 import { serveInstalledCollectionAsset } from "@bernouy/cms-repository/collections/http";
-import { createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-seo/http";
+import { createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-content/seo/http";
 import type { KernelInstanceApi, KernelProviderQuery } from "@bernouy/ulvia-provider/kernel";
 import type { InstanceComposition } from "../instances/ProviderInstanceHost";
 import type { Logger } from "@bernouy/logging";

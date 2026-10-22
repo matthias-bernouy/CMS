@@ -9,7 +9,8 @@ import {
 import type { BlobStore } from "@bernouy/blob-store";
 import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
-import { createSitemapService, executeIndexingCapability } from "@bernouy/cms-seo";
+import { createSitemapService } from "@bernouy/cms-content/seo";
+import { executeIndexingCapability } from "cms-kernel/http/pages/resolvePageIndexing";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import type { KernelCmsConfig } from "cms-kernel/KernelCmsConfig";

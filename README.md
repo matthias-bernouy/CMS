@@ -33,12 +33,12 @@ CmsCore/
 |   |   |-- image-processing/  @bernouy/image-processing
 |   |   `-- secret-store/      @bernouy/secret-store
 |   |-- features/
-|   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, themes)
+|   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, themes, SEO)
 |   |   |-- cms-auth/          @bernouy/cms-auth
 |   |   |-- cms-files/         @bernouy/cms-files
 |   |   |-- cms-gateway/       @bernouy/cms-gateway
 |   |   |-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
-|   |   `-- cms-seo/           @bernouy/cms-seo
+|   |   `-- cms-secrets/       @bernouy/cms-secrets
 |   |-- surfaces/
 |   |   |-- ulvia-provider/    @bernouy/ulvia-provider
 |   |   `-- cms-kernel/        @bernouy/cms-kernel

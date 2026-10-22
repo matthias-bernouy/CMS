@@ -8,9 +8,9 @@ import { buildHtmlBasics } from "cms-kernel/html/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-kernel/html/head/buildMetaCsp";
 import { buildAssetPreloads, buildStylesheetLink } from "cms-kernel/html/head/buildAssets";
 import { buildScriptTags } from "cms-kernel/html/head/buildScriptTags";
-import { defineMetaTags, definePageStructuredData } from "@bernouy/cms-seo";
+import { defineMetaTags, definePageStructuredData } from "@bernouy/cms-content/seo";
 import type { RenderContext } from "cms-kernel/html/RenderContext";
-import { resolvePageMetadata, type PageRenderMetadata } from "@bernouy/cms-seo";
+import { resolvePageMetadata, type PageRenderMetadata } from "@bernouy/cms-content/seo";
 
 /**
  * Render a page to a compressed CacheEntry. Thin orchestrator — every piece

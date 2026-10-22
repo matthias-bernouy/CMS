@@ -19,7 +19,6 @@
         { "path": "../../features/cms-gateway" },
         { "path": "../../features/cms-repository" },
         { "path": "../../features/cms-secrets" },
-        { "path": "../../features/cms-seo" },
         { "path": "../../surfaces/ulvia-provider" }
     ]
 }

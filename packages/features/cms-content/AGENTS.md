@@ -20,6 +20,8 @@ bindings, validation, and read models.
   network-binding preparation for the Kernel renderer.
 - `@bernouy/cms-content/http` exposes mountable handlers for the generated
   browser runtimes, Bloc sets and published Page snapshots.
+- `@bernouy/cms-content/seo` owns metadata, structured data, dynamic indexing
+  and persisted sitemap snapshots; `./seo/http` exposes their HTTP handlers.
 - `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.
 - `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
   roots.
