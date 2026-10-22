@@ -9,6 +9,7 @@ import { registerAccessCapabilities } from "./access";
 import { registerContentCapabilities } from "./content";
 import { registerFileCapabilities } from "./files";
 import { registerInstallationCapabilities } from "./installations";
+import { registerSecretCapabilities } from "./secrets";
 import type { CollectionSources } from "./installations/sources";
 import type { ProviderOperationExecutor } from "../operations/ProviderOperationExecutor";
 import type { CmsFilesService } from "@bernouy/cms-files";
@@ -22,6 +23,7 @@ export function registerOfficialProviderCapabilities(
     collectionSources?: CollectionSources,
     files?: CmsFilesService,
     fileWorkspace?: CmsFileWorkspace,
+    enabledContractIds?: ReadonlySet<string>,
 ): void {
     registerContentCapabilities(dispatcher, dependencies);
     registerInstallationCapabilities(
@@ -35,6 +37,9 @@ export function registerOfficialProviderCapabilities(
     if (files) {
         registerFileCapabilities(dispatcher, files, fileWorkspace);
     }
+    if (dependencies.secrets && enabledContractIds?.has("ulvia.cms.secrets")) {
+        registerSecretCapabilities(dispatcher, dependencies.secrets);
+    }
     registerAccessCapabilities(dispatcher, dependencies, gateway);
 }
 
@@ -43,6 +48,7 @@ export {
     registerContentCapabilities,
     registerFileCapabilities,
     registerInstallationCapabilities,
+    registerSecretCapabilities,
 };
 export {
     CollectionSources,

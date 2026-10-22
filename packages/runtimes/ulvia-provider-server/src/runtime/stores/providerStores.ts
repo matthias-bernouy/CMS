@@ -42,6 +42,8 @@ import {
 import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
 import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from "./selectedQueryCapabilities";
 import type { Logger } from "@bernouy/logging";
+import { CmsSecrets } from "@bernouy/cms-secrets";
+import { MongoCmsSecretMetadataStore } from "@bernouy/cms-secrets/mongo";
 
 const SCOPE_ID = "default";
 
@@ -158,6 +160,9 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
             secretCrypto,
         }),
     );
+    const secretMetadata = new MongoCmsSecretMetadataStore(db.collection("cms_secret_metadata"));
+    await secretMetadata.init();
+    const cmsSecrets = new CmsSecrets(secretMetadata, secrets);
     const identities = new MongoIdentityService(db);
     await identities.init();
 
@@ -177,6 +182,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         authTokens,
         rateLimit,
         secrets,
+        cmsSecrets,
         identities,
         releases,
         manifests,

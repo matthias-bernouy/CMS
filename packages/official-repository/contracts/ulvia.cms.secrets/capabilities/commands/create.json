@@ -1,0 +1,40 @@
+{
+    "id": "create",
+    "description": "Create an encrypted secret and return only its metadata.",
+    "access": "admin",
+    "behavior": { "effect": "command", "idempotency": "keyed", "execution": "sync" },
+    "input": {
+        "type": "object",
+        "properties": {
+            "name": { "type": "string", "minLength": 1, "maxLength": 96 },
+            "value": { "type": "string", "sensitive": true, "minLength": 1, "maxLength": 16384 }
+        },
+        "required": ["name", "value"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "secretId": { "type": "string", "maxLength": 160 },
+            "name": { "type": "string", "maxLength": 96 },
+            "version": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 }
+        },
+        "required": ["secretId", "name", "version", "createdAt"]
+    },
+    "errors": [
+        { "code": "INVALID_INPUT", "retryable": false },
+        { "code": "ALREADY_EXISTS", "retryable": false },
+        { "code": "CORE_UNAVAILABLE", "retryable": true }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/create",
+        "input": { "body": true },
+        "response": {
+            "successStatuses": [201],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "INVALID_INPUT": 422, "ALREADY_EXISTS": 409, "CORE_UNAVAILABLE": 503 }
+        }
+    }
+}

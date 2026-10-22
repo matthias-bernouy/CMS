@@ -1,0 +1,46 @@
+{
+    "id": "rotate",
+    "description": "Replace a secret value and increment its version without exposing either value.",
+    "access": "admin",
+    "behavior": { "effect": "command", "idempotency": "keyed", "execution": "sync" },
+    "input": {
+        "type": "object",
+        "properties": {
+            "secretId": { "type": "string", "minLength": 1, "maxLength": 160 },
+            "value": { "type": "string", "sensitive": true, "minLength": 1, "maxLength": 16384 },
+            "expectedVersion": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+        },
+        "required": ["secretId", "value", "expectedVersion"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "secretId": { "type": "string", "maxLength": 160 },
+            "version": { "type": "integer", "minimum": 2, "maximum": 9007199254740991 },
+            "rotatedAt": { "type": "string", "format": "date-time", "maxLength": 40 }
+        },
+        "required": ["secretId", "version", "rotatedAt"]
+    },
+    "errors": [
+        { "code": "INVALID_INPUT", "retryable": false },
+        { "code": "NOT_FOUND", "retryable": false },
+        { "code": "VERSION_CONFLICT", "retryable": false },
+        { "code": "CORE_UNAVAILABLE", "retryable": true }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/rotate",
+        "input": { "body": true },
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_FOUND": 404,
+                "VERSION_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

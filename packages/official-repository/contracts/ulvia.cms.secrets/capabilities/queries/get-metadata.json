@@ -1,0 +1,34 @@
+{
+    "id": "get-metadata",
+    "description": "Read secret metadata without exposing its value.",
+    "access": "admin",
+    "behavior": { "effect": "query", "execution": "sync" },
+    "input": {
+        "type": "object",
+        "properties": { "secretId": { "type": "string", "minLength": 1, "maxLength": 160 } },
+        "required": ["secretId"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "secretId": { "type": "string", "maxLength": 160 },
+            "name": { "type": "string", "maxLength": 96 },
+            "version": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+            "rotatedAt": { "type": "string", "format": "date-time", "maxLength": 40, "nullable": true }
+        },
+        "required": ["secretId", "name", "version", "createdAt", "rotatedAt"]
+    },
+    "errors": [{ "code": "NOT_FOUND", "retryable": false }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/secrets/{secretId}",
+        "input": { "path": { "secretId": "secretId" } },
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "NOT_FOUND": 404, "CORE_UNAVAILABLE": 503 }
+        }
+    }
+}

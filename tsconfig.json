@@ -41,6 +41,9 @@
             "path": "packages/features/cms-gateway"
         },
         {
+            "path": "packages/features/cms-secrets"
+        },
+        {
             "path": "packages/features/cms-seo"
         },
         {

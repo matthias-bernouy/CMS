@@ -201,6 +201,7 @@ export class ProviderInstanceHost {
                 dispatcher,
                 {
                     ...stores,
+                    secrets: stores.cmsSecrets,
                     authentication: authentication.auth,
                     accountLifecycle: authentication.accountLifecycle,
                 },
@@ -210,6 +211,7 @@ export class ProviderInstanceHost {
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
                 new CmsFileWorkspace(stores.providerFiles, stores.secrets),
+                new Set(profile.contracts.map(({ contractId }) => contractId)),
             );
             operationRecovery = new RecoverySupervisor(
                 (limit) => operations.recover(limit),
