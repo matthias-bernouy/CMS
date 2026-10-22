@@ -116,6 +116,7 @@ export async function gatewayRoute(
             installationId: "install-a",
         },
         release,
+        requestedRelease: release,
         lineage: [
             {
                 contractId: contract.release.contractId,

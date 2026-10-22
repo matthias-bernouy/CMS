@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { parseContractRelease } from "@bernouy/cms-repository/contracts";
 import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
-import { capabilityDocument, contractDocument } from "../support/fixtures";
+import { capabilityDocument, contractDocument } from "../../support/fixtures";
 
 const requirement = { contractId: "money.payment", capabilityId: "payment.checkout.create", versionRange: "^1.1.12" };
 const release = (version: string, requires?: readonly unknown[]) =>

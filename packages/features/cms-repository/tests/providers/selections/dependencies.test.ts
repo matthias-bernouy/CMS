@@ -121,7 +121,6 @@ describe("full selection dependency graph", () => {
             digest: emailer.digest,
         };
         smtpDocument.capabilities = [
-            structuredClone(emailer.release.capabilities[0]),
             {
                 ...(smtpDocument.capabilities as Record<string, unknown>[])[0],
                 id: "smtp.configure",

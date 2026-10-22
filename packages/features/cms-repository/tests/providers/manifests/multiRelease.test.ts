@@ -80,7 +80,7 @@ describe("multi-release provider implementations", () => {
             version: "1.0.0",
             digest: parent.digest,
         };
-        childDocument.capabilities = structuredClone(parent.release.capabilities);
+        (childDocument.capabilities as Record<string, unknown>[])[0]!.id = "smtp.configure";
         const child = await admitContractRelease(childDocument);
         await catalogue.publish(child);
 

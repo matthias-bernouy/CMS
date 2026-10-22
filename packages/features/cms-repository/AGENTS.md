@@ -86,6 +86,12 @@ models and validation for CMS-owned installations and site selections.
 - A contract release owns the only SemVer; capability IDs are stable and have
   no independent versions. Releases are provider-neutral: HTTP bindings are
   allowed, provider endpoints, credentials and installation state are not.
+- A specialization extends one exact parent release. It declares only new
+  capabilities; inherited capabilities resolve from the pinned parent chain and
+  cannot be redeclared. Keep authored contract directories flat; derive lineage
+  depth from exact parent pins rather than directory names. Providers and sites
+  claim or select only the concrete contract, never the concrete contract and an
+  ancestor together.
 - A capability may require external capabilities by contract ID, capability ID
   and compatible SemVer range. Requirements are mandatory and provider-neutral.
   `versionRange` defines accepted versions, not evidence partitions. Optional

@@ -29,6 +29,9 @@
             "path": "packages/features/cms-emailer"
         },
         {
+            "path": "packages/features/cms-smtp-emailer"
+        },
+        {
             "path": "packages/foundation/secret-store"
         },
         {

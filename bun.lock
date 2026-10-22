@@ -67,10 +67,6 @@
     "packages/features/cms-emailer": {
       "name": "@bernouy/cms-emailer",
       "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/secret-store": "workspace:*",
-        "nodemailer": "^10.0.10",
-      },
       "peerDependencies": {
         "typescript": "^7.0.2",
       },
@@ -133,6 +129,18 @@
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
+        "typescript": "^7.0.2",
+      },
+    },
+    "packages/features/cms-smtp-emailer": {
+      "name": "@bernouy/cms-smtp-emailer",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms-emailer": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
+        "nodemailer": "^10.0.10",
+      },
+      "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
@@ -259,6 +267,7 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-smtp-emailer": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
@@ -304,6 +313,7 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-smtp-emailer": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
       },
@@ -334,6 +344,8 @@
     "@bernouy/cms-repository": ["@bernouy/cms-repository@workspace:packages/features/cms-repository"],
 
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
+
+    "@bernouy/cms-smtp-emailer": ["@bernouy/cms-smtp-emailer@workspace:packages/features/cms-smtp-emailer"],
 
     "@bernouy/envelope-crypto": ["@bernouy/envelope-crypto@workspace:packages/foundation/envelope-crypto"],
 

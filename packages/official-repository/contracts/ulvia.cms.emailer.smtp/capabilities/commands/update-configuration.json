@@ -1,6 +1,6 @@
 {
-    "id": "emailer.configuration.update",
-    "description": "Replace outbound email delivery configuration and optionally rotate its SMTP password.",
+    "id": "smtp.configuration.update",
+    "description": "Replace SMTP email delivery configuration and optionally rotate its password.",
     "access": "admin",
     "behavior": { "effect": "command", "idempotency": "natural", "execution": "sync" },
     "input": {
@@ -10,7 +10,6 @@
             "fromEmail": { "type": "string", "maxLength": 320 },
             "fromName": { "type": "string", "maxLength": 160 },
             "replyTo": { "type": "string", "maxLength": 320 },
-            "transport": { "type": "string", "maxLength": 4, "enum": ["smtp"] },
             "smtp": {
                 "type": "object",
                 "properties": {
@@ -23,7 +22,7 @@
                 "required": ["host", "port", "secure", "username"]
             }
         },
-        "required": ["enabled", "fromEmail", "fromName", "replyTo", "transport", "smtp"]
+        "required": ["enabled", "fromEmail", "fromName", "replyTo", "smtp"]
     },
     "output": {
         "type": "object",
@@ -32,7 +31,6 @@
             "fromEmail": { "type": "string", "maxLength": 320 },
             "fromName": { "type": "string", "maxLength": 160 },
             "replyTo": { "type": "string", "maxLength": 320 },
-            "transport": { "type": "string", "maxLength": 4, "enum": ["smtp"] },
             "smtp": {
                 "type": "object",
                 "properties": {
@@ -45,31 +43,9 @@
                 "required": ["host", "port", "secure", "username", "passwordConfigured"]
             }
         },
-        "required": ["enabled", "fromEmail", "fromName", "replyTo", "transport", "smtp"]
+        "required": ["enabled", "fromEmail", "fromName", "replyTo", "smtp"]
     },
     "errors": [{ "code": "INVALID_INPUT", "retryable": false }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
-    "requires": [
-        {
-            "contractId": "ulvia.cms.secrets",
-            "versionRange": "^1.0.0",
-            "capabilityId": "secrets.get-metadata-by-name"
-        },
-        {
-            "contractId": "ulvia.cms.secrets",
-            "versionRange": "^1.0.0",
-            "capabilityId": "secrets.resolve"
-        },
-        {
-            "contractId": "ulvia.cms.secrets",
-            "versionRange": "^1.0.0",
-            "capabilityId": "secrets.create"
-        },
-        {
-            "contractId": "ulvia.cms.secrets",
-            "versionRange": "^1.0.0",
-            "capabilityId": "secrets.rotate"
-        }
-    ],
     "binding": {
         "transport": "http",
         "method": "POST",

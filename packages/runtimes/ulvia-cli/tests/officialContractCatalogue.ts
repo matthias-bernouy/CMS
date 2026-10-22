@@ -8,6 +8,7 @@ export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalo
     for (const contractId of [
         "ulvia.cms.secrets",
         "ulvia.cms.emailer",
+        "ulvia.cms.emailer.smtp",
         "ulvia.cms.access",
         "ulvia.cms.installations",
         "ulvia.cms.content",

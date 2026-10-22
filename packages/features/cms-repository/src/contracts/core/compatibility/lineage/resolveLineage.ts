@@ -1,4 +1,4 @@
-import type { ContractRelease } from "cms-repository/contracts/interfaces/ContractRelease";
+import type { CapabilityDefinition, ContractRelease } from "cms-repository/contracts/interfaces/ContractRelease";
 import type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 import { ReleaseValidationError } from "cms-repository/contracts/core/protocol/errors";
 
@@ -38,4 +38,9 @@ export async function findImplementedContract(
     return (
         (await resolveContractLineage(catalogue, concrete)).find((release) => release.contractId === contractId) ?? null
     );
+}
+
+/** Resolves the effective capability set in declaration order, from root to concrete additions. */
+export function effectiveLineageCapabilities(lineage: readonly ContractRelease[]): readonly CapabilityDefinition[] {
+    return Object.freeze(lineage.toReversed().flatMap((release) => release.capabilities));
 }

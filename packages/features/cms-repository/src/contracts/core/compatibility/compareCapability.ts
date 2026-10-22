@@ -5,7 +5,7 @@ import type { UlviaSchema } from "../../interfaces/UlviaSchema";
 import type { VersionBump } from "./semver";
 import { firstSchemaSubsetViolation } from "./schemaAcceptance";
 import { firstProjectedOutputViolation } from "./schema/projectedOutput";
-import { compareRequirements } from "./compareRequirements";
+import { compareRequirements } from "./ranges/requirements";
 
 export interface CapabilityChange {
     readonly code: "binding_changed" | "capability_changed" | "schema_changed";

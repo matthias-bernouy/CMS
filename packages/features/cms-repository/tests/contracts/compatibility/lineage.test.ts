@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     admitContractRelease,
+    effectiveLineageCapabilities,
     findImplementedContract,
     parseContractRelease,
     resolveContractLineage,
@@ -36,7 +37,7 @@ describe("contract specialization", () => {
         ).toThrow("cannot extend itself");
     });
 
-    test("publishes a self-contained specialization after its pinned parent", async () => {
+    test("publishes an additive specialization after its pinned parent", async () => {
         const parent = await admitContractRelease(contractDocument({ version: "1.0.0" }));
         const smtp = capabilityDocument({
             id: "email.smtp.configure",
@@ -53,7 +54,7 @@ describe("contract specialization", () => {
                 name: "SMTP Email",
                 version: "1.0.0",
                 extends: parentReference(parent),
-                capabilities: [capabilityDocument(), smtp],
+                capabilities: [smtp],
             }),
         );
         const catalogue = new InMemoryReleaseCatalogue();
@@ -70,9 +71,13 @@ describe("contract specialization", () => {
             "communication.email",
         ]);
         expect(await findImplementedContract(catalogue, child.release, "communication.email")).toEqual(parent.release);
+        expect(effectiveLineageCapabilities(lineage).map(({ id }) => id)).toEqual([
+            "email.message.send",
+            "email.smtp.configure",
+        ]);
     });
 
-    test("rejects missing, changed, or unpinned inherited capabilities", async () => {
+    test("rejects redeclared or unpinned inherited capabilities", async () => {
         const parent = await admitContractRelease(contractDocument({ version: "1.0.0" }));
         const catalogue = new InMemoryReleaseCatalogue();
         await catalogue.publish(parent);
@@ -87,18 +92,11 @@ describe("contract specialization", () => {
             );
 
         await expect(
-            catalogue.publish(await specialized([capabilityDocument({ id: "smtp.configure" })])),
-        ).rejects.toThrow("must include inherited capability");
+            catalogue.publish(await specialized([capabilityDocument({ id: "email.message.send" })])),
+        ).rejects.toThrow("cannot redeclare inherited capability");
         await expect(
-            catalogue.publish(
-                await specialized([
-                    capabilityDocument({ description: "A specialization cannot redefine this description." }),
-                ]),
-            ),
-        ).rejects.toThrow("cannot override inherited capability");
-        await expect(catalogue.publish(await specialized([capabilityDocument()], digest("b")))).rejects.toThrow(
-            "is not published",
-        );
+            catalogue.publish(await specialized([capabilityDocument({ id: "smtp.configure" })], digest("b"))),
+        ).rejects.toThrow("is not published");
     });
 
     test("treats changing the exact parent as a major evolution", () => {

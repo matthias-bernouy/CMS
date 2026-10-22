@@ -85,9 +85,9 @@
             "requires": []
         },
         {
-            "contractId": "ulvia.cms.emailer",
+            "contractId": "ulvia.cms.emailer.smtp",
             "version": "1.0.0",
-            "digest": "sha256:651013318b33ef410f4b8ba036668a0f128acaef223aa1dd03ea31288205336c",
+            "digest": "sha256:b054bc3fe19208ba53809a6c381cd20e7a369954cbcdd38bf4e5d60a98132890",
             "requires": [
                 {
                     "contractId": "ulvia.cms.secrets",

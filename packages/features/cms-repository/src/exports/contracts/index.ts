@@ -81,6 +81,7 @@ export type {
     ConformanceScenarioEvidence,
 } from "cms-repository/contracts/interfaces/ConformanceEvidence";
 export {
+    effectiveLineageCapabilities,
     findImplementedContract,
     resolveContractLineage,
 } from "cms-repository/contracts/core/compatibility/lineage/resolveLineage";

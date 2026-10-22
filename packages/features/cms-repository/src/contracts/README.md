@@ -19,6 +19,27 @@ authors cannot choose the “last updated” date displayed by the administratio
 Changing discovery metadata changes the immutable release digest and therefore
 needs a new release coordinate once that artifact has been published.
 
+## Contract specialization
+
+A release may `extend` one exact parent release by contract ID, version and
+digest. The child is substitutable for that parent: selecting the child satisfies
+consumers of either contract. Inheritance is single-parent and may form a chain.
+The catalogue derives roots, ancestors and depth; source folders do not encode
+levels such as L0, L1 or L2.
+
+Specialized artifacts declare only their own capabilities. Inherited
+capabilities resolve from the exact parent chain and cannot be redeclared or
+overridden. Gateway routing still invokes the selected concrete implementation,
+but validates inputs, outputs and bindings against the ancestor that owns the
+requested capability. A provider manifest claims only the concrete contract;
+claiming both a child and one of its ancestors is rejected. A site likewise
+selects one concrete release per lineage, while calls and requirements may
+target any pinned ancestor.
+
+Changing, adding or removing the exact parent is conservatively a major change.
+The parent must already be published, so publication planning orders parents
+before children and cannot admit an unresolved or cyclic lineage.
+
 ## Release and dependency evolution
 
 A capability may declare mandatory requirements:

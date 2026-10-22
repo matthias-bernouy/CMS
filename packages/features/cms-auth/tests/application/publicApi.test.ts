@@ -9,7 +9,7 @@ test("auth entrypoints separate composition and management without exposing adap
     expect(management.createAuthEmailTestSender).toBeFunction();
     for (const name of [
         "SmtpEmailer",
-        "ConfiguredEmailer",
+        "ConfiguredSmtpEmailer",
         "MongoUsersRepository",
         "createLocalUser",
         "deleteUserCompletely",

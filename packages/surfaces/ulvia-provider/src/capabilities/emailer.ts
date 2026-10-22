@@ -1,26 +1,26 @@
 import {
-    EmailConfigurationError,
-    type EmailerAdministration,
-    type EmailerConfigurationUpdate,
-    type Emailer,
-} from "@bernouy/cms-emailer";
+    SmtpEmailConfigurationError,
+    type SmtpEmailerAdministration,
+    type SmtpEmailerConfigurationUpdate,
+} from "@bernouy/cms-smtp-emailer";
+import { isEmailDeliveryDisabledError, type Emailer } from "@bernouy/cms-emailer";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../dispatch/registry";
 
-export type CmsEmailerDependencies = Readonly<{
-    emailer: Emailer & EmailerAdministration;
+export type CmsSmtpEmailerDependencies = Readonly<{
+    emailer: Emailer & SmtpEmailerAdministration;
 }>;
 
-export function registerEmailerCapabilities(
+export function registerSmtpEmailerCapabilities(
     dispatcher: ProviderCapabilityRegistry,
-    dependencies: CmsEmailerDependencies,
+    dependencies: CmsSmtpEmailerDependencies,
 ): void {
-    dispatcher.register("ulvia.cms.emailer", "emailer.configuration.get", () =>
+    dispatcher.register("ulvia.cms.emailer.smtp", "smtp.configuration.get", () =>
         emailerCall(() => dependencies.emailer.getConfiguration()),
     );
-    dispatcher.register("ulvia.cms.emailer", "emailer.configuration.update", (input) =>
+    dispatcher.register("ulvia.cms.emailer.smtp", "smtp.configuration.update", (input) =>
         emailerCall(() => dependencies.emailer.updateConfiguration(configuration(input))),
     );
-    dispatcher.register("ulvia.cms.emailer", "emailer.send", (input) =>
+    dispatcher.register("ulvia.cms.emailer.smtp", "emailer.send", (input) =>
         emailerCall(async () => {
             await dependencies.emailer.send({
                 to: {
@@ -38,14 +38,13 @@ export function registerEmailerCapabilities(
     );
 }
 
-function configuration(input: Readonly<Record<string, unknown>>): EmailerConfigurationUpdate {
+function configuration(input: Readonly<Record<string, unknown>>): SmtpEmailerConfigurationUpdate {
     const smtp = object(input.smtp, "smtp");
     return {
         enabled: boolean(input.enabled, "enabled"),
         fromEmail: string(input.fromEmail, "fromEmail"),
         fromName: string(input.fromName, "fromName"),
         replyTo: string(input.replyTo, "replyTo"),
-        transport: input.transport === "smtp" ? "smtp" : invalid("transport"),
         smtp: {
             host: string(smtp.host, "smtp.host"),
             port: integer(smtp.port, "smtp.port"),
@@ -63,11 +62,11 @@ async function emailerCall<T>(operation: () => Promise<T>): Promise<T> {
         if (error instanceof ProviderCapabilityDispatchError) {
             throw error;
         }
-        if (error instanceof EmailConfigurationError) {
-            throw new ProviderCapabilityDispatchError(
-                error.code === "disabled" ? "EMAIL_DISABLED" : "INVALID_INPUT",
-                error.code === "disabled" ? 409 : 422,
-            );
+        if (isEmailDeliveryDisabledError(error)) {
+            throw new ProviderCapabilityDispatchError("EMAIL_DISABLED", 409);
+        }
+        if (error instanceof SmtpEmailConfigurationError) {
+            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
         }
         throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
     }

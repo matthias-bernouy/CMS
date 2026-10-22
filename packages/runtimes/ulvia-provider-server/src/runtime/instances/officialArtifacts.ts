@@ -1,8 +1,16 @@
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
-import { admitContractReleaseJson, type ContractRelease } from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
+import {
+    admitContractReleaseJson,
+    type AdmittedContractRelease,
+    type ContractRelease,
+} from "@bernouy/cms-repository/contracts";
+import {
+    effectiveLineageCapabilities,
+    InMemoryReleaseCatalogue,
+    publishContractSet,
+    resolveContractLineage,
+} from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson, verifyStoredProviderManifestJson } from "@bernouy/cms-repository/providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
 import type { OfficialInstanceProfile } from "@bernouy/ulvia-provider";
@@ -37,22 +45,21 @@ export async function loadOfficialArtifacts(
     const storedManifest = await verifyStoredProviderManifestJson(manifestBytes, manifestEntry.digest);
     const catalogue = new InMemoryReleaseCatalogue();
     const contractEntries = await providers.list("contract");
-    const admissions = await Promise.all(
+    const loadedAdmissions = new Map<string, AdmittedContractRelease>();
+    const implementationAdmissions = await Promise.all(
         storedManifest.manifest.implementations.map(async (coordinate) => {
-            const entry = exactEntry(contractEntries, coordinate.contractId, coordinate.version);
-            if (entry.digest !== coordinate.digest) {
-                throw new Error(
-                    `Official contract coordinate mismatch: ${coordinate.contractId}@${coordinate.version}`,
-                );
-            }
-            const admission = await admitContractReleaseJson(await providers.get(entry));
-            if (admission.digest !== coordinate.digest) {
-                throw new Error(`Official contract digest mismatch: ${coordinate.contractId}@${coordinate.version}`);
-            }
-            return admission;
+            return loadContractWithAncestors(providers, contractEntries, loadedAdmissions, coordinate);
         }),
     );
-    await publishContractSet(catalogue, admissions);
+    await publishContractSet(catalogue, [...loadedAdmissions.values()]);
+    const effectiveContracts = await Promise.all(
+        implementationAdmissions.map(async ({ release }) =>
+            Object.freeze({
+                ...release,
+                capabilities: effectiveLineageCapabilities(await resolveContractLineage(catalogue, release)),
+            }),
+        ),
+    );
     const manifest = await admitProviderManifestJson(manifestBytes, catalogue);
     if (manifest.digest !== manifestEntry.digest) {
         throw new Error(
@@ -89,7 +96,7 @@ export async function loadOfficialArtifacts(
             digest: manifest.digest,
         }),
         contracts: Object.freeze(
-            admissions.map(({ digest, release }) =>
+            implementationAdmissions.map(({ digest, release }) =>
                 Object.freeze({ contractId: release.contractId, version: release.version, digest }),
             ),
         ),
@@ -100,7 +107,43 @@ export async function loadOfficialArtifacts(
             digest: collection.digest,
         }),
     });
-    return Object.freeze({ profile, contracts: Object.freeze(admissions.map(({ release }) => release)) });
+    return Object.freeze({
+        profile,
+        contracts: Object.freeze(effectiveContracts),
+    });
+}
+
+async function loadContractWithAncestors(
+    source: ProviderRepositorySource,
+    entries: readonly RepositoryArtifactEntry[],
+    loaded: Map<string, AdmittedContractRelease>,
+    coordinate: Readonly<{ contractId: string; version: string; digest: string }>,
+): Promise<AdmittedContractRelease> {
+    const key = `${coordinate.contractId}@${coordinate.version}`;
+    const existing = loaded.get(key);
+    if (existing) {
+        if (existing.digest !== coordinate.digest) {
+            throw new Error(`Official contract digest mismatch: ${key}`);
+        }
+        return existing;
+    }
+    const entry = exactEntry(entries, coordinate.contractId, coordinate.version);
+    if (entry.digest !== coordinate.digest) {
+        throw new Error(`Official contract coordinate mismatch: ${key}`);
+    }
+    const admission = await admitContractReleaseJson(await source.get(entry));
+    if (
+        admission.digest !== coordinate.digest ||
+        admission.release.contractId !== coordinate.contractId ||
+        admission.release.version !== coordinate.version
+    ) {
+        throw new Error(`Official contract digest mismatch: ${key}`);
+    }
+    loaded.set(key, admission);
+    if (admission.release.extends) {
+        await loadContractWithAncestors(source, entries, loaded, admission.release.extends);
+    }
+    return admission;
 }
 
 export async function loadOfficialManifest(

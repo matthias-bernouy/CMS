@@ -21,14 +21,14 @@ import { CmsSecrets } from "@bernouy/cms-secrets";
 import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 import { NOOP_LOGGER } from "@bernouy/logging";
-import { ConfiguredEmailer } from "@bernouy/cms-emailer/smtp";
+import { ConfiguredSmtpEmailer } from "@bernouy/cms-smtp-emailer/nodemailer";
 
 const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
     ["ulvia.cms.access", "list-users", "QUERY", "/list-users", {}],
     ["ulvia.cms.installations", "list-operations", "QUERY", "/operations", {}],
     ["ulvia.cms.content", "site.get", "GET", "/site", undefined],
-    ["ulvia.cms.emailer", "emailer.configuration.get", "GET", "/configuration", undefined],
+    ["ulvia.cms.emailer.smtp", "smtp.configuration.get", "GET", "/configuration", undefined],
     ["ulvia.cms.files", "namespace.create", "POST", "/namespaces", { name: "Test", defaultVisibility: "private" }],
     ["ulvia.cms.secrets", "namespace.create", "POST", "/namespaces", { name: "Test" }],
     ["ulvia.cms.installations", "list-provider-installations", "GET", "/list-provider-installations", undefined],
@@ -120,7 +120,7 @@ test("the official adapters implement the complete declared capability matrix", 
     const dispatcher = new DefaultProviderCapabilityDispatcher();
     const operations = new ProviderOperationExecutor(new MemoryProviderOperationStore());
     const secrets = new CmsSecrets(new InMemoryCmsSecretMetadataStore(), new InMemorySecretStore());
-    const emailer = new ConfiguredEmailer({ secrets: new InMemorySecretStore() });
+    const emailer = new ConfiguredSmtpEmailer({ secrets: new InMemorySecretStore() });
     registerOfficialProviderCapabilities(
         dispatcher,
         { ...({} as UlviaProviderDependencies), emailer, secrets },
@@ -158,7 +158,28 @@ async function loadOfficialContract(contractId: string) {
         import.meta.dir,
         `../../../runtimes/ulvia-cli/dist/bootstrap/contracts/cms/${contractId}/definition.json`,
     );
-    return admitContractReleaseJson(await readFile(path));
+    const admission = await admitContractReleaseJson(await readFile(path));
+    const inherited = [];
+    let parent = admission.release.extends;
+    while (parent) {
+        const parentPath = resolve(
+            import.meta.dir,
+            `../../../runtimes/ulvia-cli/dist/bootstrap/contracts/cms/${parent.contractId}/definition.json`,
+        );
+        const parentAdmission = await admitContractReleaseJson(await readFile(parentPath));
+        if (parentAdmission.release.version !== parent.version || parentAdmission.digest !== parent.digest) {
+            throw new Error(`Official parent contract mismatch: ${parent.contractId}@${parent.version}`);
+        }
+        inherited.unshift(...parentAdmission.release.capabilities);
+        parent = parentAdmission.release.extends;
+    }
+    return {
+        ...admission,
+        release: Object.freeze({
+            ...admission.release,
+            capabilities: Object.freeze([...inherited, ...admission.release.capabilities]),
+        }),
+    };
 }
 
 function requestHeaders(requestId: string, contractId: string, capabilityId: string): Record<string, string> {

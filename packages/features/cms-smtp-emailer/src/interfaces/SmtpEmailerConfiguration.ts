@@ -1,9 +1,8 @@
-export type EmailerConfiguration = Readonly<{
+export type SmtpEmailerConfiguration = Readonly<{
     enabled: boolean;
     fromEmail: string;
     fromName: string;
     replyTo: string;
-    transport: "smtp";
     smtp: Readonly<{
         host: string;
         port: number;
@@ -13,12 +12,11 @@ export type EmailerConfiguration = Readonly<{
     }>;
 }>;
 
-export type EmailerConfigurationUpdate = Readonly<{
+export type SmtpEmailerConfigurationUpdate = Readonly<{
     enabled: boolean;
     fromEmail: string;
     fromName: string;
     replyTo: string;
-    transport: "smtp";
     smtp: Readonly<{
         host: string;
         port: number;
@@ -28,7 +26,7 @@ export type EmailerConfigurationUpdate = Readonly<{
     }>;
 }>;
 
-export interface EmailerAdministration {
-    getConfiguration(): Promise<EmailerConfiguration>;
-    updateConfiguration(input: EmailerConfigurationUpdate): Promise<EmailerConfiguration>;
+export interface SmtpEmailerAdministration {
+    getConfiguration(): Promise<SmtpEmailerConfiguration>;
+    updateConfiguration(input: SmtpEmailerConfigurationUpdate): Promise<SmtpEmailerConfiguration>;
 }

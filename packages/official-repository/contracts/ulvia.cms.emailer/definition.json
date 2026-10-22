@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "contractId": "ulvia.cms.emailer",
     "name": "CMS Emailer",
-    "description": "Configure and deliver outbound CMS email without exposing delivery credentials.",
+    "description": "Deliver provider-neutral outbound CMS email.",
     "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": {

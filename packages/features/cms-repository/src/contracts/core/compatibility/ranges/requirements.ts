@@ -1,6 +1,6 @@
-import type { CapabilityRequirement } from "../../interfaces/ContractRelease";
-import type { CapabilityChange } from "./compareCapability";
-import { compareVersionRanges } from "./versionRange";
+import type { CapabilityRequirement } from "../../../interfaces/ContractRelease";
+import type { CapabilityChange } from "../compareCapability";
+import { compareVersionRanges } from "../versionRange";
 
 export function compareRequirements(
     previous: readonly CapabilityRequirement[],

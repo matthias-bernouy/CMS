@@ -31,13 +31,22 @@ administrator's approval, or send a request.
 - **Runtime report:** the provider's observation of available exact releases
   for the authenticated account. It may report only a subset of approved
   implementations. It cannot add permissions or select releases for the site.
-- **Contract selection:** the site's intended exact contract release and
-  installation. The planner/store enforces uniqueness per `(siteId, contractId)`
-  and validates the complete dependency graph without choosing versions for the site.
+- **Contract selection:** the site's intended exact concrete contract release
+  and installation. The planner/store permits only one selection for an entire
+  specialization lineage and validates the complete dependency graph without
+  choosing versions for the site. A requirement or invocation targeting an
+  ancestor resolves through that concrete selection.
 
 One provider may serve several exact releases simultaneously. Several CMS sites
 may also connect to the same remote account and thus share its business data;
 local installations and credentials remain independent.
+
+Contract `requires` describe an invariant of every compliant implementation.
+Manifest implementation `requires` describe only how that provider realizes
+the concrete contract. For example, the generic Emailer contract does not need
+Secrets, while the official SMTP Emailer implementation declares Secrets as an
+implementation dependency. A manifest claims the concrete specialization only;
+its inherited interfaces are derived from the admitted lineage.
 
 ## Manifest discovery and connection V1
 

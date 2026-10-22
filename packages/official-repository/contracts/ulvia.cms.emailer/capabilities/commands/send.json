@@ -24,18 +24,6 @@
         { "code": "EMAIL_DISABLED", "retryable": false },
         { "code": "CORE_UNAVAILABLE", "retryable": true }
     ],
-    "requires": [
-        {
-            "contractId": "ulvia.cms.secrets",
-            "versionRange": "^1.0.0",
-            "capabilityId": "secrets.get-metadata-by-name"
-        },
-        {
-            "contractId": "ulvia.cms.secrets",
-            "versionRange": "^1.0.0",
-            "capabilityId": "secrets.resolve"
-        }
-    ],
     "binding": {
         "transport": "http",
         "method": "POST",

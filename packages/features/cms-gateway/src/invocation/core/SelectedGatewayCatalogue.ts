@@ -2,7 +2,7 @@ import type { UlviaObjectSchema, UlviaSchema } from "@bernouy/cms-repository/con
 import { satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compatibility";
 import type { CollectionCapabilityRequirement } from "@bernouy/cms-repository/collections";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
-import type { GatewayRouteResolver } from "cms-gateway/invocation/interfaces/Invocation";
+import type { GatewayRoute, GatewayRouteResolver } from "cms-gateway/invocation/interfaces/Invocation";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import { resolveRoute } from "cms-gateway/invocation/core/resolveRoute";
 
@@ -53,60 +53,50 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
             return [];
         }
         const listed: GatewayEditorCapability[] = [];
+        const now = (this.options.now ?? (() => new Date().toISOString()))();
+        const maxAgeMs = this.options.maxObservationAgeMs ?? 60_000;
         for (const selection of stored.plan.selections) {
-            const route = await this.routes.resolve(siteId, selection.contractId);
-            if (!route) {
+            const concreteRoute = await this.routes.resolve(siteId, selection.contractId);
+            if (!concreteRoute) {
                 continue;
             }
-            try {
-                resolveRoute(
-                    route,
-                    siteId,
-                    selection.contractId,
-                    (this.options.now ?? (() => new Date().toISOString()))(),
-                    this.options.maxObservationAgeMs ?? 60_000,
-                );
-            } catch (error) {
-                if (
-                    error instanceof GatewayError &&
-                    (error.code === "installation_unavailable" || error.code === "not_ready")
-                ) {
+            const provider = concreteRoute.manifest.admission.manifest;
+            for (const owner of concreteRoute.lineage) {
+                const route =
+                    owner.contractId === selection.contractId
+                        ? concreteRoute
+                        : await this.routes.resolve(siteId, owner.contractId);
+                if (!route || !isAvailable(route, siteId, owner.contractId, now, maxAgeMs)) {
                     continue;
                 }
-                throw error;
-            }
-            const release = route.release.admission.release;
-            const provider = route.manifest.admission.manifest;
-            for (const capability of release.capabilities) {
-                const owner = route.lineage.toReversed().find((entry) => entry.capabilityIds.includes(capability.id));
-                if (!owner) {
-                    continue;
+                const release = route.requestedRelease.admission.release;
+                for (const capability of release.capabilities) {
+                    const binding = route.requestedRelease.admission.bindings.find(
+                        (item) => item.capabilityId === capability.id,
+                    )?.binding;
+                    if (
+                        (capability.access !== "public" && capability.access !== "authenticated") ||
+                        capability.behavior.execution !== "sync" ||
+                        (capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed") ||
+                        capability.output.type === "binary" ||
+                        !binding ||
+                        binding.body?.kind === "binary"
+                    ) {
+                        continue;
+                    }
+                    listed.push({
+                        contractId: owner.contractId,
+                        contractLabel: owner.name,
+                        capabilityId: capability.id,
+                        ...(capability.description ? { description: capability.description } : {}),
+                        providerId: provider.providerId,
+                        providerLabel: provider.name,
+                        access: capability.access,
+                        effect: capability.behavior.effect,
+                        input: capability.input,
+                        output: capability.output,
+                    });
                 }
-                const binding = route.release.admission.bindings.find(
-                    (item) => item.capabilityId === capability.id,
-                )?.binding;
-                if (
-                    (capability.access !== "public" && capability.access !== "authenticated") ||
-                    capability.behavior.execution !== "sync" ||
-                    (capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed") ||
-                    capability.output.type === "binary" ||
-                    !binding ||
-                    binding.body?.kind === "binary"
-                ) {
-                    continue;
-                }
-                listed.push({
-                    contractId: owner.contractId,
-                    contractLabel: owner.name,
-                    capabilityId: capability.id,
-                    ...(capability.description ? { description: capability.description } : {}),
-                    providerId: provider.providerId,
-                    providerLabel: provider.name,
-                    access: capability.access,
-                    effect: capability.behavior.effect,
-                    input: capability.input,
-                    output: capability.output,
-                });
             }
         }
         return listed.sort(
@@ -127,7 +117,7 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
                 if (!route) {
                     return { ...requirement, status: "missing", reason: "No contract release is selected" };
                 }
-                const release = route.release.admission.release;
+                const release = route.requestedRelease.admission.release;
                 const implemented = route.lineage.find((entry) => entry.contractId === requirement.contractId);
                 const selected = {
                     selectedVersion: implemented?.version,
@@ -159,5 +149,20 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
                 }
             }),
         );
+    }
+}
+
+function isAvailable(route: GatewayRoute, siteId: string, contractId: string, now: string, maxAgeMs: number): boolean {
+    try {
+        resolveRoute(route, siteId, contractId, now, maxAgeMs);
+        return true;
+    } catch (error) {
+        if (
+            error instanceof GatewayError &&
+            (error.code === "installation_unavailable" || error.code === "not_ready")
+        ) {
+            return false;
+        }
+        throw error;
     }
 }

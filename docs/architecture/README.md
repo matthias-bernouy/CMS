@@ -89,8 +89,9 @@ served independently by `official-repository-server`. See
 personal access tokens, one-time tokens, authentication email composition and
 account-lifecycle operations. The Provider runtime exposes them through the
 required `ulvia.cms.access` contract. Access delegates delivery to the selected
-`ulvia.cms.emailer` implementation; Emailer owns transport configuration and
-stores it inside its isolated `ulvia.cms.secrets` namespace. The Kernel owns no
+`ulvia.cms.emailer` implementation. The official `ulvia.cms.emailer.smtp`
+specialization owns SMTP configuration and stores it inside its isolated
+`ulvia.cms.secrets` namespace. The Kernel owns no
 auth capabilities or auth persistence: it resolves one request actor through
 Access and applies validated semantic session effects.
 

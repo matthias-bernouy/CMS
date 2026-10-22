@@ -74,6 +74,7 @@ export const DEFAULT_ADAPTER_SUBPATHS = [
     "mongo",
     "mongodb",
     "node",
+    "nodemailer",
     "postgres",
     "postgresql",
     "redis",

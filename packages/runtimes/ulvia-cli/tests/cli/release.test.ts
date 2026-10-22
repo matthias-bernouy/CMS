@@ -12,6 +12,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
     const coreContracts = [
         "ulvia.cms.secrets",
         "ulvia.cms.emailer",
+        "ulvia.cms.emailer.smtp",
         "ulvia.cms.access",
         "ulvia.cms.installations",
         "ulvia.cms.content",

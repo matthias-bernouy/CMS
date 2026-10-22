@@ -1,0 +1,20 @@
+{
+    "name": "@bernouy/cms-smtp-emailer",
+    "version": "0.1.0",
+    "description": "Secret-backed SMTP specialization of the CMS Emailer interface.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./nodemailer": "./src/exports/nodemailer.ts"
+    },
+    "dependencies": {
+        "@bernouy/cms-emailer": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
+        "nodemailer": "^10.0.10"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

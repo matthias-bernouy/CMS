@@ -7,7 +7,7 @@ export function resolveRoute(route: GatewayRoute, siteId: string, contractId: st
     const approved = installation.installation;
     const document = release.admission.release;
     const provider = manifest.admission.manifest;
-    validateLineage(route, contractId);
+    const requested = validateLineage(route, contractId);
     if (
         selection.siteId !== siteId ||
         selection.installationId !== approved.id ||
@@ -63,7 +63,18 @@ export function resolveRoute(route: GatewayRoute, siteId: string, contractId: st
     ) {
         throw new GatewayError("not_ready", "selected provider release has no fresh ready observation");
     }
-    return document;
+    const requestedAdmission = route.requestedRelease.admission;
+    if (
+        requestedAdmission.release.contractId !== requested.contractId ||
+        requestedAdmission.release.version !== requested.version ||
+        requestedAdmission.digest !== requested.digest ||
+        requestedAdmission.release.name !== requested.name ||
+        JSON.stringify(requested.capabilityIds) !==
+            JSON.stringify(requestedAdmission.release.capabilities.map((capability) => capability.id))
+    ) {
+        throw new GatewayError("invalid_route", "requested contract does not match its exact lineage artifact");
+    }
+    return requestedAdmission.release;
 }
 
 function validateLineage(route: GatewayRoute, requestedContractId: string) {

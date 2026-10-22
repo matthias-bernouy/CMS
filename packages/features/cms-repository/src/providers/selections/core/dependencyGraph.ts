@@ -20,17 +20,19 @@ export function selectionDependencies(
         });
     };
     for (const [contractId, node] of resolved) {
-        for (const capability of node.release.capabilities) {
-            for (const requirement of capability.requires ?? []) {
-                add({
-                    contractId: requirement.contractId,
-                    capabilityId: requirement.capabilityId,
-                    versionRange: requirement.versionRange,
-                    source: "contract",
-                    fromContractId: contractId,
-                    fromCapabilityId: capability.id,
-                    optional: false,
-                });
+        for (const release of node.lineage) {
+            for (const capability of release.capabilities) {
+                for (const requirement of capability.requires ?? []) {
+                    add({
+                        contractId: requirement.contractId,
+                        capabilityId: requirement.capabilityId,
+                        versionRange: requirement.versionRange,
+                        source: "contract",
+                        fromContractId: contractId,
+                        fromCapabilityId: capability.id,
+                        optional: false,
+                    });
+                }
             }
         }
         for (const requirement of node.implementation.requires) {

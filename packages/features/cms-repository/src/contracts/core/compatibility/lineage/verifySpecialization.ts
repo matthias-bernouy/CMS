@@ -1,9 +1,8 @@
 import type { ContractRelease } from "cms-repository/contracts/interfaces/ContractRelease";
 import type { CatalogueContractRelease } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
-import { canonicalizeIJson } from "cms-repository/contracts/core/protocol/canonical";
 import { ReleaseValidationError } from "cms-repository/contracts/core/protocol/errors";
 
-/** A specialization is self-contained and may add, but never replace, parent capabilities. */
+/** A specialization declares only additions and inherits its exact ancestors from the catalogue. */
 export function verifySpecialization(release: ContractRelease, published: readonly CatalogueContractRelease[]): void {
     const parentReference = release.extends;
     if (!parentReference) {
@@ -21,20 +20,39 @@ export function verifySpecialization(release: ContractRelease, published: readon
             "$.extends",
         );
     }
-    const childCapabilities = new Map(release.capabilities.map((capability) => [capability.id, capability]));
-    for (const parentCapability of parentRecord.admission.release.capabilities) {
-        const inherited = childCapabilities.get(parentCapability.id);
-        if (!inherited) {
+    const inheritedIds = new Set<string>();
+    let ancestor = parentRecord;
+    const visited = new Set<string>();
+    while (ancestor) {
+        if (visited.has(ancestor.admission.release.contractId)) {
+            throw new ReleaseValidationError("invalid_contract", "contract inheritance contains a cycle", "$.extends");
+        }
+        visited.add(ancestor.admission.release.contractId);
+        for (const capability of ancestor.admission.release.capabilities) {
+            inheritedIds.add(capability.id);
+        }
+        const parent = ancestor.admission.release.extends;
+        if (!parent) {
+            break;
+        }
+        const next = published.find(
+            ({ admission }) =>
+                admission.release.contractId === parent.contractId && admission.release.version === parent.version,
+        );
+        if (!next || next.admission.digest !== parent.digest) {
             throw new ReleaseValidationError(
                 "invalid_contract",
-                `specialization must include inherited capability ${parentCapability.id}`,
-                "$.capabilities",
+                `parent ${parent.contractId}@${parent.version} with digest ${parent.digest} is not published`,
+                "$.extends",
             );
         }
-        if (canonicalizeIJson(inherited) !== canonicalizeIJson(parentCapability)) {
+        ancestor = next;
+    }
+    for (const capability of release.capabilities) {
+        if (inheritedIds.has(capability.id)) {
             throw new ReleaseValidationError(
                 "invalid_contract",
-                `specialization cannot override inherited capability ${parentCapability.id}`,
+                `specialization cannot redeclare inherited capability ${capability.id}`,
                 "$.capabilities",
             );
         }

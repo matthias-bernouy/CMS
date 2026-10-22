@@ -8,7 +8,7 @@ export async function validateProviderManifestReferences(
     manifest: ProviderManifest,
     catalogue: ReleaseCatalogue,
 ): Promise<void> {
-    const releases = await Promise.all(
+    const lineages = await Promise.all(
         manifest.implementations.map(async (implementation, index) => {
             const path = `$.implementations[${index}]`;
             const release = await catalogue.get(implementation.contractId, implementation.version);
@@ -26,16 +26,16 @@ export async function validateProviderManifestReferences(
                     path,
                 );
             }
-            assertContractRequirements(implementation, release.admission.release, path);
+            const lineage = await resolveContractLineage(catalogue, release.admission.release);
+            assertContractRequirements(implementation, lineage, path);
             await Promise.all(
                 implementation.requires.map((requirement, requirementIndex) =>
                     resolveRequirement(requirement, catalogue, `${path}.requires[${requirementIndex}]`),
                 ),
             );
-            return release.admission.release;
+            return lineage;
         }),
     );
-    const lineages = await Promise.all(releases.map((release) => resolveContractLineage(catalogue, release)));
     assertDisjointImplementations(lineages);
     assertAcyclicRequirements(manifest, lineages);
 }

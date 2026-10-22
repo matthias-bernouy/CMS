@@ -7,6 +7,5 @@
             "cms-emailer/*": ["./src/*"]
         }
     },
-    "include": ["src/**/*.ts"],
-    "references": [{ "path": "../../foundation/secret-store" }]
+    "include": ["src/**/*.ts"]
 }

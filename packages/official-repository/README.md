@@ -15,8 +15,14 @@ surface after admission. Generic protocol fixtures remain beside the
 
 Contract source metadata lives in `definition.json`. Capabilities are individual
 recursive `capabilities/**/*.json` fragments. Optional mocks are individual
-`mocks/**/*.json` fragments carrying an explicit `capabilityId`. Conformance
-metadata lives in `conformance/definition.json`, with individual scenarios and
+`mocks/**/*.json` fragments carrying an explicit `capabilityId`.
+
+Specialized contracts remain sibling directories. Their `definition.json`
+pins one exact parent through `extends`, and their capability tree contains only
+specialization-specific additions. Inherited capabilities resolve from the
+immutable parent chain.
+
+Conformance metadata lives in `conformance/definition.json`, with individual scenarios and
 coverage exemptions below recursive `conformance/scenarios/` and
 `conformance/exemptions/` trees. Source paths organize review only: assembly is
 sorted by declared identities, so moving a fragment does not change the release.

@@ -9,6 +9,9 @@
   `capabilities/**/*.json` fragment, and one optional mock per recursive
   `mocks/**/*.json` fragment. A mock declares its owning `capabilityId`; source
   paths never define IDs or affect the compiled release digest.
+- Keep specialized contracts as flat sibling directories. Pin their exact
+  parent in `definition.json` and author only specialization-specific
+  capabilities; inherited capabilities come from that immutable parent chain.
 - Keep conformance metadata in `conformance/definition.json`, scenarios below
   `conformance/scenarios/**/*.json`, exemptions below
   `conformance/exemptions/**/*.json`, and optional suite fixture bytes below

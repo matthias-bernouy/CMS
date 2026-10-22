@@ -14,7 +14,7 @@ type NamespaceDefinition = Readonly<{
 }>;
 
 export type ContractSecretStores = Readonly<{
-    emailer: SecretStore;
+    smtpEmailer: SecretStore;
     files: SecretStore;
     installations: SecretStore;
 }>;
@@ -22,9 +22,9 @@ export type ContractSecretStores = Readonly<{
 const WRITE_PERMISSIONS = ["secrets.metadata.read", "secrets.resolve", "secrets.write", "secrets.delete"] as const;
 
 const DEFINITIONS = {
-    emailer: {
-        bootstrapKey: "CMS_SECRET_NAMESPACE_EMAILER",
-        name: "ulvia.cms.emailer",
+    smtpEmailer: {
+        bootstrapKey: "CMS_SECRET_NAMESPACE_SMTP_EMAILER",
+        name: "ulvia.cms.emailer.smtp",
         permissions: WRITE_PERMISSIONS,
     },
     files: {

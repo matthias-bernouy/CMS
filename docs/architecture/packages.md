@@ -41,7 +41,8 @@ already been published to a registry.
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues, authored collection admission, content projections, migrations and the explicit collection build toolchain. |
 | `@bernouy/cms-gateway` | Authorized provider-neutral capability invocation, identities and streaming binary transport. |
 | `@bernouy/cms-secrets` | Credential-scoped secret namespaces, metadata and lifecycle over an injected generic encrypted secret store. |
-| `@bernouy/cms-emailer` | Outbound email delivery, secret-backed delivery configuration and the official SMTP implementation. |
+| `@bernouy/cms-emailer` | Provider-neutral outbound email delivery interface. |
+| `@bernouy/cms-smtp-emailer` | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
 | `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, signed session tokens, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
 Collection Pages are admitted resources. The Kernel mounts their shared route

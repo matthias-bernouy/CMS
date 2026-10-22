@@ -45,7 +45,7 @@ import type { Logger } from "@bernouy/logging";
 import { CmsSecrets } from "@bernouy/cms-secrets";
 import { MongoCmsSecretMetadataStore } from "@bernouy/cms-secrets/mongo";
 import { createContractSecretStores } from "./contractSecretStores";
-import { ConfiguredEmailer } from "@bernouy/cms-emailer/smtp";
+import { ConfiguredSmtpEmailer } from "@bernouy/cms-smtp-emailer/nodemailer";
 
 const SCOPE_ID = "default";
 
@@ -170,7 +170,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     await secretMetadata.init();
     const cmsSecrets = new CmsSecrets(secretMetadata, secrets);
     const contractSecrets = await createContractSecretStores(cmsSecrets, secrets);
-    const emailer = new ConfiguredEmailer({ secrets: contractSecrets.emailer });
+    const emailer = new ConfiguredSmtpEmailer({ secrets: contractSecrets.smtpEmailer });
     const identities = new MongoIdentityService(db);
     await identities.init();
 

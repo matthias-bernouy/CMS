@@ -7,6 +7,7 @@ import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repo
 import { startLocalRepository } from "../../src/runtime/repository";
 import { prepareContractSource } from "../../src/release/authored/contract";
 import { NOOP_LOGGER } from "@bernouy/logging";
+import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 
 test("CLI push and pull preserve every official artifact kind through a remote repository", async () => {
@@ -125,12 +126,27 @@ async function definitionVersion(directory: string): Promise<string> {
 }
 
 async function publicationOrder(repositoryRoot: string, contractIds: readonly string[]): Promise<readonly string[]> {
-    const admissions = await Promise.all(
-        contractIds.map(async (contractId) => {
-            const directory = join(repositoryRoot, "contracts", contractId);
-            return (await prepareContractSource(directory)).admission;
-        }),
-    );
-    const ordered = await publishContractSet(new InMemoryReleaseCatalogue(), admissions);
+    const admissions = new Map<string, AdmittedContractRelease>();
+    const load = async (contractId: string): Promise<AdmittedContractRelease> => {
+        const existing = admissions.get(contractId);
+        if (existing) {
+            return existing;
+        }
+        const directory = join(repositoryRoot, "contracts", contractId);
+        const admission = (await prepareContractSource(directory)).admission;
+        admissions.set(contractId, admission);
+        if (admission.release.extends) {
+            const parent = await load(admission.release.extends.contractId);
+            if (
+                parent.release.version !== admission.release.extends.version ||
+                parent.digest !== admission.release.extends.digest
+            ) {
+                throw new Error(`Official specialization parent mismatch: ${contractId}`);
+            }
+        }
+        return admission;
+    };
+    await Promise.all(contractIds.map(load));
+    const ordered = await publishContractSet(new InMemoryReleaseCatalogue(), [...admissions.values()]);
     return ordered.map(({ release }) => release.contractId);
 }

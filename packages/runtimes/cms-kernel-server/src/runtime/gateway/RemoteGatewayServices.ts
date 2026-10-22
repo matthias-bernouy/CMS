@@ -87,6 +87,7 @@ function parseRoute(snapshot: string, siteId: string, contractId: string): Gatew
         route.selection.siteId !== siteId ||
         !route.lineage?.some((entry) => entry.contractId === contractId) ||
         !route.release ||
+        !route.requestedRelease ||
         !route.manifest ||
         !route.installation
     ) {

@@ -1,4 +1,4 @@
-import type { EmailRecipient, Emailer, OutboundEmail } from "cms-emailer/interfaces/Emailer";
+import type { EmailRecipient, Emailer, OutboundEmail } from "@bernouy/cms-emailer";
 import { createTransport } from "nodemailer";
 
 export type SmtpEmailerConfig = Readonly<{

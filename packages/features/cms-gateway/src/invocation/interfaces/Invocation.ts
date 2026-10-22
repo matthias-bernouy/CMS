@@ -37,7 +37,10 @@ interface GatewayBinaryBody {
 
 export interface GatewayRoute {
     readonly selection: ContractSelection;
+    /** Concrete selected release used as the Provider invocation target. */
     readonly release: CatalogueContractRelease;
+    /** Exact lineage release that owns the contract requested from the Gateway. */
+    readonly requestedRelease: CatalogueContractRelease;
     readonly manifest: CatalogueProviderManifest;
     readonly installation: StoredProviderInstallation;
     /** Concrete release first; compact exact ancestry used to resolve parent contract calls. */

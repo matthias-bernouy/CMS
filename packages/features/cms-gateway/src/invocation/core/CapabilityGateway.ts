@@ -66,12 +66,12 @@ export class CapabilityGateway implements GatewayAccessProbe {
             throw new GatewayError("not_selected", "site has no selected release for this contract");
         }
         const method = value.method.toUpperCase();
-        for (const candidate of route.release.admission.bindings) {
+        for (const candidate of route.requestedRelease.admission.bindings) {
             const pathValues = matchPathTemplate(candidate.binding.path, value.path);
             if (!pathValues) {
                 continue;
             }
-            const capability = route.release.admission.release.capabilities.find(
+            const capability = route.requestedRelease.admission.release.capabilities.find(
                 (item) => item.id === candidate.capabilityId,
             );
             if (!capability) {
@@ -200,7 +200,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (!route) {
             throw new GatewayError("not_selected", "site has no selected release for this contract");
         }
-        const release = resolveRoute(
+        const capabilityRelease = resolveRoute(
             route,
             value.siteId,
             value.contractId,
@@ -211,8 +211,8 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (!instanceId) {
             throw new GatewayError("invalid_route", "provider observation has no invocation audience");
         }
-        const capability = release.capabilities.find((item) => item.id === value.capabilityId);
-        const admittedBinding = route.release.admission.bindings.find(
+        const capability = capabilityRelease.capabilities.find((item) => item.id === value.capabilityId);
+        const admittedBinding = route.requestedRelease.admission.bindings.find(
             (item) => item.capabilityId === value.capabilityId,
         )?.binding;
         if (!capability || !admittedBinding) {
@@ -235,7 +235,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (!(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or installation changed during access check");
         }
-        return { route, instanceId, release, capability, binding };
+        return { route, instanceId, release: route.release.admission.release, capability, binding };
     }
 
     async #providerSubjectId(

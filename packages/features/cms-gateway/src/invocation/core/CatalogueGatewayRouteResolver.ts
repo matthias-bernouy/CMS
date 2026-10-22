@@ -30,6 +30,7 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
             | {
                   selection: (typeof stored.plan.selections)[number];
                   release: NonNullable<Awaited<ReturnType<ReleaseCatalogue["get"]>>>;
+                  requestedRelease: NonNullable<Awaited<ReturnType<ReleaseCatalogue["get"]>>>;
                   lineage: Awaited<ReturnType<typeof resolveContractLineage>>;
               }
             | undefined;
@@ -39,15 +40,26 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
                 throw new GatewayError("invalid_route", "selected release is missing or has a different digest");
             }
             const lineage = await resolveContractLineage(this.#options.releases, release.admission.release);
-            if (lineage.some((candidate) => candidate.contractId === contractId)) {
-                selected = { selection, release, lineage };
+            const requestedIndex = lineage.findIndex((candidate) => candidate.contractId === contractId);
+            if (requestedIndex >= 0) {
+                const requested = lineage[requestedIndex]!;
+                const requestedRelease =
+                    requestedIndex === 0
+                        ? release
+                        : await this.#options.releases.get(requested.contractId, requested.version);
+                const expectedDigest =
+                    requestedIndex === 0 ? selection.digest : lineage[requestedIndex - 1]!.extends!.digest;
+                if (!requestedRelease || requestedRelease.admission.digest !== expectedDigest) {
+                    throw new GatewayError("invalid_route", "requested ancestor release is missing or changed");
+                }
+                selected = { selection, release, requestedRelease, lineage };
                 break;
             }
         }
         if (!selected) {
             return null;
         }
-        const { selection, release, lineage } = selected;
+        const { selection, release, requestedRelease, lineage } = selected;
         const installation = await this.#options.installations.get({
             siteId,
             installationId: selection.installationId,
@@ -62,6 +74,7 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
         const route: GatewayRoute = {
             selection,
             release,
+            requestedRelease,
             manifest,
             installation,
             lineage: lineage.map((candidate, index) => ({

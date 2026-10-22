@@ -50,6 +50,7 @@ function routeSnapshot() {
             installationId: "installation-a",
         },
         release: {},
+        requestedRelease: {},
         lineage: [
             {
                 contractId: "catalog.items",

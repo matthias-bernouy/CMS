@@ -87,6 +87,16 @@ test("a parent contract call is routed through its selected specialization", asy
         ...parentRoute.release.admission.release,
         contractId: "catalog.sql",
         name: "SQL Catalog",
+        capabilities: [
+            {
+                ...parentRoute.release.admission.release.capabilities[0],
+                id: "sql.configure",
+                binding: {
+                    ...parentRoute.release.admission.release.capabilities[0]!.binding,
+                    path: "/sql/configuration",
+                },
+            },
+        ],
         extends: {
             contractId: "catalog",
             version: "1.0.0",
