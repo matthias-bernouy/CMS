@@ -16,6 +16,18 @@
     ],
     "requires": [],
     "slots": {
+        "breadcrumb": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                },
+                {
+                    "kind": "any-component"
+                }
+            ],
+            "max": 1
+        },
         "title": {
             "accepts": [
                 {
