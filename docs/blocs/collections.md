@@ -67,6 +67,15 @@ and returns cleanup when it installs listeners or observers. The build owns
 registration with `bloc-runtime.js`; collection code cannot define custom
 elements or create Shadow Roots.
 
+Iframe origins and sandbox permissions are exact Bloc capabilities declared in
+`definition.json`. Admission checks them against `markup.html` and
+`default.html`, and rejects programmatic iframe creation.
+Catalogue entries expose a deterministic browser-risk report and digest.
+Install and upgrade requests acknowledge that precise digest; a repository
+change to browser authority therefore requires a fresh selection. Collections
+with JavaScript remain trusted code in the main document for the MVP, as
+documented in [Deferred Platform Work](../TODO.md).
+
 ## Page Grammar
 
 The CMS injects no default Page wrapper. Every non-empty Page root must be an

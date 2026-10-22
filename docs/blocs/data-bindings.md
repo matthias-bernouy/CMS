@@ -283,6 +283,18 @@ value through `internalUrl`:
 It rejects schemes, protocol-relative URLs, backslashes, whitespace and control
 characters, then normalizes the path before the browser receives it.
 
+Dynamic iframe Page navigation is deliberately distinct. The entire `src` must
+use `pageUrl`, which accepts the same safe same-origin path shape and marks the
+value as a semantic Page destination:
+
+```html
+<iframe src="{{ preview.path | pageUrl }}" title="…" sandbox=""></iframe>
+```
+
+This lets Page and collection validation verify the route instead of treating
+the iframe as an opaque technical URL. External iframe URLs are static exact
+HTTPS origins declared in the owning Bloc's browser capabilities.
+
 Attributes on a `cms-bloc` root must correspond to declared Bloc settings,
 admitted native root attributes or platform binding attributes. Their types,
 native booleans, ARIA values and dynamic URL destinations are checked when a

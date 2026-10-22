@@ -103,6 +103,50 @@ variables are rejected when the release is admitted. Runtime
 `style.setProperty()` calls follow the same ownership rule and require a static
 literal variable name.
 
+## Browser Frames
+
+An iframe is authored in `markup.html` or `default.html`; behavior cannot create
+iframe elements or inject iframe markup. Its exact browser authority is part of
+the Bloc definition:
+
+```json
+{
+    "browser": {
+        "frames": {
+            "origins": ["self", "https://maps.example.com"],
+            "sandbox": ["allow-forms", "allow-scripts"]
+        }
+    }
+}
+```
+
+Admission scans the Bloc markup. The declared origin and sandbox sets must
+exactly equal what every iframe uses: missing and unused authority are both
+rejected. External entries are exact HTTPS origins; wildcards, paths and
+embedded credentials are forbidden. An empty `sandbox` list is valid and means
+that the frame receives no sandbox permission.
+
+A dynamic same-site Page frame uses one complete `pageUrl` expression:
+
+```html
+<iframe
+    src="{{ page.path | pageUrl }}"
+    title="{{ cms.i18n.example.preview-title }}"
+    sandbox="allow-same-origin allow-scripts"
+></iframe>
+```
+
+Static same-site frame paths are Page references and must resolve, including
+paths below `/.cms`. No arbitrary application prefix such as `/admin` receives
+special treatment. The Kernel builds `frame-src` from the declarations of the
+Blocs actually referenced by the Page, not by trusting rendered URLs.
+
+The repository catalogue reports JavaScript, frame origins and sandbox
+permissions. Installation and upgrade carry the exact report digest selected
+by the administrator, so changed browser authority cannot be accepted through
+a stale action. This is review metadata and CSP least authority, not a sandbox
+for arbitrary collection JavaScript.
+
 ## SVG Icons
 
 Do not put SVG geometry in `markup.html`, `default.html`, Page HTML or
