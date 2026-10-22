@@ -1,4 +1,4 @@
-import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { resolveContractLineage, type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
@@ -23,10 +23,31 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
 
     async resolve(siteId: string, contractId: string): Promise<GatewayRoute | null> {
         const stored = await this.#options.selections.get(siteId);
-        const selection = stored?.plan.selections.find((item) => item.contractId === contractId);
-        if (!stored || !selection) {
+        if (!stored) {
             return null;
         }
+        let selected:
+            | {
+                  selection: (typeof stored.plan.selections)[number];
+                  release: NonNullable<Awaited<ReturnType<ReleaseCatalogue["get"]>>>;
+                  lineage: Awaited<ReturnType<typeof resolveContractLineage>>;
+              }
+            | undefined;
+        for (const selection of stored.plan.selections) {
+            const release = await this.#options.releases.get(selection.contractId, selection.version);
+            if (!release || release.admission.digest !== selection.digest) {
+                throw new GatewayError("invalid_route", "selected release is missing or has a different digest");
+            }
+            const lineage = await resolveContractLineage(this.#options.releases, release.admission.release);
+            if (lineage.some((candidate) => candidate.contractId === contractId)) {
+                selected = { selection, release, lineage };
+                break;
+            }
+        }
+        if (!selected) {
+            return null;
+        }
+        const { selection, release, lineage } = selected;
         const installation = await this.#options.installations.get({
             siteId,
             installationId: selection.installationId,
@@ -34,18 +55,23 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
         if (!installation) {
             throw new GatewayError("invalid_route", "selected provider installation is missing");
         }
-        const [release, manifest] = await Promise.all([
-            this.#options.releases.get(contractId, selection.version),
-            this.#options.manifests.findByDigest(installation.installation.approval.manifestDigest),
-        ]);
-        if (!release || !manifest) {
-            throw new GatewayError("invalid_route", "selected release or approved manifest is missing");
+        const manifest = await this.#options.manifests.findByDigest(installation.installation.approval.manifestDigest);
+        if (!manifest) {
+            throw new GatewayError("invalid_route", "approved manifest is missing");
         }
         const route: GatewayRoute = {
             selection,
             release,
             manifest,
             installation,
+            lineage: lineage.map((candidate, index) => ({
+                contractId: candidate.contractId,
+                version: candidate.version,
+                digest: index === 0 ? selection.digest : lineage[index - 1]!.extends!.digest,
+                name: candidate.name,
+                capabilityIds: candidate.capabilities.map((capability) => capability.id),
+                ...(candidate.extends ? { extends: candidate.extends } : {}),
+            })),
         };
         if (!(await this.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or dependency changed during route lookup");

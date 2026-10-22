@@ -1,4 +1,4 @@
-import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
+import { resolveContractLineage, type ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { ProviderManifestValidationError } from "../errors";
 import type { ProviderManifest } from "../../interfaces/ProviderManifest";
 import { assertAcyclicRequirements } from "./implementationGraph";
@@ -35,5 +35,25 @@ export async function validateProviderManifestReferences(
             return release.admission.release;
         }),
     );
-    assertAcyclicRequirements(manifest, releases);
+    const lineages = await Promise.all(releases.map((release) => resolveContractLineage(catalogue, release)));
+    assertDisjointImplementations(lineages);
+    assertAcyclicRequirements(manifest, lineages);
+}
+
+function assertDisjointImplementations(lineages: readonly (readonly { contractId: string }[])[]): void {
+    const owners = new Map<string, string>();
+    for (const lineage of lineages) {
+        const concrete = lineage[0]!.contractId;
+        for (const release of lineage) {
+            const owner = owners.get(release.contractId);
+            if (owner && owner !== concrete) {
+                throw new ProviderManifestValidationError(
+                    "invalid_manifest",
+                    `${owner} and ${concrete} both implement ${release.contractId}`,
+                    "$.implementations",
+                );
+            }
+            owners.set(release.contractId, concrete);
+        }
+    }
 }

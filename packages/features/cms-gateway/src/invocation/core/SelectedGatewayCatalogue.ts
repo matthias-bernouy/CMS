@@ -78,6 +78,10 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
             const release = route.release.admission.release;
             const provider = route.manifest.admission.manifest;
             for (const capability of release.capabilities) {
+                const owner = route.lineage.toReversed().find((entry) => entry.capabilityIds.includes(capability.id));
+                if (!owner) {
+                    continue;
+                }
                 const binding = route.release.admission.bindings.find(
                     (item) => item.capabilityId === capability.id,
                 )?.binding;
@@ -92,8 +96,8 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
                     continue;
                 }
                 listed.push({
-                    contractId: selection.contractId,
-                    contractLabel: release.name,
+                    contractId: owner.contractId,
+                    contractLabel: owner.name,
                     capabilityId: capability.id,
                     ...(capability.description ? { description: capability.description } : {}),
                     providerId: provider.providerId,
@@ -124,12 +128,14 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
                     return { ...requirement, status: "missing", reason: "No contract release is selected" };
                 }
                 const release = route.release.admission.release;
+                const implemented = route.lineage.find((entry) => entry.contractId === requirement.contractId);
                 const selected = {
-                    selectedVersion: release.version,
+                    selectedVersion: implemented?.version,
                     installationId: route.installation.installation.id,
                 };
                 if (
-                    !satisfiesVersionRange(release.version, requirement.versionRange) ||
+                    !implemented ||
+                    !satisfiesVersionRange(implemented.version, requirement.versionRange) ||
                     !release.capabilities.some((capability) => capability.id === requirement.capabilityId)
                 ) {
                     return {

@@ -116,6 +116,15 @@ export async function gatewayRoute(
             installationId: "install-a",
         },
         release,
+        lineage: [
+            {
+                contractId: contract.release.contractId,
+                version: contract.release.version,
+                digest: contract.digest,
+                name: contract.release.name,
+                capabilityIds: contract.release.capabilities.map((capability) => capability.id),
+            },
+        ],
         manifest: { admission: admittedManifest, publishedAt: NOW },
         installation: {
             revision: 2,

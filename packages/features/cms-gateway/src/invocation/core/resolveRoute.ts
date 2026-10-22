@@ -7,12 +7,12 @@ export function resolveRoute(route: GatewayRoute, siteId: string, contractId: st
     const approved = installation.installation;
     const document = release.admission.release;
     const provider = manifest.admission.manifest;
+    validateLineage(route, contractId);
     if (
         selection.siteId !== siteId ||
-        selection.contractId !== contractId ||
         selection.installationId !== approved.id ||
         approved.siteId !== siteId ||
-        document.contractId !== contractId ||
+        document.contractId !== selection.contractId ||
         document.version !== selection.version ||
         release.admission.digest !== selection.digest ||
         approved.approval.manifestDigest !== manifest.admission.digest ||
@@ -44,7 +44,9 @@ export function resolveRoute(route: GatewayRoute, siteId: string, contractId: st
     }
     const claim = provider.implementations.some(
         (item) =>
-            item.contractId === contractId && item.version === selection.version && item.digest === selection.digest,
+            item.contractId === selection.contractId &&
+            item.version === selection.version &&
+            item.digest === selection.digest,
     );
     if (!claim) {
         throw new GatewayError("invalid_route", "approved manifest does not claim the selected release");
@@ -54,7 +56,7 @@ export function resolveRoute(route: GatewayRoute, siteId: string, contractId: st
         readiness.status !== "observed" ||
         !readiness.readyImplementations.some(
             (item) =>
-                item.contractId === contractId &&
+                item.contractId === selection.contractId &&
                 item.version === selection.version &&
                 item.digest === selection.digest,
         )
@@ -62,4 +64,40 @@ export function resolveRoute(route: GatewayRoute, siteId: string, contractId: st
         throw new GatewayError("not_ready", "selected provider release has no fresh ready observation");
     }
     return document;
+}
+
+function validateLineage(route: GatewayRoute, requestedContractId: string) {
+    const { lineage, selection, release } = route;
+    const concrete = lineage[0];
+    if (
+        !concrete ||
+        concrete.contractId !== selection.contractId ||
+        concrete.version !== selection.version ||
+        concrete.digest !== selection.digest ||
+        concrete.digest !== release.admission.digest ||
+        concrete.name !== release.admission.release.name ||
+        JSON.stringify(concrete.capabilityIds) !==
+            JSON.stringify(release.admission.release.capabilities.map((capability) => capability.id))
+    ) {
+        throw new GatewayError("invalid_route", "selected contract lineage does not start at the selected release");
+    }
+    for (let index = 0; index < lineage.length; index += 1) {
+        const current = lineage[index]!;
+        const parent = lineage[index + 1];
+        if (
+            (parent &&
+                (!current.extends ||
+                    current.extends.contractId !== parent.contractId ||
+                    current.extends.version !== parent.version ||
+                    current.extends.digest !== parent.digest)) ||
+            (!parent && current.extends)
+        ) {
+            throw new GatewayError("invalid_route", "selected contract lineage is not an exact parent chain");
+        }
+    }
+    const requested = lineage.find((entry) => entry.contractId === requestedContractId);
+    if (!requested) {
+        throw new GatewayError("invalid_route", "selected contract does not implement the requested contract");
+    }
+    return requested;
 }

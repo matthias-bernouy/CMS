@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import {
     CatalogueSelectionDependencies,
@@ -106,6 +108,76 @@ describe("full selection dependency graph", () => {
             code: "missing_dependency",
             dependencyPath: ["alpha", "bravo", "charlie:run"],
         });
+    });
+
+    test("lets one specialized selection satisfy consumers of its parent", async () => {
+        const releases = new InMemoryReleaseCatalogue();
+        const emailer = await admitContractRelease(contractDocument("emailer", "send"));
+        await releases.publish(emailer);
+        const smtpDocument = contractDocument("emailer.smtp", "send");
+        smtpDocument.extends = {
+            contractId: "emailer",
+            version: "1.0.0",
+            digest: emailer.digest,
+        };
+        smtpDocument.capabilities = [
+            structuredClone(emailer.release.capabilities[0]),
+            {
+                ...(smtpDocument.capabilities as Record<string, unknown>[])[0],
+                id: "smtp.configure",
+                binding: {
+                    ...((smtpDocument.capabilities as Record<string, unknown>[])[0]!.binding as object),
+                    path: "/v1/smtp/configuration",
+                },
+            },
+        ];
+        const smtp = await admitContractRelease(smtpDocument);
+        await releases.publish(smtp);
+        const commerceDocument = contractDocument("commerce", "checkout");
+        (commerceDocument.capabilities as Record<string, unknown>[])[0]!.requires = [
+            { contractId: "emailer", capabilityId: "send", versionRange: "^1.0.0" },
+        ];
+        const commerce = await admitContractRelease(commerceDocument);
+        await releases.publish(commerce);
+        const manifests = new InMemoryProviderManifestCatalogue(releases);
+        const installation = await installationFor(releases, manifests, [
+            implementation("commerce", "1.0.0", commerce.digest, [requirement("emailer", "send")]),
+            implementation("emailer.smtp", "1.0.0", smtp.digest),
+        ]);
+        const baseInstallation = await installationFor(
+            releases,
+            manifests,
+            [implementation("emailer", "1.0.0", emailer.digest)],
+            "ulvia.base-email",
+        );
+        const selection = (
+            contractId: string,
+            digest: `sha256:${string}`,
+            installationId = installation.id,
+        ): ContractSelection => ({
+            siteId,
+            contractId,
+            version: "1.0.0",
+            digest,
+            installationId,
+        });
+        const context = { releases, manifests, installations: [installation, baseInstallation] };
+
+        const plan = await planContractSelections(
+            siteId,
+            [selection("commerce", commerce.digest), selection("emailer.smtp", smtp.digest)],
+            context,
+        );
+
+        expect(plan.structurallyValid).toBe(true);
+        expect(plan.dependencies).toContainEqual(expect.objectContaining({ contractId: "emailer", present: true }));
+        await expect(
+            planContractSelections(
+                siteId,
+                [selection("emailer", emailer.digest, baseInstallation.id), selection("emailer.smtp", smtp.digest)],
+                context,
+            ),
+        ).rejects.toMatchObject({ code: "duplicate_selection" });
     });
 });
 

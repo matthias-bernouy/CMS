@@ -14,6 +14,7 @@ export { GatewayError, type GatewayErrorCode } from "cms-gateway/invocation/core
 export type {
     GatewayActor,
     GatewayAccessProbe,
+    GatewayContractLineageEntry,
     GatewayInvocation,
     GatewayInvoker,
     GatewayResult,

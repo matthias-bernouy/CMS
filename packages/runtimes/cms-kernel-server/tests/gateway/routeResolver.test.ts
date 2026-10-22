@@ -50,6 +50,15 @@ function routeSnapshot() {
             installationId: "installation-a",
         },
         release: {},
+        lineage: [
+            {
+                contractId: "catalog.items",
+                version: "1.0.0",
+                digest: `sha256:${"a".repeat(64)}`,
+                name: "Catalog items",
+                capabilityIds: ["list"],
+            },
+        ],
         manifest: {},
         installation: {
             installation: { id: "installation-a", endpoint: "http://provider.internal:5103", status: "enabled" },

@@ -1,4 +1,4 @@
-import type { ContractRelease } from "cms-repository/exports/contracts/index";
+import { resolveContractLineage, type ContractRelease } from "cms-repository/exports/contracts/index";
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import { parseProviderInstallation } from "cms-repository/providers/installations/core/parsing/parseProviderInstallation";
 import { validateProviderInstallation } from "cms-repository/providers/installations/core/validateProviderInstallation";
@@ -15,6 +15,13 @@ export interface ResolvedSelection {
     readonly selection: ContractSelection;
     readonly release: ContractRelease;
     readonly implementation: ProviderContractImplementation;
+    /** Concrete release first, followed by every exact parent. */
+    readonly lineage: readonly ContractRelease[];
+}
+
+export interface ResolvedContractImplementation {
+    readonly node: ResolvedSelection;
+    readonly release: ContractRelease;
 }
 
 export function snapshotInstallations(
@@ -101,11 +108,43 @@ export async function resolveSelections(
                 path,
             );
         }
+        const release = deepFreeze(structuredClone(record.admission.release));
         resolved.set(selection.contractId, {
             selection,
-            release: deepFreeze(structuredClone(record.admission.release)),
+            release,
             implementation,
+            lineage: await resolveContractLineage(context.releases, release),
         });
     }
+    assertDisjointLineages(resolved);
     return resolved;
+}
+
+export function findResolvedImplementation(
+    resolved: ReadonlyMap<string, ResolvedSelection>,
+    contractId: string,
+): ResolvedContractImplementation | null {
+    for (const node of resolved.values()) {
+        const release = node.lineage.find((candidate) => candidate.contractId === contractId);
+        if (release) {
+            return { node, release };
+        }
+    }
+    return null;
+}
+
+function assertDisjointLineages(resolved: ReadonlyMap<string, ResolvedSelection>): void {
+    const owners = new Map<string, string>();
+    for (const node of resolved.values()) {
+        for (const release of node.lineage) {
+            const owner = owners.get(release.contractId);
+            if (owner) {
+                throw new ContractSelectionValidationError(
+                    "duplicate_selection",
+                    `${owner} and ${node.selection.contractId} both implement ${release.contractId}`,
+                );
+            }
+            owners.set(release.contractId, node.selection.contractId);
+        }
+    }
 }

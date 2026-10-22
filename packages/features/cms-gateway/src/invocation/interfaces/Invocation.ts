@@ -4,6 +4,7 @@ import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts
 import type { CatalogueProviderManifest } from "@bernouy/cms-repository/providers/catalogue";
 import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
+import type { ContractParentReference, ReleaseDigest } from "@bernouy/cms-repository/contracts";
 import type { GatewayActorCredential, GatewayResponseEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
 export type GatewayActor =
     | { readonly kind: "anonymous" }
@@ -39,6 +40,17 @@ export interface GatewayRoute {
     readonly release: CatalogueContractRelease;
     readonly manifest: CatalogueProviderManifest;
     readonly installation: StoredProviderInstallation;
+    /** Concrete release first; compact exact ancestry used to resolve parent contract calls. */
+    readonly lineage: readonly GatewayContractLineageEntry[];
+}
+
+export interface GatewayContractLineageEntry {
+    readonly contractId: string;
+    readonly version: string;
+    readonly digest: ReleaseDigest;
+    readonly name: string;
+    readonly capabilityIds: readonly string[];
+    readonly extends?: ContractParentReference;
 }
 
 export interface GatewayRouteResolver {

@@ -4,14 +4,19 @@ import { ProviderManifestValidationError } from "../errors";
 import { satisfiesVersionRange } from "../versioning/versionRange";
 
 /** Distinct served releases are distinct nodes, including when they share a contract ID. */
-export function assertAcyclicRequirements(manifest: ProviderManifest, releases: readonly ContractRelease[]): void {
+export function assertAcyclicRequirements(
+    manifest: ProviderManifest,
+    lineages: readonly (readonly ContractRelease[])[],
+): void {
     const edges = manifest.implementations.map((implementation) =>
-        releases.flatMap((release, index) =>
-            implementation.requires.some(
-                (requirement) =>
-                    requirement.contractId === release.contractId &&
-                    satisfiesVersionRange(release.version, requirement.versionRange) &&
-                    release.capabilities.some((capability) => capability.id === requirement.capabilityId),
+        lineages.flatMap((lineage, index) =>
+            implementation.requires.some((requirement) =>
+                lineage.some(
+                    (release) =>
+                        requirement.contractId === release.contractId &&
+                        satisfiesVersionRange(release.version, requirement.versionRange) &&
+                        release.capabilities.some((capability) => capability.id === requirement.capabilityId),
+                ),
             )
                 ? [index]
                 : [],
@@ -21,7 +26,7 @@ export function assertAcyclicRequirements(manifest: ProviderManifest, releases: 
     const visited = new Set<number>();
     const visit = (index: number): void => {
         if (visiting.has(index)) {
-            const release = releases[index]!;
+            const release = lineages[index]![0]!;
             throw new ProviderManifestValidationError(
                 "invalid_manifest",
                 `implemented contract requirements contain a cycle through ${release.contractId}@${release.version}`,
@@ -38,7 +43,7 @@ export function assertAcyclicRequirements(manifest: ProviderManifest, releases: 
         visiting.delete(index);
         visited.add(index);
     };
-    for (let index = 0; index < releases.length; index++) {
+    for (let index = 0; index < lineages.length; index++) {
         visit(index);
     }
 }

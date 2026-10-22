@@ -1,4 +1,5 @@
 import type { ProviderManagementGateway } from "./types";
+import { resolveContractLineage } from "cms-repository/exports/contracts/catalogue";
 
 /** Pin one contract release to one approved provider account. */
 export async function activateProviderContract(
@@ -33,10 +34,23 @@ export async function activateProviderContract(
         throw new Error("Contract release must be imported before selection");
     }
     const existing = await gateway.selections.get(gateway.siteId);
-    const selections = [
-        ...(existing?.plan.selections ?? []).filter((item) => item.contractId !== input.contractId),
-        { siteId: gateway.siteId, ...input },
-    ];
+    const replacedContractIds = new Set(
+        (await resolveContractLineage(gateway.releases, release.admission.release)).map(({ contractId }) => contractId),
+    );
+    const retained = [];
+    for (const selection of existing?.plan.selections ?? []) {
+        const selectedRelease = await gateway.releases.get(selection.contractId, selection.version);
+        if (!selectedRelease || selectedRelease.admission.digest !== selection.digest) {
+            throw new Error("Existing selected contract release is unavailable");
+        }
+        const overlaps = (await resolveContractLineage(gateway.releases, selectedRelease.admission.release)).some(
+            ({ contractId }) => replacedContractIds.has(contractId),
+        );
+        if (!overlaps) {
+            retained.push(selection);
+        }
+    }
+    const selections = [...retained, { siteId: gateway.siteId, ...input }];
     const result = await gateway.selections.replace(gateway.siteId, selections, existing?.revision ?? 0);
     return { revision: result.revision, selected: result.plan.selections };
 }

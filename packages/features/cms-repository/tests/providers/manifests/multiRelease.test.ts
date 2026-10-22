@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { admitProviderManifest } from "@bernouy/cms-repository/providers";
+import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { contractDocument, implementation, manifestDocument, releaseCatalogue, requirement } from "../support/fixtures";
 
 describe("multi-release provider implementations", () => {
@@ -65,6 +67,34 @@ describe("multi-release provider implementations", () => {
                 ]),
                 catalogue,
             ),
+        ).resolves.toMatchObject({ kind: "admitted-provider-manifest" });
+    });
+
+    test("does not redundantly claim a specialization and its parent", async () => {
+        const catalogue = new InMemoryReleaseCatalogue();
+        const parent = await admitContractRelease(contractDocument("emailer", "send"));
+        await catalogue.publish(parent);
+        const childDocument = contractDocument("emailer.smtp", "send");
+        childDocument.extends = {
+            contractId: "emailer",
+            version: "1.0.0",
+            digest: parent.digest,
+        };
+        childDocument.capabilities = structuredClone(parent.release.capabilities);
+        const child = await admitContractRelease(childDocument);
+        await catalogue.publish(child);
+
+        await expect(
+            admitProviderManifest(
+                manifestDocument([
+                    implementation("emailer", "1.0.0", parent.digest),
+                    implementation("emailer.smtp", "1.0.0", child.digest),
+                ]),
+                catalogue,
+            ),
+        ).rejects.toThrow("both implement emailer");
+        await expect(
+            admitProviderManifest(manifestDocument([implementation("emailer.smtp", "1.0.0", child.digest)]), catalogue),
         ).resolves.toMatchObject({ kind: "admitted-provider-manifest" });
     });
 });

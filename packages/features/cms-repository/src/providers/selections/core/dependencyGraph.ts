@@ -1,7 +1,7 @@
 import { satisfiesVersionRange } from "cms-repository/exports/contracts/compatibility";
 import type { ContractSelectionDependency } from "../interfaces/ContractSelectionPlan";
 import { ContractSelectionValidationError } from "./errors";
-import type { ResolvedSelection } from "./resolveSelections";
+import { findResolvedImplementation, type ResolvedSelection } from "./resolveSelections";
 
 const MAX_SELECTION_DEPENDENCY_DEPTH = 8;
 
@@ -14,7 +14,10 @@ export function selectionDependencies(
         if (dependencies.length >= maximum) {
             throw new ContractSelectionValidationError("limit_exceeded", "too many selection dependencies");
         }
-        dependencies.push({ ...dependency, present: resolved.has(dependency.contractId) });
+        dependencies.push({
+            ...dependency,
+            present: findResolvedImplementation(resolved, dependency.contractId) !== null,
+        });
     };
     for (const [contractId, node] of resolved) {
         for (const capability of node.release.capabilities) {
@@ -64,7 +67,7 @@ export function validateSelectionGraph(
         }
         active.add(contractId);
         for (const dependency of edges.get(contractId) ?? []) {
-            const target = resolved.get(dependency.contractId);
+            const target = findResolvedImplementation(resolved, dependency.contractId);
             if (!target && dependency.optional) {
                 continue;
             }
@@ -79,16 +82,16 @@ export function validateSelectionGraph(
             }
             if (
                 !target.release.capabilities.some((capability) => capability.id === dependency.capabilityId) ||
-                !satisfiesVersionRange(target.selection.version, dependency.versionRange)
+                !satisfiesVersionRange(target.release.version, dependency.versionRange)
             ) {
                 throw new ContractSelectionValidationError(
                     "incompatible_dependency",
-                    `selected ${target.selection.version} must provide ${dependency.capabilityId} in ${dependency.versionRange}`,
+                    `selected ${target.release.version} must provide ${dependency.capabilityId} in ${dependency.versionRange}`,
                     "$",
                     dependencyPath,
                 );
             }
-            walk(dependency.contractId, path);
+            walk(target.node.selection.contractId, path);
         }
         active.delete(contractId);
         visited.add(contractId);
@@ -111,10 +114,11 @@ function assertMaximumDependencyDepth(
         }
         let longest: readonly string[] = [contractId];
         for (const dependency of edges.get(contractId) ?? []) {
-            if (!resolved.has(dependency.contractId)) {
+            const target = findResolvedImplementation(resolved, dependency.contractId);
+            if (!target) {
                 continue;
             }
-            const candidate = [contractId, ...longestPathFrom(dependency.contractId)];
+            const candidate = [contractId, ...longestPathFrom(target.node.selection.contractId)];
             if (candidate.length > longest.length) {
                 longest = candidate;
             }
