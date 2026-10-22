@@ -56,5 +56,12 @@
     "text.ui-review-the-plan-before-applying-the-migration.label": "Vérifier le plan de migration",
     "text.ui-starting-migration.label": "Démarrage de la migration",
     "text.ui-texts.label": "Textes",
-    "text.ui-this-collection-publishes-no-blocks.label": "Collection sans Bloc publié"
+    "text.ui-this-collection-publishes-no-blocks.label": "Collection sans Bloc publié",
+    "text.ui-no-browser-authority.label": "Aucune autorité navigateur",
+    "text.ui-browser-authority-review-required.label": "Vérification de l’autorité navigateur requise",
+    "text.ui-high-risk-browser-authority.label": "Autorité navigateur à risque élevé",
+    "text.ui-javascript-blocks.label": "Blocs JavaScript",
+    "text.ui-iframe-blocks.label": "Blocs iframe",
+    "text.ui-external-frame-origin.label": "Origine de frame externe",
+    "text.ui-same-origin-script-authority.label": "Autorité des scripts same-origin"
 }

@@ -56,5 +56,12 @@
     "text.ui-review-the-plan-before-applying-the-migration.label": "Review migration plan",
     "text.ui-starting-migration.label": "Starting migration",
     "text.ui-texts.label": "Texts",
-    "text.ui-this-collection-publishes-no-blocks.label": "Collection publishes no Blocks"
+    "text.ui-this-collection-publishes-no-blocks.label": "Collection publishes no Blocks",
+    "text.ui-no-browser-authority.label": "No browser authority",
+    "text.ui-browser-authority-review-required.label": "Browser authority review required",
+    "text.ui-high-risk-browser-authority.label": "High-risk browser authority",
+    "text.ui-javascript-blocks.label": "JavaScript Blocks",
+    "text.ui-iframe-blocks.label": "iframe Blocks",
+    "text.ui-external-frame-origin.label": "External frame origin",
+    "text.ui-same-origin-script-authority.label": "Same-origin script authority"
 }

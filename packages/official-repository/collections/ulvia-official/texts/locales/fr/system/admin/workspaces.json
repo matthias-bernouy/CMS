@@ -56,5 +56,12 @@
     "ui-review-the-plan-before-applying-the-migration": "Vérifiez le plan avant d’appliquer la migration.",
     "ui-starting-migration": "Démarrage de la migration…",
     "ui-texts": "Textes",
-    "ui-this-collection-publishes-no-blocks": "Cette Collection ne publie aucun Bloc."
+    "ui-this-collection-publishes-no-blocks": "Cette Collection ne publie aucun Bloc.",
+    "ui-no-browser-authority": "Aucune autorité navigateur",
+    "ui-browser-authority-review-required": "Vérification de l’autorité navigateur requise",
+    "ui-high-risk-browser-authority": "Autorité navigateur à risque élevé",
+    "ui-javascript-blocks": "Blocs JavaScript",
+    "ui-iframe-blocks": "Blocs iframe",
+    "ui-external-frame-origin": "Origine de frame externe",
+    "ui-same-origin-script-authority": "Les scripts et l’accès same-origin sont activés ensemble"
 }

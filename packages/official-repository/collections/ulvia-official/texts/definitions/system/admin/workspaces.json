@@ -346,5 +346,47 @@
         "label": "text.ui-this-collection-publishes-no-blocks.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-no-browser-authority",
+        "label": "text.ui-no-browser-authority.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-browser-authority-review-required",
+        "label": "text.ui-browser-authority-review-required.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-high-risk-browser-authority",
+        "label": "text.ui-high-risk-browser-authority.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-javascript-blocks",
+        "label": "text.ui-javascript-blocks.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-iframe-blocks",
+        "label": "text.ui-iframe-blocks.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-external-frame-origin",
+        "label": "text.ui-external-frame-origin.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-same-origin-script-authority",
+        "label": "text.ui-same-origin-script-authority.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
     }
 ]
