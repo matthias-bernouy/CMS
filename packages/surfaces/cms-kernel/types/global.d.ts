@@ -5,6 +5,7 @@ import type {
     mutationFormRequest,
     MutationFormError,
     observeBlocAttributes,
+    requestBlocFormControl,
     registerBloc,
 } from "@bernouy/cms-content/browser";
 
@@ -17,6 +18,7 @@ declare global {
     var cmsRuntime: {
         readonly CMS_BLOC_FORM_CONTROL_READY_EVENT: typeof CMS_BLOC_FORM_CONTROL_READY_EVENT;
         readonly connectBlocFormControl: typeof connectBlocFormControl;
+        readonly requestBlocFormControl: typeof requestBlocFormControl;
         readonly createBlocScope: typeof createBlocScope;
         readonly observeBlocAttributes: typeof observeBlocAttributes;
         readonly registerBloc: typeof registerBloc;

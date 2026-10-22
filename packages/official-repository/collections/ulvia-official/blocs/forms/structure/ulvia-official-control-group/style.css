@@ -16,8 +16,19 @@
     display: flex;
     align-items: stretch;
 }
+[part="leading"] {
+    grid-column: 1;
+}
 [part="control"] {
+    grid-column: 2;
     min-width: 0;
+}
+[part="trailing"] {
+    grid-column: 3;
+}
+[part="leading"]:empty,
+[part="trailing"]:empty {
+    display: none;
 }
 [part~="leading"] {
     display: inline-flex;
@@ -56,8 +67,14 @@
         grid-template-columns: minmax(0, 1fr);
     }
     [part="leading"],
+    [part="control"],
     [part="trailing"] {
+        grid-column: 1;
         display: block;
+    }
+    [part="leading"]:empty,
+    [part="trailing"]:empty {
+        display: none;
     }
     :scope[joined] {
         --ulvia-official-input-form-radius: var(--ulvia-official-radius-md, 0.5rem);

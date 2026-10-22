@@ -11,8 +11,8 @@
         "label": {
             "accepts": [
                 {
-                    "kind": "native-content",
-                    "profile": "inline"
+                    "kind": "native-element",
+                    "accepts": ["span"]
                 }
             ],
             "min": 1,

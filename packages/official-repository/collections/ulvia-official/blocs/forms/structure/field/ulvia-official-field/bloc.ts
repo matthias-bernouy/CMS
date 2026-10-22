@@ -2,6 +2,7 @@ import {
     CMS_BLOC_FORM_CONTROL_READY_EVENT,
     createBlocScope,
     connectBlocFormControl,
+    requestBlocFormControl,
 } from "@bernouy/cms-content/browser";
 
 const FIELD_VALUE_EVENT = "ulvia-official:field-value";
@@ -15,10 +16,7 @@ class Controller {
     connect(): void {
         this.blocRoot.addEventListener(CMS_BLOC_FORM_CONTROL_READY_EVENT, this.handleControlReady);
         this.blocRoot.addEventListener(FIELD_VALUE_EVENT, this.handleFieldValue);
-        this.connectControl(this.blocRoot);
-        for (const root of this.scope.queryBlocRoots()) {
-            this.connectControl(root);
-        }
+        this.connectControl();
     }
 
     disconnect(): void {
@@ -28,12 +26,16 @@ class Controller {
 
     private handleControlReady = (event: Event): void => {
         const root = event.target;
-        if (root instanceof HTMLElement && root.parentElement?.closest("[cms-bloc]") === this.blocRoot) {
-            this.connectControl(root);
+        if (
+            root instanceof HTMLElement &&
+            root !== this.blocRoot &&
+            root.parentElement?.closest('[cms-bloc="ulvia-official-field"]') === this.blocRoot
+        ) {
+            this.connectControl();
         }
     };
 
-    private connectControl(root: HTMLElement): void {
+    private connectControl(): void {
         const label = this.scope.querySelector<HTMLLabelElement>('label[part~="field-label"]');
         if (!label) {
             return;
@@ -41,7 +43,15 @@ class Controller {
         const descriptions = this.scope.querySelectorAll<HTMLElement>(
             '[part~="field-description"], [part~="field-error"]',
         );
-        connectBlocFormControl(root, { label, descriptions });
+        const roots = Array.from(this.blocRoot.querySelectorAll<HTMLElement>("[cms-bloc]"));
+        const controlRoot = roots.find(
+            (root) =>
+                root.parentElement?.closest('[cms-bloc="ulvia-official-field"]') === this.blocRoot &&
+                requestBlocFormControl(root),
+        );
+        if (controlRoot) {
+            connectBlocFormControl(controlRoot, { label, descriptions });
+        }
     }
 
     private handleFieldValue = (event: Event): void => {
