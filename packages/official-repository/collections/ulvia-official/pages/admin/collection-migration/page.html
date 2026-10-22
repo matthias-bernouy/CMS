@@ -9,8 +9,8 @@
     <section
         slot="content"
         cms-query="ulvia.cms.installations:plan-collection-migration as plan"
-        cms-query-input='{"targets[0][repositoryId]":{"from":"state","key":"@param:ulvia-official-repository"},"targets[0][publisherId]":{"from":"state","key":"@param:ulvia-official-publisher"},"targets[0][collectionId]":{"from":"state","key":"@param:ulvia-official-collection"},"targets[0][version]":{"from":"state","key":"@param:ulvia-official-version"},"targets[0][digest]":{"from":"state","key":"@param:ulvia-official-digest"}}'
-        cms-query-listen="@param:ulvia-official-repository @param:ulvia-official-publisher @param:ulvia-official-collection @param:ulvia-official-version @param:ulvia-official-digest"
+        cms-query-input='{"targets[0][repositoryId]":{"from":"state","key":"@param:ulvia-official-repository"},"targets[0][publisherId]":{"from":"state","key":"@param:ulvia-official-publisher"},"targets[0][collectionId]":{"from":"state","key":"@param:ulvia-official-collection"},"targets[0][version]":{"from":"state","key":"@param:ulvia-official-version"},"targets[0][digest]":{"from":"state","key":"@param:ulvia-official-digest"},"targets[0][approvedBrowserRiskDigest]":{"from":"state","key":"@param:ulvia-official-browser-risk"}}'
+        cms-query-listen="@param:ulvia-official-repository @param:ulvia-official-publisher @param:ulvia-official-collection @param:ulvia-official-version @param:ulvia-official-digest @param:ulvia-official-browser-risk"
     >
         <div cms-condition="plan.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-preparing-migration-plan }}</div>
         <div cms-match="plan.outcome.kind">
@@ -19,6 +19,7 @@
                 <div cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
                 <div cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
                 <div cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
+                <div cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
                 <div cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-migration-plan-unavailable }}</div>
             </div>
             <div cms-case='"success"'>
@@ -45,6 +46,11 @@
                                 <input type="hidden" name="targets[0][collectionId]" value="{{ plan.data.references.0.collectionId }}">
                                 <input type="hidden" name="targets[0][version]" value="{{ plan.data.references.0.version }}">
                                 <input type="hidden" name="targets[0][digest]" value="{{ plan.data.references.0.digest }}">
+                                <input
+                                    type="hidden"
+                                    name="targets[0][approvedBrowserRiskDigest]"
+                                    value="{{ plan.data.references.0.approvedBrowserRiskDigest }}"
+                                >
                                 <div cms-bloc="ulvia-official-form-actions" actions-align="end">
                                     <div slot="actions" cms-condition="mutation.activity === 'submitting'">
                                         {{ cms.i18n.ulvia-official.ui-starting-migration }}
@@ -64,6 +70,7 @@
                                         <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"MIGRATION_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"IDEMPOTENCY_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>

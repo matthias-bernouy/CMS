@@ -48,9 +48,20 @@
                         "digest": {
                             "type": "string",
                             "maxLength": 71
+                        },
+                        "approvedBrowserRiskDigest": {
+                            "type": "string",
+                            "maxLength": 71
                         }
                     },
-                    "required": ["repositoryId", "publisherId", "collectionId", "version", "digest"]
+                    "required": [
+                        "repositoryId",
+                        "publisherId",
+                        "collectionId",
+                        "version",
+                        "digest",
+                        "approvedBrowserRiskDigest"
+                    ]
                 }
             }
         },
@@ -100,6 +111,10 @@
             "retryable": false
         },
         {
+            "code": "BROWSER_CAPABILITIES_APPROVAL_REQUIRED",
+            "retryable": false
+        },
+        {
             "code": "REVISION_CONFLICT",
             "retryable": true
         },
@@ -130,6 +145,7 @@
                 "INVALID_INPUT": 422,
                 "NOT_FOUND": 404,
                 "RELEASE_MISMATCH": 409,
+                "BROWSER_CAPABILITIES_APPROVAL_REQUIRED": 409,
                 "REVISION_CONFLICT": 409,
                 "MIGRATION_IN_PROGRESS": 423,
                 "IDEMPOTENCY_CONFLICT": 409,

@@ -38,9 +38,20 @@
                         "digest": {
                             "type": "string",
                             "maxLength": 71
+                        },
+                        "approvedBrowserRiskDigest": {
+                            "type": "string",
+                            "maxLength": 71
                         }
                     },
-                    "required": ["repositoryId", "publisherId", "collectionId", "version", "digest"]
+                    "required": [
+                        "repositoryId",
+                        "publisherId",
+                        "collectionId",
+                        "version",
+                        "digest",
+                        "approvedBrowserRiskDigest"
+                    ]
                 }
             }
         },
@@ -128,9 +139,20 @@
                         "digest": {
                             "type": "string",
                             "maxLength": 71
+                        },
+                        "approvedBrowserRiskDigest": {
+                            "type": "string",
+                            "maxLength": 71
                         }
                     },
-                    "required": ["repositoryId", "publisherId", "collectionId", "version", "digest"]
+                    "required": [
+                        "repositoryId",
+                        "publisherId",
+                        "collectionId",
+                        "version",
+                        "digest",
+                        "approvedBrowserRiskDigest"
+                    ]
                 }
             }
         },
@@ -158,6 +180,10 @@
             "retryable": false
         },
         {
+            "code": "BROWSER_CAPABILITIES_APPROVAL_REQUIRED",
+            "retryable": false
+        },
+        {
             "code": "CORE_UNAVAILABLE",
             "retryable": true
         }
@@ -176,6 +202,7 @@
                 "INVALID_INPUT": 422,
                 "NOT_FOUND": 404,
                 "RELEASE_MISMATCH": 409,
+                "BROWSER_CAPABILITIES_APPROVAL_REQUIRED": 409,
                 "CORE_UNAVAILABLE": 503
             }
         }

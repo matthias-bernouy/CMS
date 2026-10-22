@@ -46,6 +46,10 @@ export type {
     CollectionManagedNativeAttributeConstraint,
     CollectionManagedNativeElement,
 } from "cms-repository/collections/interfaces/CollectionBloc";
+export type {
+    BlocBrowserCapabilities as CollectionBlocBrowserCapabilities,
+    BlocFrameSandboxPermission as CollectionBlocFrameSandboxPermission,
+} from "@bernouy/cms-content/page-document";
 export { settingsSchema } from "cms-repository/collections/core/parsing/blocs/settingSchema";
 export {
     COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS,
@@ -84,6 +88,12 @@ export {
     type CollectionAdmissionOptions,
 } from "cms-repository/collections/core/admission/admitCollectionRelease";
 export { describeCollectionResources } from "cms-repository/collections/core/admission/resourceDescriptors";
+export {
+    collectionBrowserRisk,
+    collectionBrowserRiskDigest,
+    type CollectionBrowserRiskLevel,
+    type CollectionBrowserRiskReport,
+} from "cms-repository/collections/core/validation/browserCapabilities";
 export { verifyCollectionPublicationEvolution } from "cms-repository/collections/core/admission/evolution";
 export {
     verifyStoredCollectionArtifact,

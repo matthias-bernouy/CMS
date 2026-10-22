@@ -8,6 +8,12 @@ export type CollectionRepositoryEntry = Readonly<{
     description: string;
     blocCount: number;
     hasTheme: boolean;
+    browserRisk: "none" | "review" | "high";
+    browserRiskDigest: string;
+    javaScriptBlocCount: number;
+    frameBlocCount: number;
+    externalFrameOrigins: readonly string[];
+    scriptsWithSameOrigin: boolean;
 }>;
 
 export type CollectionRepositoryReference = Pick<

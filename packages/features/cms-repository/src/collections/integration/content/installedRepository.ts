@@ -131,6 +131,7 @@ export function withInstalledCollections(
                             root: bloc.root,
                             kind: bloc.kind,
                             markupHTML: bloc.markup,
+                            ...(bloc.browser === undefined ? {} : { browser: bloc.browser }),
                             ...(bloc.kind === "component" && bloc.runtime?.styleCSS
                                 ? {
                                       styleCSS: bloc.runtime.styleCSS,

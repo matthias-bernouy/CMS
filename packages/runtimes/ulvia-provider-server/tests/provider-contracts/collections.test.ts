@@ -1,16 +1,45 @@
 import { expect, mock, test } from "bun:test";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { CollectionSources, registerCollectionInstallationCapabilities } from "@bernouy/ulvia-provider/capabilities";
+import { collectionBrowserRisk, collectionBrowserRiskDigest } from "@bernouy/cms-repository/collections";
 
 const digest = `sha256:${"a".repeat(64)}`;
+const noBrowserRisk = collectionBrowserRisk({ blocs: [] } as never);
+const noBrowserRiskDigest = collectionBrowserRiskDigest(noBrowserRisk);
 const reference = {
     repositoryId: "official",
     publisherId: "ulvia.official",
     collectionId: "sample",
     version: "1.0.0",
     digest,
+    approvedBrowserRiskDigest: noBrowserRiskDigest,
 };
-const entry = { ...reference, name: "Sample", description: "Fixture", blocCount: 1, hasTheme: false };
+const { approvedBrowserRiskDigest: _approvedBrowserRiskDigest, ...listedReference } = reference;
+const entry = {
+    ...listedReference,
+    browserRiskDigest: noBrowserRiskDigest,
+    browserRisk: noBrowserRisk.level,
+    javaScriptBlocCount: 0,
+    frameBlocCount: 0,
+    externalFrameOrigins: [],
+    scriptsWithSameOrigin: false,
+    name: "Sample",
+    description: "Fixture",
+    blocCount: 1,
+    hasTheme: false,
+};
+const admittedRelease = {
+    publisherId: reference.publisherId,
+    collectionId: reference.collectionId,
+    version: reference.version,
+    name: "collection.name",
+    description: "collection.description",
+    locale: "en",
+    translations: { en: { "collection.name": "Sample", "collection.description": "Fixture" } },
+    blocs: [],
+    assets: [],
+};
+const admittedArtifact = { digest, release: admittedRelease, assets: [] };
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
@@ -19,17 +48,11 @@ const context = {
 };
 
 test("collection catalogue stages only the exact repository release", async () => {
-    const importRelease = mock(async () => ({
-        digest,
-        release: {
-            publisherId: reference.publisherId,
-            collectionId: reference.collectionId,
-            version: reference.version,
-        },
-    }));
+    const importAdmittedRelease = mock(async () => admittedArtifact);
     const store = {
         snapshot: async () => ({ revision: 4, collections: [] }),
-        importRelease,
+        admitRelease: async () => admittedArtifact,
+        importAdmittedRelease,
     };
     const source = {
         id: "official",
@@ -40,10 +63,19 @@ test("collection catalogue stages only the exact repository release", async () =
 
     expect(await sources.catalogue("default")).toMatchObject({
         revision: 4,
-        releases: [{ ...entry, action: "install" }],
+        releases: [
+            {
+                repositoryId: "official",
+                digest,
+                browserRisk: "none",
+                javaScriptBlocs: [],
+                frameBlocs: [],
+                action: "install",
+            },
+        ],
     });
     expect(await sources.stage([reference])).toEqual([{ digest, repositoryId: "official" }]);
-    expect(importRelease).toHaveBeenCalledTimes(1);
+    expect(importAdmittedRelease).toHaveBeenCalledTimes(1);
     await expect(sources.stage([{ ...reference, digest: `sha256:${"b".repeat(64)}` }])).rejects.toMatchObject({
         code: "NOT_FOUND",
     });
@@ -174,6 +206,8 @@ test("collection commands stage installs and require migrations for generation c
             }),
             revision: async () => (installed ? 1 : 0),
             importRelease: async () => ({ digest, release: targetRelease }),
+            admitRelease: async () => ({ digest, release: targetRelease, assets: [] }),
+            importAdmittedRelease: async () => ({ digest, release: targetRelease }),
             getRelease: async () => ({ digest, release: targetRelease }),
             installMany: async () => {
                 installed = true;

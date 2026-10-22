@@ -56,6 +56,12 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
                         "description",
                         "blocCount",
                         "hasTheme",
+                        "browserRisk",
+                        "browserRiskDigest",
+                        "javaScriptBlocCount",
+                        "frameBlocCount",
+                        "externalFrameOrigins",
+                        "scriptsWithSameOrigin",
                     ].includes(key),
             )
         ) {
@@ -84,7 +90,18 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
             entry.description.length > 4096 ||
             !Number.isSafeInteger(entry.blocCount) ||
             (entry.blocCount as number) < 0 ||
-            (entry.hasTheme !== true && entry.hasTheme !== false)
+            (entry.hasTheme !== true && entry.hasTheme !== false) ||
+            !["none", "review", "high"].includes(String(entry.browserRisk)) ||
+            typeof entry.browserRiskDigest !== "string" ||
+            !/^sha256:[a-f0-9]{64}$/u.test(entry.browserRiskDigest) ||
+            !Number.isSafeInteger(entry.javaScriptBlocCount) ||
+            (entry.javaScriptBlocCount as number) < 0 ||
+            !Number.isSafeInteger(entry.frameBlocCount) ||
+            (entry.frameBlocCount as number) < 0 ||
+            !Array.isArray(entry.externalFrameOrigins) ||
+            entry.externalFrameOrigins.length > 32 ||
+            entry.externalFrameOrigins.some((origin) => typeof origin !== "string" || origin.length > 2048) ||
+            (entry.scriptsWithSameOrigin !== true && entry.scriptsWithSameOrigin !== false)
         ) {
             throw new TypeError("Invalid repository entry metadata");
         }
@@ -98,6 +115,12 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
             description: entry.description,
             blocCount: entry.blocCount,
             hasTheme: entry.hasTheme,
+            browserRisk: entry.browserRisk,
+            browserRiskDigest: entry.browserRiskDigest,
+            javaScriptBlocCount: entry.javaScriptBlocCount,
+            frameBlocCount: entry.frameBlocCount,
+            externalFrameOrigins: entry.externalFrameOrigins,
+            scriptsWithSameOrigin: entry.scriptsWithSameOrigin,
         } as CollectionRepositoryEntry;
     });
     const coordinates = entries.map((entry) => `${entry.publisherId}\0${entry.collectionId}\0${entry.version}`);

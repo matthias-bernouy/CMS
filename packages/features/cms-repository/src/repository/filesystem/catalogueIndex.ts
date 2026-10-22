@@ -1,4 +1,8 @@
-import { resolveCollectionTranslation } from "cms-repository/exports/collections/index";
+import {
+    collectionBrowserRisk,
+    collectionBrowserRiskDigest,
+    resolveCollectionTranslation,
+} from "cms-repository/exports/collections/index";
 import { LocalCollectionRepository } from "./artifacts/collections";
 import { LocalArtifactFiles } from "./artifacts/files";
 import { LocalContractReleases } from "./contracts";
@@ -84,6 +88,7 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
             if (await this.yanks.get("collection", release.publisherId, release.collectionId, release.version)) {
                 continue;
             }
+            const browser = collectionBrowserRisk(release);
             entries.push({
                 publisherId: release.publisherId,
                 collectionId: release.collectionId,
@@ -93,6 +98,12 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
                 description: release.description ? resolveCollectionTranslation(release, release.description) : "",
                 blocCount: release.blocs.length,
                 hasTheme: Boolean(release.theme),
+                browserRisk: browser.level,
+                browserRiskDigest: collectionBrowserRiskDigest(browser),
+                javaScriptBlocCount: browser.javaScriptBlocs.length,
+                frameBlocCount: browser.frameBlocs.length,
+                externalFrameOrigins: browser.externalFrameOrigins,
+                scriptsWithSameOrigin: browser.scriptsWithSameOrigin,
             });
         }
         return sorted(entries, "collectionId");

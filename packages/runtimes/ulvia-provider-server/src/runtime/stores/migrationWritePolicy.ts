@@ -58,6 +58,8 @@ export const COLLECTION_STORE_FENCED_MUTATIONS = [
 
 const COLLECTION_STORE_NON_SITE_MUTATIONS_OR_READS = [
     "importRelease",
+    "admitRelease",
+    "importAdmittedRelease",
     "getReleaseAsset",
     "getInstalledAssetMetadata",
     "getInstalledAssetMetadataBatch",

@@ -25,6 +25,12 @@ function collectionEntry() {
         description: "Commerce components",
         blocCount: 4,
         hasTheme: true,
+        browserRisk: "none",
+        browserRiskDigest: digest,
+        javaScriptBlocCount: 0,
+        frameBlocCount: 0,
+        externalFrameOrigins: [],
+        scriptsWithSameOrigin: false,
     };
 }
 

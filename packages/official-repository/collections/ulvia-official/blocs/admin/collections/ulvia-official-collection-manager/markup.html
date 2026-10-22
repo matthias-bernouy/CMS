@@ -40,6 +40,40 @@
                         <div slot="items">
                             <p>{{ release.description }}</p>
                             <p>{{ release.blocCount }} {{ cms.i18n.ulvia-official.ui-blocks }}</p>
+                            <div cms-bloc="ulvia-official-stack" gap="sm">
+                                <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="release.browserRisk === 'none'" slot="items">
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-no-browser-authority }}</span>
+                                </div>
+                                <div cms-bloc="ulvia-official-badge" tone="warning" cms-condition="release.browserRisk === 'review'" slot="items">
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-browser-authority-review-required }}</span>
+                                </div>
+                                <div cms-bloc="ulvia-official-badge" tone="danger" cms-condition="release.browserRisk === 'high'" slot="items">
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-high-risk-browser-authority }}</span>
+                                </div>
+                                <p slot="items" cms-condition="release.browserRisk !== 'none'">
+                                    {{ release.javaScriptBlocCount }} {{ cms.i18n.ulvia-official.ui-javascript-blocks }}
+                                </p>
+                                <p slot="items" cms-repeat="release.javaScriptBlocs as blocId">
+                                    <strong>{{ cms.i18n.ulvia-official.ui-javascript-blocks }}</strong>
+                                    <span>{{ blocId }}</span>
+                                </p>
+                                <p slot="items" cms-condition="release.browserRisk !== 'none'">
+                                    {{ release.frameBlocCount }} {{ cms.i18n.ulvia-official.ui-iframe-blocks }}
+                                </p>
+                                <div slot="items" cms-repeat="release.frameBlocs as frame">
+                                    <strong>{{ cms.i18n.ulvia-official.ui-iframe-blocks }}</strong>
+                                    <span>{{ frame.id }}</span>
+                                    <span cms-repeat="frame.origins as origin">{{ origin }}</span>
+                                    <span cms-repeat="frame.sandbox as permission">{{ permission }}</span>
+                                </div>
+                                <p slot="items" cms-repeat="release.externalFrameOrigins as origin">
+                                    <strong>{{ cms.i18n.ulvia-official.ui-external-frame-origin }}</strong>
+                                    <span>{{ origin }}</span>
+                                </p>
+                                <p slot="items" cms-condition="release.scriptsWithSameOrigin">
+                                    <strong>{{ cms.i18n.ulvia-official.ui-same-origin-script-authority }}</strong>
+                                </p>
+                            </div>
                             <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="release.action === 'current'">
                                 <span slot="label">{{ cms.i18n.ulvia-official.ui-installed }}</span>
                             </div>
@@ -60,6 +94,7 @@
                             <input type="hidden" name="targets[0][collectionId]" value="{{ release.collectionId }}">
                             <input type="hidden" name="targets[0][version]" value="{{ release.version }}">
                             <input type="hidden" name="targets[0][digest]" value="{{ release.digest }}">
+                            <input type="hidden" name="targets[0][approvedBrowserRiskDigest]" value="{{ release.browserRiskDigest }}">
                             <button cms-bloc="ulvia-official-action" size="sm" tone="primary" variant="filled" type="submit">
                                 <span>{{ cms.i18n.ulvia-official.ui-install }}</span>
                             </button>
@@ -77,6 +112,7 @@
                                     <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                     <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                     <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                     <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                     <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                     <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
@@ -97,6 +133,7 @@
                                 <input type="hidden" name="target[collectionId]" value="{{ release.collectionId }}">
                                 <input type="hidden" name="target[version]" value="{{ release.version }}">
                                 <input type="hidden" name="target[digest]" value="{{ release.digest }}">
+                                <input type="hidden" name="target[approvedBrowserRiskDigest]" value="{{ release.browserRiskDigest }}">
                                 <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" type="submit">
                                     <span>{{ cms.i18n.ulvia-official.ui-try-compatible-upgrade }}</span>
                                 </button>
@@ -108,6 +145,7 @@
                                         <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
                                         <p role="alert" cms-case='"MIGRATION_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
@@ -122,7 +160,7 @@
                                 tone="primary"
                                 variant="filled"
                                 slot="items"
-                                href="/admin/collections/migration?ulvia-official-repository={{ release.repositoryId | urlencode }}&ulvia-official-publisher={{ release.publisherId | urlencode }}&ulvia-official-collection={{ release.collectionId | urlencode }}&ulvia-official-version={{ release.version | urlencode }}&ulvia-official-digest={{ release.digest | urlencode }}"
+                                href="/admin/collections/migration?ulvia-official-repository={{ release.repositoryId | urlencode }}&ulvia-official-publisher={{ release.publisherId | urlencode }}&ulvia-official-collection={{ release.collectionId | urlencode }}&ulvia-official-version={{ release.version | urlencode }}&ulvia-official-digest={{ release.digest | urlencode }}&ulvia-official-browser-risk={{ release.browserRiskDigest | urlencode }}"
                                 ><span>
                                     {{ cms.i18n.ulvia-official.ui-plan-migration }}
                                 </span></a

@@ -40,9 +40,20 @@
                     "digest": {
                         "type": "string",
                         "maxLength": 71
+                    },
+                    "approvedBrowserRiskDigest": {
+                        "type": "string",
+                        "maxLength": 71
                     }
                 },
-                "required": ["repositoryId", "publisherId", "collectionId", "version", "digest"]
+                "required": [
+                    "repositoryId",
+                    "publisherId",
+                    "collectionId",
+                    "version",
+                    "digest",
+                    "approvedBrowserRiskDigest"
+                ]
             }
         },
         "required": ["expectedRevision", "target"]
@@ -147,6 +158,10 @@
             "retryable": false
         },
         {
+            "code": "BROWSER_CAPABILITIES_APPROVAL_REQUIRED",
+            "retryable": false
+        },
+        {
             "code": "INVALID_STATE",
             "retryable": false
         },
@@ -177,6 +192,7 @@
                 "INVALID_INPUT": 422,
                 "NOT_FOUND": 404,
                 "RELEASE_MISMATCH": 409,
+                "BROWSER_CAPABILITIES_APPROVAL_REQUIRED": 409,
                 "INVALID_STATE": 409,
                 "REVISION_CONFLICT": 409,
                 "MIGRATION_REQUIRED": 409,

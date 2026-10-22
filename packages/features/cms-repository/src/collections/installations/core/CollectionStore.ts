@@ -3,6 +3,7 @@ import type { BlobRange } from "@bernouy/blob-store";
 import { admitCollectionRelease } from "../../core/admission/admitCollectionRelease";
 import { parseCollectionTextOverrides } from "../../core/texts/parseCollectionTexts";
 import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
+import type { AdmittedCollectionRelease } from "../../interfaces/CollectionAdmission";
 import type {
     CollectionInstallRequest,
     CollectionInstallation,
@@ -26,6 +27,16 @@ export class CollectionStore {
 
     async importRelease(input: unknown, assets: readonly CollectionBundleAsset[] = []) {
         const artifact = await admitCollectionRelease(input, assets, { contracts: this.contracts });
+        return this.importAdmittedRelease(artifact);
+    }
+
+    /** Fully validates and snapshots a bundle without making it durable. */
+    admitRelease(input: unknown, assets: readonly CollectionBundleAsset[] = []): Promise<AdmittedCollectionRelease> {
+        return admitCollectionRelease(input, assets, { contracts: this.contracts });
+    }
+
+    /** Persists the exact immutable artifact previously returned by `admitRelease`. */
+    async importAdmittedRelease(artifact: AdmittedCollectionRelease) {
         const release = artifact.release;
         const storedAssets = await Promise.all(
             artifact.assets.map(async ({ id, bytes }) => ({
