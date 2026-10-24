@@ -13,23 +13,49 @@ export async function loadImplementedContracts(
     const entries = (
         await Promise.all(sources.map(async (source) => ({ source, entries: await source.list("contract") })))
     ).flatMap(({ source, entries }) => entries.map((entry) => ({ source, entry })));
-    const dependencies: AdmittedContractRelease[] = [];
+    const dependencies = new Map<string, AdmittedContractRelease>();
     for (const [index, implementation] of implementations.entries()) {
-        const existing = await contracts.get(implementation.contractId, implementation.version);
-        if (existing?.admission.digest === implementation.digest) {
-            continue;
-        }
-        const match = entries.find(({ entry }) => matchesImplementation(entry, implementation));
-        if (!match) {
-            throw new ProviderManifestValidationError(
-                "resolution_failed",
-                missingMessage,
-                `$.implementations[${index}]`,
-            );
-        }
-        dependencies.push(await loadContract(match.source, reference(match.entry)));
+        await loadContractLineage(
+            entries,
+            contracts,
+            dependencies,
+            implementation,
+            missingMessage,
+            `$.implementations[${index}]`,
+        );
     }
-    return dependencies;
+    return [...dependencies.values()];
+}
+
+async function loadContractLineage(
+    entries: readonly Readonly<{ source: ProviderRepositorySource; entry: RepositoryArtifactEntry }>[],
+    contracts: ReleaseCatalogue,
+    dependencies: Map<string, AdmittedContractRelease>,
+    coordinate: Readonly<{ contractId: string; version: string; digest: string }>,
+    missingMessage: string,
+    path: string,
+): Promise<void> {
+    const key = `${coordinate.contractId}\u0000${coordinate.version}`;
+    const pending = dependencies.get(key);
+    if (pending) {
+        if (pending.digest !== coordinate.digest) {
+            throw new ProviderManifestValidationError("resolution_failed", missingMessage, path);
+        }
+        return;
+    }
+    const existing = await contracts.get(coordinate.contractId, coordinate.version);
+    const admission = existing?.admission.digest === coordinate.digest ? existing.admission : undefined;
+    const match = admission ? undefined : entries.find(({ entry }) => matchesCoordinate(entry, coordinate));
+    if (!admission && !match) {
+        throw new ProviderManifestValidationError("resolution_failed", missingMessage, path);
+    }
+    const loaded = admission ?? (await loadContract(match!.source, reference(match!.entry)));
+    if (loaded.release.extends) {
+        await loadContractLineage(entries, contracts, dependencies, loaded.release.extends, missingMessage, path);
+    }
+    if (!admission) {
+        dependencies.set(key, loaded);
+    }
 }
 
 async function loadContract(
@@ -49,15 +75,15 @@ async function loadContract(
     return admitted;
 }
 
-function matchesImplementation(
+function matchesCoordinate(
     entry: RepositoryArtifactEntry,
-    implementation: ProviderManifest["implementations"][number],
+    coordinate: Readonly<{ contractId: string; version: string; digest: string }>,
 ): boolean {
     return (
         entry.kind === "contract" &&
-        entry.id === implementation.contractId &&
-        entry.version === implementation.version &&
-        entry.digest === implementation.digest
+        entry.id === coordinate.contractId &&
+        entry.version === coordinate.version &&
+        entry.digest === coordinate.digest
     );
 }
 
