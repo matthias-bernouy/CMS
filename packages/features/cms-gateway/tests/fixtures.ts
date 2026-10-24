@@ -6,7 +6,13 @@ import type { GatewayRoute } from "@bernouy/cms-gateway";
 export const NOW = "2026-09-29T08:00:00.000Z";
 
 export async function gatewayRoute(
-    overrides: { access?: string; behavior?: Record<string, unknown>; binary?: boolean; binaryInput?: boolean } = {},
+    overrides: {
+        access?: string;
+        behavior?: Record<string, unknown>;
+        binary?: boolean;
+        binaryInput?: boolean;
+        rawRange?: boolean;
+    } = {},
 ): Promise<GatewayRoute> {
     const command = overrides.binaryInput || overrides.behavior?.effect === "command";
     const contract = await admitContractRelease({
@@ -29,7 +35,15 @@ export async function gatewayRoute(
                 input: overrides.binary
                     ? {
                           type: "object",
-                          properties: { fileId: { type: "string", maxLength: 256 } },
+                          properties: {
+                              fileId: { type: "string", maxLength: 256 },
+                              ...(overrides.rawRange
+                                  ? {
+                                        range: { type: "string" as const, maxLength: 128 },
+                                        ifRange: { type: "string" as const, maxLength: 160 },
+                                    }
+                                  : {}),
+                          },
                           required: ["fileId"],
                       }
                     : overrides.binaryInput
@@ -63,16 +77,33 @@ export async function gatewayRoute(
                           ? "/v1/uploads/{uploadId}"
                           : "/v1/items",
                     input: overrides.binary
-                        ? { path: { fileId: "fileId" } }
+                        ? {
+                              path: { fileId: "fileId" },
+                              ...(overrides.rawRange
+                                  ? {
+                                        headers: {
+                                            range: { property: "range", encoding: "http-field" as const },
+                                            "if-range": { property: "ifRange", encoding: "http-field" as const },
+                                        },
+                                    }
+                                  : {}),
+                          }
                         : overrides.binaryInput
                           ? { path: { uploadId: "uploadId" }, body: { binaryProperty: "bytes" } }
                           : command
                             ? { body: true }
                             : { query: { term: "term" } },
                     response: {
-                        successStatuses: [
-                            overrides.binaryInput ? 204 : overrides.behavior?.execution === "operation" ? 202 : 200,
-                        ],
+                        successStatuses:
+                            overrides.binary && overrides.rawRange
+                                ? [200, 206]
+                                : [
+                                      overrides.binaryInput
+                                          ? 204
+                                          : overrides.behavior?.execution === "operation"
+                                            ? 202
+                                            : 200,
+                                  ],
                         contentTypes:
                             overrides.binary || overrides.binaryInput
                                 ? []

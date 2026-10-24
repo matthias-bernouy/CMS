@@ -82,7 +82,7 @@ test("serves a public binary capability without a Page referer", async () => {
                     binding: {
                         method: "GET",
                         path: "/files/{fileId}",
-                        pathParameters: [{ property: "fileId", wireName: "fileId" }],
+                        pathParameters: [{ property: "fileId", wireName: "fileId", encoding: "uri-component" }],
                         query: [],
                         headers: [],
                     },

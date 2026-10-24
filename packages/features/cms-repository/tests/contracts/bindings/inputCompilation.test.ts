@@ -22,7 +22,9 @@ describe("HTTP input binding compilation", () => {
                     input: {
                         path: { messageId: "messageId" },
                         query: { locale: "locale" },
-                        headers: { "x-sender-alias": "sender" },
+                        headers: {
+                            "x-sender-alias": { property: "sender", encoding: "uri-component" },
+                        },
                         body: { properties: ["payload"] },
                     },
                     response: { successStatuses: [200], contentTypes: ["application/json"] },
@@ -33,6 +35,9 @@ describe("HTTP input binding compilation", () => {
         expect(compiled.routeKey).toBe("PATCH /v1/messages/{}");
         expect(compiled.pathParameters).toEqual([
             { encoding: "uri-component", wireName: "messageId", property: "messageId" },
+        ]);
+        expect(compiled.headers).toEqual([
+            { encoding: "uri-component", wireName: "x-sender-alias", property: "sender" },
         ]);
         expect(compiled.body).toEqual({
             kind: "json",
@@ -85,7 +90,9 @@ describe("HTTP input binding compilation", () => {
                             method: "POST",
                             path: "/v1/messages",
                             input: {
-                                headers: { [header]: "recipient" },
+                                headers: {
+                                    [header]: { property: "recipient", encoding: "uri-component" },
+                                },
                                 body: { properties: ["templateId"] },
                             },
                             response: { successStatuses: [200], contentTypes: ["application/json"] },
@@ -94,6 +101,51 @@ describe("HTTP input binding compilation", () => {
                 ),
             ).toThrow("gateway-owned");
         }
+    });
+
+    test("requires explicit header encodings and limits raw fields to non-nullable strings", () => {
+        expect(() =>
+            compileHttpBinding(
+                capability({
+                    binding: {
+                        transport: "http",
+                        method: "POST",
+                        path: "/v1/messages",
+                        input: {
+                            headers: {
+                                range: { property: "recipient", encoding: "http-field" },
+                            },
+                            body: { properties: ["templateId"] },
+                        },
+                        response: { successStatuses: [200], contentTypes: ["application/json"] },
+                    },
+                }),
+            ),
+        ).not.toThrow();
+
+        expect(() =>
+            compileHttpBinding(
+                capability({
+                    input: objectSchema(
+                        {
+                            count: { type: "integer" },
+                            templateId: stringSchema(64),
+                        },
+                        ["count", "templateId"],
+                    ),
+                    binding: {
+                        transport: "http",
+                        method: "POST",
+                        path: "/v1/messages",
+                        input: {
+                            headers: { count: { property: "count", encoding: "http-field" } },
+                            body: { properties: ["templateId"] },
+                        },
+                        response: { successStatuses: [200], contentTypes: ["application/json"] },
+                    },
+                }),
+            ),
+        ).toThrow("non-nullable string");
     });
 
     test("keeps credentials out of URLs except for opaque signed access tokens", () => {

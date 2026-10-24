@@ -128,7 +128,8 @@ UUID versions 1–8 with the standard variant. These are not full validation of
 every email or URI standard. Admission rejects known impossible format lengths
 and map key/count combinations, not every theoretically uninhabited schema.
 
-HTTP scalars use `json-percent`; GET/HEAD are queries, and HEAD error identity
+Path and query scalars use `json-percent`; headers explicitly select that
+encoding or plain `http-field` strings. GET/HEAD are queries, and HEAD error identity
 uses reserved headers. See the normative
 [HTTP parameter profile](../../fixtures/contracts/protocol-v1/http-parameters.md).
 

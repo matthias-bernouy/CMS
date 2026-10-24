@@ -1,4 +1,5 @@
-import { decodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
+import { decodeHttpFieldParameter, decodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
+import type { CompiledHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type {
     GatewayActor,
@@ -132,7 +133,7 @@ async function readBindingInput(
 }> {
     const input: Record<string, unknown> = {};
     for (const parameter of route.binding.pathParameters) {
-        input[parameter.property] = decodeParameter(route, parameter.property, route.pathValues[parameter.wireName]);
+        input[parameter.property] = decodeParameter(route, parameter, route.pathValues[parameter.wireName]);
     }
     const query = rawQueryParameters(new URL(request.url).search);
     for (const parameter of route.binding.query) {
@@ -140,13 +141,13 @@ async function readBindingInput(
         if (values.length > 1) {
             throw new GatewayError("invalid_input", "query parameter must not be repeated");
         }
-        const value = decodeParameter(route, parameter.property, values[0]);
+        const value = decodeParameter(route, parameter, values[0]);
         if (value !== undefined) {
             input[parameter.property] = value;
         }
     }
     for (const parameter of route.binding.headers) {
-        const value = decodeParameter(route, parameter.property, request.headers.get(parameter.wireName) ?? undefined);
+        const value = decodeParameter(route, parameter, request.headers.get(parameter.wireName) ?? undefined);
         if (value !== undefined) {
             input[parameter.property] = value;
         }
@@ -189,11 +190,18 @@ async function readBindingInput(
     };
 }
 
-function decodeParameter(route: GatewayHttpRoute, property: string, encoded: string | undefined): unknown {
+function decodeParameter(
+    route: GatewayHttpRoute,
+    parameter: CompiledHttpParameter,
+    encoded: string | undefined,
+): unknown {
     try {
-        return decodeHttpParameter(route.capability.input.properties[property] as never, encoded);
+        const schema = route.capability.input.properties[parameter.property] as never;
+        return parameter.encoding === "http-field"
+            ? decodeHttpFieldParameter(schema, encoded)
+            : decodeHttpParameter(schema, encoded);
     } catch {
-        throw new GatewayError("invalid_input", `HTTP parameter ${property} is invalid`);
+        throw new GatewayError("invalid_input", `HTTP parameter ${parameter.property} is invalid`);
     }
 }
 

@@ -1,4 +1,5 @@
-import { decodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
+import { decodeHttpFieldParameter, decodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
+import type { HttpHeaderParameterBinding } from "@bernouy/cms-repository/contracts/bindings";
 import {
     MAX_CAPABILITY_JSON_BYTES,
     MAX_CAPABILITY_JSON_DEPTH,
@@ -29,10 +30,10 @@ export async function decodeProviderContractInput(
             input[property] = decodeScalar(capability, property, encodeURIComponent(raw));
         }
     }
-    for (const [wireName, property] of Object.entries(binding?.headers ?? {})) {
+    for (const [wireName, definition] of Object.entries(binding?.headers ?? {})) {
         const raw = request.headers.get(wireName);
         if (raw !== null) {
-            input[property] = decodeScalar(capability, property, raw);
+            input[definition.property] = decodeHeader(capability, definition, raw);
         }
     }
     if (binding?.body) {
@@ -68,6 +69,13 @@ export async function decodeProviderContractInput(
         }
     }
     return { input };
+}
+
+function decodeHeader(capability: CapabilityDefinition, definition: HttpHeaderParameterBinding, raw: string): unknown {
+    const schema = capability.input.properties[definition.property] as UlviaScalarSchema;
+    return definition.encoding === "http-field"
+        ? decodeHttpFieldParameter(schema, raw)
+        : decodeHttpParameter(schema, raw);
 }
 
 function decodeScalar(capability: CapabilityDefinition, property: string, raw: string | undefined): unknown {

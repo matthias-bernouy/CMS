@@ -1,8 +1,9 @@
 # Protocol v1 HTTP scalar parameters
 
-Path, query and application-header parameters use the single `json-percent`
-encoding. Every compiled parameter declares this encoding; providers must not
-substitute ordinary raw-string or form-urlencoded conventions.
+Path and query parameters use the `json-percent` encoding below. Every
+application-header mapping explicitly selects either `uri-component`, which
+uses the same encoding, or `http-field`, which preserves ordinary HTTP field
+syntax for standard headers such as `Range` and `If-Range`.
 
 1. Validate the scalar against its selected release schema.
 2. Serialize it as canonical I-JSON scalar text, retaining quotes around strings.
@@ -40,7 +41,11 @@ ceiling derived from the schema, before percent-decoding or JSON parsing.
 
 Strings containing line breaks are JSON-escaped and percent-encoded; their
 wire representation contains no raw carriage return, line feed or Unicode.
-Headers use this same encoding, not a separate quoting convention.
+Headers using `uri-component` use this same encoding, not a separate quoting
+convention. A header using `http-field` must map a non-nullable string. Its wire
+value is not URI-escaped and must contain only visible ASCII without surrounding
+whitespace. The schema still bounds and validates it. This encoding choice is
+part of the admitted contract plan; runtimes never infer it from a header name.
 
 ## Methods and error envelopes
 

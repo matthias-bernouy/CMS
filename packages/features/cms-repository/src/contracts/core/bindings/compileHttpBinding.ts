@@ -3,7 +3,7 @@ import { deepFreeze } from "../protocol/values";
 import type { CapabilityDefinition } from "../../interfaces/ContractRelease";
 import type { CompiledHttpBinding, CompiledHttpBody } from "../../interfaces/HttpBinding";
 import { assertJsonCompatible } from "./jsonCompatibility";
-import { compileParameterMap } from "./parameters";
+import { compileHeaderParameterMap, compileParameterMap } from "./parameters";
 import { parsePathTemplate, routeKey } from "./pathTemplate";
 import { compileResponse } from "./response";
 
@@ -31,9 +31,8 @@ export function compileHttpBinding(capability: CapabilityDefinition): CompiledHt
     );
     assertPathMappings(template.placeholders, pathParameters, `${path}.input.path`);
     const query = compileParameterMap(definition.input?.query, "query", capability.input, used, `${path}.input.query`);
-    const headers = compileParameterMap(
+    const headers = compileHeaderParameterMap(
         definition.input?.headers,
-        "header",
         capability.input,
         used,
         `${path}.input.headers`,

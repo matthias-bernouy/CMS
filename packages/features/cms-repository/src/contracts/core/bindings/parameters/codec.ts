@@ -47,6 +47,40 @@ export function decodeHttpParameter(schema: UlviaScalarSchema, encoded: unknown)
     return value;
 }
 
+/** Encodes one explicitly declared, plain HTTP field value without URI escaping. */
+export function encodeHttpFieldParameter(schema: UlviaScalarSchema, value: unknown): string | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (schema.type !== "string" || schema.nullable || typeof value !== "string") {
+        throw new SchemaValueError("plain HTTP fields require a non-nullable string");
+    }
+    validateSchemaValue(schema, value);
+    canonicalScalar(value);
+    assertHttpFieldValue(value, schema.maxLength);
+    return value;
+}
+
+/** Decodes one raw field value after the HTTP stack has parsed its header line. */
+export function decodeHttpFieldParameter(schema: UlviaScalarSchema, value: unknown): string | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (schema.type !== "string" || schema.nullable || typeof value !== "string") {
+        throw new SchemaValueError("plain HTTP fields require a non-nullable string");
+    }
+    assertHttpFieldValue(value, schema.maxLength);
+    validateSchemaValue(schema, value);
+    canonicalScalar(value);
+    return value;
+}
+
+function assertHttpFieldValue(value: string, maximum: number): void {
+    if (value.length > maximum || value !== value.trim() || !/^[\x20-\x7e]*$/u.test(value)) {
+        throw new SchemaValueError("must be a bounded visible-ASCII HTTP field value without surrounding whitespace");
+    }
+}
+
 function requiredNullableString(value: string): string {
     if (!value.startsWith("~s")) {
         throw new SchemaValueError("nullable strings must use their URI component marker");

@@ -1,4 +1,4 @@
-import { encodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
+import { encodeHttpFieldParameter, encodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import type { CompiledHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema";
@@ -83,6 +83,8 @@ export function buildHttpInvocation(request: GatewayTransportRequest): PreparedH
 
     function encode(parameter: CompiledHttpParameter): string | undefined {
         const schema = capability.input.properties[parameter.property] as UlviaScalarSchema;
-        return encodeHttpParameter(schema, input[parameter.property]);
+        return parameter.encoding === "http-field"
+            ? encodeHttpFieldParameter(schema, input[parameter.property])
+            : encodeHttpParameter(schema, input[parameter.property]);
     }
 }

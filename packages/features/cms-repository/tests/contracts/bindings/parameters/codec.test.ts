@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { decodeHttpParameter, encodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
+import {
+    decodeHttpFieldParameter,
+    decodeHttpParameter,
+    encodeHttpFieldParameter,
+    encodeHttpParameter,
+} from "@bernouy/cms-repository/contracts/bindings";
 import { parseUlviaSchema } from "@bernouy/cms-repository/contracts/schema";
 import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema";
 
@@ -73,5 +78,23 @@ describe("URI component HTTP parameter encoding", () => {
         const date = parseUlviaSchema({ type: "string", format: "date", maxLength: 10 }) as UlviaScalarSchema;
         expect(() => decodeHttpParameter(date, "2025-02-29")).toThrow("format date");
         expect(() => decodeHttpParameter({ type: "string", maxLength: 0 }, "a".repeat(65))).toThrow("bounded");
+    });
+});
+
+describe("plain HTTP field parameter encoding", () => {
+    const range: UlviaScalarSchema = { type: "string", maxLength: 128 };
+
+    test("preserves standard field syntax without URI escaping", () => {
+        expect(encodeHttpFieldParameter(range, "bytes=0-31")).toBe("bytes=0-31");
+        expect(decodeHttpFieldParameter(range, "bytes=0-31")).toBe("bytes=0-31");
+        expect(encodeHttpFieldParameter(range, undefined)).toBeUndefined();
+    });
+
+    test("rejects ambiguous whitespace, control characters, Unicode and non-string schemas", () => {
+        for (const value of [" bytes=0-31", "bytes=0-31 ", "one\r\ntwo", "café"]) {
+            expect(() => decodeHttpFieldParameter(range, value)).toThrow("HTTP field");
+        }
+        expect(() => encodeHttpFieldParameter({ type: "integer" }, 1)).toThrow("non-nullable string");
+        expect(() => encodeHttpFieldParameter({ ...range, nullable: true }, null)).toThrow("non-nullable string");
     });
 });

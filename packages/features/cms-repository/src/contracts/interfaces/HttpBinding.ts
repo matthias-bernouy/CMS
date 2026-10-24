@@ -11,9 +11,14 @@ export interface HttpBinaryBodyBinding {
 
 export interface HttpInputBinding {
     readonly body?: true | HttpBinaryBodyBinding | HttpBodyPropertiesBinding;
-    readonly headers?: Readonly<Record<string, string>>;
+    readonly headers?: Readonly<Record<string, HttpHeaderParameterBinding>>;
     readonly path?: Readonly<Record<string, string>>;
     readonly query?: Readonly<Record<string, string>>;
+}
+
+export interface HttpHeaderParameterBinding {
+    readonly encoding: "http-field" | "uri-component";
+    readonly property: string;
 }
 
 export interface HttpResponseBinding {
@@ -31,7 +36,7 @@ export interface HttpBindingDefinition {
 }
 
 export interface CompiledHttpParameter {
-    readonly encoding: "uri-component";
+    readonly encoding: "http-field" | "uri-component";
     readonly property: string;
     readonly wireName: string;
 }

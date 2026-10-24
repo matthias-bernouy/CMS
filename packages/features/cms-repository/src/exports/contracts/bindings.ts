@@ -9,6 +9,7 @@ export type {
     CompiledHttpParameter,
     CompiledHttpResponse,
     HttpBindingDefinition,
+    HttpHeaderParameterBinding,
     HttpBinaryBodyBinding,
     HttpBodyPropertiesBinding,
     HttpInputBinding,
@@ -17,5 +18,10 @@ export type {
 } from "cms-repository/contracts/interfaces/HttpBinding";
 export { compileContractBindings } from "cms-repository/contracts/core/bindings/compileContractBindings";
 export { compileHttpBinding } from "cms-repository/contracts/core/bindings/compileHttpBinding";
-export { decodeHttpParameter, encodeHttpParameter } from "cms-repository/contracts/core/bindings/parameters/codec";
+export {
+    decodeHttpFieldParameter,
+    decodeHttpParameter,
+    encodeHttpFieldParameter,
+    encodeHttpParameter,
+} from "cms-repository/contracts/core/bindings/parameters/codec";
 export { matchPathTemplate, pathTemplatesOverlap } from "cms-repository/contracts/core/bindings/pathTemplate";

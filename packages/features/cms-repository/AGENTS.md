@@ -131,8 +131,10 @@ models and validation for CMS-owned installations and site selections.
   Syntax validation does not prove that bytes match their declared format.
 - Binding compilation accounts for every top-level input property exactly once
   and reserves security, identity, tracing and transport headers for the gateway.
-- HTTP path/query/application-header scalars use `json-percent`: canonical
-  I-JSON scalar text, then `encodeURIComponent`; decode once and validate.
+- HTTP path and query scalars use `json-percent`: canonical I-JSON scalar text,
+  then `encodeURIComponent`; decode once and validate. Every application-header
+  mapping declares either that same `uri-component` encoding or `http-field`
+  for a non-nullable string following ordinary HTTP field syntax.
   Omission, null and quoted strings differ. Queries use bodyless `GET` or
   JSON-bodied `QUERY`; commands use `POST`, `PUT`, `PATCH` or `DELETE`.
   `HEAD` is derived only from binary `GET`. HEAD errors encode their code and

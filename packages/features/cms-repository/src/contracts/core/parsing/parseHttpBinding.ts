@@ -6,6 +6,7 @@ import type {
     HttpBinaryBodyBinding,
     HttpBodyPropertiesBinding,
     HttpBindingDefinition,
+    HttpHeaderParameterBinding,
     HttpInputBinding,
 } from "../../interfaces/HttpBinding";
 
@@ -40,9 +41,42 @@ function parseInput(value: unknown, path: string, limits: Readonly<ReleaseLimits
     return {
         ...(record.path === undefined ? {} : { path: parseMap(record.path, `${path}.path`, limits) }),
         ...(record.query === undefined ? {} : { query: parseMap(record.query, `${path}.query`, limits) }),
-        ...(record.headers === undefined ? {} : { headers: parseMap(record.headers, `${path}.headers`, limits) }),
+        ...(record.headers === undefined ? {} : { headers: parseHeaderMap(record.headers, `${path}.headers`, limits) }),
         ...(record.body === undefined ? {} : { body: parseBody(record.body, `${path}.body`, limits) }),
     };
+}
+
+function parseHeaderMap(
+    value: unknown,
+    path: string,
+    limits: Readonly<ReleaseLimits>,
+): Readonly<Record<string, HttpHeaderParameterBinding>> {
+    const record = expectRecord(value, path, "invalid_binding");
+    const entries = Object.entries(record);
+    if (entries.length > limits.maxProperties) {
+        throw new ReleaseValidationError("invalid_binding", `must not exceed ${limits.maxProperties} mappings`, path);
+    }
+    const result: Record<string, HttpHeaderParameterBinding> = Object.create(null) as Record<
+        string,
+        HttpHeaderParameterBinding
+    >;
+    for (const [wireName, value] of entries) {
+        const mapping = expectRecord(value, `${path}.${wireName}`, "invalid_binding");
+        rejectUnknownKeys(mapping, ["property", "encoding"], `${path}.${wireName}`, "invalid_binding");
+        const encoding = expectString(mapping.encoding, `${path}.${wireName}.encoding`, "invalid_binding", 32);
+        if (encoding !== "http-field" && encoding !== "uri-component") {
+            throw new ReleaseValidationError(
+                "invalid_binding",
+                "header encoding must be http-field or uri-component",
+                `${path}.${wireName}.encoding`,
+            );
+        }
+        result[wireName] = {
+            property: expectString(mapping.property, `${path}.${wireName}.property`, "invalid_binding", 64),
+            encoding,
+        };
+    }
+    return result;
 }
 
 function parseMap(value: unknown, path: string, limits: Readonly<ReleaseLimits>): Readonly<Record<string, string>> {

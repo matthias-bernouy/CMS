@@ -43,7 +43,7 @@ Dependency-free suites without new fields retain their digests.
 
 [Conformance controls](./conformance-controls.md) specifies literal templates,
 captures, keyed replay, operation completion, eventual queries and pagination.
-[HTTP parameters](./http-parameters.md) specifies `json-percent` scalar transport,
+[HTTP parameters](./http-parameters.md) specifies `json-percent` URL scalar transport and explicit header encoding,
 safe query methods and derived bodyless HEAD error identity. These are validated declarations and codecs,
 not a runner or a passing-provider attestation. Provider-specific call
 permissions belong to provider manifests.

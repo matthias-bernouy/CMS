@@ -160,6 +160,34 @@ test("binary provider responses stay streamed and retain safe resource headers",
     expect(pulls).toBe(1);
 });
 
+test("plain HTTP field bindings preserve standard range syntax end to end", async () => {
+    const route = await gatewayRoute({ binary: true, rawRange: true });
+    const exchanges: GatewayHttpExchange[] = [];
+    const gateway = gatewayFor(route, async (request) => {
+        exchanges.push(request);
+        return new Response(new Uint8Array([1, 2]), {
+            status: 206,
+            headers: {
+                "content-type": "application/octet-stream",
+                "content-length": "2",
+                "content-range": "bytes 0-1/8",
+                "accept-ranges": "bytes",
+            },
+        });
+    });
+    const response = await handleGatewayHttpCall(
+        new Request("https://site.example/.cms/call/catalog/v1/files/one", {
+            headers: { range: "bytes=0-1", "if-range": '"immutable"' },
+        }),
+        options(gateway),
+    );
+
+    expect(response.status).toBe(206);
+    expect(response.headers.get("content-range")).toBe("bytes 0-1/8");
+    expect(exchanges[0]?.headers.range).toBe("bytes=0-1");
+    expect(exchanges[0]?.headers["if-range"]).toBe('"immutable"');
+});
+
 test("HEAD is derived from binary GET and never emits a response body", async () => {
     const route = await gatewayRoute({ binary: true });
     const exchanges: GatewayHttpExchange[] = [];

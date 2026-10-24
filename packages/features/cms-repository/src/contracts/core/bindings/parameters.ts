@@ -1,5 +1,5 @@
 import { ReleaseValidationError } from "../protocol/errors";
-import type { CompiledHttpParameter } from "../../interfaces/HttpBinding";
+import type { CompiledHttpParameter, HttpHeaderParameterBinding } from "../../interfaces/HttpBinding";
 import type { UlviaObjectSchema, UlviaSchema } from "../../interfaces/UlviaSchema";
 
 const WIRE_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_.-]{0,127}$/;
@@ -85,6 +85,48 @@ export function compileParameterMap(
         }
         used.add(property);
         return { encoding: "uri-component" as const, wireName, property };
+    });
+    return parameters.sort((left, right) =>
+        left.wireName < right.wireName ? -1 : left.wireName > right.wireName ? 1 : 0,
+    );
+}
+
+export function compileHeaderParameterMap(
+    mapping: Readonly<Record<string, HttpHeaderParameterBinding>> | undefined,
+    input: UlviaObjectSchema,
+    used: Set<string>,
+    errorPath: string,
+): readonly CompiledHttpParameter[] {
+    const parameters = Object.entries(mapping ?? {}).map(([wireName, definition]) => {
+        validateWireName(wireName, "header", errorPath);
+        const schema = input.properties[definition.property];
+        if (!schema) {
+            throw new ReleaseValidationError(
+                "invalid_binding",
+                `maps unknown input property ${JSON.stringify(definition.property)}`,
+                `${errorPath}.${wireName}`,
+            );
+        }
+        if (used.has(definition.property)) {
+            throw new ReleaseValidationError(
+                "invalid_binding",
+                `input property ${JSON.stringify(definition.property)} is mapped more than once`,
+                `${errorPath}.${wireName}`,
+            );
+        }
+        assertTransportScalar(schema, `${errorPath}.${wireName}`);
+        if (
+            definition.encoding === "http-field" &&
+            (schema.type !== "string" || ("nullable" in schema && schema.nullable))
+        ) {
+            throw new ReleaseValidationError(
+                "invalid_binding",
+                "http-field headers require a non-nullable string property",
+                `${errorPath}.${wireName}`,
+            );
+        }
+        used.add(definition.property);
+        return { encoding: definition.encoding, wireName, property: definition.property };
     });
     return parameters.sort((left, right) =>
         left.wireName < right.wireName ? -1 : left.wireName > right.wireName ? 1 : 0,

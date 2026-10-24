@@ -82,7 +82,15 @@ export function createProviderContractRelay(
                 if (responseEffect) {
                     throw new TypeError("Binary capabilities cannot return response effects.");
                 }
-                return binaryResponse(request.method, capability, output);
+                const response = binaryResponse(request.method, capability, output);
+                logger.debug("provider.capability.binary_response", {
+                    contractId,
+                    capabilityId: capability.id,
+                    status: response.status,
+                    rangeRequested: request.headers.has("range"),
+                    ifRangeSupplied: request.headers.has("if-range"),
+                });
+                return response;
             }
             if (capability.behavior.execution === "operation") {
                 parseCapabilityOperationHandle(output);
