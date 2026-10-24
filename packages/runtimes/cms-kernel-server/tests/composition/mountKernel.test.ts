@@ -54,6 +54,7 @@ describe("production Kernel mounting", () => {
                 collectionAssets: token("collection-assets"),
                 sitemap: async () => new Response(),
                 robots: async () => new Response(),
+                invalidatePageRenderInputs: () => events.push("invalidate-content"),
             },
             gateway: {
                 invoker: token("invoker"),
@@ -86,6 +87,15 @@ describe("production Kernel mounting", () => {
         });
         expect(kernelConfig).not.toHaveProperty("capabilityHandler");
         expect(kernelConfig).not.toHaveProperty("queryHandler");
+        const mutationSuccess = (
+            kernelConfig?.capabilityGateway as {
+                onMutationSuccess(target: { contractId: string; capabilityId: string }): void;
+            }
+        ).onMutationSuccess;
+        mutationSuccess({ contractId: "ulvia.cms.access", capabilityId: "login-password" });
+        mutationSuccess({ contractId: "ulvia.cms.content", capabilityId: "pages.update" });
+        mutationSuccess({ contractId: "ulvia.cms.installations", capabilityId: "upgrade-collection" });
+        expect(events.filter((event) => event === "invalidate-content")).toHaveLength(2);
         expect(events).toContain('start:{"port":3100,"hostname":"127.0.0.1"}');
         expect(logs.records.some((record) => record.event === "kernel.started")).toBeTrue();
 

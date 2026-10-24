@@ -12,18 +12,21 @@ export type PageAccessDecision = {
     readonly response?: Response;
 };
 
+const capabilityDecisions = new WeakMap<KernelCms, WeakMap<RenderablePage, Promise<PageAccessDecision>>>();
+
 /** Derives Page access from every direct and transitively used capability. */
 export async function preflightPageGatewayAccess(
     request: Request,
     renderable: RenderablePage,
     kernel: KernelCms,
     minimumAccess: PageAccess = "public",
+    renderingSettings?: RenderingSettings,
 ): Promise<PageAccessDecision> {
     const capabilityDecision = await capabilityAccess(renderable, kernel);
     if (capabilityDecision.response) {
         return capabilityDecision;
     }
-    const settings = await kernel.content.getRenderingSettings().catch(() => null);
+    const settings = renderingSettings ?? (await kernel.content.getRenderingSettings().catch(() => null));
     if (!settings) {
         return unavailable();
     }
@@ -38,11 +41,30 @@ export async function preflightPageGatewayAccess(
 }
 
 async function capabilityAccess(renderable: RenderablePage, kernel: KernelCms): Promise<PageAccessDecision> {
+    let decisions = capabilityDecisions.get(kernel);
+    if (!decisions) {
+        decisions = new WeakMap();
+        capabilityDecisions.set(kernel, decisions);
+    }
+    const cached = decisions.get(renderable);
+    if (cached) {
+        return cached;
+    }
+    const pending = computeCapabilityAccess(renderable, kernel);
+    decisions.set(renderable, pending);
+    const decision = await pending;
+    if (decision.response && decisions.get(renderable) === pending) {
+        decisions.delete(renderable);
+    }
+    return decision;
+}
+
+async function computeCapabilityAccess(renderable: RenderablePage, kernel: KernelCms): Promise<PageAccessDecision> {
+    if (!pageRequiresCapabilityAnalysis({ page: renderable.page, requirements: renderable.requirements })) {
+        return { access: "public", cacheable: true };
+    }
     const analysis = kernel.pageCapabilities;
     if (!analysis) {
-        if (!pageRequiresCapabilityAnalysis({ page: renderable.page, requirements: renderable.requirements })) {
-            return { access: "public", cacheable: true };
-        }
         return unavailable();
     }
     const required = await analysis

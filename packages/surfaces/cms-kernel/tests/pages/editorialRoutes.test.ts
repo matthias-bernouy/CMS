@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { mountPublicPages, publicPage } from "./publicPage.fixture";
 
 test("an administrator renders a hidden Page at its normal URL", async () => {
+    let textResolutions = 0;
     const page = {
         ...publicPage("page-a", "/about", "<h1>{{ cms.i18n.preview.title }}</h1>"),
         visible: false,
@@ -14,7 +15,10 @@ test("an administrator renders a hidden Page at its normal URL", async () => {
         contentTexts: [
             {
                 namespace: "preview",
-                resolve: (locale) => ({ title: locale === "fr" ? "Aperçu" : "Preview" }),
+                resolve: (locale) => {
+                    textResolutions += 1;
+                    return { title: locale === "fr" ? "Aperçu" : "Preview" };
+                },
             },
         ],
     });
@@ -30,6 +34,11 @@ test("an administrator renders a hidden Page at its normal URL", async () => {
     expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
     expect(html).toContain("<h1>Preview</h1>");
     expect(html).not.toContain("cms.i18n");
+
+    const repeated = await mounted.get(new Request("https://site.test/about"));
+    expect(repeated.headers.get("cache-control")).toBe("private, no-store");
+    expect(await repeated.text()).toContain("<h1>Preview</h1>");
+    expect(textResolutions).toBe(1);
 });
 
 test("a hidden Page remains undiscoverable to non-administrators", async () => {

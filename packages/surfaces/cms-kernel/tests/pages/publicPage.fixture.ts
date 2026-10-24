@@ -48,6 +48,7 @@ type HarnessOptions = Readonly<{
         namespace: string;
         resolve(locale: string): Readonly<Record<string, string>>;
     }[];
+    pageCapabilities?: KernelCmsConfig["pageCapabilities"];
 }>;
 
 export function mountPublicPages(options: HarnessOptions = {}) {
@@ -117,11 +118,13 @@ export function mountPublicPages(options: HarnessOptions = {}) {
               ...options.gateway,
           } as GatewayInvoker)
         : undefined;
-    const pageCapabilities = invoker
-        ? new PageCapabilityAnalyzer({
-              resolveCapability: async () => ({ access: "public", version: "1.0.0" }),
-          })
-        : undefined;
+    const pageCapabilities =
+        options.pageCapabilities ??
+        (invoker
+            ? new PageCapabilityAnalyzer({
+                  resolveCapability: async () => ({ access: "public", version: "1.0.0" }),
+              })
+            : undefined);
     const handlers = deliveryHandlers(repository, {
         basePath: runner.basePath === "/" ? "" : runner.basePath,
         sitemapStore: options.sitemapStore,
@@ -151,12 +154,16 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         resolveActor: options.resolveActor ?? (async () => ({ kind: "anonymous" })),
         cache,
         collections: options.collections,
-        ...(invoker
+        ...(invoker || pageCapabilities
             ? {
-                  capabilityGateway: {
-                      siteId: "site-test",
-                      invoker,
-                  },
+                  ...(invoker
+                      ? {
+                            capabilityGateway: {
+                                siteId: "site-test",
+                                invoker,
+                            },
+                        }
+                      : {}),
                   pageCapabilities,
               }
             : {}),

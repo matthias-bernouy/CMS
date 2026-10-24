@@ -139,6 +139,7 @@ export function mountKernelRoutes(kernel: KernelCms) {
                 resolveCapability: kernel.capabilityGateway!.resolveCapability!,
                 basePath: kernel.basePath,
                 resolveActor: (request) => resolveRequestActor(kernel, request),
+                onSuccess: kernel.capabilityGateway!.onMutationSuccess,
             });
         runner.group(CMS_CAPABILITY_MUTATION_ROUTE, (mutationRunner) => {
             mutationRunner.setDefaultEndpoint("POST", async (request) =>

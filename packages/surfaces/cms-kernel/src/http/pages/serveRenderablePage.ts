@@ -1,4 +1,4 @@
-import type { RenderablePage, RenderingSettings, TPage } from "@bernouy/cms-content/rendering";
+import type { PageRenderInputs, RenderablePage, RenderingSettings, TPage } from "@bernouy/cms-content/rendering";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import type { PageRenderMetadata } from "@bernouy/cms-content/seo";
 import { cachedResponseAsync, sendCompressed } from "@bernouy/http-runner";
@@ -16,8 +16,15 @@ export async function serveRenderablePage(
     language: string,
     kernel: KernelCms,
     minimumAccess: PageAccess = "public",
+    renderInputs?: PageRenderInputs,
 ): Promise<Response> {
-    const decision = await preflightPageGatewayAccess(request, renderable, kernel, minimumAccess);
+    const decision = await preflightPageGatewayAccess(
+        request,
+        renderable,
+        kernel,
+        minimumAccess,
+        renderInputs?.settings,
+    );
     if (decision.response) {
         return decision.response;
     }
@@ -30,6 +37,7 @@ export async function serveRenderablePage(
         language,
         decision.cacheable,
         decision.settings,
+        renderInputs,
     );
     return embeddablePage(response, language, decision.access);
 }
@@ -43,6 +51,7 @@ async function renderIndexedPage(
     language: string,
     cacheable: boolean,
     settings?: RenderingSettings,
+    renderInputs?: PageRenderInputs,
 ): Promise<Response> {
     if (access !== "public") {
         return renderWithFallbacks(
@@ -53,6 +62,8 @@ async function renderIndexedPage(
             false,
             { canonical: null, indexable: false, language },
             settings,
+            renderInputs,
+            true,
         );
     }
     const indexing = await resolveRuntimePageIndexingMetadata(request, page, kernel);
@@ -77,6 +88,8 @@ async function renderIndexedPage(
         cacheable && !indexing.dynamic,
         { ...indexing.metadata, language },
         settings,
+        renderInputs,
+        !indexing.dynamic,
     );
 }
 
@@ -88,28 +101,40 @@ async function renderWithFallbacks(
     cacheable: boolean,
     metadata: PageRenderMetadata,
     settings?: RenderingSettings,
+    renderInputs?: PageRenderInputs,
+    artifactCacheable = true,
 ): Promise<Response> {
     try {
-        if (!cacheable) {
+        if (!artifactCacheable) {
             return sendCompressed(
                 request,
-                await renderPage(page, makeRuntimeRenderContext(kernel, { renderingSettings: settings }), metadata),
+                await renderPage(
+                    page,
+                    makeRuntimeRenderContext(kernel, { renderingSettings: settings, pageRenderInputs: renderInputs }),
+                    metadata,
+                ),
                 "no-store",
                 { skipCspHeader: true },
             );
         }
-        const collectionRevision = (await kernel.content.getContentRevision?.()) ?? 0;
+        const artifactRevision =
+            renderInputs?.artifactRevision ??
+            (await kernel.content.getRenderingRevision?.()) ??
+            (await kernel.content.getContentRevision?.()) ??
+            0;
+        const renderingRevision = renderInputs?.renderingRevision ?? artifactRevision;
         const renderContext = makeRuntimeRenderContext(kernel, {
             renderingSettings: settings,
-            contentRevision: collectionRevision,
+            contentRevision: renderingRevision,
+            pageRenderInputs: renderInputs,
         });
-        const cacheKey = CMS_CACHE_KEYS.page(cachePath);
+        const cacheKey = `${CMS_CACHE_KEYS.page(cachePath)}:page:${page.id}:${page.revision}:language:${metadata.language ?? ""}:metadata:${JSON.stringify(metadata)}`;
         return cachedResponseAsync(
             request,
-            collectionRevision ? `${cacheKey}:collections:${collectionRevision}` : cacheKey,
+            artifactRevision ? `${cacheKey}:artifact:${artifactRevision}` : cacheKey,
             kernel.cache,
             () => renderPage(page, renderContext, metadata),
-            kernel.content.getContentRevision ? "public, no-cache" : undefined,
+            cacheable ? "public, no-cache" : "private, no-store",
             { skipCspHeader: true },
         );
     } catch (error) {

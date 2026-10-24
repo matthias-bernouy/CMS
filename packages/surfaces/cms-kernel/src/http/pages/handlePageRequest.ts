@@ -3,6 +3,7 @@ import { isValidRegisteredPagePath } from "@bernouy/cms-content/page-path";
 import { renderRef } from "cms-kernel/http/pages/renderRef";
 import { serveRenderablePage } from "cms-kernel/http/pages/serveRenderablePage";
 import { resolveRequestActor } from "cms-kernel/http/pages/access/resolveRequestActor";
+import type { PageRenderInputs } from "@bernouy/cms-content/rendering";
 
 /**
  * Shared entry point for every public page GET registered by Kernel.
@@ -24,7 +25,8 @@ export async function handlePageRequest(req: Request, kernel: KernelCms): Promis
         return renderRef(req, kernel, "notFound", 404, "Page not found");
     }
 
-    const storedRoute = await kernel.content.resolveRenderableRoute(pathname);
+    const renderInputs = await pageRenderInputs(kernel, pathname);
+    const storedRoute = renderInputs?.route ?? (await kernel.content.resolveRenderableRoute(pathname));
     if (storedRoute?.kind === "updating") {
         return new Response("Service unavailable", {
             status: 503,
@@ -50,10 +52,16 @@ export async function handlePageRequest(req: Request, kernel: KernelCms): Promis
             pathname,
             storedRoute.language ?? storedRoute.page.language ?? "en",
             kernel,
+            "public",
+            renderInputs,
         );
     }
 
     return renderRef(req, kernel, "notFound", 404, "Page not found");
+}
+
+async function pageRenderInputs(kernel: KernelCms, pathname: string): Promise<PageRenderInputs | undefined> {
+    return kernel.content.getPageRenderInputs?.(pathname);
 }
 
 async function serveEditorialRoute(request: Request, pathname: string, kernel: KernelCms): Promise<Response> {

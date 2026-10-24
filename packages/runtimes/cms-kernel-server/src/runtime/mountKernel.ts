@@ -38,6 +38,11 @@ export async function mountProductionKernel(
             siteId: "default",
             invoker: gateway.invoker,
             resolveCapability: gateway.resolveCapability,
+            onMutationSuccess: ({ contractId }) => {
+                if (contractId === "ulvia.cms.content" || contractId === "ulvia.cms.installations") {
+                    content.invalidatePageRenderInputs();
+                }
+            },
         },
         pageCapabilities: gateway.pageCapabilities,
         collectionAssets: content.collectionAssets,

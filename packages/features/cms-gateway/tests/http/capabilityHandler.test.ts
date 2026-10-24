@@ -198,6 +198,7 @@ test("logical Page queries reject commands, binary results and mutation transpor
 
 test("logical Page mutations invoke structured commands by capability identity", async () => {
     const calls: GatewayInvocation[] = [];
+    const successes: { contractId: string; capabilityId: string }[] = [];
     const handler = createCapabilityMutationHandler({
         basePath: "",
         siteId: "site-a",
@@ -209,6 +210,7 @@ test("logical Page mutations invoke structured commands by capability identity",
             idempotency: "none",
             outputType: "object",
         }),
+        onSuccess: (target) => successes.push(target),
     });
 
     const response = await handler(
@@ -231,6 +233,7 @@ test("logical Page mutations invoke structured commands by capability identity",
             input: { title: "One" },
         }),
     ]);
+    expect(successes).toEqual([{ contractId: "catalog", capabilityId: "item.create" }]);
 });
 
 test("logical keyed mutations require and forward their automatic idempotency key", async () => {

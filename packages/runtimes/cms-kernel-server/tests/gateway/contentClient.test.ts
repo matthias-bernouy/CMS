@@ -27,9 +27,11 @@ test("projects all Kernel content reads through the selected Content capability"
                             digest: "sha256:digest-a",
                             asset: { id: "asset-a", mediaType: "text/plain", byteLength: 5 },
                         }
-                      : operation === "assets.metadata-batch"
-                        ? []
-                        : operation;
+                      : operation === "content.bloc-views"
+                        ? { "shop-card": "export function mount() {}" }
+                        : operation === "assets.metadata-batch"
+                          ? []
+                          : operation;
             return {
                 kind: "success",
                 requestId: crypto.randomUUID(),
@@ -76,7 +78,7 @@ test("projects all Kernel content reads through the selected Content capability"
         "content.published-pages",
         "content.resolve-published-route",
         "content.renderable-blocs",
-        "content.bloc-view-js",
+        "content.bloc-views",
         "content.rendering-settings",
         "assets.metadata",
         "assets.metadata-batch",
@@ -154,6 +156,47 @@ test("streams collection assets, sitemap, and robots resources through Content c
         rangeStart: 1,
         rangeEnd: 3,
     });
+});
+
+test("reuses Page render inputs until the rendering revision changes", async () => {
+    const operations: string[] = [];
+    let now = 0;
+    let revision = "1";
+    const gateway = {
+        invoke: async (invocation: GatewayInvocation): Promise<GatewayResult> => {
+            const operation = String((invocation.input as Record<string, unknown>).operation);
+            operations.push(operation);
+            const value =
+                operation === "content.page-render-revision"
+                    ? revision
+                    : {
+                          route: null,
+                          artifactRevision: revision,
+                          renderingRevision: revision,
+                          settings: { site: { language: "en", activeLanguages: [] } },
+                          renderableBlocs: [],
+                          texts: { defaultLocale: "en", sources: [] },
+                      };
+            return success({ chunks: [JSON.stringify(value)] });
+        },
+    };
+    const client = new GatewayContentClient(gateway as never, createMemoryLogger().logger, {
+        pageRenderInputs: { freshForMs: 100, staleForMs: 100, now: () => now },
+    });
+
+    expect((await client.content.getPageRenderInputs!("/about")).artifactRevision).toBe("1");
+    expect((await client.content.getPageRenderInputs!("/about")).artifactRevision).toBe("1");
+    now = 100;
+    expect((await client.content.getPageRenderInputs!("/about")).artifactRevision).toBe("1");
+    revision = "2";
+    now = 200;
+    expect((await client.content.getPageRenderInputs!("/about")).artifactRevision).toBe("2");
+    expect(operations).toEqual([
+        "content.page-render-inputs",
+        "content.page-render-revision",
+        "content.page-render-revision",
+        "content.page-render-inputs",
+    ]);
 });
 
 test("rejects malformed and declared-error delivery responses", async () => {

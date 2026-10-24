@@ -79,7 +79,6 @@ test("reuses Page rendering inputs within a cold render and skips them on a cach
     expect(Object.fromEntries(calls)).toEqual({
         renderableRoute: 1,
         renderingSettings: 1,
-        contentRevision: 1,
         renderableBlocs: 1,
         blocViewJS: 1,
         contentTexts: 1,
@@ -91,11 +90,10 @@ test("reuses Page rendering inputs within a cold render and skips them on a cach
     expect(Object.fromEntries(calls)).toEqual({
         renderableRoute: 2,
         renderingSettings: 2,
-        contentRevision: 2,
         renderableBlocs: 1,
         blocViewJS: 1,
         contentTexts: 1,
-        renderingRevision: 1,
+        renderingRevision: 2,
         publishedPages: 1,
     });
 });

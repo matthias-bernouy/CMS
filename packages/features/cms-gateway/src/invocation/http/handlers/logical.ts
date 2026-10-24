@@ -73,11 +73,25 @@ export function createCapabilityMutationHandler(config: CapabilityMutationHandle
                 actor,
                 ...(idempotencyKey ? { idempotencyKey } : {}),
             });
+            if (result.kind === "success") {
+                notifyMutationSuccess(config, { contractId, capabilityId });
+            }
             return gatewayResultResponse(result, request.method);
         } catch (error) {
             return logicalFailure(error, actor);
         }
     };
+}
+
+function notifyMutationSuccess(
+    config: CapabilityMutationHandlerConfig,
+    target: { readonly contractId: string; readonly capabilityId: string },
+): void {
+    try {
+        config.onSuccess?.(target);
+    } catch {
+        // Cache invalidation observers must never replace a completed command response.
+    }
 }
 
 type LogicalCapability = Awaited<ReturnType<CapabilityQueryHandlerConfig["resolveCapability"]>>;

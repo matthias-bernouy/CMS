@@ -22,4 +22,6 @@ export type CapabilityQueryHandlerConfig = Omit<CapabilityHttpHandlerConfig, "au
     } | null>;
 };
 
-export type CapabilityMutationHandlerConfig = CapabilityQueryHandlerConfig;
+export type CapabilityMutationHandlerConfig = CapabilityQueryHandlerConfig & {
+    onSuccess?: (target: { readonly contractId: string; readonly capabilityId: string }) => void;
+};

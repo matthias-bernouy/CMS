@@ -36,7 +36,7 @@ describe("Kernel page capability access preflight", () => {
 
         const response = await handler(new Request("http://site/sign-in"));
         expect(response.status).toBe(200);
-        expect(response.headers.get("cache-control")).toBe("no-store");
+        expect(response.headers.get("cache-control")).toBe("private, no-store");
     });
 
     test("redirects anonymous visitors when a query capability requires authentication", async () => {

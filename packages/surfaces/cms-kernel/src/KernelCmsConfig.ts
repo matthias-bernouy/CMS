@@ -33,6 +33,7 @@ export type KernelCmsConfig = {
             readonly effect: "query" | "command";
             readonly outputType: string;
         } | null>;
+        readonly onMutationSuccess?: (target: { readonly contractId: string; readonly capabilityId: string }) => void;
     };
     pageCapabilities?: PageCapabilityAccessPort;
     capabilityHandler?: (request: Request) => Promise<Response>;
