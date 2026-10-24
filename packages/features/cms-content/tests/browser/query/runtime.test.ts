@@ -1,5 +1,7 @@
 import { afterEach, expect, test } from "bun:test";
+import { mutationFormRequest } from "../../../src/browser";
 import { BindingRuntime } from "../../../src/browser/binding/runtime/BindingRuntime";
+import { collectFormData } from "../../../src/browser/binding/form/formSubmit";
 import { Query } from "../../../src/browser/binding/runtime/query/Query";
 import { queryRequest } from "../../../src/browser/binding/runtime/query/queryRequest";
 import { readSyncValue, writeSyncValue } from "../../../src/browser/binding/state/SyncState";
@@ -164,6 +166,37 @@ test("a nested mutation preserves parent query boolean attributes", async () => 
 
     await waitFor(() => host.querySelector("button") !== null);
     expect(host.querySelector<HTMLButtonElement>("button")!.disabled).toBe(true);
+    runtime.stop();
+});
+
+test("a repeated mutation submits parent query values and literal form values", async () => {
+    let mutationInput: unknown;
+    globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+        if (init?.method === "POST") {
+            mutationInput = JSON.parse(String(init.body));
+            return Response.json(null);
+        }
+        return Response.json({ files: [{ fileId: "file-1", visibility: "private" }] });
+    }) as typeof fetch;
+    const host = el(`<section cms-query="files:list as files">
+        <article cms-repeat="files.data.files as file">
+            <form cms-condition="file.visibility === 'private'" cms-mutation="files:set-visibility as mutation">
+                <input type="hidden" name="fileId" value="{{ file.fileId }}">
+                <input type="hidden" name="visibility" value="public">
+            </form>
+        </article>
+    </section>`);
+    document.body.appendChild(host);
+    const runtime = new BindingRuntime(host);
+    runtime.start();
+
+    await waitFor(() => host.querySelector("form") !== null);
+    const form = host.querySelector<HTMLFormElement>("form")!;
+    expect(form.elements.namedItem("fileId")).toHaveProperty("value", "file-1");
+    expect(form.elements.namedItem("visibility")).toHaveProperty("value", "public");
+    expect(Object.fromEntries(collectFormData(form))).toEqual({ fileId: "file-1", visibility: "public" });
+    await mutationFormRequest(host, "mutation");
+    expect(mutationInput).toEqual({ fileId: "file-1", visibility: "public" });
     runtime.stop();
 });
 
