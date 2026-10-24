@@ -49,6 +49,10 @@
 :scope:hover:not(:disabled) {
     background: var(--ulvia-official-action-background-hover);
 }
+:scope[aria-pressed="true"] {
+    color: var(--ulvia-official-action-tone);
+    background: var(--ulvia-official-action-tone-subtle);
+}
 :scope:active:not(:disabled) {
     background: var(--ulvia-official-action-background-active);
 }
@@ -73,6 +77,13 @@
     --ulvia-official-action-tone-active: var(--ulvia-official-text-muted, #526b61);
     --ulvia-official-action-on-tone: var(--ulvia-official-text-inverse, #ffffff);
     --ulvia-official-action-tone-subtle: var(--ulvia-official-background-subtle, #f4f5f7);
+}
+:scope[tone="inverse"] {
+    --ulvia-official-action-tone: var(--ulvia-official-text-inverse, #ffffff);
+    --ulvia-official-action-tone-hover: var(--ulvia-official-text-inverse, #ffffff);
+    --ulvia-official-action-tone-active: var(--ulvia-official-text-inverse, #ffffff);
+    --ulvia-official-action-on-tone: var(--ulvia-official-background-inverse, #17191c);
+    --ulvia-official-action-tone-subtle: rgb(255 255 255 / 12%);
 }
 :scope[tone="info"] {
     --ulvia-official-action-tone: var(--ulvia-official-info, #1769aa);
@@ -133,4 +144,17 @@
 }
 :scope[wide] {
     width: 100%;
+}
+:scope[icon-only] {
+    width: var(--ulvia-official-action-height);
+    padding-inline: 0;
+}
+:scope[icon-only] > :not(svg) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }

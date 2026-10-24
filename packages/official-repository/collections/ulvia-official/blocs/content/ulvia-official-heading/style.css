@@ -1,18 +1,57 @@
 :scope {
-    --ulvia-official-heading-color: var(--ulvia-official-text-primary, CanvasText);
-    --ulvia-official-heading-size: var(--ulvia-official-font-size-3xl, 2rem);
-    --ulvia-official-heading-line-height: var(--ulvia-official-line-height-tight, 1.15);
+    --ulvia-official-heading-color: var(
+        --ulvia-official-heading-inherited-color,
+        var(--ulvia-official-text-primary, CanvasText)
+    );
+    --ulvia-official-heading-size: var(
+        --ulvia-official-heading-inherited-size,
+        var(--ulvia-official-font-size-3xl, 2rem)
+    );
+    --ulvia-official-heading-line-height: var(
+        --ulvia-official-heading-inherited-line-height,
+        var(--ulvia-official-line-height-tight, 1.15)
+    );
+    --ulvia-official-heading-letter-spacing: var(
+        --ulvia-official-heading-inherited-letter-spacing,
+        var(--ulvia-official-letter-spacing-tight, -0.025em)
+    );
+    --ulvia-official-heading-font-family: var(
+        --ulvia-official-heading-inherited-font-family,
+        var(--ulvia-official-font-family-secondary, inherit)
+    );
+    --ulvia-official-heading-font-weight: var(
+        --ulvia-official-heading-inherited-font-weight,
+        var(--ulvia-official-font-weight-bold, 700)
+    );
     display: block;
     color: var(--ulvia-official-heading-color);
-    font-family: var(--ulvia-official-font-family-secondary, inherit);
+    font-family: var(--ulvia-official-heading-font-family);
     min-width: 0;
-    overflow-wrap: anywhere;
+    max-width: var(--ulvia-official-heading-inherited-max-width, none);
+    overflow-wrap: break-word;
     margin: 0;
     font-size: var(--ulvia-official-heading-size);
-    font-weight: var(--ulvia-official-font-weight-bold, 700);
+    font-weight: var(--ulvia-official-heading-font-weight);
     line-height: var(--ulvia-official-heading-line-height);
-    letter-spacing: var(--ulvia-official-letter-spacing-tight, -0.025em);
+    letter-spacing: var(--ulvia-official-heading-letter-spacing);
     text-align: start;
+}
+[part~="main"],
+[part~="accent"] {
+    display: block;
+}
+[part~="accent"] {
+    color: var(--ulvia-official-heading-inherited-accent-color, var(--ulvia-official-secondary, currentColor));
+    font-weight: var(
+        --ulvia-official-heading-inherited-accent-font-weight,
+        var(--ulvia-official-font-weight-regular, 400)
+    );
+}
+[part~="accent"]:empty {
+    display: none;
+}
+:scope[size="xs"] {
+    --ulvia-official-heading-size: var(--ulvia-official-font-size-lg, 1.125rem);
 }
 :scope[size="sm"] {
     --ulvia-official-heading-size: var(--ulvia-official-font-size-xl, 1.5rem);
@@ -21,7 +60,11 @@
     --ulvia-official-heading-size: var(--ulvia-official-font-size-2xl, 1.75rem);
 }
 :scope[size="xl"] {
-    --ulvia-official-heading-size: var(--ulvia-official-font-size-5xl, 3rem);
+    --ulvia-official-heading-size: clamp(
+        var(--ulvia-official-font-size-4xl, 2.5rem),
+        8vw,
+        var(--ulvia-official-font-size-5xl, 3rem)
+    );
 }
 :scope[text-align="center"] {
     text-align: center;

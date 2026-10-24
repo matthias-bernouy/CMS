@@ -92,7 +92,13 @@ test("local repository lists immutable metadata and serves matching release byte
             expect(action.root).toEqual({ accepts: ["button", "a"], defaults: { type: "button" } });
             expect(action.markup).toBe("<slot></slot>");
             expect(action.defaultContent).toBe("{{ cms.i18n.ulvia-official.ui-action-label }}");
-            expect(action.settings?.map((setting) => setting.id)).toEqual(["variant", "tone", "size", "wide"]);
+            expect(action.settings?.map((setting) => setting.id)).toEqual([
+                "variant",
+                "tone",
+                "size",
+                "wide",
+                "icon-only",
+            ]);
         }
         const heading = release.blocs.find((bloc) => bloc.id === "ulvia-official-heading");
         expect(heading?.kind === "component" ? heading.root?.accepts : undefined).toEqual([

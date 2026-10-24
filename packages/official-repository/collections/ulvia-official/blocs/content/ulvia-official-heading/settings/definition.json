@@ -8,6 +8,7 @@
         "control": {
             "kind": "segmented",
             "options": [
+                { "value": "xs", "label": "setting.option.extra-small" },
                 { "value": "sm", "label": "setting.option.small" },
                 { "value": "md", "label": "setting.option.medium" },
                 { "value": "lg", "label": "setting.option.large" },

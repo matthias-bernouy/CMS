@@ -16,6 +16,15 @@
                 }
             ],
             "min": 1
+        },
+        "accent": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "phrasing"
+                }
+            ],
+            "max": 1
         }
     },
     "root": {

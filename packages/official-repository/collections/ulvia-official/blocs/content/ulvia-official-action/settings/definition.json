@@ -26,6 +26,7 @@
                 { "value": "primary", "label": "setting.option.primary" },
                 { "value": "secondary", "label": "setting.option.secondary" },
                 { "value": "neutral", "label": "setting.option.neutral" },
+                { "value": "inverse", "label": "setting.option.inverse" },
                 { "value": "info", "label": "setting.option.info" },
                 { "value": "success", "label": "setting.option.success" },
                 { "value": "warning", "label": "setting.option.warning" },
@@ -51,6 +52,14 @@
     {
         "id": "wide",
         "label": "setting.wide.label",
+        "group": "setting.group.layout",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    },
+    {
+        "id": "icon-only",
+        "label": "setting.icon-only.label",
         "group": "setting.group.layout",
         "type": "boolean",
         "default": false,
