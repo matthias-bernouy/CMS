@@ -1,7 +1,10 @@
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { validateSiteBlocDefaultContent } from "cms-content/blocs/core/markup/validation/nativeContent";
-import { isSiteBlocNativeStructureTag } from "cms-content/blocs/core/validation/nativeHtml";
+import {
+    isPlatformManagedNativeElementTag,
+    isSiteBlocNativeStructureTag,
+} from "cms-content/blocs/core/validation/nativeHtml";
 import {
     isSiteBlocStructureTag,
     validateNativeSiteBlocNode,
@@ -133,6 +136,12 @@ function validateNode(
     }
     if (!isSiteBlocStructureTag(node.tag)) {
         throw new ContentValidationError(field, `invalid bloc tag "${node.tag}"`);
+    }
+    if (
+        node.root !== undefined &&
+        (!isValidCustomElementTag(node.tag) || !isPlatformManagedNativeElementTag(node.root))
+    ) {
+        throw new ContentValidationError(field, "root is allowed only as a valid native element for a component Bloc");
     }
     if ((parentTag === "ul" || parentTag === "ol") && node.tag !== "li") {
         throw new ContentValidationError(field, `native <${parentTag}> can contain only direct <li> children`);

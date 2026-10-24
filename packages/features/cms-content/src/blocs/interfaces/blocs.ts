@@ -75,6 +75,8 @@ export type SiteBlocNode =
     | {
           kind: "bloc";
           tag: string;
+          /** Native Page element carrying `cms-bloc` for component nodes. */
+          root?: string;
           attributes: Record<string, string>;
           children: SiteBlocNode[];
       }

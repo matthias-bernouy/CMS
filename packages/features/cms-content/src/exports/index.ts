@@ -208,6 +208,16 @@ export {
     DEFAULT_SITE_BLOC_GROUP_ID,
     validateSiteBlocGroupInput,
 } from "cms-content/blocs/core/catalogue/siteBlocGroups";
+export {
+    createCmsSiteBloc,
+    getCmsSiteBloc,
+    listCmsSiteBlocs,
+    publishCmsSiteBloc,
+    setCmsSiteBlocArchived,
+    type CmsSiteBloc,
+    type SiteBlocCreateInput,
+    type SiteBlocIdentityInput,
+} from "cms-content/blocs/core/catalogue/siteBlocContracts";
 export { nextSiteBlocUpdatedAt } from "cms-content/blocs/core/catalogue/timestamps";
 export { SiteBlocPublicationQueue } from "cms-content/blocs/core/publication/SiteBlocPublicationQueue";
 export { generateSiteBlocSourceBundle } from "cms-content/blocs/core/publication/source/generateSiteBlocSourceBundle";

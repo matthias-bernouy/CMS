@@ -59,6 +59,7 @@ function normalizeNode(node: SiteBlocNode): SiteBlocNode {
     return {
         kind: "bloc",
         tag: normalizeLineEndings(node.tag),
+        ...(node.root === undefined ? {} : { root: normalizeLineEndings(node.root) }),
         attributes: Object.fromEntries(
             Object.entries(node.attributes)
                 .map(([name, value]) => [name, normalizeLineEndings(value)] as const)

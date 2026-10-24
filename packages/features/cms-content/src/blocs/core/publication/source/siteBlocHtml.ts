@@ -4,6 +4,7 @@ import { COMPOSITION_CONTROLLER_ATTRIBUTE } from "cms-content/blocs/core/composi
 import { isCmsBindingAttribute, nativeBindingAttributeIssue } from "cms-content/blocs/core/validation/nativeBindings";
 import {
     HTML_VOID_ELEMENT_TAGS,
+    isPlatformManagedNativeElementTag,
     isSiteBlocNativeAttributeAllowed,
     isSiteBlocNativeStructureTag,
 } from "cms-content/blocs/core/validation/nativeHtml";
@@ -15,12 +16,24 @@ const TAG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const ATTRIBUTE = /^[A-Za-z_:][A-Za-z0-9_.:-]*$/;
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
-export function serializeSiteBlocMarkup(snapshot: SiteBlocSnapshot): string {
+export function serializeSiteBlocMarkup(
+    snapshot: SiteBlocSnapshot,
+    options: Readonly<{ controller?: boolean }> = {},
+): string {
     const slots = slotMap(snapshot.slots);
     const usedSlots = new Set<string>();
     const controller = snapshot.structure.find((node) => node.kind === "bloc");
     const html = snapshot.structure
-        .map((node) => serializeNode(node, slots, usedSlots, false, undefined, node === controller))
+        .map((node) =>
+            serializeNode(
+                node,
+                slots,
+                usedSlots,
+                false,
+                undefined,
+                options.controller !== false && node === controller,
+            ),
+        )
         .join("");
     for (const slot of snapshot.slots) {
         if (!usedSlots.has(slot.id)) {
@@ -83,7 +96,10 @@ function serializeNode(
         .join("");
     const controllerAttribute = behaviorController ? ` ${COMPOSITION_CONTROLLER_ATTRIBUTE}` : "";
     const native = isSiteBlocNativeStructureTag(node.tag);
-    const serializedTag = native ? node.tag : "div";
+    const serializedTag = native ? node.tag : (node.root ?? "div");
+    if (!isPlatformManagedNativeElementTag(serializedTag)) {
+        throw new Error(`Invalid native root "${serializedTag}" for site bloc "${node.tag}"`);
+    }
     const blocAttribute = native ? "" : ` cms-bloc="${escapeAttribute(node.tag)}"`;
     const opening = `<${serializedTag}${blocAttribute}${attributes}${controllerAttribute}>`;
     if (HTML_VOID_ELEMENT_TAGS.has(serializedTag)) {

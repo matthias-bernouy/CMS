@@ -1,0 +1,59 @@
+{
+    "id": "site-blocs.list",
+    "description": "List site-owned reusable compositions.",
+    "access": "admin",
+    "behavior": { "effect": "query", "execution": "sync" },
+    "input": { "type": "object", "properties": {}, "required": [] },
+    "output": {
+        "type": "object",
+        "properties": {
+            "items": {
+                "type": "array",
+                "maxItems": 1000,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "tag": { "type": "string", "maxLength": 200 },
+                        "name": { "type": "string", "maxLength": 120 },
+                        "group": { "type": "string", "maxLength": 120 },
+                        "description": { "type": "string", "maxLength": 500 },
+                        "lifecycle": { "type": "string", "enum": ["active", "archived"], "maxLength": 8 },
+                        "draftRevision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                        "publishedRevision": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
+                            "nullable": true
+                        },
+                        "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+                        "updatedAt": { "type": "string", "format": "date-time", "maxLength": 40 }
+                    },
+                    "required": [
+                        "tag",
+                        "name",
+                        "group",
+                        "description",
+                        "lifecycle",
+                        "draftRevision",
+                        "publishedRevision",
+                        "createdAt",
+                        "updatedAt"
+                    ]
+                }
+            }
+        },
+        "required": ["items"]
+    },
+    "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/site-blocs/list",
+        "input": {},
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+        }
+    }
+}
