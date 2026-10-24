@@ -1,4 +1,7 @@
 import { expect, spyOn, test } from "bun:test";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createKernelLogger } from "../../src/runtime/logger";
 
 test("the development logger keeps debug noise out of the terminal by default", () => {
@@ -39,6 +42,20 @@ test("production JSON failures retain their sanitized stack", () => {
         expect(record.error?.stack).toContain("operation failed");
     } finally {
         stderr.mockRestore();
+    }
+});
+
+test("an explicitly configured production journal is retained for CLI-managed installations", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-production-journal-"));
+    const file = join(root, "kernel.ndjson");
+    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
+    try {
+        const logger = createKernelLogger({ MODE: "PROD", ULVIA_LOG_FILE: file });
+        logger.info("kernel.journal.visible");
+        expect(await readFile(file, "utf8")).toContain("kernel.journal.visible");
+    } finally {
+        stdout.mockRestore();
+        await rm(root, { recursive: true, force: true });
     }
 });
 

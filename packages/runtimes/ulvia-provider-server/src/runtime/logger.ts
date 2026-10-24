@@ -20,7 +20,7 @@ export function createProviderLogger(environment: Record<string, string | undefi
             format: development ? "pretty" : "json",
         },
         settingNames: LOG_SETTING_NAMES,
-        file: development ? environment.ULVIA_LOG_FILE?.trim() || undefined : undefined,
+        file: environment.ULVIA_LOG_FILE?.trim() || undefined,
         includeErrorStack: true,
         context: currentRequestLogAttributes,
     });
