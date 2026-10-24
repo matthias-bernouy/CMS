@@ -1,13 +1,25 @@
-import { lstat, mkdir } from "node:fs/promises";
+import { chmod, lstat, mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 
 export type UlviaPaths = Readonly<{
     data: string;
     repository: string;
-    dev: string;
+    services: string;
     mongo: string;
     cmsFiles: string;
+    serviceLogs: string;
+    proxy: Readonly<{
+        certificates: string;
+        virtualHosts: string;
+        challenge: string;
+        acme: string;
+    }>;
+    instances: string;
+}>;
+
+export type LocalInstancePaths = Readonly<{
+    root: string;
     logs: string;
 }>;
 
@@ -17,18 +29,37 @@ export function resolveUlviaPaths(
 ): UlviaPaths {
     const explicit = environment.ULVIA_DATA_DIR?.trim();
     const data = explicit ? absolutePath(explicit, "ULVIA_DATA_DIR") : resolveUlviaDataHome(environment, userHome);
-    const dev = join(data, "dev");
+    const services = join(data, "services");
     return Object.freeze({
         data,
         repository: join(data, "repository"),
-        dev,
-        mongo: join(dev, "mongo"),
-        cmsFiles: join(dev, "cms-files"),
-        logs: join(dev, "logs"),
+        services,
+        mongo: join(services, "mongo"),
+        cmsFiles: join(services, "cms-files"),
+        serviceLogs: join(services, "logs"),
+        proxy: {
+            certificates: join(services, "proxy", "certificates"),
+            virtualHosts: join(services, "proxy", "virtual-hosts"),
+            challenge: join(services, "proxy", "challenge"),
+            acme: join(services, "proxy", "acme"),
+        },
+        instances: join(data, "instances"),
     });
 }
 
-export function resolveUlviaDataHome(
+export function resolveLocalInstancePaths(paths: UlviaPaths, name: string): LocalInstancePaths {
+    assertLocalInstanceName(name);
+    const root = join(paths.instances, name);
+    return Object.freeze({ root, logs: join(root, "logs") });
+}
+
+export function assertLocalInstanceName(name: string): void {
+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(name) || name.length > 48) {
+        throw new Error("Instance name must be lowercase kebab-case and at most 48 characters");
+    }
+}
+
+function resolveUlviaDataHome(
     environment: Record<string, string | undefined> = process.env,
     userHome = homedir(),
 ): string {
@@ -40,10 +71,29 @@ export async function ensureUlviaPaths(paths: UlviaPaths): Promise<void> {
     await ensurePrivateDirectory(paths.data);
     await Promise.all([
         ensurePrivateDirectory(paths.repository),
-        ensurePrivateDirectory(paths.dev),
+        ensurePrivateDirectory(paths.services),
         ensurePrivateDirectory(paths.mongo),
         ensurePrivateDirectory(paths.cmsFiles),
+        ensurePrivateDirectory(paths.serviceLogs),
+        ...Object.values(paths.proxy).map(ensurePrivateDirectory),
+        ensurePrivateDirectory(paths.instances),
     ]);
+}
+
+export async function ensureLocalInstancePaths(paths: LocalInstancePaths): Promise<void> {
+    await Promise.all([ensurePrivateDirectory(paths.root), ensurePrivateDirectory(paths.logs)]);
+}
+
+export async function assertLocalInstancePaths(paths: LocalInstancePaths): Promise<void> {
+    const metadata = await lstat(paths.root).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") {
+            return null;
+        }
+        throw error;
+    });
+    if (!metadata?.isDirectory() || metadata.isSymbolicLink()) {
+        throw new Error(`Unknown or unsafe local instance directory: ${paths.root}`);
+    }
 }
 
 async function ensurePrivateDirectory(path: string): Promise<void> {
@@ -52,6 +102,7 @@ async function ensurePrivateDirectory(path: string): Promise<void> {
     if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
         throw new Error(`Ulvia data path must be a real directory: ${path}`);
     }
+    await chmod(path, 0o700);
 }
 
 function absolutePath(value: string, name: string): string {

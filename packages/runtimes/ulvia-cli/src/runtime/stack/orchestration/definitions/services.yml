@@ -1,0 +1,177 @@
+services:
+    proxy:
+        image: nginxproxy/nginx-proxy:1.11.5@sha256:e06db5fb9586234e9c2bdef707c8b8d784caa4fb49fbe7285eb3730a501c3eaa
+        restart: unless-stopped
+        ports:
+            - "${ULVIA_BIND_ADDRESS}:${ULVIA_HTTP_PORT}:80"
+        volumes:
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+            - ./nginx/client_max_body.conf:/etc/nginx/conf.d/zzz_client_max_body.conf:ro
+            - ./nginx/capability_cache.conf:/etc/nginx/conf.d/zzz_capability_cache.conf:ro
+            - ./nginx/query_safe_access_log.conf:/etc/nginx/conf.d/zzz_query_safe_access_log.conf:ro
+            - ./nginx/default_location:/etc/nginx/vhost.d/default_location:ro
+            - ${ULVIA_PROXY_CERTIFICATES_DIR}:/etc/nginx/certs
+            - ${ULVIA_PROXY_VHOST_DIR}:/etc/nginx/vhost.d
+            - ${ULVIA_PROXY_CHALLENGE_DIR}:/usr/share/nginx/html
+            - ${ULVIA_PROXY_ACME_DIR}:/etc/acme.sh
+            - proxy-cache:/var/cache/nginx
+        networks:
+            - instances
+        healthcheck:
+            test: ["CMD", "nginx", "-t"]
+            interval: 2s
+            timeout: 5s
+            retries: 30
+            start_period: 5s
+
+    mongo:
+        image: mongo:7.0.37@sha256:d5b3ca8c3f3cdce78d44870dc0871b76d5235e9b2ad4ea6bea5d1fbff8027703
+        restart: unless-stopped
+        user: "${ULVIA_UID}:${ULVIA_GID}"
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${ULVIA_MONGO_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${ULVIA_MONGO_PASSWORD}
+        volumes:
+            - type: bind
+              source: ${ULVIA_MONGO_DIR}
+              target: /data/db
+        networks:
+            - private
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "mongosh --quiet --username \"$$MONGO_INITDB_ROOT_USERNAME\" --password \"$$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval 'quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)'",
+                ]
+            interval: 2s
+            timeout: 5s
+            retries: 30
+            start_period: 10s
+        stop_grace_period: 30s
+
+    repository:
+        image: ${OFFICIAL_REPOSITORY_IMAGE}
+        restart: unless-stopped
+        init: true
+        user: "${ULVIA_UID}:${ULVIA_GID}"
+        environment:
+            MODE: PROD
+            NODE_ENV: production
+            REPOSITORY_HOST: 0.0.0.0
+            REPOSITORY_PORT: "3000"
+            ULVIA_LOG_FILE: /var/log/ulvia/repository.ndjson
+            ULVIA_REPOSITORY_DIR: /var/lib/ulvia-repository
+            ULVIA_REPOSITORY_SEED_DIR: /opt/ulvia-repository-seed
+            ULVIA_REPOSITORY_TOKEN: ${ULVIA_REPOSITORY_TOKEN}
+        volumes:
+            - type: bind
+              source: ${ULVIA_REPOSITORY_DIR}
+              target: /var/lib/ulvia-repository
+            - type: bind
+              source: ${ULVIA_LOGS_DIR}
+              target: /var/log/ulvia
+        ports:
+            - "127.0.0.1:${ULVIA_REPOSITORY_PORT}:3000"
+        networks:
+            - private
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=64m
+        cap_drop: [ALL]
+        security_opt: [no-new-privileges:true]
+        healthcheck:
+            test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:3000/readyz'); if(!r.ok) process.exit(1); await r.body?.cancel()"]
+            interval: 2s
+            timeout: 5s
+            retries: 30
+            start_period: 5s
+
+    mongo-provision:
+        image: mongo:7.0.37@sha256:d5b3ca8c3f3cdce78d44870dc0871b76d5235e9b2ad4ea6bea5d1fbff8027703
+        restart: "no"
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${ULVIA_MONGO_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${ULVIA_MONGO_PASSWORD}
+            MONGO_PROVIDER_USERNAME: ${ULVIA_MONGO_PROVIDER_USERNAME}
+            MONGO_PROVIDER_PASSWORD: ${ULVIA_MONGO_PROVIDER_PASSWORD}
+        entrypoint: ["/bin/sh", "-c"]
+        command:
+            - >-
+                exec mongosh --quiet --host mongo
+                --username "$$MONGO_INITDB_ROOT_USERNAME"
+                --password "$$MONGO_INITDB_ROOT_PASSWORD"
+                --authenticationDatabase admin
+                /opt/ulvia-mongo/provision-provider.js
+        volumes:
+            - ./mongo/provision-provider.js:/opt/ulvia-mongo/provision-provider.js:ro
+        networks:
+            - private
+        depends_on:
+            mongo:
+                condition: service_healthy
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=32m
+        cap_drop: [ALL]
+        security_opt: [no-new-privileges:true]
+
+    provider:
+        image: ${PROVIDER_IMAGE}
+        restart: unless-stopped
+        init: true
+        user: "${ULVIA_UID}:${ULVIA_GID}"
+        environment:
+            MODE: PROD
+            NODE_ENV: production
+            CMS_FILES_DIR: /var/lib/cms/files
+            CMS_REPOSITORY_URL: http://repository:3000
+            CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true"
+            CMS_SESSION_SECRET: ${ULVIA_PROVIDER_SESSION_SECRET}
+            CMS_KEK_HEX: ${ULVIA_PROVIDER_KEK_HEX}
+            MONGO_URL: mongodb://${ULVIA_MONGO_PROVIDER_USERNAME}:${ULVIA_MONGO_PROVIDER_PASSWORD}@mongo:27017/ulvia_provider_control?authSource=admin&retryWrites=false
+            ULVIA_LOG_FILE: /var/log/ulvia/provider.ndjson
+            ULVIA_PROVIDER_HOST: 0.0.0.0
+            ULVIA_PROVIDER_PORT: "5103"
+            ULVIA_PROVIDER_PUBLIC_URL: http://ulvia-provider:5103
+            ULVIA_PROVIDER_OPERATOR_TOKEN: ${ULVIA_PROVIDER_OPERATOR_TOKEN}
+        volumes:
+            - type: bind
+              source: ${ULVIA_FILES_DIR}
+              target: /var/lib/cms/files
+            - type: bind
+              source: ${ULVIA_LOGS_DIR}
+              target: /var/log/ulvia
+        ports:
+            - "127.0.0.1:${ULVIA_PROVIDER_PORT}:5103"
+        networks:
+            private: {}
+            instances:
+                aliases:
+                    - ulvia-provider
+        depends_on:
+            mongo-provision:
+                condition: service_completed_successfully
+            repository:
+                condition: service_healthy
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=256m
+        cap_drop: [ALL]
+        security_opt: [no-new-privileges:true]
+        healthcheck:
+            test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:5103/ulvia/operator/instances',{headers:{authorization:'Bearer '+process.env.ULVIA_PROVIDER_OPERATOR_TOKEN}}); if(!r.ok) process.exit(1); await r.body?.cancel()"]
+            interval: 2s
+            timeout: 10s
+            retries: 30
+            start_period: 10s
+        stop_grace_period: 30s
+
+networks:
+    private:
+        name: ${ULVIA_PRIVATE_NETWORK}
+        internal: true
+    instances:
+        name: ${ULVIA_INSTANCE_NETWORK}
+
+volumes:
+    proxy-cache:

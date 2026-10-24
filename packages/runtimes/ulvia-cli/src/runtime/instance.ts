@@ -1,9 +1,10 @@
-import type { DevRuntimeConfig, LocalInstanceConnection } from "./config";
+import type { LocalInstanceConfig } from "./instanceConfig";
+import type { LocalInstanceConnection } from "./instanceConnection";
 
 export async function provisionLocalInstance(
     providerUrl: string,
     operatorToken: string,
-    config: DevRuntimeConfig,
+    config: LocalInstanceConfig,
     kernelUrl: string,
 ): Promise<Omit<LocalInstanceConnection, "schema">> {
     const response = await fetch(`${providerUrl}/ulvia/operator/instances`, {
@@ -11,10 +12,10 @@ export async function provisionLocalInstance(
         headers: {
             authorization: `Bearer ${operatorToken}`,
             "content-type": "application/json",
-            "idempotency-key": "ulvia-cli-default",
+            "idempotency-key": `ulvia-cli-${config.name}`,
         },
         body: JSON.stringify({
-            label: "Local Ulvia instance",
+            label: config.label,
             kernelUrl,
             administrator: { email: config.adminEmail, password: config.adminPassword },
         }),
@@ -37,4 +38,19 @@ export async function provisionLocalInstance(
         instanceId: value.instance.id,
         token: value.credentials.instanceAccessToken,
     };
+}
+
+export async function disableLocalInstance(
+    providerUrl: string,
+    operatorToken: string,
+    instanceId: string,
+): Promise<void> {
+    const response = await fetch(`${providerUrl}/ulvia/operator/instances/${encodeURIComponent(instanceId)}/disable`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${operatorToken}` },
+    });
+    if (!response.ok && response.status !== 404) {
+        throw new Error(`Local instance disable failed (${response.status})`);
+    }
+    await response.body?.cancel();
 }

@@ -1,0 +1,8 @@
+# Included inside every generated proxy location by nginx-proxy.
+proxy_cache cms_capabilities;
+proxy_cache_methods GET HEAD;
+proxy_cache_key "$scheme|$cms_cache_method|$host|$uri|$is_args$args";
+proxy_cache_bypass $cms_skip_capability_cache $http_authorization;
+proxy_no_cache $cms_skip_capability_cache $http_authorization;
+proxy_cache_valid 200 206 1h;
+add_header X-Cache-Status $upstream_cache_status always;

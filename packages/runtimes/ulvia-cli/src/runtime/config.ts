@@ -2,30 +2,61 @@ import { randomBytes } from "node:crypto";
 import { chmod, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-const SCHEMA = "ulvia.dev-runtime.v1" as const;
+const SCHEMA = "ulvia.services.v2" as const;
+const LEGACY_SCHEMA = "ulvia.local-services.v1" as const;
 
-export type DevRuntimeConfig = Readonly<{
+export type LocalServicesConfig = Readonly<{
     schema: typeof SCHEMA;
-    adminEmail: string;
-    adminPassword: string;
     sessionSecret: string;
     kekHex: string;
+    mongoUsername: string;
+    mongoPassword: string;
+    mongoProviderUsername: string;
+    mongoProviderPassword: string;
 }>;
 
-export async function loadOrCreateDevRuntimeConfig(devRoot: string): Promise<DevRuntimeConfig> {
-    const path = join(devRoot, "runtime.json");
+export async function loadOrCreateLocalServicesConfig(servicesRoot: string): Promise<LocalServicesConfig> {
+    const path = join(servicesRoot, "runtime.json");
     const existing = await readConfig(path);
     if (existing) {
         return existing;
     }
-    await assertNoOrphanedEncryptedState(devRoot);
-    const config: DevRuntimeConfig = {
+    await assertNoOrphanedEncryptedState(servicesRoot);
+    const config: LocalServicesConfig = {
         schema: SCHEMA,
-        adminEmail: "dev@ulvia.local",
-        adminPassword: `${randomBytes(24).toString("base64url")}Aa1!`,
         sessionSecret: randomBytes(48).toString("base64url"),
         kekHex: randomBytes(32).toString("hex"),
+        mongoUsername: "ulvia",
+        mongoPassword: randomBytes(32).toString("base64url"),
+        mongoProviderUsername: "ulvia_provider",
+        mongoProviderPassword: randomBytes(32).toString("base64url"),
     };
+    return await writeExclusiveConfig(path, config);
+}
+
+export async function loadOrCreateRepositoryToken(servicesRoot: string): Promise<string> {
+    return await loadOrCreateToken(join(servicesRoot, "repository-token"), "Repository");
+}
+
+export async function loadOrCreateProviderOperatorToken(servicesRoot: string): Promise<string> {
+    return await loadOrCreateToken(join(servicesRoot, "provider-operator-token"), "Ulvia Provider operator");
+}
+
+async function assertNoOrphanedEncryptedState(servicesRoot: string): Promise<void> {
+    const entries = await readdir(join(servicesRoot, "mongo")).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") {
+            return [];
+        }
+        throw error;
+    });
+    if (entries.length > 0) {
+        throw new Error(
+            "Ulvia service credentials are missing while persistent MongoDB data exists. Run ulvia reset --yes.",
+        );
+    }
+}
+
+async function writeExclusiveConfig(path: string, config: LocalServicesConfig): Promise<LocalServicesConfig> {
     try {
         await writeFile(path, `${JSON.stringify(config, null, 2)}\n`, { flag: "wx", mode: 0o600 });
         return config;
@@ -35,56 +66,52 @@ export async function loadOrCreateDevRuntimeConfig(devRoot: string): Promise<Dev
         }
         const concurrent = await readConfig(path);
         if (!concurrent) {
-            throw new Error("Ulvia dev runtime configuration disappeared during creation");
+            throw new Error("Ulvia local service configuration disappeared during creation");
         }
         return concurrent;
     }
 }
 
-async function assertNoOrphanedEncryptedState(devRoot: string): Promise<void> {
-    const mongoEntries = await readdir(join(devRoot, "mongo")).catch((error: NodeJS.ErrnoException) => {
+async function readConfig(path: string): Promise<LocalServicesConfig | null> {
+    const source = await readFile(path, "utf8").catch((error: NodeJS.ErrnoException) => {
         if (error.code === "ENOENT") {
-            return [];
+            return null;
         }
         throw error;
     });
-    if (mongoEntries.length > 0) {
-        throw new Error(
-            "Ulvia runtime credentials are missing while persistent MongoDB data exists. Run ulvia dev reset --yes.",
-        );
+    if (source === null) {
+        return null;
     }
-}
-
-export async function loadOrCreateRepositoryToken(devRoot: string): Promise<string> {
-    return loadOrCreateToken(join(devRoot, "repository-token"), "Repository");
-}
-
-export async function loadOrCreateProviderOperatorToken(devRoot: string): Promise<string> {
-    const path = join(devRoot, "provider-operator-token");
-    const existing = await readSecret(path);
-    if (existing) {
-        return existing;
-    }
-    if (await readSecret(join(devRoot, "ulvia-provider-token"))) {
-        throw new Error("Legacy single-instance data detected; move the old data directory aside before starting");
-    }
-    return loadOrCreateToken(path, "Ulvia Provider operator");
-}
-
-const INSTANCE_SCHEMA = "ulvia.local-instance.v1" as const;
-
-export type LocalInstanceConnection = Readonly<{
-    schema: typeof INSTANCE_SCHEMA;
-    instanceId: string;
-    token: string;
-}>;
-
-export async function saveLocalInstanceConnection(devRoot: string, value: Omit<LocalInstanceConnection, "schema">) {
-    const connection: LocalInstanceConnection = { schema: INSTANCE_SCHEMA, ...value };
-    const path = join(devRoot, "instance.json");
-    await writeFile(path, `${JSON.stringify(connection, null, 2)}\n`, { mode: 0o600 });
     await chmod(path, 0o600);
-    return connection;
+    const value = JSON.parse(source) as Partial<Omit<LocalServicesConfig, "schema">> & { schema?: unknown };
+    if (
+        value.schema === LEGACY_SCHEMA &&
+        secret(value.sessionSecret) &&
+        /^[a-f0-9]{64}$/u.test(value.kekHex ?? "") &&
+        value.mongoUsername === "ulvia" &&
+        /^[A-Za-z0-9_-]{43}$/u.test(value.mongoPassword ?? "")
+    ) {
+        const upgraded: LocalServicesConfig = {
+            ...(value as Omit<LocalServicesConfig, "schema" | "mongoProviderUsername" | "mongoProviderPassword">),
+            schema: SCHEMA,
+            mongoProviderUsername: "ulvia_provider",
+            mongoProviderPassword: randomBytes(32).toString("base64url"),
+        };
+        await writeFile(path, `${JSON.stringify(upgraded, null, 2)}\n`, { mode: 0o600 });
+        return upgraded;
+    }
+    if (
+        value.schema !== SCHEMA ||
+        !secret(value.sessionSecret) ||
+        !/^[a-f0-9]{64}$/u.test(value.kekHex ?? "") ||
+        value.mongoUsername !== "ulvia" ||
+        !/^[A-Za-z0-9_-]{43}$/u.test(value.mongoPassword ?? "") ||
+        value.mongoProviderUsername !== "ulvia_provider" ||
+        !/^[A-Za-z0-9_-]{43}$/u.test(value.mongoProviderPassword ?? "")
+    ) {
+        throw new Error("Ulvia local service configuration is invalid");
+    }
+    return value as LocalServicesConfig;
 }
 
 async function loadOrCreateToken(path: string, label: string): Promise<string> {
@@ -108,38 +135,6 @@ async function loadOrCreateToken(path: string, label: string): Promise<string> {
     }
 }
 
-async function readConfig(path: string): Promise<DevRuntimeConfig | null> {
-    const source = await readFile(path, "utf8").catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") {
-            return null;
-        }
-        throw error;
-    });
-    if (source === null) {
-        return null;
-    }
-    await chmod(path, 0o600);
-    const value = JSON.parse(source) as Partial<DevRuntimeConfig>;
-    if (
-        value.schema !== SCHEMA ||
-        !validEmail(value.adminEmail) ||
-        !secret(value.adminPassword) ||
-        !secret(value.sessionSecret) ||
-        !/^[a-f0-9]{64}$/u.test(value.kekHex ?? "")
-    ) {
-        throw new Error("Ulvia dev runtime configuration is invalid");
-    }
-    return value as DevRuntimeConfig;
-}
-
-function validEmail(value: unknown): value is string {
-    return typeof value === "string" && value.includes("@") && value.length <= 320;
-}
-
-function secret(value: unknown): value is string {
-    return typeof value === "string" && value.length >= 24 && value.length <= 256;
-}
-
 async function readSecret(path: string): Promise<string | null> {
     const value = await readFile(path, "utf8").catch((error: NodeJS.ErrnoException) => {
         if (error.code === "ENOENT") {
@@ -151,4 +146,8 @@ async function readSecret(path: string): Promise<string | null> {
         throw new Error("Local runtime token is invalid");
     }
     return value;
+}
+
+function secret(value: unknown): value is string {
+    return typeof value === "string" && value.length >= 24 && value.length <= 256;
 }

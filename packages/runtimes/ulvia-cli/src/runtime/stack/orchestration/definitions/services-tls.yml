@@ -1,0 +1,20 @@
+services:
+    proxy:
+        ports:
+            - "${ULVIA_BIND_ADDRESS}:${ULVIA_HTTPS_PORT}:443"
+
+    acme:
+        image: nginxproxy/acme-companion:2.8.1@sha256:ccfceb9798b9f6586d47eeeadbb8e185c8897b34e011a2739a9b82d5e92a8b6c
+        restart: unless-stopped
+        depends_on:
+            proxy:
+                condition: service_healthy
+        volumes_from:
+            - proxy
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ${ULVIA_PROXY_ACME_DIR}:/etc/acme.sh
+        environment:
+            DEFAULT_EMAIL: ${ULVIA_ACME_EMAIL}
+        networks:
+            - instances
