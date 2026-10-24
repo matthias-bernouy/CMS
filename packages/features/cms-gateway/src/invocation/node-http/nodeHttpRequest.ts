@@ -1,4 +1,4 @@
-import { request as httpRequest, type IncomingMessage } from "node:http";
+import { request as httpRequest, type IncomingMessage, type RequestOptions } from "node:http";
 import { request as httpsRequest } from "node:https";
 import type { ResolvedAddress } from "cms-gateway/invocation/node-http/addressPolicy";
 import { SESSION_EFFECT_HEADER } from "cms-gateway/protocol/TrustedCapabilityEffects";
@@ -15,26 +15,27 @@ export interface PinnedHttpRequest {
 /** Node dials the selected IP while retaining the approved URL for Host and TLS SNI. */
 export async function sendPinnedHttpRequest(value: PinnedHttpRequest): Promise<Response> {
     return new Promise<Response>((resolve, reject) => {
-        const request = (value.url.protocol === "https:" ? httpsRequest : httpRequest)(
-            value.url,
-            {
-                method: value.method,
-                headers: value.headers,
-                signal: value.signal,
-                agent: false,
-                lookup: (_hostname, _options, callback) => {
-                    callback(null, value.address.address, value.address.family);
-                },
-            },
-            (incoming) => {
-                try {
-                    resolve(toResponse(incoming, value.method));
-                } catch (error) {
-                    incoming.destroy();
-                    reject(error);
-                }
-            },
-        );
+        const secure = value.url.protocol === "https:";
+        const options: RequestOptions = {
+            protocol: value.url.protocol,
+            hostname: value.address.address,
+            family: value.address.family,
+            ...(value.url.port ? { port: value.url.port } : {}),
+            path: `${value.url.pathname}${value.url.search}`,
+            method: value.method,
+            headers: { ...value.headers, host: value.url.host },
+            signal: value.signal,
+            agent: false,
+            ...(secure ? { servername: value.url.hostname.replace(/^\[|\]$/g, "") } : {}),
+        };
+        const request = (secure ? httpsRequest : httpRequest)(options, (incoming) => {
+            try {
+                resolve(toResponse(incoming, value.method));
+            } catch (error) {
+                incoming.destroy();
+                reject(error);
+            }
+        });
         request.once("error", reject);
         if (value.body instanceof ReadableStream) {
             void pipeBody(value.body, request).catch(reject);

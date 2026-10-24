@@ -24,13 +24,9 @@ export function buildHttpInvocation(request: GatewayTransportRequest): PreparedH
         target.hash ||
         target.pathname !== "/" ||
         request.endpoint !== target.origin ||
-        (target.protocol !== "https:" &&
-            !(
-                target.protocol === "http:" &&
-                (target.hostname === "[::1]" || /^127(?:\.\d{1,3}){3}$/.test(target.hostname))
-            ))
+        (target.protocol !== "https:" && target.protocol !== "http:")
     ) {
-        throw new TypeError("provider endpoint must be an approved origin");
+        throw new TypeError("provider endpoint must be a canonical HTTP origin");
     }
     const { binding, capability, input } = request;
     let path = binding.path;

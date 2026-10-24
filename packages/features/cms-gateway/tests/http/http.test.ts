@@ -263,6 +263,24 @@ test("HTTP target construction never exposes provider credential references", as
     expect(gatewayRoutePrefix("/tenant/", "/.cms/call")).toBe("/tenant/.cms/call");
 });
 
+test("HTTP target construction leaves private-network policy to the network adapter", async () => {
+    const route = await gatewayRoute();
+    const capability = route.release.admission.release.capabilities[0]!;
+    const binding = route.release.admission.bindings[0]!.binding;
+    const prepared = buildHttpInvocation({
+        requestId: "00000000-0000-4000-8000-000000000001",
+        instanceId: "instance:account-a",
+        endpoint: "http://provider.internal:5103",
+        providerTokenRef: "${PROVIDER_TOKEN}",
+        release: route.release.admission.release,
+        capability,
+        binding,
+        input: { term: "query" },
+    });
+
+    expect(prepared.origin).toBe("http://provider.internal:5103");
+});
+
 function gatewayFor(
     route: Awaited<ReturnType<typeof gatewayRoute>>,
     exchange: (request: GatewayHttpExchange) => Promise<Response>,
