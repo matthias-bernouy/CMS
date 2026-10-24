@@ -7,11 +7,17 @@ describe("production Kernel mounting", () => {
         const events: string[] = [];
         const logs = createMemoryLogger({ service: "kernel-test" });
         let kernelConfig: Record<string, unknown> | undefined;
+        let runnerOptions: Record<string, unknown> | undefined;
+        const endpoints = new Map<string, () => Response>();
 
         class FakeRunner {
             readonly basePath = "/";
-            constructor() {
+            constructor(options: Record<string, unknown>) {
+                runnerOptions = options;
                 events.push("runner");
+            }
+            get(path: string, handler: () => Response): void {
+                endpoints.set(path, handler);
             }
             start(options: unknown): void {
                 events.push(`start:${JSON.stringify(options)}`);
@@ -60,6 +66,9 @@ describe("production Kernel mounting", () => {
 
         const mounted = await mountProductionKernel(options as never, runtime);
         expect(events.slice(0, 3)).toEqual(["runner", "kernel", 'start:{"port":3100,"hostname":"127.0.0.1"}']);
+        expect(endpoints.get("/healthz")?.().status).toBe(204);
+        expect(endpoints.get("/readyz")?.().status).toBe(204);
+        expect(runnerOptions).toMatchObject({ idleTimeoutSeconds: 60, logger: logs.logger });
 
         expect(kernelConfig).toMatchObject({
             content: options.content.content,

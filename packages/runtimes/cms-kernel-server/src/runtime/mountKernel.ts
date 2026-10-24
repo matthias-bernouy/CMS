@@ -23,7 +23,9 @@ export async function mountProductionKernel(
     runtime: ProductionKernelRuntime = PRODUCTION_KERNEL_RUNTIME,
 ): Promise<ProductionKernelHandle> {
     const { env, content, gateway, logger } = options;
-    const runner = new runtime.Runner({ logger });
+    const runner = new runtime.Runner({ logger, idleTimeoutSeconds: 60 });
+    runner.get("/healthz", emptyOk);
+    runner.get("/readyz", emptyOk);
     new runtime.Kernel({
         runner,
         content: content.content,
@@ -54,4 +56,8 @@ export async function mountProductionKernel(
             await runner.stopGracefully();
         },
     };
+}
+
+function emptyOk(): Response {
+    return new Response(null, { status: 204 });
 }
