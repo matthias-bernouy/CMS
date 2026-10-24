@@ -8,6 +8,7 @@ import {
     readNetworkBindingAttribute,
     type NetworkBindingAttribute,
 } from "./networkBindingModel";
+import { normalizeInternalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 
 export {
     NETWORK_BINDING_ATTRIBUTES,
@@ -121,16 +122,17 @@ export function writeNetworkBindingAttribute(
     element.setAttribute(name, value);
 }
 
-/** Activates a validated iframe URL only after its binding resolved. */
+/** Activates a validated same-site request URL only after its binding resolved. */
 export function activateResolvedNetworkBinding(element: Element, name: string, value: string | null): void {
-    if (element.localName !== "iframe" || name !== inertAttributeName("src")) {
+    if (!["iframe", "img"].includes(element.localName) || name !== inertAttributeName("src")) {
         return;
     }
-    if (!value?.trim()) {
+    const normalized = value ? normalizeInternalUrl(value) : null;
+    if (!normalized) {
         element.removeAttribute("src");
         return;
     }
-    element.setAttribute("src", value);
+    element.setAttribute("src", normalized);
 }
 
 function makeNetworkInert(element: Element): void {

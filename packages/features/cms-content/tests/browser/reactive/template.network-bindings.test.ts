@@ -28,27 +28,33 @@ describe("network-inert image bindings", () => {
         expect(compiled.cloneRaw().querySelector("iframe")!.getAttribute("src")).toBe("{{ page.path | pageUrl }}");
     });
 
-    test("binds src and srcset without exposing network attributes", () => {
+    test("activates a safe image source only after interpolation while keeping responsive candidates inert", () => {
         const { compiled, host, region } = mount(
-            `<img src="/media/{{ id }}" srcset="/media/{{ id }}-2x 2x"
+            `<img src="{{ url | internalUrl }}" srcset="/media/static-2x 2x"
                 sizes="{{ sizes }}" width="{{ width }}" height="300" alt="{{ label }}">`,
-            { id: "one", label: "One", sizes: "50vw", width: 400 },
+            { url: "/media/one", label: "One", sizes: "50vw", width: 400 },
         );
         const image = host.querySelector("img")!;
 
-        expect(image.getAttribute("src")).toBeNull();
+        expect(image.getAttribute("src")).toBe("/media/one");
         expect(image.getAttribute("srcset")).toBeNull();
         expect(image.getAttribute("data-cms-src")).toBe("/media/one");
-        expect(image.getAttribute("data-cms-srcset")).toBe("/media/one-2x 2x");
+        expect(image.getAttribute("data-cms-srcset")).toBe("/media/static-2x 2x");
         expect(image.getAttribute("data-cms-sizes")).toBe("50vw");
         expect(image.getAttribute("data-cms-width")).toBe("400");
         expect(image.getAttribute("data-cms-height")).toBe("300");
-        region.update({ value: { id: "two", label: "Two", sizes: "100vw", width: 800 } });
+        region.update({ value: { url: "/media/two", label: "Two", sizes: "100vw", width: 800 } });
+        expect(image.getAttribute("src")).toBe("/media/two");
         expect(image.getAttribute("data-cms-src")).toBe("/media/two");
 
+        region.update({
+            value: { url: "//outside.test/tracker", label: "Outside", sizes: "100vw", width: 800 },
+        });
+        expect(image.getAttribute("src")).toBeNull();
+
         const raw = compiled.cloneRaw().querySelector("img")!;
-        expect(raw.getAttribute("src")).toBe("/media/{{ id }}");
-        expect(raw.getAttribute("srcset")).toBe("/media/{{ id }}-2x 2x");
+        expect(raw.getAttribute("src")).toBe("{{ url | internalUrl }}");
+        expect(raw.getAttribute("srcset")).toBe("/media/static-2x 2x");
         expect(raw.hasAttribute("data-cms-src")).toBe(false);
     });
 
@@ -110,7 +116,7 @@ describe("network-inert image bindings", () => {
         });
         const image = host.querySelector("img")!;
 
-        expect(image.getAttribute("src")).toBeNull();
+        expect(image.getAttribute("src")).toBe("/one");
         expect(image.getAttribute("data-cms-src")).toBe("/one");
     });
 
@@ -121,7 +127,7 @@ describe("network-inert image bindings", () => {
 
         CompiledTemplate.bindChildrenInPlace(parent, { value: { image: { url: "/resolved" } } });
         const image = parent.querySelector("img")!;
-        expect(image.hasAttribute("src")).toBe(false);
+        expect(image.getAttribute("src")).toBe("/resolved");
         expect(image.hasAttribute("srcset")).toBe(false);
         expect(image.getAttribute("data-cms-src")).toBe("/resolved");
         expect(image.getAttribute("data-cms-srcset")).toBe("/fallback 1x");

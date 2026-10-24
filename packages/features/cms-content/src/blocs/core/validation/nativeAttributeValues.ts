@@ -62,6 +62,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     if (normalizedTag === "iframe" && normalizedAttribute === "src" && DYNAMIC_TOKEN.test(value)) {
         return dynamicPageUrlIssue(value);
     }
+    if (normalizedTag === "img" && normalizedAttribute === "src" && DYNAMIC_TOKEN.test(value) && !contributedAssetUrl) {
+        return dynamicInternalUrlBindingIssue(value);
+    }
     if (DYNAMIC_TOKEN.test(value) && isRuntimeBoundNativeAttribute(normalizedTag, normalizedAttribute)) {
         const issue = boundAttributeValueIssue(value, nativeAttributeBindingKind(normalizedAttribute));
         return issue === undefined ? `attribute "${attribute}" only accepts {{ expression }} bindings` : issue;
@@ -144,15 +147,8 @@ export function dynamicInternalHrefIssue(value: string): string | null {
     if (!expressions) {
         return "dynamic native link interpolation is invalid";
     }
-    if (/^\s*\{\{\s*[\w$.-]+\s*\|\s*internalUrl\s*\}\}\s*$/u.test(value)) {
-        try {
-            const node = parseBindingExpression(expressions[0]!);
-            return node.kind === "filter" && node.name === "internalUrl" && !node.argument
-                ? null
-                : "dynamic native links require a valid internalUrl filter";
-        } catch {
-            return "dynamic native link interpolation is invalid";
-        }
+    if (/^\s*\{\{.*\}\}\s*$/u.test(value)) {
+        return dynamicInternalUrlBindingIssue(value);
     }
     const firstToken = value.indexOf("{{");
     const query = value.indexOf("?");
@@ -189,6 +185,24 @@ function dynamicPageUrlIssue(value: string): string | null {
             : "dynamic native iframe sources require a valid pageUrl filter";
     } catch {
         return "dynamic native iframe source interpolation is invalid";
+    }
+}
+
+export function dynamicInternalUrlBindingIssue(value: string): string | null {
+    if (CONTROL_CHARACTER.test(value) || value.includes("#{") || value.includes("@{")) {
+        return "dynamic internal URLs require controlled interpolation";
+    }
+    const expressions = interpolationExpressions(value);
+    if (!expressions || expressions.length !== 1 || !/^\s*\{\{.*\}\}\s*$/u.test(value)) {
+        return "dynamic internal URLs require one complete internalUrl binding";
+    }
+    try {
+        const node = parseBindingExpression(expressions[0]!);
+        return node.kind === "filter" && node.name === "internalUrl" && !node.argument
+            ? null
+            : "dynamic internal URLs require a valid internalUrl filter";
+    } catch {
+        return "dynamic internal URL interpolation is invalid";
     }
 }
 
@@ -310,7 +324,9 @@ function iframeAttributeIssue(attribute: string, value: string): string | null {
 
 function imageAttributeIssue(attribute: string, value: string): string | null {
     if (attribute === "src") {
-        return isCmsMediaSource(value) || isContributedAssetSource(value)
+        return isCmsMediaSource(value) ||
+            isContributedAssetSource(value) ||
+            dynamicInternalUrlBindingIssue(value) === null
             ? null
             : "native image source must reference a CMS media item";
     }

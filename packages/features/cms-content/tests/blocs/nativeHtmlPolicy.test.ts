@@ -351,7 +351,36 @@ describe("platform native HTML policy", () => {
                         structure: [{ kind: "bloc", tag: "img", attributes: { src, alt: "Atlas" }, children: [] }],
                     }),
                 ),
-            ).toThrow("static value");
+            ).toThrow();
+        }
+    });
+
+    test("accepts only one complete internalUrl binding for dynamic image sources", () => {
+        expect(() =>
+            validateSiteBlocSnapshot(
+                siteBlocSnapshot({
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "img",
+                            attributes: { src: "{{ file.path | internalUrl }}", alt: "Selected file" },
+                            children: [],
+                        },
+                    ],
+                }),
+            ),
+        ).not.toThrow();
+
+        for (const src of ["{{ file.path }}", "prefix {{ file.path | internalUrl }}", "{{ file.url | pageUrl }}"]) {
+            expect(() =>
+                validateSiteBlocSnapshot(
+                    siteBlocSnapshot({
+                        structure: [
+                            { kind: "bloc", tag: "img", attributes: { src, alt: "Selected file" }, children: [] },
+                        ],
+                    }),
+                ),
+            ).toThrow("dynamic internal URLs require");
         }
     });
 
@@ -405,7 +434,7 @@ describe("platform native HTML policy", () => {
             "/files/{{ file.url | internalUrl }}",
             "{{ file.url | internalUrl(other.path) }}",
         ]) {
-            expect(nativeAttributeSetIssue("a", { href })).toMatch(/dynamic native link/);
+            expect(nativeAttributeSetIssue("a", { href })).toMatch(/dynamic (native link|internal URL)/);
         }
     });
 });
