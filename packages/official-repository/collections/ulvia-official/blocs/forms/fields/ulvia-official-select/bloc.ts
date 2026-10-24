@@ -26,6 +26,7 @@ class Controller {
 
     constructor(private readonly blocRoot: HTMLElement) {
         this.scope = createBlocScope(this.blocRoot);
+        this.ensureStructure();
         this.trigger = document.createElement("button");
         this.trigger.type = "button";
         this.trigger.setAttribute("part", "trigger");
@@ -40,6 +41,26 @@ class Controller {
         this.scope.querySelector('[part="trigger-shell"]')?.append(this.trigger);
         this.listbox = this.scope.querySelector('[part="listbox"]') ?? null;
         this.popover = this.scope.querySelector('[part="popover"]') ?? null;
+    }
+
+    private ensureStructure(): void {
+        const select = this.scope.querySelector<HTMLSelectElement>("select:not([multiple])");
+        if (!select || this.scope.querySelector('[part="control"]')) {
+            return;
+        }
+        const control = document.createElement("span");
+        const triggerShell = document.createElement("span");
+        const popover = document.createElement("span");
+        const listbox = document.createElement("span");
+        control.setAttribute("part", "control");
+        triggerShell.setAttribute("part", "trigger-shell");
+        popover.setAttribute("part", "popover");
+        popover.toggleAttribute("hidden", true);
+        listbox.setAttribute("part", "listbox");
+        listbox.setAttribute("role", "listbox");
+        popover.append(listbox);
+        select.before(control);
+        control.append(triggerShell, popover, select);
     }
 
     connect(): void {
