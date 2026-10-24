@@ -130,6 +130,7 @@ export { wrapBindingCore } from "cms-content/blocs/core/markup/bindingRoot";
 // ── Repository seam ────────────────────────────────────────────────────
 export type {
     ContentReader,
+    PageRenderInputs,
     PageCapabilityRequirement,
     PublishedRouteResolution,
     RenderableBloc,

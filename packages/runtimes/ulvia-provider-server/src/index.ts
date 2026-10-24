@@ -59,7 +59,7 @@ try {
             allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
         });
         const artifacts = await loadOfficialArtifacts(providerSource, collectionSource);
-        const profiles = new OfficialInstanceProfiles([artifacts.profile]);
+        const profiles = new OfficialInstanceProfiles(artifacts.profiles, artifacts.defaultProfile);
         const instanceHost = new ProviderInstanceHost(env, credentials, profiles, logger);
         host = instanceHost;
         const provisioner = new OfficialInstanceProvisioner(

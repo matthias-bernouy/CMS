@@ -4,6 +4,7 @@ export { pageDocument } from "cms-content/pages/interfaces/pages";
 export type { PageMetadataContext, PageMetadataScope } from "cms-content/pages/core/rendering/pageMetadata";
 export type {
     ContentReader,
+    PageRenderInputs,
     PageCapabilityRequirement,
     PublishedRouteResolution,
     RenderableBloc,

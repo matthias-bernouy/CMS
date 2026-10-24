@@ -30,14 +30,20 @@ describe("InMemoryCmsRepository site blocs", () => {
         const inner = new InMemoryCmsRepository();
         const repository = new ValidatingCmsRepository(inner);
         await repository.createSiteBloc(siteBlocDefinition());
+        const draftRevision = await repository.getSiteBlocsRevision();
 
         expect(await repository.getBlocsList()).toEqual([]);
         expect(await repository.getBlocViewJS("site-feature-panel")).toBeNull();
         const published = await repository.publishSiteBloc("site-feature-panel", siteBlocArtifact(), 1);
+        expect(await repository.getSiteBlocsRevision()).not.toBe(draftRevision);
         expect(published.siteDefinition?.publishedRevision).toBe(1);
         expect(published.siteDefinition?.published).toEqual(published.siteDefinition?.draft);
         expect(published.siteDefinition!.updatedAt.getTime()).toBeGreaterThan(siteBlocDefinition().updatedAt.getTime());
         expect(await repository.getBlocViewJS("site-feature-panel")).toBe("view-artifact");
+        expect(await repository.getBlocViewsJS(["site-feature-panel", "missing", "site-feature-panel"])).toEqual({
+            "site-feature-panel": "view-artifact",
+            missing: null,
+        });
 
         await expect(
             repository.publishSiteBloc("site-feature-panel", siteBlocArtifact({ viewJS: "stale-artifact" }), 0),

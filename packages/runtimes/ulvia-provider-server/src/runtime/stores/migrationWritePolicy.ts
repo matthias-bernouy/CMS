@@ -28,6 +28,8 @@ const CMS_REPOSITORY_NON_MUTATIONS = [
     "withSiteBlocPublicationLock",
     "getBlocsList",
     "getBlocViewJS",
+    "getBlocViewsJS",
+    "getSiteBlocsRevision",
     "getBlocSource",
     "getPage",
     "getPageById",

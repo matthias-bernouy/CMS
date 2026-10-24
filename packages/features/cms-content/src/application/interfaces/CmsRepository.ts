@@ -127,6 +127,10 @@ export interface CmsRepository {
 
     getBlocsList(options?: BlocListOptions): Promise<BlocListItemResponse[]>;
     getBlocViewJS(htmlTag: string): Promise<string | null>;
+    /** Batch projection used by delivery to avoid one persistence read per rendered Bloc. */
+    getBlocViewsJS(htmlTags: readonly string[]): Promise<Readonly<Record<string, string | null>>>;
+    /** Compact revision of published site-owned Blocs used by rendered Pages. */
+    getSiteBlocsRevision?(): Promise<string>;
     /** Author-side source map for resource export. Returns null when the bloc has no source bundle. */
     getBlocSource(htmlTag: string): Promise<Record<string, string> | null>;
 

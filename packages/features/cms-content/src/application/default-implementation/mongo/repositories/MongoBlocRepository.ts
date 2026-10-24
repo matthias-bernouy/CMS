@@ -143,6 +143,26 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
         return (await this.getBlocRecord(htmlTag))?.artifact?.viewJS || null;
     }
 
+    async getBlocViewsJS(htmlTags: readonly string[]): Promise<Readonly<Record<string, string | null>>> {
+        const tags = [...new Set(htmlTags)];
+        const documents = await this.blocs
+            .find({ _id: { $in: tags } }, { projection: { _id: 1, "artifact.viewJS": 1 } })
+            .toArray();
+        const views = new Map(documents.map((document) => [document._id, document.artifact?.viewJS || null]));
+        return Object.fromEntries(tags.map((tag) => [tag, views.get(tag) ?? null]));
+    }
+
+    async getSiteBlocsRevision(): Promise<string> {
+        const records = await this.blocs
+            .find(
+                { "ownership.kind": "site-builder" },
+                { projection: { _id: 1, "siteDefinition.publishedRevision": 1 } },
+            )
+            .sort({ _id: 1 })
+            .toArray();
+        return JSON.stringify(records.map((record) => [record._id, record.siteDefinition?.publishedRevision ?? null]));
+    }
+
     async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {
         return (await this.getBlocRecord(htmlTag))?.artifact?.source ?? null;
     }

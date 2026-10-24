@@ -46,6 +46,12 @@ describe("MongoCmsRepository site blocs", () => {
         });
         expect(published.siteDefinition!.updatedAt.getTime()).toBe(definition.updatedAt.getTime() + 1);
         expect(await repository.getBlocViewJS("site-feature-panel")).toBe("view-artifact");
+        const readsBefore = collection.findCalls.length;
+        expect(await repository.getBlocViewsJS(["site-feature-panel", "missing", "site-feature-panel"])).toEqual({
+            "site-feature-panel": "view-artifact",
+            missing: null,
+        });
+        expect(collection.findCalls.length).toBe(readsBefore + 1);
         await expect(
             repository.publishSiteBloc("site-feature-panel", siteBlocArtifact({ viewJS: "stale-artifact" }), 0),
         ).rejects.toBeInstanceOf(BlocRevisionConflictError);

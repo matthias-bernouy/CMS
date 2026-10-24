@@ -8,6 +8,7 @@ type ReplacementDocument = Record<string, unknown> & { _id?: string };
 
 export class FakeContentCollection {
     readonly indexes: Array<{ keys: Filter; options: Filter }> = [];
+    readonly findCalls: Filter[] = [];
     readonly replaceOneCalls: Array<{
         filter: Filter;
         document: ReplacementDocument;
@@ -69,6 +70,7 @@ export class FakeContentCollection {
         limit: (count: number) => { toArray: () => Promise<StoredDocument[]> };
         toArray: () => Promise<StoredDocument[]>;
     } {
+        this.findCalls.push(structuredClone(filter));
         let documents = [...this.documents.values()].filter((document) => matches(document, filter));
         const query = {
             sort: (order: Filter) => {
@@ -229,6 +231,7 @@ function matches(document: StoredDocument, filter: Filter): boolean {
                 $exists?: boolean;
                 $gt?: unknown;
                 $gte?: unknown;
+                $in?: unknown[];
                 $lt?: unknown;
                 $ne?: unknown;
             };
@@ -247,6 +250,9 @@ function matches(document: StoredDocument, filter: Filter): boolean {
             if (Object.prototype.hasOwnProperty.call(operator, "$gte") && Number(value) < Number(operator.$gte)) {
                 return false;
             }
+            if (operator.$in && !operator.$in.some((candidate) => Bun.deepEquals(value, candidate))) {
+                return false;
+            }
             if (Object.prototype.hasOwnProperty.call(operator, "$lt") && Number(value) >= Number(operator.$lt)) {
                 return false;
             }
@@ -256,6 +262,7 @@ function matches(document: StoredDocument, filter: Filter): boolean {
                 Object.prototype.hasOwnProperty.call(operator, "$eq") ||
                 Object.prototype.hasOwnProperty.call(operator, "$gt") ||
                 Object.prototype.hasOwnProperty.call(operator, "$gte") ||
+                Object.prototype.hasOwnProperty.call(operator, "$in") ||
                 Object.prototype.hasOwnProperty.call(operator, "$lt")
             ) {
                 return true;

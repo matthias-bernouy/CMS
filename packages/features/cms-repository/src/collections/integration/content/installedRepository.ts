@@ -44,6 +44,8 @@ const CMS_REPOSITORY_METHOD_POLICY = {
     withSiteBlocPublicationLock: "delegate",
     getBlocsList: "override",
     getBlocViewJS: "override",
+    getBlocViewsJS: "override",
+    getSiteBlocsRevision: "delegate",
     getBlocSource: "override",
     getPage: "delegate",
     getPageById: "delegate",
@@ -290,6 +292,15 @@ export function withInstalledCollections(
         getBlocViewJS: async (tag) => {
             const record = (await installedState()).byTag.get(tag);
             return record ? record.artifact?.viewJS || null : repository.getBlocViewJS(tag);
+        },
+        getBlocViewsJS: async (tags) => {
+            const uniqueTags = [...new Set(tags)];
+            const installed = await installedState();
+            const localTags = uniqueTags.filter((tag) => !installed.byTag.has(tag));
+            const local = localTags.length ? await repository.getBlocViewsJS(localTags) : {};
+            return Object.fromEntries(
+                uniqueTags.map((tag) => [tag, installed.byTag.get(tag)?.artifact?.viewJS || local[tag] || null]),
+            );
         },
         getBlocSource: async (tag) => ((await installedState()).byTag.has(tag) ? null : repository.getBlocSource(tag)),
     };

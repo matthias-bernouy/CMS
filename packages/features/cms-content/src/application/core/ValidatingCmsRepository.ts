@@ -147,6 +147,9 @@ export class ValidatingCmsRepository implements CmsRepository {
     getBlocViewJS(htmlTag: string) {
         return this.inner.getBlocViewJS(htmlTag);
     }
+    getBlocViewsJS(htmlTags: readonly string[]) {
+        return this.inner.getBlocViewsJS(htmlTags);
+    }
     getBlocSource(htmlTag: string) {
         return this.inner.getBlocSource(htmlTag);
     }
@@ -230,6 +233,10 @@ export class ValidatingCmsRepository implements CmsRepository {
     }
     getTagCounts() {
         return this.inner.getTagCounts();
+    }
+
+    getSiteBlocsRevision(): Promise<string> {
+        return this.inner.getSiteBlocsRevision?.() ?? Promise.resolve("[]");
     }
 
     // ── Pass-through: system (settings validated elsewhere) ────────────────

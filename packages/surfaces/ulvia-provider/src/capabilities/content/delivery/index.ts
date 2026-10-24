@@ -1,6 +1,7 @@
 import { createContentReader, type ContentReader, type RenderablePage } from "@bernouy/cms-content/rendering";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import type { CmsContentDependencies } from "../../../ports";
+import { blocViews, pageRenderRevision, projectPageRenderInputs } from "./renderInputs";
 import { registerContentResourceCapabilities } from "./resources";
 
 const CHUNK_LENGTH = 1024 * 1024;
@@ -62,6 +63,12 @@ async function executeDeliveryRead(
             return content.getBlocViewJS(requiredText(input.tag));
         case "content.rendering-settings":
             return content.getRenderingSettings();
+        case "content.page-render-inputs":
+            return projectPageRenderInputs(requiredText(input.path), content);
+        case "content.page-render-revision":
+            return pageRenderRevision(requiredText(input.path), content);
+        case "content.bloc-views":
+            return blocViews(requiredTextArray(input.tags), content);
         case "assets.metadata":
             return dependencies.collections.getInstalledAssetMetadata(
                 "default",

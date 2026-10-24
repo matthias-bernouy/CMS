@@ -51,6 +51,16 @@ export type RenderableRouteResolution =
     | { kind: "current"; page: RenderablePage; language: string }
     | Exclude<PublishedRouteResolution, { kind: "current" }>;
 
+/** Coherent inputs shared by route resolution and one Page render. */
+export type PageRenderInputs = {
+    readonly route: RenderableRouteResolution | null;
+    readonly artifactRevision: number | string;
+    readonly renderingRevision: number | string;
+    readonly settings: RenderingSettings;
+    readonly contentTexts: readonly ContentTextSource[];
+    readonly renderableBlocs: readonly RenderableBloc[];
+};
+
 export type PublishedRouteResolution =
     | { kind: "current"; page: TPage; language: string }
     | { kind: "redirect"; path: string }
@@ -80,6 +90,8 @@ export interface ContentReader {
     resolvePageReference(reference: PageReference): Promise<string | null>;
     resolvePagePaths(paths: readonly string[]): Promise<Readonly<Record<string, string>>>;
     resolveRenderableRoute(path: string): Promise<RenderableRouteResolution | null>;
+    getPageRenderInputs?(path: string): Promise<PageRenderInputs>;
+    getPageRenderRevision?(path: string): Promise<number | string>;
     // PAGE
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPageById(id: string): Promise<TPage | null>;
@@ -89,6 +101,7 @@ export interface ContentReader {
     // BLOC (rendering artifacts only)
     getRenderableBlocs(): Promise<RenderableBloc[]>;
     getBlocViewJS(tag: string): Promise<string | null>;
+    getBlocViewsJS?(tags: readonly string[]): Promise<Readonly<Record<string, string | null>>>;
 
     // SYSTEM (theme, favicon, host, language, system page refs)
     getRenderingSettings(): Promise<RenderingSettings>;

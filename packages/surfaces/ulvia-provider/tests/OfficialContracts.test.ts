@@ -73,9 +73,13 @@ test("mounts and dispatches every official CMS contract release", async () => {
     try {
         for (const [index, [contractId, capabilityId, method, path, body]] of ROUTES.entries()) {
             const requestId = `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`;
+            const contractVersion = contracts.find(({ release }) => release.contractId === contractId)?.release.version;
+            if (!contractVersion) {
+                throw new Error(`Official contract is unavailable: ${contractId}`);
+            }
             const response = await server.request(method, path, {
                 headers: {
-                    ...requestHeaders(requestId, contractId, capabilityId),
+                    ...requestHeaders(requestId, contractId, contractVersion, capabilityId),
                     ...(body === undefined ? {} : { "content-type": "application/json" }),
                 },
                 ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -182,14 +186,19 @@ async function loadOfficialContract(contractId: string) {
     };
 }
 
-function requestHeaders(requestId: string, contractId: string, capabilityId: string): Record<string, string> {
+function requestHeaders(
+    requestId: string,
+    contractId: string,
+    contractVersion: string,
+    capabilityId: string,
+): Record<string, string> {
     const issuedAt = Math.floor(Date.now() / 1_000);
     const invocation = signProviderInvocationToken(TOKEN, {
         version: 1,
         requestId,
         instanceId: "instance:contract-matrix",
         contractId,
-        contractVersion: "1.0.0",
+        contractVersion,
         capabilityId,
         issuedAt,
         expiresAt: issuedAt + 30,

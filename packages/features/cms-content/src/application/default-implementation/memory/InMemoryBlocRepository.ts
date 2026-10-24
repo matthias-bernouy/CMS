@@ -125,6 +125,16 @@ export class InMemoryBlocRepository {
         return this.blocs.get(htmlTag)?.artifact?.viewJS || null;
     }
 
+    async getBlocViewsJS(htmlTags: readonly string[]): Promise<Readonly<Record<string, string | null>>> {
+        return Object.fromEntries(
+            [...new Set(htmlTags)].map((tag) => [tag, this.blocs.get(tag)?.artifact?.viewJS || null]),
+        );
+    }
+
+    async getSiteBlocsRevision(): Promise<string> {
+        return siteBlocsRevision([...this.blocs.values()]);
+    }
+
     async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {
         const source = this.blocs.get(htmlTag)?.artifact?.source;
         return source ? structuredClone(source) : null;
@@ -157,4 +167,13 @@ export class InMemoryBlocRepository {
         this.blocs.set(tag, { ...current, siteDefinition: definition });
         return structuredClone(definition);
     }
+}
+
+function siteBlocsRevision(records: readonly BlocRecord[]): string {
+    return JSON.stringify(
+        records
+            .filter((record) => record.ownership.kind === "site-builder")
+            .map((record) => [record.tag, record.siteDefinition?.publishedRevision ?? null])
+            .sort(([left], [right]) => String(left).localeCompare(String(right))),
+    );
 }

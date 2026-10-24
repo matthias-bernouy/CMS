@@ -15,10 +15,18 @@ import { admitProviderManifestJson, verifyStoredProviderManifestJson } from "@be
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
 import type { OfficialInstanceProfile } from "@bernouy/ulvia-provider";
 
-const PROFILE = Object.freeze({
+type ProfileDefinition = Readonly<{
+    id: string;
+    version: string;
+    upgradeFromVersions: readonly string[];
+    manifest: Readonly<{ providerId: string; version: string }>;
+    collection: Readonly<{ publisherId: string; collectionId: string; version: string }>;
+}>;
+
+const LEGACY_PROFILE: ProfileDefinition = Object.freeze({
     id: "ulvia.official",
     version: "1.0.0",
-    upgradeFromVersions: Object.freeze([] as string[]),
+    upgradeFromVersions: Object.freeze([]),
     manifest: Object.freeze({ providerId: "ulvia.official", version: "0.3.0" }),
     collection: Object.freeze({
         publisherId: "ulvia.official",
@@ -26,9 +34,17 @@ const PROFILE = Object.freeze({
         version: "1.0.0",
     }),
 });
+const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
+    ...LEGACY_PROFILE,
+    version: "1.1.0",
+    upgradeFromVersions: Object.freeze(["1.0.0"]),
+    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.4.0" }),
+});
+const SUPPORTED_PROFILES = Object.freeze([LEGACY_PROFILE, CURRENT_PROFILE]);
 
 export type LoadedOfficialArtifacts = Readonly<{
-    profile: OfficialInstanceProfile;
+    profiles: readonly OfficialInstanceProfile[];
+    defaultProfile: OfficialInstanceProfile;
     contracts: readonly ContractRelease[];
 }>;
 
@@ -36,11 +52,42 @@ export async function loadOfficialArtifacts(
     providers: ProviderRepositorySource,
     collections: CollectionRepositorySource,
 ): Promise<LoadedOfficialArtifacts> {
-    const manifestEntry = exactEntry(
-        await providers.list("provider-manifest"),
-        PROFILE.manifest.providerId,
-        PROFILE.manifest.version,
+    const manifestEntries = await providers.list("provider-manifest");
+    const available = SUPPORTED_PROFILES.filter((profile) =>
+        hasEntry(manifestEntries, profile.manifest.providerId, profile.manifest.version),
     );
+    if (!available.includes(CURRENT_PROFILE)) {
+        throw new Error(
+            `Exact official artifact is unavailable: ${CURRENT_PROFILE.manifest.providerId}@${CURRENT_PROFILE.manifest.version}`,
+        );
+    }
+    const loaded = await Promise.all(
+        available.map((profile) => loadOfficialProfile(providers, collections, manifestEntries, profile)),
+    );
+    const defaultProfile = loaded.find(({ profile }) => profile.version === CURRENT_PROFILE.version)?.profile;
+    if (!defaultProfile) {
+        throw new Error(`Official default profile is unavailable: ${CURRENT_PROFILE.id}@${CURRENT_PROFILE.version}`);
+    }
+    const contracts = new Map<string, ContractRelease>();
+    for (const artifacts of loaded) {
+        for (const release of artifacts.contracts) {
+            contracts.set(`${release.contractId}\0${release.version}`, release);
+        }
+    }
+    return Object.freeze({
+        profiles: Object.freeze(loaded.map(({ profile }) => profile)),
+        defaultProfile,
+        contracts: Object.freeze([...contracts.values()]),
+    });
+}
+
+async function loadOfficialProfile(
+    providers: ProviderRepositorySource,
+    collections: CollectionRepositorySource,
+    manifestEntries: readonly RepositoryArtifactEntry[],
+    definition: ProfileDefinition,
+): Promise<Readonly<{ profile: OfficialInstanceProfile; contracts: readonly ContractRelease[] }>> {
+    const manifestEntry = exactEntry(manifestEntries, definition.manifest.providerId, definition.manifest.version);
     const manifestBytes = await providers.get(manifestEntry);
     const storedManifest = await verifyStoredProviderManifestJson(manifestBytes, manifestEntry.digest);
     const catalogue = new InMemoryReleaseCatalogue();
@@ -68,13 +115,13 @@ export async function loadOfficialArtifacts(
     }
     const collectionEntry = (await collections.list()).find(
         (entry) =>
-            entry.publisherId === PROFILE.collection.publisherId &&
-            entry.collectionId === PROFILE.collection.collectionId &&
-            entry.version === PROFILE.collection.version,
+            entry.publisherId === definition.collection.publisherId &&
+            entry.collectionId === definition.collection.collectionId &&
+            entry.version === definition.collection.version,
     );
     if (!collectionEntry) {
         throw new Error(
-            `Exact official artifact is unavailable: ${PROFILE.collection.collectionId}@${PROFILE.collection.version}`,
+            `Exact official artifact is unavailable: ${definition.collection.collectionId}@${definition.collection.version}`,
         );
     }
     const collectionBundle = await collections.get(collectionEntry);
@@ -83,13 +130,13 @@ export async function loadOfficialArtifacts(
     });
     if (collection.digest !== collectionEntry.digest) {
         throw new Error(
-            `Official collection digest mismatch: ${PROFILE.collection.collectionId}@${PROFILE.collection.version}`,
+            `Official collection digest mismatch: ${definition.collection.collectionId}@${definition.collection.version}`,
         );
     }
     const profile: OfficialInstanceProfile = Object.freeze({
-        id: PROFILE.id,
-        version: PROFILE.version,
-        upgradeFromVersions: PROFILE.upgradeFromVersions,
+        id: definition.id,
+        version: definition.version,
+        upgradeFromVersions: definition.upgradeFromVersions,
         manifest: Object.freeze({
             providerId: manifest.manifest.providerId,
             version: manifest.manifest.version,
@@ -161,7 +208,7 @@ export async function loadOfficialManifest(
 function exactEntry(entries: readonly RepositoryArtifactEntry[], id: string, version: string): RepositoryArtifactEntry {
     const entry = entries.find(
         (candidate) =>
-            candidate.publisherId === PROFILE.manifest.providerId &&
+            candidate.publisherId === CURRENT_PROFILE.manifest.providerId &&
             candidate.id === id &&
             candidate.version === version,
     );
@@ -169,4 +216,11 @@ function exactEntry(entries: readonly RepositoryArtifactEntry[], id: string, ver
         throw new Error(`Exact official artifact is unavailable: ${id}@${version}`);
     }
     return entry;
+}
+
+function hasEntry(entries: readonly RepositoryArtifactEntry[], id: string, version: string): boolean {
+    return entries.some(
+        (entry) =>
+            entry.publisherId === CURRENT_PROFILE.manifest.providerId && entry.id === id && entry.version === version,
+    );
 }

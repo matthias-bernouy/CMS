@@ -28,6 +28,9 @@
                     "content.resolve-published-route",
                     "content.renderable-blocs",
                     "content.bloc-view-js",
+                    "content.bloc-views",
+                    "content.page-render-inputs",
+                    "content.page-render-revision",
                     "content.rendering-settings",
                     "assets.metadata",
                     "assets.metadata-batch"

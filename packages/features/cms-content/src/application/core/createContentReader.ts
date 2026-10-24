@@ -2,9 +2,10 @@ import { resolvePublishedRoute } from "cms-content/pages/core/queries/resolvePub
 import { projectRenderingSettings } from "cms-content/settings/core/renderingSettings";
 import { projectPublishedPage } from "cms-content/pages/core/queries/publishedPage";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
-import type { ContentReader, RenderablePage } from "cms-content/application/interfaces/ContentReader";
+import type { ContentReader, RenderableBloc, RenderablePage } from "cms-content/application/interfaces/ContentReader";
 import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { RegisteredPageRoute } from "cms-content/pages/interfaces/routing";
+import { installPageRenderInputReaders } from "cms-content/application/core/pageRenderInputs";
 
 export type ContentReaderOptions = {
     readonly resolvePageRoute?: (path: string) => Promise<RegisteredPageRoute | null>;
@@ -57,16 +58,23 @@ export function createContentReader(repository: CmsRepository, options: ContentR
             ) ?? null
         );
     };
-    return {
+    const getContentTexts = async () => [...((await repository.getContentContributions?.())?.texts ?? [])];
+    const getRenderableBlocs = async (): Promise<RenderableBloc[]> =>
+        (await repository.getBlocsList({ includeHidden: true })).map((bloc) => ({
+            id: bloc.id,
+            kind: bloc.kind,
+            markupHTML: bloc.markupHTML,
+            ...(bloc.browser ? { browser: bloc.browser } : {}),
+            ...(bloc.uses?.length ? { uses: [...bloc.uses] } : {}),
+            root: bloc.root,
+            ...(bloc.styleCSS ? { styleCSS: bloc.styleCSS } : {}),
+            ...(bloc.styleCollectionId ? { styleCollectionId: bloc.styleCollectionId } : {}),
+            hasBehavior: bloc.hasBehavior,
+        }));
+    const getRenderingSettings = async () => projectRenderingSettings(await repository.getSystem());
+    const reader: ContentReader = {
         getContentRevision: async () => (await repository.getContentContributions?.())?.revision ?? 0,
-        getRenderingRevision: async () => {
-            const [contentRevision, systemRevision] = await Promise.all([
-                repository.getContentContributions?.().then((contributions) => contributions.revision) ?? 0,
-                repository.getSystemRevision?.() ?? 0,
-            ]);
-            return JSON.stringify([contentRevision, systemRevision]);
-        },
-        getContentTexts: async () => [...((await repository.getContentContributions?.())?.texts ?? [])],
+        getContentTexts,
         getRenderablePage,
         getRenderablePages,
         resolvePageReference: async (reference) => {
@@ -160,19 +168,15 @@ export function createContentReader(repository: CmsRepository, options: ContentR
             const page = projectPublishedPage(resolved.page);
             return page ? { ...resolved, page } : { kind: "unavailable" };
         },
-        getRenderableBlocs: async () =>
-            (await repository.getBlocsList({ includeHidden: true })).map((bloc) => ({
-                id: bloc.id,
-                kind: bloc.kind,
-                markupHTML: bloc.markupHTML,
-                ...(bloc.browser ? { browser: bloc.browser } : {}),
-                ...(bloc.uses?.length ? { uses: [...bloc.uses] } : {}),
-                root: bloc.root,
-                ...(bloc.styleCSS ? { styleCSS: bloc.styleCSS } : {}),
-                ...(bloc.styleCollectionId ? { styleCollectionId: bloc.styleCollectionId } : {}),
-                hasBehavior: bloc.hasBehavior,
-            })),
+        getRenderableBlocs,
         getBlocViewJS: (tag) => repository.getBlocViewJS(tag),
-        getRenderingSettings: async () => projectRenderingSettings(await repository.getSystem()),
+        getBlocViewsJS: (tags) => repository.getBlocViewsJS(tags),
+        getRenderingSettings,
     };
+    installPageRenderInputReaders(reader, repository, {
+        getRenderingSettings,
+        getContentTexts,
+        getRenderableBlocs,
+    });
+    return reader;
 }

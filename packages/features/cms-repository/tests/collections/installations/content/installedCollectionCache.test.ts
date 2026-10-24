@@ -69,6 +69,10 @@ test("indexes installed Blocs once per collection revision", async () => {
 
     await repository.getBlocViewJS("cached-card");
     await repository.getBlocViewJS("cached-card");
+    expect(await repository.getBlocViewsJS(["cached-card", "missing", "cached-card"])).toEqual({
+        "cached-card": null,
+        missing: null,
+    });
     await repository.getBlocRecord("cached-card");
     await repository.getBlocsList();
     await repository.getContentContributions?.();

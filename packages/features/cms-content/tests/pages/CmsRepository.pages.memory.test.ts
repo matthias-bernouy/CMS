@@ -98,6 +98,17 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
         expect(await reader.getRenderingRevision!()).not.toBe(initial);
     });
 
+    test("Page render revisions change with the resolved Page revision", async () => {
+        const repository = await seeded();
+        const reader = createContentReader(repository);
+        const initial = await reader.getPageRenderRevision!("/about");
+        const page = (await repository.getPage("/about"))!;
+
+        await repository.updatePage({ id: page.id, title: "Updated about" }, page.revision);
+
+        expect(await reader.getPageRenderRevision!("/about")).not.toBe(initial);
+    });
+
     test("public reader retains hidden rendering artifacts without authoring fields", async () => {
         let includeHidden = false;
         const reader = createContentReader({
