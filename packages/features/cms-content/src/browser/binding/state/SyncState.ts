@@ -1,9 +1,5 @@
-import {
-    parseSyncSelection,
-    parseSyncTarget,
-    type CmsSyncSelection,
-    type CmsSyncTarget,
-} from "cms-content/blocs/core/markup/bindings";
+import { parseSyncSelection, parseSyncTarget } from "cms-content/blocs/core/markup/bindings/sync";
+import type { CmsSyncSelection, CmsSyncTarget } from "cms-content/blocs/core/markup/bindings/types";
 import { parseJsonValue, serializeJsonValue } from "./jsonValue";
 
 const CMS_SYNC_CHANGE_EVENT = "cms-sync:change";

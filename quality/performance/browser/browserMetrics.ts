@@ -5,7 +5,7 @@ import { assertMaximum } from "../benchmark";
 
 export const BINDING_CORE = join(
     import.meta.dir,
-    "../../../packages/features/cms-content/src/runtime-assets/generated/binding-core.js",
+    "../../../packages/features/cms-content/dist/runtime-assets/binding-core.js",
 );
 
 export async function reportBundleSize(): Promise<void> {
@@ -16,8 +16,8 @@ export async function reportBundleSize(): Promise<void> {
         brotli: brotliCompressSync(bytes).byteLength,
     };
     console.log("\nBinding bundle bytes", sizes);
-    assertMaximum("raw binding bundle", sizes.raw, 200_000);
-    assertMaximum("gzip binding bundle", sizes.gzip, 80_000);
+    assertMaximum("raw binding bundle", sizes.raw, 80_000);
+    assertMaximum("gzip binding bundle", sizes.gzip, 25_000);
 }
 
 export async function memoryMetrics(page: Page): Promise<{ domNodes: number; usedJsHeapBytes: number }> {

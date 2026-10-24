@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { stat } from "node:fs/promises";
 import { ensureDurableDirectory } from "../core/durable";
 import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
+import { isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
 
 export type ArtifactType = "contracts" | "providers";
 export type StoredArtifact = {
@@ -38,7 +39,7 @@ export class LocalArtifactFiles {
             const fixtureRoot = join(this.root, "assets", "contracts", releaseHash(canonicalJson));
             await ensureDurableDirectory(fixtureRoot, this.root);
             for (const fixture of fixtures) {
-                if (!IDENTIFIER.test(fixture.id)) {
+                if (!ASSET_IDENTIFIER.test(fixture.id)) {
                     throw new Error("Invalid fixture asset ID");
                 }
                 const path = join(fixtureRoot, fixture.id);
@@ -58,21 +59,21 @@ export class LocalArtifactFiles {
     }
 
     async fixture(canonicalJson: string, assetId: string): Promise<Buffer> {
-        if (!IDENTIFIER.test(assetId)) {
+        if (!ASSET_IDENTIFIER.test(assetId)) {
             throw new Error("Invalid fixture asset ID");
         }
         return readFile(join(this.root, "assets", "contracts", releaseHash(canonicalJson), assetId));
     }
 
     fixtureBlob(canonicalJson: string, assetId: string): Blob {
-        if (!IDENTIFIER.test(assetId)) {
+        if (!ASSET_IDENTIFIER.test(assetId)) {
             throw new Error("Invalid fixture asset ID");
         }
         return Bun.file(join(this.root, "assets", "contracts", releaseHash(canonicalJson), assetId));
     }
 
     async get(type: ArtifactType, publisherId: string, id: string, version: string): Promise<Buffer | null> {
-        if (!IDENTIFIER.test(publisherId) || !IDENTIFIER.test(id) || !VERSION.test(version)) {
+        if (!isRepositoryIdentifier(publisherId) || !isRepositoryIdentifier(id) || !VERSION.test(version)) {
             return null;
         }
         return readFile(this.path(type, publisherId, id, version)).catch((error: NodeJS.ErrnoException) => {
@@ -121,7 +122,7 @@ export class LocalArtifactFiles {
     }
 
     async getEvidence(providerId: string, contractId: string, evidenceId: string): Promise<Buffer | null> {
-        if (!IDENTIFIER.test(providerId) || !IDENTIFIER.test(contractId) || !UUID.test(evidenceId)) {
+        if (!isRepositoryIdentifier(providerId) || !isRepositoryIdentifier(contractId) || !UUID.test(evidenceId)) {
             return null;
         }
         return readFile(this.evidencePath(providerId, contractId, evidenceId)).catch((error: NodeJS.ErrnoException) => {
@@ -141,7 +142,7 @@ export class LocalArtifactFiles {
     }
 }
 
-const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
+const ASSET_IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 

@@ -1,10 +1,5 @@
 import { MANAGED_NATIVE_ELEMENT_TAGS } from "cms-content/blocs/core/markup/validation/contracts/managedNativePolicy";
-import {
-    isDeclaredPlatformNativeAttributeAllowed,
-    nativeAttributeBindingKind,
-} from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";
-
-export { nativeAttributeBindingKind };
+import { isDeclaredPlatformNativeAttributeAllowed } from "cms-content/blocs/core/markup/validation/contracts/nativeAttributes";
 
 export const HTML_VOID_ELEMENT_TAGS: ReadonlySet<string> = new Set([
     "area",

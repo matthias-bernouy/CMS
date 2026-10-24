@@ -1,7 +1,8 @@
 import { MUTATION_ATTR } from "../../core/attrs";
 import { collectConditionReferences } from "../../render/condition";
 import type { MutationBoundary } from "../templatePlan";
-import { interpolationExpressions, parseMutation } from "cms-content/blocs/core/markup/bindings";
+import { interpolationExpressions } from "cms-content/blocs/core/markup/bindings/operation";
+import { parseMutation } from "cms-content/blocs/core/markup/bindings/operation/query";
 
 export function mutationBoundary(element: Element): MutationBoundary {
     return {

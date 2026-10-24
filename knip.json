@@ -27,11 +27,9 @@
     "workspaces": {
         "packages/features/cms-content": {
             "entry": [
-                "src/index.ts",
                 "src/browser/entries/*.ts",
                 "src/runtime-assets/build.ts"
-            ],
-            "ignoreFiles": ["src/runtime-assets/generated/*.js"]
+            ]
         },
         "packages/surfaces/cms-kernel": {
             "entry": ["src/index.ts", "tests/contracts/publicReader.fixture.ts"]

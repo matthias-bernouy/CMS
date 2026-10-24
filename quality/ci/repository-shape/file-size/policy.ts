@@ -52,13 +52,7 @@ const governedExtensions = new Set([
     ".yml",
 ]);
 
-const exactExceptions = new Map([
-    [
-        "packages/features/cms-content/src/runtime-assets/generated/binding-core.js",
-        "generated content binding browser runtime",
-    ],
-    ["quality/ci/coverage/baseline.json", "generated per-package coverage snapshot"],
-]);
+const exactExceptions = new Map([["quality/ci/coverage/baseline.json", "generated per-package coverage snapshot"]]);
 
 const governedNames = new Set(["Containerfile", "Dockerfile", "Justfile", "Makefile"]);
 const generatedLockfiles = new Set(["npm-shrinkwrap.json", "package-lock.json", "pnpm-lock.yaml"]);

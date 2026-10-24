@@ -1,10 +1,8 @@
 import { isSha256Digest } from "@bernouy/binary-media";
 import type { CollectionRepositoryEntry } from "./interfaces";
 import { isCollectionNamespace } from "../core/namespace";
-import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
-
-const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
-const CURSOR = /^[A-Za-z0-9_-]{1,1024}$/u;
+import { isCanonicalSemVer, isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
+import { isPlainRecord, isRepositoryCatalogueCursor } from "cms-repository/repository-http/catalogueValues";
 
 export type CollectionCataloguePage = Readonly<{
     entries: CollectionRepositoryEntry[];
@@ -18,7 +16,7 @@ export function validCollectionReference(reference: {
     digest: string;
 }): boolean {
     return (
-        validIdentifier(reference.publisherId) &&
+        isRepositoryIdentifier(reference.publisherId) &&
         isCollectionNamespace(reference.collectionId) &&
         isCanonicalSemVer(reference.version) &&
         isSha256Digest(reference.digest)
@@ -26,7 +24,7 @@ export function validCollectionReference(reference: {
 }
 
 export function validCollectionRepositoryId(id: string): boolean {
-    return validIdentifier(id);
+    return isRepositoryIdentifier(id);
 }
 
 export function parseCollectionCataloguePage(data: unknown, repositoryId: string): CollectionCataloguePage {
@@ -34,7 +32,7 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
         !isPlainRecord(data) ||
         Object.keys(data).some((key) => key !== "releases" && key !== "nextCursor") ||
         !Array.isArray(data.releases) ||
-        (data.nextCursor !== undefined && (typeof data.nextCursor !== "string" || !CURSOR.test(data.nextCursor)))
+        (data.nextCursor !== undefined && !isRepositoryCatalogueCursor(data.nextCursor))
     ) {
         throw new TypeError("Invalid repository catalogue");
     }
@@ -68,7 +66,7 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
             throw new TypeError("Invalid repository entry");
         }
         const entry = item;
-        if (typeof entry.publisherId !== "string" || !validIdentifier(entry.publisherId)) {
+        if (typeof entry.publisherId !== "string" || !isRepositoryIdentifier(entry.publisherId)) {
             throw new TypeError("Invalid repository publisherId");
         }
         if (!isCollectionNamespace(entry.collectionId)) {
@@ -128,16 +126,4 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
         throw new TypeError("Duplicate collection repository release coordinates");
     }
     return { entries, ...(typeof data.nextCursor === "string" ? { nextCursor: data.nextCursor } : {}) };
-}
-
-function validIdentifier(value: string): boolean {
-    return value.length <= 96 && IDENTIFIER.test(value);
-}
-
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-    if (value === null || typeof value !== "object" || Array.isArray(value)) {
-        return false;
-    }
-    const prototype = Object.getPrototypeOf(value);
-    return prototype === Object.prototype || prototype === null;
 }

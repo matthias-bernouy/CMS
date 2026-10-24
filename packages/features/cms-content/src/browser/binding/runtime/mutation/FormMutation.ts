@@ -1,6 +1,6 @@
 /** Executes one native form-owned `cms-mutation`. */
 
-import { parseMutation } from "cms-content/blocs/core/markup/bindings";
+import { parseMutation } from "cms-content/blocs/core/markup/bindings/operation/query";
 import { MUTATION_ATTR } from "../../core/attrs";
 import type { FilterMap } from "../../core/interpolate";
 import type { FormSubmitResult } from "../../form/formSubmit";

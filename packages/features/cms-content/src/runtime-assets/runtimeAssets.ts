@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { compress, type CacheEntry } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
 
-const ASSET_DIRECTORY = join(import.meta.dir, "generated");
+const ASSET_DIRECTORY = join(import.meta.dir, "../../dist/runtime-assets");
 
 export async function loadBlocRuntimeEntry(): Promise<CacheEntry> {
     return loadBrowserRuntimeEntry("bloc-runtime.js");
@@ -19,7 +19,7 @@ export function blocRuntimeCacheKey(pathname: string): string {
 async function loadBrowserRuntimeEntry(filename: string): Promise<CacheEntry> {
     const file = Bun.file(join(ASSET_DIRECTORY, filename));
     if (!(await file.exists())) {
-        throw new Error(`CMS browser runtime ${filename} is missing; run bun run build`);
+        throw new Error(`CMS browser runtime ${filename} is missing; run bun run build:browser`);
     }
     return compress(await file.text(), "text/javascript");
 }

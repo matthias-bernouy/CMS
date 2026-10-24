@@ -1,5 +1,5 @@
 import { CASE_ATTR, CONDITION_ATTR, MATCH_ATTR, REPEAT_ATTR } from "../../core/attrs";
-import { parseCase } from "cms-content/blocs/core/markup/bindings";
+import { parseCase } from "cms-content/blocs/core/markup/bindings/conditions";
 import type { FilterMap } from "../../core/interpolate";
 import { compileCondition } from "../../render/condition";
 import { compileExpression } from "../../render/expression";

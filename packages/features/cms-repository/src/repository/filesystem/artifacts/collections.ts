@@ -13,7 +13,7 @@ import {
 import { snapshotCollectionAssets, verifyCollectionAssets } from "cms-repository/collections/core/admission/assets";
 import type { CollectionAssetDefinition } from "cms-repository/collections/interfaces/CollectionAssets";
 import type { VerifiedCollectionReleaseMetadata } from "cms-repository/collections/interfaces/CollectionAdmission";
-import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
+import { compareSemVer, isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
 import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
 import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
 import { pruneRepository } from "../core/recovery";
@@ -124,7 +124,7 @@ export class LocalCollectionRepository {
         collectionId: string,
         version: string,
     ): Promise<VerifiedCollectionReleaseMetadata | null> {
-        if (!IDENTIFIER.test(publisherId) || !isCollectionNamespace(collectionId) || !VERSION.test(version)) {
+        if (!isRepositoryIdentifier(publisherId) || !isCollectionNamespace(collectionId) || !VERSION.test(version)) {
             return null;
         }
         const path = this.releasePath(publisherId, collectionId, version);
@@ -189,7 +189,6 @@ export class LocalCollectionRepository {
     }
 }
 
-const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
 
 type CollectionIdentity = Pick<AdmittedCollectionRelease, "digest" | "release">;

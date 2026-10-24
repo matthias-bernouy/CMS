@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { parseCollectionCataloguePage } from "../../src/collections/sources/parseCatalogue";
-import { parseProviderCataloguePage } from "../../src/providers/sources/parseCatalogue";
+import {
+    parseCollectionCataloguePage,
+    validCollectionRepositoryId,
+} from "../../src/collections/sources/parseCatalogue";
+import { parseProviderCataloguePage, validProviderRepositoryId } from "../../src/providers/sources/parseCatalogue";
 import { readCataloguePages } from "../../src/repository-http/cataloguePages";
 
 const digest = `sha256:${"0".repeat(64)}`;
@@ -61,7 +64,13 @@ describe("repository catalogue boundaries", () => {
 
     test("collection entries use canonical versions and exact fields", () => {
         expect(parseCollectionCataloguePage({ releases: [collectionEntry()] }, "official").entries).toHaveLength(1);
-        for (const patch of [{ version: "01.0.0" }, { name: "" }, { collectionId: "cms-tools" }, { extra: true }]) {
+        for (const patch of [
+            { publisherId: "acme.2" },
+            { version: "01.0.0" },
+            { name: "" },
+            { collectionId: "cms-tools" },
+            { extra: true },
+        ]) {
             expect(() =>
                 parseCollectionCataloguePage({ releases: [{ ...collectionEntry(), ...patch }] }, "official"),
             ).toThrow();
@@ -69,6 +78,12 @@ describe("repository catalogue boundaries", () => {
         expect(() =>
             parseCollectionCataloguePage({ releases: [collectionEntry()], extra: true }, "official"),
         ).toThrow();
+    });
+
+    test("uses one repository identifier grammar across catalogue types", () => {
+        for (const id of ["official", "acme.official", "acme-store", "acme.2", "Acme", "acme..store"]) {
+            expect(validCollectionRepositoryId(id)).toBe(validProviderRepositoryId(id));
+        }
     });
 
     test("rejects ambiguous release coordinates in both catalogues", () => {

@@ -33,3 +33,7 @@ export function parseSemVer(value: unknown, path: string): string {
 export function isCanonicalSemVer(value: unknown): value is string {
     return typeof value === "string" && value.length <= 128 && SEMVER_PATTERN.test(value);
 }
+
+export function isRepositoryIdentifier(value: string): boolean {
+    return value.length <= 96 && IDENTIFIER_PATTERN.test(value);
+}

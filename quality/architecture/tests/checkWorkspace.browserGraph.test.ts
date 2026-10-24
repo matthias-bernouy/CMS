@@ -72,4 +72,16 @@ describe("browser import graph", () => {
         expect(ofKind(violations, "browser-runtime-adapter")).toHaveLength(1);
         expect(ofKind(violations, "browser-runtime-adapter")[0]!.file).toMatch(/ui\/src\/unsafe\.ts$/);
     });
+
+    test("reports stale configured browser entrypoints", async () => {
+        const root = await createWorkspace({
+            "packages/features/ui/package.json": manifest("@fixture/ui", {}),
+            "packages/features/ui/src/index.ts": "export const ui = true;\n",
+        });
+        const violations = await checkWorkspaceArchitecture({
+            rootDir: root,
+            browserEntryPaths: ["packages/features/ui/src/missing.entry.ts"],
+        });
+        expect(ofKind(violations, "browser-entry-missing")).toHaveLength(1);
+    });
 });

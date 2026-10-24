@@ -1,4 +1,4 @@
-import { parseQueryListen, parseQueryRefresh } from "cms-content/blocs/core/markup/bindings";
+import { parseQueryListen, parseQueryRefresh } from "cms-content/blocs/core/markup/bindings/operation/query";
 import { QUERY_LISTEN_ATTR, QUERY_REFRESH_ATTR } from "../../core/attrs";
 import { readSyncValue, subscribeSyncValue } from "../../state/SyncState";
 import { selectSyncValue, shareProjectedValue } from "../../state/selectSyncValue";

@@ -1,7 +1,7 @@
 import { bindingOwnedByMutation } from "./mutationOwnership";
 import type { CompilePlan, MutationBoundary, NodePath } from "../templatePlan";
-import { parseInterpolation } from "cms-content/blocs/core/markup/bindings";
-import { nativeAttributeBindingKind } from "cms-content/blocs/core/validation/nativeHtml";
+import { parseInterpolation } from "cms-content/blocs/core/markup/bindings/operation";
+import { nativeAttributeBindingKind } from "cms-content/blocs/core/markup/bindings/platform/nativeAttributes";
 
 export function compileAttributes(
     element: Element,

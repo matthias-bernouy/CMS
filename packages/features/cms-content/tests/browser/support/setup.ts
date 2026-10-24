@@ -1,4 +1,7 @@
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
+import { buildContentBrowserAssets } from "@bernouy/cms-content/runtime-assets/build";
+
+await buildContentBrowserAssets();
 
 // Keep Bun's network and form primitives: happy-dom's replacements do not
 // behave like the runtime APIs exercised by serialization and fetch tests.

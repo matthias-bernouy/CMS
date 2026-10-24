@@ -1,5 +1,5 @@
 import type { FormSubmitResult } from "../../form/formSubmit";
-import { parseMutation } from "cms-content/blocs/core/markup/bindings";
+import { parseMutation } from "cms-content/blocs/core/markup/bindings/operation/query";
 
 const submittedControls = new WeakMap<HTMLFormElement, HTMLElement[]>();
 type MutationRunner = () => Promise<FormSubmitResult | null>;
