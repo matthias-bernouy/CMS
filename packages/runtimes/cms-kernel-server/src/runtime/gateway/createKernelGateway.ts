@@ -32,6 +32,7 @@ export function createKernelGateway(control: ControlProviderClient) {
                   access: capability.access,
                   version: route!.release.admission.release.version,
                   effect: capability.behavior.effect,
+                  ...(capability.behavior.effect === "command" ? { idempotency: capability.behavior.idempotency } : {}),
                   outputType: capability.output.type,
               }
             : null;
