@@ -8,9 +8,13 @@ test("official repository image keeps its production storage and secret boundari
     const dockerfile = await readFile(resolve(root, "infra/images/official-repository/Dockerfile"), "utf8");
 
     expect(dockerfile).toContain("oven/bun:1.4.2-alpine@sha256:");
+    expect(dockerfile).toContain('org.opencontainers.image.title="Ulvia Official Repository"');
     expect(dockerfile).toContain("--filter=@bernouy/official-repository-server");
     expect(dockerfile).toContain("USER bun");
     expect(dockerfile).toContain("ULVIA_REPOSITORY_DIR=/var/lib/ulvia-repository");
+    expect(dockerfile).toContain("ULVIA_REPOSITORY_SEED_DIR=/opt/ulvia-repository-seed");
+    expect(dockerfile).toContain("bootstrapOfficialRepository");
+    expect(dockerfile).toContain("/opt/ulvia-repository-seed/");
     expect(dockerfile).toContain('VOLUME ["/var/lib/ulvia-repository"]');
     expect(dockerfile).toContain("/healthz");
     expect(dockerfile).toContain('CMD ["bun", "run", "packages/runtimes/official-repository-server/src/index.ts"]');

@@ -5,6 +5,8 @@ COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
 COPY packages/ ./packages/
 RUN bun install --frozen-lockfile
 RUN bunx tsc --build packages/runtimes/official-repository-server
+RUN bun run generate:official-bootstrap
+RUN bun -e 'import { bootstrapOfficialRepository } from "./packages/runtimes/ulvia-cli/src/commands/bootstrap.ts"; await bootstrapOfficialRepository("/opt/ulvia-repository-seed")'
 
 FROM build AS runtime-source
 RUN rm -rf /app/node_modules /app/packages/*/*/node_modules
@@ -14,7 +16,7 @@ FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33d
 ARG IMAGE_VERSION=dev
 ARG VCS_REF=unknown
 
-LABEL org.opencontainers.image.title="@bernouy/official-repository-server" \
+LABEL org.opencontainers.image.title="Ulvia Official Repository" \
       org.opencontainers.image.description="Official immutable Ulvia repository runtime" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}"
@@ -22,6 +24,7 @@ LABEL org.opencontainers.image.title="@bernouy/official-repository-server" \
 WORKDIR /app
 COPY --chown=bun:bun --from=runtime-source /app/package.json /app/bun.lock /app/tsconfig.base.json /app/tsconfig.json ./
 COPY --chown=bun:bun --from=runtime-source /app/packages/ ./packages/
+COPY --chown=bun:bun --from=runtime-source /opt/ulvia-repository-seed/ /opt/ulvia-repository-seed/
 
 RUN install -d -o bun -g bun /var/lib/ulvia-repository && chown bun:bun /app
 USER bun
@@ -30,7 +33,8 @@ RUN bun install --frozen-lockfile --production --omit=peer --filter=@bernouy/off
 ENV NODE_ENV=production \
     REPOSITORY_HOST=0.0.0.0 \
     REPOSITORY_PORT=3000 \
-    ULVIA_REPOSITORY_DIR=/var/lib/ulvia-repository
+    ULVIA_REPOSITORY_DIR=/var/lib/ulvia-repository/current \
+    ULVIA_REPOSITORY_SEED_DIR=/opt/ulvia-repository-seed
 
 VOLUME ["/var/lib/ulvia-repository"]
 EXPOSE 3000
