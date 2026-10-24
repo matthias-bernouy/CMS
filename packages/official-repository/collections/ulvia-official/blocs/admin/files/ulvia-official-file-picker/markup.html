@@ -1,0 +1,40 @@
+<div
+    part="content"
+    cms-query="ulvia.cms.files:workspace.get as filePicker"
+    cms-query-input='{"offset":{"from":"literal","value":0},"limit":{"from":"literal","value":100}}'
+    cms-query-listen="@page:ulvia-official-files-mutation/lastSuccess/requestId"
+>
+    <p part="status" role="status" aria-live="polite" cms-condition="filePicker.activity === 'fetching'">
+        {{ cms.i18n.ulvia-official.ui-loading-files }}
+    </p>
+    <div cms-match="filePicker.outcome.kind">
+        <span cms-case='"none"' hidden></span>
+        <div part="error" role="alert" cms-case='"error"' cms-match="filePicker.outcome.code">
+            <p cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-the-author-library-could-not-be-read }}</p>
+            <p cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-the-author-library-could-not-be-read }}</p>
+        </div>
+        <div part="library" cms-case='"success"'>
+            <button
+                part="item"
+                cms-repeat="filePicker.data.items as file"
+                cms-condition="file.visibility === 'public' && (file.mimeType === 'image/avif' || file.mimeType === 'image/gif' || file.mimeType === 'image/jpeg' || file.mimeType === 'image/png' || file.mimeType === 'image/svg+xml' || file.mimeType === 'image/webp')"
+                data-file-path="{{ file.path }}"
+                data-file-name="{{ file.name }}"
+                data-file-mime-type="{{ file.mimeType }}"
+                type="button"
+            >
+                <span part="thumbnail" cms-bloc="ulvia-official-image" ratio="square">
+                    <img src="{{ file.path | internalUrl }}" alt="" role="presentation" aria-hidden="true" loading="lazy" decoding="async">
+                </span>
+                <span part="name">{{ file.name }}</span>
+                <span part="type">{{ file.mimeType }}</span>
+            </button>
+            <p part="empty" cms-condition="filePicker.data.items.length === 0">
+                {{ cms.i18n.ulvia-official.ui-this-folder-is-empty }}
+            </p>
+        </div>
+        <div part="error" role="alert" cms-case='"failure"'>
+            <p>{{ cms.i18n.ulvia-official.ui-the-author-library-could-not-be-read }}</p>
+        </div>
+    </div>
+</div>

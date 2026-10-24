@@ -1,0 +1,66 @@
+:scope {
+    display: block;
+    min-width: 0;
+}
+
+[part~="content"] {
+    max-height: min(36rem, calc(100dvh - 11rem));
+    overflow: auto;
+}
+
+[part~="library"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: var(--ulvia-official-spacing-sm, 0.75rem);
+}
+
+[part~="item"] {
+    display: grid;
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
+    min-width: 0;
+    padding: var(--ulvia-official-spacing-xs, 0.5rem);
+    border: 1px solid var(--ulvia-official-border-subtle, #d8ddda);
+    border-radius: var(--ulvia-official-radius-sm, 0.5rem);
+    color: inherit;
+    background: var(--ulvia-official-background-base, #fff);
+    text-align: start;
+    cursor: pointer;
+}
+
+[part~="item"]:hover {
+    border-color: var(--ulvia-official-primary, #126b57);
+    background: var(--ulvia-official-background-subtle, #f4f5f7);
+}
+
+[part~="item"]:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--ulvia-official-primary, #126b57) 30%, transparent);
+    outline-offset: 2px;
+}
+
+[part~="thumbnail"] {
+    width: 100%;
+}
+
+[part~="name"],
+[part~="type"] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+[part~="name"] {
+    font-weight: 650;
+}
+
+[part~="type"] {
+    color: var(--ulvia-official-text-muted, #66716c);
+    font-size: var(--ulvia-official-font-size-xs, 0.75rem);
+}
+
+[part~="status"],
+[part~="error"],
+[part~="empty"] {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: var(--ulvia-official-spacing-md, 1rem);
+}

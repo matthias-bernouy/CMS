@@ -1,0 +1,21 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-file-picker",
+    "label": "bloc.file-picker.label",
+    "description": "bloc.file-picker.description",
+    "category": "bloc.category.administration",
+    "order": 11,
+    "catalogue": "hidden",
+    "uses": ["ulvia-official-action", "ulvia-official-heading", "ulvia-official-image"],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.get",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
+}
