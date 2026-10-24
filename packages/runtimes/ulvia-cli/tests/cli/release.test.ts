@@ -58,7 +58,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
         await runCli(["prune"], options);
         expect(await repository.list()).toEqual([]);
         expect(await readdir(join(data, "repository"))).toEqual([]);
-        expect(await readdir(join(data, "dev"))).toContain("mongo");
+        expect(await readdir(join(data, "services"))).toContain("mongo");
     } finally {
         await rm(data, { recursive: true, force: true });
     }

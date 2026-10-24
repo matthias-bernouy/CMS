@@ -1,18 +1,21 @@
-import { devCommand } from "./commands/dev";
+import { localCommand } from "./commands/local";
 import { pruneCommand } from "./commands/prune";
 import { releaseCommand } from "./commands/release";
 import { remoteCommand } from "./commands/remote";
 import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
-import { ensureUlviaPaths } from "./runtime/paths";
-import { createProjectEnvironment, resolveCommandPaths } from "./runtime/dev/projectEnvironment";
+import { ensureUlviaPaths, resolveUlviaPaths } from "./runtime/paths";
 
-const HELP = `Ulvia local CMS CLI
+const HELP = `Ulvia CMS CLI
 
 Usage:
-  ulvia dev [status | credentials | stop]
-  ulvia dev logs [all | kernel | provider | repository | supervisor] [filters] [--json] [--stack] [--follow]
-  ulvia dev new [--data-dir <absolute-data-directory>]
-  ulvia dev reset --yes
+  ulvia start
+  ulvia configure network [network options]
+  ulvia services <start | stop | status | upgrade | logs>
+  ulvia instance create <name> [--label <label>] [--domain <domain>]
+  ulvia instance <start | stop | status | upgrade | credentials | logs> <name>
+  ulvia instance list
+  ulvia instance delete <name> --yes
+  ulvia reset --yes
   ulvia release <resource-directory>
   ulvia push <kind> <publisher/id@version> --repository <url>
   ulvia pull <kind> <publisher/id@version> --repository <url>
@@ -21,23 +24,27 @@ Usage:
   ulvia prune
 
 Commands:
-  dev        Run, inspect, create, or reset a persistent local CMS development stack
-  release    Validate and store an immutable collection, contract, or provider manifest
-  push       Publish one exact local release to a remote repository
-  pull       Validate and store one exact remote release locally
-  yank       Hide a remote release from new catalogue resolutions
-  restore    Make a yanked remote release resolvable again
-  prune      Remove all local repository contents
+  start        Start shared services and every existing instance
+  configure    Configure persistent network exposure and TLS before creating instances
+  services     Manage the shared proxy, MongoDB, Repository, and Provider
+  instance     Create and manage independent Kernel instances
+  reset        Delete all instances, services data, and repository releases after --yes
+  release      Validate and store an immutable collection, contract, or provider manifest
+  push         Publish one exact local release to a remote repository
+  pull         Validate and store one exact remote release locally
+  yank         Hide a remote release from new catalogue resolutions
+  restore      Make a yanked remote release resolvable again
+  prune        Remove all local repository contents
 
 Environment:
-  ULVIA_DATA_DIR          Absolute persistent data directory override
-  ULVIA_DEV_KERNEL_PORT   Local Kernel port
-  ULVIA_DEV_MONGO_PORT    Local MongoDB port
-  ULVIA_DEV_REPOSITORY_PORT Local collection repository port
+  ULVIA_DATA_DIR            Absolute persistent data directory override
+  ULVIA_HTTP_PORT           Initial HTTP proxy port (tests and isolated installations)
+  ULVIA_REPOSITORY_PORT     Initial collection repository port
+  ULVIA_PROVIDER_PORT       Initial Provider management port
   ULVIA_REPOSITORY_URL      Default remote repository URL
   ULVIA_REPOSITORY_TOKEN    Remote repository write token
   ULVIA_LOG_LEVEL           Runtime log threshold (trace through fatal)
-  ULVIA_LOG_CONSOLE_LEVEL   Development terminal threshold (trace through fatal)
+  ULVIA_LOG_CONSOLE_LEVEL   Local terminal threshold (trace through fatal)
   ULVIA_LOG_FORMAT          Runtime terminal format (pretty or json)
 `;
 
@@ -59,23 +66,15 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         log("0.1.0");
         return;
     }
-    if (!["dev", "release", "push", "pull", "yank", "restore", "prune"].includes(command)) {
+    if (![...LOCAL_COMMANDS, "release", "push", "pull", "yank", "restore", "prune"].includes(command)) {
         throw new Error(`Unknown command: ${command}`);
     }
     const environment = options.environment ?? process.env;
     const cwd = options.cwd ?? process.cwd();
-    if (command === "dev" && args[1] === "new") {
-        const dataDirectory = parseNewDataDirectory(args.slice(2));
-        const created = await createProjectEnvironment(cwd, environment, options.home, dataDirectory);
-        log(`Created Ulvia environment for ${created.projectRoot}`);
-        log(`Persistent data: ${created.paths.data}`);
-        await devCommand([], created.paths, log, environment);
-        return;
-    }
-    const paths = await resolveCommandPaths(cwd, environment, options.home);
+    const paths = resolveUlviaPaths(environment, options.home);
     await ensureUlviaPaths(paths);
-    if (command === "dev") {
-        await devCommand(args.slice(1), paths, log, environment);
+    if (LOCAL_COMMANDS.has(command)) {
+        await localCommand(command, args.slice(1), paths, log, environment);
         return;
     }
     const repository = new LocalCollectionRepository(paths.repository);
@@ -90,12 +89,4 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     await pruneCommand(args.slice(1), repository, log);
 }
 
-function parseNewDataDirectory(args: readonly string[]): string | undefined {
-    if (args.length === 0) {
-        return undefined;
-    }
-    if (args.length === 2 && args[0] === "--data-dir" && args[1]) {
-        return args[1];
-    }
-    throw new Error("Usage: ulvia dev new [--data-dir <absolute-data-directory>]");
-}
+const LOCAL_COMMANDS = new Set(["start", "configure", "services", "instance", "reset"]);
