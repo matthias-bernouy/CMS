@@ -14,10 +14,11 @@
     position: relative;
     display: block;
     min-width: 0;
+    min-inline-size: var(--ulvia-official-select-min-inline-size, 7rem);
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="control"] {
+[part~="control"] {
     position: relative;
     display: block;
 }
@@ -41,7 +42,7 @@ select {
     overflow: hidden;
     clip-path: inset(50%);
 }
-[part="trigger"] {
+[part~="trigger"] {
     display: grid;
     width: 100%;
     height: var(--ulvia-official-select-height);
@@ -61,12 +62,12 @@ select {
     text-align: start;
     cursor: pointer;
 }
-[part="value"] {
+[part~="value"] {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-[part="indicator"] {
+[part~="indicator"] {
     width: 1.125rem;
     height: 1.125rem;
     color: var(--ulvia-official-text-muted, #68766f);
@@ -75,19 +76,19 @@ select {
     -webkit-mask: url("{{ cms.asset.ulvia-official.icons/controls/chevron-down.svg }}") center / contain no-repeat;
     mask: url("{{ cms.asset.ulvia-official.icons/controls/chevron-down.svg }}") center / contain no-repeat;
 }
-:scope[data-open] [part="indicator"] {
+:scope[data-open] [part~="indicator"] {
     transform: rotate(180deg);
 }
-[part="trigger"]:hover:not(:disabled) {
+[part~="trigger"]:hover:not(:disabled) {
     border-color: var(--ulvia-official-border-strong, #737985);
 }
-[part="trigger"]:focus-visible {
+[part~="trigger"]:focus-visible {
     border-color: var(--ulvia-official-primary, #086c55);
     outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring, #167c5e) 28%, transparent);
     outline-offset: 1px;
     box-shadow: 0 0 0 1px var(--ulvia-official-primary, #086c55);
 }
-[part="popover"] {
+[part~="popover"] {
     position: absolute;
     z-index: 30;
     inset-block-start: calc(100% + var(--ulvia-official-spacing-xs, 0.5rem));
@@ -99,16 +100,16 @@ select {
     background: var(--ulvia-official-background-raised, Canvas);
     box-shadow: var(--ulvia-official-shadow-lg, 0 1rem 2.5rem rgb(23 33 30 / 16%));
 }
-[part="popover"][hidden] {
+[part~="popover"][hidden] {
     display: none;
 }
-[part="listbox"] {
+[part~="listbox"] {
     display: grid;
     max-height: 18rem;
     gap: var(--ulvia-official-spacing-3xs, 0.25rem);
     overflow-y: auto;
 }
-[part="option"] {
+[part~="option"] {
     display: flex;
     width: 100%;
     min-height: var(--ulvia-official-select-height);
@@ -124,12 +125,12 @@ select {
     text-align: start;
     cursor: pointer;
 }
-[part="option"]:hover,
-[part="option"][data-active] {
+[part~="option"]:hover,
+[part~="option"][data-active] {
     color: var(--ulvia-official-on-primary-subtle, #075642);
     background: var(--ulvia-official-primary-subtle, #dff3ed);
 }
-[part="option"][aria-selected="true"]::after {
+[part~="option"][aria-selected="true"]::after {
     width: 1rem;
     height: 1rem;
     margin-inline-start: auto;
@@ -139,14 +140,14 @@ select {
     -webkit-mask: url("{{ cms.asset.ulvia-official.icons/feedback/check.svg }}") center / contain no-repeat;
     mask: url("{{ cms.asset.ulvia-official.icons/feedback/check.svg }}") center / contain no-repeat;
 }
-[part="option"]:disabled {
+[part~="option"]:disabled {
     cursor: not-allowed;
     opacity: 0.5;
 }
-:scope[data-invalid] [part="trigger"] {
+:scope[data-invalid] [part~="trigger"] {
     border-color: var(--ulvia-official-danger-border, #b42318);
 }
-:scope[data-disabled] [part="trigger"] {
+:scope[data-disabled] [part~="trigger"] {
     color: var(--ulvia-official-text-disabled, #858b95);
     background: var(--ulvia-official-background-subtle, #f4f5f7);
     cursor: not-allowed;
