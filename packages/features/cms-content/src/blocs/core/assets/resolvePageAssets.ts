@@ -1,5 +1,6 @@
 import { getOrGenerateEntryAsync, type Cache } from "@bernouy/http-runner";
 import type { ContentReader, RenderableBloc } from "cms-content/application/interfaces/ContentReader";
+import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
 import { generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 import { generateStyleEntry } from "cms-content/theme/core/generateStyleEntry";
 import {
@@ -14,6 +15,7 @@ import {
     loadBlocRuntimeEntry,
 } from "cms-content/runtime-assets/runtimeAssets";
 import { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
+import type { BlocViewCache } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
 
 /**
  * Content-addressed URLs for every asset a page references. The hash is the
@@ -39,21 +41,11 @@ export type AssetsManifest = {
 };
 
 /**
- * Runtime asset resolution: loads prebuilt browser runtimes, warms the kernel
- * cache on miss and produces
- * hashed URLs under `<cmsPathPrefix>/`. Used by the live serving path; the
- * build pipeline has its own resolver that uploads to the CDN instead.
+ * Loads prebuilt browser runtimes, warms the Kernel cache and produces hashed
+ * URLs under `<cmsPathPrefix>/`; the build pipeline uploads its own entries.
  *
- * Bloc behavior ships as `/blocset` bundles chosen by the signature grouping (see
- * `blocGroupManifest`): the page's tags are mapped to the STABLE groups that
- * cover them, so a group bundle has the same content-hashed URL on every page
- * that uses it → cross-page / cross-visitor immutable cache reuse. Each group
- * is emitted whole (its full membership) — lossless, since co-signature blocs
- * always co-occur. Any tag the manifest doesn't yet know (a brand-new bloc, or
- * a manifest gone briefly stale) falls into one per-page bundle, so rendering
- * is always correct; when the manifest is empty this degrades cleanly to a
- * single per-page bundle. The per-bloc `/bloc?tag=` endpoint stays for the
- * editor/dev (unhashed) path.
+ * Bloc behavior ships as stable signature-group `/blocset` bundles. Unknown
+ * tags fall into one per-page bundle, while `/bloc?tag=` remains editor-only.
  *
  * Parallel resolution is a no-op on the warm path and only pays when the
  * process just started.
@@ -62,6 +54,9 @@ export type PageAssetContext = {
     content: ContentReader;
     cache: Cache;
     cmsPathPrefix: string;
+    renderingSettings?: RenderingSettings;
+    contentRevision?: number | string;
+    blocViews?: BlocViewCache;
     resolveContributedAssets(input: string): Promise<string>;
 };
 
@@ -75,19 +70,24 @@ export async function resolvePageAssets(
     const blocRuntimeCacheEntryKey = blocRuntimeCacheKey(blocRuntimeJsUrl);
     const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
     const bindingCoreJsCacheKey = CMS_CACHE_KEYS.js(bindingCoreJsUrl);
-    const collectionRevision = (await context.content.getContentRevision?.()) ?? 0;
+    const collectionRevision = context.contentRevision ?? (await context.content.getContentRevision?.()) ?? 0;
     const collectionRevisionDigest = await digestContentRevision(collectionRevision);
     const renderingRevision = (await context.content.getRenderingRevision?.()) ?? collectionRevision;
     const renderingRevisionDigest = await digestContentRevision(renderingRevision);
     const collectionAssetReader = {
         getBlocViewJS: async (tag: string) => {
-            const source = await context.content.getBlocViewJS(tag);
+            const source = await (context.blocViews?.get(tag) ?? context.content.getBlocViewJS(tag));
             return source ? context.resolveContributedAssets(source) : null;
         },
     };
 
     const renderableBlocs = renderableBlocSnapshot ?? (await context.content.getRenderableBlocs());
-    const manifest = await getBlocGroupManifest(context.content, collectionRevision, renderableBlocs);
+    const manifest = await getBlocGroupManifest(
+        context.content,
+        collectionRevision,
+        renderableBlocs,
+        context.blocViews,
+    );
     const blocsById = new Map(renderableBlocs.map((bloc) => [bloc.id, bloc]));
 
     // Partition the page's blocs into the stable signature groups that cover
@@ -103,8 +103,7 @@ export async function resolvePageAssets(
         }
     }
 
-    // One sorted tag set per bundle. Deterministic order → a stable <script>
-    // sequence. Group tags come from the manifest (already the full group);
+    // Group tags come from the manifest (already the full group);
     // the uncovered remainder is its own per-page bundle.
     const candidateBundles: string[][] = [
         ...[...groupIds].sort().map((gid) => manifest.groups.get(gid)!),
@@ -119,7 +118,13 @@ export async function resolvePageAssets(
         getOrGenerateEntryAsync(blocRuntimeCacheEntryKey, context.cache, loadBlocRuntimeEntry),
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, context.cache, loadBindingCoreRuntimeEntry),
         getOrGenerateEntryAsync(CMS_CACHE_KEYS.style(renderingRevisionDigest), context.cache, () =>
-            generateStyleEntry(context.content, [], context.resolveContributedAssets),
+            generateStyleEntry(
+                context.renderingSettings
+                    ? { getRenderingSettings: async () => context.renderingSettings! }
+                    : context.content,
+                [],
+                context.resolveContributedAssets,
+            ),
         ),
         Promise.all(
             behaviorBundles.map((tags) =>

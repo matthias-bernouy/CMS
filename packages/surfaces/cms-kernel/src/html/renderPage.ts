@@ -34,7 +34,7 @@ export async function renderPage(
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     const head = document.head;
 
-    const storedSettings = await ctx.content.getRenderingSettings();
+    const storedSettings = ctx.renderingSettings ?? (await ctx.content.getRenderingSettings());
     const settings = runtimeMetadata.language
         ? { ...storedSettings, site: { ...storedSettings.site, language: runtimeMetadata.language } }
         : storedSettings;
@@ -53,7 +53,7 @@ export async function renderPage(
         },
     });
     const usedTags = [...rendered.usedTags];
-    const assets = await ctx.resolveAssets(usedTags, rendered.renderableBlocs);
+    const assets = await ctx.resolveAssets(usedTags, rendered.renderableBlocs, rendered.blocViews);
     const requiresBindingRuntime = rendered.requiresBindingRuntime;
 
     // Whitelist asset hosts in CSP. When the build pipeline pre-uploads CSS

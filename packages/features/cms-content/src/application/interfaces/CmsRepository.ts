@@ -142,9 +142,11 @@ export interface CmsRepository {
     ): Promise<PageScan>;
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPageById(id: string): Promise<TPage | null>;
+    getPublishedPagesByIds?(ids: readonly string[]): Promise<TPage[]>;
     getPublishedPages(): Promise<TPage[]>;
     /** Editorial route record access. Public consumers use `resolvePublishedRoute`. */
     getPageRoute(path: string): Promise<PageRoute | null>;
+    getPageRoutes?(paths: readonly string[]): Promise<PageRoute[]>;
     insertPage(path: string, title: string, content?: string, options?: PageCreateOptions): Promise<void>;
     updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null>;
     deletePage(id: string, expectedRevision?: number): Promise<void>;

@@ -10,14 +10,11 @@ export async function resolveRuntimePageIndexingMetadata(
     page: TPage,
     kernel: KernelCms,
 ): Promise<PageIndexingMetadataResult> {
-    const actor = await indexingActor(kernel, request);
-    return resolvePageIndexingMetadata(request, page, (contractId, capabilityId, input) =>
-        executeIndexingCapability(kernel.capabilityGateway, actor, contractId, capabilityId, input),
-    );
-}
-
-async function indexingActor(kernel: KernelCms, request: Request): Promise<GatewayActor> {
-    return resolveRequestActor(kernel, request);
+    let actor: Promise<GatewayActor> | undefined;
+    return resolvePageIndexingMetadata(request, page, async (contractId, capabilityId, input) => {
+        actor ??= resolveRequestActor(kernel, request);
+        return executeIndexingCapability(kernel.capabilityGateway, await actor, contractId, capabilityId, input);
+    });
 }
 
 export async function executeIndexingCapability(

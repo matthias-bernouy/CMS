@@ -89,7 +89,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
 
     async invoke(value: GatewayInvocation): Promise<GatewayResult> {
         const invocation = snapshotInvocation(value);
-        const { route, instanceId, release, capability, binding } = await this.#authorizedRoute(invocation);
+        const { route, instanceId, release, capability, binding } = await this.#authorizedRoute(invocation, false);
         assertActorCredentialTarget(invocation, capability);
         const input = snapshotInput(invocation.input, capability);
         const subjectId = await this.#providerSubjectId(invocation.actor, capability, route);
@@ -195,7 +195,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
         }
     }
 
-    async #authorizedRoute(value: Omit<GatewayInvocation, "input">): Promise<AuthorizedRoute> {
+    async #authorizedRoute(value: Omit<GatewayInvocation, "input">, verifyCurrent = true): Promise<AuthorizedRoute> {
         const route = await this.#options.routes.resolve(value.siteId, value.contractId);
         if (!route) {
             throw new GatewayError("not_selected", "site has no selected release for this contract");
@@ -232,7 +232,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (!(await this.#options.authorize(value.actor, capability, route))) {
             throw new GatewayError("not_authorized", "host grant denied this capability");
         }
-        if (!(await this.#options.routes.isCurrent(route))) {
+        if (verifyCurrent && !(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or installation changed during access check");
         }
         return { route, instanceId, release: route.release.admission.release, capability, binding };

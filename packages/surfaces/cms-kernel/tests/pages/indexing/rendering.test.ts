@@ -9,6 +9,33 @@ const gateway = (output: unknown, status = 200): GatewayInvoker => ({
 });
 
 describe("Kernel dynamic page metadata", () => {
+    test("does not resolve an actor for static indexing metadata", async () => {
+        let actorResolutions = 0;
+        const mounted = mountPublicPages({
+            storedPages: [
+                {
+                    id: "static",
+                    revision: 1,
+                    path: "/static",
+                    title: "Static",
+                    description: "Static page",
+                    content: "<p>Static</p>",
+                    visible: true,
+                    tags: [],
+                },
+            ],
+            resolveActor: async () => {
+                actorResolutions += 1;
+                return { kind: "anonymous" };
+            },
+        });
+
+        const response = await mounted.get(new Request("https://example.test/static"));
+
+        expect(response.status).toBe(200);
+        expect(actorResolutions).toBe(0);
+    });
+
     test("renders gateway variables and a canonical without path caching", async () => {
         const calls: unknown[] = [];
         const mounted = mountPublicPages({
