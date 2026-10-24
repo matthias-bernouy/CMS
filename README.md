@@ -50,7 +50,7 @@ CmsCore/
 |   `-- official-repository/   Authored official releases
 |
 |-- infra/
-|   `-- images/cms/
+|   `-- images/             Separate Kernel, Provider and Repository images
 |
 |-- build.ts
 |-- tsconfig.base.json
@@ -95,15 +95,13 @@ straight to `src/` outside the explicit `cms-content` browser bundles.
 
 ## Deployment
 
-`infra/images/cms/` ships the deployment artefact: a `Dockerfile` containing
-the two independent server entrypoints, a stateless per-instance Kernel
-`compose.yml`, and a shared `infra/compose.yml` (`nginx-proxy` +
-`acme-companion` + `mongo` + repository + Provider). The design hosts **many
-instances on one server**: durable instance data and files remain behind the
-Provider, while each domain routes published and administrative Pages to its
-own Kernel process.
-See [`infra/images/cms/README.md`](./infra/images/cms/README.md) for the
-quick start.
+`infra/images/` ships distinct Kernel, Provider and Official Repository images.
+The Ulvia CLI owns one parameterized Compose definition for loopback and public
+installations. The design hosts **many instances on one server**: durable
+instance data and files remain behind the Provider, while each domain routes
+published and administrative Pages to its own Kernel process. Network binding,
+ports and ACME TLS are persisted installation configuration rather than a
+runtime development/production switch.
 
 ## License
 

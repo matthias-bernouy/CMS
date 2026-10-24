@@ -122,7 +122,7 @@ there is no aggregate instance-runtime package shared by both processes.
 `cms-kernel-server` and `ulvia-provider-server` each read their own environment,
 mount exactly one surface and start one listener. The Kernel runtime is
 stateless; the Provider runtime selects every persistent adapter. `ulvia-cli`
-manages the persistent local development stack and supervises both processes.
+manages the persistent local container stack; it does not supervise application processes.
 `official-repository-server` mounts the public immutable
 repository and its signed publication protocol over one persistent production
 volume; authored official releases remain separate publication inputs. New

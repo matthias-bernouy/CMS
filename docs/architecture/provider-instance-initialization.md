@@ -24,27 +24,37 @@ state, installation state and migration journals remain behind contracts. Kernel
 knows neither the Provider operator secret nor another instance's identity or
 credentials.
 
-## Local Flow
+## Installation Flow
 
-`ulvia dev new` associates the current project with a private environment and
-starts this sequence:
+The CLI manages one shared-services Compose project and one Kernel project per
+named instance. The same projects support a loopback installation or explicit
+public binding with ACME TLS; there is no separate production mode. Shared
+services must already be running (`ulvia start` on a
+fresh installation, or `ulvia services start`). `ulvia instance create <name>`
+then performs the following sequence:
 
-1. Prepare and start the local immutable repository.
-2. Start Ulvia Provider with its durable control-plane database, files root,
-   encryption key and operator secret.
-3. Call `POST /ulvia/operator/instances` with the operator Bearer, a stable
+1. Verify that the shared Provider is healthy and read its private operator
+   connection from the local services state.
+2. Call `POST /ulvia/operator/instances` with the operator Bearer, a stable
    idempotency key, Kernel URL and initial administrator credentials.
-4. Let the Provider create or resume the instance, generate its opaque token and
+3. Let the Provider create or resume the instance, generate its opaque token and
    isolated storage key, then install the exact official profile.
-5. Persist the returned Kernel connection inside the private environment.
-6. Start Kernel with its public URL, installations Provider URL and
+4. Persist the returned Kernel connection inside the private named-instance directory.
+5. Start the deployment Kernel image with its public URL, installations Provider URL and
    `CMS_INSTALLATIONS_PROVIDER_TOKEN` only.
-7. Report readiness after Kernel can authenticate and serve the installed
-   official Pages.
+6. Report readiness only after the Kernel health endpoint is reachable through
+   the shared proxy.
 
-Repeating `ulvia dev` reuses the same instance. Restart reopens persisted stores
-and resumes recoverable transitions without provisioning a second instance.
-`ulvia dev reset --yes` deliberately clears the selected local environment;
+Repeating `ulvia start` starts the shared services and every previously created
+Kernel without calling the provisioning endpoint again. `ulvia services ...`
+manages the shared services without changing Kernel containers, while
+`ulvia instance ... <name>` creates, starts, stops, upgrades and deletes Kernels
+independently. Nginx routes names through the configured shared ports. Instances
+default to `<name>.localhost`; public instances receive an explicit immutable
+domain during provisioning.
+The CLI itself owns no server process: it only drives Compose. Restart reopens
+persisted stores and resumes recoverable transitions.
+`ulvia reset --yes` deliberately clears every local instance and shared store;
 ordinary startup never repairs incompatible encrypted state by deleting it.
 
 ## Operator API
@@ -65,18 +75,18 @@ registry stores only the incoming token hash and the encrypted secrets needed
 inside the Provider. The raw access token has no claims; Provider resolves it
 server-side and never asks Kernel for an instance ID header.
 
-## Production Composition
+## Public Composition
 
-Deployment automation provisions in two phases:
+Public installation uses the same CLI flow in two phases:
 
 1. start the repository and Provider, then create the instance through the
    operator API;
-2. start one Kernel with the returned access token and the Provider's private
-   network URL.
+2. start one Kernel with the returned access token, canonical domain and the
+   Provider's private network URL.
 
 Ulvia Provider needs access to its control-plane database and isolated instance
-databases. Those credentials are never passed to Kernel. See the
-[deployment guide](../../infra/images/cms/README.md).
+databases. Its MongoDB account is provisioned idempotently before the Provider
+starts and those credentials are never passed to Kernel.
 
 ## Recovery And Limits
 

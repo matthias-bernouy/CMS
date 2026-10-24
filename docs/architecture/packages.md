@@ -77,7 +77,7 @@ and serves admitted copies from a separate persistent volume.
 | `@bernouy/cms-kernel-server` | Stateless HTTP composition for one pre-provisioned instance, connected only by Provider URL and opaque instance access token. |
 | `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, instance-scoped persistence/auth/gateway/files, exact profile transitions and recovery, operator API and Ulvia Provider listener. |
 | `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
-| `@bernouy/ulvia-cli` | Persistent local repository/Provider/Kernel development stack, including idempotent instance provisioning. |
+| `@bernouy/ulvia-cli` | Persistent local repository/Provider/Kernel container stack, including idempotent instance provisioning. |
 
 See [workspace architecture](README.md) for dependency direction and
 [repository and gateway flows](../providers/README.md) for runtime wiring.
