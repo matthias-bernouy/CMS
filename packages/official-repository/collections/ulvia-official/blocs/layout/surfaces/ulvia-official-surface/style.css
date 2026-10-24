@@ -8,7 +8,7 @@
     display: block;
 }
 
-[part="surface"] {
+[part~="surface"] {
     min-width: 0;
     min-height: 100%;
     box-sizing: border-box;

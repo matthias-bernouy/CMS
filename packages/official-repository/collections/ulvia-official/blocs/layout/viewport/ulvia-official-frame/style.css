@@ -5,7 +5,7 @@
     display: block;
 }
 
-[part="frame"] {
+[part~="frame"] {
     aspect-ratio: var(--ulvia-official-frame-ratio);
     border-radius: var(--ulvia-official-frame-radius);
     overflow: clip;

@@ -7,7 +7,7 @@
     display: inline-block;
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="control"] {
+[part~="control"] {
     position: relative;
     display: inline-grid;
     width: var(--ulvia-official-toggle-hit-width);
@@ -24,7 +24,7 @@ input {
     appearance: none;
     cursor: pointer;
 }
-[part="track"] {
+[part~="track"] {
     position: relative;
     display: block;
     width: var(--ulvia-official-toggle-track-width);
@@ -38,7 +38,7 @@ input {
         border-color var(--ulvia-official-duration-fast, 120ms),
         background-color var(--ulvia-official-duration-fast, 120ms);
 }
-[part="thumb"] {
+[part~="thumb"] {
     position: absolute;
     inset-block-start: 50%;
     inset-inline-start: -0.1875rem;
@@ -55,11 +55,11 @@ input {
         border-color var(--ulvia-official-duration-fast, 120ms),
         transform var(--ulvia-official-duration-fast, 120ms);
 }
-:scope[data-checked] [part="track"] {
+:scope[data-checked] [part~="track"] {
     border-color: transparent;
     background: var(--ulvia-official-primary, #086c55);
 }
-:scope[data-checked] [part="thumb"] {
+:scope[data-checked] [part~="thumb"] {
     inset-inline-start: calc(100% - var(--ulvia-official-toggle-thumb-size) + 0.1875rem);
     border-color: color-mix(
         in srgb,
@@ -67,18 +67,18 @@ input {
         var(--ulvia-official-background-surface, #fff)
     );
 }
-:scope:hover:not([data-disabled]) [part="thumb"] {
+:scope:hover:not([data-disabled]) [part~="thumb"] {
     transform: translateY(-50%) scale(1.06);
 }
-:scope:focus-within [part="track"] {
+:scope:focus-within [part~="track"] {
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: 3px;
 }
-:scope[data-invalid] [part="track"] {
+:scope[data-invalid] [part~="track"] {
     outline: 2px solid var(--ulvia-official-danger-border, #b42318);
     outline-offset: 2px;
 }
-:scope[data-disabled] [part="control"] {
+:scope[data-disabled] [part~="control"] {
     cursor: not-allowed;
     opacity: 0.55;
 }

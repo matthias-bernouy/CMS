@@ -4,7 +4,7 @@
     text-align: inherit;
 }
 
-[part="cluster"] {
+[part~="cluster"] {
     display: flex;
     flex-wrap: wrap;
     gap: var(--ulvia-official-cluster-gap);
@@ -21,21 +21,21 @@
 :scope[gap="lg"] {
     --ulvia-official-cluster-gap: var(--ulvia-official-spacing-lg, 1.5rem);
 }
-:scope[items-align="start"] [part="cluster"] {
+:scope[items-align="start"] [part~="cluster"] {
     align-items: flex-start;
 }
-:scope[items-align="end"] [part="cluster"] {
+:scope[items-align="end"] [part~="cluster"] {
     align-items: flex-end;
 }
-:scope[items-align="stretch"] [part="cluster"] {
+:scope[items-align="stretch"] [part~="cluster"] {
     align-items: stretch;
 }
-:scope[justify="center"] [part="cluster"] {
+:scope[justify="center"] [part~="cluster"] {
     justify-content: center;
 }
-:scope[justify="end"] [part="cluster"] {
+:scope[justify="end"] [part~="cluster"] {
     justify-content: flex-end;
 }
-:scope[justify="between"] [part="cluster"] {
+:scope[justify="between"] [part~="cluster"] {
     justify-content: space-between;
 }

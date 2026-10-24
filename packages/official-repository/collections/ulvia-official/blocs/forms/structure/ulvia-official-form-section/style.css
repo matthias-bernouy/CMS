@@ -11,7 +11,7 @@
     container-type: inline-size;
 }
 
-[part="section"] {
+[part~="section"] {
     min-width: 0;
     box-sizing: border-box;
     padding: var(--ulvia-official-form-section-padding);
@@ -53,12 +53,12 @@ fieldset[part~="form-section"] {
 }
 
 @container (max-width: 30rem) {
-    [part="section"] {
+    [part~="section"] {
         --ulvia-official-form-section-padding: var(--ulvia-official-spacing-lg, 1.5rem);
         --ulvia-official-form-section-radius: var(--ulvia-official-radius-lg, 0.75rem);
     }
 
-    :scope[appearance="plain"] [part="section"] {
+    :scope[appearance="plain"] [part~="section"] {
         --ulvia-official-form-section-padding: 0;
     }
 }

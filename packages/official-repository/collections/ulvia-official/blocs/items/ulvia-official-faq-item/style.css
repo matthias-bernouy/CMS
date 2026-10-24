@@ -3,7 +3,7 @@
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="item"] {
+[part~="item"] {
     border-block-end: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #dfe2e7);
 }
 details {

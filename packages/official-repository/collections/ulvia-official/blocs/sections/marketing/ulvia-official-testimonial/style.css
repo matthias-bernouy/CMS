@@ -5,10 +5,10 @@
     font-family: var(--ulvia-official-font-family-main, inherit);
     container-type: inline-size;
 }
-[part="section"] {
+[part~="section"] {
     padding-block: var(--ulvia-official-section-spacing, 4rem);
 }
-[part="container"] {
+[part~="container"] {
     display: grid;
     width: min(100% - (2 * var(--ulvia-official-page-gutter, 1rem)), var(--ulvia-official-content-width-lg, 72rem));
     margin-inline: auto;
@@ -16,24 +16,24 @@
     gap: var(--ulvia-official-spacing-xl, 2rem);
     align-items: center;
 }
-[part="media"],
-[part="testimonial"] {
+[part~="media"],
+[part~="testimonial"] {
     margin: 0;
 }
-[part="media"] {
+[part~="media"] {
     width: 8rem;
 }
-[part="testimonial"] {
+[part~="testimonial"] {
     display: grid;
     gap: var(--ulvia-official-spacing-lg, 1.5rem);
 }
-[part="quote"] {
+[part~="quote"] {
     font-family: var(--ulvia-official-font-family-secondary, inherit);
     font-size: var(--ulvia-official-font-size-2xl, 1.75rem);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
     line-height: var(--ulvia-official-line-height-snug, 1.35);
 }
-[part="attribution"] {
+[part~="attribution"] {
     display: grid;
     gap: var(--ulvia-official-spacing-3xs, 0.25rem);
     color: var(--ulvia-official-text-secondary, #5b6472);
@@ -54,14 +54,14 @@
     color: var(--ulvia-official-text-inverse, #ffffff);
     background: var(--ulvia-official-background-inverse, #17191c);
 }
-:scope[surface="inverse"] [part="attribution"] {
+:scope[surface="inverse"] [part~="attribution"] {
     color: var(--ulvia-official-text-inverse, #ffffff);
 }
 @container (max-width: 36rem) {
-    [part="container"] {
+    [part~="container"] {
         grid-template-columns: minmax(0, 1fr);
     }
-    [part="media"] {
+    [part~="media"] {
         width: 6rem;
     }
 }

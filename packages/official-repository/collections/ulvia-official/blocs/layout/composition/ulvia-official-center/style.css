@@ -3,7 +3,7 @@
     display: block;
 }
 
-[part="center"] {
+[part~="center"] {
     width: min(100%, var(--ulvia-official-center-width));
     box-sizing: border-box;
     margin-inline: auto;
@@ -16,13 +16,13 @@
 :scope[width="lg"] {
     --ulvia-official-center-width: var(--ulvia-official-content-width-lg, 72rem);
 }
-:scope[text-align="center"] [part="center"] {
+:scope[text-align="center"] [part~="center"] {
     text-align: center;
 }
-:scope[text-align="end"] [part="center"] {
+:scope[text-align="end"] [part~="center"] {
     text-align: end;
 }
-:scope[intrinsic] [part="center"] {
+:scope[intrinsic] [part~="center"] {
     display: flex;
     flex-direction: column;
     align-items: center;

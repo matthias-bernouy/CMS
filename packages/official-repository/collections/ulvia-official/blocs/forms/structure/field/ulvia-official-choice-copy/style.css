@@ -4,25 +4,25 @@
     color: inherit;
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="copy"] {
+[part~="copy"] {
     display: grid;
     min-width: 0;
     padding-block-start: 0.3125rem;
     gap: var(--ulvia-official-spacing-3xs, 0.25rem);
 }
-[part="label"] {
+[part~="label"] {
     color: var(--ulvia-official-text-primary, CanvasText);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     line-height: var(--ulvia-official-line-height-snug, 1.35);
 }
-[part="help"] {
+[part~="help"] {
     color: var(--ulvia-official-text-muted, #68766f);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     font-weight: var(--ulvia-official-font-weight-regular, 400);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
-[part="label"]:empty,
-[part="help"]:empty {
+[part~="label"]:empty,
+[part~="help"]:empty {
     display: none;
 }

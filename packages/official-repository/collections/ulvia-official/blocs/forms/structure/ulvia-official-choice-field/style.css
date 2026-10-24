@@ -3,7 +3,7 @@
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="field"] {
+[part~="field"] {
     display: grid;
     gap: var(--ulvia-official-spacing-2xs, 0.375rem);
 }

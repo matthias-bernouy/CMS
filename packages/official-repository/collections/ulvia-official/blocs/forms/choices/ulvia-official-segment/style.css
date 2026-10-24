@@ -13,7 +13,7 @@
     font-family: var(--ulvia-official-font-family-main, inherit);
     transition: color var(--ulvia-official-duration-fast, 120ms);
 }
-[part="segment"] {
+[part~="segment"] {
     display: contents;
 }
 label[part~="segment"] {

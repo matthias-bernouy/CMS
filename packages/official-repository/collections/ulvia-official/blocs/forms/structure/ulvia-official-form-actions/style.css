@@ -4,16 +4,16 @@
     text-align: inherit;
     container-type: inline-size;
 }
-[part="actions"] {
+[part~="actions"] {
     display: flex;
     flex-wrap: wrap;
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
     align-items: center;
 }
-:scope[actions-align="center"] [part="actions"] {
+:scope[actions-align="center"] [part~="actions"] {
     justify-content: center;
 }
-:scope[actions-align="end"] [part="actions"] {
+:scope[actions-align="end"] [part~="actions"] {
     justify-content: flex-end;
 }
 :scope[wide] * {
@@ -21,7 +21,7 @@
     flex: 1 1 12rem;
 }
 @container (max-width: 24rem) {
-    :scope:not([responsive-layout="wrap"]) [part="actions"] {
+    :scope:not([responsive-layout="wrap"]) [part~="actions"] {
         align-items: stretch;
         flex-direction: column;
     }

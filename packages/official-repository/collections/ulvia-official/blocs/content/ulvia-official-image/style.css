@@ -12,7 +12,7 @@
     height: var(--ulvia-official-image-root-height, auto);
 }
 
-[part="frame"] {
+[part~="frame"] {
     display: block;
     overflow: hidden;
     aspect-ratio: var(--ulvia-official-image-ratio);

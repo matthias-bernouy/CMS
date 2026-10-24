@@ -4,7 +4,7 @@
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="plan"] {
+[part~="plan"] {
     display: flex;
     height: 100%;
     box-sizing: border-box;
@@ -15,15 +15,15 @@
     border-radius: var(--ulvia-official-radius-xl, 1rem);
     background: var(--ulvia-official-background-surface, Canvas);
 }
-[part="header"] {
+[part~="header"] {
     display: grid;
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
-[part="features"] {
+[part~="features"] {
     flex: 1;
     color: var(--ulvia-official-text-secondary, #5b6472);
 }
-[part="action"] {
+[part~="action"] {
     margin-block-start: auto;
 }
 [part~="name"],
@@ -37,7 +37,7 @@
     font-size: var(--ulvia-official-font-size-3xl, 2rem);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
 }
-:scope[featured] [part="plan"] {
+:scope[featured] [part~="plan"] {
     border-color: var(--ulvia-official-primary, #3157d5);
     box-shadow: var(--ulvia-official-shadow-lg, 0 12px 32px rgb(0 0 0 / 16%));
 }

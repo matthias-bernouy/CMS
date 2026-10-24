@@ -10,7 +10,7 @@
     min-width: 0;
 }
 
-[part="list"] {
+[part~="list"] {
     display: grid;
     min-width: 0;
     overflow: clip;
@@ -19,7 +19,7 @@
     background: var(--ulvia-official-background-base, #fff);
     box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(20 40 32 / 5%));
 }
-[part="header"] {
+[part~="header"] {
     padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
     border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-list-border);
     color: var(--ulvia-official-text-muted, #68766f);
@@ -28,18 +28,18 @@
     letter-spacing: var(--ulvia-official-letter-spacing-wide, 0.025em);
     text-transform: uppercase;
 }
-[part="header"]:has(slot:not(:has-slotted)) {
+[part~="header"]:has(slot:not(:has-slotted)) {
     display: none;
 }
 
-:scope[appearance="plain"] [part="list"] {
+:scope[appearance="plain"] [part~="list"] {
     overflow: visible;
     border: 0;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
 }
-:scope[appearance="plain"] [part="header"] {
+:scope[appearance="plain"] [part~="header"] {
     display: none;
 }
 :scope[appearance="plain"] {

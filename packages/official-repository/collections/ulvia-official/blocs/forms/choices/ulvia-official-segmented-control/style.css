@@ -17,7 +17,7 @@
     container-type: inline-size;
 }
 
-[part="control"] {
+[part~="control"] {
     min-width: 0;
 }
 

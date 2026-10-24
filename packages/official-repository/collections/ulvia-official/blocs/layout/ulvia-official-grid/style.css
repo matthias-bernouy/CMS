@@ -4,37 +4,37 @@
     container-type: inline-size;
 }
 
-[part="grid"] {
+[part~="grid"] {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
     gap: var(--ulvia-official-grid-gap);
     align-items: stretch;
 }
-:scope[columns="1"] [part="grid"] {
+:scope[columns="1"] [part~="grid"] {
     grid-template-columns: minmax(0, 1fr);
 }
-:scope[columns="2"] [part="grid"] {
+:scope[columns="2"] [part~="grid"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-:scope[columns="3"] [part="grid"] {
+:scope[columns="3"] [part~="grid"] {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-:scope[columns="4"] [part="grid"] {
+:scope[columns="4"] [part~="grid"] {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
-:scope[columns="5"] [part="grid"] {
+:scope[columns="5"] [part~="grid"] {
     grid-template-columns: repeat(5, minmax(0, 1fr));
 }
-:scope[columns="6"] [part="grid"] {
+:scope[columns="6"] [part~="grid"] {
     grid-template-columns: repeat(6, minmax(0, 1fr));
 }
-:scope[items-align="start"] [part="grid"] {
+:scope[items-align="start"] [part~="grid"] {
     align-items: start;
 }
-:scope[items-align="center"] [part="grid"] {
+:scope[items-align="center"] [part~="grid"] {
     align-items: center;
 }
-:scope[items-align="end"] [part="grid"] {
+:scope[items-align="end"] [part~="grid"] {
     align-items: end;
 }
 :scope[gap="none"] {
@@ -51,13 +51,13 @@
 }
 
 @container (max-width: 48rem) {
-    :scope[columns]:not([columns="1"]) [part="grid"] {
+    :scope[columns]:not([columns="1"]) [part~="grid"] {
         grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
     }
 }
 
 @media (max-width: 40rem) {
-    :scope[columns] [part="grid"] {
+    :scope[columns] [part~="grid"] {
         grid-template-columns: minmax(0, 1fr);
     }
 }

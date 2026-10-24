@@ -3,39 +3,39 @@
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="stat"] {
+[part~="stat"] {
     display: grid;
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
 }
-[part="value"] {
+[part~="value"] {
     color: var(--ulvia-official-primary, #3157d5);
     font-family: var(--ulvia-official-font-family-secondary, inherit);
     font-size: var(--ulvia-official-font-size-4xl, 2.5rem);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
     line-height: var(--ulvia-official-line-height-tight, 1.15);
 }
-[part="label"] {
+[part~="label"] {
     font-size: var(--ulvia-official-font-size-lg, 1.125rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
 }
-[part="description"] {
+[part~="description"] {
     color: var(--ulvia-official-text-secondary, #5b6472);
 }
 * {
     margin: 0;
 }
-:scope[text-align="center"] [part="stat"] {
+:scope[text-align="center"] [part~="stat"] {
     text-align: center;
 }
-:scope[text-align="end"] [part="stat"] {
+:scope[text-align="end"] [part~="stat"] {
     text-align: end;
 }
-:scope[size="sm"] [part="stat"] {
+:scope[size="sm"] [part~="stat"] {
     gap: var(--ulvia-official-spacing-2xs, 0.25rem);
 }
-:scope[size="sm"] [part="value"] {
+:scope[size="sm"] [part~="value"] {
     font-size: var(--ulvia-official-font-size-2xl, 1.5rem);
 }
-:scope[size="sm"] [part="label"] {
+:scope[size="sm"] [part~="label"] {
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }

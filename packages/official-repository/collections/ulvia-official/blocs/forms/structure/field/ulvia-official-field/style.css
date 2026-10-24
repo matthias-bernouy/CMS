@@ -7,13 +7,13 @@
     container-type: inline-size;
 }
 
-[part="field"] {
+[part~="field"] {
     display: grid;
     min-width: 0;
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
 }
 
-[part="heading"] {
+[part~="heading"] {
     display: flex;
     min-width: 0;
     align-items: center;
@@ -21,7 +21,7 @@
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 
-[part="heading-actions"] {
+[part~="heading-actions"] {
     display: flex;
     min-width: 0;
     align-items: center;
@@ -112,13 +112,13 @@ label[part~="field-label"] {
     color: var(--ulvia-official-danger, #b42318);
 }
 
-:scope[label-position="inline"] [part="field"] {
+:scope[label-position="inline"] [part~="field"] {
     grid-template-columns: minmax(7.5rem, 8rem) minmax(0, 1fr);
     align-items: center;
     column-gap: var(--ulvia-official-spacing-md, 1rem);
 }
 
-:scope[label-position="inline"] [part="heading"] {
+:scope[label-position="inline"] [part~="heading"] {
     grid-column: 1;
 }
 
@@ -131,7 +131,7 @@ label[part~="field-label"] {
     grid-column: 2;
 }
 
-:scope[label-position="hidden"] [part="heading"] {
+:scope[label-position="hidden"] [part~="heading"] {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -144,13 +144,13 @@ label[part~="field-label"] {
 }
 
 @container (max-width: 28rem) {
-    :scope[label-position="inline"] [part="field"] {
+    :scope[label-position="inline"] [part~="field"] {
         grid-template-columns: minmax(0, 1fr);
         align-items: stretch;
         column-gap: 0;
     }
 
-    :scope[label-position="inline"] [part="heading"],
+    :scope[label-position="inline"] [part~="heading"],
     :scope[label-position="inline"] [part~="field-control"],
     :scope[label-position="inline"] [part~="field-description"],
     :scope[label-position="inline"] [part~="field-error"] {

@@ -6,7 +6,7 @@
     container-type: inline-size;
 }
 
-[part="layout"] {
+[part~="layout"] {
     display: grid;
     grid-template-columns: minmax(0, var(--ulvia-official-detail-layout-detail-navigation-width)) minmax(0, 1fr) minmax(
             0,
@@ -15,9 +15,9 @@
     gap: var(--ulvia-official-detail-layout-detail-gap);
     align-items: start;
 }
-[part="navigation"],
-[part="main"],
-[part="aside"] {
+[part~="navigation"],
+[part~="main"],
+[part~="aside"] {
     min-width: 0;
 }
 :scope[navigation-width="sm"] {
@@ -40,29 +40,29 @@
 }
 
 @container (max-width: 64rem) {
-    [part="layout"] {
+    [part~="layout"] {
         grid-template-columns: minmax(0, var(--ulvia-official-detail-layout-detail-navigation-width)) minmax(0, 1fr);
     }
-    [part="aside"] {
+    [part~="aside"] {
         grid-column: 2;
     }
 }
 
 @container (max-width: 42rem) {
-    [part="layout"] {
+    [part~="layout"] {
         grid-template-columns: minmax(0, 1fr);
     }
-    [part="main"] {
+    [part~="main"] {
         order: 1;
     }
-    [part="aside"] {
+    [part~="aside"] {
         grid-column: auto;
         order: 2;
     }
-    [part="navigation"] {
+    [part~="navigation"] {
         order: 3;
     }
-    :scope[narrow-layout="navigation-first"] [part="navigation"] {
+    :scope[narrow-layout="navigation-first"] [part~="navigation"] {
         order: 0;
     }
 }

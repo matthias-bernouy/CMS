@@ -12,7 +12,7 @@
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 
-[part="control"] {
+[part~="control"] {
     display: flex;
     height: var(--ulvia-official-tag-input-tag-control-height);
     align-items: center;
@@ -26,21 +26,21 @@
     cursor: text;
 }
 
-:scope:focus-within [part="control"] {
+:scope:focus-within [part~="control"] {
     border-color: var(--ulvia-official-primary, #086c55);
     outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring, #167c5e) 28%, transparent);
     outline-offset: 1px;
     box-shadow: 0 0 0 1px var(--ulvia-official-primary, #086c55);
 }
 
-[part="tags"] {
+[part~="tags"] {
     display: flex;
     min-width: 0;
     gap: var(--ulvia-official-spacing-2xs, 0.375rem);
     flex-wrap: wrap;
 }
 
-[part="tags"][hidden] {
+[part~="tags"][hidden] {
     display: none;
 }
 
@@ -108,7 +108,7 @@
     outline-offset: 1px;
 }
 
-[part="input"] {
+[part~="input"] {
     width: 100%;
     min-width: 0;
     height: var(--ulvia-official-tag-input-height);
@@ -122,17 +122,17 @@
     font-size: var(--ulvia-official-tag-input-tag-font-size);
 }
 
-[part="draft"] {
+[part~="draft"] {
     display: flex;
     min-width: 0;
     flex: 1 1 auto;
 }
 
-[part="input"]::placeholder {
+[part~="input"]::placeholder {
     color: var(--ulvia-official-text-muted, #68766f);
 }
 
-[part="control"] > input:not([part]) {
+[part~="control"] > input:not([part]) {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -140,13 +140,13 @@
     clip-path: inset(50%);
 }
 
-[part="hint"] {
+[part~="hint"] {
     color: var(--ulvia-official-text-muted, #68766f);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
 
-[part="status"] {
+[part~="status"] {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -154,7 +154,7 @@
     clip-path: inset(50%);
 }
 
-:scope[data-disabled] [part="control"] {
+:scope[data-disabled] [part~="control"] {
     color: var(--ulvia-official-text-disabled, #858b95);
     background: var(--ulvia-official-background-subtle, #f4f5f7);
     cursor: not-allowed;

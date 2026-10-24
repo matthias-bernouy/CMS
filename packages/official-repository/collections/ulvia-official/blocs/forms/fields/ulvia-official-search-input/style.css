@@ -9,11 +9,11 @@
     min-width: 0;
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="control"] {
+[part~="control"] {
     position: relative;
     display: block;
 }
-[part="icon-shell"] {
+[part~="icon-shell"] {
     position: absolute;
     z-index: 1;
     inset-block-start: 50%;
@@ -26,14 +26,14 @@
     color: var(--ulvia-official-text-muted, #737985);
     pointer-events: none;
 }
-[part="search-icon"] {
+[part~="search-icon"] {
     width: var(--ulvia-official-search-input-search-icon-size);
     height: var(--ulvia-official-search-input-search-icon-size);
     background: currentColor;
     -webkit-mask: url("{{ cms.asset.ulvia-official.icons/actions/search.svg }}") center / contain no-repeat;
     mask: url("{{ cms.asset.ulvia-official.icons/actions/search.svg }}") center / contain no-repeat;
 }
-:scope:focus-within [part="icon-shell"] {
+:scope:focus-within [part~="icon-shell"] {
     color: var(--ulvia-official-primary, #086c55);
 }
 [part~="search-control"] {

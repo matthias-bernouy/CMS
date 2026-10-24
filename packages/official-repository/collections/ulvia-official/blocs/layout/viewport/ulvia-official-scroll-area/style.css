@@ -3,13 +3,13 @@
     display: block;
 }
 
-[part="scroll-area"] {
+[part~="scroll-area"] {
     max-height: var(--ulvia-official-scroll-area-height);
     overflow: auto;
     overscroll-behavior: contain;
     scrollbar-color: var(--ulvia-official-border-strong, #899b94) transparent;
 }
-[part="scroll-area"]:focus-visible {
+[part~="scroll-area"]:focus-visible {
     outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
     outline-offset: 3px;
 }
@@ -22,12 +22,12 @@
 :scope[height="viewport"] {
     --ulvia-official-scroll-area-height: 100svh;
 }
-:scope[scrollbar="thin"] [part="scroll-area"] {
+:scope[scrollbar="thin"] [part~="scroll-area"] {
     scrollbar-width: thin;
 }
-:scope[scrollbar="hidden"] [part="scroll-area"] {
+:scope[scrollbar="hidden"] [part~="scroll-area"] {
     scrollbar-width: none;
 }
-:scope[scrollbar="hidden"] [part="scroll-area"]::-webkit-scrollbar {
+:scope[scrollbar="hidden"] [part~="scroll-area"]::-webkit-scrollbar {
     display: none;
 }

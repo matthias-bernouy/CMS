@@ -4,7 +4,7 @@
     color: var(--ulvia-official-text-secondary, #5b6472);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="help"] {
+[part~="help"] {
     position: relative;
     display: inline-block;
 }

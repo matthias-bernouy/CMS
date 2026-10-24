@@ -9,7 +9,7 @@
     line-height: var(--ulvia-official-line-height-relaxed, 1.7);
 }
 
-[part="prose"] {
+[part~="prose"] {
     max-width: var(--ulvia-official-prose-measure);
 }
 :scope[measure="narrow"] {

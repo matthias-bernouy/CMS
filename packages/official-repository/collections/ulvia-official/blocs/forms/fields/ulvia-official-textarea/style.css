@@ -6,7 +6,7 @@
     min-width: 0;
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="control"] {
+[part~="control"] {
     display: grid;
     gap: var(--ulvia-official-spacing-2xs, 0.375rem);
 }
@@ -51,7 +51,7 @@ textarea:disabled {
 :scope[resize="both"] textarea {
     resize: both;
 }
-[part="count"] {
+[part~="count"] {
     display: none;
     justify-self: end;
     color: var(--ulvia-official-text-muted, #68766f);
@@ -59,7 +59,7 @@ textarea:disabled {
     font-variant-numeric: tabular-nums;
     line-height: var(--ulvia-official-line-height-snug, 1.35);
 }
-:scope[show-count][data-count-ready] [part="count"] {
+:scope[show-count][data-count-ready] [part~="count"] {
     display: block;
 }
 :scope[size="sm"] {

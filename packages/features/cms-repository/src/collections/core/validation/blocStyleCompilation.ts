@@ -26,6 +26,9 @@ export function compileBlocStyle(id: string, source: string): string {
         if (node.type === "PseudoClassSelector" && node.name.toLowerCase() === "root") {
             throw new Error(`Bloc ${id} CSS cannot use :root`);
         }
+        if (node.type === "AttributeSelector" && node.name.name.toLowerCase() === "part" && node.matcher === "=") {
+            throw new Error(`Bloc ${id} CSS must match part tokens with [part~="..."]`);
+        }
         if (node.type === "TypeSelector" && ["html", "body", "head"].includes(node.name.toLowerCase())) {
             throw new Error(`Bloc ${id} CSS cannot address document elements`);
         }

@@ -6,7 +6,7 @@
     display: block;
 }
 
-[part="panel"] {
+[part~="panel"] {
     display: grid;
     min-width: 0;
     border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-panel-border);
@@ -16,29 +16,29 @@
     box-shadow: var(--ulvia-official-panel-shadow);
 }
 
-[part="header"],
-[part="footer"] {
+[part~="header"],
+[part~="footer"] {
     display: flex;
     gap: var(--ulvia-official-spacing-md, 1rem);
     align-items: center;
     justify-content: space-between;
     padding: var(--ulvia-official-panel-padding);
 }
-[part="header"] {
+[part~="header"] {
     border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
 }
-[part="heading"] {
+[part~="heading"] {
     min-width: 0;
     flex: 1 1 10rem;
 }
-[part="actions"] {
+[part~="actions"] {
     min-width: 0;
     margin-inline-start: auto;
 }
-[part="footer"] {
+[part~="footer"] {
     border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
 }
-[part="content"] {
+[part~="content"] {
     min-width: 0;
     padding: var(--ulvia-official-panel-padding);
 }
@@ -56,17 +56,17 @@
 :scope[density="comfortable"] {
     --ulvia-official-panel-padding: var(--ulvia-official-spacing-xl, 2rem);
 }
-:scope[contained] [part="panel"] {
+:scope[contained] [part~="panel"] {
     max-height: min(70svh, 44rem);
     grid-template-rows: auto minmax(0, 1fr) auto;
 }
-:scope[contained] [part="content"] {
+:scope[contained] [part~="content"] {
     overflow: auto;
     overscroll-behavior: contain;
 }
 
 @container (max-width: 30rem) {
-    [part="header"] {
+    [part~="header"] {
         flex-wrap: wrap;
         align-items: flex-start;
     }

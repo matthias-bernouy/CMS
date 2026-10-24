@@ -5,7 +5,7 @@
     text-align: inherit;
 }
 
-[part="cover"] {
+[part~="cover"] {
     display: flex;
     min-height: var(--ulvia-official-cover-height);
     box-sizing: border-box;
@@ -13,7 +13,7 @@
     padding: var(--ulvia-official-cover-spacing);
 }
 
-[part="content"] {
+[part~="content"] {
     display: grid;
     flex: 1;
     align-items: center;
@@ -24,10 +24,10 @@
 :scope[height="viewport"] {
     --ulvia-official-cover-height: 100svh;
 }
-:scope[content-align="start"] [part="content"] {
+:scope[content-align="start"] [part~="content"] {
     align-items: start;
 }
-:scope[content-align="end"] [part="content"] {
+:scope[content-align="end"] [part~="content"] {
     align-items: end;
 }
 :scope[spacing="sm"] {

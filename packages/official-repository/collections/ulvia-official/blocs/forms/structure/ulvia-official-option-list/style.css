@@ -2,7 +2,7 @@
     display: block;
     min-width: 0;
 }
-[part="items"] {
+[part~="items"] {
     position: relative;
     display: grid;
     grid-template-columns: var(--ulvia-official-option-list-columns, minmax(0, 1fr));
@@ -17,7 +17,7 @@
     background: var(--ulvia-official-option-list-background, transparent);
 }
 
-[part="items"]::before {
+[part~="items"]::before {
     position: absolute;
     z-index: 0;
     inset-block-start: var(--ulvia-official-option-list-indicator-block-start, 0);

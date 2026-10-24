@@ -5,7 +5,7 @@
     container-type: inline-size;
 }
 
-[part="container"] {
+[part~="container"] {
     width: min(100% - (2 * var(--ulvia-official-container-gutter)), var(--ulvia-official-container-width));
     margin-inline: auto;
 }

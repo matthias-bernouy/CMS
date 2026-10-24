@@ -3,15 +3,15 @@
     color: inherit;
     font: inherit;
 }
-[part="caption"] {
+[part~="caption"] {
     display: inline-flex;
     align-items: baseline;
     gap: var(--ulvia-official-spacing-3xs, 0.25rem);
 }
-[part="required"] {
+[part~="required"] {
     display: var(--ulvia-official-field-caption-required-marker-display, none);
     color: var(--ulvia-official-danger, #b42318);
 }
-[part="required"]::before {
+[part~="required"]::before {
     content: "*";
 }

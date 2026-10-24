@@ -40,6 +40,13 @@ describe("validateBloc — source patterns", () => {
         ).not.toThrow();
     });
 
+    test("requires token matching for the space-separated part attribute", () => {
+        expect(() => compileBlocStyle("my-bloc", '[part="control"] { display: grid; }')).toThrow(
+            'must match part tokens with [part~="..."]',
+        );
+        expect(() => compileBlocStyle("my-bloc", '[part~="control"] { display: grid; }')).not.toThrow();
+    });
+
     test("accepts source without customElements.define", () => {
         const r = validateBloc({
             tag: "my-bloc",

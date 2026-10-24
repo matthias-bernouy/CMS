@@ -5,7 +5,7 @@
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="caption"] {
+[part~="caption"] {
     display: block;
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);

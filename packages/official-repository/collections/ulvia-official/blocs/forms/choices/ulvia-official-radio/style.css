@@ -10,7 +10,7 @@
     clip-path: var(--ulvia-official-radio-host-clip, none);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="control"] {
+[part~="control"] {
     display: inline-flex;
     width: var(--ulvia-official-radio-choice-hit-size);
     min-height: var(--ulvia-official-radio-choice-hit-size);

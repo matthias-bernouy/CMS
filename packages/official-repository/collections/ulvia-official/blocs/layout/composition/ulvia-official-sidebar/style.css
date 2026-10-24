@@ -5,21 +5,21 @@
     container-type: inline-size;
 }
 
-[part="layout"] {
+[part~="layout"] {
     display: grid;
     grid-template-columns: minmax(0, var(--ulvia-official-sidebar-width)) minmax(0, 1fr);
     gap: var(--ulvia-official-sidebar-gap);
     align-items: start;
 }
 
-[part="sidebar"],
-[part="content"] {
+[part~="sidebar"],
+[part~="content"] {
     min-width: 0;
 }
-:scope[side="end"] [part="layout"] {
+:scope[side="end"] [part~="layout"] {
     grid-template-columns: minmax(0, 1fr) minmax(0, var(--ulvia-official-sidebar-width));
 }
-:scope[side="end"] [part="sidebar"] {
+:scope[side="end"] [part~="sidebar"] {
     order: 2;
 }
 :scope[sidebar-width="sm"] {
@@ -39,7 +39,7 @@
 }
 
 @container (max-width: 44rem) {
-    :scope:not([collapse="never"]) [part="layout"] {
+    :scope:not([collapse="never"]) [part~="layout"] {
         grid-template-columns: minmax(0, 1fr);
     }
 }

@@ -3,7 +3,7 @@
     color: var(--ulvia-official-on-danger-subtle, #60150f);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
-[part="summary"] {
+[part~="summary"] {
     display: contents;
 }
 section[part~="summary"] {

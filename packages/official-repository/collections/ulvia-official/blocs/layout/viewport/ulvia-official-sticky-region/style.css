@@ -4,12 +4,12 @@
     align-self: start;
 }
 
-[part="sticky"] {
+[part~="sticky"] {
     position: sticky;
     z-index: 2;
     top: var(--ulvia-official-sticky-region-sticky-offset);
 }
-:scope[position="bottom"] [part="sticky"] {
+:scope[position="bottom"] [part~="sticky"] {
     top: auto;
     bottom: var(--ulvia-official-sticky-region-sticky-offset);
 }

@@ -5,7 +5,7 @@
     font-family: var(--ulvia-official-font-family-main, system-ui, sans-serif);
 }
 
-[part="badge"] {
+[part~="badge"] {
     display: inline-flex;
     align-items: center;
     min-height: 1.75rem;
@@ -19,31 +19,31 @@
     white-space: nowrap;
 }
 
-:scope[tone="info"] [part="badge"] {
+:scope[tone="info"] [part~="badge"] {
     border-color: var(--ulvia-official-info-border, #a7c9e8);
     color: var(--ulvia-official-on-info-subtle, #235f94);
     background: var(--ulvia-official-info-subtle, #eef7ff);
 }
 
-:scope[tone="success"] [part="badge"] {
+:scope[tone="success"] [part~="badge"] {
     border-color: var(--ulvia-official-success-border, #9cd4bd);
     color: var(--ulvia-official-on-success-subtle, #176b4d);
     background: var(--ulvia-official-success-subtle, #effaf5);
 }
 
-:scope[tone="warning"] [part="badge"] {
+:scope[tone="warning"] [part~="badge"] {
     border-color: var(--ulvia-official-warning-border, #e6c56a);
     color: var(--ulvia-official-on-warning-subtle, #765600);
     background: var(--ulvia-official-warning-subtle, #fff8df);
 }
 
-:scope[tone="danger"] [part="badge"] {
+:scope[tone="danger"] [part~="badge"] {
     border-color: var(--ulvia-official-danger-border, #efb0aa);
     color: var(--ulvia-official-on-danger-subtle, #8a1c13);
     background: var(--ulvia-official-danger-subtle, #fff1f0);
 }
 
-:scope[size="sm"] [part="badge"] {
+:scope[size="sm"] [part~="badge"] {
     min-height: 1.5rem;
     padding-inline: 0.5rem;
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
