@@ -1,8 +1,7 @@
 import { open, readdir } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { LOG_LEVELS, type LogLevel, type LogRecord } from "@bernouy/logging";
-import type { UlviaPaths } from "../../paths";
-import type { DevLogService } from "./selection";
+import type { LocalLogService } from "./selection";
 
 const STABLE_IDENTIFIER = /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/u;
 const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u;
@@ -13,12 +12,12 @@ type JournalCursor = {
     lastSeen: number;
 };
 
-export type DevLogCursor = Map<string, JournalCursor>;
+export type LocalLogCursor = Map<string, JournalCursor>;
 
-export async function readDevLogRecords(
-    paths: UlviaPaths,
-    services: readonly DevLogService[],
-    cursor: DevLogCursor,
+export async function readLocalLogRecords(
+    paths: Readonly<{ logs: string }>,
+    services: readonly LocalLogService[],
+    cursor: LocalLogCursor,
 ): Promise<LogRecord[]> {
     const names = await readdir(paths.logs).catch((error: NodeJS.ErrnoException) => {
         if (error.code === "ENOENT") {
@@ -35,7 +34,7 @@ export async function readDevLogRecords(
     return records;
 }
 
-async function readJournal(file: string, cursor: DevLogCursor, now: number): Promise<LogRecord[]> {
+async function readJournal(file: string, cursor: LocalLogCursor, now: number): Promise<LogRecord[]> {
     let handle;
     try {
         handle = await open(file, "r");
@@ -94,7 +93,7 @@ function parseLines(lines: readonly string[], file: string, now: number): LogRec
         records.push({
             time: new Date(now).toISOString(),
             level: "warn",
-            service: "ulvia-dev",
+            service: "ulvia-cli",
             event: "logging.journal.invalid-record",
             attributes: { journal: basename(file), invalidRecords },
         });
@@ -140,14 +139,14 @@ function isValidAttributes(value: unknown): boolean {
     return value === undefined || (!!value && typeof value === "object" && !Array.isArray(value));
 }
 
-function isSelectedJournal(name: string, services: readonly DevLogService[]): boolean {
+function isSelectedJournal(name: string, services: readonly LocalLogService[]): boolean {
     return services.some((service) => {
         const base = `${service}.ndjson`;
         return name === base || (name.startsWith(`${base}.`) && /^\d+$/u.test(name.slice(base.length + 1)));
     });
 }
 
-function pruneCursor(cursor: DevLogCursor, now: number): void {
+function pruneCursor(cursor: LocalLogCursor, now: number): void {
     if (cursor.size <= 64) {
         return;
     }

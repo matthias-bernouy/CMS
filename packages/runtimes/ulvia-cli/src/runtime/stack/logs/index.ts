@@ -1,20 +1,20 @@
 import type { LogRecord } from "@bernouy/logging";
-import type { UlviaPaths } from "../../paths";
-import { readDevLogRecords, type DevLogCursor } from "./journal";
+import { readLocalLogRecords, type LocalLogCursor } from "./journal";
 import { formatRecord, matches, parseSelection } from "./selection";
 
-export { readDevLogRecords, type DevLogCursor } from "./journal";
+export { readLocalLogRecords, type LocalLogCursor } from "./journal";
 
-export async function showDevLogs(
+export async function showLocalLogs(
     args: readonly string[],
-    paths: UlviaPaths,
+    paths: Readonly<{ logs: string }>,
     log: (message: string) => void,
+    usage = "ulvia logs",
 ): Promise<void> {
-    const selection = parseSelection(args);
-    const cursor: DevLogCursor = new Map();
+    const selection = parseSelection(args, usage);
+    const cursor: LocalLogCursor = new Map();
     let initial = true;
     do {
-        const records = (await readDevLogRecords(paths, selection.services, cursor)).filter((record) =>
+        const records = (await readLocalLogRecords(paths, selection.services, cursor)).filter((record) =>
             matches(record, selection),
         );
         records.sort(compareRecords);

@@ -1,13 +1,13 @@
 import { LOG_LEVELS, type LogLevel, type LogRecord } from "@bernouy/logging";
 import { isValidRequestId } from "@bernouy/http-runner/observability";
 
-const DEV_LOG_SERVICES = ["kernel", "provider", "repository", "supervisor"] as const;
+const DEV_LOG_SERVICES = ["kernel", "provider", "repository"] as const;
 const STABLE_IDENTIFIER = /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/u;
 const INSTANCE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
-export type DevLogService = (typeof DEV_LOG_SERVICES)[number];
+export type LocalLogService = (typeof DEV_LOG_SERVICES)[number];
 
 export type LogSelection = Readonly<{
-    services: readonly DevLogService[];
+    services: readonly LocalLogService[];
     level: LogLevel;
     requestId?: string;
     event?: string;
@@ -17,15 +17,15 @@ export type LogSelection = Readonly<{
     stack: boolean;
 }>;
 
-export function parseSelection(args: readonly string[]): LogSelection {
+export function parseSelection(args: readonly string[], usage = "ulvia logs"): LogSelection {
     const values = [...args];
     const first = values[0];
-    const services: readonly DevLogService[] =
+    const services: readonly LocalLogService[] =
         !first || first.startsWith("--") || first === "all"
             ? DEV_LOG_SERVICES
-            : DEV_LOG_SERVICES.includes(first as DevLogService)
-              ? [values.shift() as DevLogService]
-              : fail(`Unknown log service: ${first}`);
+            : DEV_LOG_SERVICES.includes(first as LocalLogService)
+              ? [values.shift() as LocalLogService]
+              : fail(`Unknown log service: ${first}`, usage);
     if (first === "all") {
         values.shift();
     }
@@ -53,7 +53,7 @@ export function parseSelection(args: readonly string[]): LogSelection {
         if (flag === "--level") {
             const value = values.shift() as LogLevel | undefined;
             if (!value || !LOG_LEVELS.includes(value)) {
-                fail("--level requires trace, debug, info, warn, error, or fatal");
+                fail("--level requires trace, debug, info, warn, error, or fatal", usage);
             }
             level = value;
             continue;
@@ -61,25 +61,25 @@ export function parseSelection(args: readonly string[]): LogSelection {
         if (flag === "--request-id") {
             requestId = values.shift()?.trim();
             if (!requestId || !isValidRequestId(requestId)) {
-                fail("--request-id requires a canonical UUID v4");
+                fail("--request-id requires a canonical UUID v4", usage);
             }
             continue;
         }
         if (flag === "--event") {
             event = values.shift()?.trim();
             if (!event || !STABLE_IDENTIFIER.test(event)) {
-                fail("--event requires a stable lowercase event name");
+                fail("--event requires a stable lowercase event name", usage);
             }
             continue;
         }
         if (flag === "--instance-id") {
             instanceId = values.shift()?.trim();
             if (!instanceId || !INSTANCE_ID.test(instanceId)) {
-                fail("--instance-id requires a canonical UUID");
+                fail("--instance-id requires a canonical UUID", usage);
             }
             continue;
         }
-        fail(`Unknown logs option: ${flag}`);
+        fail(`Unknown logs option: ${flag}`, usage);
     }
     return { services, level, requestId, event, instanceId, follow, format, stack };
 }
@@ -119,6 +119,6 @@ function escapeControls(value: string): string {
     );
 }
 
-function fail(message: string): never {
-    throw new Error(`${message}\nUsage: ulvia dev logs [all | kernel | provider | repository | supervisor] [options]`);
+function fail(message: string, usage: string): never {
+    throw new Error(`${message}\nUsage: ${usage} [all | kernel | provider | repository] [options]`);
 }
