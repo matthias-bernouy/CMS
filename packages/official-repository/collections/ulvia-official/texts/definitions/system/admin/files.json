@@ -36,6 +36,12 @@
         "group": "text.group.admin.files"
     },
     {
+        "id": "ui-file-name",
+        "label": "text.ui-file-name.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
         "id": "ui-files-are-validated-and-limited-by-the-server-upload-policy",
         "label": "text.ui-files-are-validated-and-limited-by-the-server-upload-policy.label",
         "category": "text.category.admin",
@@ -222,8 +228,14 @@
         "group": "text.group.admin.files"
     },
     {
-        "id": "ui-files-in-this-batch",
-        "label": "text.ui-files-in-this-batch.label",
+        "id": "ui-file-in-this-list",
+        "label": "text.ui-file-in-this-list.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.files"
+    },
+    {
+        "id": "ui-files-in-this-list",
+        "label": "text.ui-files-in-this-list.label",
         "category": "text.category.admin",
         "group": "text.group.admin.files"
     },

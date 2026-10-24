@@ -8,6 +8,7 @@
     "catalogue": "hidden",
     "uses": [
         "ulvia-official-action",
+        "ulvia-official-badge",
         "ulvia-official-cluster",
         "ulvia-official-dialog",
         "ulvia-official-field",
@@ -19,6 +20,8 @@
         "ulvia-official-grid",
         "ulvia-official-heading",
         "ulvia-official-input",
+        "ulvia-official-image",
+        "ulvia-official-media-placeholder",
         "ulvia-official-stack",
         "ulvia-official-surface"
     ],

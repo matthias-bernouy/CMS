@@ -2,3 +2,90 @@
     display: block;
     min-width: 0;
 }
+
+[part~="toolbar"] {
+    min-height: 2.75rem;
+}
+
+[part~="library"],
+[part~="library-content"] {
+    min-width: 0;
+}
+
+[part~="library-header"] h2,
+[part~="library-header"] p,
+[part~="file-header"] h3,
+[part~="file-header"] p {
+    margin: 0;
+}
+
+[part~="library-header"] p,
+[part~="file-meta"] {
+    color: var(--ulvia-official-text-muted, #66716c);
+    font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+}
+
+[part~="file-meta"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
+}
+
+[part~="file-grid"] {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 18rem));
+    justify-content: start;
+}
+
+[part~="file-card"] {
+    height: 100%;
+}
+
+[part~="file-preview"],
+[part~="file-placeholder"] {
+    width: 100%;
+}
+
+[part~="file-header"] {
+    display: grid;
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
+    min-width: 0;
+}
+
+[part~="file-header"] h3 {
+    overflow-wrap: anywhere;
+}
+
+[part~="file-badges"],
+[part~="file-actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ulvia-official-spacing-xs, 0.5rem);
+}
+
+[part~="file-details"],
+[part~="danger-details"] {
+    padding-block-start: var(--ulvia-official-spacing-sm, 0.75rem);
+    border-block-start: 1px solid var(--ulvia-official-border-subtle, #d8ddda);
+}
+
+[part~="file-details"] summary,
+[part~="danger-details"] summary {
+    font-weight: var(--ulvia-official-font-weight-semibold, 600);
+    cursor: pointer;
+}
+
+[part~="danger-details"] summary {
+    color: var(--ulvia-official-danger, #a12828);
+}
+
+@media (max-width: 42rem) {
+    [part~="library-header"] {
+        align-items: start;
+        flex-direction: column;
+    }
+
+    [part~="file-actions"] {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

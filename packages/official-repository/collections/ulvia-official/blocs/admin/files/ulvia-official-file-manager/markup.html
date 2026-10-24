@@ -1,5 +1,5 @@
 <div part="content" cms-bloc="ulvia-official-stack" gap="lg">
-    <div cms-bloc="ulvia-official-cluster" justify="end" items-align="center" slot="items">
+    <div part="toolbar" cms-bloc="ulvia-official-cluster" justify="end" items-align="center" slot="items">
         <button
             cms-bloc="ulvia-official-action"
             tone="primary"
@@ -14,7 +14,7 @@
                 {{ cms.i18n.ulvia-official.ui-upload-a-file }}
             </span>
         </button>
-        <dialog cms-bloc="ulvia-official-dialog" slot="items" aria-labelledby="upload-file-dialog-title" id="upload-file-dialog">
+        <dialog part="upload-dialog" cms-bloc="ulvia-official-dialog" slot="items" aria-labelledby="upload-file-dialog-title" id="upload-file-dialog">
             <div slot="content" cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
                 <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
                     <div cms-bloc="ulvia-official-cluster" justify="between" items-align="start" slot="items">
@@ -34,7 +34,6 @@
                             </span>
                         </button>
                     </div>
-                    <p slot="items">{{ cms.i18n.ulvia-official.ui-files-are-validated-and-limited-by-the-server-upload-policy }}</p>
                     <div cms-bloc="ulvia-official-file-upload" visibility="private" slot="items">
                         <div cms-bloc="ulvia-official-field" label-position="top" slot="content">
                             <span slot="label">{{ cms.i18n.ulvia-official.ui-choose-a-file }}</span>
@@ -50,6 +49,7 @@
 
     <section
         id="file-library"
+        part="library"
         slot="items"
         cms-query="ulvia.cms.files:workspace.get as workspace"
         cms-query-input='{"offset":{"from":"literal","value":0},"limit":{"from":"literal","value":100}}'
@@ -70,15 +70,27 @@
                     <p>{{ cms.i18n.ulvia-official.ui-the-author-library-could-not-be-read }}</p>
                 </div>
             </div>
-            <div cms-bloc="ulvia-official-stack" gap="md" cms-case='"success"'>
-                <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center" slot="items">
+            <div part="library-content" cms-bloc="ulvia-official-stack" gap="md" cms-case='"success"'>
+                <div part="library-header" cms-bloc="ulvia-official-cluster" justify="between" items-align="center" slot="items">
                     <h2 cms-bloc="ulvia-official-heading" slot="items">{{ cms.i18n.ulvia-official.ui-library }}</h2>
-                    <p slot="items">
-                        {{ workspace.data.items.length }} {{ cms.i18n.ulvia-official.ui-files-in-this-batch }}
+                    <p slot="items" cms-condition="workspace.data.items.length === 1">
+                        {{ workspace.data.items.length }} {{ cms.i18n.ulvia-official.ui-file-in-this-list }}
+                    </p>
+                    <p slot="items" cms-condition="workspace.data.items.length !== 1">
+                        {{ workspace.data.items.length }} {{ cms.i18n.ulvia-official.ui-files-in-this-list }}
                     </p>
                 </div>
-                <div cms-bloc="ulvia-official-grid" role="list" gap="md" columns="1" cms-condition="workspace.data.items.length" slot="items">
+                <div
+                    part="file-grid"
+                    cms-bloc="ulvia-official-grid"
+                    role="list"
+                    gap="md"
+                    items-align="start"
+                    cms-condition="workspace.data.items.length"
+                    slot="items"
+                >
                     <div
+                        part="file-card"
                         cms-bloc="ulvia-official-surface"
                         role="listitem"
                         radius="sm"
@@ -88,83 +100,111 @@
                         slot="items"
                     >
                         <div cms-bloc="ulvia-official-stack" gap="md" slot="content">
-                            <header slot="items">
-                                <h3 cms-bloc="ulvia-official-heading">{{ file.name }}</h3>
-                                <p>{{ file.mimeType }} {{ file.size }} {{ cms.i18n.ulvia-official.ui-bytes }}</p>
-                                <p cms-condition="file.visibility === 'private'">
-                                    {{ cms.i18n.ulvia-official.ui-private }}
-                                </p>
-                                <p cms-condition="file.visibility === 'public'">
-                                    {{ cms.i18n.ulvia-official.ui-public }}
-                                </p>
-                            </header>
-                            <form
+                            <span
+                                part="file-preview"
+                                cms-bloc="ulvia-official-image"
+                                ratio="landscape"
+                                cms-condition="file.visibility === 'public' && (file.mimeType === 'image/avif' || file.mimeType === 'image/gif' || file.mimeType === 'image/jpeg' || file.mimeType === 'image/png' || file.mimeType === 'image/svg+xml' || file.mimeType === 'image/webp')"
                                 slot="items"
-                                cms-mutation="ulvia.cms.files:workspace.files.update as mutation"
-                                cms-sync="@page:ulvia-official-files-mutation"
-                                cms-sync-select="lastSuccess.requestId"
-                                cms-mutation-reset="false"
                             >
-                                <input type="hidden" name="fileId" value="{{ file.fileId }}">
-                                <div cms-bloc="ulvia-official-field" label-position="top">
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-save-name }}</span>
-                                    <div cms-bloc="ulvia-official-input" slot="control">
-                                        <input id="file-name-{{ file.fileId }}" type="text" name="name" value="{{ file.name }}" maxlength="255" required>
+                                <img src="{{ file.path | internalUrl }}" alt="" role="presentation" aria-hidden="true" loading="lazy" decoding="async">
+                            </span>
+                            <div
+                                part="file-placeholder"
+                                cms-bloc="ulvia-official-media-placeholder"
+                                cms-condition="file.visibility !== 'public' || (file.mimeType !== 'image/avif' && file.mimeType !== 'image/gif' && file.mimeType !== 'image/jpeg' && file.mimeType !== 'image/png' && file.mimeType !== 'image/svg+xml' && file.mimeType !== 'image/webp')"
+                                slot="items"
+                            >
+                                <svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/media.svg }}" aria-hidden="true"></svg>
+                            </div>
+                            <header part="file-header" slot="items">
+                                <h3 cms-bloc="ulvia-official-heading">{{ file.name }}</h3>
+                                <p part="file-meta">
+                                    <span>{{ file.mimeType }}</span>
+                                    <span>{{ file.size }} {{ cms.i18n.ulvia-official.ui-bytes }}</span>
+                                </p>
+                                <div part="file-badges">
+                                    <div cms-bloc="ulvia-official-badge" tone="neutral" size="sm" cms-condition="file.visibility === 'private'">
+                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-private }}</span>
+                                    </div>
+                                    <div cms-bloc="ulvia-official-badge" tone="success" size="sm" cms-condition="file.visibility === 'public'">
+                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-public }}</span>
                                     </div>
                                 </div>
-                                <div cms-bloc="ulvia-official-form-actions" actions-align="end">
-                                    <p slot="actions" role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">
-                                        {{ cms.i18n.ulvia-official.ui-saving }}
-                                    </p>
-                                    <p slot="actions" role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
-                                        {{ cms.i18n.ulvia-official.ui-reload-this-folder-before-retrying }}
-                                    </p>
-                                    <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" slot="actions" type="submit">
-                                        <span>
-                                            {{ cms.i18n.ulvia-official.ui-save-name }}
-                                        </span>
-                                    </button>
-                                </div>
+                            </header>
+                            <details part="file-details" slot="items">
+                                <summary>{{ cms.i18n.ulvia-official.ui-details }}</summary>
+                                <form
+                                    cms-mutation="ulvia.cms.files:workspace.files.update as mutation"
+                                    cms-sync="@page:ulvia-official-files-mutation"
+                                    cms-sync-select="lastSuccess.requestId"
+                                    cms-mutation-reset="false"
+                                >
+                                    <input type="hidden" name="fileId" value="{{ file.fileId }}">
+                                    <div cms-bloc="ulvia-official-field" label-position="top">
+                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-file-name }}</span>
+                                        <div cms-bloc="ulvia-official-input" slot="control">
+                                            <input id="file-name-{{ file.fileId }}" type="text" name="name" value="{{ file.name }}" maxlength="255" required>
+                                        </div>
+                                    </div>
+                                    <div cms-bloc="ulvia-official-form-actions" actions-align="end">
+                                        <p slot="actions" role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">
+                                            {{ cms.i18n.ulvia-official.ui-saving }}
+                                        </p>
+                                        <p
+                                            slot="actions"
+                                            role="alert"
+                                            cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')"
+                                        >
+                                            {{ cms.i18n.ulvia-official.ui-reload-this-folder-before-retrying }}
+                                        </p>
+                                        <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" slot="actions" type="submit">
+                                            <span>
+                                                {{ cms.i18n.ulvia-official.ui-save-name }}
+                                            </span>
+                                        </button>
+                                    </div>
 
-                                <div cms-match="mutation.outcome.kind">
-                                    <span cms-case='"none"' hidden></span>
-                                    <span cms-case='"success"' hidden></span>
-                                    <div cms-case='"error"' cms-match="mutation.outcome.code">
-                                        <p role="alert" cms-case='"INVALID_INPUT"'>
-                                            {{ cms.i18n.ulvia-official.ui-request-failed }}
-                                        </p>
-                                        <p role="alert" cms-case='"NOT_FOUND"'>
-                                            {{ cms.i18n.ulvia-official.ui-request-failed }}
-                                        </p>
-                                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                                    <div cms-match="mutation.outcome.kind">
+                                        <span cms-case='"none"' hidden></span>
+                                        <span cms-case='"success"' hidden></span>
+                                        <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                            <p role="alert" cms-case='"INVALID_INPUT"'>
+                                                {{ cms.i18n.ulvia-official.ui-request-failed }}
+                                            </p>
+                                            <p role="alert" cms-case='"NOT_FOUND"'>
+                                                {{ cms.i18n.ulvia-official.ui-request-failed }}
+                                            </p>
+                                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>
+                                                {{ cms.i18n.ulvia-official.ui-request-failed }}
+                                            </p>
+                                        </div>
+                                        <p role="alert" cms-case='"failure"'>
                                             {{ cms.i18n.ulvia-official.ui-request-failed }}
                                         </p>
                                     </div>
-                                    <p role="alert" cms-case='"failure"'>
-                                        {{ cms.i18n.ulvia-official.ui-request-failed }}
-                                    </p>
-                                </div>
-                            </form>
-                            <div cms-bloc="ulvia-official-file-upload" visibility="{{ file.visibility }}" file-id="{{ file.fileId }}" slot="items">
-                                <div cms-bloc="ulvia-official-field" label-position="top" slot="content">
-                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-replace-content }}</span>
-                                    <div cms-bloc="ulvia-official-file-input" variant="compact" slot="control">
-                                        <div cms-bloc="ulvia-official-file-upload-input" slot="control">
-                                            <input
-                                                id="file-replacement-{{ file.fileId }}"
-                                                type="file"
-                                                name="file"
-                                                aria-label="{{ cms.i18n.ulvia-official.ui-replacement-file-for }} {{ file.name }}"
-                                                required
-                                            >
+                                </form>
+                                <div cms-bloc="ulvia-official-file-upload" visibility="{{ file.visibility }}" file-id="{{ file.fileId }}">
+                                    <div cms-bloc="ulvia-official-field" label-position="top" slot="content">
+                                        <span slot="label">{{ cms.i18n.ulvia-official.ui-replace-content }}</span>
+                                        <div cms-bloc="ulvia-official-file-input" variant="compact" slot="control">
+                                            <div cms-bloc="ulvia-official-file-upload-input" slot="control">
+                                                <input
+                                                    id="file-replacement-{{ file.fileId }}"
+                                                    type="file"
+                                                    name="file"
+                                                    aria-label="{{ cms.i18n.ulvia-official.ui-replacement-file-for }} {{ file.name }}"
+                                                    required
+                                                >
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div cms-bloc="ulvia-official-cluster" items-align="center" slot="items">
+                            </details>
+                            <div part="file-actions" cms-bloc="ulvia-official-cluster" items-align="center" slot="items">
                                 <a
                                     cms-bloc="ulvia-official-action"
-                                    href="{{ file.url | internalUrl }}"
+                                    href="{{ file.path | internalUrl }}"
                                     cms-condition="file.visibility === 'public'"
                                     slot="items"
                                 >
@@ -274,7 +314,7 @@
                                     </div>
                                 </form>
                             </div>
-                            <details slot="items">
+                            <details part="danger-details" slot="items">
                                 <summary>{{ cms.i18n.ulvia-official.ui-delete }}</summary>
                                 <p>{{ cms.i18n.ulvia-official.ui-deleting-a-file-removes-all-of-its-generations }}</p>
                                 <form
