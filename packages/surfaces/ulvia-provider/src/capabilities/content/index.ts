@@ -5,7 +5,7 @@ import { registerPageCapabilities } from "./pages";
 import { registerSiteCapabilities } from "./site";
 import { registerThemeCapabilities } from "./theme";
 import { registerContentDeliveryCapabilities } from "./delivery";
-import { registerSiteBlocCapabilities } from "./siteBlocs";
+import { registerSiteBlocCapabilities } from "./site/blocs";
 
 export function registerContentCapabilities(
     dispatcher: ProviderCapabilityRegistry,

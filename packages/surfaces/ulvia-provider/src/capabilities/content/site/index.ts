@@ -1,7 +1,7 @@
 import { readSystemSnapshot } from "@bernouy/cms-content";
-import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
-import type { CmsContentDependencies } from "../../ports";
-import { configurationCommand, requiredText, revision } from "./support";
+import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
+import type { CmsContentDependencies } from "../../../ports";
+import { configurationCommand, requiredText, revision } from "../support";
 
 export function registerSiteCapabilities(
     dispatcher: ProviderCapabilityRegistry,
