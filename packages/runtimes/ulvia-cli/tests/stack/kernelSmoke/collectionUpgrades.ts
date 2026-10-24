@@ -21,7 +21,10 @@ export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
         page.getByRole("button", { name: /^(Apply migration|Appliquer la migration)$/u }).click(),
     ]);
     if (!migrationResponse.ok()) {
-        throw new Error(`Collection migration failed (${migrationResponse.status()}).`);
+        throw new Error(
+            `Collection migration failed (${migrationResponse.status()}): ${await migrationResponse.text()}. ` +
+                `Input: ${migrationResponse.request().postData() ?? "<none>"}`,
+        );
     }
     await page.waitForURL(/\/admin\/collections$/u);
     await page.locator('a[href="/admin/diagnostics"]').first().click();

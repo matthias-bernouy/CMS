@@ -83,7 +83,7 @@ async function signIn(
     }
     await page.waitForURL(/\/admin$/u);
     await page.getByRole("heading", { name: /^(Dashboard|Tableau de bord)$/u }).waitFor();
-    await adminPageLink(page, "pages").click();
+    await adminPageLink(page, "pages").click({ noWaitAfter: true });
     await page.getByRole("heading", { name: "Pages", exact: true }).waitFor();
 }
 
@@ -131,15 +131,15 @@ async function mutateCollections(page: Page): Promise<void> {
     if (!(await installResponse).ok()) {
         throw new Error("Collection installation failed.");
     }
-    await installedCollectionLink(page, "smoke-kit").click();
-    await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor();
+    await installedCollectionLink(page, "smoke-kit").click({ noWaitAfter: true });
+    await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor({ timeout: 60_000 });
     await page.locator('a[href="#collection-blocks"]').click();
     await page.waitForURL(/#collection-blocks$/u);
     await page.getByText("smoke-kit-card", { exact: true }).waitFor();
     await page.getByRole("link", { name: /^(Explore collections|Explorer les Collections)$/u }).click();
     await exerciseCollectionUpgrades(page);
-    await installedCollectionLink(page, "ulvia-official").click();
-    await page.getByRole("heading", { name: "Ulvia Official", exact: true }).waitFor();
+    await installedCollectionLink(page, "ulvia-official").click({ noWaitAfter: true });
+    await page.getByRole("heading", { name: "Ulvia Official", exact: true }).waitFor({ timeout: 60_000 });
     await page.locator('a[href="#collection-theme"]').click();
     await page.locator("#collection-theme-search").waitFor();
     await page
@@ -194,7 +194,7 @@ function adminPageLink(page: Page, pageId: string) {
 }
 
 function installedCollectionLink(page: Page, collectionId: string) {
-    return page.locator(
-        `a[href="/admin/collections/detail?ulvia-official-collection=${encodeURIComponent(collectionId)}"]`,
-    );
+    return page
+        .locator(`a[href="/admin/collections/detail?ulvia-official-collection=${encodeURIComponent(collectionId)}"]`)
+        .first();
 }

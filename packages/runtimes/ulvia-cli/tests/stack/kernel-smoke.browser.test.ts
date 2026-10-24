@@ -9,26 +9,25 @@ import { runKernelSmoke, verifyKernelStateAfterRestart } from "./kernelSmoke/flo
 import { verifySecondInstanceIsolation } from "./kernelSmoke/providerAccess";
 
 const smoke = process.env.ULVIA_RUN_KERNEL_SMOKE === "1" ? test : test.skip;
-const PORTS = { kernel: 15_100, mongo: 27_029, repository: 15_102, provider: 5_103 } as const;
+const PORTS = { kernel: 15_100, repository: 15_102, provider: 15_103 } as const;
+const KERNEL_URL = `http://localhost:${PORTS.kernel}`;
 
 smoke(
     "fresh local installation publishes a Page and preserves Kernel state",
     async () => {
+        assertPortAvailable(PORTS.kernel, "shared proxy");
+        assertPortAvailable(PORTS.repository, "official Repository");
         assertPortAvailable(PORTS.provider, "official Provider");
         const data = await mkdtemp(join(tmpdir(), "ulvia-kernel-smoke-"));
         const environment = {
             ...process.env,
             ULVIA_DATA_DIR: data,
-            ULVIA_DEV_KERNEL_PORT: String(PORTS.kernel),
-            ULVIA_DEV_MONGO_PORT: String(PORTS.mongo),
-            ULVIA_DEV_REPOSITORY_PORT: String(PORTS.repository),
-            ULVIA_DEV_PROVIDER_PORT: String(PORTS.provider),
+            ULVIA_HTTP_PORT: String(PORTS.kernel),
+            ULVIA_REPOSITORY_PORT: String(PORTS.repository),
+            ULVIA_PROVIDER_PORT: String(PORTS.provider),
         };
-        const cli = resolve(import.meta.dir, "../../src/index.ts");
         const smokeCollection = resolve(import.meta.dir, "fixtures/smoke-kit");
-        let runtime: ReturnType<typeof Bun.spawn> | undefined;
         let output = "";
-        let capture: Promise<void[]> | undefined;
         let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
         let browserErrors: string[] = [];
         try {
@@ -37,18 +36,15 @@ smoke(
             const migrationUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "2.0.0", true);
             await runCli(["release", compatibleUpgrade], { environment, log: () => undefined });
             await runCli(["release", migrationUpgrade], { environment, log: () => undefined });
-            runtime = Bun.spawn([process.execPath, cli, "dev"], {
-                cwd: resolve(import.meta.dir, "../../../../.."),
-                env: environment,
-                stdout: "pipe",
-                stderr: "pipe",
+            await runCli(["services", "start"], { environment, log: (message) => (output += `${message}\n`) });
+            await runCli(["instance", "create", "default"], {
+                environment,
+                log: (message) => (output += `${message}\n`),
             });
-            capture = Promise.all([
-                captureOutput(runtime.stdout, (value) => (output += value)),
-                captureOutput(runtime.stderr, (value) => (output += value)),
-            ]);
-            await waitForHttp(`http://127.0.0.1:${PORTS.kernel}/login`, runtime);
-            const credentials = JSON.parse(await readFile(join(data, "dev", "runtime.json"), "utf8")) as {
+            await waitForHttp(`${KERNEL_URL}/login`);
+            const credentials = JSON.parse(
+                await readFile(join(data, "instances", "default", "runtime.json"), "utf8"),
+            ) as {
                 adminEmail: string;
                 adminPassword: string;
             };
@@ -58,40 +54,31 @@ smoke(
             page.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
 
             report("initial browser journey");
-            await runKernelSmoke(page, credentials, `http://127.0.0.1:${PORTS.kernel}`);
+            await runKernelSmoke(page, credentials, KERNEL_URL);
             report("second instance isolation");
-            await verifySecondInstanceIsolation(data, credentials, `http://127.0.0.1:${PORTS.kernel}`);
+            await verifySecondInstanceIsolation(data, credentials, KERNEL_URL, `http://127.0.0.1:${PORTS.provider}`);
 
             expect(browserErrors).toEqual([]);
             await browser.close();
             browser = undefined;
             report("first runtime shutdown");
             const status: string[] = [];
-            await runCli(["dev", "status"], { environment, log: (message) => status.push(message) });
-            expect(status).toContain("Dev stack: running");
-            expect(status).toContain("CMS Kernel: running");
-            expect(status).toContain("Ulvia Provider: running");
-            expect(status).toContain("Resource repository: running");
-            await runCli(["dev", "stop"], { environment, log: () => undefined });
-            await runtime.exited;
-            await capture;
+            await runCli(["services", "status"], { environment, log: (message) => status.push(message) });
+            await runCli(["instance", "status", "default"], { environment, log: (message) => status.push(message) });
+            expect(status).toContain("Shared services: running");
+            expect(status).toContain("Instance default: running");
+            expect(status).toContain("Ulvia Provider: running / healthy");
+            expect(status).toContain("Repository: running / healthy");
+            await runCli(["instance", "stop", "default"], { environment, log: () => undefined });
+            await runCli(["services", "stop"], { environment, log: () => undefined });
             const stoppedStatus: string[] = [];
-            await runCli(["dev", "status"], { environment, log: (message) => stoppedStatus.push(message) });
-            expect(stoppedStatus).toContain("Dev stack: stopped");
+            await runCli(["services", "status"], { environment, log: (message) => stoppedStatus.push(message) });
+            expect(stoppedStatus).toContain("Shared services: stopped");
 
             output += "\n--- persisted-state restart ---\n";
             report("persisted-state restart");
-            runtime = Bun.spawn([process.execPath, cli, "dev"], {
-                cwd: resolve(import.meta.dir, "../../../../.."),
-                env: environment,
-                stdout: "pipe",
-                stderr: "pipe",
-            });
-            capture = Promise.all([
-                captureOutput(runtime.stdout, (value) => (output += value)),
-                captureOutput(runtime.stderr, (value) => (output += value)),
-            ]);
-            await waitForHttp(`http://127.0.0.1:${PORTS.kernel}/login`, runtime);
+            await runCli(["start"], { environment, log: (message) => (output += `${message}\n`) });
+            await waitForHttp(`${KERNEL_URL}/login`);
             browser = await chromium.launch({ headless: true });
             const restartedPage = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             restartedPage.setDefaultTimeout(15_000);
@@ -100,14 +87,13 @@ smoke(
             restartedPage.on("pageerror", (error) => restartErrors.push(error.stack ?? error.message));
 
             report("persisted browser journey");
-            await verifyKernelStateAfterRestart(restartedPage, credentials, `http://127.0.0.1:${PORTS.kernel}`);
+            await verifyKernelStateAfterRestart(restartedPage, credentials, KERNEL_URL);
             expect(restartErrors).toEqual([]);
             await browser.close();
             browser = undefined;
             report("second runtime shutdown");
-            await runCli(["dev", "stop"], { environment, log: () => undefined });
-            await runtime.exited;
-            await capture;
+            await runCli(["instance", "stop", "default"], { environment, log: () => undefined });
+            await runCli(["services", "stop"], { environment, log: () => undefined });
         } catch (error) {
             await writeFailureArtifacts(output, browser);
             throw new Error(
@@ -115,26 +101,20 @@ smoke(
             );
         } finally {
             await browser?.close();
-            runtime?.kill("SIGTERM");
-            await runtime?.exited;
-            await capture;
-            await runCli(["dev", "stop"], { environment, log: () => undefined }).catch(() => undefined);
+            await runCli(["reset", "--yes"], { environment, log: () => undefined }).catch(() => undefined);
             await rm(data, { recursive: true, force: true });
         }
     },
-    420_000,
+    540_000,
 );
 
 function report(step: string): void {
     console.info(`[kernel-smoke] ${step}`);
 }
 
-async function waitForHttp(url: string, runtime: ReturnType<typeof Bun.spawn>): Promise<void> {
+async function waitForHttp(url: string): Promise<void> {
     const deadline = Date.now() + 90_000;
     while (Date.now() < deadline) {
-        if (runtime.exitCode !== null) {
-            throw new Error(`Local runtime exited during startup (${runtime.exitCode})`);
-        }
         const ready = await fetch(url, { redirect: "manual" }).then(
             (response) => response.status < 500,
             () => false,
@@ -159,7 +139,7 @@ function assertPortAvailable(port: number, label: string): void {
         const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
         if (code === "EADDRINUSE") {
             throw new Error(
-                `Kernel smoke cannot start because the ${label} port ${port} is already in use. Stop the existing Ulvia dev stack and retry.`,
+                `Kernel smoke cannot start because the ${label} port ${port} is already in use. Stop the existing local Ulvia installation and retry.`,
             );
         }
         throw error;
@@ -183,18 +163,4 @@ async function writeFailureArtifacts(
                 .catch(() => undefined),
         ]);
     }
-}
-
-async function captureOutput(
-    stream: ReadableStream<Uint8Array> | number | null | undefined,
-    append: (value: string) => void,
-): Promise<void> {
-    if (!stream || typeof stream === "number") {
-        return;
-    }
-    const decoder = new TextDecoder();
-    for await (const chunk of stream) {
-        append(decoder.decode(chunk, { stream: true }));
-    }
-    append(decoder.decode());
 }

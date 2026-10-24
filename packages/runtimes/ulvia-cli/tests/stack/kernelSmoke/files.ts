@@ -20,6 +20,7 @@ export async function mutateFiles(page: Page): Promise<void> {
     await upload(page, "smoke.png", FIRST_IMAGE);
 
     const card = fileCard(page, "smoke.png");
+    await openFileDetails(card);
     const renameForm = capabilityForm(card, "workspace.files.update");
     await renameForm.locator('input[name="name"]').fill("smoke-renamed.png");
     const refreshedAfterRename = await submit(
@@ -41,6 +42,7 @@ export async function mutateFiles(page: Page): Promise<void> {
     await submit(page, "workspace.files.set-visibility", visibilityButton(renamed, "public"));
     const publicFile = fileCard(page, "smoke-renamed.png");
     await visibilityButton(publicFile, "private").waitFor();
+    await openFileDetails(publicFile);
     await replace(page, publicFile, "replacement.png", REPLACEMENT_IMAGE);
     const replaced = fileCard(page, "replacement.png");
     await submit(page, "workspace.files.set-visibility", visibilityButton(replaced, "private"));
@@ -49,7 +51,7 @@ export async function mutateFiles(page: Page): Promise<void> {
 
     await upload(page, "delete-me.png", FIRST_IMAGE);
     const disposable = fileCard(page, "delete-me.png");
-    await disposable.locator("details > summary").click();
+    await openDeleteDetails(disposable);
     await submit(
         page,
         "workspace.files.delete",
@@ -63,7 +65,7 @@ export async function verifyFilesAfterRestart(page: Page): Promise<void> {
     const persisted = fileCard(page, "replacement.png");
     await persisted.waitFor();
     await expectOpenImage(page, persisted, 2);
-    await persisted.locator("details > summary").click();
+    await openDeleteDetails(persisted);
     await submit(page, "workspace.files.delete", capabilityForm(persisted, "workspace.files.delete").locator("button"));
     await persisted.waitFor({ state: "detached" });
 }
@@ -120,11 +122,12 @@ async function replace(page: Page, card: Locator, name: string, contents: Buffer
 }
 
 async function submit(page: Page, capabilityId: string, trigger: Locator) {
-    const responsePromise = page.waitForResponse((candidate) => candidate.url().includes(capabilityId));
-    const refreshed = page.waitForResponse(isWorkspaceResponse);
+    const flow = page
+        .waitForResponse((candidate) => candidate.url().includes(capabilityId))
+        .then(async (response) => ({ response, refreshed: await page.waitForResponse(isWorkspaceResponse) }));
     await trigger.click();
-    await expectOk(capabilityId, await responsePromise);
-    const refreshResponse = await refreshed;
+    const { response, refreshed: refreshResponse } = await flow;
+    await expectOk(capabilityId, response);
     await expectOk("workspace.get", refreshResponse);
     return refreshResponse;
 }
@@ -161,6 +164,14 @@ function visibilityButton(card: Locator, visibility: "private" | "public"): Loca
     return card.locator(
         `form[cms-mutation*="workspace.files.set-visibility"]:has(input[name="visibility"][value="${visibility}"]) button[type="submit"]`,
     );
+}
+
+async function openFileDetails(card: Locator): Promise<void> {
+    await card.locator("details").first().locator("summary").click();
+}
+
+async function openDeleteDetails(card: Locator): Promise<void> {
+    await card.locator('details:has(form[cms-mutation*="workspace.files.delete"]) > summary').click();
 }
 
 async function expectOk(label: string, response: Awaited<ReturnType<Page["waitForResponse"]>>): Promise<void> {

@@ -63,14 +63,19 @@ export async function cyclePublicationState(page: Page, kernelOrigin: string, de
 
 export async function deleteSmokePage(page: Page, kernelOrigin: string): Promise<void> {
     await page.goto(`${kernelOrigin}/admin/pages`);
-    const card = page.locator('#pages-list [role="listitem"]').filter({ hasText: "Smoke Page" });
-    await card.locator('a[href*="ulvia-official-page-id"]').click();
+    const detailLink = page
+        .locator('#pages-list a[href^="/admin/pages/detail?ulvia-official-page-id="]')
+        .filter({ hasText: "Smoke Page" });
+    await detailLink.click();
     await page.locator("#page-general").waitFor();
     await page.locator('a[href="#page-danger"]').click();
     await page.waitForURL(/#page-danger$/u);
+    await page.locator('button[command="show-modal"][commandfor="delete-page-dialog"]').click();
+    const deleteDialog = page.locator("#delete-page-dialog");
+    await deleteDialog.waitFor({ state: "visible" });
     const [response] = await Promise.all([
         page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.content/pages.delete")),
-        page.locator('form[cms-mutation^="ulvia.cms.content:pages.delete "] button[type="submit"]').click(),
+        deleteDialog.locator('form[cms-mutation^="ulvia.cms.content:pages.delete "] button[type="submit"]').click(),
     ]);
     if (!response.ok()) {
         throw new Error(`Page deletion failed (${response.status()}).`);

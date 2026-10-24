@@ -7,14 +7,14 @@ export async function verifySecondInstanceIsolation(
     dataRoot: string,
     credentials: { adminPassword: string },
     kernelUrl: string,
+    providerUrl: string,
 ): Promise<void> {
     const [operatorToken, primary] = await Promise.all([
-        readFile(join(dataRoot, "dev", "provider-operator-token"), "utf8"),
-        readFile(join(dataRoot, "dev", "instance.json"), "utf8").then(
+        readFile(join(dataRoot, "services", "provider-operator-token"), "utf8"),
+        readFile(join(dataRoot, "instances", "default", "instance.json"), "utf8").then(
             (source) => JSON.parse(source) as { instanceId: string; token: string },
         ),
     ]);
-    const providerUrl = "http://127.0.0.1:5103";
     const created = await fetch(`${providerUrl}/ulvia/operator/instances`, {
         method: "POST",
         headers: {

@@ -47,7 +47,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     await mutateSeo(page);
     await page.locator('a[href^="/admin/pages/edit?ulvia-official-page-id="]').click();
     await page.waitForURL(/\/admin\/pages\/edit\?ulvia-official-page-id=/u);
-    const openCatalogue = page.locator("button[data-open-catalogue]");
+    const openCatalogue = page.locator("#page-editor-open-catalogue");
     await openCatalogue.click();
     const addHeading = page.locator('button[data-add="ulvia-official-heading"]');
     await addHeading.waitFor();
@@ -75,7 +75,7 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
 }
 
 async function fillLatestVisibleElementContent(page: Page, value: string): Promise<void> {
-    const fields = page.locator("textarea[data-element-content]");
+    const fields = page.locator("[data-content-fields] textarea[data-content-address]");
     const deadline = Date.now() + 15_000;
     while (Date.now() < deadline) {
         for (let index = (await fields.count()) - 1; index >= 0; index -= 1) {
