@@ -5,13 +5,13 @@
     color: var(--ulvia-official-text-secondary, #4f625a);
 }
 
-[part="item"] {
+[part~="item"] {
     display: contents;
 }
-[part="item"] > svg {
-    width: 1.125rem;
-    height: 1.125rem;
-    flex: 0 0 1.125rem;
+[part~="item"] > svg {
+    width: var(--ulvia-official-navigation-item-icon-size, 1.125rem);
+    height: var(--ulvia-official-navigation-item-icon-size, 1.125rem);
+    flex: 0 0 var(--ulvia-official-navigation-item-icon-size, 1.125rem);
 }
 :scope {
     position: relative;

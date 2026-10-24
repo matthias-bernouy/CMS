@@ -3,16 +3,19 @@
     min-width: 0;
     flex: var(--ulvia-official-navigation-section-flex, 0 0 auto);
 }
-[part="section"] {
+[part~="section"] {
     display: grid;
     gap: var(--ulvia-official-spacing-2xs, 0.25rem);
 }
-[part="label"] {
+[part~="label"] {
     display: var(--ulvia-official-navigation-section-label-display, flex);
     align-items: center;
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
-    padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem)
-        var(--ulvia-official-spacing-2xs, 0.25rem);
+    padding: var(
+        --ulvia-official-navigation-section-label-padding,
+        var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem)
+            var(--ulvia-official-spacing-2xs, 0.25rem)
+    );
     color: var(--ulvia-official-text-muted, #6d7e77);
     font-size: 0.6875rem;
     font-weight: var(--ulvia-official-font-weight-bold, 700);
@@ -20,13 +23,13 @@
     line-height: 1;
     text-transform: uppercase;
 }
-:scope[divider] [part="label"]::after {
+:scope[divider] [part~="label"]::after {
     height: var(--ulvia-official-border-width, 1px);
     flex: 1;
     background: var(--ulvia-official-border-subtle, #e2e9e6);
     content: "";
 }
-[part="items"] {
+[part~="items"] {
     display: flex;
     flex-direction: var(--ulvia-official-navigation-section-direction, column);
     flex-wrap: var(--ulvia-official-navigation-section-wrap, nowrap);

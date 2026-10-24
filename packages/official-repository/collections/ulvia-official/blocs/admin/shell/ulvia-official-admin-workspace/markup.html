@@ -1,16 +1,15 @@
-<div cms-bloc="ulvia-official-app-shell" data-cms-composition-controller="" sticky-header="" layout="sidebar">
+<div cms-bloc="ulvia-official-app-shell" data-cms-composition-controller="" density="compact" sticky-header="" layout="sidebar">
     <strong slot="brand">{{ cms.i18n.ulvia-official.ui-ulvia }}</strong>
     <span slot="primary-mobile-label">{{ cms.i18n.ulvia-official.ui-workspace }}</span>
-    <div cms-bloc="ulvia-official-navigation-menu" label="{{ cms.i18n.ulvia-official.ui-administration }}" slot="secondary-navigation">
-        <span slot="header">{{ cms.i18n.ulvia-official.ui-site-administration }}</span>
-        <div cms-bloc="ulvia-official-navigation-section" slot="sections">
+    <div cms-bloc="ulvia-official-navigation-menu" density="compact" label="{{ cms.i18n.ulvia-official.ui-administration }}" slot="secondary-navigation">
+        <div cms-bloc="ulvia-official-navigation-section" divider="" slot="sections">
             <span slot="label">{{ cms.i18n.ulvia-official.ui-workspace }}</span>
             <a cms-bloc="ulvia-official-navigation-item" slot="items" href="/admin"
                 ><svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/dashboard.svg }}" aria-hidden="true" slot="content"></svg
                 ><span slot="content">{{ cms.i18n.ulvia-official.ui-dashboard }}</span></a
             >
         </div>
-        <div cms-bloc="ulvia-official-navigation-section" slot="sections">
+        <div cms-bloc="ulvia-official-navigation-section" divider="" slot="sections">
             <span slot="label">{{ cms.i18n.ulvia-official.ui-content }}</span>
             <a cms-bloc="ulvia-official-navigation-item" slot="items" href="/admin/pages"
                 ><svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/pages.svg }}" aria-hidden="true" slot="content"></svg
@@ -25,7 +24,7 @@
                 ><span slot="content">{{ cms.i18n.ulvia-official.ui-collections }}</span></a
             >
         </div>
-        <div cms-bloc="ulvia-official-navigation-section" slot="sections">
+        <div cms-bloc="ulvia-official-navigation-section" divider="" slot="sections">
             <span slot="label">{{ cms.i18n.ulvia-official.ui-administration }}</span>
             <a cms-bloc="ulvia-official-navigation-item" slot="items" href="/admin/providers"
                 ><svg cms-svg="{{ cms.asset.ulvia-official.icons/navigation/sources.svg }}" aria-hidden="true" slot="content"></svg
