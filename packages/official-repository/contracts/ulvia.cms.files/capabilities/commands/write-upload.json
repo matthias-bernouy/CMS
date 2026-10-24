@@ -57,7 +57,10 @@
                 "uploadId": "uploadId"
             },
             "headers": {
-                "upload-token": "uploadToken"
+                "upload-token": {
+                    "property": "uploadToken",
+                    "encoding": "uri-component"
+                }
             },
             "body": {
                 "binaryProperty": "bytes"

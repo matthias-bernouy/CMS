@@ -79,6 +79,7 @@ export class FileAccess {
             ...(file.width === undefined ? {} : { width: file.width }),
             ...(file.height === undefined ? {} : { height: file.height }),
             url: file.visibility === "public" ? this.fileUrl(file) : "",
+            path: file.visibility === "public" ? this.filePath(file) : "",
             ...(file.variants?.length
                 ? {
                       variants: file.variants.map((variant) => ({
@@ -87,6 +88,7 @@ export class FileAccess {
                           profile: variant.profile,
                           mimeType: variant.mimeType,
                           url: this.variantUrl(file, variant.width),
+                          path: this.variantPath(file, variant.width),
                       })),
                   }
                 : {}),
@@ -95,6 +97,10 @@ export class FileAccess {
 
     representationUrl(file: FileRecord, profile: string, width: number): string {
         return `${this.fileUrl(file)}/representations/${encodeURIComponent(profile)}/${width}.webp`;
+    }
+
+    representationPath(file: FileRecord, profile: string, width: number): string {
+        return new URL(this.representationUrl(file, profile, width)).pathname;
     }
 
     async read(
@@ -136,8 +142,17 @@ export class FileAccess {
         return `${this.publicBaseUrl}/.cms/call/ulvia.cms.files/files/${encodeURIComponent(file.id)}/${encodeURIComponent(file.generation)}`;
     }
 
+    private filePath(file: FileRecord): string {
+        return new URL(this.fileUrl(file)).pathname;
+    }
+
     private variantUrl(file: FileRecord, width: number): string {
         const variant = file.variants?.find((candidate) => candidate.width === width);
         return variant ? this.representationUrl(file, variant.profile, variant.width) : this.fileUrl(file);
+    }
+
+    private variantPath(file: FileRecord, width: number): string {
+        const variant = file.variants?.find((candidate) => candidate.width === width);
+        return variant ? this.representationPath(file, variant.profile, variant.width) : this.filePath(file);
     }
 }

@@ -106,12 +106,15 @@ export interface FileReference {
     readonly width?: number;
     readonly height?: number;
     readonly url: string;
+    /** Canonical same-site path suitable for persisted Page markup. */
+    readonly path: string;
     readonly variants?: readonly {
         readonly width: number;
         readonly height: number;
         readonly profile: "thumbnail" | "responsive";
         readonly mimeType: "image/webp";
         readonly url: string;
+        readonly path: string;
     }[];
 }
 

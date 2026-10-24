@@ -217,5 +217,6 @@ function fileReference() {
         visibility: "private" as const,
         name: "asset.txt",
         url: "https://cms.example/site/files/file_a/generation_a",
+        path: "/site/files/file_a/generation_a",
     };
 }

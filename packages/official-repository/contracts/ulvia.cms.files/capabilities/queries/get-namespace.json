@@ -86,7 +86,10 @@
                 "namespaceId": "namespaceId"
             },
             "headers": {
-                "namespace-key": "namespaceKey"
+                "namespace-key": {
+                    "property": "namespaceKey",
+                    "encoding": "uri-component"
+                }
             }
         },
         "response": {

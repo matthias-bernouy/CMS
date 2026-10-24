@@ -74,6 +74,10 @@
                             "type": "string",
                             "maxLength": 4096
                         },
+                        "path": {
+                            "type": "string",
+                            "maxLength": 4096
+                        },
                         "width": {
                             "type": "integer",
                             "minimum": 1,
@@ -114,13 +118,27 @@
                                     "url": {
                                         "type": "string",
                                         "maxLength": 4096
+                                    },
+                                    "path": {
+                                        "type": "string",
+                                        "maxLength": 4096
                                     }
                                 },
-                                "required": ["profile", "width", "height", "mimeType", "url"]
+                                "required": ["profile", "width", "height", "mimeType", "url", "path"]
                             }
                         }
                     },
-                    "required": ["namespaceId", "fileId", "generation", "name", "mimeType", "size", "visibility", "url"]
+                    "required": [
+                        "namespaceId",
+                        "fileId",
+                        "generation",
+                        "name",
+                        "mimeType",
+                        "size",
+                        "visibility",
+                        "url",
+                        "path"
+                    ]
                 }
             },
             "offset": {
@@ -161,7 +179,10 @@
                 "namespaceId": "namespaceId"
             },
             "headers": {
-                "namespace-key": "namespaceKey"
+                "namespace-key": {
+                    "property": "namespaceKey",
+                    "encoding": "uri-component"
+                }
             },
             "query": {
                 "offset": "offset",

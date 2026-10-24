@@ -3,7 +3,7 @@
     "protocol": "ulvia-conformance/v1",
     "contractId": "ulvia.cms.files",
     "contractVersion": "1.0.0",
-    "contractDigest": "sha256:fa9e6aac42c7c466a44ff10f39e77ae6941508bf105d87dc54dbd6c7a6d57fcc",
+    "contractDigest": "sha256:c23222f3598aeec033cef4880139189f50a3856aadfb0722c724d1dcd1a1e3e1",
     "publisherId": "ulvia.official",
     "version": "1.0.0",
     "isolation": "disposable-tenant"

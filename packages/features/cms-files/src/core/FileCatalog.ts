@@ -87,6 +87,7 @@ export class FileCatalog {
                 height: variant.height,
                 mimeType: variant.mimeType,
                 url: this.access.representationUrl(file, variant.profile, variant.width),
+                path: this.access.representationPath(file, variant.profile, variant.width),
             })),
         };
     }

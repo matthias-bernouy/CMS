@@ -33,6 +33,7 @@ test("namespace credentials authorize a streamed immutable public file", async (
 
     expect(reference.generation).toMatch(/^[0-9a-f]{64}$/);
     expect(reference.url).toContain("/.cms/call/ulvia.cms.files/files/");
+    expect(reference.path).toStartWith("/site/.cms/call/ulvia.cms.files/files/");
     const read = await files.readFile({
         fileId: reference.fileId,
         generation: reference.generation,
@@ -41,6 +42,17 @@ test("namespace credentials authorize a streamed immutable public file", async (
     expect(read.status).toBe(206);
     expect(read.contentRange).toBe("bytes 1-3/5");
     expect(await new Response(read.stream).text()).toBe("ell");
+
+    const conditionalRead = await files.readFile({
+        fileId: reference.fileId,
+        generation: reference.generation,
+        range: "bytes=1-3",
+        ifRange: '"another-generation"',
+    });
+    expect(conditionalRead.status).toBe(200);
+    expect(conditionalRead.contentRange).toBeUndefined();
+    expect(conditionalRead.contentLength).toBe(5);
+    expect(await new Response(conditionalRead.stream).text()).toBe("hello");
 });
 
 test("private files require an opaque signature minted by cms-files", async () => {

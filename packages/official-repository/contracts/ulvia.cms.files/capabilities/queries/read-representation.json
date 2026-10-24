@@ -80,8 +80,14 @@
                 "access": "access"
             },
             "headers": {
-                "range": "range",
-                "if-range": "ifRange"
+                "range": {
+                    "property": "range",
+                    "encoding": "http-field"
+                },
+                "if-range": {
+                    "property": "ifRange",
+                    "encoding": "http-field"
+                }
             }
         },
         "response": {
