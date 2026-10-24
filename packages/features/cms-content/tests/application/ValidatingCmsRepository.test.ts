@@ -240,7 +240,7 @@ describe("ValidatingCmsRepository — pages", () => {
                 content:
                     '<div cms-bloc=\"fixture-card\"><div cms-bloc=\"fixture-image\" slot="image"><img src="/.cms/sources/catalog/image?id={{ product.image }}" alt="Product"></div></div>',
             }),
-        ).rejects.toThrow("static value");
+        ).rejects.toThrow("dynamic internal URLs require one complete internalUrl binding");
     });
 
     test("rejects authored runtime image attributes that could bypass the image source policy", async () => {
