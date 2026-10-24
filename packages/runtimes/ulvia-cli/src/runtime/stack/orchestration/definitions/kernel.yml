@@ -38,4 +38,3 @@ networks:
     instances:
         external: true
         name: ${ULVIA_INSTANCE_NETWORK}
-
