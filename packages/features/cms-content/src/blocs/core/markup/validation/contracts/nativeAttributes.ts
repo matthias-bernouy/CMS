@@ -284,24 +284,6 @@ export function blocSettingAttributeNameIssue(name: string, acceptedTags: readon
     return null;
 }
 
-const NATIVE_BOOLEAN_ATTRIBUTES = new Set([
-    "checked",
-    "default",
-    "disabled",
-    "hidden",
-    "inert",
-    "multiple",
-    "readonly",
-    "required",
-    "selected",
-]);
-
-type NativeAttributeBindingKind = "boolean" | "string";
-
-export function nativeAttributeBindingKind(attribute: string): NativeAttributeBindingKind {
-    return NATIVE_BOOLEAN_ATTRIBUTES.has(attribute.toLowerCase()) ? "boolean" : "string";
-}
-
 export function isDeclaredPlatformNativeAttributeAllowed(tag: string, attribute: string): boolean {
     return PLATFORM_NATIVE_ATTRIBUTES[tag.toLowerCase()]?.has(attribute.toLowerCase()) === true;
 }

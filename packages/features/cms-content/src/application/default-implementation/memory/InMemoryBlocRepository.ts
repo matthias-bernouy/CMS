@@ -1,5 +1,5 @@
-import type { BlocListItemResponse } from "cms-content/application/interfaces/CmsRepository";
 import type { BlocListOptions } from "cms-content/application/interfaces/CmsRepository";
+import { projectBlocList } from "cms-content/application/core/projectBlocList";
 import type {
     BlocRecord,
     SiteBlocDefinition,
@@ -117,35 +117,8 @@ export class InMemoryBlocRepository {
         return this.siteBlocPublications.run(operation);
     }
 
-    async getBlocsList(options: BlocListOptions = {}): Promise<BlocListItemResponse[]> {
-        return [...this.blocs.values()].flatMap((record) => {
-            const bloc = record.artifact;
-            return bloc && (options.includeHidden || bloc.catalogue !== "hidden")
-                ? [
-                      {
-                          id: record.tag,
-                          name: bloc.name,
-                          group: bloc.group || "",
-                          ...(bloc.catalogueOrder === undefined ? {} : { catalogueOrder: bloc.catalogueOrder }),
-                          description: bloc.description || "",
-                          kind: bloc.kind,
-                          markupHTML: bloc.markupHTML,
-                          ...(bloc.browser ? { browser: structuredClone(bloc.browser) } : {}),
-                          ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
-                          ...(bloc.slots ? { slots: structuredClone(bloc.slots) } : {}),
-                          ...(bloc.settings ? { settings: structuredClone(bloc.settings) } : {}),
-                          ...(bloc.catalogue ? { catalogue: bloc.catalogue } : {}),
-                          ...(bloc.uses ? { uses: [...bloc.uses] } : {}),
-                          root: bloc.root,
-                          ...(bloc.styleCSS ? { styleCSS: bloc.styleCSS } : {}),
-                          ...(bloc.styleCollectionId ? { styleCollectionId: bloc.styleCollectionId } : {}),
-                          hasBehavior: Boolean(bloc.viewJS),
-                          ...(bloc.thumbnail ? { thumbnail: structuredClone(bloc.thumbnail) } : {}),
-                          ownership: structuredClone(record.ownership),
-                      },
-                  ]
-                : [];
-        });
+    async getBlocsList(options: BlocListOptions = {}) {
+        return projectBlocList([...this.blocs.values()], options);
     }
 
     async getBlocViewJS(htmlTag: string): Promise<string | null> {

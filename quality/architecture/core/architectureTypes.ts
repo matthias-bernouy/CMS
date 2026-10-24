@@ -10,6 +10,7 @@ export type ArchitectureViolationKind =
     | "surface-runtime-adapter"
     | "restricted-package-import"
     | "browser-runtime-adapter"
+    | "browser-entry-missing"
     | "environment-read"
     | "focused-test";
 

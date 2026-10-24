@@ -18,6 +18,15 @@ export async function checkBrowserEntrypoints(
     const packageByRoot = [...packages].sort((a, b) => b.root.length - a.root.length);
     const entries = browserEntries(packages, configuredEntries, rootDir);
     const sourceFiles = new Set(importsByFile.keys());
+    for (const configuredEntry of configuredEntries) {
+        if (!sourceFiles.has(resolve(rootDir, configuredEntry))) {
+            violations.push({
+                kind: "browser-entry-missing",
+                file: configuredEntry,
+                message: `configured browser entry does not exist: ${configuredEntry}`,
+            });
+        }
+    }
     const visited = new Set<string>();
     const pending = [...entries].filter((entry) => sourceFiles.has(entry));
 

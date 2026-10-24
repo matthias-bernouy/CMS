@@ -174,11 +174,27 @@ export class ValidatingCmsRepository implements CmsRepository {
     getPublishedPageById(id: string) {
         return this.inner.getPublishedPageById(id);
     }
+    getPublishedPagesByIds(ids: readonly string[]) {
+        return (
+            this.inner.getPublishedPagesByIds?.(ids) ??
+            Promise.all(ids.map((id) => this.inner.getPublishedPageById(id))).then((pages) =>
+                pages.filter((page): page is TPage => page !== null),
+            )
+        );
+    }
     getPublishedPages() {
         return this.inner.getPublishedPages();
     }
     getPageRoute(path: string) {
         return this.inner.getPageRoute?.(path) ?? Promise.resolve(null);
+    }
+    getPageRoutes(paths: readonly string[]) {
+        return (
+            this.inner.getPageRoutes?.(paths) ??
+            Promise.all(paths.map((path) => this.inner.getPageRoute(path))).then((routes) =>
+                routes.filter((route): route is NonNullable<typeof route> => route !== null),
+            )
+        );
     }
     getPageById(id: string) {
         return this.inner.getPageById(id);

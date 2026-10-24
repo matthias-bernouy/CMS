@@ -1,5 +1,5 @@
 import type { ContentReader, RenderableBloc } from "cms-content/application/interfaces/ContentReader";
-import { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
+import { type BlocViewCache, createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
 import { groupBlocsBySignature, type BlocGroups } from "./groupBlocsBySignature";
 
 const TTL_MS = 5 * 60_000;
@@ -12,13 +12,14 @@ export function getBlocGroupManifest(
     content: ContentReader,
     revision?: ContentRevision,
     renderableBlocs?: readonly RenderableBloc[],
+    blocViews?: BlocViewCache,
 ): Promise<BlocGroups> {
     const now = Date.now();
     const cached = memo.get(content);
     if (cached && cached.revision === revision && now - cached.computedAt < TTL_MS) {
         return cached.promise;
     }
-    const promise = computeBlocGroupManifest(content, renderableBlocs);
+    const promise = computeBlocGroupManifest(content, renderableBlocs, blocViews);
     memo.set(content, { promise, computedAt: now, revision });
     promise.catch(() => {
         if (memo.get(content)?.promise === promise) {
@@ -31,11 +32,12 @@ export function getBlocGroupManifest(
 async function computeBlocGroupManifest(
     content: ContentReader,
     renderableBlocs?: readonly RenderableBloc[],
+    blocViews?: BlocViewCache,
 ): Promise<BlocGroups> {
     const [pages, blocs] = await Promise.all([
         content.getPublishedPages(),
         renderableBlocs ?? content.getRenderableBlocs(),
     ]);
-    const resolveUsage = createBlocUsageResolver([...blocs], content);
+    const resolveUsage = createBlocUsageResolver([...blocs], content, blocViews);
     return groupBlocsBySignature(await Promise.all(pages.map((page) => resolveUsage(page.content))));
 }

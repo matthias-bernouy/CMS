@@ -1,4 +1,4 @@
-import type { RenderablePage, TPage } from "@bernouy/cms-content/rendering";
+import type { RenderablePage, RenderingSettings, TPage } from "@bernouy/cms-content/rendering";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import type { PageRenderMetadata } from "@bernouy/cms-content/seo";
 import { cachedResponseAsync, sendCompressed } from "@bernouy/http-runner";
@@ -29,6 +29,7 @@ export async function serveRenderablePage(
         decision.access,
         language,
         decision.cacheable,
+        decision.settings,
     );
     return embeddablePage(response, language, decision.access);
 }
@@ -41,13 +42,18 @@ async function renderIndexedPage(
     access: PageAccess,
     language: string,
     cacheable: boolean,
+    settings?: RenderingSettings,
 ): Promise<Response> {
     if (access !== "public") {
-        return renderWithFallbacks(request, page, cachePath, kernel, false, {
-            canonical: null,
-            indexable: false,
-            language,
-        });
+        return renderWithFallbacks(
+            request,
+            page,
+            cachePath,
+            kernel,
+            false,
+            { canonical: null, indexable: false, language },
+            settings,
+        );
     }
     const indexing = await resolveRuntimePageIndexingMetadata(request, page, kernel);
     if (indexing.kind === "not-found") {
@@ -63,10 +69,15 @@ async function renderIndexedPage(
         reportPageFailure(kernel, "indexing", cachePath, new Error(indexing.reason));
         return renderRef(request, kernel, "serverError", 503, "Service unavailable");
     }
-    return renderWithFallbacks(request, page, cachePath, kernel, cacheable && !indexing.dynamic, {
-        ...indexing.metadata,
-        language,
-    });
+    return renderWithFallbacks(
+        request,
+        page,
+        cachePath,
+        kernel,
+        cacheable && !indexing.dynamic,
+        { ...indexing.metadata, language },
+        settings,
+    );
 }
 
 async function renderWithFallbacks(
@@ -76,23 +87,28 @@ async function renderWithFallbacks(
     kernel: KernelCms,
     cacheable: boolean,
     metadata: PageRenderMetadata,
+    settings?: RenderingSettings,
 ): Promise<Response> {
     try {
         if (!cacheable) {
             return sendCompressed(
                 request,
-                await renderPage(page, makeRuntimeRenderContext(kernel), metadata),
+                await renderPage(page, makeRuntimeRenderContext(kernel, { renderingSettings: settings }), metadata),
                 "no-store",
                 { skipCspHeader: true },
             );
         }
         const collectionRevision = (await kernel.content.getContentRevision?.()) ?? 0;
+        const renderContext = makeRuntimeRenderContext(kernel, {
+            renderingSettings: settings,
+            contentRevision: collectionRevision,
+        });
         const cacheKey = CMS_CACHE_KEYS.page(cachePath);
         return cachedResponseAsync(
             request,
             collectionRevision ? `${cacheKey}:collections:${collectionRevision}` : cacheKey,
             kernel.cache,
-            () => renderPage(page, makeRuntimeRenderContext(kernel), metadata),
+            () => renderPage(page, renderContext, metadata),
             kernel.content.getContentRevision ? "public, no-cache" : undefined,
             { skipCspHeader: true },
         );

@@ -71,3 +71,36 @@ test("ignores Kernel-local queries and promotes administrator capabilities", asy
 
     expect(await analyzer.requiredAccess(document)).toBe("admin");
 });
+
+test("resolves one contract snapshot for all Page capabilities", async () => {
+    let contractResolutions = 0;
+    const analyzer = new PageCapabilityAnalyzer({
+        resolveCapability: async () => {
+            throw new Error("individual capability resolution must not be used");
+        },
+        resolveContract: async (contractId) => {
+            contractResolutions += 1;
+            return contractId === "shop"
+                ? {
+                      version: "2.3.0",
+                      capabilities: [
+                          { id: "list-products", access: "public" as const },
+                          { id: "read-product", access: "authenticated" as const },
+                      ],
+                  }
+                : null;
+        },
+    });
+
+    await expect(
+        analyzer.requiredAccess({
+            page: {
+                ...page,
+                content:
+                    '<section cms-query="shop:list-products as products"></section><section cms-query="shop:read-product as product"></section>',
+            },
+            requirements: [],
+        }),
+    ).resolves.toBe("authenticated");
+    expect(contractResolutions).toBe(1);
+});

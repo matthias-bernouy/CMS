@@ -4,7 +4,7 @@ import { expandCompositions } from "cms-content/blocs/core/composition/expandCom
 import { wrapBindingCore } from "cms-content/blocs/core/markup/bindingRoot";
 import { CMS_BINDING_ATTRIBUTES } from "cms-content/blocs/core/markup/bindings";
 import { sanitizeDomTree } from "cms-content/blocs/core/markup/security/sanitizeDomTree";
-import { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
+import { type BlocViewCache, createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
 import { renderContentTexts, type ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
 import { expandSvgReferences } from "cms-content/pages/core/rendering/expandSvgReferences";
 
@@ -24,6 +24,7 @@ export interface RenderedPageDocument {
     /** Blocs still represented in rendered markup and therefore requiring browser assets. */
     readonly usedTags: readonly string[];
     readonly renderableBlocs: readonly RenderableBloc[];
+    readonly blocViews: BlocViewCache;
     readonly requiresBindingRuntime: boolean;
 }
 
@@ -37,7 +38,8 @@ export async function renderPageDocument(
     sanitizeDomTree(body);
 
     const blocList = await context.repository.getRenderableBlocs();
-    const resolveBlocUsage = createBlocUsageResolver(blocList, context.repository);
+    const blocViews: BlocViewCache = new Map();
+    const resolveBlocUsage = createBlocUsageResolver(blocList, context.repository, blocViews);
     const referencedTags = await resolveBlocUsage(body.innerHTML);
     expandCompositions(body, blocList);
     renderContentTexts(
@@ -61,6 +63,7 @@ export async function renderPageDocument(
         referencedTags,
         usedTags: resolvedTags,
         renderableBlocs: blocList,
+        blocViews,
         requiresBindingRuntime: hasLiveBindings(body),
     };
 }

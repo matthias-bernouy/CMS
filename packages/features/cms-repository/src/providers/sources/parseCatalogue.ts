@@ -1,11 +1,10 @@
 import { isSha256Digest } from "@bernouy/binary-media";
 import type { RepositoryArtifactEntry, RepositoryArtifactKind, RepositoryArtifactReference } from "./interfaces";
-import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
+import { isCanonicalSemVer, isRepositoryIdentifier } from "cms-repository/exports/contracts/compatibility";
+import { isPlainRecord, isRepositoryCatalogueCursor } from "cms-repository/repository-http/catalogueValues";
 
-const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/u;
 const CATALOGUE_TOKEN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
-const CURSOR = /^[A-Za-z0-9_-]{1,1024}$/u;
 
 export type ProviderCataloguePage = Readonly<{
     entries: readonly RepositoryArtifactEntry[];
@@ -13,13 +12,13 @@ export type ProviderCataloguePage = Readonly<{
 }>;
 
 export function validProviderRepositoryId(id: string): boolean {
-    return validIdentifier(id);
+    return isRepositoryIdentifier(id);
 }
 
 export function validProviderReference(reference: RepositoryArtifactReference): boolean {
     return (
-        validIdentifier(reference.publisherId) &&
-        validIdentifier(reference.id) &&
+        isRepositoryIdentifier(reference.publisherId) &&
+        isRepositoryIdentifier(reference.id) &&
         isCanonicalSemVer(reference.version) &&
         isSha256Digest(reference.digest)
     );
@@ -33,7 +32,7 @@ export function parseProviderCataloguePage(
     if (
         !isPlainRecord(data) ||
         Object.keys(data).some((key) => key !== "releases" && key !== "nextCursor") ||
-        (data.nextCursor !== undefined && (typeof data.nextCursor !== "string" || !CURSOR.test(data.nextCursor)))
+        (data.nextCursor !== undefined && !isRepositoryCatalogueCursor(data.nextCursor))
     ) {
         throw new TypeError("Invalid provider repository catalogue");
     }
@@ -62,9 +61,9 @@ export function parseProviderCataloguePage(
         const id = item[idKey];
         if (
             typeof item.publisherId !== "string" ||
-            !validIdentifier(item.publisherId) ||
+            !isRepositoryIdentifier(item.publisherId) ||
             typeof id !== "string" ||
-            !validIdentifier(id) ||
+            !isRepositoryIdentifier(id) ||
             typeof item.version !== "string" ||
             !isCanonicalSemVer(item.version) ||
             typeof item.digest !== "string" ||
@@ -102,18 +101,6 @@ export function parseProviderCataloguePage(
         throw new TypeError("Duplicate provider repository release coordinates");
     }
     return { entries, ...(typeof data.nextCursor === "string" ? { nextCursor: data.nextCursor } : {}) };
-}
-
-function validIdentifier(value: string): boolean {
-    return value.length <= 96 && IDENTIFIER.test(value);
-}
-
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-    if (value === null || typeof value !== "object" || Array.isArray(value)) {
-        return false;
-    }
-    const prototype = Object.getPrototypeOf(value);
-    return prototype === Object.prototype || prototype === null;
 }
 
 function validLinks(value: unknown): boolean {

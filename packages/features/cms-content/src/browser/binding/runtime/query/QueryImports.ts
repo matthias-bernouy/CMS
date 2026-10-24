@@ -1,4 +1,4 @@
-import { parseQueries } from "cms-content/blocs/core/markup/bindings";
+import { parseQueries } from "cms-content/blocs/core/markup/bindings/operation/query";
 import { QUERIES_ATTR } from "../../core/attrs";
 import { readSyncValue, subscribeSyncValue } from "../../state/SyncState";
 import { initialQueryState, isQueryState, successfulQueryState, type QueryState } from "./queryState";

@@ -14,7 +14,7 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
     return {
         rootDir,
         browserEntryPaths: [
-            "packages/features/cms-content/src/browser/entries/component.entry.ts",
+            "packages/features/cms-content/src/browser/entries/blocRuntime.entry.ts",
             "packages/features/cms-content/src/browser/entries/bindingCore.entry.ts",
             "packages/features/cms-content/src/exports/runtime/browser.ts",
             "packages/features/cms-content/src/exports/runtime/browser-dom.ts",

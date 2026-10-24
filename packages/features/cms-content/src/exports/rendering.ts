@@ -19,6 +19,7 @@ export { pageSeoForLanguage } from "cms-content/pages/core/lifecycle/pageSeo";
 export { wrapBindingCore } from "cms-content/blocs/core/markup/bindingRoot";
 export { projectPublicSiteOrganization } from "cms-content/settings/core/publicOrganization";
 export { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
+export type { BlocViewCache } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
 export { getBlocGroupManifest } from "cms-content/blocs/core/assets/blocGroupManifest";
 export {
     groupBlocsBySignature,

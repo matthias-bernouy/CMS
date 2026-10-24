@@ -81,7 +81,7 @@ CmsCore/
 bun install                 # links every workspace package + installs externals
 bun run build               # types, browser runtimes and official bootstrap
 bun run typecheck           # tsc --build only (project references)
-bun run clean               # tsc --build --clean (drops per-package dist + tsbuildinfo)
+bun run clean               # cleans TypeScript state, package dist and tsbuildinfo
 bun test                    # workspace test runner
 ```
 

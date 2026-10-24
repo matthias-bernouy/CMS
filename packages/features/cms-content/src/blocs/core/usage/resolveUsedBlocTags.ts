@@ -2,6 +2,7 @@ import type { ContentReader } from "cms-content/application/interfaces/ContentRe
 import { findUsedBlocTags } from "cms-content/blocs/core/usage/findUsedBlocTags";
 
 type BlocListItem = { id: string; markupHTML: string; uses?: readonly string[] };
+export type BlocViewCache = Map<string, Promise<string | null>>;
 
 /**
  * Resolves page blocs and the blocs referenced by server composition templates
@@ -11,8 +12,8 @@ type BlocListItem = { id: string; markupHTML: string; uses?: readonly string[] }
 export function createBlocUsageResolver(
     blocList: BlocListItem[],
     repository: Pick<ContentReader, "getBlocViewJS">,
+    viewCache: BlocViewCache = new Map(),
 ): (content: string) => Promise<string[]> {
-    const viewCache = new Map<string, Promise<string | null>>();
     const compositionByTag = new Map(blocList.map((bloc) => [bloc.id, bloc.markupHTML]));
     const dependenciesByTag = new Map(blocList.map((bloc) => [bloc.id, bloc.uses ?? []]));
 

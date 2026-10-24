@@ -24,23 +24,40 @@ export function createKernelGateway(control: ControlProviderClient) {
             }),
         }),
     });
-    const resolveCapability = async (contractId: string, capabilityId: string) => {
+    const resolveContract = async (contractId: string) => {
         const route = await routes.resolve("default", contractId);
-        const capability = route?.release.admission.release.capabilities.find((item) => item.id === capabilityId);
-        return capability
+        return route
+            ? {
+                  version: route!.release.admission.release.version,
+                  capabilities: route.release.admission.release.capabilities.map((capability) => ({
+                      id: capability.id,
+                      access: capability.access,
+                      effect: capability.behavior.effect,
+                      ...(capability.behavior.effect === "command"
+                          ? { idempotency: capability.behavior.idempotency }
+                          : {}),
+                      outputType: capability.output.type,
+                  })),
+              }
+            : null;
+    };
+    const resolveCapability = async (contractId: string, capabilityId: string) => {
+        const contract = await resolveContract(contractId);
+        const capability = contract?.capabilities.find((item) => item.id === capabilityId);
+        return capability && contract
             ? {
                   access: capability.access,
-                  version: route!.release.admission.release.version,
-                  effect: capability.behavior.effect,
-                  ...(capability.behavior.effect === "command" ? { idempotency: capability.behavior.idempotency } : {}),
-                  outputType: capability.output.type,
+                  effect: capability.effect,
+                  ...(capability.effect === "command" ? { idempotency: capability.idempotency } : {}),
+                  outputType: capability.outputType,
+                  version: contract.version,
               }
             : null;
     };
     return {
         invoker: gateway,
         resolveCapability,
-        pageCapabilities: new PageCapabilityAnalyzer({ resolveCapability }),
+        pageCapabilities: new PageCapabilityAnalyzer({ resolveCapability, resolveContract }),
         resolveActor: (request: Request) => resolveActor(gateway, request),
     };
 }

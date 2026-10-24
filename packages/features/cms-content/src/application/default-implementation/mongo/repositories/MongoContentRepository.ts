@@ -122,6 +122,20 @@ export class MongoContentRepository extends MongoBlocRepository {
             : null;
     }
 
+    async getPageRoutes(paths: readonly string[]): Promise<PageRoute[]> {
+        const unique = [...new Set(paths)];
+        if (unique.length === 0) {
+            return [];
+        }
+        return (await this.pageRoutes.find({ _id: { $in: unique } }).toArray()).map((route) => ({
+            path: route._id,
+            state: route.state,
+            pageId: route.pageId,
+            ownerPageId: route.ownerPageId,
+            language: route.language,
+        }));
+    }
+
     async getPage(path: string): Promise<TPage | null> {
         const direct = await this.pages.findOne({ path });
         if (direct) {
@@ -189,6 +203,17 @@ export class MongoContentRepository extends MongoBlocRepository {
                 deletionIntent: { $exists: false },
             }),
         );
+    }
+
+    async getPublishedPagesByIds(ids: readonly string[]): Promise<TPage[]> {
+        const unique = [...new Set(ids)];
+        if (unique.length === 0) {
+            return [];
+        }
+        const documents = await this.pages
+            .find({ _id: { $in: unique }, visible: true, deletionIntent: { $exists: false } })
+            .toArray();
+        return documents.map((document) => fromPageDoc(document)!);
     }
 
     async getPublishedPages(): Promise<TPage[]> {

@@ -14,6 +14,7 @@ import { gatewayRoute, NOW } from "../fixtures";
 function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(new InMemoryIdentityService())) {
     const sent: GatewayTransportRequest[] = [];
     let current = true;
+    let currentChecks = 0;
     let response: GatewayTransportResponse = {
         status: 200,
         contentType: "application/json",
@@ -23,7 +24,10 @@ function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(n
     const gateway = new CapabilityGateway({
         routes: {
             resolve: async () => route,
-            isCurrent: async () => current,
+            isCurrent: async () => {
+                currentChecks += 1;
+                return current;
+            },
         },
         transport: {
             send: async (request) => {
@@ -41,6 +45,9 @@ function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(n
         commandAudit,
         sent,
         identities,
+        get currentChecks() {
+            return currentChecks;
+        },
         setCurrent: (value: boolean) => {
             current = value;
         },
@@ -87,6 +94,7 @@ describe("capability gateway", () => {
             providerTokenRef: "${PROVIDER_TOKEN}",
             input: { term: "one" },
         });
+        expect(scope.currentChecks).toBe(2);
     });
 
     test("accepts an HTTP Provider origin only when the admitted manifest pins that private-network origin", async () => {

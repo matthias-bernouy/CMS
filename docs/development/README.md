@@ -130,7 +130,7 @@ automatically.
 | `bun run build` | Build TypeScript references and the browser runtimes owned by `cms-content`. |
 | `bun test` | Run the test suite. |
 | `bun run test:kernel-smoke` | Exercise a fresh local Kernel installation, representative mutations and restart through Chromium. |
-| `bun run clean` | Clean TypeScript build outputs through `tsc --build --clean`. |
+| `bun run clean` | Clean TypeScript build state, then remove every package `dist` and `tsconfig.tsbuildinfo`. |
 
 `check:all` remains the fast aggregate static check; it does not execute the
 application test suite or browser scenarios. Use `verify` before handing off a

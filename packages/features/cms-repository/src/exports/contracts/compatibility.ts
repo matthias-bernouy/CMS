@@ -17,5 +17,8 @@ export {
     satisfiesVersionRange,
     type VersionRangeChange,
 } from "cms-repository/contracts/core/compatibility/versionRange";
-export { isCanonicalSemVer } from "cms-repository/contracts/core/parsing/identifiers";
+export {
+    isCanonicalSemVer,
+    isRepositoryIdentifier,
+} from "cms-repository/contracts/core/parsing/identifiers";
 export { firstSchemaSubsetViolation } from "cms-repository/contracts/core/compatibility/schemaAcceptance";

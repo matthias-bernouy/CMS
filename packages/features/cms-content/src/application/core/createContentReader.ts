@@ -3,6 +3,7 @@ import { projectRenderingSettings } from "cms-content/settings/core/renderingSet
 import { projectPublishedPage } from "cms-content/pages/core/queries/publishedPage";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { ContentReader, RenderablePage } from "cms-content/application/interfaces/ContentReader";
+import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { RegisteredPageRoute } from "cms-content/pages/interfaces/routing";
 
 export type ContentReaderOptions = {
@@ -85,15 +86,26 @@ export function createContentReader(repository: CmsRepository, options: ContentR
         resolvePagePaths: async (paths) => {
             const requested = new Set(paths);
             const resolved: Record<string, string> = {};
+            const routes = repository.getPageRoutes
+                ? await repository.getPageRoutes([...requested])
+                : (await Promise.all([...requested].map((path) => repository.getPageRoute(path)))).filter(
+                      (route): route is PageRoute => route !== null,
+                  );
+            const routeByPath = new Map(routes.map((route) => [route.path, route]));
+            const pageIds = [...new Set(routes.filter((route) => route.state !== "gone").map((route) => route.pageId))];
+            const pages = repository.getPublishedPagesByIds
+                ? await repository.getPublishedPagesByIds(pageIds)
+                : (await Promise.all(pageIds.map((id) => repository.getPublishedPageById(id)))).filter(
+                      (page): page is TPage => page !== null,
+                  );
+            const pageById = new Map(pages.map((page) => [page.id, page]));
             await Promise.all(
                 [...requested].map(async (path) => {
-                    const route = await repository.getPageRoute(path);
+                    const route = routeByPath.get(path);
                     if (route?.state === "gone") {
                         return;
                     }
-                    const page = route
-                        ? projectPublishedPage(await repository.getPublishedPageById(route.pageId))
-                        : null;
+                    const page = route ? projectPublishedPage(pageById.get(route.pageId) ?? null) : null;
                     if (page) {
                         resolved[path] = page.path;
                         return;

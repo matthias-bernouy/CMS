@@ -39,6 +39,13 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         return route ? { ...route } : null;
     }
 
+    async getPageRoutes(paths: readonly string[]): Promise<PageRoute[]> {
+        return [...new Set(paths)].flatMap((path) => {
+            const route = this.pageRoutes.get(path);
+            return route ? [{ ...route }] : [];
+        });
+    }
+
     async getAllPages(): Promise<TPage[]> {
         return Array.from(this.pages.values()).map((page) => ({ ...page }));
     }
@@ -82,6 +89,13 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
     async getPublishedPageById(id: string): Promise<TPage | null> {
         const page = await this.getPageById(id);
         return isPublishedPage(page) ? structuredClone(page) : null;
+    }
+
+    async getPublishedPagesByIds(ids: readonly string[]): Promise<TPage[]> {
+        return [...new Set(ids)].flatMap((id) => {
+            const page = this.findPageEntryById(id)?.[1];
+            return isPublishedPage(page) ? [structuredClone(page)] : [];
+        });
     }
 
     async getPublishedPages(): Promise<TPage[]> {

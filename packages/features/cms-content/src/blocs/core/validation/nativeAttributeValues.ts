@@ -3,7 +3,7 @@ import { interpolationExpressions } from "cms-content/blocs/core/markup/bindings
 import { parseBindingExpression } from "cms-content/blocs/core/markup/expression/parser";
 import { boundAttributeValueIssue } from "cms-content/blocs/core/markup/validation/contracts/attributeBindings";
 import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
-import { nativeAttributeBindingKind } from "cms-content/blocs/core/validation/nativeHtml";
+import { nativeAttributeBindingKind } from "cms-content/blocs/core/markup/bindings/platform/nativeAttributes";
 
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;

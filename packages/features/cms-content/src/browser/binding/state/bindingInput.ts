@@ -1,9 +1,6 @@
-import {
-    parseBindingInput,
-    parseSyncTarget,
-    type CmsBindingInputCast,
-    type CmsJsonValue,
-} from "cms-content/blocs/core/markup/bindings";
+import { parseBindingInput } from "cms-content/blocs/core/markup/bindings/operation/input";
+import { parseSyncTarget } from "cms-content/blocs/core/markup/bindings/sync";
+import type { CmsBindingInputCast, CmsJsonValue } from "cms-content/blocs/core/markup/bindings/types";
 import { readSyncValue } from "./SyncState";
 
 export type ResolvedBindingInput =
