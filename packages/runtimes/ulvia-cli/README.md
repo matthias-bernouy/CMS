@@ -1,15 +1,19 @@
 # @bernouy/ulvia-cli
 
-Local development launcher for CmsCore.
+Ulvia installation and release CLI.
 
 ```bash
-bun run ulvia -- dev new
-bun run ulvia -- dev
-bun run ulvia -- dev status
-bun run ulvia -- dev credentials
-bun run ulvia -- dev stop
-bun run ulvia -- dev new --data-dir /absolute/path/to/a/fresh-environment
-bun run ulvia -- dev reset --yes
+bun run ulvia -- start
+bun run ulvia -- configure network
+bun run ulvia -- services status
+bun run ulvia -- instance create preview --label "Preview site"
+bun run ulvia -- instance list
+bun run ulvia -- instance credentials preview
+bun run ulvia -- instance stop preview
+bun run ulvia -- instance delete preview --yes
+bun run ulvia -- services stop
+bun run ulvia -- services upgrade
+bun run ulvia -- reset --yes
 bun run ulvia -- release packages/official-repository/collections/ulvia-official
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
@@ -20,36 +24,71 @@ bun run ulvia -- restore collection ulvia.official/ulvia-official@1.0.0 --reposi
 bun run ulvia -- prune
 ```
 
-`dev new` associates the current directory with a private development
-environment. The project keeps only a non-sensitive identity below
-`.ulvia/`; persistent data lives below
-`$XDG_DATA_HOME/ulvia/environments/` or
-`~/.local/share/ulvia/environments/`. Commands resolve the association from the
-current directory or one of its parents. They never silently fall back to a
-global environment. `ULVIA_DATA_DIR` remains an explicit advanced override.
-The CLI stores local releases in `<data>/repository`.
-The separate `dev/` directory holds credentials, CMS files, and MongoDB data.
-`dev` mounts the authenticated Ulvia Provider surface on loopback port 5103.
-That port is fixed because it is part of the admitted official Provider
-manifest; `ULVIA_DEV_PROVIDER_PORT` cannot select another origin.
-`dev credentials` prints the CMS administrator email and password. Repository,
-Provider operator and instance bearer tokens remain in the private `dev/`
-directory and are not printed as user credentials.
-`dev new` creates, associates, and immediately starts a completely isolated
-environment. `dev new --data-dir <absolute-data-directory>` selects an advanced
-custom destination, which must not exist. Later commands recover either form
-from the project association. `dev reset --yes` stops the
-current environment's MongoDB container and permanently clears only its `dev/`
-and `repository/` directories. It refuses to continue while the Kernel,
-Provider, or repository listener is still reachable; stop the foreground
-`dev` process first. The next `dev` invocation provisions a fresh instance.
+The lifecycle commands manage the same Docker Compose projects for loopback and
+public installations from any directory. Persistent
+data lives below `$XDG_DATA_HOME/ulvia` or `~/.local/share/ulvia`;
+`ULVIA_DATA_DIR` remains an explicit isolation override for tests and CI. The
+CLI stores authored releases in `<data>/repository`. Shared Provider, Repository,
+MongoDB, proxy, files, secrets and logs live below `<data>/services`; each
+stateless Kernel has independent state and logs below `<data>/instances/<name>`.
+The CLI never starts application servers or supervises their PIDs.
+
+The first lifecycle command creates a safe installation configuration bound to
+`127.0.0.1:5100`. Configure public exposure before creating an instance:
+
+```bash
+ulvia configure network \
+  --bind 0.0.0.0 \
+  --http-port 80 \
+  --tls acme \
+  --https-port 443 \
+  --acme-email ops@example.com
+ulvia start
+ulvia instance create website --domain example.com
+```
+
+The configuration is persisted under `<data>/services/installation.json` and
+is not a per-start mode. ACME requires `0.0.0.0` and every instance in an ACME
+installation requires an explicit DNS domain. Network configuration is locked
+after the first instance because its canonical Kernel URL is part of Provider
+provisioning. Repository and Provider management ports remain loopback-only.
+
+`services start` starts only the shared proxy, MongoDB, Repository and Provider.
+`instance create` provisions one isolated Provider tenant and immediately starts
+its dedicated Kernel. `instance start` restarts only an already-provisioned
+instance's Kernel. All Kernels use the shared proxy port: an instance named
+`default` is available at `http://localhost:5100`, while any other instance such
+as `preview` uses `http://preview.localhost:5100`.
+`ULVIA_HTTP_PORT`, `ULVIA_REPOSITORY_PORT`, and `ULVIA_PROVIDER_PORT` provide
+initial isolation defaults for tests and CI. Interactive configuration belongs
+to `ulvia configure network`. The Provider still listens on its canonical port
+5103 inside the private Docker network; only its operator port on the host
+changes.
+`start` is the idempotent convenience command for shared services plus every
+previously created local instance; it never creates an implicit instance.
+
+The lifecycle boundary is deliberate:
+
+| Command | Provider tenant | Kernel container |
+| --- | --- | --- |
+| `services start` | Does not create one | Does not start one |
+| `instance create <name>` | Provisions one durable tenant | Creates and starts its Kernel |
+| `instance start <name>` | Reuses the existing tenant | Starts only that Kernel |
+| `start` | Never provisions | Starts every existing Kernel after shared services |
+
+`instance credentials <name>` prints only that administrator's email and
+password. Repository, Provider operator and instance bearer tokens remain in
+private runtime files. Shared services and every instance have independent
+`stop`, `status`, `logs` and explicit `upgrade` boundaries. `reset --yes`
+removes every Compose project, instance, shared state and repository
+release. It does not inspect or modify the current working directory.
 `release <resource-directory>` reads `definition.json` and routes by `kind`:
 `collection`, `contract`, or `provider-manifest`. It validates and stores one
 immutable release. A provider manifest must reference exact contract releases
 already in the local repository. Release does not connect to or test a provider.
 Contract fixture assets declared in `definition.json` are read from
 `fixtures/<asset-id>` and verified by digest. Releasing the same coordinate with
-different content fails. `dev` serves stored resources
+different content fails. The local Repository serves stored resources
 at `/v1/collections`, `/v1/contracts`, and `/v1/providers` on loopback port
 5102, with declared contract fixtures at
 `/v1/contracts/<publisher>/<contract>/<version>/fixtures/<asset-id>`, and sees
@@ -57,7 +96,7 @@ new releases without restarting. The CMS consumes the collection and provider
 repository endpoints. The Provider administration Page imports an exact
 manifest, approves an account connection and replaces the site's exact contract
 selections for Gateway calls. `prune` empties all local repository content
-without deleting `dev/` data.
+without deleting service or instance data.
 
 Contract authors may keep only release metadata in `definition.json` and split
 capabilities recursively below `capabilities/`. Each capability is one JSON
@@ -100,7 +139,7 @@ executable package.
 `yank` is reversible catalogue metadata: it hides a release from new catalogue
 resolution without deleting its exact historical bytes. `restore` exposes it
 again. Contract yanks block new dependent publications while previously
-published provider manifests remain readable. The loopback dev server uses the
+published provider manifests remain readable. The loopback Repository uses the
 same write protocol and keeps its generated repository token in the private
 runtime directory. The removed integration repository/Supabase bridge is not
 run.
@@ -146,7 +185,7 @@ for a nested Bloc. Intermediate grouping directories contain only directories
 and do not affect release identity.
 
 The bundled bootstrap already admits the official CMS contracts, provider manifest
-and administration collection before starting the local stack. To publish the same
+and administration collection before starting local services. To publish the same
 resources manually, release the CMS contracts before the manifest:
 
 ```bash
@@ -156,10 +195,9 @@ bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.conten
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.files
 bun run ulvia -- release packages/official-repository/contracts/ulvia.provider.cms-instances
 bun run ulvia -- release packages/official-repository/providers/ulvia.official
-bun run ulvia -- dev new
+bun run ulvia -- start
 ```
 
-Local `dev` provisions an instance through the Provider operator API, then
-connects and selects the official Provider automatically. Connection review
-validates the runtime report and exact manifest claims; it does not yet execute
-a live conformance suite.
+`instance create` provisions the named instance through the Provider operator
+API, then starts its Kernel. Connection review validates the runtime report and
+exact manifest claims; it does not yet execute a live conformance suite.

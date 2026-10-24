@@ -10,43 +10,50 @@ bun install --frozen-lockfile
 ## Local CMS
 
 ```bash
-bun run ulvia -- dev new
-bun run ulvia -- dev
-bun run ulvia -- dev status
-bun run ulvia -- dev credentials
-bun run ulvia -- dev logs --level warn
-bun run ulvia -- dev stop
+bun run ulvia -- start
+bun run ulvia -- configure network
+bun run ulvia -- services status
+bun run ulvia -- instance create preview
+bun run ulvia -- instance credentials preview
+bun run ulvia -- instance stop preview
+bun run ulvia -- services stop
 ```
 
-The CLI manages a persistent local stack with MongoDB, an Ulvia Provider, a CMS
-Kernel and an immutable resource repository. `dev new` associates the current
-project with private data below the user data directory. Later commands resolve
-that association automatically, including from project subdirectories.
-`ULVIA_DATA_DIR` explicitly overrides project resolution; `ULVIA_DEV_KERNEL_PORT`,
-`ULVIA_DEV_MONGO_PORT`, and
-`ULVIA_DEV_REPOSITORY_PORT` override the local ports. `release` validates an
-authored collection, contract, or provider manifest into the local immutable
-repository. `push` and `pull` transfer exact coordinates to and from a compatible
-HTTPS repository; `yank` and `restore` manage reversible catalogue availability.
-`dev` idempotently provisions the local instance through the Provider operator
-API, installs the official profile and starts its Kernel. `dev credentials`
-prints only the administrator email and password; repository, operator and
-instance tokens remain in the private local runtime directory.
+The CLI manages shared services and any number of named Kernel instances through
+independent Docker Compose projects. It runs the same Kernel, Provider and
+Official Repository images for loopback and public installations, plus Nginx
+and MongoDB, and never
+starts application servers inside the CLI process. Data lives below `$XDG_DATA_HOME/ulvia` or
+`~/.local/share/ulvia`; commands work from any directory. `ULVIA_DATA_DIR` is an
+explicit isolation override for tests and CI. `ULVIA_HTTP_PORT`,
+`ULVIA_REPOSITORY_PORT`, and `ULVIA_PROVIDER_PORT` provide initial port defaults
+for isolated tests. Persistent exposure is managed with
+`ulvia configure network`; loopback HTTP and public HTTPS/ACME use the same
+orchestrator and lifecycle commands. The Provider's internal Docker endpoint remains
+`ulvia-provider:5103`. `start` is an
+idempotent shortcut for the shared services and every previously created local
+instance. It creates no default instance. `instance create` provisions the
+Provider tenant and starts its dedicated Kernel. Named instances use
+`<name>.localhost` by default; public instances use
+`instance create <name> --domain <domain>`. Services and instances have
+separate stop and upgrade lifecycles.
+Credential commands print only administrator credentials; technical tokens
+remain private.
 
 ## Runtime Logs
 
-Kernel, Provider, repository, and development-supervisor diagnostics use the
+Kernel, Provider, and repository diagnostics use the
 shared structured logger. Local development keeps private rotating NDJSON files
-below `<data>/dev/logs` at `debug` level while the terminal defaults to the less
-noisy `info` level. Inspect the last 200 matching records with:
+below `<data>/services/logs` and `<data>/instances/<name>/logs` while the terminal defaults to the less
+noisy `info` level. An explicit file journal remains available even though the
+containers use production HTTP and CSP behavior. Inspect the last 200 matching records with:
 
 ```bash
-ulvia dev logs
-ulvia dev logs provider --level warn
-ulvia dev logs all --request-id <uuid>
-ulvia dev logs provider --event provider.operation.failed --instance-id <uuid> --stack
-ulvia dev logs all --json
-ulvia dev logs kernel --follow
+ulvia services logs provider --level warn
+ulvia services logs all --request-id <uuid>
+ulvia services logs provider --event provider.operation.failed --instance-id <uuid> --stack
+ulvia services logs all --json
+ulvia instance logs default kernel --follow
 ```
 
 `ULVIA_LOG_LEVEL` accepts `trace`, `debug`, `info`, `warn`, `error`, or `fatal`.
@@ -55,8 +62,7 @@ independently controls terminal verbosity and defaults to `info`.
 `ULVIA_LOG_FORMAT` accepts `pretty` or `json`. Production runtimes default to
 JSON on stdout/stderr; deployment infrastructure remains responsible for
 collecting and retaining that stream. The synchronous rotating file journal is
-reserved for local `MODE=DEV` runtimes and is configured automatically by
-`ulvia dev`; production runtimes ignore `ULVIA_LOG_FILE`. Invalid logging
+enabled only when `ULVIA_LOG_FILE` is explicitly configured. Invalid logging
 configuration is reported as a structured warning before the safe default is
 used.
 

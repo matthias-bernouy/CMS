@@ -46,7 +46,7 @@ namespace key, select a provider or install a required official dependency.
 
 | Checkpoint | Current evidence | State |
 | --- | --- | --- |
-| Fresh local startup and credential discovery | `ulvia dev` and `ulvia dev credentials` | Implemented |
+| Fresh local startup and credential discovery | `ulvia start`, `ulvia instance create site`, and `ulvia instance credentials site` | Implemented |
 | Administrator sign-in | Kernel browser smoke | Implemented |
 | Page creation | `ulvia.cms.content/pages.create` through an administration Page | Implemented |
 | Blank Page creation | New Pages start with an empty document and no implicit Bloc | Implemented |

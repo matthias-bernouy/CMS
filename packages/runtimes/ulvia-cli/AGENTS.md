@@ -1,19 +1,22 @@
 # @bernouy/ulvia-cli
 
-Local Ulvia CMS development runtime.
+Ulvia CMS installation runtime.
 
 ## Responsibilities
 
-- Start the local CMS and its MongoDB dependency.
-- Keep local runtime data and generated credentials private and persistent.
+- Orchestrate shared services and independent named Kernel instances through Docker Compose.
+- Keep runtime data and generated credentials private and persistent.
 - Expose lifecycle commands for starting, inspecting, and stopping the stack.
 
 ## Rules
 
 - CLI commands, help text, errors, and tests are written in English.
-- Bind development-only services to loopback interfaces.
+- Keep Repository and Provider management endpoints bound to loopback; expose
+  only the shared proxy according to the persistent installation configuration.
 - Never print session secrets, encryption keys, or infrastructure credentials.
 - Keep external process invocation behind the runtime process abstraction.
+- Lifecycle commands must never start the Kernel, Provider, Repository, or MongoDB directly;
+  it only manages their production-shaped containers.
 - `release` reads an explicit authored resource folder and dispatches by its
   `definition.json` kind: collection, contract, or provider-manifest. It stores
   immutable releases below the persistent user data directory. Provider
@@ -46,7 +49,7 @@ Local Ulvia CMS development runtime.
 - Before storing a collection release, validate namespaced CSS variable
   references against its local tokens, selective dependency imports and
   Bloc-owned custom-property declarations.
-- `dev` serves only stored releases on loopback; it must never read authored folders.
+- The local Repository serves only stored releases on loopback; it must never read authored folders.
 - `push` and `pull` transfer one exact collection, contract or provider release.
   Re-admit remote bytes locally and let the receiving repository re-run all
   publication and evolution rules. Never trust a remote digest without
@@ -60,5 +63,5 @@ Local Ulvia CMS development runtime.
 - A yank is reversible repository metadata. It removes a release from new
   catalogue resolution without deleting immutable bytes or breaking historical
   exact-coordinate reads.
-- `prune` clears the local repository without touching the persistent dev stack.
+- `prune` clears the local repository without touching shared services or instances.
 - Do not reintroduce the removed integration repository or Supabase bridge.
