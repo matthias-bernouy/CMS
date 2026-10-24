@@ -17,9 +17,9 @@
             </p>
         </div>
         <div cms-case='"success"'>
-            <header>
+            <header part="catalogue-header">
                 <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-explore-collections }}</h2>
-                <p>
+                <p part="release-count">
                     {{ catalogue.data.releases.length }}
                     {{ cms.i18n.ulvia-official.ui-available-releases }}
                 </p>
@@ -37,49 +37,52 @@
                     <span slot="eyebrow">{{ release.publisherId }} {{ release.version }}</span>
                     <h3 cms-bloc="ulvia-official-heading" slot="title">{{ release.name }}</h3>
                     <div cms-bloc="ulvia-official-stack" gap="md" slot="body">
-                        <div slot="items">
-                            <p>{{ release.description }}</p>
-                            <p>{{ release.blocCount }} {{ cms.i18n.ulvia-official.ui-blocks }}</p>
-                            <div cms-bloc="ulvia-official-stack" gap="sm">
-                                <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="release.browserRisk === 'none'" slot="items">
+                        <div part="release-summary" slot="items">
+                            <p part="release-description">{{ release.description }}</p>
+                            <p part="release-meta">{{ release.blocCount }} {{ cms.i18n.ulvia-official.ui-blocks }}</p>
+                            <div part="release-statuses">
+                                <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="release.browserRisk === 'none'">
                                     <span slot="label">{{ cms.i18n.ulvia-official.ui-no-browser-authority }}</span>
                                 </div>
-                                <div cms-bloc="ulvia-official-badge" tone="warning" cms-condition="release.browserRisk === 'review'" slot="items">
+                                <div cms-bloc="ulvia-official-badge" tone="warning" cms-condition="release.browserRisk === 'review'">
                                     <span slot="label">{{ cms.i18n.ulvia-official.ui-browser-authority-review-required }}</span>
                                 </div>
-                                <div cms-bloc="ulvia-official-badge" tone="danger" cms-condition="release.browserRisk === 'high'" slot="items">
+                                <div cms-bloc="ulvia-official-badge" tone="danger" cms-condition="release.browserRisk === 'high'">
                                     <span slot="label">{{ cms.i18n.ulvia-official.ui-high-risk-browser-authority }}</span>
                                 </div>
-                                <p slot="items" cms-condition="release.browserRisk !== 'none'">
+                                <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="release.action === 'current'">
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-installed }}</span>
+                                </div>
+                                <div cms-bloc="ulvia-official-badge" tone="neutral" cms-condition="release.action === 'older'">
+                                    <span slot="label">{{ cms.i18n.ulvia-official.ui-historical-release }}</span>
+                                </div>
+                            </div>
+                            <details part="security-details" cms-condition="release.browserRisk !== 'none'">
+                                <summary>{{ cms.i18n.ulvia-official.ui-technical-details }}</summary>
+                                <p cms-condition="release.browserRisk !== 'none'">
                                     {{ release.javaScriptBlocCount }} {{ cms.i18n.ulvia-official.ui-javascript-blocks }}
                                 </p>
-                                <p slot="items" cms-repeat="release.javaScriptBlocs as blocId">
+                                <p cms-repeat="release.javaScriptBlocs as blocId">
                                     <strong>{{ cms.i18n.ulvia-official.ui-javascript-blocks }}</strong>
                                     <span>{{ blocId }}</span>
                                 </p>
-                                <p slot="items" cms-condition="release.browserRisk !== 'none'">
+                                <p cms-condition="release.browserRisk !== 'none'">
                                     {{ release.frameBlocCount }} {{ cms.i18n.ulvia-official.ui-iframe-blocks }}
                                 </p>
-                                <div slot="items" cms-repeat="release.frameBlocs as frame">
+                                <div cms-repeat="release.frameBlocs as frame">
                                     <strong>{{ cms.i18n.ulvia-official.ui-iframe-blocks }}</strong>
                                     <span>{{ frame.id }}</span>
                                     <span cms-repeat="frame.origins as origin">{{ origin }}</span>
                                     <span cms-repeat="frame.sandbox as permission">{{ permission }}</span>
                                 </div>
-                                <p slot="items" cms-repeat="release.externalFrameOrigins as origin">
+                                <p cms-repeat="release.externalFrameOrigins as origin">
                                     <strong>{{ cms.i18n.ulvia-official.ui-external-frame-origin }}</strong>
                                     <span>{{ origin }}</span>
                                 </p>
-                                <p slot="items" cms-condition="release.scriptsWithSameOrigin">
+                                <p cms-condition="release.scriptsWithSameOrigin">
                                     <strong>{{ cms.i18n.ulvia-official.ui-same-origin-script-authority }}</strong>
                                 </p>
-                            </div>
-                            <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="release.action === 'current'">
-                                <span slot="label">{{ cms.i18n.ulvia-official.ui-installed }}</span>
-                            </div>
-                            <div cms-bloc="ulvia-official-badge" tone="neutral" cms-condition="release.action === 'older'">
-                                <span slot="label">{{ cms.i18n.ulvia-official.ui-historical-release }}</span>
-                            </div>
+                            </details>
                         </div>
                         <form
                             slot="items"
@@ -166,6 +169,17 @@
                                 </span></a
                             >
                         </div>
+                        <a
+                            cms-bloc="ulvia-official-action"
+                            size="sm"
+                            tone="secondary"
+                            variant="outline"
+                            cms-condition="release.action === 'current'"
+                            slot="items"
+                            href="/admin/collections/detail?ulvia-official-collection={{ release.collectionId | urlencode }}"
+                        >
+                            <span>{{ cms.i18n.ulvia-official.ui-manage }}</span>
+                        </a>
                     </div>
                 </div>
             </div>
