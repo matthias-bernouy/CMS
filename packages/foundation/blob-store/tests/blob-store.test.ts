@@ -59,6 +59,34 @@ describe("LocalFsBlobStore", () => {
         expect(await new Response(await store.get("manifest")).text()).toBe("after");
         expect(await readdir(directory)).toEqual(["manifest"]);
     });
+
+    test("does not let Bun reapply an incoming HTTP range to a full blob stream", async () => {
+        const store = new LocalFsBlobStore(directory);
+        await store.put("manifest", bytes("0123456789abcdef"));
+        const server = Bun.serve({
+            port: 0,
+            async fetch() {
+                return new Response(await store.get("manifest"), {
+                    status: 200,
+                    headers: {
+                        "accept-ranges": "bytes",
+                        "content-length": "16",
+                        etag: '"current"',
+                    },
+                });
+            },
+        });
+        try {
+            const response = await fetch(`http://127.0.0.1:${server.port}/manifest`, {
+                headers: { range: "bytes=0-7", "if-range": '"different"' },
+            });
+
+            expect(response.status).toBe(200);
+            expect(await response.text()).toBe("0123456789abcdef");
+        } finally {
+            server.stop(true);
+        }
+    });
 });
 
 describe("S3BlobStore", () => {

@@ -6,6 +6,7 @@ import {
     type BlobReadOptions,
     type BlobStore,
 } from "blob-store/core/contracts";
+import { detachBlobStream } from "blob-store/core/detachBlobStream";
 
 export type S3BlobStoreConfig = {
     bucket: string;
@@ -37,10 +38,10 @@ export class S3BlobStore implements BlobStore {
             return null;
         }
         if (!options.range) {
-            return file.stream();
+            return detachBlobStream(file.stream());
         }
         assertBlobRange(options.range, file.size);
-        return file.slice(options.range.start, options.range.end + 1).stream();
+        return detachBlobStream(file.slice(options.range.start, options.range.end + 1).stream());
     }
 
     async head(key: string): Promise<{ size: number } | null> {
