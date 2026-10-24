@@ -17,11 +17,29 @@
             ],
             "max": 1
         },
+        "title": {
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
         "caption": {
             "accepts": [
                 {
                     "kind": "native-content",
                     "profile": "inline"
+                }
+            ],
+            "max": 1
+        },
+        "mark": {
+            "accepts": [
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-image"
                 }
             ],
             "max": 1

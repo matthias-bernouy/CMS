@@ -1,5 +1,33 @@
 [
     {
+        "id": "surface",
+        "label": "setting.surface.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "plain",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "plain", "label": "setting.option.none" },
+                { "value": "inverse", "label": "setting.option.inverse" }
+            ]
+        }
+    },
+    {
+        "id": "caption-placement",
+        "label": "setting.caption-placement.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "below",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "below", "label": "setting.option.caption-below" },
+                { "value": "overlay", "label": "setting.option.caption-overlay" }
+            ]
+        }
+    },
+    {
         "id": "ratio",
         "label": "setting.ratio.label",
         "group": "setting.group.media",

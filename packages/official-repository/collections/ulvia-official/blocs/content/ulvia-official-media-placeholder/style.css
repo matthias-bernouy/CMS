@@ -1,0 +1,19 @@
+:scope {
+    display: block;
+    width: 100%;
+    color: var(--ulvia-official-text-muted, #66716c);
+}
+
+[part~="frame"] {
+    display: grid;
+    min-height: var(--ulvia-official-media-placeholder-min-height, 10rem);
+    overflow: hidden;
+    border-radius: var(--ulvia-official-media-placeholder-radius, var(--ulvia-official-radius-sm, 0.5rem));
+    background: var(--ulvia-official-media-placeholder-background, var(--ulvia-official-background-subtle, #f3f7f5));
+    place-items: center;
+}
+
+svg {
+    width: var(--ulvia-official-media-placeholder-icon-size, 2.5rem);
+    height: var(--ulvia-official-media-placeholder-icon-size, 2.5rem);
+}

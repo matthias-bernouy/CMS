@@ -1,0 +1,26 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-media-placeholder",
+    "label": "bloc.media-placeholder.label",
+    "description": "bloc.media-placeholder.description",
+    "category": "bloc.category.media",
+    "order": 6,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "default": {
+            "accepts": [
+                {
+                    "kind": "native-element",
+                    "accepts": ["svg"],
+                    "attributes": { "cms-svg": { "required": true } }
+                }
+            ],
+            "min": 1,
+            "max": 1
+        }
+    },
+    "root": {
+        "accepts": ["div", "span"]
+    }
+}

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { access, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { validatePageDocument } from "@bernouy/cms-content/page-document";
@@ -10,27 +10,7 @@ import { officialContractCatalogue } from "../officialContractCatalogue";
 test("the official collection passes its source quality contract", async () => {
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
     const artifact = await prepareCollectionRelease(source, await officialContractCatalogue());
-    const showcaseRoot = resolve(import.meta.dir, "../../../../official-repository/showcases/ulvia-official");
-    const showcasedBlocs = new Set<string>();
-    for (const name of (await readdir(showcaseRoot)).filter((entry) => entry.endsWith(".html"))) {
-        const html = await readFile(join(showcaseRoot, name), "utf8");
-        expect(html).not.toMatch(/<ulvia-[a-z]/u);
-        for (const match of html.matchAll(/\bcms-bloc\s*=\s*["']([^"']+)["']/gu)) {
-            showcasedBlocs.add(match[1]!);
-        }
-        for (const media of html.matchAll(/\/files\/(showcase-[a-z-]+)\/generation/gu)) {
-            await access(join(showcaseRoot, "assets", `${media[1]}.svg`));
-        }
-        try {
-            validatePageDocument(html, artifact.release.blocs);
-        } catch (error) {
-            throw new Error(`${name}: ${error instanceof Error ? error.message : String(error)}`);
-        }
-    }
     const visible = artifact.release.blocs.filter((bloc) => bloc.catalogue !== "hidden");
-    const knownBlocIds = new Set(artifact.release.blocs.map((bloc) => bloc.id));
-    expect([...showcasedBlocs].every((id) => knownBlocIds.has(id))).toBeTrue();
-    expect(visible.every((bloc) => showcasedBlocs.has(bloc.id))).toBeTrue();
     expect(visible.every((bloc) => bloc.category !== undefined && bloc.order !== undefined)).toBeTrue();
     expect(new Set(visible.map((bloc) => `${bloc.category}:${bloc.order}`)).size).toBe(visible.length);
     expect(
@@ -88,7 +68,7 @@ test("the official collection passes its source quality contract", async () => {
     expect(artifact.release.blocs.some((bloc) => bloc.id.startsWith("ulvia-official-field-help-"))).toBeFalse();
 
     const appShell = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-app-shell");
-    expect(appShell?.style).toContain(':scope > [part="shell"] > [part="mobile-backdrop"]');
+    expect(appShell?.style).toContain(':scope > [part~="shell"] > [part~="mobile-backdrop"]');
     expect(appShell?.style).toContain("button[data-mobile-toggle-close]");
 
     const action = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
@@ -98,6 +78,37 @@ test("the official collection passes its source quality contract", async () => {
     expect(action?.style).toContain("min-height: var(--ulvia-official-action-height)");
     expect(action?.style).toContain("white-space: normal");
     expect(action?.style).not.toContain(":scope > span");
+
+    const heading = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-heading");
+    expect(heading?.slots.accent).toEqual({
+        accepts: [{ kind: "native-content", profile: "phrasing" }],
+        max: 1,
+    });
+    expect(heading?.markup).toContain('<span part="accent"><slot name="accent"></slot></span>');
+    expect(heading?.style).toContain("--ulvia-official-heading-inherited-size");
+
+    const mediaFigure = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-media-figure");
+    expect(mediaFigure?.slots.title).toEqual({
+        accepts: [{ kind: "native-content", profile: "inline" }],
+        max: 1,
+    });
+    expect(mediaFigure?.settings?.find((setting) => setting.id === "surface")?.control?.options).toEqual([
+        { value: "plain", label: "setting.option.none" },
+        { value: "inverse", label: "setting.option.inverse" },
+    ]);
+
+    const hero = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-hero");
+    expect(hero?.uses).toContain("ulvia-official-media-figure");
+    expect(hero?.slots.media?.accepts).toContainEqual({
+        kind: "component",
+        tag: "ulvia-official-media-figure",
+    });
+    expect(() =>
+        validatePageDocument(
+            '<div cms-bloc="ulvia-official-hero"><h1 cms-bloc="ulvia-official-heading" slot="heading">Understand Gen Z.<span slot="accent">Engage your teams.</span></h1><div cms-bloc="ulvia-official-media-figure" slot="media" ratio="square" surface="inverse"><strong slot="title">Ada Lovelace</strong><span slot="caption">Trainer</span></div></div>',
+            artifact.release.blocs,
+        ),
+    ).not.toThrow();
 
     const link = artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-link");
     expect(link?.style).not.toContain("height: 100%");

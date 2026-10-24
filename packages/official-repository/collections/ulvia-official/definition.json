@@ -49,6 +49,7 @@
             "ulvia-official-list-item",
             "ulvia-official-lookup",
             "ulvia-official-media-figure",
+            "ulvia-official-media-placeholder",
             "ulvia-official-multi-select",
             "ulvia-official-navigation",
             "ulvia-official-navigation-group",
@@ -294,6 +295,24 @@
         },
         {
             "id": "collection-texts-mutation",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                        },
+                        "required": ["requestId"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "site-composition-mutation",
             "scope": "page",
             "schema": {
                 "type": "object",

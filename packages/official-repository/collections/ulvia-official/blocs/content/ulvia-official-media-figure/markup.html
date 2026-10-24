@@ -1,3 +1,7 @@
 <figure part="figure">
-    <span part="media"><slot name="media"></slot></span><slot name="caption"></slot>
+    <span part="media"><slot name="media"></slot></span>
+    <figcaption part="metadata">
+        <span part="metadata-copy"><slot name="title"></slot><slot name="caption"></slot></span>
+        <span part="mark"><slot name="mark"></slot></span>
+    </figcaption>
 </figure>

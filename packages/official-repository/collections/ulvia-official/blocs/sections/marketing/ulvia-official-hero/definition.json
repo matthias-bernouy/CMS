@@ -5,7 +5,7 @@
     "description": "bloc.hero.description",
     "category": "bloc.category.sections",
     "order": 10,
-    "uses": ["ulvia-official-action", "ulvia-official-heading", "ulvia-official-image"],
+    "uses": ["ulvia-official-action", "ulvia-official-heading", "ulvia-official-image", "ulvia-official-media-figure"],
     "requires": [],
     "slots": {
         "eyebrow": {
@@ -54,6 +54,10 @@
                 {
                     "kind": "component",
                     "tag": "ulvia-official-image"
+                },
+                {
+                    "kind": "component",
+                    "tag": "ulvia-official-media-figure"
                 }
             ],
             "max": 1
