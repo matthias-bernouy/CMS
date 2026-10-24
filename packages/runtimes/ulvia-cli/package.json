@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/ulvia-cli",
     "version": "0.1.0",
-    "description": "Local Ulvia CMS development runtime.",
+    "description": "Ulvia CMS installation and release CLI.",
     "license": "MIT",
     "type": "module",
     "bin": {
@@ -23,11 +23,9 @@
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-kernel-server": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/logging": "workspace:*",
-        "@bernouy/ulvia-provider-server": "workspace:*"
+        "@bernouy/logging": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

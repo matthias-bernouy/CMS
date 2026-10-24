@@ -20,7 +20,11 @@ test("the Bun runtime, types, CI, and container pins stay aligned", async () => 
     const qualityWorkflow = await readRepositoryFile(".github/workflows/quality.yml");
     const integrationWorkflow = await readRepositoryFile(".github/workflows/quality-integration-contracts.yml");
     const setupAction = await readRepositoryFile(".github/actions/setup-workspace/action.yml");
-    const dockerfile = await readRepositoryFile("infra/images/cms/Dockerfile");
+    const dockerfiles = await Promise.all(
+        ["kernel", "provider", "official-repository"].map((image) =>
+            readRepositoryFile(`infra/images/${image}/Dockerfile`),
+        ),
+    );
 
     expect(Bun.version).toBe(version);
     expect(rootPackage.packageManager).toBe(`bun@${version}`);
@@ -37,5 +41,7 @@ test("the Bun runtime, types, CI, and container pins stay aligned", async () => 
     expect(setupAction).toContain("bun-version-file: .bun-version");
     expect(qualityWorkflow).not.toContain("BUN_VERSION:");
     expect(integrationWorkflow).not.toContain("BUN_VERSION:");
-    expect(dockerfile.match(new RegExp(`oven/bun:${version}-alpine@sha256:[0-9a-f]{64}`, "g"))).toHaveLength(2);
+    for (const dockerfile of dockerfiles) {
+        expect(dockerfile.match(new RegExp(`oven/bun:${version}-alpine@sha256:[0-9a-f]{64}`, "g"))).toHaveLength(2);
+    }
 });

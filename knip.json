@@ -1,10 +1,7 @@
 {
     "$schema": "./node_modules/knip/schema.json",
     "include": ["files", "dependencies", "devDependencies", "optionalPeerDependencies", "exports", "types"],
-    "entry": [
-        "build.ts",
-        "infra/images/cms/infra/mongo/*.js"
-    ],
+    "entry": ["build.ts", "packages/runtimes/ulvia-cli/src/runtime/stack/orchestration/definitions/mongo/*.js"],
     "project": [
         "*.ts",
         "infra/**/*.js",
@@ -39,7 +36,7 @@
     },
     "ignoreFiles": [
         "**/dist/**",
-        "infra/images/cms/infra/mongo/*.js",
+        "**/runtime/stack/orchestration/definitions/mongo/*.js",
         "maquette/**",
         "packages/official-repository/**"
     ],
