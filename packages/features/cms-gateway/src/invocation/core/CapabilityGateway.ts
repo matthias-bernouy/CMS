@@ -38,6 +38,12 @@ export interface CapabilityGatewayOptions {
     readonly commandAudit?: GatewayCommandAuditStore;
     readonly now?: () => string;
     readonly maxObservationAgeMs?: number;
+    /**
+     * The transport authorization boundary re-resolves and fences the exact
+     * installation, release and capability immediately before dispatch.
+     * Generic transports must leave this disabled.
+     */
+    readonly transportFencesRoute?: boolean;
 }
 
 type AuthorizedRoute = {
@@ -93,7 +99,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
         assertActorCredentialTarget(invocation, capability);
         const input = snapshotInput(invocation.input, capability);
         const subjectId = await this.#providerSubjectId(invocation.actor, capability, route);
-        if (!(await this.#options.routes.isCurrent(route))) {
+        if (!this.#options.transportFencesRoute && !(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "installation changed while resolving actor identity");
         }
         const requestId = crypto.randomUUID();
@@ -122,7 +128,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 ...(invocation.idempotencyKey ? { idempotencyKey: invocation.idempotencyKey } : {}),
                 ...(invocation.actorCredential ? { actorCredential: invocation.actorCredential } : {}),
             });
-            if (!(await this.#options.routes.isCurrent(route))) {
+            if (!this.#options.transportFencesRoute && !(await this.#options.routes.isCurrent(route))) {
                 throw new GatewayError("stale_route", "selection or installation changed during invocation");
             }
             result = validateResponse(capability, binding, response, requestId);

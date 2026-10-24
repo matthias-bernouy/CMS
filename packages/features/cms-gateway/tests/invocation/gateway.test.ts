@@ -57,6 +57,31 @@ function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(n
     };
 }
 
+test("delegates invocation freshness to an explicitly fencing transport", async () => {
+    const route = await gatewayRoute();
+    let currentChecks = 0;
+    const gateway = new CapabilityGateway({
+        routes: {
+            resolve: async () => route,
+            isCurrent: async () => {
+                currentChecks += 1;
+                return false;
+            },
+        },
+        transport: {
+            send: async () => ({ status: 200, contentType: "application/json", output: { items: ["one"] } }),
+        },
+        authorize: async () => true,
+        transportFencesRoute: true,
+        now: () => NOW,
+    });
+
+    await expect(gateway.invoke(invocation())).resolves.toMatchObject({ kind: "success" });
+    expect(currentChecks).toBe(0);
+    await expect(gateway.assertAuthorized(invocation())).rejects.toMatchObject({ code: "stale_route" });
+    expect(currentChecks).toBe(1);
+});
+
 function invocation(
     actor: GatewayActor = { kind: "system", serviceId: "gateway-test" },
     input: unknown = { term: "one" },

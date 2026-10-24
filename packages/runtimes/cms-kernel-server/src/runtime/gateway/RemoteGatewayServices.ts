@@ -5,14 +5,32 @@ import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import type { ControlProviderClient } from "./ControlProviderClient";
 
 export class ControlGatewayRouteResolver implements GatewayRouteResolver {
-    constructor(private readonly control: ControlProviderClient) {}
+    readonly #cache = new Map<string, { route: GatewayRoute; expiresAt: number }>();
+
+    constructor(
+        private readonly control: ControlProviderClient,
+        private readonly now: () => number = Date.now,
+        private readonly cacheDurationMs = 5_000,
+    ) {}
 
     async resolve(siteId: string, contractId: string): Promise<GatewayRoute | null> {
+        const cacheKey = routeCacheKey(siteId, contractId);
+        const cached = this.#cache.get(cacheKey);
+        if (cached && cached.expiresAt > this.now()) {
+            return cached.route;
+        }
         const snapshot = await this.control.getGatewayRoute(contractId);
         if (snapshot === null) {
+            this.#cache.delete(cacheKey);
             return null;
         }
-        return parseRoute(snapshot, siteId, contractId);
+        const route = parseRoute(snapshot, siteId, contractId);
+        this.#cache.set(cacheKey, { route, expiresAt: this.now() + this.cacheDurationMs });
+        return route;
+    }
+
+    invalidate(siteId: string, contractId: string): void {
+        this.#cache.delete(routeCacheKey(siteId, contractId));
     }
 
     async isCurrent(route: GatewayRoute): Promise<boolean> {
@@ -23,6 +41,10 @@ export class ControlGatewayRouteResolver implements GatewayRouteResolver {
         const current = parseRoute(snapshot, route.selection.siteId, route.selection.contractId);
         return sameSelection(route, current) && sameInstallation(route, current) && readyForSelection(current);
     }
+}
+
+function routeCacheKey(siteId: string, contractId: string): string {
+    return `${siteId}\u0000${contractId}`;
 }
 
 function sameSelection(previous: GatewayRoute, current: GatewayRoute): boolean {

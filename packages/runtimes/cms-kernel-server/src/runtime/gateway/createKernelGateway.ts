@@ -12,20 +12,27 @@ import {
 
 export function createKernelGateway(control: ControlProviderClient) {
     const routes = new ControlGatewayRouteResolver(control);
+    const logicalRoutes = new ControlGatewayRouteResolver(control, Date.now, 0);
     const gateway = new CapabilityGateway({
         routes,
         identities: new ControlProviderIdentityService(control),
         commandAudit: new ControlGatewayAuditStore(control),
+        // The control Provider resolves the live route again before issuing
+        // every short-lived invocation token. That broker is the dispatch
+        // fence; the cached route is only a transport plan.
+        transportFencesRoute: true,
         authorize: async () => true,
         transport: new HttpGatewayTransport({
             network: new NodeGatewayHttpNetwork({
                 allowPrivateAddresses: true,
-                authorize: (request) => brokerAuthorization(control, request),
+                authorize: (request) => brokerAuthorization(control, routes, request),
             }),
         }),
     });
     const resolveContract = async (contractId: string) => {
-        const route = await routes.resolve("default", contractId);
+        // Capability access is an authorization input, not a transport plan:
+        // always resolve it from current control state.
+        const route = await logicalRoutes.resolve("default", contractId);
         return route
             ? {
                   version: route!.release.admission.release.version,
@@ -62,18 +69,28 @@ export function createKernelGateway(control: ControlProviderClient) {
     };
 }
 
-async function brokerAuthorization(control: ControlProviderClient, request: GatewayHttpExchange): Promise<string> {
+async function brokerAuthorization(
+    control: ControlProviderClient,
+    routes: ControlGatewayRouteResolver,
+    request: GatewayHttpExchange,
+): Promise<string> {
     if (request.authentication.kind !== "capability" || !request.installationId) {
         throw new TypeError("Provider invocation authorization requires an exact installation and capability");
     }
-    const issued = await control.issueGatewayInvocation({
-        requestId: request.requestId,
-        installationId: request.installationId,
-        contractId: request.authentication.contractId,
-        contractVersion: request.authentication.contractVersion,
-        capabilityId: request.authentication.capabilityId,
-        ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
-    });
+    let issued;
+    try {
+        issued = await control.issueGatewayInvocation({
+            requestId: request.requestId,
+            installationId: request.installationId,
+            contractId: request.authentication.contractId,
+            contractVersion: request.authentication.contractVersion,
+            capabilityId: request.authentication.capabilityId,
+            ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
+        });
+    } catch (error) {
+        routes.invalidate("default", request.authentication.contractId);
+        throw error;
+    }
     if (issued.instanceId !== request.authentication.instanceId) {
         throw new TypeError("Installations Provider issued a token for a different Provider audience");
     }

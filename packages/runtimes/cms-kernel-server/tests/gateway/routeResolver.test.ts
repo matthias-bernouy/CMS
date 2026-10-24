@@ -40,6 +40,34 @@ test("remote route freshness ignores observation renewal but fences selection an
     expect(await resolver.isCurrent(resolved!)).toBeFalse();
 });
 
+test("reuses a transport plan briefly and supports explicit invalidation", async () => {
+    const route = routeSnapshot();
+    let reads = 0;
+    let now = 1_000;
+    const resolver = new ControlGatewayRouteResolver(
+        {
+            getGatewayRoute: async () => {
+                reads += 1;
+                return JSON.stringify(route);
+            },
+        } as ControlProviderClient,
+        () => now,
+        30_000,
+    );
+
+    expect(await resolver.resolve("default", "catalog.items")).not.toBeNull();
+    expect(await resolver.resolve("default", "catalog.items")).not.toBeNull();
+    expect(reads).toBe(1);
+
+    resolver.invalidate("default", "catalog.items");
+    expect(await resolver.resolve("default", "catalog.items")).not.toBeNull();
+    expect(reads).toBe(2);
+
+    now += 30_001;
+    expect(await resolver.resolve("default", "catalog.items")).not.toBeNull();
+    expect(reads).toBe(3);
+});
+
 function routeSnapshot() {
     return {
         selection: {
