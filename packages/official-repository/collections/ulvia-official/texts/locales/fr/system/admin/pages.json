@@ -100,5 +100,20 @@
     "ui-the-search-metadata-is-invalid": "Les métadonnées de recherche sont invalides.",
     "ui-this-action-cannot-be-undone": "Cette action est irréversible.",
     "ui-this-route-is-already-used-by-another-page": "Cette route est déjà utilisée par une autre Page.",
-    "ui-visibility": "Visibilité"
+    "ui-visibility": "Visibilité",
+    "ui-document-history": "Historique du document",
+    "ui-redo": "Rétablir",
+    "ui-undo": "Annuler",
+    "ui-save-structural-changes-to-refresh-the-preview": "Enregistrez les changements de structure pour actualiser l’aperçu exact.",
+    "ui-native-element": "Élément natif",
+    "ui-link-url": "URL du lien",
+    "ui-choose-an-image": "Choisir une image",
+    "ui-only-public-images-can-be-used-on-a-page": "Seules les images publiques peuvent être utilisées dans une Page.",
+    "ui-save-as-composition": "Enregistrer comme composition",
+    "ui-composition-keeps-the-selected-content-together": "Réutilisez l’élément sélectionné et son contenu comme une composition propre au site.",
+    "ui-name": "Nom",
+    "ui-identifier": "Identifiant",
+    "ui-group": "Groupe",
+    "ui-create-composition": "Créer la composition",
+    "ui-composition-created": "Composition créée et publiée."
 }

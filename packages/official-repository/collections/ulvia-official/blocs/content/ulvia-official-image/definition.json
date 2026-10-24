@@ -19,6 +19,7 @@
                 {
                     "kind": "native-element",
                     "accepts": ["img"],
+                    "attributes": { "src": { "required": false } },
                     "defaults": { "alt": "", "loading": "lazy", "decoding": "async" }
                 }
             ],
@@ -27,6 +28,6 @@
         }
     },
     "root": {
-        "accepts": ["div"]
+        "accepts": ["div", "span"]
     }
 }

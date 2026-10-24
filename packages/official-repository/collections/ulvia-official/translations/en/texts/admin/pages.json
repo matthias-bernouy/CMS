@@ -100,5 +100,20 @@
     "text.ui-mobile.label": "Mobile",
     "text.ui-page-structure.label": "Page structure",
     "text.ui-text-content.label": "Text content",
-    "text.ui-document-saved.label": "Document saved."
+    "text.ui-document-saved.label": "Document saved.",
+    "text.ui-document-history.label": "Document history",
+    "text.ui-redo.label": "Redo",
+    "text.ui-undo.label": "Undo",
+    "text.ui-save-structural-changes-to-refresh-the-preview.label": "Save structural changes to refresh the exact preview",
+    "text.ui-native-element.label": "Native element",
+    "text.ui-link-url.label": "Link URL",
+    "text.ui-choose-an-image.label": "Choose an image",
+    "text.ui-only-public-images-can-be-used-on-a-page.label": "Only public images can be used on a Page",
+    "text.ui-save-as-composition.label": "Save as composition",
+    "text.ui-composition-keeps-the-selected-content-together.label": "Composition reuse explanation",
+    "text.ui-name.label": "Name",
+    "text.ui-identifier.label": "Identifier",
+    "text.ui-group.label": "Group",
+    "text.ui-create-composition.label": "Create composition",
+    "text.ui-composition-created.label": "Composition created"
 }

@@ -100,5 +100,20 @@
     "ui-the-search-metadata-is-invalid": "The search metadata is invalid.",
     "ui-this-action-cannot-be-undone": "This action cannot be undone.",
     "ui-this-route-is-already-used-by-another-page": "This route is already used by another Page.",
-    "ui-visibility": "Visibility"
+    "ui-visibility": "Visibility",
+    "ui-document-history": "Document history",
+    "ui-redo": "Redo",
+    "ui-undo": "Undo",
+    "ui-save-structural-changes-to-refresh-the-preview": "Save structural changes to refresh the exact preview.",
+    "ui-native-element": "Native element",
+    "ui-link-url": "Link URL",
+    "ui-choose-an-image": "Choose an image",
+    "ui-only-public-images-can-be-used-on-a-page": "Only public images can be used on a Page.",
+    "ui-save-as-composition": "Save as composition",
+    "ui-composition-keeps-the-selected-content-together": "Reuse the selected element and its content as one site-owned composition.",
+    "ui-name": "Name",
+    "ui-identifier": "Identifier",
+    "ui-group": "Group",
+    "ui-create-composition": "Create composition",
+    "ui-composition-created": "Composition created and published."
 }

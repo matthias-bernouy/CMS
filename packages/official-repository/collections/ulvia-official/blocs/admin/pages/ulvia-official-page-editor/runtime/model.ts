@@ -34,26 +34,21 @@ export type AuthoringContract = {
     slots?: Record<string, EditorSlot>;
 };
 
-type EditorNativeElement = { accepts?: string[]; defaults?: Record<string, string> };
-type EditorSlot = { accepts?: EditorSlotAccept[] };
-type EditorSlotAccept = EditorNativeElement & { kind?: string };
-
-export type ManagedContent = {
-    readonly slot: string;
-    readonly nativeElement?: EditorNativeElement;
+export type EditorNativeAttribute = { required?: boolean; values?: string[] };
+export type EditorNativeElement = {
+    accepts?: string[];
+    attributes?: Record<string, EditorNativeAttribute>;
+    defaults?: Record<string, string>;
+};
+export type EditorSlot = { accepts?: EditorSlotAccept[]; min?: number; max?: number };
+export type EditorSlotAccept = EditorNativeElement & {
+    kind?: string;
+    tag?: string;
+    profile?: "phrasing" | "inline" | "prose";
 };
 
-export function managedContent(contract: AuthoringContract): ManagedContent | undefined {
-    const entries = Object.entries(contract.slots ?? {});
-    if (entries.length !== 1) {
-        return undefined;
-    }
-    const [slot, definition] = entries[0]!;
-    const nativeElement = definition.accepts?.find((accept) => accept.kind === "native-element");
-    if (nativeElement) {
-        return { slot, nativeElement };
-    }
-    return definition.accepts?.some((accept) => accept.kind === "native-content") ? { slot } : undefined;
+export function normalizedSlotName(name: string): string {
+    return name === "default" ? "" : name;
 }
 
 export type EditorSetting = {

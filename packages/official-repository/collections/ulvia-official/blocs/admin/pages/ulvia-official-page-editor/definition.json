@@ -19,7 +19,15 @@
             ]
         }
     },
-    "uses": ["ulvia-official-heading"],
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-file-picker",
+        "ulvia-official-heading",
+        "ulvia-official-input",
+        "ulvia-official-select",
+        "ulvia-official-textarea",
+        "ulvia-official-toggle"
+    ],
     "requires": [
         {
             "contractId": "ulvia.cms.content",
@@ -34,6 +42,21 @@
         {
             "contractId": "ulvia.cms.content",
             "capabilityId": "pages.editor-catalogue",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "workspace.get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "site-blocs.create",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "site-blocs.publish",
             "versionRange": "^1.0.0"
         }
     ],

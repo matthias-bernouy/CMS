@@ -3,6 +3,7 @@ import { CapabilityError } from "./client";
 export class EditorStatus {
     private busy = false;
     private readonly disabledState = new WeakMap<HTMLButtonElement, boolean>();
+    private noticeTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor(private readonly root: HTMLElement) {}
 
@@ -28,9 +29,23 @@ export class EditorStatus {
     }
 
     notice(message: string, error = false): void {
-        const notice = this.required("[data-notice]");
-        notice.textContent = message;
-        notice.toggleAttribute("data-error", error);
+        this.clearNotice();
+        for (const notice of this.root.querySelectorAll<HTMLElement>("[data-notice]")) {
+            notice.textContent = message;
+            notice.toggleAttribute("data-error", error);
+        }
+        this.noticeTimer = setTimeout(() => this.clearNotice(), error ? 8000 : 3000);
+    }
+
+    clearNotice(): void {
+        if (this.noticeTimer) {
+            clearTimeout(this.noticeTimer);
+            this.noticeTimer = null;
+        }
+        for (const notice of this.root.querySelectorAll<HTMLElement>("[data-notice]")) {
+            notice.textContent = "";
+            notice.removeAttribute("data-error");
+        }
     }
 
     private setBusy(busy: boolean): void {

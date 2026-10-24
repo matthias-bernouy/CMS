@@ -26,7 +26,16 @@
             <textarea hidden data-page-content>{{ editedPage.data.content }}</textarea>
             <header part="toolbar">
                 <div part="toolbar-start">
-                    <a part="back" href="/admin/pages/detail?ulvia-official-page-id={{ editedPage.data.id | urlencode }}">
+                    <a
+                        cms-bloc="ulvia-official-action"
+                        part="back-action"
+                        size="sm"
+                        tone="neutral"
+                        variant="ghost"
+                        icon-only=""
+                        aria-label="{{ cms.i18n.ulvia-official.ui-back-to-page-details }}"
+                        href="/admin/pages/detail?ulvia-official-page-id={{ editedPage.data.id | urlencode }}"
+                    >
                         <svg cms-svg="{{ cms.asset.ulvia-official.icons/controls/chevron-left.svg }}" aria-hidden="true"></svg>
                         <span>{{ cms.i18n.ulvia-official.ui-back-to-page-details }}</span>
                     </a>
@@ -35,34 +44,70 @@
                         <strong>{{ editedPage.data.title }}</strong>
                         <span>{{ editedPage.data.path }}</span>
                     </div>
-                    <label part="preview-language">
-                        <span>{{ cms.i18n.ulvia-official.ui-preview-language }}</span>
-                        <select data-preview-route>
-                            <option cms-repeat="editedPage.data.routes as route" value="{{ route.path }}" selected="{{ route.primary }}">
-                                {{ route.language }}
-                            </option>
-                        </select>
-                    </label>
+                    <div part="preview-language">
+                        <label for="page-editor-preview-route">{{ cms.i18n.ulvia-official.ui-preview-language }}</label>
+                        <div cms-bloc="ulvia-official-select" id="page-editor-preview-route-control" size="sm">
+                            <select id="page-editor-preview-route">
+                                <option cms-repeat="editedPage.data.routes as route" value="{{ route.path }}" selected="{{ route.primary }}">
+                                    {{ route.language }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <div part="viewport-actions" role="group" aria-label="{{ cms.i18n.ulvia-official.ui-preview-size }}">
-                    <button type="button" data-viewport="desktop" aria-pressed="true">
-                        <span part="device desktop" aria-hidden="true"></span>
+                    <button
+                        cms-bloc="ulvia-official-action"
+                        size="sm"
+                        tone="neutral"
+                        variant="ghost"
+                        type="button"
+                        name="viewport"
+                        value="desktop"
+                        aria-pressed="true"
+                    >
                         <span>{{ cms.i18n.ulvia-official.ui-desktop }}</span>
                     </button>
-                    <button type="button" data-viewport="tablet" aria-pressed="false">
-                        <span part="device tablet" aria-hidden="true"></span>
+                    <button
+                        cms-bloc="ulvia-official-action"
+                        size="sm"
+                        tone="neutral"
+                        variant="ghost"
+                        type="button"
+                        name="viewport"
+                        value="tablet"
+                        aria-pressed="false"
+                    >
                         <span>{{ cms.i18n.ulvia-official.ui-tablet }}</span>
                     </button>
-                    <button type="button" data-viewport="mobile" aria-pressed="false">
-                        <span part="device mobile" aria-hidden="true"></span>
+                    <button
+                        cms-bloc="ulvia-official-action"
+                        size="sm"
+                        tone="neutral"
+                        variant="ghost"
+                        type="button"
+                        name="viewport"
+                        value="mobile"
+                        aria-pressed="false"
+                    >
                         <span>{{ cms.i18n.ulvia-official.ui-mobile }}</span>
                     </button>
                 </div>
 
                 <div part="toolbar-end">
+                    <div part="history-actions" role="group" aria-label="{{ cms.i18n.ulvia-official.ui-document-history }}">
+                        <button cms-bloc="ulvia-official-action" id="page-editor-undo" size="sm" tone="neutral" variant="ghost" type="button">
+                            {{ cms.i18n.ulvia-official.ui-undo }}
+                        </button>
+                        <button cms-bloc="ulvia-official-action" id="page-editor-redo" size="sm" tone="neutral" variant="ghost" type="button">
+                            {{ cms.i18n.ulvia-official.ui-redo }}
+                        </button>
+                    </div>
                     <span part="save-state" data-save-state>{{ cms.i18n.ulvia-official.ui-document-saved }}</span>
-                    <button type="button" data-save>{{ cms.i18n.ulvia-official.ui-save-changes }}</button>
+                    <button cms-bloc="ulvia-official-action" id="page-editor-save" size="sm" type="button">
+                        {{ cms.i18n.ulvia-official.ui-save-changes }}
+                    </button>
                 </div>
             </header>
 
@@ -71,16 +116,21 @@
             <div part="workspace">
                 <aside part="panel structure" aria-labelledby="structure-title">
                     <div part="panel-header">
-                        <h2 cms-bloc="ulvia-official-heading" id="structure-title">
+                        <h2 cms-bloc="ulvia-official-heading" id="structure-title" size="xs">
                             {{ cms.i18n.ulvia-official.ui-page-structure }}
                         </h2>
-                        <button type="button" data-open-catalogue>{{ cms.i18n.ulvia-official.ui-add-a-bloc }}</button>
+                        <button cms-bloc="ulvia-official-action" id="page-editor-open-catalogue" size="sm" variant="outline" type="button">
+                            {{ cms.i18n.ulvia-official.ui-add-a-bloc }}
+                        </button>
                     </div>
                     <p part="empty" data-empty>{{ cms.i18n.ulvia-official.ui-no-elements-yet-add-a-bloc-to-start }}</p>
                     <ol data-outline></ol>
                 </aside>
 
                 <main part="canvas" aria-label="{{ cms.i18n.ulvia-official.ui-document-preview }}">
+                    <p part="preview-status" data-preview-stale hidden role="status">
+                        {{ cms.i18n.ulvia-official.ui-save-structural-changes-to-refresh-the-preview }}
+                    </p>
                     <div part="preview-frame" data-preview-frame data-viewport="desktop">
                         <iframe
                             data-preview
@@ -90,28 +140,39 @@
                             loading="eager"
                             referrerpolicy="same-origin"
                         ></iframe>
+                        <span data-frame-highlight hidden aria-hidden="true"></span>
                     </div>
                 </main>
 
                 <aside part="panel inspector" aria-labelledby="inspector-title">
                     <div part="panel-header">
-                        <h2 cms-bloc="ulvia-official-heading" id="inspector-title">
+                        <h2 cms-bloc="ulvia-official-heading" id="inspector-title" size="xs">
                             {{ cms.i18n.ulvia-official.ui-selected-element }}
                         </h2>
                     </div>
                     <p data-inspector-empty>{{ cms.i18n.ulvia-official.ui-select-an-element-to-edit-it }}</p>
                     <div data-inspector hidden>
                         <strong data-selected-label></strong>
-                        <label data-content-field>
-                            <span>{{ cms.i18n.ulvia-official.ui-text-content }}</span>
-                            <textarea data-element-content rows="8"></textarea>
-                        </label>
+                        <div data-root-fields></div>
+                        <div data-content-fields></div>
+                        <div data-native-fields></div>
                         <div data-settings></div>
                         <div part="element-actions">
-                            <button type="button" data-move="-1">{{ cms.i18n.ulvia-official.ui-move-up }}</button>
-                            <button type="button" data-move="1">{{ cms.i18n.ulvia-official.ui-move-down }}</button>
-                            <button type="button" data-duplicate>{{ cms.i18n.ulvia-official.ui-duplicate }}</button>
-                            <button type="button" data-remove data-danger>{{ cms.i18n.ulvia-official.ui-remove }}</button>
+                            <button cms-bloc="ulvia-official-action" size="sm" tone="neutral" variant="outline" type="button" name="move" value="-1">
+                                {{ cms.i18n.ulvia-official.ui-move-up }}
+                            </button>
+                            <button cms-bloc="ulvia-official-action" size="sm" tone="neutral" variant="outline" type="button" name="move" value="1">
+                                {{ cms.i18n.ulvia-official.ui-move-down }}
+                            </button>
+                            <button cms-bloc="ulvia-official-action" size="sm" tone="neutral" variant="outline" type="button" id="page-editor-duplicate">
+                                {{ cms.i18n.ulvia-official.ui-duplicate }}
+                            </button>
+                            <button cms-bloc="ulvia-official-action" size="sm" tone="neutral" variant="outline" type="button" id="page-editor-open-composition">
+                                {{ cms.i18n.ulvia-official.ui-save-as-composition }}
+                            </button>
+                            <button cms-bloc="ulvia-official-action" size="sm" tone="danger" variant="ghost" type="button" id="page-editor-remove">
+                                {{ cms.i18n.ulvia-official.ui-remove }}
+                            </button>
                         </div>
                     </div>
                 </aside>
@@ -121,24 +182,116 @@
                 <div part="catalogue-shell">
                     <header part="catalogue-header">
                         <div>
-                            <h2 cms-bloc="ulvia-official-heading" id="catalogue-title">
+                            <h2 cms-bloc="ulvia-official-heading" id="catalogue-title" size="sm">
                                 {{ cms.i18n.ulvia-official.ui-add-a-bloc }}
                             </h2>
                             <p>{{ cms.i18n.ulvia-official.ui-static-page-composition }}</p>
                         </div>
-                        <button type="button" part="dialog-close" data-close-catalogue>
+                        <button cms-bloc="ulvia-official-action" id="page-editor-close-catalogue" size="sm" tone="neutral" variant="ghost" type="button">
                             {{ cms.i18n.ulvia-official.ui-close }}
                         </button>
                     </header>
-                    <label part="search" for="page-editor-search">
-                        <span part="visually-hidden">{{ cms.i18n.ulvia-official.ui-search-blocs }}</span>
-                        <svg cms-svg="{{ cms.asset.ulvia-official.icons/actions/search.svg }}" aria-hidden="true"></svg>
-                        <input id="page-editor-search" type="search" data-search placeholder="{{ cms.i18n.ulvia-official.ui-search-blocs }}" autocomplete="off">
-                    </label>
+                    <div part="search">
+                        <label part="visually-hidden" for="page-editor-search">
+                            {{ cms.i18n.ulvia-official.ui-search-blocs }}
+                        </label>
+                        <div cms-bloc="ulvia-official-input" id="page-editor-search-control" size="sm">
+                            <input id="page-editor-search" type="search" placeholder="{{ cms.i18n.ulvia-official.ui-search-blocs }}" autocomplete="off">
+                        </div>
+                    </div>
                     <div part="catalogue-list" data-catalogue></div>
                     <p data-catalogue-empty hidden>{{ cms.i18n.ulvia-official.ui-no-matching-blocs }}</p>
                 </div>
             </dialog>
+
+            <dialog part="media-dialog" data-media-dialog aria-labelledby="media-dialog-title">
+                <div part="catalogue-shell">
+                    <header part="catalogue-header">
+                        <div>
+                            <h2 cms-bloc="ulvia-official-heading" id="media-dialog-title" size="sm">
+                                {{ cms.i18n.ulvia-official.ui-choose-an-image }}
+                            </h2>
+                            <p>{{ cms.i18n.ulvia-official.ui-only-public-images-can-be-used-on-a-page }}</p>
+                        </div>
+                        <button cms-bloc="ulvia-official-action" id="page-editor-close-media" size="sm" tone="neutral" variant="ghost" type="button">
+                            {{ cms.i18n.ulvia-official.ui-close }}
+                        </button>
+                    </header>
+                    <div cms-bloc="ulvia-official-file-picker"></div>
+                </div>
+            </dialog>
+
+            <dialog part="composition-dialog" data-composition-dialog aria-labelledby="composition-dialog-title">
+                <div id="page-editor-composition-form" part="composition-form">
+                    <header part="catalogue-header">
+                        <div>
+                            <h2 cms-bloc="ulvia-official-heading" id="composition-dialog-title" size="sm">
+                                {{ cms.i18n.ulvia-official.ui-save-as-composition }}
+                            </h2>
+                            <p>{{ cms.i18n.ulvia-official.ui-composition-keeps-the-selected-content-together }}</p>
+                        </div>
+                        <button cms-bloc="ulvia-official-action" id="page-editor-close-composition" size="sm" tone="neutral" variant="ghost" type="button">
+                            {{ cms.i18n.ulvia-official.ui-close }}
+                        </button>
+                    </header>
+                    <label>
+                        <span>{{ cms.i18n.ulvia-official.ui-name }}</span>
+                        <div cms-bloc="ulvia-official-input">
+                            <input id="page-editor-composition-name" name="name" required maxlength="120">
+                        </div>
+                    </label>
+                    <label>
+                        <span>{{ cms.i18n.ulvia-official.ui-identifier }}</span>
+                        <div cms-bloc="ulvia-official-input">
+                            <input name="tag" required maxlength="200">
+                        </div>
+                    </label>
+                    <label>
+                        <span>{{ cms.i18n.ulvia-official.ui-group }}</span>
+                        <div cms-bloc="ulvia-official-input">
+                            <input name="group" required maxlength="120">
+                        </div>
+                    </label>
+                    <label>
+                        <span>{{ cms.i18n.ulvia-official.ui-description }}</span>
+                        <div cms-bloc="ulvia-official-textarea">
+                            <textarea name="description" maxlength="500"></textarea>
+                        </div>
+                    </label>
+                    <footer part="dialog-actions">
+                        <button cms-bloc="ulvia-official-action" id="page-editor-create-composition" type="button">
+                            {{ cms.i18n.ulvia-official.ui-create-composition }}
+                        </button>
+                    </footer>
+                    <p part="notice" data-notice role="status" aria-live="polite"></p>
+                </div>
+            </dialog>
+
+            <form hidden cms-mutation="ulvia.cms.content:site-blocs.create as createSiteBloc">
+                <div cms-match="createSiteBloc.outcome.kind">
+                    <span cms-case='"none"'></span>
+                    <span cms-case='"success"'></span>
+                    <div cms-case='"error"' cms-match="createSiteBloc.outcome.code">
+                        <span cms-case='"TAG_CONFLICT"'></span>
+                        <span cms-case='"INVALID_SITE_BLOC"'></span>
+                        <span cms-case='"CORE_UNAVAILABLE"'></span>
+                    </div>
+                    <span cms-case='"failure"'></span>
+                </div>
+            </form>
+            <form hidden cms-mutation="ulvia.cms.content:site-blocs.publish as publishSiteBloc">
+                <div cms-match="publishSiteBloc.outcome.kind">
+                    <span cms-case='"none"'></span>
+                    <span cms-case='"success"'></span>
+                    <div cms-case='"error"' cms-match="publishSiteBloc.outcome.code">
+                        <span cms-case='"NOT_FOUND"'></span>
+                        <span cms-case='"REVISION_CONFLICT"'></span>
+                        <span cms-case='"INVALID_SITE_BLOC"'></span>
+                        <span cms-case='"CORE_UNAVAILABLE"'></span>
+                    </div>
+                    <span cms-case='"failure"'></span>
+                </div>
+            </form>
 
             <div hidden aria-hidden="true">
                 <span data-copy="request-failed">{{ cms.i18n.ulvia-official.ui-request-failed }}</span>
@@ -148,6 +301,10 @@
                 <span data-copy="document-saved">{{ cms.i18n.ulvia-official.ui-document-saved }}</span>
                 <span data-copy="unsaved-changes">{{ cms.i18n.ulvia-official.ui-unsaved-document-changes }}</span>
                 <span data-copy="saving">{{ cms.i18n.ulvia-official.ui-saving }}</span>
+                <span data-copy="native-element">{{ cms.i18n.ulvia-official.ui-native-element }}</span>
+                <span data-copy="link-url">{{ cms.i18n.ulvia-official.ui-link-url }}</span>
+                <span data-copy="choose-image">{{ cms.i18n.ulvia-official.ui-choose-an-image }}</span>
+                <span data-copy="composition-created">{{ cms.i18n.ulvia-official.ui-composition-created }}</span>
             </div>
         </div>
     </div>

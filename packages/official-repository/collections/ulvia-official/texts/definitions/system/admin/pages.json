@@ -610,5 +610,95 @@
         "label": "text.ui-visibility.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-document-history",
+        "label": "text.ui-document-history.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-redo",
+        "label": "text.ui-redo.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-undo",
+        "label": "text.ui-undo.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-save-structural-changes-to-refresh-the-preview",
+        "label": "text.ui-save-structural-changes-to-refresh-the-preview.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-native-element",
+        "label": "text.ui-native-element.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-link-url",
+        "label": "text.ui-link-url.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-choose-an-image",
+        "label": "text.ui-choose-an-image.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-only-public-images-can-be-used-on-a-page",
+        "label": "text.ui-only-public-images-can-be-used-on-a-page.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-save-as-composition",
+        "label": "text.ui-save-as-composition.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-composition-keeps-the-selected-content-together",
+        "label": "text.ui-composition-keeps-the-selected-content-together.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-name",
+        "label": "text.ui-name.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-identifier",
+        "label": "text.ui-identifier.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-group",
+        "label": "text.ui-group.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-create-composition",
+        "label": "text.ui-create-composition.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-composition-created",
+        "label": "text.ui-composition-created.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
     }
 ]

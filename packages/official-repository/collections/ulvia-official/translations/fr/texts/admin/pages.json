@@ -100,5 +100,20 @@
     "text.ui-mobile.label": "Mobile",
     "text.ui-page-structure.label": "Structure de la Page",
     "text.ui-text-content.label": "Contenu texte",
-    "text.ui-document-saved.label": "Document enregistré."
+    "text.ui-document-saved.label": "Document enregistré.",
+    "text.ui-document-history.label": "Historique du document",
+    "text.ui-redo.label": "Rétablir",
+    "text.ui-undo.label": "Annuler",
+    "text.ui-save-structural-changes-to-refresh-the-preview.label": "Enregistrer les changements de structure pour actualiser l’aperçu exact",
+    "text.ui-native-element.label": "Élément natif",
+    "text.ui-link-url.label": "URL du lien",
+    "text.ui-choose-an-image.label": "Choisir une image",
+    "text.ui-only-public-images-can-be-used-on-a-page.label": "Seules les images publiques peuvent être utilisées dans une Page",
+    "text.ui-save-as-composition.label": "Enregistrer comme composition",
+    "text.ui-composition-keeps-the-selected-content-together.label": "Explication de la réutilisation d’une composition",
+    "text.ui-name.label": "Nom",
+    "text.ui-identifier.label": "Identifiant",
+    "text.ui-group.label": "Groupe",
+    "text.ui-create-composition.label": "Créer la composition",
+    "text.ui-composition-created.label": "Composition créée"
 }
