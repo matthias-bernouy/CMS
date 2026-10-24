@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { provisionLocalInstance } from "../../src/runtime/instance";
+import { provisionLocalInstance, upgradeLocalInstanceProfile } from "../../src/runtime/instance";
 
 test("local provisioning sends administrator input only to the protected operator endpoint", async () => {
     const originalFetch = globalThis.fetch;
@@ -37,6 +37,30 @@ test("local provisioning sends administrator input only to the protected operato
         const body = await captured?.json();
         expect(body.administrator.email).toBe("dev@ulvia.local");
         expect(body.kernelUrl).toBe("http://preview.localhost:5100");
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test("local upgrade selects the exact official Provider profile", async () => {
+    const originalFetch = globalThis.fetch;
+    let captured: Request | undefined;
+    globalThis.fetch = (async (input, init) => {
+        captured = new Request(input, init);
+        return Response.json({
+            status: "ready",
+            profile: { id: "ulvia.official", version: "1.1.0" },
+        });
+    }) as typeof fetch;
+    try {
+        await upgradeLocalInstanceProfile("http://127.0.0.1:5103", "operator-secret", "instance:one", {
+            id: "ulvia.official",
+            version: "1.1.0",
+        });
+        expect(captured?.url).toBe("http://127.0.0.1:5103/ulvia/operator/instances/instance%3Aone/profile");
+        expect(captured?.method).toBe("POST");
+        expect(captured?.headers.get("authorization")).toBe("Bearer operator-secret");
+        expect(await captured?.json()).toEqual({ id: "ulvia.official", version: "1.1.0" });
     } finally {
         globalThis.fetch = originalFetch;
     }

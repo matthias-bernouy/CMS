@@ -54,3 +54,29 @@ export async function disableLocalInstance(
     }
     await response.body?.cancel();
 }
+
+export async function upgradeLocalInstanceProfile(
+    providerUrl: string,
+    operatorToken: string,
+    instanceId: string,
+    profile: Readonly<{ id: string; version: string }>,
+): Promise<void> {
+    const response = await fetch(`${providerUrl}/ulvia/operator/instances/${encodeURIComponent(instanceId)}/profile`, {
+        method: "POST",
+        headers: {
+            authorization: `Bearer ${operatorToken}`,
+            "content-type": "application/json",
+        },
+        body: JSON.stringify(profile),
+    });
+    if (!response.ok) {
+        throw new Error(`Local instance profile upgrade failed (${response.status})`);
+    }
+    const value = (await response.json()) as {
+        status?: unknown;
+        profile?: { id?: unknown; version?: unknown };
+    };
+    if (value.status !== "ready" || value.profile?.id !== profile.id || value.profile.version !== profile.version) {
+        throw new Error("Local instance profile upgrade returned an invalid response");
+    }
+}

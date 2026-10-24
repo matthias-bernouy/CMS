@@ -1,5 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { loadOrCreateProviderOperatorToken } from "../../config";
+import { upgradeLocalInstanceProfile } from "../../instance";
 import type { LocalInstanceConfig } from "../../instanceConfig";
 import { loadLocalInstanceConfig } from "../../instanceConfig";
 import type { LocalInstanceConnection } from "../../instanceConnection";
@@ -13,7 +14,7 @@ import {
 import { instancePublicUrl } from "../ports";
 import { composeDown, composeStop, composeUp, inspectComposeServices, type ComposeProject } from "./compose";
 import { localKernelEnvironment } from "./environment";
-import { ensureLocalKernelImage, LOCAL_STACK_VERSION } from "./release";
+import { ensureLocalKernelImage, LOCAL_OFFICIAL_PROFILE, LOCAL_STACK_VERSION } from "./release";
 import { requireRunningLocalProvider } from "./services";
 import { loadLocalKernelState, loadLocalServicesState, localKernelProjectName, saveLocalKernelState } from "./state";
 import type { LocalServicesState } from "./state";
@@ -32,6 +33,16 @@ export async function startLocalKernel(
         throw new Error(
             `Instance ${name} uses ${installed.version}; upgrade it explicitly with: ulvia instance upgrade ${name}`,
         );
+    }
+    if (allowUpgrade) {
+        const operator = await providerOperatorAccess(paths, services);
+        await upgradeLocalInstanceProfile(
+            operator.url,
+            operator.token,
+            runtime.connection.instanceId,
+            LOCAL_OFFICIAL_PROFILE,
+        );
+        log(`Provider profile ${LOCAL_OFFICIAL_PROFILE.id}@${LOCAL_OFFICIAL_PROFILE.version} is ready.`);
     }
     if (allowUpgrade && installed?.version === LOCAL_STACK_VERSION) {
         log(`Instance ${name} is already at ${LOCAL_STACK_VERSION}.`);

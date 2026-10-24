@@ -19,9 +19,9 @@ services:
             - instances
         healthcheck:
             test: ["CMD", "nginx", "-t"]
-            interval: 2s
+            interval: 30s
             timeout: 5s
-            retries: 30
+            retries: 3
             start_period: 5s
 
     mongo:
@@ -43,9 +43,9 @@ services:
                     "CMD-SHELL",
                     "mongosh --quiet --username \"$$MONGO_INITDB_ROOT_USERNAME\" --password \"$$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval 'quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)'",
                 ]
-            interval: 2s
+            interval: 30s
             timeout: 5s
-            retries: 30
+            retries: 3
             start_period: 10s
         stop_grace_period: 30s
 
@@ -81,9 +81,9 @@ services:
         security_opt: [no-new-privileges:true]
         healthcheck:
             test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:3000/readyz'); if(!r.ok) process.exit(1); await r.body?.cancel()"]
-            interval: 2s
+            interval: 30s
             timeout: 5s
-            retries: 30
+            retries: 3
             start_period: 5s
 
     mongo-provision:
@@ -160,9 +160,9 @@ services:
         security_opt: [no-new-privileges:true]
         healthcheck:
             test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:5103/ulvia/operator/instances',{headers:{authorization:'Bearer '+process.env.ULVIA_PROVIDER_OPERATOR_TOKEN}}); if(!r.ok) process.exit(1); await r.body?.cancel()"]
-            interval: 2s
-            timeout: 10s
-            retries: 30
+            interval: 30s
+            timeout: 5s
+            retries: 3
             start_period: 10s
         stop_grace_period: 30s
 

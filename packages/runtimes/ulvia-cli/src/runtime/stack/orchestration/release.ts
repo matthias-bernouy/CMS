@@ -2,7 +2,8 @@ import { access } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { requireExecutable, runCommand } from "../../process";
 
-export const LOCAL_STACK_VERSION = "0.0.1-alpha.7";
+export const LOCAL_STACK_VERSION = "0.0.1-alpha.8";
+export const LOCAL_OFFICIAL_PROFILE = Object.freeze({ id: "ulvia.official", version: "1.1.0" });
 
 export const LOCAL_STACK_IMAGES = Object.freeze({
     kernel: `ulvia-kernel:${LOCAL_STACK_VERSION}`,
