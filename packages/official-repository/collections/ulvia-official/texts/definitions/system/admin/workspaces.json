@@ -388,5 +388,53 @@
         "label": "text.ui-same-origin-script-authority.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-site-compositions",
+        "label": "text.ui-site-compositions.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-site-compositions-help",
+        "label": "text.ui-site-compositions-help.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-no-site-compositions",
+        "label": "text.ui-no-site-compositions.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-active",
+        "label": "text.ui-active.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-archived",
+        "label": "text.ui-archived.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-archive",
+        "label": "text.ui-archive.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-restore",
+        "label": "text.ui-restore.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-reading-site-compositions",
+        "label": "text.ui-reading-site-compositions.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
     }
 ]

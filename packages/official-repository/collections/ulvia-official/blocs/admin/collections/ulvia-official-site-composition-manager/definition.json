@@ -1,0 +1,42 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-site-composition-manager",
+    "label": "bloc.site-composition-manager.label",
+    "description": "bloc.site-composition-manager.description",
+    "category": "bloc.category.administration",
+    "order": 11,
+    "catalogue": "hidden",
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-badge",
+        "ulvia-official-data-table",
+        "ulvia-official-data-table-cell",
+        "ulvia-official-data-table-column-header",
+        "ulvia-official-data-table-row",
+        "ulvia-official-data-table-row-header",
+        "ulvia-official-heading",
+        "ulvia-official-stack",
+        "ulvia-official-surface"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "site-blocs.list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "site-blocs.archive",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "site-blocs.restore",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {},
+    "root": {
+        "accepts": ["div"]
+    }
+}

@@ -63,5 +63,13 @@
     "text.ui-javascript-blocks.label": "JavaScript Blocks",
     "text.ui-iframe-blocks.label": "iframe Blocks",
     "text.ui-external-frame-origin.label": "External frame origin",
-    "text.ui-same-origin-script-authority.label": "Same-origin script authority"
+    "text.ui-same-origin-script-authority.label": "Same-origin script authority",
+    "text.ui-site-compositions.label": "Site compositions",
+    "text.ui-site-compositions-help.label": "Site compositions help",
+    "text.ui-no-site-compositions.label": "No site compositions",
+    "text.ui-active.label": "Active",
+    "text.ui-archived.label": "Archived",
+    "text.ui-archive.label": "Archive",
+    "text.ui-restore.label": "Restore",
+    "text.ui-reading-site-compositions.label": "Reading site compositions"
 }

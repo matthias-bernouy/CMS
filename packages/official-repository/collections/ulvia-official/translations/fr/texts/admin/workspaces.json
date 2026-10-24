@@ -63,5 +63,13 @@
     "text.ui-javascript-blocks.label": "Blocs JavaScript",
     "text.ui-iframe-blocks.label": "Blocs iframe",
     "text.ui-external-frame-origin.label": "Origine de frame externe",
-    "text.ui-same-origin-script-authority.label": "Autorité des scripts same-origin"
+    "text.ui-same-origin-script-authority.label": "Autorité des scripts same-origin",
+    "text.ui-site-compositions.label": "Compositions du site",
+    "text.ui-site-compositions-help.label": "Aide sur les compositions du site",
+    "text.ui-no-site-compositions.label": "Aucune composition du site",
+    "text.ui-active.label": "Active",
+    "text.ui-archived.label": "Archivée",
+    "text.ui-archive.label": "Archiver",
+    "text.ui-restore.label": "Restaurer",
+    "text.ui-reading-site-compositions.label": "Lecture des compositions du site"
 }

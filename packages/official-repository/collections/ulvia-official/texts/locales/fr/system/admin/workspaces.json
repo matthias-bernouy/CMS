@@ -63,5 +63,13 @@
     "ui-javascript-blocks": "Blocs JavaScript",
     "ui-iframe-blocks": "Blocs iframe",
     "ui-external-frame-origin": "Origine de frame externe",
-    "ui-same-origin-script-authority": "Les scripts et l’accès same-origin sont activés ensemble"
+    "ui-same-origin-script-authority": "Les scripts et l’accès same-origin sont activés ensemble",
+    "ui-site-compositions": "Compositions du site",
+    "ui-site-compositions-help": "Groupes réutilisables créés depuis l’éditeur de Pages. L’archivage les retire du catalogue sans modifier les Pages existantes.",
+    "ui-no-site-compositions": "Aucune composition propre au site n’a encore été créée.",
+    "ui-active": "Active",
+    "ui-archived": "Archivée",
+    "ui-archive": "Archiver",
+    "ui-restore": "Restaurer",
+    "ui-reading-site-compositions": "Lecture des compositions du site…"
 }

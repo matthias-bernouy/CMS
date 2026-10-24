@@ -2,5 +2,8 @@
     <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-collections }}</h1>
     <span slot="secondary-label">{{ cms.i18n.ulvia-official.ui-collections }}</span>
     <div cms-bloc="ulvia-official-collection-navigation" slot="secondary-navigation"></div>
-    <div cms-bloc="ulvia-official-collection-manager" slot="content"></div>
+    <div cms-bloc="ulvia-official-stack" gap="xl" slot="content">
+        <div cms-bloc="ulvia-official-collection-manager" slot="items"></div>
+        <div cms-bloc="ulvia-official-site-composition-manager" slot="items"></div>
+    </div>
 </div>

@@ -1,0 +1,105 @@
+<section
+    part="section"
+    cms-query="ulvia.cms.content:site-blocs.list as compositions"
+    cms-query-listen="@page:ulvia-official-site-composition-mutation/lastSuccess/requestId"
+>
+    <header part="header">
+        <div>
+            <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-site-compositions }}</h2>
+            <p>{{ cms.i18n.ulvia-official.ui-site-compositions-help }}</p>
+        </div>
+    </header>
+    <p role="status" cms-condition="compositions.activity === 'fetching'">
+        {{ cms.i18n.ulvia-official.ui-reading-site-compositions }}
+    </p>
+    <div cms-match="compositions.outcome.kind">
+        <span cms-case='"none"' hidden></span>
+        <div cms-case='"error"' cms-match="compositions.outcome.code">
+            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+        </div>
+        <div cms-case='"success"'>
+            <div cms-bloc="ulvia-official-data-table" density="compact" caption-visibility="hidden" cms-condition="compositions.data.items.length">
+                <span slot="caption">{{ cms.i18n.ulvia-official.ui-site-compositions }}</span>
+                <th cms-bloc="ulvia-official-data-table-column-header" slot="columns" scope="col">
+                    {{ cms.i18n.ulvia-official.ui-name }}
+                </th>
+                <th cms-bloc="ulvia-official-data-table-column-header" slot="columns" scope="col">
+                    {{ cms.i18n.ulvia-official.ui-group }}
+                </th>
+                <th cms-bloc="ulvia-official-data-table-column-header" slot="columns" scope="col">
+                    {{ cms.i18n.ulvia-official.ui-status }}
+                </th>
+                <th cms-bloc="ulvia-official-data-table-column-header" slot="columns" scope="col">
+                    {{ cms.i18n.ulvia-official.ui-actions }}
+                </th>
+                <tr cms-bloc="ulvia-official-data-table-row" cms-repeat="compositions.data.items as composition" slot="rows">
+                    <th cms-bloc="ulvia-official-data-table-row-header" slot="cells" scope="row">
+                        <strong>{{ composition.name }}</strong>
+                        <small>{{ composition.tag }}</small>
+                    </th>
+                    <td cms-bloc="ulvia-official-data-table-cell" slot="cells">{{ composition.group }}</td>
+                    <td cms-bloc="ulvia-official-data-table-cell" slot="cells">
+                        <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="composition.lifecycle === 'active'">
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-active }}</span>
+                        </div>
+                        <div cms-bloc="ulvia-official-badge" tone="neutral" cms-condition="composition.lifecycle === 'archived'">
+                            <span slot="label">{{ cms.i18n.ulvia-official.ui-archived }}</span>
+                        </div>
+                    </td>
+                    <td cms-bloc="ulvia-official-data-table-cell" slot="cells">
+                        <form
+                            cms-condition="composition.lifecycle === 'active'"
+                            cms-mutation="ulvia.cms.content:site-blocs.archive as mutation"
+                            cms-sync="@page:ulvia-official-site-composition-mutation"
+                            cms-sync-select="lastSuccess.requestId"
+                        >
+                            <input type="hidden" name="tag" value="{{ composition.tag }}">
+                            <input type="hidden" name="revision" value="{{ composition.draftRevision }}" cms-form-value-type="number">
+                            <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" type="submit">
+                                <span>{{ cms.i18n.ulvia-official.ui-archive }}</span>
+                            </button>
+                            <div cms-match="mutation.outcome.kind">
+                                <span cms-case='"none"' hidden></span>
+                                <span cms-case='"success"' hidden></span>
+                                <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"TAG_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                </div>
+                                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            </div>
+                        </form>
+                        <form
+                            cms-condition="composition.lifecycle === 'archived'"
+                            cms-mutation="ulvia.cms.content:site-blocs.restore as mutation"
+                            cms-sync="@page:ulvia-official-site-composition-mutation"
+                            cms-sync-select="lastSuccess.requestId"
+                        >
+                            <input type="hidden" name="tag" value="{{ composition.tag }}">
+                            <input type="hidden" name="revision" value="{{ composition.draftRevision }}" cms-form-value-type="number">
+                            <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" type="submit">
+                                <span>{{ cms.i18n.ulvia-official.ui-restore }}</span>
+                            </button>
+                            <div cms-match="mutation.outcome.kind">
+                                <span cms-case='"none"' hidden></span>
+                                <span cms-case='"success"' hidden></span>
+                                <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                    <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"TAG_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                </div>
+                                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            </div>
+            <div cms-bloc="ulvia-official-surface" padding="lg" appearance="subtle" cms-condition="compositions.data.items.length === 0">
+                <p slot="content">{{ cms.i18n.ulvia-official.ui-no-site-compositions }}</p>
+            </div>
+        </div>
+        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+    </div>
+</section>

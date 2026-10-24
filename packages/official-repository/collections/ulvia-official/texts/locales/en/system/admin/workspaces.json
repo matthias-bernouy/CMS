@@ -63,5 +63,13 @@
     "ui-javascript-blocks": "JavaScript Blocks",
     "ui-iframe-blocks": "iframe Blocks",
     "ui-external-frame-origin": "External frame origin",
-    "ui-same-origin-script-authority": "Scripts and same-origin access are enabled together"
+    "ui-same-origin-script-authority": "Scripts and same-origin access are enabled together",
+    "ui-site-compositions": "Site compositions",
+    "ui-site-compositions-help": "Reusable groups created from the Page editor. Archiving removes them from the editor catalogue without changing existing Pages.",
+    "ui-no-site-compositions": "No site composition has been created yet.",
+    "ui-active": "Active",
+    "ui-archived": "Archived",
+    "ui-archive": "Archive",
+    "ui-restore": "Restore",
+    "ui-reading-site-compositions": "Reading site compositions…"
 }
