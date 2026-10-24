@@ -59,16 +59,14 @@ export class ProviderInstanceHost {
         private readonly profiles: OfficialInstanceProfiles,
         private readonly logger: Logger,
     ) {
-        this.#providerSource = new HttpProviderRepository(
-            "ulvia-provider-bootstrap",
-            env.CMS_REPOSITORY_URL,
-            correlatedRepositoryFetch,
-        );
-        this.#collectionSource = new HttpCollectionRepository(
-            "ulvia-provider-bootstrap",
-            env.CMS_REPOSITORY_URL,
-            correlatedRepositoryFetch,
-        );
+        this.#providerSource = new HttpProviderRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL, {
+            request: correlatedRepositoryFetch,
+            allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
+        });
+        this.#collectionSource = new HttpCollectionRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL, {
+            request: correlatedRepositoryFetch,
+            allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
+        });
         this.#instances = new InstanceResourcePool(
             (key, lifetime) => this.createComposition(this.#records.get(key)!, lifetime),
             (composition) => composition.close(),

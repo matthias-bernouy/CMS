@@ -50,16 +50,14 @@ try {
     let transitionRecovery: RecoverySupervisor | undefined;
     let operationRecovery: Promise<void> | undefined;
     try {
-        const providerSource = new HttpProviderRepository(
-            "ulvia-provider-runtime",
-            env.CMS_REPOSITORY_URL,
-            correlatedRepositoryFetch,
-        );
-        const collectionSource = new HttpCollectionRepository(
-            "ulvia-provider-runtime",
-            env.CMS_REPOSITORY_URL,
-            correlatedRepositoryFetch,
-        );
+        const providerSource = new HttpProviderRepository("ulvia-provider-runtime", env.CMS_REPOSITORY_URL, {
+            request: correlatedRepositoryFetch,
+            allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
+        });
+        const collectionSource = new HttpCollectionRepository("ulvia-provider-runtime", env.CMS_REPOSITORY_URL, {
+            request: correlatedRepositoryFetch,
+            allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
+        });
         const artifacts = await loadOfficialArtifacts(providerSource, collectionSource);
         const profiles = new OfficialInstanceProfiles([artifacts.profile]);
         const instanceHost = new ProviderInstanceHost(env, credentials, profiles, logger);

@@ -8,6 +8,7 @@ function validEnv(): Record<string, string> {
         ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
         ULVIA_PROVIDER_OPERATOR_TOKEN: "opaque-ulvia-operator-token",
         CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
+        CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "false",
         MONGO_URL: "mongodb://127.0.0.1:27017/cms",
         CMS_FILES_DIR: "/tmp/cms-files",
         CMS_SESSION_SECRET: "session-secret",
@@ -21,6 +22,7 @@ describe("Ulvia Provider server environment", () => {
             ULVIA_PROVIDER_PORT: 5103,
             ULVIA_PROVIDER_HOST: "127.0.0.1",
             ULVIA_PROVIDER_OPERATOR_TOKEN: "opaque-ulvia-operator-token",
+            CMS_REPOSITORY_ALLOW_INSECURE_HTTP: false,
         });
     });
 

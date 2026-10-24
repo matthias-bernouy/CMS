@@ -25,7 +25,10 @@ test("repository transport rejects redirects and oversized responses", async () 
 });
 
 test("repository base URLs reject credentials and non-HTTPS remote hosts", () => {
-    expect(() => repositoryBaseUrl("http://example.com", "Provider")).toThrow("HTTPS or loopback HTTP");
+    expect(() => repositoryBaseUrl("http://example.com", "Provider")).toThrow("HTTPS or explicitly allowed HTTP");
+    expect(repositoryBaseUrl("http://repository:3100", "Provider", { allowInsecureHttp: true }).href).toBe(
+        "http://repository:3100/",
+    );
     expect(() => repositoryBaseUrl("https://user:pass@example.com", "Provider")).toThrow("URL credentials");
 });
 

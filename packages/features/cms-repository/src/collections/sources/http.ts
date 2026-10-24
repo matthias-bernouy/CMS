@@ -18,21 +18,25 @@ import { parseCollectionCataloguePage, validCollectionReference, validCollection
 const ASSET_FETCH_CONCURRENCY = 4;
 const CATALOGUE_PAGE_SIZE = 256;
 
+export type HttpCollectionRepositoryOptions = Readonly<{
+    request?: RepositoryFetch;
+    allowInsecureHttp?: boolean;
+}>;
+
 export class HttpCollectionRepository implements CollectionRepositorySource {
     readonly id: string;
     private readonly base: URL;
 
-    constructor(
-        id: string,
-        baseUrl: string,
-        private readonly request?: RepositoryFetch,
-    ) {
+    constructor(id: string, baseUrl: string, options: HttpCollectionRepositoryOptions = {}) {
         if (!validCollectionRepositoryId(id)) {
             throw new TypeError("Invalid collection repository ID");
         }
         this.id = id;
-        this.base = repositoryBaseUrl(baseUrl, "Collection");
+        this.base = repositoryBaseUrl(baseUrl, "Collection", options);
+        this.request = options.request;
     }
+
+    private readonly request?: RepositoryFetch;
 
     async list(): Promise<CollectionRepositoryEntry[]> {
         return readCataloguePages(

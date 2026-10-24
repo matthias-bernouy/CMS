@@ -16,21 +16,25 @@ import { parseProviderCataloguePage, validProviderReference, validProviderReposi
 
 const CATALOGUE_PAGE_SIZE = 256;
 
+export type HttpProviderRepositoryOptions = Readonly<{
+    request?: RepositoryFetch;
+    allowInsecureHttp?: boolean;
+}>;
+
 export class HttpProviderRepository implements ProviderRepositorySource {
     readonly id: string;
     private readonly base: URL;
 
-    constructor(
-        id: string,
-        baseUrl: string,
-        private readonly request?: RepositoryFetch,
-    ) {
+    constructor(id: string, baseUrl: string, options: HttpProviderRepositoryOptions = {}) {
         if (!validProviderRepositoryId(id)) {
             throw new TypeError("Invalid provider repository ID");
         }
         this.id = id;
-        this.base = repositoryBaseUrl(baseUrl, "Provider");
+        this.base = repositoryBaseUrl(baseUrl, "Provider", options);
+        this.request = options.request;
     }
+
+    private readonly request?: RepositoryFetch;
 
     async list(kind: RepositoryArtifactKind): Promise<readonly RepositoryArtifactEntry[]> {
         return readCataloguePages(
