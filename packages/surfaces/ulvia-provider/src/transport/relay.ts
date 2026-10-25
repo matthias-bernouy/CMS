@@ -64,7 +64,9 @@ export function createProviderContractRelay(
             });
         }
         try {
+            const dispatchStartedAt = performance.now();
             const dispatched = await dispatcher.invoke(contractId, capability.id, input, context);
+            reportDispatch(logger, contractId, capability.id, performance.now() - dispatchStartedAt);
             const output = dispatched instanceof ProviderCapabilityResponse ? dispatched.output : dispatched;
             const responseEffect =
                 dispatched instanceof ProviderCapabilityResponse ? dispatched.responseEffect : undefined;
@@ -127,6 +129,15 @@ export function createProviderContractRelay(
             return Response.json({ error: { code: "CORE_UNAVAILABLE" } }, { status: 503 });
         }
     };
+}
+
+function reportDispatch(logger: Logger, contractId: string, capabilityId: string, durationMs: number): void {
+    const attributes = { contractId, capabilityId, durationMs: Math.round(durationMs * 100) / 100 };
+    if (durationMs >= 50) {
+        logger.info("provider.capability.completed", attributes);
+        return;
+    }
+    logger.debug("provider.capability.completed", attributes);
 }
 
 function headError(

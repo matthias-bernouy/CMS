@@ -26,11 +26,15 @@ export function mountUlviaProvider(options: {
         contracts,
         logger,
         authenticateControlToken: async (token) => {
+            const startedAt = performance.now();
             const instance = await authenticator.authenticateControlToken(token);
+            reportAuthentication(logger, "control", performance.now() - startedAt, Boolean(instance));
             return instance ? host.runtime(instance) : null;
         },
         authenticateInvocationToken: async (token) => {
+            const startedAt = performance.now();
             const authentication = await authenticator.authenticateInvocationToken(token);
+            reportAuthentication(logger, "invocation", performance.now() - startedAt, Boolean(authentication));
             if (!authentication) {
                 return null;
             }
@@ -39,4 +43,13 @@ export function mountUlviaProvider(options: {
     });
     runner.start(env.ULVIA_PROVIDER_PORT);
     return { stop: () => runner.stopGracefully() };
+}
+
+function reportAuthentication(logger: Logger, kind: string, durationMs: number, accepted: boolean): void {
+    const attributes = { kind, accepted, durationMs: Math.round(durationMs * 100) / 100 };
+    if (durationMs >= 50) {
+        logger.info("provider.authentication.completed", attributes);
+        return;
+    }
+    logger.debug("provider.authentication.completed", attributes);
 }
