@@ -1,5 +1,11 @@
 import type { RuntimeEnv } from "../runtimeEnv";
 import { InMemoryCache } from "@bernouy/http-runner";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
+import {
+    blocRuntimeCacheKey,
+    loadBindingCoreRuntimeEntry,
+    loadBlocRuntimeEntry,
+} from "@bernouy/cms-content/runtime-assets";
 import { PRODUCTION_KERNEL_RUNTIME, type ProductionKernelRuntime } from "./kernelRuntime";
 import type { Logger } from "@bernouy/logging";
 import type { createKernelGateway } from "./gateway/createKernelGateway";
@@ -24,6 +30,9 @@ export async function mountProductionKernel(
 ): Promise<ProductionKernelHandle> {
     const { env, content, gateway, logger } = options;
     const runner = new runtime.Runner({ logger, idleTimeoutSeconds: 60 });
+    const cache = new InMemoryCache();
+    const basePath = runner.basePath === "/" ? "" : runner.basePath;
+    await prewarmBrowserRuntimes(cache, `${basePath}/.cms`, logger);
     runner.get("/healthz", emptyOk);
     runner.get("/readyz", emptyOk);
     new runtime.Kernel({
@@ -32,7 +41,7 @@ export async function mountProductionKernel(
         editorialPages: content.editorialPages,
         resolveActor: gateway.resolveActor,
         sessionCookie: { secure: env.KERNEL_PUBLIC_URL.startsWith("https:") },
-        cache: new InMemoryCache(),
+        cache,
         enforcePageCsp: env.MODE !== "DEV",
         capabilityGateway: {
             siteId: "default",
@@ -61,6 +70,19 @@ export async function mountProductionKernel(
             await runner.stopGracefully();
         },
     };
+}
+
+async function prewarmBrowserRuntimes(cache: InMemoryCache, cmsPathPrefix: string, logger: Logger): Promise<void> {
+    const startedAt = performance.now();
+    const blocRuntimePath = `${cmsPathPrefix}/assets/bloc-runtime.js`;
+    const bindingRuntimePath = `${cmsPathPrefix}/assets/cms-binding-core.js`;
+    const [blocRuntime, bindingRuntime] = await Promise.all([loadBlocRuntimeEntry(), loadBindingCoreRuntimeEntry()]);
+    cache.set(blocRuntimeCacheKey(blocRuntimePath), blocRuntime);
+    cache.set(CMS_CACHE_KEYS.js(bindingRuntimePath), bindingRuntime);
+    logger.info("kernel.browser-runtimes.prewarmed", {
+        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
+        entries: 2,
+    });
 }
 
 function emptyOk(): Response {
