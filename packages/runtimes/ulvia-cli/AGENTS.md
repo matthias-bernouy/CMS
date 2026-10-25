@@ -55,7 +55,12 @@ Ulvia CMS installation runtime.
   references against its local tokens, selective dependency imports and
   Bloc-owned custom-property declarations.
 - The local Repository serves only stored releases on loopback; it must never read authored folders.
-- `push` and `pull` transfer one exact collection, contract or provider release.
+- `push` infers one local release kind from its coordinate; an explicit kind
+  resolves collisions. `push all` sends every non-yanked local cached release,
+  ordered by contract dependencies, then providers and collection dependencies.
+  Validate all local artifacts and namespace keys before the first upload. Stop
+  on failure; exact retries are idempotent and the batch is not transactional.
+  `pull` transfers one explicitly typed exact release.
   Re-admit remote bytes locally and let the receiving repository re-run all
   publication and evolution rules. Never trust a remote digest without
   recomputing it.

@@ -201,10 +201,28 @@ dependencies, before storing the contract. Conformance publication and live
 execution are separate Gateway/repository APIs; the CLI does not yet orchestrate
 a disposable provider environment.
 
-`push` publishes one exact local coordinate, and `pull` downloads and re-admits
-one exact remote coordinate before storing it locally. Both support
-`collection`, `contract`, and `provider`; dependencies must be transferred
-first. `repository login` saves the default endpoint; `--repository` and
+`push <publisher/id@version>` infers the kind from local cached releases. If the
+same coordinate exists in several catalogues, specify `push contract`,
+`push collection` or `push provider` to resolve the ambiguity. `pull` still takes
+an explicit kind and downloads and re-admits one exact coordinate locally.
+
+`push all` publishes every non-yanked release in the local cache, independently
+of the working directory. It orders contract inheritance and requirements,
+then providers and known local collection dependencies. All artifacts and every
+namespace's local owner key are checked before the first upload. No namespace
+is implicitly claimed and releases without an owner key are not silently skipped.
+A remote refusal or transfer failure stops the batch; already completed
+publications remain visible. Repeating the command reconciles identical releases
+and resumes the remainder. The receiving Repository still validates dependency
+availability and every immutable artifact. For single pushes, transfer required
+dependencies first.
+
+```bash
+ulvia push ulvia.official/ulvia.cms.emailer@1.0.0
+ulvia push all
+```
+
+`repository login` saves the default endpoint; `--repository` and
 `ULVIA_REPOSITORY_URL` remain explicit overrides. Owner signatures bind Repository
 identity, namespace revision, action, content digest, timestamp and nonce.
 The server rejects stale or replayed

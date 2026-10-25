@@ -11,58 +11,14 @@ import {
     LocalContractReleases,
     LocalProviderReleases,
     LocalRepositoryYanks,
-    withRepositoryWriteLock,
 } from "@bernouy/cms-repository/repository/filesystem";
 import {
-    RemoteRepositoryClient,
     type PublicationAsset,
     type PublicationEnvelope,
     type RemoteCoordinate,
 } from "@bernouy/cms-repository/repository/publication";
-import { formatCoordinate, parseRemoteArguments, type RemoteAction } from "./remoteArguments";
-import { RemoteAssetFileSink } from "./remoteAssetSink";
-import { remoteRepositoryCredential } from "./namespace/credentials";
 
-export async function remoteCommand(
-    action: RemoteAction,
-    args: readonly string[],
-    repositoryRoot: string,
-    environment: Record<string, string | undefined>,
-    log: (message: string) => void,
-): Promise<void> {
-    const { coordinate, repositoryUrl, reason } = parseRemoteArguments(action, args, environment);
-    const client = new RemoteRepositoryClient(
-        repositoryUrl,
-        action === "pull"
-            ? undefined
-            : await remoteRepositoryCredential(repositoryUrl, coordinate.publisherId, environment),
-    );
-    if (action === "yank" || action === "restore") {
-        await client.yank(coordinate, action === "restore" ? null : reason!);
-        log(`${action === "restore" ? "Restored" : "Yanked"} ${formatCoordinate(coordinate)}`);
-        return;
-    }
-    if (action === "push") {
-        const local = await loadLocal(repositoryRoot, coordinate);
-        const result = await client.push(local.envelope);
-        if (result.digest !== local.digest) {
-            throw new Error("Remote repository returned a different publication digest");
-        }
-        log(`${result.added ? "+" : "="} ${formatCoordinate(coordinate)} (${result.digest})`);
-        return;
-    }
-    const sink = new RemoteAssetFileSink(repositoryRoot);
-    const remote = await client.pull(coordinate, sink);
-    let added: boolean;
-    try {
-        added = await withRepositoryWriteLock(repositoryRoot, () => storeLocal(repositoryRoot, remote));
-    } finally {
-        await sink.complete();
-    }
-    log(`${added ? "+" : "="} ${formatCoordinate(coordinate)} (${remote.expectedDigest})`);
-}
-
-async function loadLocal(root: string, coordinate: RemoteCoordinate) {
+export async function loadLocal(root: string, coordinate: RemoteCoordinate) {
     const yanks = new LocalRepositoryYanks(root);
     if (await yanks.get(coordinate.kind, coordinate.publisherId, coordinate.id, coordinate.version)) {
         throw new Error("A locally yanked release cannot be pushed");
@@ -94,13 +50,18 @@ async function loadLocal(root: string, coordinate: RemoteCoordinate) {
     const canonicalJson = bytes.toString("utf8");
     const contracts = new LocalContractReleases(files, yanks);
     if (coordinate.kind === "contract") {
+        const assets = await contractAssets(files, canonicalJson);
+        const admission = assets.length
+            ? await admitContractBundleJson(canonicalJson, assets)
+            : await admitContractReleaseJson(canonicalJson);
         const record = await (await contracts.catalogue()).get(coordinate.id, coordinate.version);
+        assertDigest(admission.digest, record!.admission.digest);
         return {
-            digest: record!.admission.digest,
+            digest: admission.digest,
             envelope: {
                 kind: coordinate.kind,
                 canonicalJson,
-                assets: await contractAssets(files, canonicalJson),
+                assets,
             } satisfies PublicationEnvelope,
         };
     }
@@ -114,7 +75,10 @@ async function loadLocal(root: string, coordinate: RemoteCoordinate) {
     };
 }
 
-async function storeLocal(root: string, remote: PublicationEnvelope & { expectedDigest: string }): Promise<boolean> {
+export async function storeLocal(
+    root: string,
+    remote: PublicationEnvelope & { expectedDigest: string },
+): Promise<boolean> {
     const files = new LocalArtifactFiles(root);
     const yanks = new LocalRepositoryYanks(root);
     const contracts = new LocalContractReleases(files, yanks);

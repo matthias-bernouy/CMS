@@ -28,7 +28,7 @@ Usage:
   ulvia upgrade <kernel | provider | repository> --version <version>
   ulvia reset --yes
   ulvia release <resource-directory> [--recursive]
-  ulvia push <kind> <publisher/id@version> --repository <url>
+  ulvia push <publisher/id@version | all> [--repository <url>]
   ulvia pull <kind> <publisher/id@version> --repository <url>
   ulvia yank <kind> <publisher/id@version> --repository <url> --reason <text>
   ulvia restore <kind> <publisher/id@version> --repository <url>
@@ -45,7 +45,7 @@ Commands:
   upgrade      Pull and install one exact official Docker image version
   reset        Delete all instances, services data, and repository releases after --yes
   release      Validate and store one resource or a recursive resource batch
-  push         Publish one exact local release to a remote repository
+  push         Publish one local release or all non-yanked local releases
   pull         Validate and store one exact remote release locally
   yank         Hide a remote release from new catalogue resolutions
   restore      Make a yanked remote release resolvable again

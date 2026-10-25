@@ -305,16 +305,20 @@ ulvia release /path/to/authored-resource
 ulvia push contract acme/example.contract@1.0.0
 ```
 
-The development CLI also supports recursive release:
+The development CLI adds recursive release, inferred push kinds and `push all`:
 
 ```bash
 ulvia release /path/to/resources --recursive
+ulvia push acme/example.contract@1.0.0
+ulvia push all
 ```
 
-Recursive release prepares sources locally. Source admission precedes storage;
-each resource is stored separately and a conflict can leave a partial batch.
-Repeat identical releases to resume. The published `0.1.0-beta` CLI does not yet
-include recursive release.
+Recursive release prepares sources locally. `push all` publishes every
+non-yanked release in the local cache to the saved Repository, respecting local
+dependency order. It verifies all artifacts and namespace owner keys before
+uploading. A failed batch can leave completed publications; rerun it to resume
+idempotently. A type is required only when a coordinate matches several local
+resource kinds. The published `0.1.0-beta` CLI does not yet include these additions.
 
 The resource's `publisherId` must match the owned namespace. Dependencies must
 be released and pushed first. Collections and provider manifests use
