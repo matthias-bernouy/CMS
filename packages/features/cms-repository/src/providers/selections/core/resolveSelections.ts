@@ -1,3 +1,4 @@
+import { capabilityBindings } from "cms-repository/exports/contracts/bindings";
 import { resolveContractLineage, type ContractRelease } from "cms-repository/exports/contracts/index";
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import { parseProviderInstallation } from "cms-repository/providers/installations/core/parsing/parseProviderInstallation";
@@ -109,11 +110,27 @@ export async function resolveSelections(
             );
         }
         const release = deepFreeze(structuredClone(record.admission.release));
+        const lineage = await resolveContractLineage(context.releases, release);
+        for (const entry of lineage) {
+            for (const capability of entry.capabilities) {
+                const bindings = capabilityBindings(capability);
+                if (
+                    bindings.some((binding) => binding.transport === "mcp") &&
+                    !bindings.some((binding) => binding.transport === "http")
+                ) {
+                    throw new ContractSelectionValidationError(
+                        "invalid_selection",
+                        "Remote MCP capabilities require an outbound HTTP binding",
+                        path,
+                    );
+                }
+            }
+        }
         resolved.set(selection.contractId, {
             selection,
             release,
             implementation,
-            lineage: await resolveContractLineage(context.releases, release),
+            lineage,
         });
     }
     assertDisjointLineages(resolved);

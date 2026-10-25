@@ -22,6 +22,7 @@ export type McpToolResult = Readonly<{
 
 export interface CapabilityMcpOptions {
     readonly invoker: Pick<GatewayInvoker, "invoke">;
+    readonly onMutationSuccess?: (value: { contractId: string; capabilityId: string }) => void | Promise<void>;
     /** Return exact admitted releases available for this trusted host scope. Maximum 1024 capabilities. */
     readonly contracts: (context: McpInvocationContext) => Promise<readonly AdmittedContractRelease[]>;
     /** Resolve host-owned resource handles. Never fetch an arbitrary client-supplied URL. */

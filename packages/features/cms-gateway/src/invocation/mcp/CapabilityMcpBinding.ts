@@ -103,6 +103,12 @@ export class CapabilityMcpBinding {
                     structuredContent: { output: { uri: link.uri, mimeType: result.contentType } },
                 };
             }
+            if (result.kind === "success" && entry.capability.behavior.effect === "command") {
+                await this.options.onMutationSuccess?.({
+                    contractId: entry.contractId,
+                    capabilityId: entry.capability.id,
+                });
+            }
             const data =
                 result.kind === "declared-error"
                     ? {

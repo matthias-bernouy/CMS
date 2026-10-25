@@ -7,6 +7,10 @@ export const MCP_PROTOCOL_VERSION = "2025-11-25";
 
 export function createCapabilityMcpHttpHandler(options: {
     binding: CapabilityMcpBinding;
+    resources?: {
+        list(context: McpInvocationContext): Promise<unknown>;
+        read(uri: string, context: McpInvocationContext): Promise<unknown>;
+    };
     resolveContext(request: Request): Promise<McpInvocationContext>;
     allowedOrigins: readonly string[];
     serverInfo: { name: string; version: string };
@@ -79,12 +83,24 @@ export function createCapabilityMcpHttpHandler(options: {
                 case "initialize":
                     result = {
                         protocolVersion: MCP_PROTOCOL_VERSION,
-                        capabilities: { tools: {} },
+                        capabilities: { tools: {}, ...(options.resources ? { resources: {} } : {}) },
                         serverInfo: options.serverInfo,
                     };
                     break;
                 case "ping":
                     result = {};
+                    break;
+                case "resources/list":
+                    if (!options.resources) {
+                        throw new McpProtocolError(-32601, "Method not found");
+                    }
+                    result = await options.resources.list(context);
+                    break;
+                case "resources/read":
+                    if (!options.resources || typeof params.uri !== "string") {
+                        throw new McpProtocolError(-32602, "Invalid resource URI");
+                    }
+                    result = await options.resources.read(params.uri, context);
                     break;
                 case "tools/list":
                     if (params.cursor !== undefined && typeof params.cursor !== "string") {
