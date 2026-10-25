@@ -2,13 +2,12 @@ import { expect, test } from "bun:test";
 import { generateKeyPairSync } from "node:crypto";
 import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { docker, repositoryContainer } from "./docker";
 
 const image = process.env.ULVIA_REPOSITORY_DOCKER_IMAGE;
 
 test.skipIf(!image)(
-    "real image preserves ownership, owner publication and MCP across graceful and abrupt restart",
+    "real image preserves ownership, owner publication and HTTP-only transport across graceful and abrupt restart",
     async () => {
         const keys = generateKeyPairSync("ed25519");
         const publicKey = keys.publicKey.export({ type: "spki", format: "der" }).toString("base64url");
@@ -57,39 +56,13 @@ test.skipIf(!image)(
                 assets: [],
             });
             expect(published.added).toBe(true);
-            const mcp = async (method: string, params: unknown) => {
-                const response = await fetch(`${base}mcp`, {
-                    method: "POST",
-                    headers: {
-                        Accept: "application/json, text/event-stream",
-                        "Content-Type": "application/json",
-                        "MCP-Protocol-Version": "2025-11-25",
-                    },
-                    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-                });
-                return response.json() as Promise<{
-                    result: {
-                        tools: { outputSchema: { type: string } }[];
-                        structuredContent: { output: { uri: string } };
-                    };
-                }>;
-            };
-            const tools = (await mcp("tools/list", {})).result.tools;
-            expect(tools).toHaveLength(13);
-            expect(tools.every((tool) => tool.outputSchema.type === "object")).toBe(true);
+            expect((await fetch(`${base}mcp`, { method: "POST", body: "{}" })).status).toBe(404);
             const coordinate = {
                 kind: "contract" as const,
                 publisherId: "ulvia.official",
                 id: "docker.example",
                 version: "1.0.0",
             };
-            const resource = await mcp("tools/call", {
-                name: capabilityToolName("ulvia.repository", "release-download"),
-                arguments: { input: coordinate },
-            });
-            expect(resource.result.structuredContent.output.uri).toBe(
-                "https://repository.example/v1/contracts/ulvia.official/docker.example/1.0.0",
-            );
             const missing = await fetch(`${base}v1/releases/contract/claim/missing/1.0.0`, { method: "HEAD" });
             expect(missing.status).toBe(404);
             expect(missing.headers.get("x-ulvia-error-code")).toBe("NOT_FOUND");

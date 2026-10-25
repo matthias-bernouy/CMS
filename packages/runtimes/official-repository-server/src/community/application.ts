@@ -1,6 +1,5 @@
 import { CapabilityGateway } from "@bernouy/cms-gateway";
 import { handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
-import { CapabilityMcpBinding, createCapabilityMcpHttpHandler } from "@bernouy/cms-gateway/mcp";
 import { matchPathTemplate } from "@bernouy/cms-repository/contracts/bindings";
 import {
     admitRepositoryContract,
@@ -8,12 +7,10 @@ import {
     RepositoryCapabilityError,
 } from "@bernouy/cms-repository/repository/contract";
 import type { RepositoryCapabilityPorts } from "@bernouy/cms-repository/repository/contract";
-import type { RemoteCoordinate } from "@bernouy/cms-repository/repository/publication";
 import { repositoryRoute } from "./route";
 import { RepositoryCommandAudit } from "./audit";
-import { repositoryReleasePath } from "./catalogue";
 
-export async function createRepositoryCapabilities(root: string, ports: RepositoryCapabilityPorts, publicUrl: string) {
+export async function createRepositoryCapabilities(root: string, ports: RepositoryCapabilityPorts) {
     const contract = await admitRepositoryContract();
     const route = await repositoryRoute(contract);
     const service = new RepositoryCapabilityService(ports);
@@ -57,30 +54,6 @@ export async function createRepositoryCapabilities(root: string, ports: Reposito
                 headers: { "Content-Type": "application/json", ETag: `"${contract.digest}"` },
             });
         }
-        if (url.pathname === "/mcp") {
-            const binding = new CapabilityMcpBinding({
-                invoker: gateway,
-                contracts: async () => [contract],
-                publishBinary: async (result, capability, _context, input) => {
-                    await result.stream.cancel();
-                    if (capability.id !== "release-download") {
-                        throw new Error("Unknown public resource representation");
-                    }
-                    return {
-                        type: "resource_link",
-                        uri: new URL(repositoryReleasePath(input as unknown as RemoteCoordinate), publicUrl).href,
-                        name: String(input.id),
-                        mimeType: result.contentType,
-                    };
-                },
-            });
-            return createCapabilityMcpHttpHandler({
-                binding,
-                allowedOrigins: [],
-                serverInfo: { name: "ulvia-repository", version: contract.release.version },
-                resolveContext: async () => ({ siteId: "repository", actor: { kind: "anonymous" } }),
-            })(request);
-        }
         const prefix = "/.cms/call";
         const direct = contract.bindings.some(
             ({ binding }) =>
@@ -93,11 +66,15 @@ export async function createRepositoryCapabilities(root: string, ports: Reposito
         if (direct) {
             url.pathname = `${prefix}/${contract.release.contractId}${url.pathname}`;
         }
-        return handleGatewayHttpCall(new Request(url, request), {
+        const response = await handleGatewayHttpCall(new Request(url, request), {
             siteId: "repository",
             invoker: gateway,
             actor: { kind: "anonymous" },
             prefix,
         });
+        if (url.pathname.includes("/v1/source-snapshots")) {
+            response.headers.set("Cache-Control", "no-store");
+        }
+        return response;
     };
 }

@@ -1,0 +1,85 @@
+{
+    "id": "source-put",
+    "description": "Retain private immutable sources for a published collection",
+    "access": "public",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "collectionId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "version": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "proof": {
+                "type": "string",
+                "maxLength": 4096,
+                "sensitive": true
+            },
+            "sourceJson": {
+                "type": "string",
+                "maxLength": 1048576,
+                "sensitive": true
+            },
+            "releaseDigest": {
+                "type": "string",
+                "maxLength": 71
+            }
+        },
+        "required": [
+            "namespace",
+            "collectionId",
+            "version",
+            "proof",
+            "sourceJson",
+            "releaseDigest"
+        ]
+    },
+    "output": {
+        "type": "null"
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/v1/source-snapshots/put",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [
+                    200
+                ],
+                "contentTypes": [
+                    "application/json"
+                ],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        }
+    ]
+}

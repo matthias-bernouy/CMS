@@ -1,0 +1,89 @@
+{
+    "id": "source-get",
+    "description": "Read private collection sources",
+    "access": "public",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "collectionId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "version": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "proof": {
+                "type": "string",
+                "maxLength": 4096,
+                "sensitive": true
+            }
+        },
+        "required": [
+            "namespace",
+            "collectionId",
+            "version",
+            "proof"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "sourceJson": {
+                "type": "string",
+                "maxLength": 1048576,
+                "sensitive": true
+            },
+            "releaseDigest": {
+                "type": "string",
+                "maxLength": 71
+            }
+        },
+        "required": [
+            "sourceJson",
+            "releaseDigest"
+        ],
+        "nullable": true
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/v1/source-snapshots",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [
+                    200
+                ],
+                "contentTypes": [
+                    "application/json"
+                ],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        }
+    ]
+}

@@ -66,10 +66,6 @@
                     "NOT_FOUND": 404
                 }
             }
-        },
-        {
-            "id": "mcp",
-            "transport": "mcp"
         }
     ]
 }

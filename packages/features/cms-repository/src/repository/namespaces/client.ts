@@ -2,13 +2,13 @@ import { randomUUID } from "node:crypto";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { boundedResponseBytes, repositoryUrl } from "../publication/transport";
 import type { RepositoryNamespace } from "./interfaces";
-import { assertRepositoryNamespace, repositoryDigest, signNamespaceProof } from "./proofs";
+import { assertRepositoryNamespace, namespacePublicKey, repositoryDigest, signNamespaceProof } from "./proofs";
 import type { RepositoryOwnerCredential } from "./request";
 
 export class RepositoryNamespaceClient {
     private readonly base: URL;
-    constructor(url: string) {
-        this.base = repositoryUrl(url);
+    constructor(url: string, options: Readonly<{ allowInsecureHttp?: boolean }> = {}) {
+        this.base = repositoryUrl(url, options);
     }
 
     async identity(): Promise<string> {
@@ -21,7 +21,27 @@ export class RepositoryNamespaceClient {
 
     async get(namespace: string): Promise<RepositoryNamespace | null> {
         assertRepositoryNamespace(namespace);
-        return (await this.request(`v1/namespaces/${namespace}`, undefined, true)) as RepositoryNamespace | null;
+        const value = await this.request(`v1/namespaces/${namespace}`, undefined, true);
+        if (value === null) {
+            return null;
+        }
+        const owner = value as RepositoryNamespace;
+        if (
+            !owner ||
+            owner.namespace !== namespace ||
+            !Number.isSafeInteger(owner.revision) ||
+            owner.revision < 1 ||
+            typeof owner.revoked !== "boolean" ||
+            typeof owner.publicKey !== "string" ||
+            !["claim", "rotate", "revoke"].includes(owner.action) ||
+            typeof owner.updatedAt !== "string" ||
+            !Number.isFinite(Date.parse(owner.updatedAt)) ||
+            (owner.previousDigest !== null && !/^sha256:[a-f0-9]{64}$/u.test(owner.previousDigest))
+        ) {
+            throw new Error("Repository returned an invalid namespace owner");
+        }
+        namespacePublicKey(owner.publicKey);
+        return owner;
     }
 
     async claim(credential: RepositoryOwnerCredential, publicKey: string): Promise<RepositoryNamespace> {

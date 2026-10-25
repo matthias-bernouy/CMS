@@ -7,6 +7,7 @@ import {
     RepositoryReadEndpoint,
 } from "@bernouy/cms-repository/repository/filesystem";
 import { RepositoryMutationEndpoint } from "@bernouy/cms-repository/repository/publication";
+import { FilesystemRepositorySourceStore } from "@bernouy/cms-repository/repository/sources";
 import { probeOfficialRepositoryStorage, validateOfficialRepositoryStorage } from "./storage";
 import { RepositoryNamespaceEndpoint } from "@bernouy/cms-repository/repository/namespaces";
 import { createNamespaceAuthority } from "./community/namespaces";
@@ -17,10 +18,7 @@ export type OfficialRepositoryApplication = Readonly<{
     handle(request: Request): Promise<Response>;
 }>;
 
-export async function createOfficialRepositoryApplication(
-    root: string,
-    publicUrl = "http://127.0.0.1:3000",
-): Promise<OfficialRepositoryApplication> {
+export async function createOfficialRepositoryApplication(root: string): Promise<OfficialRepositoryApplication> {
     const index = new FilesystemRepositoryCatalogueIndex(root);
     await validateOfficialRepositoryStorage(root, index);
     await recoverRepositoryStorage(root);
@@ -30,16 +28,13 @@ export async function createOfficialRepositoryApplication(
     const namespaces = await createNamespaceAuthority(root);
     const ownership = new RepositoryNamespaceEndpoint(namespaces);
     const registry = new FilesystemRepositoryPublicationRegistry(root, index);
-    const capabilities = await createRepositoryCapabilities(
-        root,
-        {
-            namespaces,
-            registry,
-            uploads,
-            ...cataloguePorts(reads),
-        },
-        publicUrl,
-    );
+    const capabilities = await createRepositoryCapabilities(root, {
+        namespaces,
+        sources: new FilesystemRepositorySourceStore(root),
+        registry,
+        uploads,
+        ...cataloguePorts(reads),
+    });
     const mutations = new RepositoryMutationEndpoint(registry, {
         uploads,
         replays: new FilesystemRepositoryReplayStore(root),

@@ -2,7 +2,7 @@ import type { RepositoryReadEndpoint } from "@bernouy/cms-repository/repository/
 import type { RepositoryCapabilityPorts } from "@bernouy/cms-repository/repository/contract";
 import type { RemoteCoordinate } from "@bernouy/cms-repository/repository/publication";
 
-export function repositoryReleasePath(coordinate: RemoteCoordinate): string {
+function repositoryReleasePath(coordinate: RemoteCoordinate): string {
     const directory = catalogueType(coordinate.kind);
     return `/v1/${directory}/${[coordinate.publisherId, coordinate.id, coordinate.version].map(encodeURIComponent).join("/")}`;
 }
@@ -44,7 +44,7 @@ export function cataloguePorts(
                 stream: response.body,
                 contentType: "application/json",
                 contentLength: Number(response.headers.get("content-length")),
-                digest: response.headers.get("etag") ?? "",
+                digest: (response.headers.get("etag") ?? "").replace(/^"|"$/gu, ""),
             };
         },
     };

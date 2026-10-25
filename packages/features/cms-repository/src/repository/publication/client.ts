@@ -29,8 +29,12 @@ export class RemoteRepositoryClient {
     private readonly base: URL;
     private readonly writer: RemoteRepositoryWriter;
 
-    constructor(baseUrl: string, credential?: RepositoryOwnerCredential) {
-        this.base = repositoryUrl(baseUrl);
+    constructor(
+        baseUrl: string,
+        credential?: RepositoryOwnerCredential,
+        options: Readonly<{ allowInsecureHttp?: boolean }> = {},
+    ) {
+        this.base = repositoryUrl(baseUrl, options);
         this.writer = new RemoteRepositoryWriter(this.base, credential);
     }
 

@@ -1,3 +1,5 @@
+import { repositoryUrl, RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { RepositoryNamespaceClient } from "@bernouy/cms-repository/repository/namespaces";
 import { expect, test } from "bun:test";
 import { repositoryBaseUrl } from "../../src/repository-http/baseUrl";
 import { getRepositoryBytes, MAX_REPOSITORY_RESPONSE_BYTES } from "../../src/repository-http/getBytes";
@@ -43,4 +45,16 @@ test("repository transport accepts runtime-owned outbound request decoration", a
     await getRepositoryBytes(base, "release", "Collection", { request });
 
     expect(observed?.get("accept")).toBe("application/json");
+});
+
+test("signed Repository clients retain HTTPS defaults and accept only a host-configured HTTP exception", () => {
+    expect(() => new RepositoryNamespaceClient("http://repository:3000")).toThrow();
+    expect(() => new RemoteRepositoryClient("http://repository:3000")).toThrow();
+    expect(() => new RepositoryNamespaceClient("http://repository:3000", { allowInsecureHttp: true })).not.toThrow();
+    expect(
+        () => new RemoteRepositoryClient("http://repository:3000", undefined, { allowInsecureHttp: true }),
+    ).not.toThrow();
+    expect(repositoryUrl("http://repository:3000", { allowInsecureHttp: true }).href).toBe("http://repository:3000/");
+    expect(() => repositoryUrl("http://user:password@repository:3000", { allowInsecureHttp: true })).toThrow();
+    expect(() => repositoryUrl("file:///tmp/repository", { allowInsecureHttp: true })).toThrow();
 });

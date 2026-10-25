@@ -1,3 +1,4 @@
+import type { RepositorySourceStore } from "../sources/interfaces";
 import type { RepositoryNamespaceAuthority } from "../namespaces/authority";
 import type {
     RemoteCoordinate,
@@ -6,6 +7,7 @@ import type {
 } from "../publication/types";
 
 export interface RepositoryCapabilityPorts {
+    readonly sources?: RepositorySourceStore;
     readonly namespaces: RepositoryNamespaceAuthority;
     readonly registry: RepositoryPublicationRegistry;
     readonly uploads: RepositoryPublicationUploadStore;

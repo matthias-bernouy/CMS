@@ -1,16 +1,7 @@
-export function repositoryUrl(value: string): URL {
-    const url = new URL(value);
-    const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
-    if (
-        (url.protocol !== "https:" && !(url.protocol === "http:" && loopback)) ||
-        url.username ||
-        url.password ||
-        url.search ||
-        url.hash
-    ) {
-        throw new Error("Repository URL must use HTTPS or loopback HTTP without embedded credentials");
-    }
-    return new URL(`${url.toString().replace(/\/+$/u, "")}/`);
+import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
+
+export function repositoryUrl(value: string, options: Readonly<{ allowInsecureHttp?: boolean }> = {}): URL {
+    return repositoryBaseUrl(value, "Publication", options);
 }
 
 export async function boundedResponseBytes(response: Response, maximum: number): Promise<Uint8Array> {

@@ -5,6 +5,6 @@
     "contractId": "ulvia.repository",
     "name": "Community Repository",
     "description": "Public discovery and cryptographic namespace ownership for immutable contract, provider and collection artifacts.",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "publisherId": "ulvia.official"
 }

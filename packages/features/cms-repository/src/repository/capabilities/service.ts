@@ -88,6 +88,48 @@ export class RepositoryCapabilityService {
             }
             return release;
         }
+        if (id === "source-get" || id === "source-put") {
+            if (!this.ports.sources) {
+                throw new RepositoryRequestError("NOT_FOUND");
+            }
+            const collectionId = input.collectionId as string;
+            const version = input.version as string;
+            const source =
+                id === "source-put"
+                    ? { collectionId, version, sourceJson: input.sourceJson, releaseDigest: input.releaseDigest }
+                    : { collectionId, version };
+            const proof = parseNamespaceProof(parseStrictJson(input.proof as string, 4_096, 4));
+            return namespaces.execute(
+                namespace,
+                id,
+                `${collectionId}@${version}`,
+                repositoryDigest(source),
+                proof,
+                async () => {
+                    if (id === "source-get") {
+                        return this.ports.sources!.get(namespace, collectionId, version);
+                    }
+                    const release = await this.ports.release({
+                        kind: "collection",
+                        publisherId: namespace,
+                        id: collectionId,
+                        version,
+                    });
+                    if (!release) {
+                        throw new RepositoryRequestError("NOT_FOUND");
+                    }
+                    await release.stream.cancel();
+                    if (release.digest !== input.releaseDigest) {
+                        throw new RepositoryRequestError("REJECTED");
+                    }
+                    await this.ports.sources!.put(namespace, collectionId, version, {
+                        sourceJson: input.sourceJson as string,
+                        releaseDigest: input.releaseDigest as string,
+                    });
+                    return null;
+                },
+            );
+        }
         const proof = parseNamespaceProof(parseStrictJson(input.proof as string, 4_096, 4));
         if (id === "namespace-claim") {
             return namespaces.claim(namespace, input.publicKey as string, proof);

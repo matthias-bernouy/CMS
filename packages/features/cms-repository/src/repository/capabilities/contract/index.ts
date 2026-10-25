@@ -14,12 +14,17 @@ import publicationAsset from "./capabilities/commands/publications/publication-a
 import publicationState from "./capabilities/queries/publication-state.json";
 import publicationYank from "./capabilities/commands/publications/publication-yank.json";
 
+import sourceGet from "./capabilities/queries/source-get.json";
+import sourcePut from "./capabilities/commands/publications/source-put.json";
+
 // Static imports keep authoring fragments out of runtime filesystem discovery.
 // Preserve declaration order so this source split retains the existing release digest.
 export default {
     ...definition,
     capabilities: [
         repositoryInfo,
+        sourceGet,
+        sourcePut,
         namespaceGet,
         namespaceClaim,
         namespaceRotate,

@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test";
 import { rm } from "node:fs/promises";
-import { capabilityToolName } from "@bernouy/cms-gateway/mcp";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 import { communityFixture, keyPair, capabilityProof, simpleContract } from "./fixtures";
 
@@ -79,51 +78,21 @@ test("admitted binary GET and HEAD preserve missing-resource errors", async () =
     }
 });
 
-test("MCP tools meet the 2025-11-25 object-schema contract and use configured public resource URLs", async () => {
-    const f = await communityFixture("https://repository.example");
+test("Repository exposes its HTTP contract and never mounts a standalone MCP", async () => {
+    const f = await communityFixture();
     try {
-        const call = async (method: string, params: unknown) => {
-            const response = await f.application.handle(
-                new Request("http://internal:3000/mcp", {
-                    method: "POST",
-                    headers: {
-                        Accept: "application/json, text/event-stream",
-                        "Content-Type": "application/json",
-                        "MCP-Protocol-Version": "2025-11-25",
-                        "X-Forwarded-Host": "attacker.example",
-                        "X-Forwarded-Proto": "http",
-                    },
-                    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-                }),
-            );
-            return response.json() as Promise<{
-                result: {
-                    tools: { inputSchema: { type: string }; outputSchema: { type: string } }[];
-                    structuredContent: { output: { uri: string } };
-                };
-            }>;
+        const response = await f.application.handle(new Request(`${f.base}mcp`, { method: "POST", body: "{}" }));
+        expect(response.status).toBe(404);
+        const contract = (await (await fetch(`${f.base}v1/repository-contract`)).json()) as {
+            version: string;
+            capabilities: { bindings: { transport: string }[] }[];
         };
-        const tools = (await call("tools/list", {})).result.tools;
-        expect(tools).toHaveLength(13);
-        // Both schema roots are required to have this literal type by MCP Tool in 2025-11-25.
-        for (const tool of tools) {
-            expect(tool.inputSchema.type).toBe("object");
-            expect(tool.outputSchema.type).toBe("object");
-        }
-        await new RemoteRepositoryClient(f.base, f.credential).push({
-            kind: "contract",
-            canonicalJson: simpleContract(),
-            assets: [],
-        });
-        const result = await call("tools/call", {
-            name: capabilityToolName("ulvia.repository", "release-download"),
-            arguments: {
-                input: { kind: "contract", publisherId: "community", id: "community.example", version: "1.0.0" },
-            },
-        });
-        expect(result.result.structuredContent.output.uri).toBe(
-            "https://repository.example/v1/contracts/community/community.example/1.0.0",
-        );
+        expect(contract.version).toBe("0.2.0");
+        expect(
+            contract.capabilities.every((capability) =>
+                capability.bindings.every((binding) => binding.transport === "http"),
+            ),
+        ).toBe(true);
     } finally {
         f.server.stop(true);
         await rm(f.root, { recursive: true, force: true });

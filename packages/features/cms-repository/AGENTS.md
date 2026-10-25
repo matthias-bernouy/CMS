@@ -367,3 +367,9 @@ models and validation for CMS-owned installations and site selections.
   the collection's default locale and allow partial additional locales to fall
   back through regional parents to that default. These translations are not
   site-overridable content texts.
+
+- `./collections/build` also owns recursive authored source assembly shared by
+  CLI and instance preparation. Keep compiler imports behind this explicit API.
+- `./repository/authoring` owns bounded collection preparations and exact
+  publication; `./repository/sources` owns private immutable owner-authorized
+  source snapshots. Neither grants implicit installation or exposes private keys.

@@ -20,3 +20,6 @@ Production composition root for the official immutable repository.
   artifact-last visibility and graceful shutdown.
 - TLS is terminated by deployment infrastructure. Health checks remain unauthenticated;
   mutation endpoints remain authenticated and catalogue reads remain public.
+
+- Mount HTTP only. CMS instances own MCP. Compose private immutable source
+  storage separately from public artifact downloads and enforce owner proofs.

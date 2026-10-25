@@ -35,7 +35,9 @@
         "./repository/namespaces": "./src/exports/repository/namespaces.ts",
         "./repository/contract": "./src/exports/repository/contract.ts",
         "./repository/publication": "./src/exports/repository/publication.ts",
-        "./repository/filesystem": "./src/exports/repository/filesystem.ts"
+        "./repository/filesystem": "./src/exports/repository/filesystem.ts",
+        "./repository/sources": "./src/exports/repository/sources.ts",
+        "./repository/authoring": "./src/exports/repository/authoring.ts"
     },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",

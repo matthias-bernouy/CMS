@@ -5,16 +5,16 @@ import { admitRepositoryContract } from "@bernouy/cms-repository/repository/cont
 
 const source = resolve(import.meta.dir, "../../src/repository/capabilities/contract");
 
-test("splitting Repository capability sources preserves the existing immutable release digest", async () => {
+test("HTTP-only Repository source snapshots have an explicit new immutable release coordinate", async () => {
     const artifact = await admitRepositoryContract();
-    expect(artifact.digest).toBe("sha256:097bce6cb52cfbf6df0b987f5e8d375cad793d29a60c9153ab0e5bd176109005");
-    expect(artifact.release.capabilities).toHaveLength(14);
-    expect(artifact.bindings).toHaveLength(14);
+    expect(artifact.digest).toBe("sha256:12cb44d00f70e9457d42bdfc7096b66d899284b9e26afaaee0ffac823d8882c1");
+    expect(artifact.release.capabilities).toHaveLength(16);
+    expect(artifact.bindings).toHaveLength(16);
     expect(
         artifact.release.capabilities.filter((capability) =>
             capability.bindings?.some((binding) => binding.transport === "mcp"),
         ),
-    ).toHaveLength(13);
+    ).toHaveLength(0);
 });
 
 test("static Repository assembly includes each authored fragment exactly once and no inline capabilities", async () => {

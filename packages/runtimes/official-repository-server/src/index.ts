@@ -19,7 +19,7 @@ async function startRepository(): Promise<void> {
     let server: ReturnType<typeof startOfficialRepositoryServer>;
     try {
         await seedOfficialRepository(env.root, env.seedRoot);
-        const application = await createOfficialRepositoryApplication(env.root, env.publicUrl);
+        const application = await createOfficialRepositoryApplication(env.root);
         server = startOfficialRepositoryServer(application, env, logger);
     } catch (error) {
         await ownership.release();
