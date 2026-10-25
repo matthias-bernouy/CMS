@@ -10,15 +10,19 @@ import {
     currentRequestLogAttributes,
     finishRequestTiming,
     isValidRequestId,
+    measureCurrentRequestTiming,
     measureRequestTiming,
+    recordCurrentRequestTiming,
     recordRequestTiming,
     requestId,
     requestTimingSnapshot,
+    requestTimingCountSnapshot,
     runWithRequestContext,
     runWithoutRequestContext,
     serverTimingHeader,
 } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
+import { requestCompletionLevel } from "http-runner/default-implementation/bunRequestDispatch";
 
 describe("request context", () => {
     test("accepts only canonical UUID v4 values and keeps one id per Request", () => {
@@ -260,6 +264,32 @@ describe("request context", () => {
 });
 
 describe("request timing", () => {
+    test("promotes slow successful requests without escalating ordinary traffic", () => {
+        expect(requestCompletionLevel(200, 99.99)).toBe("debug");
+        expect(requestCompletionLevel(200, 100)).toBe("info");
+        expect(requestCompletionLevel(503, 1)).toBe("error");
+    });
+
+    test("records nested service stages against the active request context", async () => {
+        const request = new Request("http://local");
+        let now = 10;
+
+        await runWithRequestContext(request, async () => {
+            await measureCurrentRequestTiming(
+                "nested_service",
+                async () => {
+                    now = 14;
+                },
+                () => now,
+            );
+            expect(recordCurrentRequestTiming("nested_service", 2)).toBe(true);
+        });
+
+        expect(requestTimingSnapshot(request)).toEqual({ nested_service: 6 });
+        expect(requestTimingCountSnapshot(request)).toEqual({ nested_service: 2 });
+        expect(recordCurrentRequestTiming("outside_request", 1)).toBe(false);
+    });
+
     test("accumulates stages, preserves operation errors, and snapshots defensively", async () => {
         const request = new Request("http://local");
         let now = 10;
@@ -290,6 +320,7 @@ describe("request timing", () => {
         expect(requestTimingSnapshot(request)).toEqual({ stage_one: 5 });
         expect(Object.isFrozen(requestTimingSnapshot(request))).toBe(true);
         expect(finishRequestTiming(request)).toEqual({ stage_one: 5 });
+        expect(requestTimingCountSnapshot(request)).toEqual({ stage_one: 2 });
         expect(recordRequestTiming(request, "too_late", 1)).toBe(false);
     });
 

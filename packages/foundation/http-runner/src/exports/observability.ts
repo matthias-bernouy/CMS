@@ -1,5 +1,9 @@
 export type { Middleware } from "http-runner/interfaces/Runner";
-export type { RequestTimingClock, RequestTimingSnapshot } from "http-runner/interfaces/RequestObservability";
+export type {
+    RequestTimingClock,
+    RequestTimingCounts,
+    RequestTimingSnapshot,
+} from "http-runner/interfaces/RequestObservability";
 export {
     REQUEST_ID_HEADER,
     MAX_REQUEST_TIMING_ENTRIES,
@@ -13,9 +17,12 @@ export {
     finishRequestTiming,
     isValidRequestId,
     measureRequestTiming,
+    measureCurrentRequestTiming,
+    recordCurrentRequestTiming,
     recordRequestTiming,
     requestId,
     requestTimingSnapshot,
+    requestTimingCountSnapshot,
     runWithRequestContext,
     runWithoutRequestContext,
     serverTimingHeader,

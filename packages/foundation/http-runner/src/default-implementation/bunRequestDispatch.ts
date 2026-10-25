@@ -1,8 +1,9 @@
 import { dispatchRequest } from "http-runner/core/request/dispatch";
 import { setRequestIP } from "http-runner/core/request/ip";
 import { requestId, runWithRequestContext, withRequestIdHeader } from "http-runner/core/request/observability";
-import { finishRequestTiming } from "http-runner/core/request/timing";
+import { finishRequestTiming, requestTimingCountSnapshot } from "http-runner/core/request/timing";
 import type { Logger } from "@bernouy/logging";
+import type { LogLevel } from "@bernouy/logging";
 import type { Middleware, RouteHandler } from "http-runner/interfaces/Runner";
 import { matchPath, normalizePath, pathUnderPrefix } from "./runnerPaths";
 
@@ -70,16 +71,21 @@ function logRequestCompletion(
     startedAt: number,
 ): void {
     const timings = finishRequestTiming(request);
+    const timingCounts = requestTimingCountSnapshot(request);
+    const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
     const attributes = {
         method: request.method,
         path,
         status,
-        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
-        ...(Object.keys(timings).length > 0 ? { timings } : {}),
+        durationMs,
+        ...(Object.keys(timings).length > 0 ? { timings, timingCounts } : {}),
     };
+    logger?.log(requestCompletionLevel(status, durationMs), "http.request.completed", attributes);
+}
+
+export function requestCompletionLevel(status: number, durationMs: number): LogLevel {
     if (status >= 500) {
-        logger?.error("http.request.completed", attributes);
-        return;
+        return "error";
     }
-    logger?.debug("http.request.completed", attributes);
+    return durationMs >= 100 ? "info" : "debug";
 }

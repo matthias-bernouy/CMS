@@ -18,7 +18,10 @@ export {
     SERVER_TIMING_HEADER,
     finishRequestTiming,
     measureRequestTiming,
+    measureCurrentRequestTiming,
+    recordCurrentRequestTiming,
     recordRequestTiming,
+    requestTimingCountSnapshot,
     requestTimingSnapshot,
     serverTimingHeader,
 } from "http-runner/core/request/timing";
