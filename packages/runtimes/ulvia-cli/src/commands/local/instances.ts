@@ -24,7 +24,7 @@ export async function instanceCommand(
     if (action === "create") {
         const name = rest[0] ?? "";
         const options = parseCreateOptions(rest.slice(1));
-        await createNamedInstance(paths, installation, name, options, log);
+        await createNamedInstance(paths, name, options, log);
         return;
     }
     if (action === "list") {
@@ -32,24 +32,21 @@ export async function instanceCommand(
         await listInstances(paths, installation, log);
         return;
     }
-    if (["start", "stop", "status", "upgrade", "credentials", "delete", "logs"].includes(action ?? "")) {
-        await runExistingInstanceCommand(action as string, rest, paths, installation, log);
+    if (["start", "stop", "status", "credentials", "delete", "logs"].includes(action ?? "")) {
+        await runExistingInstanceCommand(action as string, rest, paths, log);
         return;
     }
-    throw new Error(
-        "Usage: ulvia instance <create | list | start | stop | status | upgrade | credentials | logs | delete>",
-    );
+    throw new Error("Usage: ulvia instance <create | list | start | stop | status | credentials | logs | delete>");
 }
 
 async function createNamedInstance(
     paths: UlviaPaths,
-    installation: InstallationConfig,
     name: string,
     options: Readonly<{ label?: string; domain?: string }>,
     log: (message: string) => void,
 ): Promise<void> {
     assertLocalInstanceName(name);
-    const services = await assertProviderRunning(paths, installation);
+    const services = await assertProviderRunning(paths);
     const instancePaths = resolveLocalInstancePaths(paths, name);
     await ensureLocalInstancePaths(instancePaths);
     if (await loadLocalInstanceConnection(instancePaths.root)) {

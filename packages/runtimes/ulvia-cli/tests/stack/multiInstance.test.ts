@@ -15,6 +15,7 @@ import { defaultInstallationConfig } from "../../src/runtime/stack/installation"
 import { releaseInstanceDomain, reserveInstanceDomain } from "../../src/runtime/stack/domains";
 import { instancePublicUrl, localInstanceHostname } from "../../src/runtime/stack/ports";
 import { localKernelEnvironment } from "../../src/runtime/stack/orchestration/environment";
+import type { OfficialImageComponent } from "../../src/runtime/stack/orchestration/images";
 import {
     loadLocalKernelState,
     localKernelProjectName,
@@ -27,7 +28,10 @@ test("named instances keep independent identities, credentials, state, and hostn
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
     await ensureUlviaPaths(paths);
     try {
-        const services = await saveLocalServicesState(paths, defaultInstallationConfig());
+        const services = await saveLocalServicesState(paths, defaultInstallationConfig(), {
+            provider: image("provider"),
+            repository: image("repository"),
+        });
         const defaultInstance = resolveLocalInstancePaths(paths, "default");
         const previewInstance = resolveLocalInstancePaths(paths, "preview");
         await Promise.all([ensureLocalInstancePaths(defaultInstance), ensureLocalInstancePaths(previewInstance)]);
@@ -46,7 +50,8 @@ test("named instances keep independent identities, credentials, state, and hostn
             token: "a".repeat(43),
         });
         const projectName = localKernelProjectName(paths, "preview");
-        await saveLocalKernelState(previewInstance, projectName, previewConfig.hostname);
+        const kernelImage = image("kernel");
+        await saveLocalKernelState(previewInstance, projectName, previewConfig.hostname, kernelImage);
 
         expect(defaultConfig.adminPassword).not.toBe(previewConfig.adminPassword);
         expect(instancePublicUrl(defaultConfig.hostname, services.installation)).toBe("http://localhost:5100");
@@ -54,7 +59,7 @@ test("named instances keep independent identities, credentials, state, and hostn
         expect(localKernelProjectName(paths, "default")).not.toBe(projectName);
         expect((await loadLocalKernelState(previewInstance))?.projectName).toBe(projectName);
 
-        const environment = localKernelEnvironment(previewInstance, previewConfig, connection, services);
+        const environment = localKernelEnvironment(previewInstance, previewConfig, connection, services, kernelImage);
         expect(environment.CMS_INSTALLATIONS_PROVIDER_TOKEN).toBe("a".repeat(43));
         expect(environment.ULVIA_INSTANCE_HOSTNAME).toBe("preview.localhost");
         expect(environment.ULVIA_MONGO_PASSWORD).toBeUndefined();
@@ -64,6 +69,12 @@ test("named instances keep independent identities, credentials, state, and hostn
         await rm(root, { recursive: true, force: true });
     }
 });
+
+function image(component: OfficialImageComponent) {
+    const version = "1.2.3";
+    const digest = `sha256:${"a".repeat(64)}`;
+    return { component, version, digest } as const;
+}
 
 test("instance names are safe for hostnames, paths, and Compose project names", () => {
     for (const name of ["default", "preview", "client-42"]) {

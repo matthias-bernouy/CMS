@@ -2,11 +2,11 @@ import type { UlviaPaths } from "../../runtime/paths";
 import { loadOrCreateInstallationConfig } from "../../runtime/stack/installation";
 import { listLocalInstanceNames, startLocalKernel } from "../../runtime/stack/orchestration/instances";
 import { startLocalServices } from "../../runtime/stack/orchestration/services";
-import { bootstrapOfficialRepository } from "../bootstrap";
 import { configureCommand } from "./configure";
 import { instanceCommand } from "./instances";
 import { resetLocalInstallation } from "./reset";
-import { servicesCommand } from "./services";
+import { parseStartVersion, servicesCommand } from "./services";
+import { upgradeCommand } from "./upgrade";
 
 export async function localCommand(
     command: string,
@@ -28,24 +28,31 @@ export async function localCommand(
         await instanceCommand(args, paths, installation, log);
         return;
     }
+    if (command === "upgrade") {
+        await upgradeCommand(args, paths, log);
+        return;
+    }
     if (command === "reset") {
         if (args.length !== 1 || args[0] !== "--yes") {
             throw new Error(
                 "Usage: ulvia reset --yes (permanently deletes every local instance and repository release)",
             );
         }
-        await resetLocalInstallation(paths, installation, log);
+        await resetLocalInstallation(paths, log);
         return;
     }
-    if (command !== "start" || args.length > 0) {
-        throw new Error("Usage: ulvia start");
+    if (command !== "start") {
+        throw new Error("Usage: ulvia start [--version <version>]");
     }
-    await startLocalServices(paths, installation, log, {
-        prepare: async () => {
-            log("Preparing bundled official resources...");
-            await bootstrapOfficialRepository(paths.repository);
-        },
-    });
+    if (args.length === 1 && ["help", "--help", "-h"].includes(args[0] ?? "")) {
+        log(`Usage: ulvia start [--version <version>]
+
+Start shared services and every existing instance. The exact version only
+selects Provider and Repository images when shared services are uninitialized.`);
+        return;
+    }
+    const requestedVersion = parseStartVersion(args, "Usage: ulvia start [--version <version>]");
+    await startLocalServices(paths, installation, log, requestedVersion);
     const instances = await listLocalInstanceNames(paths);
     if (instances.length === 0) {
         log("Shared services are ready. Create an instance with: ulvia instance create <name>");

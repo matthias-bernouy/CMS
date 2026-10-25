@@ -26,9 +26,30 @@ describe("Ulvia CLI", () => {
         expect(output.join("\n")).toContain("ulvia services");
         expect(output.join("\n")).toContain("ulvia configure network");
         expect(output.join("\n")).toContain("ulvia instance create");
+        expect(output.join("\n")).toContain("ulvia upgrade <kernel | provider | repository>");
         expect(output.join("\n")).not.toContain("ulvia dev");
         expect(output.join("\n")).toContain("ulvia reset --yes");
         expect(output.join("\n")).toContain("ulvia instance delete");
+    });
+
+    test("rejects ambiguous or mutable software upgrade versions before contacting Docker", async () => {
+        const root = await mkdtemp(join(tmpdir(), "ulvia-upgrade-arguments-"));
+        try {
+            await expect(
+                runCli(["upgrade", "kernel", "--version", "latest"], {
+                    environment: { ULVIA_DATA_DIR: root },
+                    log: () => undefined,
+                }),
+            ).rejects.toThrow(/Invalid Ulvia image version/);
+            await expect(
+                runCli(["upgrade", "kernel", "1.2.3"], {
+                    environment: { ULVIA_DATA_DIR: root },
+                    log: () => undefined,
+                }),
+            ).rejects.toThrow(/Usage: ulvia upgrade/);
+        } finally {
+            await rm(root, { recursive: true, force: true });
+        }
     });
 
     test("persists explicit network exposure and locks it after an instance exists", async () => {

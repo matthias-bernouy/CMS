@@ -3,26 +3,24 @@ import { chmod, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { LocalInstancePaths, UlviaPaths } from "../../paths";
 import { loadInstallationConfig, parseInstallationConfig, type InstallationConfig } from "../installation";
-import { LOCAL_STACK_IMAGES, LOCAL_STACK_VERSION } from "./release";
+import { isOfficialImage, type OfficialImage } from "./images";
 
-const SERVICES_SCHEMA = "ulvia.local-services-stack.v1" as const;
-const INSTANCE_SCHEMA = "ulvia.local-kernel-stack.v1" as const;
+const SERVICES_SCHEMA = "ulvia.local-services-stack.v2" as const;
+const INSTANCE_SCHEMA = "ulvia.local-kernel-stack.v2" as const;
 
 export type LocalServicesState = Readonly<{
     schema: typeof SERVICES_SCHEMA;
-    version: string;
     projectName: string;
     privateNetwork: string;
     instanceNetwork: string;
-    images: Pick<typeof LOCAL_STACK_IMAGES, "provider" | "repository">;
+    images: Readonly<{ provider: OfficialImage; repository: OfficialImage }>;
     installation: InstallationConfig;
 }>;
 
 export type LocalKernelState = Readonly<{
     schema: typeof INSTANCE_SCHEMA;
-    version: string;
     projectName: string;
-    image: string;
+    image: OfficialImage;
     hostname: string;
 }>;
 
@@ -47,11 +45,10 @@ export async function loadLocalServicesState(paths: UlviaPaths): Promise<LocalSe
     const identity = localServicesIdentity(paths);
     if (
         value.schema !== SERVICES_SCHEMA ||
-        typeof value.version !== "string" ||
         value.projectName !== identity.projectName ||
         value.privateNetwork !== identity.privateNetwork ||
         value.instanceNetwork !== identity.instanceNetwork ||
-        !validImages(value.images, ["provider", "repository"])
+        !validServiceImages(value.images)
     ) {
         throw new Error("Ulvia local services state is invalid");
     }
@@ -63,7 +60,6 @@ export async function loadLocalServicesState(paths: UlviaPaths): Promise<LocalSe
     }
     return {
         schema: SERVICES_SCHEMA,
-        version: value.version as string,
         projectName: value.projectName as string,
         privateNetwork: value.privateNetwork as string,
         instanceNetwork: value.instanceNetwork as string,
@@ -75,12 +71,12 @@ export async function loadLocalServicesState(paths: UlviaPaths): Promise<LocalSe
 export async function saveLocalServicesState(
     paths: UlviaPaths,
     installation: InstallationConfig,
+    images: LocalServicesState["images"],
 ): Promise<LocalServicesState> {
     const state: LocalServicesState = {
         schema: SERVICES_SCHEMA,
-        version: LOCAL_STACK_VERSION,
         ...localServicesIdentity(paths),
-        images: { provider: LOCAL_STACK_IMAGES.provider, repository: LOCAL_STACK_IMAGES.repository },
+        images,
         installation,
     };
     await writeState(join(paths.services, "stack.json"), state);
@@ -94,10 +90,9 @@ export async function loadLocalKernelState(instance: LocalInstancePaths): Promis
     }
     if (
         value.schema !== INSTANCE_SCHEMA ||
-        typeof value.version !== "string" ||
         typeof value.projectName !== "string" ||
         typeof value.hostname !== "string" ||
-        !validImage(value.image)
+        !isOfficialImage(value.image, "kernel")
     ) {
         throw new Error("Ulvia local Kernel state is invalid");
     }
@@ -108,12 +103,12 @@ export async function saveLocalKernelState(
     instance: LocalInstancePaths,
     projectName: string,
     hostname: string,
+    image: OfficialImage,
 ): Promise<LocalKernelState> {
     const state: LocalKernelState = {
         schema: INSTANCE_SCHEMA,
-        version: LOCAL_STACK_VERSION,
         projectName,
-        image: LOCAL_STACK_IMAGES.kernel,
+        image,
         hostname,
     };
     await writeState(join(instance.root, "stack.json"), state);
@@ -143,14 +138,10 @@ function dataSuffix(paths: UlviaPaths): string {
     return createHash("sha256").update(paths.data).digest("hex").slice(0, 12);
 }
 
-function validImages(value: unknown, keys: readonly string[]): boolean {
+function validServiceImages(value: unknown): value is LocalServicesState["images"] {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
         return false;
     }
     const record = value as Record<string, unknown>;
-    return keys.every((key) => validImage(record[key]));
-}
-
-function validImage(value: unknown): value is string {
-    return typeof value === "string" && /^[a-z0-9./_-]+:[a-z0-9._-]+$/u.test(value);
+    return isOfficialImage(record.provider, "provider") && isOfficialImage(record.repository, "repository");
 }

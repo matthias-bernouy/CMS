@@ -27,7 +27,6 @@ export async function runExistingInstanceCommand(
     action: string,
     args: readonly string[],
     paths: UlviaPaths,
-    installation: InstallationConfig,
     log: (message: string) => void,
 ): Promise<void> {
     const [name, ...rest] = args;
@@ -45,7 +44,7 @@ export async function runExistingInstanceCommand(
         if (rest.length !== 1 || rest[0] !== "--yes") {
             throw new Error(`Usage: ulvia instance delete ${name} --yes`);
         }
-        await deleteInstance(paths, installation, name, log);
+        await deleteInstance(paths, name, log);
         return;
     }
     if (rest.length > 0) {
@@ -74,8 +73,8 @@ export async function listInstances(
     }
 }
 
-export async function assertProviderRunning(paths: UlviaPaths, installation: InstallationConfig) {
-    return requireRunningLocalProvider(paths, installation);
+export async function assertProviderRunning(paths: UlviaPaths) {
+    return requireRunningLocalProvider(paths);
 }
 
 async function runLifecycleAction(
@@ -84,8 +83,8 @@ async function runLifecycleAction(
     name: string,
     log: (message: string) => void,
 ): Promise<void> {
-    if (action === "start" || action === "upgrade") {
-        await startLocalKernel(paths, name, log, action === "upgrade");
+    if (action === "start") {
+        await startLocalKernel(paths, name, log);
     } else if (action === "stop") {
         await stopLocalKernel(paths, name);
         log(`Instance ${name} stopped.`);
@@ -101,7 +100,7 @@ async function printInstanceStatus(paths: UlviaPaths, name: string, log: (messag
     const kernel = described.services.find(({ service }) => service === "kernel");
     const running = kernel?.state === "running" && (!kernel.health || kernel.health === "healthy");
     log(`Instance ${name}: ${running ? "running" : (kernel?.state ?? "stopped")}`);
-    log(`Version: ${described.state?.version ?? "not started"}`);
+    log(`Version: ${described.state?.image.version ?? "not started"}`);
     log(`URL: ${described.url}`);
 }
 
@@ -116,18 +115,13 @@ async function printCredentials(paths: UlviaPaths, name: string, log: (message: 
     log(`Technical tokens remain in the private instance directory: ${root}`);
 }
 
-async function deleteInstance(
-    paths: UlviaPaths,
-    installation: InstallationConfig,
-    name: string,
-    log: (message: string) => void,
-): Promise<void> {
+async function deleteInstance(paths: UlviaPaths, name: string, log: (message: string) => void): Promise<void> {
     const instancePaths = resolveLocalInstancePaths(paths, name);
     const connection = await loadLocalInstanceConnection(instancePaths.root);
     if (!connection) {
         throw new Error(`Unknown local instance: ${name}`);
     }
-    const services = await assertProviderRunning(paths, installation);
+    const services = await assertProviderRunning(paths);
     await destroyLocalKernel(paths, name);
     const operator = await providerOperatorAccess(paths, services);
     await disableLocalInstance(operator.url, operator.token, connection.instanceId);

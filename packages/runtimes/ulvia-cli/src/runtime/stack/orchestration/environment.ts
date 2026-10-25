@@ -4,7 +4,7 @@ import type { LocalInstanceConnection } from "../../instanceConnection";
 import type { LocalInstancePaths, UlviaPaths } from "../../paths";
 import type { InstallationConfig } from "../installation";
 import { instancePublicUrl } from "../ports";
-import { LOCAL_STACK_IMAGES } from "./release";
+import { pinnedOfficialImageReference, type OfficialImage } from "./images";
 import type { LocalServicesState } from "./state";
 
 type ServiceCredentials = Readonly<{
@@ -16,12 +16,12 @@ type ServiceCredentials = Readonly<{
 export function localServicesEnvironment(
     paths: UlviaPaths,
     installation: InstallationConfig,
-    state: Pick<LocalServicesState, "privateNetwork" | "instanceNetwork">,
+    state: Pick<LocalServicesState, "privateNetwork" | "instanceNetwork" | "images">,
     credentials?: ServiceCredentials,
 ): Record<string, string> {
     return {
-        PROVIDER_IMAGE: LOCAL_STACK_IMAGES.provider,
-        OFFICIAL_REPOSITORY_IMAGE: LOCAL_STACK_IMAGES.repository,
+        PROVIDER_IMAGE: pinnedOfficialImageReference(state.images.provider),
+        OFFICIAL_REPOSITORY_IMAGE: pinnedOfficialImageReference(state.images.repository),
         ULVIA_BIND_ADDRESS: installation.bindAddress,
         ULVIA_HTTP_PORT: String(installation.ports.http),
         ULVIA_HTTPS_PORT: installation.tls.mode === "acme" ? String(installation.tls.httpsPort) : "443",
@@ -56,9 +56,10 @@ export function localKernelEnvironment(
     config: LocalInstanceConfig,
     connection: LocalInstanceConnection,
     services: LocalServicesState,
+    image: OfficialImage,
 ): Record<string, string> {
     return {
-        KERNEL_IMAGE: LOCAL_STACK_IMAGES.kernel,
+        KERNEL_IMAGE: pinnedOfficialImageReference(image),
         ULVIA_UID: String(process.getuid?.() ?? 1000),
         ULVIA_GID: String(process.getgid?.() ?? 1000),
         ULVIA_INSTANCE_NETWORK: services.instanceNetwork,

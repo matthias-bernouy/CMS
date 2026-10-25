@@ -3,15 +3,11 @@ import { join } from "node:path";
 import { loadLocalInstanceConfig } from "../../runtime/instanceConfig";
 import { loadLocalInstanceConnection } from "../../runtime/instanceConnection";
 import { ensureUlviaPaths, type UlviaPaths } from "../../runtime/paths";
-import { loadInstallationConfig, type InstallationConfig } from "../../runtime/stack/installation";
+import { loadInstallationConfig } from "../../runtime/stack/installation";
 import { destroyLocalKernel, listLocalInstanceNames } from "../../runtime/stack/orchestration/instances";
 import { destroyLocalServices } from "../../runtime/stack/orchestration/services";
 
-export async function resetLocalInstallation(
-    paths: UlviaPaths,
-    installation: InstallationConfig,
-    log: (message: string) => void,
-): Promise<void> {
+export async function resetLocalInstallation(paths: UlviaPaths, log: (message: string) => void): Promise<void> {
     await assertRecognizedData(paths);
     for (const name of await listLocalInstanceNames(paths)) {
         const root = join(paths.instances, name);
@@ -26,7 +22,7 @@ export async function resetLocalInstallation(
             await destroyLocalKernel(paths, name);
         }
     }
-    await destroyLocalServices(paths, installation);
+    await destroyLocalServices(paths);
     await resetLocalData(paths);
     log(`Reset local Ulvia installation: ${paths.data}`);
     log("Run ulvia start, then provision a fresh instance with: ulvia instance create <name>");

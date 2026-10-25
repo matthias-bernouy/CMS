@@ -4,17 +4,20 @@ import { releaseCommand } from "./commands/release";
 import { remoteCommand } from "./commands/remote";
 import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { ensureUlviaPaths, resolveUlviaPaths } from "./runtime/paths";
+import { CLI_VERSION } from "./runtime/stack/version";
 
 const HELP = `Ulvia CMS CLI
 
 Usage:
-  ulvia start
+  ulvia start [--version <version>]
   ulvia configure network [network options]
-  ulvia services <start | stop | status | upgrade | logs>
+  ulvia services start [--version <version>]
+  ulvia services <stop | status | logs>
   ulvia instance create <name> [--label <label>] [--domain <domain>]
-  ulvia instance <start | stop | status | upgrade | credentials | logs> <name>
+  ulvia instance <start | stop | status | credentials | logs> <name>
   ulvia instance list
   ulvia instance delete <name> --yes
+  ulvia upgrade <kernel | provider | repository> --version <version>
   ulvia reset --yes
   ulvia release <resource-directory>
   ulvia push <kind> <publisher/id@version> --repository <url>
@@ -28,6 +31,7 @@ Commands:
   configure    Configure persistent network exposure and TLS before creating instances
   services     Manage the shared proxy, MongoDB, Repository, and Provider
   instance     Create and manage independent Kernel instances
+  upgrade      Pull and install one exact official Docker image version
   reset        Delete all instances, services data, and repository releases after --yes
   release      Validate and store an immutable collection, contract, or provider manifest
   push         Publish one exact local release to a remote repository
@@ -63,7 +67,7 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         return;
     }
     if (command === "--version" || command === "-v") {
-        log("0.1.0");
+        log(CLI_VERSION);
         return;
     }
     if (![...LOCAL_COMMANDS, "release", "push", "pull", "yank", "restore", "prune"].includes(command)) {
@@ -89,4 +93,4 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     await pruneCommand(args.slice(1), repository, log);
 }
 
-const LOCAL_COMMANDS = new Set(["start", "configure", "services", "instance", "reset"]);
+const LOCAL_COMMANDS = new Set(["start", "configure", "services", "instance", "upgrade", "reset"]);

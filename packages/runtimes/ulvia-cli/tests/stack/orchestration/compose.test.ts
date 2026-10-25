@@ -20,11 +20,28 @@ test("Compose status accepts the array and line-delimited Docker formats", () =>
 
 test("Compose receives explicit user-owned storage and loopback port configuration", () => {
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: "/tmp/ulvia-stack-fixture" });
-    const environment = localServicesEnvironment(paths, defaultInstallationConfig(), localServicesIdentity(paths));
+    const digest = `sha256:${"a".repeat(64)}`;
+    const identity = {
+        ...localServicesIdentity(paths),
+        images: {
+            provider: {
+                component: "provider" as const,
+                version: "1.2.3",
+                digest,
+            },
+            repository: {
+                component: "repository" as const,
+                version: "1.2.3",
+                digest,
+            },
+        },
+    };
+    const environment = localServicesEnvironment(paths, defaultInstallationConfig(), identity);
     expect(environment.ULVIA_MONGO_DIR).toBe(paths.mongo);
     expect(environment.ULVIA_FILES_DIR).toBe(paths.cmsFiles);
     expect(environment.ULVIA_REPOSITORY_DIR).toBe(paths.repository);
     expect(environment.ULVIA_HTTP_PORT).toBe("5100");
     expect(environment.ULVIA_BIND_ADDRESS).toBe("127.0.0.1");
     expect(environment.ULVIA_INSTANCE_NETWORK).toContain("ulvia-instances-");
+    expect(environment.PROVIDER_IMAGE).toContain("@sha256:");
 });

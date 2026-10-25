@@ -1,6 +1,5 @@
 import { readdir } from "node:fs/promises";
 import { loadOrCreateProviderOperatorToken } from "../../config";
-import { upgradeLocalInstanceProfile } from "../../instance";
 import type { LocalInstanceConfig } from "../../instanceConfig";
 import { loadLocalInstanceConfig } from "../../instanceConfig";
 import type { LocalInstanceConnection } from "../../instanceConnection";
@@ -14,44 +13,21 @@ import {
 import { instancePublicUrl } from "../ports";
 import { composeDown, composeStop, composeUp, inspectComposeServices, type ComposeProject } from "./compose";
 import { localKernelEnvironment } from "./environment";
-import { ensureLocalKernelImage, LOCAL_OFFICIAL_PROFILE, LOCAL_STACK_VERSION } from "./release";
+import { ensureOfficialImage, pullOfficialImage, type OfficialImage } from "./images";
 import { requireRunningLocalProvider } from "./services";
 import { loadLocalKernelState, loadLocalServicesState, localKernelProjectName, saveLocalKernelState } from "./state";
 import type { LocalServicesState } from "./state";
 
-export async function startLocalKernel(
-    paths: UlviaPaths,
-    name: string,
-    log: (message: string) => void,
-    allowUpgrade = false,
-): Promise<void> {
+export async function startLocalKernel(paths: UlviaPaths, name: string, log: (message: string) => void): Promise<void> {
     const runtime = await requireInstance(paths, name);
     const services = await requireServices(paths);
-    await requireRunningLocalProvider(paths, services.installation);
+    await requireRunningLocalProvider(paths);
     const installed = await loadLocalKernelState(runtime.paths);
-    if (installed && installed.version !== LOCAL_STACK_VERSION && !allowUpgrade) {
-        throw new Error(
-            `Instance ${name} uses ${installed.version}; upgrade it explicitly with: ulvia instance upgrade ${name}`,
-        );
-    }
-    if (allowUpgrade) {
-        const operator = await providerOperatorAccess(paths, services);
-        await upgradeLocalInstanceProfile(
-            operator.url,
-            operator.token,
-            runtime.connection.instanceId,
-            LOCAL_OFFICIAL_PROFILE,
-        );
-        log(`Provider profile ${LOCAL_OFFICIAL_PROFILE.id}@${LOCAL_OFFICIAL_PROFILE.version} is ready.`);
-    }
-    if (allowUpgrade && installed?.version === LOCAL_STACK_VERSION) {
-        log(`Instance ${name} is already at ${LOCAL_STACK_VERSION}.`);
-        return;
-    }
-    await ensureLocalKernelImage(log);
+    const image = installed?.image ?? (await pullOfficialImage("kernel", services.images.provider.version, log));
+    await ensureOfficialImage(image);
     const projectName = installed?.projectName ?? localKernelProjectName(paths, name);
-    await composeUp(kernelProject(runtime.paths, runtime.config, runtime.connection, services, projectName));
-    await saveLocalKernelState(runtime.paths, projectName, runtime.config.hostname);
+    await composeUp(kernelProject(runtime.paths, runtime.config, runtime.connection, services, projectName, image));
+    await saveLocalKernelState(runtime.paths, projectName, runtime.config.hostname, image);
     const publicUrl = instancePublicUrl(runtime.config.hostname, services.installation);
     await waitForProxyRoute(runtime.config.hostname, services.installation);
     log(`Instance ${name} is ready at ${publicUrl}.`);
@@ -73,9 +49,11 @@ export async function describeLocalKernel(paths: UlviaPaths, name: string) {
     return {
         config: runtime.config,
         state,
-        services: await inspectComposeServices(
-            kernelProject(runtime.paths, runtime.config, runtime.connection, services, projectName),
-        ),
+        services: state
+            ? await inspectComposeServices(
+                  kernelProject(runtime.paths, runtime.config, runtime.connection, services, projectName, state.image),
+              )
+            : [],
         url: instancePublicUrl(runtime.config.hostname, services.installation),
     };
 }
@@ -92,13 +70,19 @@ async function projectForExistingInstance(paths: UlviaPaths, name: string): Prom
     const runtime = await requireInstance(paths, name);
     const services = await requireServices(paths);
     const state = await loadLocalKernelState(runtime.paths);
-    return kernelProject(
-        runtime.paths,
-        runtime.config,
-        runtime.connection,
-        services,
-        state?.projectName ?? localKernelProjectName(paths, name),
-    );
+    if (!state) {
+        throw new Error(`Local instance ${name} has not been started`);
+    }
+    return kernelProject(runtime.paths, runtime.config, runtime.connection, services, state.projectName, state.image);
+}
+
+export function localKernelComposeProject(
+    runtime: Awaited<ReturnType<typeof requireInstance>>,
+    services: LocalServicesState,
+    projectName: string,
+    image: OfficialImage,
+): ComposeProject {
+    return kernelProject(runtime.paths, runtime.config, runtime.connection, services, projectName, image);
 }
 
 function kernelProject(
@@ -107,16 +91,17 @@ function kernelProject(
     connection: LocalInstanceConnection,
     services: NonNullable<Awaited<ReturnType<typeof loadLocalServicesState>>>,
     projectName: string,
+    image: OfficialImage,
 ): ComposeProject {
     return {
         definition: "kernel",
         overlays: services.installation.tls.mode === "acme" ? ["kernel-tls"] : [],
         projectName,
-        environment: localKernelEnvironment(paths, config, connection, services),
+        environment: localKernelEnvironment(paths, config, connection, services, image),
     };
 }
 
-async function requireInstance(paths: UlviaPaths, name: string) {
+export async function requireInstance(paths: UlviaPaths, name: string) {
     const instancePaths = resolveLocalInstancePaths(paths, name);
     await assertLocalInstancePaths(instancePaths);
     const [config, connection] = await Promise.all([
@@ -132,7 +117,7 @@ async function requireInstance(paths: UlviaPaths, name: string) {
     return { paths: instancePaths, config, connection };
 }
 
-async function requireServices(paths: UlviaPaths) {
+export async function requireServices(paths: UlviaPaths) {
     const services = await loadLocalServicesState(paths);
     if (!services) {
         throw new Error("Shared services are not initialized. Run ulvia services start first.");
