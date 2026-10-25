@@ -70,7 +70,7 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository` | Type-only entry point for principal domain models |
 | `@bernouy/cms-repository/contracts` | Release parsing, admission, canonicalization, digests, mocks and conformance suites |
 | `@bernouy/cms-repository/contracts/schema` | Bounded schema vocabulary, parsing and value validation |
-| `@bernouy/cms-repository/contracts/bindings` | HTTP binding compilation and pure scalar codecs |
+| `@bernouy/cms-repository/contracts/bindings` | Explicit HTTP/MCP binding types, exposure selection, HTTP plans and pure scalar codecs |
 | `@bernouy/cms-repository/contracts/compatibility` | Release evolution and consumer-compatibility checks |
 | `@bernouy/cms-repository/contracts/catalogue` | Release catalogue port and deterministic in-memory implementation |
 | `@bernouy/cms-repository/contracts/mongo` | Mongo release artifacts and revisioned publication metadata |
@@ -94,6 +94,8 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/collections/http` | Collection repository HTTP route registration and bounded wire decoding |
 | `@bernouy/cms-repository/collections/mongo` | Mongo collection catalogues and installation stores |
 | `@bernouy/cms-repository/repository/publication` | Signed staged-publication protocol, exact remote client, mutation endpoint, upload-store and replay-store ports |
+| `@bernouy/cms-repository/repository/namespaces` | Ed25519 namespace authority, owner credentials, key lifecycle client and bounded ownership proofs |
+| `@bernouy/cms-repository/repository/contract` | Admitted `ulvia.repository` contract and transport-independent capability service |
 | `@bernouy/cms-repository/repository/filesystem` | Reference immutable registry, streamed upload staging, durable replay claims, local catalogues, yanks and read endpoint |
 
 Use explicit domain subpaths for executable APIs. There are no compatibility

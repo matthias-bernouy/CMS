@@ -38,6 +38,13 @@ publish releases or choose providers.
   signature and representation semantics. Binary response headers come from the provider.
 - Runtime adapters select HTTP, persistence, DNS policy, secret storage and
   worker implementations. Keep optional adapters in explicit domain subpaths.
+- Core invocation validates domain inputs/outcomes, access and audit without
+  requiring HTTP bindings or statuses. HTTP routing and wire validation belong
+  in the HTTP adapter; protocol adapters pass the selected binding ID/protocol
+  so the exact selected release can enforce exposure before dispatch.
+- `./mcp` projects explicitly declared MCP bindings into tools and delegates execution to
+  the existing Gateway invoker. Host context supplies actor/site authority;
+  tool arguments never do. Binary resource resolution is an injected host policy.
 
 Use `cms-gateway/...` aliases inside this package and declared
 `@bernouy/cms-gateway/...` exports outside it.

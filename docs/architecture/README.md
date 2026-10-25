@@ -90,6 +90,8 @@ provider connection approval, credential rotation and exact contract selection
 are application workflows owned by `cms-repository`. Repository publication is
 served independently by `official-repository-server`. See
 [repository and gateway flows](../providers/README.md).
+The [community Repository](community-repository.md) adds cryptographic namespace
+ownership, an admitted Repository capability contract and a reusable MCP binding.
 
 ### Authentication
 

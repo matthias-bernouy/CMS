@@ -110,6 +110,15 @@ previously created local instance; it never creates an implicit instance.
 
 The lifecycle boundary is deliberate:
 
+Independent community Repository deployments use `ulvia repository start <name>`
+with optional `--version` and `--port`. They retain their own volume and image
+pin below `<data>/repositories/<name>` and support `status`, `stop` and `upgrade`.
+They do not start shared services or a Kernel. Namespace authors use
+`ulvia namespace keygen`, `claim`, `status`, `rotate` and `revoke`, and select
+their private key with `ULVIA_REPOSITORY_PRIVATE_KEY_FILE`. See the
+[community Repository guide](../../../docs/architecture/community-repository.md)
+for examples, irreversible key loss, owner signing and deployment limits.
+
 | Command | Provider tenant | Kernel container |
 | --- | --- | --- |
 | `services start` | Does not create one | Does not start one |

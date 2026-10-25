@@ -60,6 +60,11 @@ Ulvia CMS installation runtime.
   signed raw asset at a time, and finish with an idempotent commit. Keep write
   serialization, durable replay rejection, abandoned-session cleanup and
   artifact-last atomic visibility intact.
+- Community writes use Ed25519 owner credentials instead of the operator token.
+  Namespace key files are private, bounded regular files, opened without following
+  symlinks. Never expose private keys to the Repository or tool arguments.
+- `repository` lifecycle commands manage independent named Repository containers
+  and pinned published images. Keep their volumes separate from shared services.
 - A yank is reversible repository metadata. It removes a release from new
   catalogue resolution without deleting immutable bytes or breaking historical
   exact-coordinate reads.

@@ -50,6 +50,12 @@ models and validation for CMS-owned installations and site selections.
   retain an idempotent commit receipt, expire abandoned sessions and keep the
   immutable release invisible until registry publication succeeds. Never restore
   the whole-bundle base64 request.
+- `./repository/namespaces` owns public first-claim Ed25519 namespace authority.
+  Keep private keys in host-owned secret readers. Rotation proves possession of
+  both keys; revocation is terminal and operators have no community recovery path.
+  Preserve repository/action/subject/content/revision proof binding and hold the
+  namespace fence throughout an authorized mutation. `./repository/contract`
+  declares the Repository capability service; transport adapters inject its ports.
 - `src/collections/{interfaces,core}/` owns authored collection release parsing,
   asset verification and resource-level reference validation, exposed through
   `./collections`. `./collections/texts` exposes browser-safe text validation,
@@ -83,6 +89,10 @@ models and validation for CMS-owned installations and site selections.
 
 ## Contract rules
 
+- New capabilities declare `bindings[]` with unique IDs and explicit `http` or
+  `mcp` variants. MCP exposure is opt-in; HTTP aliases compile independently.
+  Preserve canonical bytes and digests when reading legacy single `binding`
+  declarations. Never infer MCP exposure from a legacy or HTTP-only binding.
 - A contract release owns the only SemVer; capability IDs are stable and have
   no independent versions. Releases are provider-neutral: HTTP bindings are
   allowed, provider endpoints, credentials and installation state are not.

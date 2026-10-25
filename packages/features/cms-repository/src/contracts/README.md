@@ -200,3 +200,17 @@ durable operation persistence and idempotent replay context remain outside this
 contract-admission domain. A provider deployment does not implicitly upgrade a
 site's selected release. See the [package overview](../../README.md) for public
 entry points.
+
+## Capability exposures
+
+New capabilities declare `bindings` with stable per-capability IDs and explicit
+`http` or `mcp` transports. MCP bindings may provide tool name, title and
+description; no MCP binding means no MCP exposure. HTTP mappings and response
+rules remain in each HTTP binding. A capability can expose multiple HTTP routes,
+multiple MCP tools or MCP alone. Skills, prompts, resource catalogues and
+WebSocket bindings remain future work.
+
+Legacy single `binding` input remains readable as HTTP-only without changing
+canonical release bytes or digests. Declaring both forms is invalid. See the
+[community Repository architecture](../../../../../docs/architecture/community-repository.md#explicit-capability-bindings)
+for validation, routing and Gateway boundaries.

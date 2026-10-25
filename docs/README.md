@@ -30,6 +30,10 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 
 - [Repository and gateway flows](providers/README.md): artifact admission, site
   state, live invocation, identities and remaining integration gaps.
+- [Community Repository](architecture/community-repository.md): cryptographic
+  namespaces, capability contract, MCP, standalone deployments and limitations.
+- [Agent authoring](development/agent-authoring.md): current collection tooling
+  and a prioritized proposal for disposable previews and declared tests.
 - [Bloc authoring](blocs/README.md): collection Blocs, site-owned content
   contracts, bindings and themes.
 - [Collection API and admission](blocs/collections.md): the current administration
