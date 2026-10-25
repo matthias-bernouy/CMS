@@ -1,5 +1,7 @@
 import type { GatewayCommandAuditEvent } from "@bernouy/cms-gateway/audit";
 import type { InstallationsProviderTransport } from "./InstallationsProviderTransport";
+import type { Logger } from "@bernouy/logging";
+import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 
 const CONTROL_CONTRACT_ID = "ulvia.cms.installations";
 const CONTROL_CONTRACT_VERSION = "1.0.0";
@@ -11,7 +13,10 @@ export type IssuedProviderInvocation = Readonly<{
 }>;
 
 export class ControlProviderClient {
-    constructor(private readonly transport: InstallationsProviderTransport) {}
+    constructor(
+        private readonly transport: InstallationsProviderTransport,
+        private readonly logger?: Logger,
+    ) {}
 
     async getGatewayRoute(contractId: string): Promise<string | null> {
         const response = await this.invoke("gateway.route.get", "QUERY", "/gateway/route", { contractId }, true);
@@ -66,31 +71,56 @@ export class ControlProviderClient {
         input: unknown,
         notFoundAsNull = false,
     ): Promise<Record<string, unknown> | null> {
-        const response = await this.transport.request(path, {
-            method,
-            headers: {
-                accept: "application/json",
-                "content-type": "application/json",
-                "x-ulvia-request-id": crypto.randomUUID(),
-                "x-ulvia-contract-id": CONTROL_CONTRACT_ID,
-                "x-ulvia-contract-version": CONTROL_CONTRACT_VERSION,
-                "x-ulvia-capability-id": capabilityId,
-            },
-            body: JSON.stringify(input),
-            signal: AbortSignal.timeout(10_000),
-        });
+        const startedAt = performance.now();
+        const response = await measureCurrentRequestTiming(controlTimingName(capabilityId), () =>
+            this.transport.request(path, {
+                method,
+                headers: {
+                    accept: "application/json",
+                    "content-type": "application/json",
+                    "x-ulvia-request-id": crypto.randomUUID(),
+                    "x-ulvia-contract-id": CONTROL_CONTRACT_ID,
+                    "x-ulvia-contract-version": CONTROL_CONTRACT_VERSION,
+                    "x-ulvia-capability-id": capabilityId,
+                },
+                body: JSON.stringify(input),
+                signal: AbortSignal.timeout(10_000),
+            }),
+        );
         if (notFoundAsNull && response.status === 404) {
             return null;
         }
         if (!response.ok) {
             throw new ControlProviderError(capabilityId, response.status);
         }
-        const value: unknown = JSON.parse(new TextDecoder().decode(await readBounded(response)));
+        const bytes = await readBounded(response);
+        this.reportInvocation(capabilityId, performance.now() - startedAt, bytes.byteLength);
+        const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
         if (!value || typeof value !== "object" || Array.isArray(value)) {
             throw new TypeError("Installations Provider returned an invalid capability response");
         }
         return value as Record<string, unknown>;
     }
+
+    private reportInvocation(capabilityId: string, durationMs: number, responseBytes: number): void {
+        if (!this.logger) {
+            return;
+        }
+        const attributes = {
+            capabilityId,
+            durationMs: Math.round(durationMs * 100) / 100,
+            responseBytes,
+        };
+        if (durationMs >= 50) {
+            this.logger.info("gateway.control.completed", attributes);
+            return;
+        }
+        this.logger.debug("gateway.control.completed", attributes);
+    }
+}
+
+function controlTimingName(capabilityId: string): string {
+    return capabilityId === "gateway.route.get" ? "gateway_route" : "gateway_authorize";
 }
 
 class ControlProviderError extends Error {

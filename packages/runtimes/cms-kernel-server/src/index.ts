@@ -22,7 +22,7 @@ async function startKernel(): Promise<void> {
         env.CMS_INSTALLATIONS_PROVIDER_TOKEN,
     );
     await fetchInstallationsProviderReport(transport);
-    const gateway = createKernelGateway(new ControlProviderClient(transport));
+    const gateway = createKernelGateway(new ControlProviderClient(transport, logger));
     const content = new GatewayContentClient(gateway.invoker, logger);
     const kernel = await mountProductionKernel({ env, content, gateway, logger });
 
