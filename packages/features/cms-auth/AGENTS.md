@@ -48,3 +48,7 @@ the exact same operation.
 - Security-sensitive changes require tests around credential precedence, rate
   limits, token expiry and one-time-token recovery. Cookie behavior is tested
   in the Kernel surface that owns it.
+
+- `./oauth` owns client-neutral delegated MCP grants, PKCE, rotation and live
+  authorization policy injection. These are separate from browser sessions and
+  PATs. HTTP protocol handling belongs to the Kernel; OAuth is not OIDC login.

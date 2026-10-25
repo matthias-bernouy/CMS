@@ -20,3 +20,5 @@ export {
     MongoAuthTokenStore,
     type MongoAuthTokenConfig,
 } from "cms-auth/tokens/one-time/default-implementation/mongo/MongoAuthTokenStore";
+
+export { MongoOAuthStore } from "cms-auth/oauth/default-implementation/mongo/MongoOAuthStore";

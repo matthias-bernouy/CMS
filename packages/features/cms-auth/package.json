@@ -8,7 +8,8 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./management": "./src/exports/management.ts",
-        "./mongo": "./src/exports/mongo.ts"
+        "./mongo": "./src/exports/mongo.ts",
+        "./oauth": "./src/exports/oauth.ts"
     },
     "dependencies": {
         "@bernouy/cms-emailer": "workspace:*",
