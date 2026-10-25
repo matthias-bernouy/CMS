@@ -85,3 +85,5 @@ export {
     findImplementedContract,
     resolveContractLineage,
 } from "cms-repository/contracts/core/compatibility/lineage/resolveLineage";
+
+export type { CapabilityBinding, McpBindingDefinition } from "cms-repository/contracts/interfaces/CapabilityBinding";

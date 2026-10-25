@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { compileHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
-import { capability, objectSchema } from "../support/fixtures";
+import { capability, objectSchema } from "../../support/fixtures";
 
 describe("HTTP method and capability effect", () => {
     test("requires queries for GET and QUERY independently of idempotency", () => {

@@ -1,4 +1,5 @@
 import type { HttpBindingDefinition } from "./HttpBinding";
+import type { CapabilityBinding } from "./CapabilityBinding";
 import type { UlviaObjectSchema, UlviaSchema } from "./UlviaSchema";
 import type { ReleaseDigest } from "../core/admission/digest";
 
@@ -76,7 +77,7 @@ export interface CapabilityRequirement {
     readonly supportRanges?: readonly string[];
 }
 
-export interface CapabilityDefinition {
+interface CapabilityCommon {
     readonly id: string;
     readonly description?: string;
     readonly access: CapabilityAccess;
@@ -84,13 +85,19 @@ export interface CapabilityDefinition {
     readonly input: UlviaObjectSchema;
     readonly output: UlviaSchema;
     readonly errors: readonly CapabilityErrorDefinition[];
-    readonly binding: HttpBindingDefinition;
     /** Trusted HTTP-boundary effects a successful response may request. */
     readonly responseEffects?: readonly CapabilityResponseEffect[];
     readonly requires?: readonly CapabilityRequirement[];
     readonly mocks?: readonly CapabilityMockDefinition[];
     readonly deprecation?: CapabilityDeprecation;
 }
+
+/** Legacy single HTTP bindings remain readable without rewriting immutable release identities. */
+export type CapabilityDefinition = CapabilityCommon &
+    (
+        | { readonly bindings: readonly CapabilityBinding[]; readonly binding?: undefined }
+        | { readonly binding: HttpBindingDefinition; readonly bindings?: undefined }
+    );
 
 export interface ContractRelease {
     readonly catalogue?: ContractCatalogueMetadata;

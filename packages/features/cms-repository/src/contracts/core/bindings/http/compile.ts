@@ -1,14 +1,22 @@
-import { ReleaseValidationError } from "../protocol/errors";
-import { deepFreeze } from "../protocol/values";
-import type { CapabilityDefinition } from "../../interfaces/ContractRelease";
-import type { CompiledHttpBinding, CompiledHttpBody } from "../../interfaces/HttpBinding";
-import { assertJsonCompatible } from "./jsonCompatibility";
-import { compileHeaderParameterMap, compileParameterMap } from "./parameters";
-import { parsePathTemplate, routeKey } from "./pathTemplate";
+import { capabilityBindings } from "../definitions";
+import type { HttpBindingDefinition } from "../../../interfaces/HttpBinding";
+import { ReleaseValidationError } from "../../protocol/errors";
+import { deepFreeze } from "../../protocol/values";
+import type { CapabilityDefinition } from "../../../interfaces/ContractRelease";
+import type { CompiledHttpBinding, CompiledHttpBody } from "../../../interfaces/HttpBinding";
+import { assertJsonCompatible } from "../jsonCompatibility";
+import { compileHeaderParameterMap, compileParameterMap } from "../parameters";
+import { parsePathTemplate, routeKey } from "../pathTemplate";
 import { compileResponse } from "./response";
 
-export function compileHttpBinding(capability: CapabilityDefinition): CompiledHttpBinding {
-    const definition = capability.binding;
+export function compileHttpBinding(
+    capability: CapabilityDefinition,
+    selected?: HttpBindingDefinition,
+): CompiledHttpBinding {
+    const definition = selected ?? capabilityBindings(capability).find((binding) => binding.transport === "http");
+    if (!definition || definition.transport !== "http") {
+        throw new ReleaseValidationError("invalid_binding", "capability has no HTTP binding");
+    }
     const path = `capability ${capability.id}.binding`;
     const queryMethod = definition.method === "GET" || definition.method === "QUERY";
     if (queryMethod !== (capability.behavior.effect === "query")) {
@@ -37,7 +45,7 @@ export function compileHttpBinding(capability: CapabilityDefinition): CompiledHt
         used,
         `${path}.input.headers`,
     );
-    const body = compileBody(capability, used, path);
+    const body = compileBody(capability, definition, used, path);
     const missing = Object.keys(capability.input.properties).filter((property) => !used.has(property));
     if (missing.length > 0) {
         throw new ReleaseValidationError(
@@ -70,8 +78,13 @@ export function compileHttpBinding(capability: CapabilityDefinition): CompiledHt
     }) as CompiledHttpBinding;
 }
 
-function compileBody(capability: CapabilityDefinition, used: Set<string>, path: string): CompiledHttpBody | null {
-    const definition = capability.binding.input?.body;
+function compileBody(
+    capability: CapabilityDefinition,
+    binding: HttpBindingDefinition,
+    used: Set<string>,
+    path: string,
+): CompiledHttpBody | null {
+    const definition = binding.input?.body;
     if (definition === undefined) {
         return null;
     }

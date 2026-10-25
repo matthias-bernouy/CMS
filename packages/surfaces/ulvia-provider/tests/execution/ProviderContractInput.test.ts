@@ -1,3 +1,5 @@
+import { admitContractRelease } from "@bernouy/cms-repository/contracts";
+import { compileProviderRoutes } from "../../src/transport/routes";
 import { expect, test } from "bun:test";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
 import { decodeProviderContractInput } from "../../src/transport/input";
@@ -35,6 +37,7 @@ test("preserves standard HTTP field syntax for explicitly raw headers", async ()
             required: [],
         },
         binding: {
+            transport: "http",
             input: {
                 headers: {
                     range: { property: "range", encoding: "http-field" },
@@ -65,6 +68,7 @@ function capability(): CapabilityDefinition {
             required: ["uploadId", "offset", "uploadToken", "bytes"],
         },
         binding: {
+            transport: "http",
             input: {
                 path: { "upload-id": "uploadId" },
                 query: { "part-offset": "offset" },
@@ -76,3 +80,61 @@ function capability(): CapabilityDefinition {
         },
     } as unknown as CapabilityDefinition;
 }
+
+test("provider aliases decode the selected binding rather than the first HTTP binding", async () => {
+    const response = { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} };
+    const admitted = await admitContractRelease({
+        kind: "contract",
+        protocol: "ulvia-provider/v1",
+        schemaDialect: "ulvia-schema/v1",
+        contractId: "ulvia.cms.example",
+        publisherId: "ulvia.official",
+        name: "Alias fixture",
+        version: "1.0.0",
+        capabilities: [
+            {
+                id: "find",
+                access: "public",
+                behavior: { effect: "query", execution: "sync" },
+                input: {
+                    type: "object",
+                    properties: { value: { type: "string", maxLength: 40 } },
+                    required: ["value"],
+                },
+                output: { type: "string", maxLength: 40 },
+                errors: [],
+                bindings: [
+                    {
+                        id: "first",
+                        transport: "http",
+                        method: "GET",
+                        path: "/first/{first}",
+                        input: { path: { first: "value" } },
+                        response,
+                    },
+                    {
+                        id: "second",
+                        transport: "http",
+                        method: "GET",
+                        path: "/second/{second}",
+                        input: { path: { second: "value" } },
+                        response,
+                    },
+                    { id: "agent", transport: "mcp" },
+                ],
+            },
+        ],
+    });
+    const routes = compileProviderRoutes([admitted.release]);
+    expect(routes).toHaveLength(2);
+    const request = new Request("https://provider.test/second/selected");
+    const route = routes.find((candidate) => candidate.match("GET", "/second/selected"));
+    expect(route).toBeDefined();
+    const decoded = await decodeProviderContractInput(
+        request,
+        new URL(request.url),
+        route!.capability,
+        route!.match("GET", "/second/selected")!,
+    );
+    expect(decoded.input).toEqual({ value: "selected" });
+});

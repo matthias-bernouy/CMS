@@ -1,10 +1,14 @@
-import { pathTemplatesOverlap } from "@bernouy/cms-repository/contracts/bindings";
+import { capabilityBindings, pathTemplatesOverlap } from "@bernouy/cms-repository/contracts/bindings";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
+
+export type HttpBoundCapability = Omit<CapabilityDefinition, "bindings" | "binding"> & {
+    readonly binding: import("@bernouy/cms-repository/contracts/bindings").HttpBindingDefinition;
+};
 
 export type ProviderRoute = {
     readonly contractId: string;
     readonly contractVersion: string;
-    readonly capability: CapabilityDefinition;
+    readonly capability: HttpBoundCapability;
     readonly match: (method: string, path: string) => Readonly<Record<string, string>> | null;
 };
 
@@ -13,13 +17,20 @@ export function compileProviderRoutes(releases: readonly ContractRelease[]): rea
         throw new TypeError("Ulvia Provider only accepts ulvia.cms.* contract releases.");
     }
     const routes = releases.flatMap((release) =>
-        release.capabilities.map((capability) => compileRoute(release.contractId, release.version, capability)),
+        release.capabilities.flatMap((capability) => {
+            const { bindings: _bindings, binding: _legacy, ...domain } = capability;
+            return capabilityBindings(capability).flatMap((binding) =>
+                binding.transport === "http"
+                    ? [compileRoute(release.contractId, release.version, { ...domain, binding })]
+                    : [],
+            );
+        }),
     );
     assertRoutesDoNotOverlap(routes);
     return Object.freeze(routes);
 }
 
-function compileRoute(contractId: string, contractVersion: string, capability: CapabilityDefinition): ProviderRoute {
+function compileRoute(contractId: string, contractVersion: string, capability: HttpBoundCapability): ProviderRoute {
     const names: string[] = [];
     const escaped = capability.binding.path.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
     const pattern = escaped.replace(/\\\{([A-Za-z][A-Za-z0-9_-]*)\\\}/gu, (_match, name: string) => {

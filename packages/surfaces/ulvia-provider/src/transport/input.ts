@@ -7,6 +7,7 @@ import {
 } from "@bernouy/cms-repository/contracts/protocol";
 import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
+import { capabilityBindings } from "@bernouy/cms-repository/contracts/bindings";
 import { readBoundedRequestBody } from "@bernouy/http-runner";
 import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
 
@@ -20,7 +21,11 @@ export async function decodeProviderContractInput(
     binaryBody?: ProviderCapabilityInvocationContext["binaryBody"];
 }> {
     const input: Record<string, unknown> = {};
-    const binding = capability.binding.input;
+    const definition = capabilityBindings(capability).find((item) => item.transport === "http");
+    if (!definition) {
+        throw new TypeError("Capability has no HTTP input binding");
+    }
+    const binding = definition.input;
     for (const [wireName, property] of Object.entries(binding?.path ?? {})) {
         input[property] = decodeScalar(capability, property, pathParameters[wireName]);
     }

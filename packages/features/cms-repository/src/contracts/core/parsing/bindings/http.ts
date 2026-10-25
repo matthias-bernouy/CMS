@@ -1,6 +1,6 @@
-import { ReleaseValidationError } from "../protocol/errors";
-import { type ReleaseLimits } from "../protocol/limits";
-import { expectArray, expectRecord, expectSafeInteger, expectString, rejectUnknownKeys } from "../protocol/values";
+import { ReleaseValidationError } from "../../protocol/errors";
+import { type ReleaseLimits } from "../../protocol/limits";
+import { expectArray, expectRecord, expectSafeInteger, expectString, rejectUnknownKeys } from "../../protocol/values";
 import type {
     CapabilityHttpMethod,
     HttpBinaryBodyBinding,
@@ -8,7 +8,7 @@ import type {
     HttpBindingDefinition,
     HttpHeaderParameterBinding,
     HttpInputBinding,
-} from "../../interfaces/HttpBinding";
+} from "../../../interfaces/HttpBinding";
 
 const HTTP_METHODS = new Set<CapabilityHttpMethod>(["DELETE", "GET", "PATCH", "POST", "PUT", "QUERY"]);
 

@@ -17,7 +17,7 @@ export type {
     HttpResponseBinding,
 } from "cms-repository/contracts/interfaces/HttpBinding";
 export { compileContractBindings } from "cms-repository/contracts/core/bindings/compileContractBindings";
-export { compileHttpBinding } from "cms-repository/contracts/core/bindings/compileHttpBinding";
+export { compileHttpBinding } from "cms-repository/contracts/core/bindings/http/compile";
 export {
     decodeHttpFieldParameter,
     decodeHttpParameter,
@@ -25,3 +25,6 @@ export {
     encodeHttpParameter,
 } from "cms-repository/contracts/core/bindings/parameters/codec";
 export { matchPathTemplate, pathTemplatesOverlap } from "cms-repository/contracts/core/bindings/pathTemplate";
+
+export type { CapabilityBinding, McpBindingDefinition } from "cms-repository/contracts/interfaces/CapabilityBinding";
+export { capabilityBindings } from "cms-repository/contracts/core/bindings/definitions";

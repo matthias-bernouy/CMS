@@ -1,4 +1,5 @@
-import { compileHttpBinding } from "../bindings/compileHttpBinding";
+import { capabilityBindings } from "../bindings/definitions";
+import { compileHttpBinding } from "../bindings/http/compile";
 import { canonicalizeIJson } from "../protocol/canonical";
 import type { CapabilityDefinition, CapabilityErrorDefinition } from "../../interfaces/ContractRelease";
 import type { UlviaSchema } from "../../interfaces/UlviaSchema";
@@ -48,14 +49,20 @@ export function compareCapability(
     ) {
         changes.push(major("capability_changed", `${path}.errors`, "declared errors changed"));
     }
-    if (
-        fingerprint(compileHttpBinding(previous), maxJsonDepth) !== fingerprint(compileHttpBinding(next), maxJsonDepth)
-    ) {
+    if (fingerprint(bindingPlans(previous), maxJsonDepth) !== fingerprint(bindingPlans(next), maxJsonDepth)) {
         changes.push({
             code: "binding_changed",
-            path: `${path}.binding`,
-            message: "compiled HTTP binding changed",
-            requiredBump: "minor",
+            path: `${path}.bindings`,
+            message: "capability bindings changed",
+            requiredBump: capabilityBindings(previous).some(
+                (old) =>
+                    old.transport === "mcp" &&
+                    !capabilityBindings(next).some(
+                        (item) => item.id === old.id && item.transport === "mcp" && item.tool?.name === old.tool?.name,
+                    ),
+            )
+                ? "major"
+                : "minor",
         });
     }
     return changes;
@@ -143,4 +150,16 @@ function normalize(value: unknown, key?: string): unknown {
 
 function fingerprint(value: unknown, maxJsonDepth: number): string {
     return canonicalizeIJson(value, maxJsonDepth);
+}
+
+function bindingPlans(capability: CapabilityDefinition): unknown {
+    return capabilityBindings(capability).map((binding) =>
+        binding.transport === "http"
+            ? { id: binding.id, transport: binding.transport, binding: compileHttpBinding(capability, binding) }
+            : {
+                  id: binding.id,
+                  transport: binding.transport,
+                  ...(binding.tool?.name ? { name: binding.tool.name } : {}),
+              },
+    );
 }

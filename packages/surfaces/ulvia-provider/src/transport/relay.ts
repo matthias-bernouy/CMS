@@ -1,6 +1,6 @@
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
-import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
+import type { HttpBoundCapability as CapabilityDefinition } from "./routes";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { RequestBodyTooLargeError } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";

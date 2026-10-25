@@ -1,10 +1,10 @@
-import { ReleaseValidationError } from "../protocol/errors";
-import { MEDIA_TYPE_PATTERN } from "../schema/context";
-import type { CapabilityErrorDefinition, CapabilityExecution } from "../../interfaces/ContractRelease";
-import type { CompiledHttpResponse, HttpResponseBinding } from "../../interfaces/HttpBinding";
-import type { UlviaSchema } from "../../interfaces/UlviaSchema";
-import { assertJsonCompatible } from "./jsonCompatibility";
-import { compileErrorStatuses, errorEnvelope } from "./responses/errors";
+import { ReleaseValidationError } from "../../protocol/errors";
+import { MEDIA_TYPE_PATTERN } from "../../schema/context";
+import type { CapabilityErrorDefinition, CapabilityExecution } from "../../../interfaces/ContractRelease";
+import type { CompiledHttpResponse, HttpResponseBinding } from "../../../interfaces/HttpBinding";
+import type { UlviaSchema } from "../../../interfaces/UlviaSchema";
+import { assertJsonCompatible } from "../jsonCompatibility";
+import { compileErrorStatuses, errorEnvelope } from "../responses/errors";
 
 export function compileResponse(
     binding: HttpResponseBinding,

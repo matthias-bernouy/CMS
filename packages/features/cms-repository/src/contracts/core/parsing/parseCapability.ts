@@ -21,7 +21,8 @@ import type { UlviaObjectSchema } from "../../interfaces/UlviaSchema";
 import { type SchemaParseState } from "../schema/context";
 import { parseSchemaAt } from "../schema/parseSchema";
 import { parseErrorCode, parseIdentifier } from "./identifiers";
-import { parseHttpBinding } from "./parseHttpBinding";
+import { validateMcpSchemas } from "./bindings/schemas";
+import { parseCapabilityBindings } from "./bindings";
 import { parseCapabilityDeprecation } from "./parseDeprecation";
 import { parseMocks } from "./parseMocks";
 import { parseCapabilityRequirements } from "./parseCapabilityRequirements";
@@ -53,6 +54,7 @@ export function parseCapability(
             "output",
             "errors",
             "binding",
+            "bindings",
             "mocks",
             "requires",
             "responseEffects",
@@ -79,7 +81,10 @@ export function parseCapability(
     const output = parseSchemaAt(record.output, `${path}.output`, schemaState, 1);
     const errors = parseErrors(record.errors, `${path}.errors`, schemaState);
     const behavior = parseBehavior(record.behavior, `${path}.behavior`);
-    const binding = parseHttpBinding(record.binding, `${path}.binding`, limits);
+    const bindings = parseCapabilityBindings(record, path, limits);
+    if (bindings.bindings?.some((binding) => binding.transport === "mcp")) {
+        validateMcpSchemas(input as UlviaObjectSchema, output, errors, path);
+    }
     const responseEffects = parseResponseEffects(record.responseEffects, `${path}.responseEffects`);
     return {
         id: parseIdentifier(record.id, `${path}.id`),
@@ -89,7 +94,7 @@ export function parseCapability(
         input: input as UlviaObjectSchema,
         output,
         errors,
-        binding,
+        ...bindings,
         ...(responseEffects ? { responseEffects } : {}),
         ...(record.requires === undefined
             ? {}

@@ -86,6 +86,7 @@ export interface CompiledHttpBinding {
 }
 
 export interface CompiledCapabilityBinding {
+    readonly bindingId: string;
     readonly binding: CompiledHttpBinding;
     readonly capabilityId: string;
 }
