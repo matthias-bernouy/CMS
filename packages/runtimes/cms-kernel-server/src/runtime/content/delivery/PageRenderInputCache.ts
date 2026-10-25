@@ -1,10 +1,9 @@
-import type { PageRenderInputs } from "@bernouy/cms-content/rendering";
 import type { DeliveryRead } from "./protocol";
-import { decodePageRenderInputs } from "./protocol";
+import { decodePageRenderInputs, type DeliveredPageRenderInputs } from "./protocol";
 
 export class PageRenderInputCache {
     readonly #cache = new Map<string, CacheEntry>();
-    readonly #pending = new Map<string, Promise<PageRenderInputs>>();
+    readonly #pending = new Map<string, Promise<DeliveredPageRenderInputs>>();
     readonly #freshForMs: number;
     readonly #staleForMs: number;
     readonly #now: () => number;
@@ -24,7 +23,7 @@ export class PageRenderInputCache {
         this.#now = options.now ?? Date.now;
     }
 
-    async get(path: string): Promise<PageRenderInputs> {
+    async get(path: string): Promise<DeliveredPageRenderInputs> {
         const cached = this.#cache.get(path);
         if (cached && this.#now() - cached.validatedAt < this.#freshForMs) {
             return cached.inputs;
@@ -68,7 +67,11 @@ export class PageRenderInputCache {
         this.#pending.clear();
     }
 
-    private async refresh(path: string, cached: CacheEntry | undefined, generation: number): Promise<PageRenderInputs> {
+    private async refresh(
+        path: string,
+        cached: CacheEntry | undefined,
+        generation: number,
+    ): Promise<DeliveredPageRenderInputs> {
         if (cached) {
             const artifactRevision = await this.read<number | string>("content.page-render-revision", { path });
             if (cached.inputs.artifactRevision === artifactRevision) {
@@ -87,7 +90,7 @@ export class PageRenderInputCache {
 }
 
 type CacheEntry = {
-    readonly inputs: PageRenderInputs;
+    readonly inputs: DeliveredPageRenderInputs;
     readonly validatedAt: number;
 };
 

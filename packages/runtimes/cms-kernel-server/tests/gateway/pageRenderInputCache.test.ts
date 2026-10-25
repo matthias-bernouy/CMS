@@ -56,6 +56,8 @@ function renderInputs(revision: string): unknown {
         settings: { site: { language: "en", activeLanguages: [] } },
         texts: { defaultLocale: "en", sources: [] },
         renderableBlocs: [],
+        blocViews: {},
+        collectionAssets: [],
     };
 }
 

@@ -64,7 +64,7 @@ async function executeDeliveryRead(
         case "content.rendering-settings":
             return content.getRenderingSettings();
         case "content.page-render-inputs":
-            return projectPageRenderInputs(requiredText(input.path), content);
+            return projectPageRenderInputs(requiredText(input.path), content, dependencies.collections);
         case "content.page-render-revision":
             return pageRenderRevision(requiredText(input.path), content);
         case "content.bloc-views":

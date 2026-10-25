@@ -81,7 +81,6 @@ test("projects all Kernel content reads through the selected Content capability"
         "content.bloc-views",
         "content.rendering-settings",
         "assets.metadata",
-        "assets.metadata-batch",
     ]);
     expect(invocations.every((invocation) => invocation.contractId === "ulvia.cms.content")).toBeTrue();
     expect(invocations.every((invocation) => invocation.capabilityId === "delivery.read")).toBeTrue();
@@ -175,6 +174,8 @@ test("reuses Page render inputs until the rendering revision changes", async () 
                           renderingRevision: revision,
                           settings: { site: { language: "en", activeLanguages: [] } },
                           renderableBlocs: [],
+                          blocViews: {},
+                          collectionAssets: [],
                           texts: { defaultLocale: "en", sources: [] },
                       };
             return success({ chunks: [JSON.stringify(value)] });

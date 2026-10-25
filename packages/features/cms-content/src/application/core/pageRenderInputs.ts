@@ -24,19 +24,27 @@ export function installPageRenderInputReaders(
         return pageRenderRevision(route, renderingRevision);
     };
     reader.getPageRenderInputs = async (path): Promise<PageRenderInputs> => {
-        const [route, renderingRevision, settings, contentTexts, renderableBlocs] = await Promise.all([
-            reader.resolveRenderableRoute(path),
-            getRenderingRevision(),
-            loaders.getRenderingSettings(),
-            loaders.getContentTexts(),
-            loaders.getRenderableBlocs(),
+        const contributions = repository.getContentContributions?.() ?? Promise.resolve(undefined);
+        const [route, loadedContributions, systemRevision, siteBlocsRevision, settings, renderableBlocs] =
+            await Promise.all([
+                reader.resolveRenderableRoute(path),
+                contributions,
+                repository.getSystemRevision?.() ?? 0,
+                repository.getSiteBlocsRevision?.() ?? "[]",
+                loaders.getRenderingSettings(),
+                loaders.getRenderableBlocs(),
+            ]);
+        const renderingRevision = JSON.stringify([
+            loadedContributions?.revision ?? 0,
+            systemRevision,
+            siteBlocsRevision,
         ]);
         return {
             route,
             artifactRevision: pageRenderRevision(route, renderingRevision),
             renderingRevision,
             settings,
-            contentTexts,
+            contentTexts: [...(loadedContributions?.texts ?? [])],
             renderableBlocs,
         };
     };

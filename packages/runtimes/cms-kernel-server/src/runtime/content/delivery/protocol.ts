@@ -1,4 +1,5 @@
 import type { ContentTextSource, PageRenderInputs } from "@bernouy/cms-content/rendering";
+import type { InstalledCollectionAssetMetadata } from "@bernouy/cms-repository/collections/installations";
 
 export type DeliveryOperation =
     | "content.texts"
@@ -43,7 +44,12 @@ export function parseDeliveryOutput<T>(value: unknown): T {
     return JSON.parse(chunks.join("")) as T;
 }
 
-export function decodePageRenderInputs(value: unknown): PageRenderInputs {
+export type DeliveredPageRenderInputs = PageRenderInputs & {
+    readonly blocViews: Readonly<Record<string, string | null>>;
+    readonly collectionAssets: readonly InstalledCollectionAssetMetadata[];
+};
+
+export function decodePageRenderInputs(value: unknown): DeliveredPageRenderInputs {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
         throw new TypeError("Content delivery returned invalid Page render inputs");
     }
@@ -59,7 +65,11 @@ export function decodePageRenderInputs(value: unknown): PageRenderInputs {
         !isRevision(input.renderingRevision) ||
         !input.settings ||
         typeof input.settings !== "object" ||
-        !Array.isArray(input.renderableBlocs)
+        !Array.isArray(input.renderableBlocs) ||
+        !input.blocViews ||
+        typeof input.blocViews !== "object" ||
+        Array.isArray(input.blocViews) ||
+        !Array.isArray(input.collectionAssets)
     ) {
         throw new TypeError("Content delivery returned invalid Page render metadata");
     }
@@ -79,6 +89,8 @@ export function decodePageRenderInputs(value: unknown): PageRenderInputs {
         renderingRevision: input.renderingRevision,
         settings: input.settings as PageRenderInputs["settings"],
         renderableBlocs: input.renderableBlocs as PageRenderInputs["renderableBlocs"],
+        blocViews: input.blocViews as Readonly<Record<string, string | null>>,
+        collectionAssets: input.collectionAssets as readonly InstalledCollectionAssetMetadata[],
         contentTexts,
     };
 }

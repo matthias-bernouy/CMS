@@ -103,6 +103,41 @@ test("one render batches repeated Bloc views into one bounded capability request
     expect(jsonBytes(invocation.input)).toBeLessThan(4 * 1024);
 });
 
+test("one Page snapshot primes Bloc views and collection metadata without more Provider calls", async () => {
+    const invocations: GatewayInvocation[] = [];
+    const gateway = {
+        invoke: async (invocation: GatewayInvocation): Promise<GatewayResult> => {
+            invocations.push(invocation);
+            return success({
+                route: null,
+                artifactRevision: "revision-1",
+                renderingRevision: "rendering-1",
+                settings: { site: { language: "en", activeLanguages: [] } },
+                renderableBlocs: [],
+                blocViews: { "site-card": "export function mount() {}" },
+                collectionAssets: [
+                    {
+                        collectionId: "ulvia-official",
+                        digest: "sha256:asset-release",
+                        asset: { id: "media/card.webp", mediaType: "image/webp", byteLength: 512 },
+                    },
+                ],
+                texts: { defaultLocale: "en", sources: [] },
+            });
+        },
+    };
+    const client = new GatewayContentClient(gateway as never, createMemoryLogger().logger);
+
+    await client.content.getPageRenderInputs!("/about");
+    expect(await client.content.getBlocViewJS("site-card")).toBe("export function mount() {}");
+    expect(
+        await client.collectionAssets.store.getInstalledAssetMetadataBatch("default", [
+            { collectionId: "ulvia-official", assetId: "media/card.webp" },
+        ]),
+    ).toHaveLength(1);
+    expect(operationCount(invocations)).toEqual({ "content.page-render-inputs": 1 });
+});
+
 function contentClient(
     invocations: GatewayInvocation[],
     pageRenderInputs?: { readonly freshForMs: number; readonly staleForMs?: number; readonly now: () => number },
@@ -122,6 +157,8 @@ function contentClient(
                     renderingRevision: "rendering-1",
                     settings: { site: { language: "en", activeLanguages: [] } },
                     renderableBlocs: [],
+                    blocViews: {},
+                    collectionAssets: [],
                     texts: { defaultLocale: "en", sources: [] },
                 });
             }

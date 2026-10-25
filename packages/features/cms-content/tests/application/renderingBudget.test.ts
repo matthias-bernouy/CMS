@@ -14,7 +14,7 @@ test("a Page render snapshot has a fixed repository-read budget", async () => {
     expect(inputs.route?.kind).toBe("current");
     expect(fixture.calls()).toEqual({
         getBlocsList: 1,
-        getContentContributions: 2,
+        getContentContributions: 1,
         getPageById: 1,
         getPageRequirements: 1,
         getPageRoute: 2,

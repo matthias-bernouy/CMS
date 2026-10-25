@@ -15,13 +15,33 @@ test("Page render delivery keeps one fixed repository-read budget", async () => 
     expect(jsonBytes(output)).toBeLessThan(128 * 1024);
     expect(fixture.calls()).toEqual({
         getBlocsList: 1,
-        getContentContributions: 2,
+        getBlocViewsJS: 1,
+        getContentContributions: 1,
         getPageById: 1,
         getPageRequirements: 1,
         getPageRoute: 2,
         getSiteBlocsRevision: 1,
         getSystem: 3,
         getSystemRevision: 1,
+    });
+});
+
+test("one Page render delivery includes behavior and collection-asset dependencies", async () => {
+    const fixture = deliveryFixture({ hasBehavior: true, assetExpression: true });
+    const output = await read(fixture.dependencies, "content.page-render-inputs", { path: "/" });
+    const payload = JSON.parse(output.chunks.join(""));
+
+    expect(payload.blocViews).toEqual({ "site-bloc-0": "export const tag = 'site-bloc-0';" });
+    expect(payload.collectionAssets).toEqual([
+        {
+            collectionId: "ulvia-official",
+            digest: "sha256:asset-release",
+            asset: { id: "media/portrait.webp", mediaType: "image/webp", byteLength: 512 },
+        },
+    ]);
+    expect(fixture.calls()).toMatchObject({
+        getBlocViewsJS: 1,
+        getInstalledAssetMetadataBatch: 1,
     });
 });
 
@@ -37,7 +57,7 @@ test("unrelated Pages add neither delivery bytes nor repository requests", async
 });
 
 test("one batched Bloc-view request reads each distinct Bloc once", async () => {
-    const fixture = deliveryFixture();
+    const fixture = deliveryFixture({ hasBehavior: true });
     const output = await read(fixture.dependencies, "content.bloc-views", {
         tags: ["site-card", "site-action", "site-card", "site-action"],
     });
@@ -82,7 +102,15 @@ async function read(
     )) as { readonly chunks: readonly string[] };
 }
 
-function deliveryFixture(options: { unrelatedPageCount?: number; blocCount?: number; markupBytes?: number } = {}): {
+function deliveryFixture(
+    options: {
+        unrelatedPageCount?: number;
+        blocCount?: number;
+        markupBytes?: number;
+        hasBehavior?: boolean;
+        assetExpression?: boolean;
+    } = {},
+): {
     dependencies: CmsContentDependencies;
     calls(): Record<string, number>;
 } {
@@ -94,13 +122,15 @@ function deliveryFixture(options: { unrelatedPageCount?: number; blocCount?: num
     const unrelatedPages = Array.from({ length: options.unrelatedPageCount ?? 0 }, (_, index) =>
         renderablePage(pageRecord(`unrelated-${index}`, `/unrelated-${index}`)),
     );
-    const markup = "x".repeat(options.markupBytes ?? 256);
+    const markup = options.assetExpression
+        ? "{{ cms.asset.ulvia-official.media/portrait.webp }}"
+        : "x".repeat(options.markupBytes ?? 256);
     const blocs = Array.from({ length: options.blocCount ?? 1 }, (_, index) => ({
         id: `site-bloc-${index}`,
         kind: "component" as const,
         markupHTML: `<article>${markup}</article>`,
         root: { accepts: ["article"] },
-        hasBehavior: false,
+        hasBehavior: options.hasBehavior ?? false,
     }));
     const repository = {
         getSystem: async () => {
@@ -143,11 +173,27 @@ function deliveryFixture(options: { unrelatedPageCount?: number; blocCount?: num
         },
         getBlocViewsJS: async (tags: readonly string[]) => {
             count("getBlocViewsJS");
-            return Object.fromEntries(tags.map((tag) => [tag, `export const tag = '${tag}';`]));
+            return Object.fromEntries(
+                tags.map((tag) => [tag, options.hasBehavior ? `export const tag = '${tag}';` : null]),
+            );
         },
     } as unknown as CmsRepository;
     return {
-        dependencies: { repo: repository, collections: {} as never },
+        dependencies: {
+            repo: repository,
+            collections: {
+                getInstalledAssetMetadataBatch: async () => {
+                    count("getInstalledAssetMetadataBatch");
+                    return [
+                        {
+                            collectionId: "ulvia-official",
+                            digest: "sha256:asset-release",
+                            asset: { id: "media/portrait.webp", mediaType: "image/webp", byteLength: 512 },
+                        },
+                    ];
+                },
+            } as never,
+        },
         calls: () => Object.fromEntries([...counts].sort()),
     };
 }

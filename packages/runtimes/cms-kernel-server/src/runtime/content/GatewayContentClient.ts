@@ -1,8 +1,10 @@
 import type { ContentReader, PageRenderInputs, RenderablePage } from "@bernouy/cms-content/rendering";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
+import type { InstalledCollectionAssetMetadata } from "@bernouy/cms-repository/collections/installations";
 import type { Logger } from "@bernouy/logging";
 import type { BlobRange } from "@bernouy/blob-store";
+import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 import { BlocViewBatch } from "./delivery/BlocViewBatch";
 import { PageRenderInputCache, type PageRenderInputCacheOptions } from "./delivery/PageRenderInputCache";
 import { ContentDeliveryError, parseDeliveryOutput, type DeliveryOperation } from "./delivery/protocol";
@@ -16,6 +18,7 @@ export class GatewayContentClient {
     };
     readonly collectionAssets: InstalledCollectionAssetSource;
     readonly #collectionByDigest = new Map<string, string>();
+    readonly #assetMetadata = new Map<string, InstalledCollectionAssetMetadata>();
     readonly #blocViews: BlocViewBatch;
     readonly #pageRenderInputs: PageRenderInputCache;
 
@@ -35,6 +38,10 @@ export class GatewayContentClient {
             siteId: "default",
             store: {
                 getInstalledAssetMetadata: async (_siteId, collectionId, assetId) => {
+                    const cached = this.#assetMetadata.get(assetKey(collectionId, assetId));
+                    if (cached) {
+                        return cached;
+                    }
                     const installed = await this.read<CollectionAssetMetadata | null>("assets.metadata", {
                         collectionId,
                         assetId,
@@ -43,9 +50,22 @@ export class GatewayContentClient {
                     return installed;
                 },
                 getInstalledAssetMetadataBatch: async (_siteId, references) => {
-                    const installed = await this.read<CollectionAssetMetadata[]>("assets.metadata-batch", {
-                        references,
-                    });
+                    const installed = references
+                        .map(({ collectionId, assetId }) => this.#assetMetadata.get(assetKey(collectionId, assetId)))
+                        .filter((value): value is CollectionAssetMetadata => Boolean(value));
+                    const resolved = new Set(
+                        installed.map(({ collectionId, asset }) => assetKey(collectionId, asset.id)),
+                    );
+                    const missing = references.filter(
+                        ({ collectionId, assetId }) => !resolved.has(assetKey(collectionId, assetId)),
+                    );
+                    if (missing.length > 0) {
+                        installed.push(
+                            ...(await this.read<CollectionAssetMetadata[]>("assets.metadata-batch", {
+                                references: missing,
+                            })),
+                        );
+                    }
                     this.rememberCollectionAssets(installed);
                     return installed;
                 },
@@ -93,16 +113,18 @@ export class GatewayContentClient {
     async read<T>(operation: DeliveryOperation, input?: unknown): Promise<T> {
         const startedAt = performance.now();
         try {
-            const result = await this.gateway.invoke({
-                siteId: "default",
-                contractId: "ulvia.cms.content",
-                capabilityId: "delivery.read",
-                input: {
-                    operation,
-                    ...(input === undefined ? {} : { inputJson: JSON.stringify(input) }),
-                },
-                actor: { kind: "system", serviceId: "cms-kernel" },
-            });
+            const result = await measureCurrentRequestTiming(deliveryTimingName(operation), () =>
+                this.gateway.invoke({
+                    siteId: "default",
+                    contractId: "ulvia.cms.content",
+                    capabilityId: "delivery.read",
+                    input: {
+                        operation,
+                        ...(input === undefined ? {} : { inputJson: JSON.stringify(input) }),
+                    },
+                    actor: { kind: "system", serviceId: "cms-kernel" },
+                }),
+            );
             if (result.kind !== "success") {
                 this.logger.warn("content.delivery.rejected", {
                     operation,
@@ -111,7 +133,11 @@ export class GatewayContentClient {
                 });
                 throw new ContentDeliveryError(operation, result.status);
             }
-            return parseDeliveryOutput<T>(result.output);
+            const output = await measureCurrentRequestTiming("content_decode", () =>
+                parseDeliveryOutput<T>(result.output),
+            );
+            this.reportDelivery(operation, performance.now() - startedAt);
+            return output;
         } catch (error) {
             if (!(error instanceof ContentDeliveryError)) {
                 this.logger.error(
@@ -153,19 +179,35 @@ export class GatewayContentClient {
     private rememberCollectionAssets(installed: readonly CollectionAssetMetadata[]): void {
         for (const item of installed) {
             this.#collectionByDigest.set(item.digest, item.collectionId);
+            this.#assetMetadata.set(assetKey(item.collectionId, item.asset.id), item);
         }
     }
 
     async getPageRenderInputs(path: string): Promise<PageRenderInputs> {
-        return this.#pageRenderInputs.get(path);
+        const inputs = await measureCurrentRequestTiming("page_snapshot", () => this.#pageRenderInputs.get(path));
+        this.#blocViews.prime(inputs.blocViews);
+        this.rememberCollectionAssets(inputs.collectionAssets);
+        return inputs;
     }
 
     invalidatePageRenderInputs(): void {
         this.#pageRenderInputs.invalidate();
+        this.#blocViews.clear();
+        this.#collectionByDigest.clear();
+        this.#assetMetadata.clear();
     }
 
     readBlocView(tag: string): Promise<string | null> {
         return this.#blocViews.get(tag);
+    }
+
+    private reportDelivery(operation: DeliveryOperation, durationMs: number): void {
+        const attributes = { operation, durationMs: Math.round(durationMs * 100) / 100 };
+        if (durationMs >= 50) {
+            this.logger.info("content.delivery.completed", attributes);
+            return;
+        }
+        this.logger.debug("content.delivery.completed", attributes);
     }
 }
 
@@ -177,3 +219,11 @@ type CollectionAssetMetadata =
     Awaited<ReturnType<InstalledCollectionAssetSource["store"]["getInstalledAssetMetadata"]>> extends infer Value
         ? Exclude<Value, null>
         : never;
+
+function assetKey(collectionId: string, assetId: string): string {
+    return `${collectionId}\0${assetId}`;
+}
+
+function deliveryTimingName(operation: DeliveryOperation): string {
+    return `content_${operation.replaceAll(".", "_").replaceAll("-", "_")}`;
+}
