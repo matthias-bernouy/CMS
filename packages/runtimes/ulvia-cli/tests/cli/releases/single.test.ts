@@ -2,13 +2,13 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { runCli } from "../../src/cli";
+import { runCli } from "../../../src/cli";
 import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 
 test("release publishes a folder explicitly, survives CLI runs, and prune clears only the repository", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-cli-release-"));
-    const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
+    const source = resolve(import.meta.dir, "../../../../../official-repository/collections/ulvia-official");
     const coreContracts = [
         "ulvia.cms.secrets",
         "ulvia.cms.emailer",
@@ -17,7 +17,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
         "ulvia.cms.installations",
         "ulvia.cms.content",
         "ulvia.cms.files",
-    ].map((id) => resolve(import.meta.dir, `../../../../official-repository/contracts/${id}`));
+    ].map((id) => resolve(import.meta.dir, `../../../../../official-repository/contracts/${id}`));
     const definition = (await Bun.file(join(source, "definition.json")).json()) as {
         version: string;
         exports: { blocs: string[]; texts: string[] };

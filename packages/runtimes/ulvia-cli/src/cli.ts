@@ -27,7 +27,7 @@ Usage:
   ulvia instance delete <name> --yes
   ulvia upgrade <kernel | provider | repository> --version <version>
   ulvia reset --yes
-  ulvia release <resource-directory>
+  ulvia release <resource-directory> [--recursive]
   ulvia push <kind> <publisher/id@version> --repository <url>
   ulvia pull <kind> <publisher/id@version> --repository <url>
   ulvia yank <kind> <publisher/id@version> --repository <url> --reason <text>
@@ -44,7 +44,7 @@ Commands:
   instance     Create and manage independent Kernel instances
   upgrade      Pull and install one exact official Docker image version
   reset        Delete all instances, services data, and repository releases after --yes
-  release      Validate and store an immutable collection, contract, or provider manifest
+  release      Validate and store one resource or a recursive resource batch
   push         Publish one exact local release to a remote repository
   pull         Validate and store one exact remote release locally
   yank         Hide a remote release from new catalogue resolutions

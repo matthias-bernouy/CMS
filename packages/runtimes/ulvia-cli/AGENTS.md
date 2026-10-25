@@ -22,6 +22,11 @@ Ulvia CMS installation runtime.
   immutable releases below the persistent user data directory. Provider
   manifests require their exact contract releases locally; release never probes
   a provider or handles credentials.
+- `release --recursive` discovers bounded authored resource roots and stops at
+  each owning definition. Reject symbolic links and duplicate coordinates. Plan
+  contracts against the local catalogue before providers and collections, and
+  validate all authored sources before storing the batch. Keep writes atomic per
+  resource; the batch is not a cross-resource transaction. Never implicitly push.
 - Collection release sources merge recursive JSON fragments below each
   `translations/<locale>/` directory and discover theme category files
   recursively by stable ID. Reject duplicate translation keys, duplicate theme

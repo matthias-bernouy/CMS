@@ -155,6 +155,23 @@ releases. It preserves independent Repository deployments and signing identities
 `collection`, `contract`, or `provider-manifest`. It validates and stores one
 immutable release. A provider manifest must reference exact contract releases
 already in the local repository. Release does not connect to or test a provider.
+`release <directory> --recursive` discovers authored resource roots below a
+folder, stopping before nested Bloc or conformance definitions. It orders
+contracts by inheritance and capability requirements, validates conformance
+against the complete planned contract set, then prepares providers and
+collections. Existing local dependencies are reused. Source admission happens
+before any resource is stored; each resource is committed separately, so a
+storage or publication conflict can leave a partial batch. Retrying identical
+releases is idempotent. Duplicate coordinates and symbolic links are rejected.
+Discovery is bounded to 256 resources, 4096 directories and 32 directory levels;
+prepared canonical bytes and assets are bounded to 512 MiB. `push` remains an
+explicit separate command.
+
+```bash
+ulvia release packages/official-repository/contracts --recursive
+ulvia release packages/official-repository --recursive
+```
+
 Contract fixture assets declared in `definition.json` are read from
 `fixtures/<asset-id>` and verified by digest. Releasing the same coordinate with
 different content fails. The local Repository serves stored resources
