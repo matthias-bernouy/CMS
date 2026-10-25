@@ -34,7 +34,9 @@ import { createInstanceAuth } from "../authentication/createInstanceAuth";
 
 const SITE_ID = "default";
 const MAX_OPEN_INSTANCES = 32;
-const INSTANCE_IDLE_MS = 60_000;
+// Keep recently active instances warm while the bounded LRU ceiling protects
+// the process from an unbounded number of Mongo-backed compositions.
+const INSTANCE_IDLE_MS = 15 * 60_000;
 
 export type InstanceComposition = Readonly<{
     stores: ProviderStores;
@@ -77,8 +79,13 @@ export class ProviderInstanceHost {
     readonly #records = new Map<string, ProviderInstanceRecord>();
 
     async runtime(instance: ProviderInstanceRecord): Promise<ResourceLease<UlviaProviderInstanceRuntime>> {
+        const startedAt = performance.now();
         const lease = await this.open(instance);
+        const openMs = performance.now() - startedAt;
+        const readyStartedAt = performance.now();
         await lease.resource.ensureProviderReady();
+        const readyMs = performance.now() - readyStartedAt;
+        this.reportRuntimeTiming(instance.id, openMs, readyMs);
         return {
             resource: {
                 ...lease.resource.runtime,
@@ -137,12 +144,16 @@ export class ProviderInstanceHost {
         instance: ProviderInstanceRecord,
         lifetime: ResourceLifetime,
     ): Promise<InstanceComposition> {
+        const startedAt = performance.now();
+        const credentialsStartedAt = performance.now();
         const credentials = await this.credentials.read(instance.id);
+        const bootstrapReadMs = performance.now() - credentialsStartedAt;
         if (!credentials) {
             throw new Error(`Provider instance credentials are unavailable: ${instance.id}`);
         }
         const filesDirectory = join(this.env.CMS_FILES_DIR, instance.storageKey);
         await mkdir(filesDirectory, { recursive: true, mode: 0o700 });
+        const storesStartedAt = performance.now();
         const stores = await createProviderStores(
             {
                 CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: this.env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
@@ -158,6 +169,7 @@ export class ProviderInstanceHost {
             },
             this.logger.child({ instanceId: instance.id }),
         );
+        const storesMs = performance.now() - storesStartedAt;
         let operationRecovery: RecoverySupervisor | undefined;
         try {
             const gateway = await createProviderGateway(stores, SITE_ID);
@@ -215,7 +227,7 @@ export class ProviderInstanceHost {
             );
             await operationRecovery.start(false);
             const activeRecovery = operationRecovery;
-            return {
+            const composition = {
                 stores,
                 gateway,
                 management,
@@ -234,6 +246,14 @@ export class ProviderInstanceHost {
                     dispatcher,
                 },
             };
+            this.logger.info("provider.instance.composition.created", {
+                instanceId: instance.id,
+                bootstrapReadMs: roundDuration(bootstrapReadMs),
+                storesMs: roundDuration(storesMs),
+                assemblyMs: roundDuration(performance.now() - startedAt - bootstrapReadMs - storesMs),
+                durationMs: roundDuration(performance.now() - startedAt),
+            });
+            return composition;
         } catch (error) {
             await operationRecovery?.stop();
             await stores.close();
@@ -247,6 +267,25 @@ export class ProviderInstanceHost {
         }
         return profile;
     }
+
+    private reportRuntimeTiming(instanceId: string, openMs: number, readyMs: number): void {
+        const durationMs = openMs + readyMs;
+        const attributes = {
+            instanceId,
+            openMs: roundDuration(openMs),
+            observationMs: roundDuration(readyMs),
+            durationMs: roundDuration(durationMs),
+        };
+        if (durationMs >= 50) {
+            this.logger.info("provider.instance.runtime.ready", attributes);
+            return;
+        }
+        this.logger.debug("provider.instance.runtime.ready", attributes);
+    }
+}
+
+function roundDuration(value: number): number {
+    return Math.round(value * 100) / 100;
 }
 
 function providerReport(instance: ProviderInstanceRecord, profile: OfficialInstanceProfile): ProviderRuntimeReport {
