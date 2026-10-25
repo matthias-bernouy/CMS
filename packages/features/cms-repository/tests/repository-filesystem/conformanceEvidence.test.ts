@@ -1,3 +1,4 @@
+import { ownerFixture } from "../repository-http/publicationFixtures";
 import { afterEach, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -85,10 +86,10 @@ test("publishes immutable evidence only for an exact provider and contract relea
     expect(response?.headers.get("etag")).toBe(`"${evidence.digest}"`);
     expect(await response!.text()).toBe(evidence.canonicalJson);
 
-    const token = "e".repeat(32);
+    const { namespaces, credential } = await ownerFixture(root, "ulvia.official");
     const reads = new RepositoryReadEndpoint(root);
     const mutations = new RepositoryMutationEndpoint(registry, {
-        token,
+        namespaces,
         uploads: new FilesystemRepositoryPublicationUploadStore(root),
     });
     const server = Bun.serve({
@@ -98,7 +99,7 @@ test("publishes immutable evidence only for an exact provider and contract relea
             (await mutations.handle(request)) ?? (await reads.handle(request)) ?? new Response(null, { status: 404 }),
     });
     try {
-        const remote = new RemoteRepositoryClient(`http://127.0.0.1:${server.port}`, token);
+        const remote = new RemoteRepositoryClient(`http://127.0.0.1:${server.port}`, credential);
         expect(await remote.pushConformanceEvidence(evidence.canonicalJson)).toMatchObject({ added: false });
         const pulled = await remote.pullConformanceEvidence({
             providerId: "ulvia.example",

@@ -3,11 +3,11 @@ import { lstat, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promis
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { runCli } from "../../src/cli";
-import { readNamespacePrivateKey } from "../../src/commands/namespace/credentials";
+import { readNamespacePrivateKey } from "../../src/runtime/repository/keys";
 
-test("namespace key generation preserves private files and rejects unsafe key readers", async () => {
+test("identity key generation preserves private files and rejects unsafe key readers", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-namespace-key-"));
-    const path = join(root, "owner.pem");
+    const path = join(root, "data/config/keys/owner.pem");
     const output: string[] = [];
     const options = {
         cwd: root,
@@ -15,13 +15,13 @@ test("namespace key generation preserves private files and rejects unsafe key re
         log: (message: string) => output.push(message),
     };
     try {
-        await runCli(["namespace", "keygen", "--key-file", "owner.pem"], options);
+        await runCli(["identity", "create", "owner"], options);
         const privateKey = await readFile(path, "utf8");
         expect(privateKey).toContain("BEGIN PRIVATE KEY");
         expect((await lstat(path)).mode & 0o077).toBe(0);
         expect(output.join("\n")).not.toContain(privateKey);
         expect(output.join("\n")).toContain("Public key:");
-        await expect(runCli(["namespace", "keygen", "--key-file", "owner.pem"], options)).rejects.toThrow();
+        await expect(runCli(["identity", "create", "owner"], options)).rejects.toThrow();
         expect(await readFile(path, "utf8")).toBe(privateKey);
         expect(await readNamespacePrivateKey(path)).toBe(privateKey);
         const linked = join(root, "linked.pem");

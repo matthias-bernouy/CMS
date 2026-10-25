@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { isSha256Digest } from "@bernouy/binary-media";
-import { repositoryWriteHeaders, type RepositoryWriteCredential } from "../namespaces/request";
+import { repositoryWriteHeaders, type RepositoryOwnerCredential } from "../namespaces/request";
 import { encodePublicationUpload, type PublicationUploadManifest } from "./protocol";
 import type {
     ConformanceEvidencePublicationResult,
@@ -18,7 +18,7 @@ const TRANSFER_CONCURRENCY = 4;
 export class RemoteRepositoryWriter {
     constructor(
         private readonly base: URL,
-        private readonly credential?: RepositoryWriteCredential,
+        private readonly credential?: RepositoryOwnerCredential,
     ) {}
 
     async push(envelope: PublicationEnvelope): Promise<{ added: boolean; digest: string }> {
@@ -50,7 +50,7 @@ export class RemoteRepositoryWriter {
     async yank(coordinate: RemoteCoordinate, reason: string | null): Promise<void> {
         const path = `v1/yanks/${coordinate.kind}/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}`;
         let expectedRevision: number | undefined;
-        if (this.credential && typeof this.credential !== "string") {
+        if (this.credential) {
             const response = await fetch(new URL(path, this.base), {
                 redirect: "error",
                 signal: AbortSignal.timeout(15_000),

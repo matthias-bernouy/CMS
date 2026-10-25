@@ -34,10 +34,6 @@ export async function loadOrCreateLocalServicesConfig(servicesRoot: string): Pro
     return await writeExclusiveConfig(path, config);
 }
 
-export async function loadOrCreateRepositoryToken(servicesRoot: string): Promise<string> {
-    return await loadOrCreateToken(join(servicesRoot, "repository-token"), "Repository");
-}
-
 export async function loadOrCreateProviderOperatorToken(servicesRoot: string): Promise<string> {
     return await loadOrCreateToken(join(servicesRoot, "provider-operator-token"), "Ulvia Provider operator");
 }

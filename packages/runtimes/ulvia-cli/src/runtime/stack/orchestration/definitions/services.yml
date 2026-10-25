@@ -63,7 +63,6 @@ services:
             ULVIA_LOG_FILE: /var/log/ulvia/repository.ndjson
             ULVIA_REPOSITORY_DIR: /var/lib/ulvia-repository
             ULVIA_REPOSITORY_SEED_DIR: /opt/ulvia-repository-seed
-            ULVIA_REPOSITORY_TOKEN: ${ULVIA_REPOSITORY_TOKEN}
         stop_grace_period: 30s
         volumes:
             - type: bind

@@ -1,12 +1,13 @@
+import { parseRepositoryConfig, type RepositoryDeploymentConfig } from "./config";
 import { readFile, rename, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { isOfficialImage, type OfficialImage } from "../orchestration/images";
 
 export type StandaloneRepositoryState = Readonly<{
-    schema: "ulvia.repository-service.v1";
-    port: number;
+    schema: "ulvia.repository-service.v2";
     image: OfficialImage;
+    config: RepositoryDeploymentConfig;
 }>;
 
 export async function readRepositoryState(root: string): Promise<StandaloneRepositoryState | null> {
@@ -20,15 +21,10 @@ export async function readRepositoryState(root: string): Promise<StandaloneRepos
         return null;
     }
     const value = JSON.parse(source) as StandaloneRepositoryState;
-    if (
-        value.schema !== "ulvia.repository-service.v1" ||
-        !isOfficialImage(value.image, "repository") ||
-        !Number.isSafeInteger(value.port) ||
-        value.port < 1 ||
-        value.port > 65_535
-    ) {
+    if (!value || value.schema !== "ulvia.repository-service.v2" || !isOfficialImage(value.image, "repository")) {
         throw new Error("Invalid standalone Repository state");
     }
+    parseRepositoryConfig(value.config);
     return value;
 }
 

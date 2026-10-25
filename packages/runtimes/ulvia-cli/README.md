@@ -110,14 +110,30 @@ previously created local instance; it never creates an implicit instance.
 
 The lifecycle boundary is deliberate:
 
-Independent community Repository deployments use `ulvia repository start <name>`
-with optional `--version` and `--port`. They retain their own volume and image
-pin below `<data>/repositories/<name>` and support `status`, `stop` and `upgrade`.
-They do not start shared services or a Kernel. Namespace authors use
-`ulvia namespace keygen`, `claim`, `status`, `rotate` and `revoke`, and select
-their private key with `ULVIA_REPOSITORY_PRIVATE_KEY_FILE`. See the
-[community Repository guide](../../../docs/architecture/community-repository.md)
-for examples, irreversible key loss, owner signing and deployment limits.
+Independent Repository deployments use `ulvia repository start`, `status`, `stop`
+and `upgrade --version <exact-version>`. Their default volume and image pin live
+below `<data>/repository-service`. No deployment name or `global`/`community`
+qualifier is required. The command does not start
+shared services or a Kernel.
+
+`ulvia repository login <url>` verifies and saves the remote identity and creates
+a default local signing identity if none exists. `ulvia identity create`, `import`,
+`use`, `list` and `public-key` manage reusable Ed25519 identities. Namespace
+commands and publication use the saved connection and select an identity matching
+the namespace's current owner. No environment exports are needed. `logout`
+removes only the connection, preserving keys.
+
+Client configuration lives in `$XDG_CONFIG_HOME/ulvia/config.json` or
+`~/.config/ulvia/config.json`; private keys live in its `keys/` directory. Files
+use mode 0600, directories 0700. `ULVIA_CONFIG_DIR` overrides that location;
+`ULVIA_DATA_DIR` alone isolates client configuration under `<data>/config`.
+Deployment configuration is separate: `<data>/repository-service/config.json`.
+`repository configure` persists local, external HTTPS proxy or managed ACME
+networking. All namespaces, including `ulvia.official`, use public first claim.
+Claim platform-owned names locally before enabling public access. Ownership
+persists across restarts and cannot be reset through deployment configuration.
+See the [installation guide](../../../docs/installation/README.md#9-standalone-repository)
+and [Repository architecture](../../../docs/architecture/community-repository.md).
 
 | Command | Provider tenant | Kernel container |
 | --- | --- | --- |
@@ -127,14 +143,14 @@ for examples, irreversible key loss, owner signing and deployment limits.
 | `start` | Never provisions | Starts every existing Kernel after shared services |
 
 `instance credentials <name>` prints only that administrator's email and
-password. Repository, Provider operator and instance bearer tokens remain in
+password. Provider operator and instance bearer tokens remain in
 private runtime files. Shared services and every instance have independent
 `stop`, `status`, and `logs` boundaries. Software upgrades are explicit and
 component-scoped through `upgrade <component> --version <exact-version>`.
 Normal starts always reuse the installed digest and never follow a newer tag.
 `reset --yes`
-removes every Compose project, instance, shared state and repository
-release. It does not inspect or modify the current working directory.
+removes shared Compose projects, instances, shared state and local repository
+releases. It preserves independent Repository deployments and signing identities. It does not inspect or modify the current working directory.
 `release <resource-directory>` reads `definition.json` and routes by `kind`:
 `collection`, `contract`, or `provider-manifest`. It validates and stores one
 immutable release. A provider manifest must reference exact contract releases
@@ -171,10 +187,10 @@ a disposable provider environment.
 `push` publishes one exact local coordinate, and `pull` downloads and re-admits
 one exact remote coordinate before storing it locally. Both support
 `collection`, `contract`, and `provider`; dependencies must be transferred
-first. `ULVIA_REPOSITORY_URL` can replace `--repository`.
-Repository writes require `ULVIA_REPOSITORY_TOKEN`; the token is never accepted
-as a command-line argument. Every mutation carries a timestamp, one-time nonce,
-body digest, and HMAC-SHA-256 signature. The server rejects stale or replayed
+first. `repository login` saves the default endpoint; `--repository` and
+`ULVIA_REPOSITORY_URL` remain explicit overrides. Owner signatures bind Repository
+identity, namespace revision, action, content digest, timestamp and nonce.
+The server rejects stale or replayed
 requests, serializes writes across processes, re-runs admission and evolution
 rules, and stages every declared asset as a separately signed raw stream. A final
 idempotent commit makes the immutable artifact visible only after all byte lengths
@@ -194,9 +210,7 @@ executable package.
 resolution without deleting its exact historical bytes. `restore` exposes it
 again. Contract yanks block new dependent publications while previously
 published provider manifests remain readable. The loopback Repository uses the
-same write protocol and keeps its generated repository token in the private
-runtime directory. The removed integration repository/Supabase bridge is not
-run.
+same owner-signing protocol. Signing keys stay in local identities.
 
 A collection keeps immutable administration copy in recursive locale
 directories such as `translations/en/collection.json` and

@@ -34,8 +34,6 @@ export async function repositoryContainer(image: string) {
         "--env",
         "ULVIA_REPOSITORY_SEED_DIR=",
         "--env",
-        "ULVIA_REPOSITORY_TOKEN=docker-test-operator-token-1234567890",
-        "--env",
         "REPOSITORY_PUBLIC_URL=https://repository.example",
     ];
     const start = () => docker(["run", "--detach", "--name", name, "--publish", "127.0.0.1::3000", ...common, image]);

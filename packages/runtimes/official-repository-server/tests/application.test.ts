@@ -12,7 +12,7 @@ afterEach(async () => {
 
 test("mounts public health and catalogue reads while protecting mutations", async () => {
     const root = await temporaryRoot();
-    const application = await createOfficialRepositoryApplication(root, "a".repeat(32));
+    const application = await createOfficialRepositoryApplication(root);
 
     const health = await application.handle(new Request("http://repository.test/healthz"));
     expect(health.status).toBe(200);
@@ -39,7 +39,7 @@ test("mounts public health and catalogue reads while protecting mutations", asyn
 
 test("keeps liveness up while readiness reports unavailable storage", async () => {
     const root = await temporaryRoot();
-    const application = await createOfficialRepositoryApplication(root, "c".repeat(32));
+    const application = await createOfficialRepositoryApplication(root);
     await rm(root, { recursive: true });
 
     expect((await application.handle(new Request("http://repository.test/healthz"))).status).toBe(200);
@@ -54,7 +54,7 @@ test("fails startup when persisted repository artifacts are corrupt", async () =
     await mkdir(directory, { recursive: true });
     await writeFile(join(directory, "1.0.0.json"), "not json");
 
-    await expect(createOfficialRepositoryApplication(root, "b".repeat(32))).rejects.toThrow();
+    await expect(createOfficialRepositoryApplication(root)).rejects.toThrow();
 });
 
 async function temporaryRoot(): Promise<string> {

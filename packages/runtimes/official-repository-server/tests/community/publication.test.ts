@@ -5,7 +5,7 @@ import { repositoryWriteHeaders } from "@bernouy/cms-repository/repository/names
 import { createHash } from "node:crypto";
 import { communityFixture, keyPair, simpleContract } from "./fixtures";
 
-test("owners publish without operator secrets; foreign writes, replacement and stale keys fail", async () => {
+test("owners publish with owner signatures; foreign writes, replacement and stale keys fail", async () => {
     const f = await communityFixture();
     try {
         const writer = new RemoteRepositoryClient(f.base, f.credential);
@@ -17,9 +17,12 @@ test("owners publish without operator secrets; foreign writes, replacement and s
         await expect(
             writer.push({ ...envelope, canonicalJson: simpleContract("community", "1.0.0", "Replaced") }),
         ).rejects.toThrow();
-        const operator = new RemoteRepositoryClient(f.base, "o".repeat(32));
+        const intruder = new RemoteRepositoryClient(f.base, {
+            ...f.credential,
+            resolvePrivateKey: async () => keyPair().privateKey,
+        });
         await expect(
-            operator.push({ ...envelope, canonicalJson: simpleContract("community", "1.1.0") }),
+            intruder.push({ ...envelope, canonicalJson: simpleContract("community", "1.1.0") }),
         ).rejects.toThrow();
         const replacement = keyPair();
         await f.client.rotate(f.credential, {

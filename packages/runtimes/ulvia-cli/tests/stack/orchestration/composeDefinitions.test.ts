@@ -50,6 +50,22 @@ composeTest("one isolated Kernel receives no shared persistence credentials", ()
     expect(kernel.cap_drop).toEqual(["ALL"]);
 });
 
+composeTest("standalone Repository uses owner publication and exposes only its TLS proxy publicly", () => {
+    const local = render(["repository.yml"]);
+    expect(Object.keys(local.services)).toEqual(["repository"]);
+    expect(local.services.repository.ports?.[0]).toMatchObject({ host_ip: "127.0.0.1", target: 3000 });
+    expect(local.services.repository.environment.ULVIA_REPOSITORY_TOKEN).toBeUndefined();
+    expect(local.services.repository.environment.REPOSITORY_PUBLIC_URL).toBe("https://repository.example");
+    const tls = render(["repository.yml", "repository-tls.yml"]);
+    expect(Object.keys(tls.services).sort()).toEqual(["acme", "proxy", "repository"]);
+    expect(tls.services.proxy.ports).toEqual([
+        expect.objectContaining({ host_ip: "0.0.0.0", target: 80, published: "80" }),
+        expect.objectContaining({ host_ip: "0.0.0.0", target: 443, published: "443" }),
+    ]);
+    expect(tls.services.repository.environment.LETSENCRYPT_HOST).toBe("repository.example");
+    expect(tls.services.acme.environment.DEFAULT_EMAIL).toBe("ops@example.com");
+});
+
 type RenderedService = {
     environment: Record<string, string>;
     ports?: Array<Record<string, unknown>>;
@@ -111,7 +127,9 @@ function composeEnvironment(): Record<string, string> {
         ULVIA_MONGO_PROVIDER_PASSWORD: "b".repeat(43),
         ULVIA_PROVIDER_SESSION_SECRET: "c".repeat(43),
         ULVIA_PROVIDER_KEK_HEX: "d".repeat(64),
-        ULVIA_REPOSITORY_TOKEN: "e".repeat(43),
+        ULVIA_REPOSITORY_PUBLIC_URL: "https://repository.example",
+        ULVIA_REPOSITORY_DOMAIN: "repository.example",
+        ULVIA_REPOSITORY_PROXY_DIR: "/tmp/ulvia-test/repository-proxy",
         ULVIA_PROVIDER_OPERATOR_TOKEN: "f".repeat(43),
         ULVIA_ACME_EMAIL: "ops@example.com",
         ULVIA_INSTANCE_HOSTNAME: "example.com",

@@ -8,7 +8,10 @@ if (import.meta.main) {
     const args = Bun.argv.slice(2);
     const root = process.env.ULVIA_TEST_DOCKER_ROOT!;
     const log = `${root}/calls.ndjson`;
-    await appendFile(log, `${JSON.stringify({ args, image: process.env.OFFICIAL_REPOSITORY_IMAGE })}\n`);
+    await appendFile(
+        log,
+        `${JSON.stringify({ args, image: process.env.OFFICIAL_REPOSITORY_IMAGE, publicUrl: process.env.ULVIA_REPOSITORY_PUBLIC_URL })}\n`,
+    );
     const imagesPath = `${root}/images.json`;
     const images = JSON.parse(await readFile(imagesPath, "utf8").catch(() => "{}")) as Record<
         string,

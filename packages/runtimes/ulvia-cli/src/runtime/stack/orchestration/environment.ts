@@ -9,7 +9,6 @@ import type { LocalServicesState } from "./state";
 
 type ServiceCredentials = Readonly<{
     config: LocalServicesConfig;
-    repositoryToken: string;
     operatorToken: string;
 }>;
 
@@ -46,7 +45,6 @@ export function localServicesEnvironment(
         ULVIA_MONGO_PROVIDER_PASSWORD: credentials?.config.mongoProviderPassword ?? "b".repeat(43),
         ULVIA_PROVIDER_SESSION_SECRET: credentials?.config.sessionSecret ?? "a".repeat(43),
         ULVIA_PROVIDER_KEK_HEX: credentials?.config.kekHex ?? "0".repeat(64),
-        ULVIA_REPOSITORY_TOKEN: credentials?.repositoryToken ?? "a".repeat(43),
         ULVIA_PROVIDER_OPERATOR_TOKEN: credentials?.operatorToken ?? "a".repeat(43),
     };
 }

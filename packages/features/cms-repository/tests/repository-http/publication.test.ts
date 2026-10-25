@@ -8,11 +8,17 @@ import {
     InMemoryRepositoryReplayStore,
     parsePublicationUpload,
     RepositoryMutationEndpoint,
-    signRepositoryContentDigest,
-    signRepositoryRequest,
 } from "@bernouy/cms-repository/repository/publication";
 import { createHash } from "node:crypto";
-import { emptySignedRequest, RecordingRegistry, signedRequest, signedRequestWithoutBody } from "./publicationFixtures";
+import {
+    emptySignedRequest,
+    RecordingRegistry,
+    signedRequest,
+    signedRequestWithoutBody,
+    ownerFixture,
+    signOwnerRequest,
+    signOwnerContentDigest,
+} from "./publicationFixtures";
 
 const directories: string[] = [];
 
@@ -39,24 +45,28 @@ test("a shared replay store rejects one signature across endpoint instances", as
     const registry = new RecordingRegistry();
     const replays = new InMemoryRepositoryReplayStore();
     const uploads = new FilesystemRepositoryPublicationUploadStore(root);
-    const token = "a".repeat(32);
+    const { namespaces, credential } = await ownerFixture(root);
     const url = new URL("https://repository.example/v1/publication-uploads");
-    const body = encodePublicationUpload({ kind: "provider-manifest", canonicalJson: "{}", assets: [] });
-    const signed = signRepositoryRequest("POST", url, body, token);
-    const request = () => signedRequest(url, "POST", body, signed);
-    const options = { token, uploads, replays };
+    const body = encodePublicationUpload({
+        kind: "provider-manifest",
+        canonicalJson: '{"provenance":{"publisherId":"publisher"}}',
+        assets: [],
+    });
+    const signed = await signOwnerRequest("POST", url, body, credential);
+    const request = async () => signedRequest(url, "POST", body, signed);
+    const options = { namespaces, uploads, replays };
 
     const first = new RepositoryMutationEndpoint(registry, options);
     const second = new RepositoryMutationEndpoint(registry, options);
-    const created = await first.handle(request());
+    const created = await first.handle(await request());
     expect(created?.status).toBe(200);
-    expect((await second.handle(request()))?.status).toBe(401);
+    expect((await second.handle(await request()))?.status).toBe(401);
     expect(registry.publications).toHaveLength(0);
 
     const uploadId = ((await created!.json()) as { uploadId: string }).uploadId;
     const commitUrl = new URL(`/v1/publication-uploads/${uploadId}`, url);
     const commitBody = new Uint8Array();
-    const commit = signRepositoryRequest("POST", commitUrl, commitBody, token);
+    const commit = await signOwnerRequest("POST", commitUrl, commitBody, credential);
     expect((await first.handle(signedRequest(commitUrl, "POST", commitBody, commit)))?.status).toBe(200);
     expect(registry.publications).toHaveLength(1);
 });
@@ -64,9 +74,9 @@ test("a shared replay store rejects one signature across endpoint instances", as
 test("assets remain invisible until every streamed byte is verified and committed", async () => {
     const root = await temporaryDirectory();
     const registry = new RecordingRegistry();
-    const token = "b".repeat(32);
+    const { namespaces, credential } = await ownerFixture(root);
     const endpoint = new RepositoryMutationEndpoint(registry, {
-        token,
+        namespaces,
         uploads: new FilesystemRepositoryPublicationUploadStore(root),
     });
     const expected = Buffer.from("verified asset");
@@ -74,60 +84,60 @@ test("assets remain invisible until every streamed byte is verified and committe
     const createUrl = new URL("https://repository.example/v1/publication-uploads");
     const manifest = encodePublicationUpload({
         kind: "contract",
-        canonicalJson: "{}",
+        canonicalJson: '{"publisherId":"publisher"}',
         assets: [{ id: "fixture.txt", byteLength: expected.byteLength, digest: `sha256:${digest}` }],
     });
     const created = await endpoint.handle(
-        signedRequest(createUrl, "POST", manifest, signRepositoryRequest("POST", createUrl, manifest, token)),
+        signedRequest(createUrl, "POST", manifest, await signOwnerRequest("POST", createUrl, manifest, credential)),
     );
     const uploadId = ((await created!.json()) as { uploadId: string }).uploadId;
     const commitUrl = new URL(`/v1/publication-uploads/${uploadId}`, createUrl);
 
-    expect((await endpoint.handle(emptySignedRequest(commitUrl, "POST", token)))?.status).toBe(409);
+    expect((await endpoint.handle(await emptySignedRequest(commitUrl, "POST", credential)))?.status).toBe(409);
     expect(registry.publications).toHaveLength(0);
 
     const assetUrl = new URL(`/v1/publication-uploads/${uploadId}/assets/fixture.txt`, createUrl);
     const tampered = Buffer.from("tampered asset");
-    const tamperedSignature = signRepositoryContentDigest("PUT", assetUrl, digest, token);
+    const tamperedSignature = await signOwnerContentDigest("PUT", assetUrl, digest, credential);
     expect((await endpoint.handle(signedRequest(assetUrl, "PUT", tampered, tamperedSignature)))?.status).toBe(409);
     expect(
         (
             await endpoint.handle(
-                signedRequest(assetUrl, "PUT", expected, signRepositoryRequest("PUT", assetUrl, expected, token)),
+                signedRequest(assetUrl, "PUT", expected, await signOwnerRequest("PUT", assetUrl, expected, credential)),
             )
         )?.status,
     ).toBe(204);
 
-    const status = await endpoint.handle(signedRequestWithoutBody(commitUrl, "GET", token));
+    const status = await endpoint.handle(await signedRequestWithoutBody(commitUrl, "GET", credential));
     expect(await status!.json()).toMatchObject({ uploadId, uploadedAssetIds: ["fixture.txt"] });
     const resumed = await endpoint.handle(
-        signedRequest(createUrl, "POST", manifest, signRepositoryRequest("POST", createUrl, manifest, token)),
+        signedRequest(createUrl, "POST", manifest, await signOwnerRequest("POST", createUrl, manifest, credential)),
     );
     expect(await resumed!.json()).toMatchObject({ uploadId, uploadedAssetIds: ["fixture.txt"] });
 
-    expect((await endpoint.handle(emptySignedRequest(commitUrl, "POST", token)))?.status).toBe(200);
+    expect((await endpoint.handle(await emptySignedRequest(commitUrl, "POST", credential)))?.status).toBe(200);
     expect(registry.publications).toHaveLength(1);
     const published = registry.publications[0]!.assets[0]!.bytes;
     expect(published instanceof Blob ? await published.text() : new TextDecoder().decode(published)).toBe(
         "verified asset",
     );
-    expect((await endpoint.handle(emptySignedRequest(commitUrl, "POST", token)))?.status).toBe(200);
+    expect((await endpoint.handle(await emptySignedRequest(commitUrl, "POST", credential)))?.status).toBe(200);
     expect(registry.publications).toHaveLength(1);
 });
 
 test("conformance evidence publication uses the authenticated immutable mutation channel", async () => {
     const root = await temporaryDirectory();
     const registry = new RecordingRegistry();
-    const token = "c".repeat(32);
+    const { namespaces, credential } = await ownerFixture(root);
     const endpoint = new RepositoryMutationEndpoint(registry, {
-        token,
+        namespaces,
         uploads: new FilesystemRepositoryPublicationUploadStore(root),
     });
     const url = new URL("https://repository.example/v1/conformance-evidence");
-    const body = Buffer.from('{"kind":"conformance-evidence"}');
-    const request = () => signedRequest(url, "POST", body, signRepositoryRequest("POST", url, body, token));
+    const body = Buffer.from('{"kind":"conformance-evidence","publisherId":"publisher"}');
+    const request = async () => signedRequest(url, "POST", body, await signOwnerRequest("POST", url, body, credential));
 
-    const response = await endpoint.handle(request());
+    const response = await endpoint.handle(await request());
 
     expect(response?.status).toBe(200);
     expect(registry.evidencePublications).toEqual([body.toString("utf8")]);

@@ -3,7 +3,6 @@ import { readOfficialRepositoryEnv } from "../src/env";
 
 const valid = {
     ULVIA_REPOSITORY_DIR: "/var/lib/ulvia-repository",
-    ULVIA_REPOSITORY_TOKEN: "a".repeat(32),
 };
 
 describe("official repository environment", () => {
@@ -13,7 +12,6 @@ describe("official repository environment", () => {
             port: 3000,
             publicUrl: "http://127.0.0.1:3000",
             root: "/var/lib/ulvia-repository",
-            token: valid.ULVIA_REPOSITORY_TOKEN,
             shutdownTimeoutMs: 10_000,
         });
         expect(
@@ -21,11 +19,10 @@ describe("official repository environment", () => {
         ).toBe("/opt/ulvia-repository-seed");
     });
 
-    test("rejects relative storage, weak tokens and invalid listen values", () => {
+    test("rejects relative storage and invalid listen values", () => {
         expect(() => readOfficialRepositoryEnv({ ...valid, ULVIA_REPOSITORY_DIR: "repository" })).toThrow(
             "absolute path",
         );
-        expect(() => readOfficialRepositoryEnv({ ...valid, ULVIA_REPOSITORY_TOKEN: "short" })).toThrow("32 to 1024");
         expect(() => readOfficialRepositoryEnv({ ...valid, REPOSITORY_PORT: "0" })).toThrow("between 1 and 65535");
         expect(() => readOfficialRepositoryEnv({ ...valid, REPOSITORY_HOST: "https://repository" })).toThrow(
             "hostname or IP",

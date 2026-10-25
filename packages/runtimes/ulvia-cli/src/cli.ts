@@ -1,3 +1,5 @@
+import { clientConfigDirectory, readClientConfig } from "./runtime/repository/config";
+import { identityCommand } from "./commands/namespace/identity";
 import { localCommand } from "./commands/local";
 import { pruneCommand } from "./commands/prune";
 import { releaseCommand } from "./commands/release";
@@ -15,8 +17,10 @@ Usage:
   ulvia configure network [network options]
   ulvia services start [--version <version>]
   ulvia services <stop | status | logs>
-  ulvia repository <start | stop | status | upgrade> <name> [--version <version>] [--port <port>]
-  ulvia namespace <keygen | claim | status | rotate | revoke> [options]
+  ulvia repository login <url> [--identity <name>]
+  ulvia repository <start | stop | status | upgrade | configure> [options]
+  ulvia identity <create | import | use | list | public-key> [options]
+  ulvia namespace <claim | status | rotate | revoke> [options]
   ulvia instance create <name> [--label <label>] [--domain <domain>]
   ulvia instance <start | stop | status | credentials | logs> <name>
   ulvia instance list
@@ -35,6 +39,7 @@ Commands:
   configure    Configure persistent network exposure and TLS before creating instances
   services     Manage the shared proxy, MongoDB, Repository, and Provider
   repository   Manage an independent Repository deployment
+  identity     Manage persistent local signing identities
   namespace    Manage cryptographic Repository namespace ownership
   instance     Create and manage independent Kernel instances
   upgrade      Pull and install one exact official Docker image version
@@ -52,8 +57,7 @@ Environment:
   ULVIA_REPOSITORY_PORT     Initial collection repository port
   ULVIA_PROVIDER_PORT       Initial Provider management port
   ULVIA_REPOSITORY_URL      Default remote repository URL
-  ULVIA_REPOSITORY_TOKEN    Remote repository write token
-  ULVIA_REPOSITORY_PRIVATE_KEY_FILE  Owner signing key (private local file)
+  ULVIA_CONFIG_DIR          Absolute client configuration directory override
   ULVIA_LOG_LEVEL           Runtime log threshold (trace through fatal)
   ULVIA_LOG_CONSOLE_LEVEL   Local terminal threshold (trace through fatal)
   ULVIA_LOG_FORMAT          Runtime terminal format (pretty or json)
@@ -78,22 +82,41 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         return;
     }
     if (
-        ![...LOCAL_COMMANDS, "repository", "namespace", "release", "push", "pull", "yank", "restore", "prune"].includes(
-            command,
-        )
+        ![
+            ...LOCAL_COMMANDS,
+            "repository",
+            "namespace",
+            "identity",
+            "release",
+            "push",
+            "pull",
+            "yank",
+            "restore",
+            "prune",
+        ].includes(command)
     ) {
         throw new Error(`Unknown command: ${command}`);
     }
-    const environment = options.environment ?? process.env;
+    const environment = { ...(options.environment ?? process.env) };
+    environment.ULVIA_CONFIG_DIR = clientConfigDirectory(environment, options.home);
     const cwd = options.cwd ?? process.cwd();
     const paths = resolveUlviaPaths(environment, options.home);
     await ensureUlviaPaths(paths);
+    if (command === "identity") {
+        await identityCommand(args.slice(1), environment.ULVIA_CONFIG_DIR, cwd, log);
+        return;
+    }
+    if (["namespace", "push", "pull", "yank", "restore"].includes(command)) {
+        environment.ULVIA_REPOSITORY_URL =
+            environment.ULVIA_REPOSITORY_URL?.trim() ||
+            (await readClientConfig(environment.ULVIA_CONFIG_DIR)).repository?.url;
+    }
     if (command === "namespace") {
-        await namespaceCommand(args.slice(1), environment, cwd, log);
+        await namespaceCommand(args.slice(1), environment, log);
         return;
     }
     if (command === "repository") {
-        await standaloneRepositoryCommand(args.slice(1), paths, log);
+        await standaloneRepositoryCommand(args.slice(1), paths, log, environment);
         return;
     }
     if (LOCAL_COMMANDS.has(command)) {

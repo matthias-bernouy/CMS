@@ -19,7 +19,6 @@ export type OfficialRepositoryApplication = Readonly<{
 
 export async function createOfficialRepositoryApplication(
     root: string,
-    token: string,
     publicUrl = "http://127.0.0.1:3000",
 ): Promise<OfficialRepositoryApplication> {
     const index = new FilesystemRepositoryCatalogueIndex(root);
@@ -42,7 +41,6 @@ export async function createOfficialRepositoryApplication(
         publicUrl,
     );
     const mutations = new RepositoryMutationEndpoint(registry, {
-        token,
         uploads,
         replays: new FilesystemRepositoryReplayStore(root),
         namespaces,

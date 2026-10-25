@@ -13,7 +13,6 @@ export class RepositoryNamespaceAuthority {
     constructor(
         readonly repositoryId: string,
         private readonly store: RepositoryNamespaceStore,
-        private readonly reserved: (namespace: string) => Promise<boolean> = async () => false,
     ) {
         if (!/^[A-Za-z0-9._:-]{1,128}$/u.test(repositoryId)) {
             throw new RepositoryRequestError("REJECTED", "Invalid repository identity");
@@ -28,13 +27,6 @@ export class RepositoryNamespaceAuthority {
         return this.store.get(namespace, revision);
     }
 
-    async assertOperatorNamespace(namespace: string): Promise<void> {
-        assertRepositoryNamespace(namespace);
-        if ((await this.store.get(namespace)) || !(await this.reserved(namespace))) {
-            throw new RepositoryRequestError("REJECTED", "Operator credentials cannot write a community namespace");
-        }
-    }
-
     async claim(namespace: string, publicKey: string, supplied: unknown): Promise<RepositoryNamespace> {
         assertRepositoryNamespace(namespace);
         namespacePublicKey(publicKey);
@@ -47,8 +39,8 @@ export class RepositoryNamespaceAuthority {
             if (current?.revision === 1 && current.publicKey === publicKey && !current.revoked) {
                 return current;
             }
-            if (current || proof.revision !== 0 || (await this.reserved(namespace))) {
-                throw new RepositoryRequestError("REJECTED", "Repository namespace is already owned or reserved");
+            if (current || proof.revision !== 0) {
+                throw new RepositoryRequestError("REJECTED", "Repository namespace is already owned");
             }
             const next = state(namespace, 1, publicKey, "claim", null);
             await save(next);

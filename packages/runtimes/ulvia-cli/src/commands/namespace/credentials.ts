@@ -1,41 +1,29 @@
-import { constants } from "node:fs";
-import { open } from "node:fs/promises";
 import {
     RepositoryNamespaceClient,
-    type RepositoryWriteCredential,
+    type RepositoryOwnerCredential,
 } from "@bernouy/cms-repository/repository/namespaces";
-
-export async function readNamespacePrivateKey(path: string): Promise<string> {
-    const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
-    try {
-        const metadata = await handle.stat();
-        if (!metadata.isFile() || metadata.size > 4_096 || (metadata.mode & 0o077) !== 0) {
-            throw new Error("Namespace private key must be a private regular file of at most 4096 bytes");
-        }
-        return await handle.readFile("utf8");
-    } finally {
-        await handle.close();
-    }
-}
+import { clientConfigDirectory } from "../../runtime/repository/config";
+import { assertSavedRepository } from "../../runtime/repository/connection";
+import { selectIdentity } from "../../runtime/repository/identities";
+import { readNamespacePrivateKey } from "../../runtime/repository/keys";
 
 export async function remoteRepositoryCredential(
     url: string,
     namespace: string,
     environment: Record<string, string | undefined>,
-): Promise<RepositoryWriteCredential | undefined> {
-    const path = environment.ULVIA_REPOSITORY_PRIVATE_KEY_FILE?.trim();
-    if (!path) {
-        return environment.ULVIA_REPOSITORY_TOKEN?.trim();
-    }
+): Promise<RepositoryOwnerCredential> {
     const client = new RepositoryNamespaceClient(url);
     const [repositoryId, state] = await Promise.all([client.identity(), client.get(namespace)]);
+    const directory = clientConfigDirectory(environment);
+    await assertSavedRepository(directory, url, repositoryId);
     if (!state || state.revoked) {
         throw new Error("Repository namespace is unavailable or revoked");
     }
+    const { keyFile } = await selectIdentity(directory, undefined, state.publicKey);
     return {
         namespace,
         repositoryId,
         revision: state.revision,
-        resolvePrivateKey: () => readNamespacePrivateKey(path),
+        resolvePrivateKey: () => readNamespacePrivateKey(keyFile),
     };
 }

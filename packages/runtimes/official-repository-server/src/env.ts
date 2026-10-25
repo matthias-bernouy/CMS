@@ -7,7 +7,6 @@ export type OfficialRepositoryEnv = Readonly<{
     publicUrl: string;
     root: string;
     seedRoot?: string;
-    token: string;
     shutdownTimeoutMs: number;
 }>;
 
@@ -15,10 +14,6 @@ export function readOfficialRepositoryEnv(source: Record<string, string | undefi
     const root = required(source, "ULVIA_REPOSITORY_DIR");
     if (!isAbsolute(root)) {
         throw new Error("ULVIA_REPOSITORY_DIR must be an absolute path");
-    }
-    const token = required(source, "ULVIA_REPOSITORY_TOKEN");
-    if (token.length < 32 || token.length > 1_024 || /\s/u.test(token)) {
-        throw new Error("ULVIA_REPOSITORY_TOKEN must contain 32 to 1024 non-whitespace characters");
     }
     const host = source.REPOSITORY_HOST?.trim() || "0.0.0.0";
     if (!validHost(host)) {
@@ -35,7 +30,6 @@ export function readOfficialRepositoryEnv(source: Record<string, string | undefi
         publicUrl: publicOrigin(source.REPOSITORY_PUBLIC_URL ?? `http://127.0.0.1:${port}`),
         root,
         ...(seedRoot ? { seedRoot } : {}),
-        token,
         shutdownTimeoutMs: integer(
             source.REPOSITORY_SHUTDOWN_TIMEOUT_MS,
             "REPOSITORY_SHUTDOWN_TIMEOUT_MS",

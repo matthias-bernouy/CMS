@@ -9,10 +9,9 @@ services:
             NODE_ENV: production
             REPOSITORY_HOST: 0.0.0.0
             REPOSITORY_PORT: "3000"
-            REPOSITORY_PUBLIC_URL: http://127.0.0.1:${ULVIA_REPOSITORY_PORT}
+            REPOSITORY_PUBLIC_URL: ${ULVIA_REPOSITORY_PUBLIC_URL}
             ULVIA_REPOSITORY_DIR: /var/lib/ulvia-repository
             ULVIA_REPOSITORY_SEED_DIR: ""
-            ULVIA_REPOSITORY_TOKEN: ${ULVIA_REPOSITORY_TOKEN}
         volumes:
             - type: bind
               source: ${ULVIA_REPOSITORY_DIR}

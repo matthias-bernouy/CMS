@@ -4,9 +4,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
-import { startLocalRepository } from "../../src/runtime/repository";
+import { startTestRepository } from "./fixture";
 import { prepareContractSource } from "../../src/release/authored/contract";
-import { NOOP_LOGGER } from "@bernouy/logging";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 
@@ -14,8 +13,7 @@ test("CLI push and pull preserve every official artifact kind through a remote r
     const sourceData = await mkdtemp(join(tmpdir(), "ulvia-push-source-"));
     const targetData = await mkdtemp(join(tmpdir(), "ulvia-pull-target-"));
     const remoteRoot = await mkdtemp(join(tmpdir(), "ulvia-push-target-"));
-    const token = "b".repeat(43);
-    const server = startLocalRepository(0, remoteRoot, NOOP_LOGGER, token);
+    const server = startTestRepository(remoteRoot);
     const repositoryRoot = resolve(import.meta.dir, "../../../../official-repository");
     const providerDirectory = join(repositoryRoot, "providers", "ulvia.official");
     const providerDefinition = (await Bun.file(join(providerDirectory, "definition.json")).json()) as {
@@ -25,23 +23,23 @@ test("CLI push and pull preserve every official artifact kind through a remote r
         repositoryRoot,
         providerDefinition.implementations.map(({ contractId }) => contractId),
     );
-    const environment = (data: string, writable: boolean) => ({
+    const environment = (data: string) => ({
         ULVIA_DATA_DIR: data,
         ULVIA_REPOSITORY_URL: server.url,
-        ...(writable ? { ULVIA_REPOSITORY_TOKEN: token } : {}),
     });
     try {
+        await server.connect(sourceData);
         for (const contractId of contractIds) {
             const directory = join(repositoryRoot, "contracts", contractId);
             const definition = (await Bun.file(join(directory, "definition.json")).json()) as { version: string };
             const coordinate = `ulvia.official/${contractId}@${definition.version}`;
-            await runCli(["release", directory], { environment: environment(sourceData, false), log: () => undefined });
+            await runCli(["release", directory], { environment: environment(sourceData), log: () => undefined });
             await runCli(["push", "contract", coordinate], {
-                environment: environment(sourceData, true),
+                environment: environment(sourceData),
                 log: () => undefined,
             });
             await runCli(["pull", "contract", coordinate], {
-                environment: environment(targetData, false),
+                environment: environment(targetData),
                 log: () => undefined,
             });
         }
@@ -49,21 +47,21 @@ test("CLI push and pull preserve every official artifact kind through a remote r
         const providerVersion = await definitionVersion(providerDirectory);
         const providerCoordinate = `ulvia.official/ulvia.official@${providerVersion}`;
         await runCli(["release", providerDirectory], {
-            environment: environment(sourceData, false),
+            environment: environment(sourceData),
             log: () => undefined,
         });
         await runCli(["push", "provider", providerCoordinate], {
-            environment: environment(sourceData, true),
+            environment: environment(sourceData),
             log: () => undefined,
         });
         await runCli(["pull", "provider", providerCoordinate], {
-            environment: environment(targetData, false),
+            environment: environment(targetData),
             log: () => undefined,
         });
         const accessVersion = await definitionVersion(join(repositoryRoot, "contracts", "ulvia.cms.access"));
         const accessCoordinate = `ulvia.official/ulvia.cms.access@${accessVersion}`;
         await runCli(["yank", "contract", accessCoordinate, "--reason", "Temporarily unavailable"], {
-            environment: environment(sourceData, true),
+            environment: environment(sourceData),
             log: () => undefined,
         });
         expect(
@@ -73,7 +71,7 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             (await fetch(`${server.url}/v1/contracts/ulvia.official/ulvia.cms.access/${accessVersion}`)).status,
         ).toBe(200);
         await runCli(["restore", "contract", accessCoordinate], {
-            environment: environment(sourceData, true),
+            environment: environment(sourceData),
             log: () => undefined,
         });
 
@@ -81,15 +79,15 @@ test("CLI push and pull preserve every official artifact kind through a remote r
         const collectionVersion = await definitionVersion(collectionDirectory);
         const collectionCoordinate = `ulvia.official/ulvia-official@${collectionVersion}`;
         await runCli(["release", collectionDirectory], {
-            environment: environment(sourceData, false),
+            environment: environment(sourceData),
             log: () => undefined,
         });
         await runCli(["push", "collection", collectionCoordinate], {
-            environment: environment(sourceData, true),
+            environment: environment(sourceData),
             log: () => undefined,
         });
         await runCli(["pull", "collection", collectionCoordinate], {
-            environment: environment(targetData, false),
+            environment: environment(targetData),
             log: () => undefined,
         });
 
@@ -100,14 +98,14 @@ test("CLI push and pull preserve every official artifact kind through a remote r
         expect(await new LocalCollectionRepository(join(targetData, "repository")).list()).toHaveLength(1);
 
         await runCli(["yank", "collection", collectionCoordinate, "--reason", "Superseded"], {
-            environment: environment(sourceData, true),
+            environment: environment(sourceData),
             log: () => undefined,
         });
         expect(
             ((await (await fetch(`${server.url}/v1/collections`)).json()) as { releases: unknown[] }).releases,
         ).toEqual([]);
         await runCli(["restore", "collection", collectionCoordinate], {
-            environment: environment(sourceData, true),
+            environment: environment(sourceData),
             log: () => undefined,
         });
         expect(

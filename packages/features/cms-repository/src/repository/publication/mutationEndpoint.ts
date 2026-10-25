@@ -1,4 +1,3 @@
-import { verifyRepositoryRequestHeaders } from "./auth";
 import { createHash } from "node:crypto";
 import {
     MAX_PUBLICATION_METADATA_BYTES,
@@ -17,7 +16,6 @@ const UPLOAD_TTL_MS = 60 * 60 * 1_000;
 const MAX_CONFORMANCE_EVIDENCE_BYTES = 8 * 1024 * 1024;
 
 export type RepositoryMutationOptions = Readonly<{
-    token?: string;
     uploads?: RepositoryPublicationUploadStore;
     replays?: RepositoryReplayStore;
     namespaces?: RepositoryNamespaceAuthority;
@@ -25,7 +23,6 @@ export type RepositoryMutationOptions = Readonly<{
 
 /** Authenticated mutation transport. Publication bytes are staged before one atomic registry commit. */
 export class RepositoryMutationEndpoint {
-    private readonly token?: string;
     private readonly uploads?: RepositoryPublicationUploadStore;
     private readonly replays: RepositoryReplayStore;
     private readonly namespaces?: RepositoryNamespaceAuthority;
@@ -34,11 +31,10 @@ export class RepositoryMutationEndpoint {
         private readonly registry: RepositoryPublicationRegistry,
         options: RepositoryMutationOptions = {},
     ) {
-        this.token = options.token;
         this.uploads = options.uploads;
         this.replays = options.replays ?? new InMemoryRepositoryReplayStore();
         this.namespaces = options.namespaces;
-        if ((this.token || this.namespaces) && !this.uploads) {
+        if (this.namespaces && !this.uploads) {
             throw new Error("Writable repository mutations require a publication upload store");
         }
     }
@@ -61,7 +57,7 @@ export class RepositoryMutationEndpoint {
             return this.withBytes(request, MAX_PUBLICATION_METADATA_BYTES, async (bytes) => {
                 const manifest = parsePublicationUpload(bytes);
                 if (this.namespaces) {
-                    await assertPublicationOwner(this.namespaces, request, manifestPublisher(manifest));
+                    await assertPublicationOwner(request, manifestPublisher(manifest));
                 }
                 return this.uploads!.create(manifest, new Date(Date.now() + UPLOAD_TTL_MS));
             });
@@ -70,11 +66,7 @@ export class RepositoryMutationEndpoint {
             return this.withBytes(request, MAX_CONFORMANCE_EVIDENCE_BYTES, async (bytes) => {
                 const canonicalJson = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
                 if (this.namespaces) {
-                    await assertPublicationOwner(
-                        this.namespaces,
-                        request,
-                        manifestPublisher({ kind: "contract", canonicalJson }),
-                    );
+                    await assertPublicationOwner(request, manifestPublisher({ kind: "contract", canonicalJson }));
                 }
                 return this.registry.publishEvidence(canonicalJson);
             });
@@ -100,9 +92,9 @@ export class RepositoryMutationEndpoint {
         if (request.method === "PUT" && url.pathname.startsWith("/v1/yanks/")) {
             return this.withBytes(request, 2_048, async (bytes) => {
                 const coordinate = parseYankCoordinate(url.pathname);
-                await assertPublicationOwner(this.namespaces, request, coordinate.publisherId);
+                await assertPublicationOwner(request, coordinate.publisherId);
                 const revision = parseYankRevision(bytes);
-                if (ownerProofFromRequest(request) && revision === undefined) {
+                if (revision === undefined) {
                     throw new Error("Owner publication metadata writes require an expected revision");
                 }
                 return this.registry.setYank(coordinate, parseYank(bytes), revision);
@@ -130,11 +122,7 @@ export class RepositoryMutationEndpoint {
     ): Promise<Response> {
         return this.authorized(request, async (verified) => {
             if (this.namespaces) {
-                await assertPublicationOwner(
-                    this.namespaces,
-                    request,
-                    manifestPublisher(await this.uploads!.describe(uploadId)),
-                );
+                await assertPublicationOwner(request, manifestPublisher(await this.uploads!.describe(uploadId)));
             }
             return operation(verified);
         });
@@ -164,26 +152,21 @@ export class RepositoryMutationEndpoint {
         request: Request,
         mutation: (verified: { contentDigest: `sha256:${string}` }) => Promise<unknown>,
     ): Promise<Response> {
-        if (!this.token && !this.namespaces) {
+        if (!this.namespaces) {
             return response(405, "repository_read_only", "Repository mutations are disabled");
         }
         try {
             const proof = ownerProofFromRequest(request);
-            const verified =
-                proof && this.namespaces
-                    ? {
-                          replayKey: `sha256=${createHash("sha256").update(`ed25519:${proof.signature}`).digest("hex")}`,
-                          contentDigest: proof.digest as `sha256:${string}`,
-                      }
-                    : this.token
-                      ? verifyRepositoryRequestHeaders(request, this.token)
-                      : null;
-            if (!verified) {
+            if (!proof) {
                 return response(401, "invalid_signature", "Repository request authentication failed");
             }
+            const verified = {
+                replayKey: `sha256=${createHash("sha256").update(`ed25519:${proof.signature}`).digest("hex")}`,
+                contentDigest: proof.digest as `sha256:${string}`,
+            };
             const url = new URL(request.url);
             const execute = async () => {
-                const signedAt = proof?.timestamp ?? Number(request.headers.get("x-ulvia-timestamp"));
+                const signedAt = proof.timestamp;
                 if (!(await this.replays.claim(verified.replayKey, new Date(signedAt + SIGNATURE_TTL_MS + 1)))) {
                     throw new RepositoryMutationError(
                         401,
@@ -193,17 +176,14 @@ export class RepositoryMutationEndpoint {
                 }
                 return mutation(verified);
             };
-            const result =
-                proof && this.namespaces
-                    ? await this.namespaces.execute(
-                          proof.namespace,
-                          `http:${request.method}`,
-                          `${url.pathname}${url.search}`,
-                          proof.digest,
-                          proof,
-                          execute,
-                      )
-                    : await execute();
+            const result = await this.namespaces.execute(
+                proof.namespace,
+                `http:${request.method}`,
+                `${url.pathname}${url.search}`,
+                proof.digest,
+                proof,
+                execute,
+            );
             return result === null ? new Response(null, { status: 204 }) : Response.json(result, { status: 200 });
         } catch (error) {
             if (error instanceof RepositoryMutationError) {

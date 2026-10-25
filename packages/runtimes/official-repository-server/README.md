@@ -18,12 +18,15 @@ and production storage as separate concerns.
 | Variable | Required | Meaning |
 | --- | --- | --- |
 | `ULVIA_REPOSITORY_DIR` | yes | Absolute persistent data directory |
-| `ULVIA_REPOSITORY_TOKEN` | yes | 32–1024 character operator secret for reserved/legacy publishers; never share it with namespace authors |
 | `ULVIA_REPOSITORY_SEED_DIR` | no | Read-only admitted repository snapshot copied when persistent storage is absent or empty |
 | `REPOSITORY_HOST` | no | Listen address, default `0.0.0.0` |
 | `REPOSITORY_PORT` | no | Listen port, default `3000` |
 | `REPOSITORY_PUBLIC_URL` | no | Public HTTPS origin for MCP resource links; defaults to loopback HTTP at the listen port |
 | `REPOSITORY_SHUTDOWN_TIMEOUT_MS` | no | Graceful-stop bound, default `10000`, maximum `60000` |
+
+The production runtime requires no operator token. Every namespace, including
+`ulvia.official`, uses public first claim followed by owner-signed publication.
+Claim intended official publishers locally before exposing the Repository. There is no operator recovery after private-key loss.
 
 TLS must terminate at a trusted reverse proxy or load balancer. Do not expose
 plain HTTP outside the private deployment network. Configure the proxy to allow

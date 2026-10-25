@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { open, readFile, rename, rm, stat } from "node:fs/promises";
+import { open, readFile, rename, rm } from "node:fs/promises";
 import { join } from "node:path";
 import {
     FilesystemRepositoryNamespaceStore,
@@ -44,19 +44,5 @@ export async function createNamespaceAuthority(root: string): Promise<Repository
         }
         return identity;
     });
-    return new RepositoryNamespaceAuthority(
-        repositoryId,
-        new FilesystemRepositoryNamespaceStore(root),
-        async (namespace) => {
-            if (namespace === "ulvia" || namespace.startsWith("ulvia.")) {
-                return true;
-            }
-            for (const directory of ["releases", "contracts", "providers"]) {
-                if (await stat(join(root, directory, namespace)).catch(() => null)) {
-                    return true;
-                }
-            }
-            return false;
-        },
-    );
+    return new RepositoryNamespaceAuthority(repositoryId, new FilesystemRepositoryNamespaceStore(root));
 }

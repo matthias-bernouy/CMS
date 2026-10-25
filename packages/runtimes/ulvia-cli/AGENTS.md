@@ -54,17 +54,21 @@ Ulvia CMS installation runtime.
   Re-admit remote bytes locally and let the receiving repository re-run all
   publication and evolution rules. Never trust a remote digest without
   recomputing it.
-- Repository writes use a bearer token plus a timestamped, nonce-bound
-  HMAC-SHA-256 request signature. Keep tokens in environment or private runtime
-  files, never command arguments. Push metadata first, stream one separately
-  signed raw asset at a time, and finish with an idempotent commit. Keep write
-  serialization, durable replay rejection, abandoned-session cleanup and
-  artifact-last atomic visibility intact.
-- Community writes use Ed25519 owner credentials instead of the operator token.
+- Repository writes use Ed25519 namespace owner credentials, including official
+  publishers. Persist local identities and the active Repository connection;
+  configuration contains public keys and private file references only. Push
+  metadata first, stream separately signed assets and finish with an idempotent
+  commit. Preserve write serialization, durable replay rejection, abandoned-session
+  cleanup and artifact-last atomic visibility. Ed25519 owner proofs are the only
+  publication authentication; never reintroduce operator-token/HMAC support.
   Namespace key files are private, bounded regular files, opened without following
   symlinks. Never expose private keys to the Repository or tool arguments.
-- `repository` lifecycle commands manage independent named Repository containers
-  and pinned published images. Keep their volumes separate from shared services.
+- `repository` lifecycle commands manage one default Repository deployment and
+  pinned published images without a deployment name. Keep their volumes separate
+  from shared services. Do not support historical states or named deployments.
+  Deployment network configuration is independent of local client identities.
+  All namespaces, including official publishers, use public first claim.
+  Never replace ownership or recover revoked/lost keys during startup.
 - A yank is reversible repository metadata. It removes a release from new
   catalogue resolution without deleting immutable bytes or breaking historical
   exact-coordinate reads.

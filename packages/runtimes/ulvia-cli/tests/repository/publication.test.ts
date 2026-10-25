@@ -4,14 +4,12 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
-import { startLocalRepository } from "../../src/runtime/repository";
-import { NOOP_LOGGER } from "@bernouy/logging";
+import { startTestRepository } from "./fixture";
 
 test("remote publication is signed, immutable, atomic, and reversibly yankable", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-publication-source-"));
     const remoteRoot = await mkdtemp(join(tmpdir(), "ulvia-publication-target-"));
-    const token = "a".repeat(43);
-    const server = startLocalRepository(0, remoteRoot, NOOP_LOGGER, token);
+    const server = startTestRepository(remoteRoot);
     const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.cms.installations");
     try {
         await runCli(["release", source], { environment: { ULVIA_DATA_DIR: data }, log: () => undefined });
@@ -30,8 +28,10 @@ test("remote publication is signed, immutable, atomic, and reversibly yankable",
         );
         const canonicalJson = await readFile(path, "utf8");
         const envelope = { kind: "contract" as const, canonicalJson, assets: [] };
-        await expect(new RemoteRepositoryClient(server.url).push(envelope)).rejects.toThrow("ULVIA_REPOSITORY_TOKEN");
-        const client = new RemoteRepositoryClient(server.url, token);
+        await expect(new RemoteRepositoryClient(server.url).push(envelope)).rejects.toThrow(
+            "namespace owner credential",
+        );
+        const client = new RemoteRepositoryClient(server.url, await server.claim());
         expect(await client.push(envelope)).toMatchObject({ added: true });
         expect(await client.push(envelope)).toMatchObject({ added: false });
 

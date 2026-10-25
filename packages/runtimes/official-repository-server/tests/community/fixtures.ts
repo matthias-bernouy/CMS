@@ -22,7 +22,7 @@ export async function communityFixture(publicUrl?: string) {
     const root = await mkdtemp(join(tmpdir(), "community-repository-"));
     let application: Awaited<ReturnType<typeof createOfficialRepositoryApplication>>;
     const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: (request) => application.handle(request) });
-    application = await createOfficialRepositoryApplication(root, "o".repeat(32), publicUrl ?? server.url.origin);
+    application = await createOfficialRepositoryApplication(root, publicUrl ?? server.url.origin);
     const base = server.url.href;
     const key = keyPair();
     const client = new RepositoryNamespaceClient(base);

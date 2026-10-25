@@ -1,8 +1,4 @@
-import {
-    loadOrCreateLocalServicesConfig,
-    loadOrCreateProviderOperatorToken,
-    loadOrCreateRepositoryToken,
-} from "../../config";
+import { loadOrCreateLocalServicesConfig, loadOrCreateProviderOperatorToken } from "../../config";
 import type { UlviaPaths } from "../../paths";
 import type { InstallationConfig } from "../installation";
 import { defaultStackVersion } from "../version";
@@ -141,7 +137,6 @@ function serviceProject(
 async function serviceCredentials(paths: UlviaPaths) {
     return {
         config: await loadOrCreateLocalServicesConfig(paths.services),
-        repositoryToken: await loadOrCreateRepositoryToken(paths.services),
         operatorToken: await loadOrCreateProviderOperatorToken(paths.services),
     };
 }

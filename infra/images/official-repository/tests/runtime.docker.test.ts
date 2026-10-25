@@ -10,30 +10,29 @@ const image = process.env.ULVIA_REPOSITORY_DOCKER_IMAGE;
 test.skipIf(!image)(
     "real image preserves ownership, owner publication and MCP across graceful and abrupt restart",
     async () => {
+        const keys = generateKeyPairSync("ed25519");
+        const publicKey = keys.publicKey.export({ type: "spki", format: "der" }).toString("base64url");
         const container = await repositoryContainer(image!);
         try {
             await container.start();
             let base = await container.ready();
-            const keys = generateKeyPairSync("ed25519");
             const namespace = new RepositoryNamespaceClient(base);
             const repositoryId = await namespace.identity();
             const credential = {
-                namespace: "claim",
+                namespace: "ulvia.official",
                 repositoryId,
                 revision: 0,
                 resolvePrivateKey: async () => keys.privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
             };
-            await namespace.claim(
-                credential,
-                keys.publicKey.export({ type: "spki", format: "der" }).toString("base64url"),
-            );
+            await namespace.claim(credential, publicKey);
+            await namespace.claim({ ...credential, namespace: "claim", revision: 0 }, publicKey);
             const canonicalJson = JSON.stringify({
                 kind: "contract",
                 protocol: "ulvia-provider/v1",
                 schemaDialect: "ulvia-schema/v1",
                 contractId: "docker.example",
                 version: "1.0.0",
-                publisherId: "claim",
+                publisherId: "ulvia.official",
                 name: "Docker contract",
                 capabilities: [
                     {
@@ -80,7 +79,7 @@ test.skipIf(!image)(
             expect(tools.every((tool) => tool.outputSchema.type === "object")).toBe(true);
             const coordinate = {
                 kind: "contract" as const,
-                publisherId: "claim",
+                publisherId: "ulvia.official",
                 id: "docker.example",
                 version: "1.0.0",
             };
@@ -89,7 +88,7 @@ test.skipIf(!image)(
                 arguments: { input: coordinate },
             });
             expect(resource.result.structuredContent.output.uri).toBe(
-                "https://repository.example/v1/contracts/claim/docker.example/1.0.0",
+                "https://repository.example/v1/contracts/ulvia.official/docker.example/1.0.0",
             );
             const missing = await fetch(`${base}v1/releases/contract/claim/missing/1.0.0`, { method: "HEAD" });
             expect(missing.status).toBe(404);
@@ -117,7 +116,7 @@ test.skipIf(!image)(
                 expect(await pid()).toBe(originalPid);
                 const restarted = new RepositoryNamespaceClient(base);
                 expect(await restarted.identity()).toBe(repositoryId);
-                expect((await restarted.get("claim"))?.revision).toBe(1);
+                expect((await restarted.get("ulvia.official"))?.revision).toBe(1);
                 expect((await new RemoteRepositoryClient(base).pull(coordinate)).expectedDigest).toBe(published.digest);
             }
         } finally {

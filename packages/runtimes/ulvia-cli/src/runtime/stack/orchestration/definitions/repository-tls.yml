@@ -1,0 +1,38 @@
+services:
+    repository:
+        environment:
+            VIRTUAL_HOST: ${ULVIA_REPOSITORY_DOMAIN}
+            VIRTUAL_PORT: "3000"
+            LETSENCRYPT_HOST: ${ULVIA_REPOSITORY_DOMAIN}
+    proxy:
+        image: nginxproxy/nginx-proxy:1.11.5@sha256:e06db5fb9586234e9c2bdef707c8b8d784caa4fb49fbe7285eb3730a501c3eaa
+        restart: unless-stopped
+        ports:
+            - "0.0.0.0:80:80"
+            - "0.0.0.0:443:443"
+        volumes:
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+            - ./nginx/client_max_body.conf:/etc/nginx/conf.d/zzz_client_max_body.conf:ro
+            - ./nginx/query_safe_access_log.conf:/etc/nginx/conf.d/zzz_query_safe_access_log.conf:ro
+            - ${ULVIA_REPOSITORY_PROXY_DIR}/certificates:/etc/nginx/certs
+            - ${ULVIA_REPOSITORY_PROXY_DIR}/virtual-hosts:/etc/nginx/vhost.d
+            - ${ULVIA_REPOSITORY_PROXY_DIR}/challenge:/usr/share/nginx/html
+        healthcheck:
+            test: ["CMD", "nginx", "-t"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 5s
+    acme:
+        image: nginxproxy/acme-companion:2.8.1@sha256:ccfceb9798b9f6586d47eeeadbb8e185c8897b34e011a2739a9b82d5e92a8b6c
+        restart: unless-stopped
+        depends_on:
+            proxy:
+                condition: service_healthy
+        volumes_from:
+            - proxy
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ${ULVIA_REPOSITORY_PROXY_DIR}/acme:/etc/acme.sh
+        environment:
+            DEFAULT_EMAIL: ${ULVIA_ACME_EMAIL}

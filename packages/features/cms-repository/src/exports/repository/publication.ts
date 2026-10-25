@@ -1,13 +1,4 @@
 export {
-    matchesRepositoryToken,
-    signRepositoryContentDigest,
-    signRepositoryRequest,
-    verifyRepositoryRequest,
-    verifyRepositoryRequestHeaders,
-    type RepositorySignature,
-    type VerifiedRepositorySignature,
-} from "cms-repository/repository/publication/auth";
-export {
     RemoteRepositoryClient,
     type RepositoryAssetDownloadSink,
 } from "cms-repository/repository/publication/client";

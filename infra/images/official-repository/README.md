@@ -7,8 +7,9 @@ bun run images:build --version 0.0.1-beta repository
 bun run images:publish --version 0.0.1-beta repository
 ```
 
-Mount a persistent volume at `/var/lib/ulvia-repository` and inject
-`ULVIA_REPOSITORY_TOKEN` through the deployment secret manager. Run one active
+Mount a persistent volume at `/var/lib/ulvia-repository`. No operator token or
+private key belongs in the container. All namespaces use public first claim;
+claim official names locally before exposing a new Repository. Run one active
 replica and terminate HTTPS before the container. `/healthz` is the liveness
 endpoint and `/readyz` is the readiness endpoint.
 

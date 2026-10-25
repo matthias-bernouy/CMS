@@ -1,27 +1,24 @@
-import { createHash } from "node:crypto";
-import { mkdir } from "node:fs/promises";
+import { repositoryProject } from "./project";
+import { defaultRepositoryConfig, readRepositoryConfig, saveRepositoryConfig } from "./config";
 import { join } from "node:path";
 import { withRepositoryWriteLock } from "@bernouy/cms-repository/repository/filesystem";
-import { loadOrCreateRepositoryToken } from "../../config";
-import { assertLocalInstanceName, type UlviaPaths } from "../../paths";
-import { composeStop, composeUp, inspectComposeServices, type ComposeProject } from "../orchestration/compose";
-import { ensureOfficialImage, pinnedOfficialImageReference, pullOfficialImage } from "../orchestration/images";
-import { DEFAULT_STACK_VERSION } from "../version";
+import { type UlviaPaths } from "../../paths";
+import { composeStop, composeUp, inspectComposeServices } from "../orchestration/compose";
+import { ensureOfficialImage, pullOfficialImage } from "../orchestration/images";
+import { defaultStackVersion } from "../version";
 import { readRepositoryState, saveRepositoryState, type StandaloneRepositoryState } from "./state";
 
 export async function repositoryLifecycle(
     paths: UlviaPaths,
-    name: string,
     action: "start" | "stop" | "status" | "upgrade",
     options: { version?: string; port?: number },
     log: (message: string) => void,
 ): Promise<void> {
-    assertLocalInstanceName(name);
-    const root = join(paths.data, "repositories", name);
+    const root = join(paths.data, "repository-service");
     await withRepositoryWriteLock(root, async () => {
         const installed = await readRepositoryState(root);
         if (action === "status" && !installed) {
-            log(`Repository ${name}: not initialized`);
+            log(`Repository: not initialized`);
             return;
         }
         if (!installed && action !== "start") {
@@ -31,63 +28,56 @@ export async function repositoryLifecycle(
             action === "start" &&
             installed &&
             ((options.version && options.version !== installed.image.version) ||
-                (options.port && options.port !== installed.port))
+                (options.port && options.port !== installed.config.port))
         ) {
             throw new Error("Repository is already configured; use repository upgrade to change its image");
         }
+        if ((action === "status" || action === "stop") && installed) {
+            const project = await repositoryProject(root, installed);
+            if (action === "stop") {
+                await composeStop(project);
+                log("Repository stopped. Persistent data retained.");
+            } else {
+                const services = await inspectComposeServices(project);
+                const service = services.find((item) => item.service === "repository");
+                log(`Repository: ${service?.state ?? "stopped"}${service?.health ? ` / ${service.health}` : ""}`);
+                log(`Version: ${installed.image.version} (${installed.image.digest})`);
+                log(`Endpoint: ${installed.config.publicUrl}`);
+                log(`Configuration: ${join(root, "config.json")}`);
+            }
+            return;
+        }
+        const desired = await readRepositoryConfig(
+            root,
+            defaultRepositoryConfig(options.port ?? installed?.config.port ?? 5010),
+        );
+        if (options.port && options.port !== desired.port) {
+            throw new Error("Use repository configure --port before starting");
+        }
         const image =
             action === "upgrade" || !installed
-                ? await pullOfficialImage("repository", options.version ?? DEFAULT_STACK_VERSION, log)
+                ? await pullOfficialImage("repository", options.version ?? defaultStackVersion(), log)
                 : installed.image;
         const state: StandaloneRepositoryState = {
-            schema: "ulvia.repository-service.v1",
+            schema: "ulvia.repository-service.v2",
             image,
-            port: options.port ?? installed?.port ?? 5010,
+            config: desired,
         };
         const project = await repositoryProject(root, state);
-        if (action === "status") {
-            const services = await inspectComposeServices(project);
-            const service = services.find((item) => item.service === "repository");
-            log(`Repository ${name}: ${service?.state ?? "stopped"}${service?.health ? ` / ${service.health}` : ""}`);
-            log(`Version: ${state.image.version} (${state.image.digest})`);
-            log(`Endpoint: http://127.0.0.1:${state.port}`);
-            return;
-        }
-        if (action === "stop") {
-            await composeStop(project);
-            log(`Repository ${name} stopped. Persistent data retained.`);
-            return;
-        }
+        await saveRepositoryConfig(root, desired);
         await ensureOfficialImage(state.image);
         if (!installed) {
             await saveRepositoryState(root, state);
         }
         try {
-            await composeUp(project);
+            await composeUp(project, true);
             await saveRepositoryState(root, state);
         } catch (error) {
-            if (installed && action === "upgrade") {
-                await composeUp(await repositoryProject(root, installed)).catch(() => undefined);
+            if (installed) {
+                await composeUp(await repositoryProject(root, installed), true).catch(() => undefined);
             }
             throw error;
         }
-        log(`Repository ${name} ready at http://127.0.0.1:${state.port} (${state.image.version}).`);
+        log(`Repository ready at ${desired.publicUrl} (${state.image.version}).`);
     });
-}
-
-async function repositoryProject(root: string, state: StandaloneRepositoryState): Promise<ComposeProject> {
-    await mkdir(join(root, "data"), { recursive: true, mode: 0o700 });
-    const token = await loadOrCreateRepositoryToken(root);
-    return {
-        definition: "repository",
-        projectName: `ulvia-repository-${createHash("sha256").update(root).digest("hex").slice(0, 12)}`,
-        environment: {
-            OFFICIAL_REPOSITORY_IMAGE: pinnedOfficialImageReference(state.image),
-            ULVIA_REPOSITORY_DIR: join(root, "data"),
-            ULVIA_REPOSITORY_PORT: String(state.port),
-            ULVIA_REPOSITORY_TOKEN: token,
-            ULVIA_UID: String(process.getuid?.() ?? 1000),
-            ULVIA_GID: String(process.getgid?.() ?? 1000),
-        },
-    };
 }

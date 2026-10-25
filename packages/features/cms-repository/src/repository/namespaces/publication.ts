@@ -1,7 +1,6 @@
 import { RepositoryRequestError } from "../core/errors";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import type { NamespaceProof } from "../namespaces/interfaces";
-import type { RepositoryNamespaceAuthority } from "../namespaces/authority";
 import { parseNamespaceProof } from "../namespaces/proofs";
 import type { PublicationUploadManifest } from "../publication/types";
 
@@ -31,17 +30,10 @@ export function manifestPublisher(manifest: Pick<PublicationUploadManifest, "kin
     return publisher;
 }
 
-export async function assertPublicationOwner(
-    authority: RepositoryNamespaceAuthority | undefined,
-    request: Request,
-    publisher: string,
-): Promise<void> {
-    if (!authority) {
-        return;
-    }
+export async function assertPublicationOwner(request: Request, publisher: string): Promise<void> {
     const proof = ownerProofFromRequest(request);
     if (!proof) {
-        return authority.assertOperatorNamespace(publisher);
+        throw new RepositoryRequestError("REJECTED", "Publication requires a namespace owner proof");
     }
     if (proof.namespace !== publisher) {
         throw new RepositoryRequestError("REJECTED", "Publication is outside the authorized namespace");

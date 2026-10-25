@@ -11,9 +11,12 @@ CMS-owned state and never become mutable Repository artifacts.
 
 Namespaces are publicly claimed by the first valid Ed25519 possession proof.
 The filesystem adapter serializes competing claims across local processes.
-`ulvia` and `ulvia.*`, and publishers already present in a legacy repository,
-are reserved. The operator HMAC credential can write those reserved publishers;
-it cannot write, rotate, recover or revoke a community namespace.
+All namespaces, including `ulvia.official`, follow the same first-claim rule.
+There is no reserved-name bootstrap, startup owner assignment or operator-token
+publication authority. Claim official names through the loopback endpoint before
+opening a new Repository to the public. The official public origin is
+`https://repo.ulvia.fr`; regression tests use temporary local repositories only.
+Ed25519 owner proofs are the only supported publication credentials.
 
 Each namespace has one active public key. Rotation requires signatures by the
 current and replacement keys at the same expected revision. Revocation is
@@ -23,7 +26,7 @@ backups before claiming a namespace or rotating its key.
 The server stores canonical Ed25519 SPKI public keys, never private keys. Proofs
 bind the persistent Repository identity, namespace, key revision, action,
 subject, SHA-256 content digest, timestamp and nonce. The clock window is five
-minutes. Legacy HTTP owner requests also use durable replay claims. Contract
+minutes. Signed HTTP owner requests also use durable replay claims. Contract
 commands use natural idempotency, exact subject/content bindings and revision
 fences; an exact retry reconciles an existing result rather than granting a
 second mutation. TLS protects signatures against interception.
@@ -50,17 +53,18 @@ Build/publish tooling remains in `infra/images/build.ts`, outside the installed
 CLI. No image is implicitly built or published by a lifecycle command.
 
 ```sh
-ulvia repository start community --version 0.1.0 --port 5010
-ulvia repository status community
-ulvia repository upgrade community --version 0.1.1
-ulvia repository stop community
+ulvia repository start --version 0.1.0 --port 5010
+ulvia repository status
+ulvia repository upgrade --version 0.1.1
+ulvia repository stop
 ```
 
 The versions above are illustrative; choose an image tag actually published by
-the operator. Each named deployment has its own volume, operator credential,
-Compose project and pinned image digest under `$ULVIA_DATA_DIR/repositories/`.
-The command starts only a Repository. It binds the endpoint to loopback; public
-TLS ingress is independently configured by the deployment operator. Existing
+the operator. The default deployment has its own volume, Compose project and
+pinned image digest under `<data>/repository-service/`. Its persistent network
+configuration supports local HTTP, an external HTTPS proxy or a dedicated ACME
+proxy. The Repository backend always binds to loopback; only the managed proxy
+exposes ports 80/443. Existing
 shared-service and Kernel lifecycle commands retain their separate behavior.
 Production supports one active server on one local volume with atomic rename,
 exclusive-create and hard-link semantics. This is not a multi-host database.
@@ -113,15 +117,22 @@ browser, agent tool arguments or logs. The CLI reads a private regular key file
 with no symlink following, a 4096-byte bound and owner-only permissions.
 
 ```sh
-ulvia namespace keygen --key-file /private/community.pem
-export ULVIA_REPOSITORY_PRIVATE_KEY_FILE=/private/community.pem
-ulvia namespace claim community --repository https://repository.example
-ulvia push contract community/community.example@1.0.0 --repository https://repository.example
-ulvia namespace status community --repository https://repository.example
+ulvia repository login https://repository.example
+ulvia namespace claim community
+ulvia push contract community/community.example@1.0.0
+ulvia namespace status community
+ulvia identity create replacement
+ulvia namespace rotate community --replacement-identity replacement
 ```
 
-Generate a separate replacement file and use `namespace rotate` with
-`--replacement-key-file`, then select the replacement file for later writes.
+Local identities are independent of namespace names and Repository connections.
+The CLI searches saved identities for the current owner public key, so rotations
+remain usable even when another identity is active. Login pins the persistent
+Repository identity and detects an unexpected identity change at the saved URL.
+Login does not create an authenticated bearer session; each write is signed.
+Private keys are never sent to the server. See the
+[installation guide](../installation/README.md#9-standalone-repository) for
+configuration locations, network modes, initial official claims and backup boundaries.
 `namespace revoke` requires `--yes`. Keep authoring and signing environments
 separate when an agent should not possess publication authority.
 
@@ -202,12 +213,12 @@ and [HTTP transport](https://modelcontextprotocol.io/specification/2025-11-25/ba
 ## Limits and next work
 
 The contract bounds manifest strings to 1 MiB, JSON envelopes to the existing
-8 MiB Gateway budget, and raw assets to 100 MiB. The legacy transfer protocol
-retains its existing larger manifest envelope. Public catalogue pages contain
+8 MiB Gateway budget, and raw assets to 100 MiB. The streaming transfer endpoints
+accept a larger bounded manifest envelope. Public catalogue pages contain
 at most 256 entries; exact artifact reads survive yanking.
 
 Public first-claim naming needs deployment-specific rate limits, storage quotas,
-abuse handling and reserved-name policy before unrestricted Internet exposure.
+abuse handling and namespace naming policy before unrestricted Internet exposure.
 The reference adapter rebuilds full in-memory catalogue indexes and retains
 commit receipts and audit records. Storage growth, retention and large-catalogue
 indexes need production capacity policy; bounded response pages are not a claim

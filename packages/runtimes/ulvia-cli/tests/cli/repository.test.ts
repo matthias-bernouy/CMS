@@ -6,15 +6,14 @@ import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/ht
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { prepareCollectionRelease } from "../../src/release/source";
-import { startLocalRepository } from "../../src/runtime/repository";
+import { startTestRepository } from "../repository/fixture";
 import { officialContractCatalogue } from "../officialContractCatalogue";
-import { NOOP_LOGGER } from "@bernouy/logging";
 import { isValidRequestId, REQUEST_ID_HEADER } from "@bernouy/http-runner/observability";
 
 test("local repository lists immutable metadata and serves matching release bytes", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-repository-"));
     const repository = new LocalCollectionRepository(root);
-    const server = startLocalRepository(0, root, NOOP_LOGGER);
+    const server = startTestRepository(root);
     try {
         const contracts = await officialContractCatalogue();
         const source = new HttpCollectionRepository("local", server.url);
@@ -268,7 +267,7 @@ test("collection source assets keep their verified bytes through the repository 
 
         const repository = new LocalCollectionRepository(repositoryRoot);
         await repository.store(artifact);
-        const server = startLocalRepository(0, repositoryRoot, NOOP_LOGGER);
+        const server = startTestRepository(repositoryRoot);
         try {
             const remote = new HttpCollectionRepository("local", server.url);
             const bundle = await remote.get((await remote.list())[0]!);

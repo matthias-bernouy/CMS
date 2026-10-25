@@ -9,13 +9,13 @@ export type ComposeServiceState = Readonly<{
 
 export type ComposeProject = Readonly<{
     definition: "services" | "kernel" | "repository";
-    overlays?: readonly ("services-tls" | "kernel-tls")[];
+    overlays?: readonly ("services-tls" | "kernel-tls" | "repository-tls")[];
     projectName: string;
     environment: Record<string, string | undefined>;
 }>;
 
-export async function composeUp(project: ComposeProject): Promise<void> {
-    await compose(project, ["up", "--detach", "--wait"], true);
+export async function composeUp(project: ComposeProject, removeOrphans = false): Promise<void> {
+    await compose(project, ["up", "--detach", "--wait", ...(removeOrphans ? ["--remove-orphans"] : [])], true);
 }
 
 export async function composeStop(project: ComposeProject): Promise<void> {

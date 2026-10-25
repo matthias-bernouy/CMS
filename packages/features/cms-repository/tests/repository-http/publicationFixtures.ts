@@ -1,5 +1,13 @@
+import { createHash, generateKeyPairSync, randomUUID } from "node:crypto";
+import { FilesystemRepositoryNamespaceStore } from "@bernouy/cms-repository/repository/filesystem";
 import {
-    signRepositoryRequest,
+    RepositoryNamespaceAuthority,
+    type RepositoryOwnerCredential,
+    repositoryDigest,
+    repositoryWriteHeaders,
+    signNamespaceProof,
+} from "@bernouy/cms-repository/repository/namespaces";
+import {
     type PublicationEnvelope,
     type RemoteCoordinate,
     type RepositoryPublicationRegistry,
@@ -44,35 +52,70 @@ export class RecordingRegistry implements RepositoryPublicationRegistry {
     }
 }
 
-export function signedRequest(
+export async function ownerFixture(root: string, namespace = "publisher") {
+    const pair = generateKeyPairSync("ed25519");
+    const privateKey = pair.privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+    const publicKey = pair.publicKey.export({ type: "spki", format: "der" }).toString("base64url");
+    const namespaces = new RepositoryNamespaceAuthority(
+        "test-repository",
+        new FilesystemRepositoryNamespaceStore(root),
+    );
+    await namespaces.claim(
+        namespace,
+        publicKey,
+        signNamespaceProof(
+            {
+                repositoryId: namespaces.repositoryId,
+                namespace,
+                revision: 0,
+                action: "claim",
+                subject: namespace,
+                digest: repositoryDigest({ publicKey }),
+                timestamp: Date.now(),
+                nonce: randomUUID(),
+            },
+            privateKey,
+        ),
+    );
+    const credential: RepositoryOwnerCredential = {
+        repositoryId: namespaces.repositoryId,
+        namespace,
+        revision: 1,
+        resolvePrivateKey: async () => privateKey,
+    };
+    return { namespaces, credential };
+}
+
+export function signOwnerRequest(method: string, url: URL, body: Uint8Array, credential: RepositoryOwnerCredential) {
+    return signOwnerContentDigest(method, url, createHash("sha256").update(body).digest("hex"), credential);
+}
+
+export function signOwnerContentDigest(
+    method: string,
+    url: URL,
+    digest: string,
+    credential: RepositoryOwnerCredential,
+) {
+    return repositoryWriteHeaders(method, url, digest, credential);
+}
+
+export function signedRequest(url: URL, method: string, body: Uint8Array, headers: Record<string, string>): Request {
+    return new Request(url, { method, body: Buffer.from(body), headers });
+}
+
+export async function emptySignedRequest(
     url: URL,
     method: string,
-    body: Uint8Array,
-    signed: ReturnType<typeof signRepositoryRequest>,
-): Request {
-    return new Request(url, {
-        method,
-        body: Buffer.from(body),
-        headers: signedHeaders(signed),
-    });
-}
-
-export function emptySignedRequest(url: URL, method: string, token: string): Request {
+    credential: RepositoryOwnerCredential,
+): Promise<Request> {
     const body = new Uint8Array();
-    return signedRequest(url, method, body, signRepositoryRequest(method, url, body, token));
+    return signedRequest(url, method, body, await signOwnerRequest(method, url, body, credential));
 }
 
-export function signedRequestWithoutBody(url: URL, method: string, token: string): Request {
-    const signed = signRepositoryRequest(method, url, new Uint8Array(), token);
-    return new Request(url, { method, headers: signedHeaders(signed) });
-}
-
-function signedHeaders(signed: ReturnType<typeof signRepositoryRequest>): Record<string, string> {
-    return {
-        Authorization: signed.authorization,
-        "X-Ulvia-Timestamp": signed.timestamp,
-        "X-Ulvia-Nonce": signed.nonce,
-        "X-Ulvia-Content-SHA256": signed.contentDigest,
-        "X-Ulvia-Signature": signed.signature,
-    };
+export async function signedRequestWithoutBody(
+    url: URL,
+    method: string,
+    credential: RepositoryOwnerCredential,
+): Promise<Request> {
+    return new Request(url, { method, headers: await signOwnerRequest(method, url, new Uint8Array(), credential) });
 }
