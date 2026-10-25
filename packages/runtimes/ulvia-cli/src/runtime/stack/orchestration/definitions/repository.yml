@@ -1,0 +1,33 @@
+services:
+    repository:
+        image: ${OFFICIAL_REPOSITORY_IMAGE}
+        restart: unless-stopped
+        init: true
+        user: "${ULVIA_UID}:${ULVIA_GID}"
+        environment:
+            MODE: PROD
+            NODE_ENV: production
+            REPOSITORY_HOST: 0.0.0.0
+            REPOSITORY_PORT: "3000"
+            REPOSITORY_PUBLIC_URL: http://127.0.0.1:${ULVIA_REPOSITORY_PORT}
+            ULVIA_REPOSITORY_DIR: /var/lib/ulvia-repository
+            ULVIA_REPOSITORY_SEED_DIR: ""
+            ULVIA_REPOSITORY_TOKEN: ${ULVIA_REPOSITORY_TOKEN}
+        volumes:
+            - type: bind
+              source: ${ULVIA_REPOSITORY_DIR}
+              target: /var/lib/ulvia-repository
+        ports:
+            - "127.0.0.1:${ULVIA_REPOSITORY_PORT}:3000"
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=64m
+        cap_drop: [ALL]
+        security_opt: [no-new-privileges:true]
+        stop_grace_period: 30s
+        healthcheck:
+            test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:3000/readyz'); if(!r.ok) process.exit(1); await r.body?.cancel()"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 5s

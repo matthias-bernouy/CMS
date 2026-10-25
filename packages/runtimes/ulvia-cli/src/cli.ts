@@ -5,6 +5,8 @@ import { remoteCommand } from "./commands/remote";
 import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { ensureUlviaPaths, resolveUlviaPaths } from "./runtime/paths";
 import { CLI_VERSION } from "./runtime/stack/version";
+import { standaloneRepositoryCommand } from "./commands/local/repository";
+import { namespaceCommand } from "./commands/namespace/command";
 
 const HELP = `Ulvia CMS CLI
 
@@ -13,6 +15,8 @@ Usage:
   ulvia configure network [network options]
   ulvia services start [--version <version>]
   ulvia services <stop | status | logs>
+  ulvia repository <start | stop | status | upgrade> <name> [--version <version>] [--port <port>]
+  ulvia namespace <keygen | claim | status | rotate | revoke> [options]
   ulvia instance create <name> [--label <label>] [--domain <domain>]
   ulvia instance <start | stop | status | credentials | logs> <name>
   ulvia instance list
@@ -30,6 +34,8 @@ Commands:
   start        Start shared services and every existing instance
   configure    Configure persistent network exposure and TLS before creating instances
   services     Manage the shared proxy, MongoDB, Repository, and Provider
+  repository   Manage an independent Repository deployment
+  namespace    Manage cryptographic Repository namespace ownership
   instance     Create and manage independent Kernel instances
   upgrade      Pull and install one exact official Docker image version
   reset        Delete all instances, services data, and repository releases after --yes
@@ -47,6 +53,7 @@ Environment:
   ULVIA_PROVIDER_PORT       Initial Provider management port
   ULVIA_REPOSITORY_URL      Default remote repository URL
   ULVIA_REPOSITORY_TOKEN    Remote repository write token
+  ULVIA_REPOSITORY_PRIVATE_KEY_FILE  Owner signing key (private local file)
   ULVIA_LOG_LEVEL           Runtime log threshold (trace through fatal)
   ULVIA_LOG_CONSOLE_LEVEL   Local terminal threshold (trace through fatal)
   ULVIA_LOG_FORMAT          Runtime terminal format (pretty or json)
@@ -70,13 +77,25 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         log(CLI_VERSION);
         return;
     }
-    if (![...LOCAL_COMMANDS, "release", "push", "pull", "yank", "restore", "prune"].includes(command)) {
+    if (
+        ![...LOCAL_COMMANDS, "repository", "namespace", "release", "push", "pull", "yank", "restore", "prune"].includes(
+            command,
+        )
+    ) {
         throw new Error(`Unknown command: ${command}`);
     }
     const environment = options.environment ?? process.env;
     const cwd = options.cwd ?? process.cwd();
     const paths = resolveUlviaPaths(environment, options.home);
     await ensureUlviaPaths(paths);
+    if (command === "namespace") {
+        await namespaceCommand(args.slice(1), environment, cwd, log);
+        return;
+    }
+    if (command === "repository") {
+        await standaloneRepositoryCommand(args.slice(1), paths, log);
+        return;
+    }
     if (LOCAL_COMMANDS.has(command)) {
         await localCommand(command, args.slice(1), paths, log, environment);
         return;

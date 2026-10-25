@@ -21,6 +21,7 @@ import {
 } from "@bernouy/cms-repository/repository/publication";
 import { formatCoordinate, parseRemoteArguments, type RemoteAction } from "./remoteArguments";
 import { RemoteAssetFileSink } from "./remoteAssetSink";
+import { remoteRepositoryCredential } from "./namespace/credentials";
 
 export async function remoteCommand(
     action: RemoteAction,
@@ -30,7 +31,12 @@ export async function remoteCommand(
     log: (message: string) => void,
 ): Promise<void> {
     const { coordinate, repositoryUrl, reason } = parseRemoteArguments(action, args, environment);
-    const client = new RemoteRepositoryClient(repositoryUrl, environment.ULVIA_REPOSITORY_TOKEN?.trim());
+    const client = new RemoteRepositoryClient(
+        repositoryUrl,
+        action === "pull"
+            ? undefined
+            : await remoteRepositoryCredential(repositoryUrl, coordinate.publisherId, environment),
+    );
     if (action === "yank" || action === "restore") {
         await client.yank(coordinate, action === "restore" ? null : reason!);
         log(`${action === "restore" ? "Restored" : "Yanked"} ${formatCoordinate(coordinate)}`);

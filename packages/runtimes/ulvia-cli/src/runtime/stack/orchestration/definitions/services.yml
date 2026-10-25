@@ -59,10 +59,12 @@ services:
             NODE_ENV: production
             REPOSITORY_HOST: 0.0.0.0
             REPOSITORY_PORT: "3000"
+            REPOSITORY_PUBLIC_URL: http://127.0.0.1:${ULVIA_REPOSITORY_PORT}
             ULVIA_LOG_FILE: /var/log/ulvia/repository.ndjson
             ULVIA_REPOSITORY_DIR: /var/lib/ulvia-repository
             ULVIA_REPOSITORY_SEED_DIR: /opt/ulvia-repository-seed
             ULVIA_REPOSITORY_TOKEN: ${ULVIA_REPOSITORY_TOKEN}
+        stop_grace_period: 30s
         volumes:
             - type: bind
               source: ${ULVIA_REPOSITORY_DIR}
