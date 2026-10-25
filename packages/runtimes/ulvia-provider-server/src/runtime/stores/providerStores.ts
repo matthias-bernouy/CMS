@@ -12,6 +12,7 @@ import {
     withCollectionMigrationWriteFence,
 } from "@bernouy/cms-repository/collections/installations";
 import {
+    MongoOAuthStore,
     MongoAuthTokenStore,
     MongoLocalCredentialStore,
     MongoPatRepository,
@@ -151,6 +152,14 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     await credentials.init();
     const pats = new MongoPatRepository(db);
     await pats.init();
+    const oauthPublicLimiter = new MongoRateLimiter(
+        db,
+        { limit: 32, windowSeconds: 60 },
+        { collectionPrefix: "cms_oauth_public_" },
+    );
+    await oauthPublicLimiter.init();
+    const oauthStore = new MongoOAuthStore(db);
+    await oauthStore.init();
     const authTokens = new MongoAuthTokenStore(db);
     await authTokens.init();
     const rateLimit = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 });
@@ -188,6 +197,8 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         credentials,
         pats,
         authTokens,
+        oauthStore,
+        oauthPublicLimiter,
         rateLimit,
         cmsSecrets,
         contractSecrets,

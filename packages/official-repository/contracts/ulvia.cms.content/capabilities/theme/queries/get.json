@@ -9,59 +9,136 @@
     "input": {
         "type": "object",
         "properties": {
-            "collectionId": { "type": "string", "minLength": 1, "maxLength": 96 },
-            "profileId": { "type": "string", "maxLength": 96 },
-            "mode": { "type": "string", "enum": ["light", "dark"], "maxLength": 5 },
-            "tokenId": { "type": "string", "maxLength": 96 },
-            "search": { "type": "string", "maxLength": 300 }
+            "collectionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "profileId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "mode": {
+                "type": "string",
+                "enum": ["light", "dark"],
+                "maxLength": 5
+            },
+            "tokenId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "search": {
+                "type": "string",
+                "maxLength": 300
+            }
         },
         "required": ["collectionId"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-            "collectionId": { "type": "string", "maxLength": 96 },
-            "activeThemeId": { "type": "string", "maxLength": 96 },
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "collectionId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "activeThemeId": {
+                "type": "string",
+                "maxLength": 96
+            },
             "profiles": {
                 "type": "array",
                 "maxItems": 128,
                 "items": {
                     "type": "object",
                     "properties": {
-                        "id": { "type": "string", "maxLength": 96 },
-                        "name": { "type": "string", "maxLength": 300 },
-                        "active": { "type": "boolean" }
+                        "id": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "name": {
+                            "type": "string",
+                            "maxLength": 300
+                        },
+                        "active": {
+                            "type": "boolean"
+                        }
                     },
                     "required": ["id", "name", "active"]
                 }
             },
-            "profileId": { "type": "string", "maxLength": 96 },
-            "profileActive": { "type": "boolean" },
-            "mode": { "type": "string", "enum": ["light", "dark"], "maxLength": 5 },
-            "search": { "type": "string", "maxLength": 300 },
-            "sourceFound": { "type": "boolean" },
-            "sourceLabel": { "type": "string", "maxLength": 300 },
-            "supportsModes": { "type": "boolean" },
+            "profileId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "profileActive": {
+                "type": "boolean"
+            },
+            "mode": {
+                "type": "string",
+                "enum": ["light", "dark"],
+                "maxLength": 5
+            },
+            "search": {
+                "type": "string",
+                "maxLength": 300
+            },
+            "sourceFound": {
+                "type": "boolean"
+            },
+            "sourceLabel": {
+                "type": "string",
+                "maxLength": 300
+            },
+            "supportsModes": {
+                "type": "boolean"
+            },
             "tokens": {
                 "type": "array",
                 "maxItems": 4096,
                 "items": {
                     "type": "object",
                     "properties": {
-                        "id": { "type": "string", "maxLength": 96 },
-                        "label": { "type": "string", "maxLength": 300 },
-                        "description": { "type": "string", "maxLength": 2000 },
-                        "variable": { "type": "string", "maxLength": 96 },
+                        "id": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "label": {
+                            "type": "string",
+                            "maxLength": 300
+                        },
+                        "description": {
+                            "type": "string",
+                            "maxLength": 2000
+                        },
+                        "variable": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
                         "type": {
                             "type": "string",
                             "enum": ["color", "font-family", "length", "number", "shadow", "value"],
                             "maxLength": 11
                         },
-                        "value": { "type": "string", "maxLength": 4096 },
-                        "overridden": { "type": "boolean" },
-                        "categoryId": { "type": "string", "maxLength": 96 },
-                        "categoryLabel": { "type": "string", "maxLength": 300 }
+                        "value": {
+                            "type": "string",
+                            "maxLength": 4096
+                        },
+                        "overridden": {
+                            "type": "boolean"
+                        },
+                        "categoryId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "categoryLabel": {
+                            "type": "string",
+                            "maxLength": 300
+                        }
                     },
                     "required": [
                         "id",
@@ -76,23 +153,48 @@
                     ]
                 }
             },
-            "hasToken": { "type": "boolean" },
+            "hasToken": {
+                "type": "boolean"
+            },
             "token": {
                 "type": "object",
                 "properties": {
-                    "id": { "type": "string", "maxLength": 96 },
-                    "label": { "type": "string", "maxLength": 300 },
-                    "description": { "type": "string", "maxLength": 2000 },
-                    "variable": { "type": "string", "maxLength": 96 },
+                    "id": {
+                        "type": "string",
+                        "maxLength": 96
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 2000
+                    },
+                    "variable": {
+                        "type": "string",
+                        "maxLength": 96
+                    },
                     "type": {
                         "type": "string",
                         "enum": ["color", "font-family", "length", "number", "shadow", "value"],
                         "maxLength": 11
                     },
-                    "value": { "type": "string", "maxLength": 4096 },
-                    "overridden": { "type": "boolean" },
-                    "categoryId": { "type": "string", "maxLength": 96 },
-                    "categoryLabel": { "type": "string", "maxLength": 300 }
+                    "value": {
+                        "type": "string",
+                        "maxLength": 4096
+                    },
+                    "overridden": {
+                        "type": "boolean"
+                    },
+                    "categoryId": {
+                        "type": "string",
+                        "maxLength": 96
+                    },
+                    "categoryLabel": {
+                        "type": "string",
+                        "maxLength": 300
+                    }
                 },
                 "required": [
                     "id",
@@ -124,16 +226,36 @@
             "token"
         ]
     },
-    "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
-    "binding": {
-        "transport": "http",
-        "method": "QUERY",
-        "path": "/theme",
-        "input": { "body": true },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
         }
-    }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/theme",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "content_theme_get",
+                "description": "Read an installed collection\u2019s theme, available modes, tokens and current site values."
+            }
+        }
+    ]
 }

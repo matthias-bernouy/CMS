@@ -9,6 +9,7 @@ import { registerAccessCapabilities } from "./access";
 import { registerContentCapabilities } from "./content";
 import { registerFileCapabilities } from "./files";
 import { registerSmtpEmailerCapabilities } from "./emailer";
+import { registerCollectionAuthoringCapabilities } from "./installations/authoring";
 import { registerInstallationCapabilities } from "./installations";
 import { registerSecretCapabilities } from "./secrets";
 import type { CollectionSources } from "./installations/sources";
@@ -26,6 +27,9 @@ export function registerOfficialProviderCapabilities(
     fileWorkspace?: CmsFileWorkspace,
     enabledContractIds?: ReadonlySet<string>,
 ): void {
+    if (enabledContractIds?.has("ulvia.cms.repository")) {
+        registerCollectionAuthoringCapabilities(dispatcher, dependencies.collectionAuthoring);
+    }
     registerContentCapabilities(dispatcher, dependencies);
     registerInstallationCapabilities(
         dispatcher,

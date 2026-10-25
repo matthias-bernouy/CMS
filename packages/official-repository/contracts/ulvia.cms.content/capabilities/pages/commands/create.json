@@ -84,21 +84,32 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/pages/create",
-        "input": {
-            "body": true
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/pages/create",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [201],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "PATH_CONFLICT": 409,
+                    "INVALID_PAGE": 422,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
         },
-        "response": {
-            "successStatuses": [201],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "PATH_CONFLICT": 409,
-                "INVALID_PAGE": 422,
-                "CORE_UNAVAILABLE": 503
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "content_pages_create",
+                "description": "Create a Page draft at a site path. Use installed Blocs from the editor catalogue; publication is a separate action."
             }
         }
-    }
+    ]
 }

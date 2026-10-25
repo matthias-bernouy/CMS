@@ -32,6 +32,9 @@ import type { Logger } from "@bernouy/logging";
 import { correlatedRepositoryFetch } from "../gateway/repositoryFetch";
 import { createInstanceAuth } from "../authentication/createInstanceAuth";
 
+import { createCollectionAuthoring } from "../stores/repository/composition";
+import { McpAuthorization } from "@bernouy/cms-auth/oauth";
+
 const SITE_ID = "default";
 const MAX_OPEN_INSTANCES = 32;
 // Keep recently active instances warm while the bounded LRU ceiling protects
@@ -199,15 +202,41 @@ export class ProviderInstanceHost {
             });
             const dispatcher = new DefaultProviderCapabilityDispatcher();
             const authentication = await createInstanceAuth(stores, instance.kernelUrl);
+            const fileWorkspace = new CmsFileWorkspace(
+                stores.providerFiles,
+                stores.contractSecrets.files,
+                instance.kernelUrl,
+            );
+            const collectionAuthoring = createCollectionAuthoring(
+                stores,
+                filesDirectory,
+                this.env.CMS_REPOSITORY_URL,
+                this.#collectionSource,
+                fileWorkspace,
+                this.env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
+            );
             registerOfficialProviderCapabilities(
                 dispatcher,
                 {
                     ...stores,
+                    collectionAuthoring,
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
                     resolvePageRoute: (path: string) => stores.pageRoutes.resolve(gateway.siteId, path),
                     sitemapStore: stores.sitemapStore,
                     logger: this.logger.child({ instanceId: instance.id, component: "content-delivery" }),
+                    mcpAuthorization: new McpAuthorization(
+                        stores.oauthStore,
+                        {
+                            canConnect: async (sub) =>
+                                Boolean(await stores.users.getBySub(sub)) &&
+                                (await gateway.administrators.get(sub)).enabled,
+                        },
+                        new URL("/.cms/mcp", instance.kernelUrl).href,
+                        new TextEncoder().encode(stores.runtimeSessionSecret),
+                        Date.now,
+                        stores.oauthPublicLimiter,
+                    ),
                     authentication: authentication.auth,
                     accountLifecycle: authentication.accountLifecycle,
                 },
@@ -216,7 +245,7 @@ export class ProviderInstanceHost {
                 createProtectedProviderManagement(management, instance, profile),
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
-                new CmsFileWorkspace(stores.providerFiles, stores.contractSecrets.files),
+                fileWorkspace,
                 new Set(profile.contracts.map(({ contractId }) => contractId)),
             );
             operationRecovery = new RecoverySupervisor(

@@ -1,4 +1,5 @@
 import type { RuntimeEnv } from "../runtimeEnv";
+import { createCmsMcpHandler } from "@bernouy/cms-kernel";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import {
@@ -35,8 +36,20 @@ export async function mountProductionKernel(
     await prewarmBrowserRuntimes(cache, `${basePath}/.cms`, logger);
     runner.get("/healthz", emptyOk);
     runner.get("/readyz", emptyOk);
+    const onMutationSuccess = ({ contractId }: { contractId: string }) => {
+        if (contractId === "ulvia.cms.content" || contractId === "ulvia.cms.installations") {
+            content.invalidatePageRenderInputs();
+        }
+    };
     new runtime.Kernel({
         runner,
+        mcpHandler: createCmsMcpHandler({
+            publicUrl: env.KERNEL_PUBLIC_URL,
+            invoker: gateway.invoker,
+            resolveActor: gateway.resolveActor,
+            contracts: gateway.contracts,
+            onMutationSuccess,
+        }),
         content: content.content,
         editorialPages: content.editorialPages,
         resolveActor: gateway.resolveActor,
@@ -47,11 +60,7 @@ export async function mountProductionKernel(
             siteId: "default",
             invoker: gateway.invoker,
             resolveCapability: gateway.resolveCapability,
-            onMutationSuccess: ({ contractId }) => {
-                if (contractId === "ulvia.cms.content" || contractId === "ulvia.cms.installations") {
-                    content.invalidatePageRenderInputs();
-                }
-            },
+            onMutationSuccess,
         },
         pageCapabilities: gateway.pageCapabilities,
         collectionAssets: content.collectionAssets,

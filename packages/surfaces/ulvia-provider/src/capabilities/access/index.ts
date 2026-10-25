@@ -15,11 +15,14 @@ import {
     revision,
 } from "./support";
 
+import { registerMcpAccessCapabilities } from "./mcp";
+
 export function registerAccessCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     dependencies: CmsAccessDependencies,
     gateway: UlviaProviderGateway | undefined,
 ): void {
+    registerMcpAccessCapabilities(dispatcher, gateway, dependencies.mcpAuthorization);
     dispatcher.register("ulvia.cms.access", "resolve-actor", async (_input, context) => {
         const subject = await dependencies.authentication.resolveCredential(context.actorCredential);
         if (!subject) {

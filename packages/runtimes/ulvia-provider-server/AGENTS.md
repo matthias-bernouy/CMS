@@ -14,3 +14,8 @@ Production runtime for the official Ulvia Provider.
 - Mount only the `@bernouy/ulvia-provider` surface; never mount or start the
   CMS Kernel.
 - Never log Provider tokens or instance secrets.
+
+- Run Bun with `--no-macros`; startup must fail without this flag because remote
+  authored sources pass through the shared compiler. This is not an OS sandbox.
+- Keep the Repository publisher key in its dedicated encrypted secret namespace,
+  pin its Repository identity and never regenerate a missing persisted key.

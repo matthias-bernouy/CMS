@@ -7,7 +7,7 @@
     "type": "module",
     "main": "./src/index.ts",
     "scripts": {
-        "start": "bun run src/index.ts"
+        "start": "bun --no-macros run src/index.ts"
     },
     "dependencies": {
         "@bernouy/blob-store": "workspace:*",

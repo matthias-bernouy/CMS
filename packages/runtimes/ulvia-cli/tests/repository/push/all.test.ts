@@ -38,13 +38,13 @@ test("push all publishes every official artifact kind, then inferred provider an
         await f.run(["release", source, "--recursive"]);
         f.output.length = 0;
         await f.run(["push", "all"]);
-        expect(await f.remoteFiles.list("contracts")).toHaveLength(8);
+        expect(await f.remoteFiles.list("contracts")).toHaveLength(9);
         expect(await f.remoteFiles.list("providers")).toHaveLength(1);
         expect(await new LocalCollectionRepository(f.remote).list()).toHaveLength(1);
-        expect(f.output.slice(1, 9).every((line) => line.startsWith("+ contract"))).toBe(true);
-        expect(f.output[9]).toStartWith("+ provider-manifest");
-        expect(f.output[10]).toStartWith("+ collection");
-        expect(f.output.at(-1)).toBe("Published 10 local releases.");
+        expect(f.output.slice(1, 10).every((line) => line.startsWith("+ contract"))).toBe(true);
+        expect(f.output[10]).toStartWith("+ provider-manifest");
+        expect(f.output[11]).toStartWith("+ collection");
+        expect(f.output.at(-1)).toBe("Published 11 local releases.");
         const provider = JSON.parse(await readFile(join(source, "providers/ulvia.official/definition.json"), "utf8"));
         const collection = JSON.parse(
             await readFile(join(source, "collections/ulvia-official/definition.json"), "utf8"),

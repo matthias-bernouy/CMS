@@ -145,20 +145,31 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "QUERY",
-        "path": "/localization/texts",
-        "input": {
-            "body": true
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/localization/texts",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
         },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "NOT_FOUND": 404,
-                "CORE_UNAVAILABLE": 503
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "content_localization_texts_get",
+                "description": "Read installed collection texts and their site overrides, optionally filtered by locale, group or search."
             }
         }
-    }
+    ]
 }

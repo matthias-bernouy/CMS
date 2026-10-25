@@ -11,3 +11,5 @@
 export { default as KernelCms } from "cms-kernel/KernelCms";
 export type { KernelCmsConfig } from "cms-kernel/KernelCmsConfig";
 export { isKernelReservedPath } from "cms-kernel/http/pages/reservedPaths";
+
+export { createCmsMcpHandler } from "./http/mcp/handler";

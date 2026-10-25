@@ -2,30 +2,69 @@
     "id": "workspace.files.update",
     "description": "Rename a file in the server-managed site workspace.",
     "access": "admin",
-    "behavior": { "effect": "command", "execution": "sync", "idempotency": "natural" },
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural"
+    },
     "input": {
         "type": "object",
         "properties": {
-            "fileId": { "type": "string", "maxLength": 128 },
-            "name": { "type": "string", "minLength": 1, "maxLength": 255 }
+            "fileId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+            }
         },
         "required": ["fileId", "name"]
     },
-    "output": { "type": "null" },
+    "output": {
+        "type": "null"
+    },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
-    ],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/workspace.files.update",
-        "input": { "body": true },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": { "INVALID_INPUT": 422, "NOT_FOUND": 404, "CORE_UNAVAILABLE": 503 }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
         }
-    }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/workspace.files.update",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "files_workspace_files_update",
+                "description": "Rename one file in this instance without changing its immutable bytes."
+            }
+        }
+    ]
 }

@@ -16,7 +16,7 @@ test("builds the official profile from verified repository releases", async () =
     const loaded = await loadOfficialArtifacts(fixture.providers, fixture.collections);
 
     expect(loaded.profiles).toEqual([loaded.defaultProfile]);
-    expect(loaded.defaultProfile.version).toBe("1.1.0");
+    expect(loaded.defaultProfile.version).toBe("1.2.0");
     expect(loaded.defaultProfile.manifest.digest).toBe(fixture.manifestDigest);
     expect(loaded.defaultProfile.collection.digest).toBe(fixture.collectionDigest);
     expect(loaded.defaultProfile.contracts).toEqual(

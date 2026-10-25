@@ -34,8 +34,9 @@ fallbacks onto one provided `Runner`.
   administrative behavior is authorized from capability access, not from a
   separate surface.
 - Preserve `/.cms/*` route semantics for blocsets, style, generic gateway
-  capabilities and runtime assets. There is no auth route family, per-Bloc or public
-  `/.cms/sources` route.
+  capabilities and runtime assets. Generic MCP OAuth protocol routes delegate to
+  the selected Access contract; never add a second authentication store here.
+  There is no per-Bloc or public `/.cms/sources` route.
 - Gateway execution uses the selected contract and injected runtime transport.
 - Public routes should be careful with cache headers and CSP-related settings.
 - Installed collection assets use representation-versioned public URLs and support single HTTP byte ranges for

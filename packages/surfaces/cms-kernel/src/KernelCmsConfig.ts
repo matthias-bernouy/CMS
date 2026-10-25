@@ -8,6 +8,7 @@ import type { Logger } from "@bernouy/logging";
 
 export type KernelCmsConfig = {
     runner: Runner;
+    mcpHandler?: (request: Request) => Promise<Response | null>;
     content: ContentReader;
     editorialPages?: {
         resolveRoute(path: string): Promise<{ readonly page: RenderablePage; readonly language: string } | null>;

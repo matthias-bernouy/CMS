@@ -20,6 +20,7 @@ import {
     serveInstalledCollectionAsset,
 } from "@bernouy/cms-repository/collections/http";
 import { resolveRequestActor } from "cms-kernel/http/pages/access/resolveRequestActor";
+import { mountCmsMcpRoutes } from "cms-kernel/http/mcp/routes";
 import { applySessionEffect } from "cms-kernel/http/session/applySessionEffect";
 
 /**
@@ -38,6 +39,9 @@ import { applySessionEffect } from "cms-kernel/http/session/applySessionEffect";
  */
 export function mountKernelRoutes(kernel: KernelCms) {
     const runner = kernel.runner;
+    if (kernel.mcpHandler) {
+        mountCmsMcpRoutes(runner, kernel.mcpHandler);
+    }
     if (kernel.collections) {
         runner.use(
             createCollectionMaintenanceGuard({

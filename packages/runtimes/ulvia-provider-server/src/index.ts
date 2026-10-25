@@ -25,6 +25,11 @@ import { correlatedRepositoryFetch } from "./runtime/gateway/repositoryFetch";
 
 const logger = createProviderLogger(process.env);
 try {
+    if (!process.execArgv.includes("--no-macros")) {
+        throw new Error(
+            "Start the Provider with bun --no-macros; remote collection compilation must not execute build-time macros",
+        );
+    }
     const env = readProviderRuntimeEnv(process.env);
     await validateCmsStorageRoots(env.CMS_FILES_DIR);
 

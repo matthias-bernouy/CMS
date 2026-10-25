@@ -14,6 +14,7 @@ export default class KernelCms {
     readonly sessionCookie;
     readonly collections;
     readonly collectionAssets;
+    readonly mcpHandler;
     readonly capabilityGateway;
     readonly pageCapabilities;
     readonly capabilityHandler;
@@ -37,6 +38,7 @@ export default class KernelCms {
         this.sessionCookie = config.sessionCookie;
         this.collections = config.collections;
         this.collectionAssets = config.collectionAssets;
+        this.mcpHandler = config.mcpHandler;
         this.capabilityGateway = config.capabilityGateway;
         this.pageCapabilities = config.pageCapabilities;
         this.capabilityHandler = config.capabilityHandler;

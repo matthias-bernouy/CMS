@@ -12,7 +12,8 @@
             "expectedRevision": {
                 "type": "integer",
                 "minimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "Current revision returned by the corresponding read operation. Read again after a conflict."
             },
             "planDigest": {
                 "type": "string",
@@ -131,26 +132,37 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/apply-collection-migration",
-        "input": {
-            "body": true
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/apply-collection-migration",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [202],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_FOUND": 404,
+                    "RELEASE_MISMATCH": 409,
+                    "BROWSER_CAPABILITIES_APPROVAL_REQUIRED": 409,
+                    "REVISION_CONFLICT": 409,
+                    "MIGRATION_IN_PROGRESS": 423,
+                    "IDEMPOTENCY_CONFLICT": 409,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
         },
-        "response": {
-            "successStatuses": [202],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "INVALID_INPUT": 422,
-                "NOT_FOUND": 404,
-                "RELEASE_MISMATCH": 409,
-                "BROWSER_CAPABILITIES_APPROVAL_REQUIRED": 409,
-                "REVISION_CONFLICT": 409,
-                "MIGRATION_IN_PROGRESS": 423,
-                "IDEMPOTENCY_CONFLICT": 409,
-                "CORE_UNAVAILABLE": 503
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "installations_apply_collection_migration",
+                "description": "Apply a reviewed collection migration using its planDigest and expectedRevision. Track the returned asynchronous operation."
             }
         }
-    }
+    ]
 }

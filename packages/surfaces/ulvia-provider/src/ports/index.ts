@@ -1,3 +1,5 @@
+import type { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
+import type { McpAuthorization } from "@bernouy/cms-auth/oauth";
 import type {
     AuthenticationCredential,
     LocalCredentialStore,
@@ -35,11 +37,13 @@ export interface CmsContentDependencies {
 }
 
 export interface CmsCollectionDependencies {
+    readonly collectionAuthoring?: CollectionAuthoring;
     readonly collections: CollectionStore;
     readonly collectionMigrations: CollectionMigrationService;
 }
 
 export interface CmsAccessDependencies {
+    readonly mcpAuthorization?: McpAuthorization;
     readonly users: UsersRepository;
     readonly credentials: LocalCredentialStore;
     readonly pats: PatRepository;

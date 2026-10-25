@@ -72,19 +72,30 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "QUERY",
-        "path": "/pages/list",
-        "input": {
-            "body": true
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/pages/list",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
         },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "CORE_UNAVAILABLE": 503
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "content_pages_list",
+                "description": "Find this site\u2019s Pages by text or visibility. Follow the returned cursor and read a Page before changing it."
             }
         }
-    }
+    ]
 }

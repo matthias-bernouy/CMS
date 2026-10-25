@@ -10,6 +10,7 @@ test("contract secret stores keep values isolated and preserve namespace authori
     const secrets = new CmsSecrets(new InMemoryCmsSecretMetadataStore(), values);
     const first = await createContractSecretStores(secrets, bootstrap);
 
+    await first.repository.set("SHARED_NAME", "repository-value");
     await first.files.set("SHARED_NAME", "files-value");
     await first.installations.set("SHARED_NAME", "installation-value");
 
@@ -19,11 +20,13 @@ test("contract secret stores keep values isolated and preserve namespace authori
     expect((await bootstrap.listKeys()).sort()).toEqual([
         "CMS_SECRET_NAMESPACE_FILES",
         "CMS_SECRET_NAMESPACE_INSTALLATIONS",
+        "CMS_SECRET_NAMESPACE_REPOSITORY",
         "CMS_SECRET_NAMESPACE_SMTP_EMAILER",
     ]);
 
     const resumed = await createContractSecretStores(secrets, bootstrap);
     expect(await resumed.smtpEmailer.get("SHARED_NAME")).toBeNull();
+    expect(await resumed.repository.get("SHARED_NAME")).toBe("repository-value");
     expect(await resumed.files.get("SHARED_NAME")).toBe("files-value");
     expect(await resumed.installations.get("SHARED_NAME")).toBe("installation-value");
 });

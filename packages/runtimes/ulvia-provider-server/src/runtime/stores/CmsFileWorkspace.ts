@@ -12,6 +12,7 @@ export class CmsFileWorkspace implements CmsFileWorkspacePort {
     constructor(
         private readonly files: CmsFilesService,
         private readonly secrets: SecretStore,
+        private readonly publicUrl?: string,
     ) {}
 
     async get(input: { offset?: number; limit?: number }) {
@@ -32,7 +33,7 @@ export class CmsFileWorkspace implements CmsFileWorkspacePort {
         fileId?: string;
     }) {
         const credentials = await this.#credentials();
-        return this.files.createUpload({
+        const upload = await this.files.createUpload({
             ...credentials,
             filename: input.filename,
             size: input.size,
@@ -41,6 +42,15 @@ export class CmsFileWorkspace implements CmsFileWorkspacePort {
             ...(input.imageProfile ? { imageProfile: input.imageProfile } : {}),
             ...(input.fileId ? { fileId: input.fileId } : {}),
         });
+        return {
+            ...upload,
+            ...(this.publicUrl
+                ? {
+                      uploadUrl: new URL(`/.cms/mcp/uploads/${encodeURIComponent(upload.uploadId)}`, this.publicUrl)
+                          .href,
+                  }
+                : {}),
+        };
     }
 
     async completeUpload(uploadId: string): Promise<FileReference> {
@@ -66,6 +76,21 @@ export class CmsFileWorkspace implements CmsFileWorkspacePort {
     async deleteFile(fileId: string): Promise<void> {
         const credentials = await this.#credentials();
         await this.files.deleteFile(credentials.namespaceId, credentials.namespaceKey, fileId);
+    }
+
+    async readAsset(fileId: string, generation: string): Promise<Blob> {
+        const credentials = await this.#credentials();
+        const file = await this.files.getFile({ ...credentials, fileId, generation });
+        if (file.size > 16 * 1024 * 1024) {
+            throw new Error("Source asset exceeds 16 MiB");
+        }
+        const signed = await this.files.signFile({ ...credentials, fileId, generation, expiresInSeconds: 60 });
+        const read = await this.files.readFile({
+            fileId,
+            generation,
+            access: new URL(signed.url).searchParams.get("access") ?? undefined,
+        });
+        return new Response(read.stream).blob();
     }
 
     #credentials(): Promise<WorkspaceCredentials> {

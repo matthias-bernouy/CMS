@@ -4,10 +4,10 @@ import {
 } from "@bernouy/cms-repository/providers/installations";
 import type { InstallationsProviderTransport } from "./InstallationsProviderTransport";
 
-const INSTALLATIONS_CONTRACT = {
+export const INSTALLATIONS_CONTRACT = {
     contractId: "ulvia.cms.installations",
-    version: "1.0.0",
-    digest: "sha256:447e0bd013efd0a1f78d9fde6c175f03429ef443cd69c285427aec95ed350e1f",
+    version: "1.1.0",
+    digest: "sha256:675151d45a956dd34f928cb851dc0908f2f57bb97fea6c017fb8a689a98b34f8",
 } as const;
 
 /** Validates the stable public Provider report before the Kernel accepts its control capabilities. */

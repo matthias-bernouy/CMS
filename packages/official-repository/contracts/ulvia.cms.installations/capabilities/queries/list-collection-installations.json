@@ -102,17 +102,28 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "GET",
-        "path": "/list-collection-installations",
-        "input": {},
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "CORE_UNAVAILABLE": 503
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/list-collection-installations",
+            "input": {},
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "installations_list_collection_installations",
+                "description": "Read this site\u2019s installed collection versions and current installation revision before installing or upgrading."
             }
         }
-    }
+    ]
 }

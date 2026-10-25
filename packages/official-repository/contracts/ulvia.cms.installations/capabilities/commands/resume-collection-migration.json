@@ -65,22 +65,33 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/resume-collection-migration",
-        "input": {
-            "body": true
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/resume-collection-migration",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [202],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "NOT_FOUND": 404,
+                    "MIGRATION_IN_PROGRESS": 423,
+                    "IDEMPOTENCY_CONFLICT": 409,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
         },
-        "response": {
-            "successStatuses": [202],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "NOT_FOUND": 404,
-                "MIGRATION_IN_PROGRESS": 423,
-                "IDEMPOTENCY_CONFLICT": 409,
-                "CORE_UNAVAILABLE": 503
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "installations_resume_collection_migration",
+                "description": "Resume an interrupted collection migration. Track the returned operation until completion."
             }
         }
-    }
+    ]
 }

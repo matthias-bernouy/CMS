@@ -2,50 +2,118 @@
     "id": "theme.token.reset",
     "description": "Remove one token override from one site theme profile and mode.",
     "access": "admin",
-    "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
     "input": {
         "type": "object",
         "properties": {
-            "expectedRevision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-            "themeId": { "type": "string", "minLength": 1, "maxLength": 96 },
-            "mode": { "type": "string", "enum": ["light", "dark"], "maxLength": 5 },
-            "tokenId": { "type": "string", "minLength": 1, "maxLength": 96 }
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Current revision returned by the corresponding read operation. Read again after a conflict."
+            },
+            "themeId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "mode": {
+                "type": "string",
+                "enum": ["light", "dark"],
+                "maxLength": 5
+            },
+            "tokenId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            }
         },
         "required": ["expectedRevision", "themeId", "mode", "tokenId"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-            "activeThemeId": { "type": "string", "maxLength": 96 },
-            "themeId": { "type": "string", "maxLength": 96 },
-            "mode": { "type": "string", "enum": ["light", "dark"], "maxLength": 5 },
-            "tokenId": { "type": "string", "maxLength": 96 },
-            "value": { "type": "string", "maxLength": 4096 },
-            "overridden": { "type": "boolean" }
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "activeThemeId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "themeId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "mode": {
+                "type": "string",
+                "enum": ["light", "dark"],
+                "maxLength": 5
+            },
+            "tokenId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "value": {
+                "type": "string",
+                "maxLength": 4096
+            },
+            "overridden": {
+                "type": "boolean"
+            }
         },
         "required": ["revision", "activeThemeId", "themeId", "mode", "tokenId", "value", "overridden"]
     },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "REVISION_CONFLICT", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/theme/token/reset",
-        "input": { "body": true },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "INVALID_INPUT": 422,
-                "NOT_FOUND": 404,
-                "REVISION_CONFLICT": 409,
-                "CORE_UNAVAILABLE": 503
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/theme/token/reset",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_FOUND": 404,
+                    "REVISION_CONFLICT": 409,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "content_theme_token_reset",
+                "description": "Reset one site theme-token override to its collection default using the current expectedRevision."
             }
         }
-    }
+    ]
 }

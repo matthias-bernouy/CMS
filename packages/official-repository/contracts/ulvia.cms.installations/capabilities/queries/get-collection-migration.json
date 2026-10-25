@@ -89,20 +89,31 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "QUERY",
-        "path": "/get-collection-migration",
-        "input": {
-            "body": true
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/get-collection-migration",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
         },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "NOT_FOUND": 404,
-                "CORE_UNAVAILABLE": 503
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "installations_get_collection_migration",
+                "description": "Read detailed progress for one collection migration."
             }
         }
-    }
+    ]
 }

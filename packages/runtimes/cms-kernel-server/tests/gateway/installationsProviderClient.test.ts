@@ -47,7 +47,7 @@ describe("Installations Provider control capabilities", () => {
             const headers = new Headers(request.init?.headers);
             expect(headers.get("authorization")).toBe("Bearer installations-provider-token");
             expect(headers.get("x-ulvia-contract-id")).toBe("ulvia.cms.installations");
-            expect(headers.get("x-ulvia-contract-version")).toBe("1.0.0");
+            expect(headers.get("x-ulvia-contract-version")).toBe("1.1.0");
             expect(headers.get("x-ulvia-request-id")).toMatch(/^[0-9a-f-]{36}$/);
         }
         expect(new Headers(requests[3]?.init?.headers).get("x-ulvia-capability-id")).toBe("gateway.invocation.issue");

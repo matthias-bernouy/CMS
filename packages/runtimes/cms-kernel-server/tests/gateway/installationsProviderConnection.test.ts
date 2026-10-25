@@ -4,7 +4,7 @@ import { InstallationsProviderTransport } from "../../src/runtime/gateway/Instal
 
 test("the public Provider report accepts a compatible installations control contract", async () => {
     const requests: Array<{ url: string; init?: RequestInit }> = [];
-    const report = providerReport();
+    const report = await providerReport();
     const endpoint = "http://ulvia-provider:5103";
     const token = "provider-token-at-least-twenty";
     const transport = new InstallationsProviderTransport(endpoint, token, (async (url, init) => {
@@ -22,7 +22,7 @@ test("the public Provider report accepts a compatible installations control cont
 });
 
 test("the public Provider report rejects incompatible installations control contracts", async () => {
-    const report = providerReport();
+    const report = await providerReport();
     const endpoint = "http://ulvia-provider:5103";
     const token = "provider-token-at-least-twenty";
     const transport = new InstallationsProviderTransport(endpoint, token, (async () =>
@@ -35,7 +35,13 @@ test("the public Provider report rejects incompatible installations control cont
     await expect(fetchInstallationsProviderReport(transport)).rejects.toThrow("compatible control contract");
 });
 
-function providerReport() {
+async function providerReport() {
+    const manifest = await Bun.file(
+        new URL("../../../../official-repository/providers/ulvia.official/definition.json", import.meta.url),
+    ).json();
+    const current = manifest.implementations.find(
+        (item: { contractId: string }) => item.contractId === "ulvia.cms.installations",
+    );
     return {
         protocol: "ulvia-provider/v1",
         providerId: "ulvia.example",
@@ -46,8 +52,8 @@ function providerReport() {
         implementations: [
             {
                 contractId: "ulvia.cms.installations",
-                version: "1.0.0",
-                digest: "sha256:447e0bd013efd0a1f78d9fde6c175f03429ef443cd69c285427aec95ed350e1f",
+                version: current.version,
+                digest: current.digest,
                 status: "ready",
             },
         ],

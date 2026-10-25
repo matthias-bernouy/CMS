@@ -1,3 +1,4 @@
+import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
 import { CapabilityGateway, type GatewayActor } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
@@ -62,6 +63,35 @@ export function createKernelGateway(control: ControlProviderClient) {
             : null;
     };
     return {
+        contracts: async (context: McpInvocationContext) => {
+            const result = await gateway.invoke({
+                ...context,
+                contractId: "ulvia.cms.installations",
+                capabilityId: "list-provider-installations",
+                input: {},
+            });
+            if (result.kind !== "success") {
+                throw new Error("Selected contract catalogue is unavailable");
+            }
+            const selections = (result.output as { selections: { contractId: string }[] }).selections;
+            const ids = [...new Set(selections.map(({ contractId }) => contractId))];
+            const contracts = new Map<string, Awaited<ReturnType<typeof gateway.resolveContract>>>();
+            while (ids.length) {
+                if (contracts.size >= 256) {
+                    throw new Error("Selected contract catalogue is too large");
+                }
+                const contractId = ids.shift()!;
+                if (contracts.has(contractId)) {
+                    continue;
+                }
+                const contract = await gateway.resolveContract({ siteId: context.siteId, contractId });
+                contracts.set(contractId, contract);
+                if (contract.release.extends) {
+                    ids.push(contract.release.extends.contractId);
+                }
+            }
+            return [...contracts.values()];
+        },
         invoker: gateway,
         resolveCapability,
         pageCapabilities: new PageCapabilityAnalyzer({ resolveCapability, resolveContract }),

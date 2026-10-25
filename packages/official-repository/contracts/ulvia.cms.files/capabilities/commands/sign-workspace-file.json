@@ -2,38 +2,84 @@
     "id": "workspace.files.sign",
     "description": "Create a short-lived private read URL for a site workspace file generation.",
     "access": "admin",
-    "behavior": { "effect": "command", "execution": "sync", "idempotency": "none" },
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "none"
+    },
     "input": {
         "type": "object",
         "properties": {
-            "fileId": { "type": "string", "maxLength": 128 },
-            "generation": { "type": "string", "maxLength": 128 },
-            "expiresIn": { "type": "integer", "minimum": 1, "maximum": 3600 }
+            "fileId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "generation": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "expiresIn": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3600
+            }
         },
         "required": ["fileId", "generation", "expiresIn"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "url": { "type": "string", "maxLength": 4096 },
-            "expiresAt": { "type": "string", "maxLength": 64 }
+            "url": {
+                "type": "string",
+                "maxLength": 4096
+            },
+            "expiresAt": {
+                "type": "string",
+                "maxLength": 64
+            }
         },
         "required": ["url", "expiresAt"]
     },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
-    ],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/workspace.files.sign",
-        "input": { "body": true },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": { "INVALID_INPUT": 422, "NOT_FOUND": 404, "CORE_UNAVAILABLE": 503 }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
         }
-    }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/workspace.files.sign",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "files_workspace_files_sign",
+                "description": "Create an expiring download URL for one exact file generation. This does not make a private file public."
+            }
+        }
+    ]
 }

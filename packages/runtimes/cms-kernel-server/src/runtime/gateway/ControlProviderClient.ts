@@ -3,8 +3,7 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 import type { Logger } from "@bernouy/logging";
 import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 
-const CONTROL_CONTRACT_ID = "ulvia.cms.installations";
-const CONTROL_CONTRACT_VERSION = "1.0.0";
+import { INSTALLATIONS_CONTRACT } from "./fetchProviderReport";
 const MAX_CONTROL_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 export type IssuedProviderInvocation = Readonly<{
@@ -79,8 +78,8 @@ export class ControlProviderClient {
                     accept: "application/json",
                     "content-type": "application/json",
                     "x-ulvia-request-id": crypto.randomUUID(),
-                    "x-ulvia-contract-id": CONTROL_CONTRACT_ID,
-                    "x-ulvia-contract-version": CONTROL_CONTRACT_VERSION,
+                    "x-ulvia-contract-id": INSTALLATIONS_CONTRACT.contractId,
+                    "x-ulvia-contract-version": INSTALLATIONS_CONTRACT.version,
                     "x-ulvia-capability-id": capabilityId,
                 },
                 body: JSON.stringify(input),

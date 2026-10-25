@@ -17,7 +17,8 @@
             "expectedRevision": {
                 "type": "integer",
                 "minimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "Current revision returned by the corresponding read operation. Read again after a conflict."
             },
             "configurationJson": {
                 "type": "string",
@@ -130,22 +131,33 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/update-collection-configuration",
-        "input": {
-            "body": true
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/update-collection-configuration",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_FOUND": 404,
+                    "REVISION_CONFLICT": 409,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
         },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "INVALID_INPUT": 422,
-                "NOT_FOUND": 404,
-                "REVISION_CONFLICT": 409,
-                "CORE_UNAVAILABLE": 503
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "installations_update_collection_configuration",
+                "description": "Update site-owned configuration for an installed collection using the current installation expectedRevision."
             }
         }
-    }
+    ]
 }

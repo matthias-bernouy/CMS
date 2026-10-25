@@ -17,11 +17,17 @@ export type ContractSecretStores = Readonly<{
     smtpEmailer: SecretStore;
     files: SecretStore;
     installations: SecretStore;
+    repository: SecretStore;
 }>;
 
 const WRITE_PERMISSIONS = ["secrets.metadata.read", "secrets.resolve", "secrets.write", "secrets.delete"] as const;
 
 const DEFINITIONS = {
+    repository: {
+        bootstrapKey: "CMS_SECRET_NAMESPACE_REPOSITORY",
+        name: "ulvia.cms.repository",
+        permissions: WRITE_PERMISSIONS,
+    },
     smtpEmailer: {
         bootstrapKey: "CMS_SECRET_NAMESPACE_SMTP_EMAILER",
         name: "ulvia.cms.emailer.smtp",

@@ -1,0 +1,14 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.repository",
+    "name": "CMS Repository",
+    "description": "Prepare collection source snapshots and publish immutable releases through a configured Repository identity.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "package",
+        "categories": ["administration", "collections"]
+    }
+}
