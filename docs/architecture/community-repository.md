@@ -77,7 +77,7 @@ must support `flock`, and the runtime must provide the `flock` executable.
 ## Contract and transport clients
 
 `@bernouy/cms-repository/repository/contract` exports `admitRepositoryContract`
-and `RepositoryCapabilityService`. The exact admitted `ulvia.repository@0.1.0`
+and `RepositoryCapabilityService`. The exact admitted `ulvia.repository@0.2.0`
 definition is available at `GET /v1/repository-contract`; its ETag is its release
 digest. This built-in protocol definition is not automatically published into
 the user's mutable catalogue. Consumers explicitly admit and pin it.
@@ -144,7 +144,8 @@ HTTP bindings retain method, path, input mappings and response rules; MCP
 bindings optionally declare `tool.name`, `tool.title` and `tool.description`.
 Multiple HTTP aliases or MCP tools may expose the same domain operation.
 Overlapping HTTP routes and duplicate declared MCP names fail admission.
-WebSocket, skills, prompts and resource catalogues are not implemented.
+WebSocket, skills and prompts are not implemented. The CMS host supplies four
+MCP resources; see [Instance MCP V1](instance-mcp.md).
 
 A capability may declare only MCP bindings. Its admission then contains no HTTP
 execution plans, and both direct and logical HTTP entry points reject it.
@@ -157,7 +158,8 @@ HTTP route resolution, automatic binary HEAD, wire content types, response
 statuses and headers belong to the HTTP adapter. A host's native transport
 returns domain outcomes directly. An outbound HTTP transport uses the requested
 HTTP binding when one is selected; otherwise it chooses the first declared HTTP
-binding. It fails before network access when none exists. Optional HTTP response
+binding. It fails before network access when none exists. Remote HTTP installation
+selection additionally rejects MCP exposures without an HTTP binding. Optional HTTP response
 metadata is carried through the Gateway without becoming a domain prerequisite.
 
 Historical `binding` declarations remain accepted as HTTP-only. Their canonical
@@ -180,9 +182,9 @@ Discovery is deterministic and paginated at 64 tools, with 1024 tools maximum.
 The supported HTTP protocol is explicitly `2025-11-25`, using JSON responses,
 no protocol sessions, and no server-initiated streams. It supports initialization,
 ping, tool discovery and calls. It rejects unapproved browser Origins and
-unsupported protocol versions. The Repository mounts it at `/mcp` for public
-discovery and domain-proof-authorized commands. Host authentication belongs in
-the injected context resolver; model-supplied arguments cannot choose an actor.
+unsupported protocol versions. Only the CMS instance mounts MCP, at `/.cms/mcp`,
+with OAuth consent and trusted context resolution. The Repository mounts no MCP
+endpoint. Model-supplied arguments cannot choose an actor.
 
 Inputs use `{ input, idempotencyKey? }`; keyed commands require the explicit
 retry key. Outputs use `{ output }`, and declared errors use
@@ -198,11 +200,9 @@ fetching or whole-bundle base64. New authored assets can be streamed over the
 declared HTTP upload binding between MCP begin and commit. Resource delivery
 policy, retention and authorization belong to the host.
 Tools requiring a binary input resolver or output publisher are omitted when
-the host has not supplied that port. The Repository supplies public immutable
-release links; its asset-write tool remains available through raw HTTP.
-Set the runtime's `REPOSITORY_PUBLIC_URL` to the external HTTPS origin behind
-a proxy. The default is loopback HTTP at the configured listen port; resource
-links never derive their authority from request or forwarded headers.
+the host has not supplied that port. The CMS V1 file workspace uses a separate
+authenticated binary upload bridge. Repository publication streams signed asset
+bytes through its HTTP API; no Repository MCP asset-write tool is exposed.
 
 The newer `2026-07-28` protocol changes initialization/metadata, headers and
 results. It requires a separately tested profile; this implementation does not
@@ -226,6 +226,9 @@ of constant work over an unlimited repository.
 
 Remote installation/observation of the Repository as an ordinary selectable
 Provider, CMS administration Pages for namespace keys, multiple delegated keys,
-source workspaces, source snapshots, and a distributed storage adapter are not
-implemented. They must preserve the same contract, ownership and secret ports.
+source workspaces and a distributed storage adapter are not implemented.
+Private immutable source snapshots are implemented through owner-authorized
+`QUERY /v1/source-snapshots` and `POST /v1/source-snapshots/put`. Writes must
+match an existing collection release digest. Snapshots are separate from public
+release downloads and survive as private authored input for later versions.
 The proposed authoring/test roadmap is in [agent authoring](../development/agent-authoring.md).

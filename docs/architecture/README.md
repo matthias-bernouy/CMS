@@ -73,6 +73,9 @@ backup/restore remain [open operational work](../TODO.md).
 
 ### Repository And Gateway
 
+See [Instance MCP V1](instance-mcp.md) for delegated connections, collection
+authoring and the HTTP-only Repository boundary.
+
 `cms-repository` owns immutable contract releases and provider manifests,
 site installation and selection models, revisioned storage, and authored
 collection admission. It does not call providers.
@@ -91,7 +94,8 @@ are application workflows owned by `cms-repository`. Repository publication is
 served independently by `official-repository-server`. See
 [repository and gateway flows](../providers/README.md).
 The [community Repository](community-repository.md) adds cryptographic namespace
-ownership, an admitted Repository capability contract and a reusable MCP binding.
+ownership and an admitted HTTP Repository capability contract. The reusable
+MCP binding is mounted by the CMS instance.
 
 ### Authentication
 

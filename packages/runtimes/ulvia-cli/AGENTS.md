@@ -84,3 +84,7 @@ Ulvia CMS installation runtime.
   exact-coordinate reads.
 - `prune` clears the local repository without touching shared services or instances.
 - Do not reintroduce the removed integration repository or Supabase bridge.
+
+- Import collection source assembly directly from
+  `@bernouy/cms-repository/collections/build`; do not retain CLI forwarding files
+  merely to preserve obsolete internal paths.

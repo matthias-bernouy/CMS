@@ -53,67 +53,25 @@ reports do not prove that a live provider passed.
    without publication authority may prepare the artifact and verification
    evidence but cannot mint an owner signature.
 
-No new generic authoring sandbox or collection-authored test DSL is implemented
-by the community Repository change. Its MCP tools expose the same admitted
-Repository operations and exact results; they do not authorize arbitrary builds.
+No generic authoring sandbox or collection-authored test DSL is implemented.
+Instance MCP uses fixed collection compilation entrypoints; it does not accept
+arbitrary build commands.
 
-## Prioritized implementation proposal
+## Current instance authoring and next work
 
-### P0: reusable validation and disposable preview capabilities
+The shared compiler extraction and bounded source preparation are implemented.
+The [Instance MCP V1](../architecture/instance-mcp.md) guide documents the exact
+tools, OAuth connection, source snapshot format and explicit publication /
+installation workflow. The Repository is HTTP-only. Agents connect to their CMS
+instance; the host retains namespace signing credentials.
 
-Extract the CLI's source assembly into an explicit authoring-tool subpath with
-an injected filesystem reader, limits and compiler. Keep it outside the normal
-admission path. Expose structured `validate-source` and `build-release` results
-with bounded path/line diagnostics, source digest, artifact digest, dependency
-pins and browser-risk report. Use fixed compiler entrypoints, not a client-
-supplied command string. This seam should serve CLI and agent tools equally.
+Persistent source workspaces, disposable preview workers, collection-authored
+browser scenarios and packaged skills remain future work. A future preview
+worker should isolate compilation and rendering from signing credentials with
+bounded CPU, memory, temporary storage, network and deadlines. Current static
+admission and Bun macro disabling do not provide an OS sandbox.
 
-Add a preview environment port that creates, describes and destroys a disposable
-tenant with an exact collection/dependency graph and a bounded lease. The
-runtime chooses container/worker isolation, a read-only base image, temporary
-storage, CPU/memory/process limits, deadlines and denied-by-default network
-access. Give every run/profile its own environment, including failure cleanup.
-Do not mount the Docker socket or production secrets into the authoring worker.
-
-### P1: declared collection scenarios and evidence
-
-Define an independently versioned suite pinned to the collection release digest.
-Start with bounded fixtures: Page source, selected exported Blocs, locale,
-settings, viewport, user actor and exact capability mocks. Declare expected
-rendered DOM/accessible roles, query/mutation outcomes, asset references and
-console/network failures. Avoid arbitrary JavaScript assertions in the public
-format. Bound steps, retries, screenshot sizes and total runtime.
-
-Reuse contract scenarios for capability setup and verification rather than
-copying their actor/capture/assertion language. Keep rendering assertions in a
-small collection-specific extension. Add migration scenarios that install an
-old exact release, preserve representative Page state, apply the declared
-adjacent migration and verify rollback/resume behavior.
-
-Return evidence with source/artifact/suite/dependency/image digests, runner
-version, environment policy, test outcomes and bounded logs/screenshots. Store
-large outputs as immutable resources and return authorized links over MCP.
-Build/admission, passing scenarios and human review remain separate claims.
-
-### P2: source workspaces and contract extension
-
-Introduce remote source workspaces only when remote authoring is needed. Key
-every workspace by `(namespace, artifact kind, artifact ID, workspace ID)`;
-use revision-checked writes and owner proofs bound to the source digest. Build
-from canonical bounded snapshots containing every declared authoring file,
-asset, text and theme. Reject traversal, symlinks, duplicate normalized paths,
-undeclared material, excessive counts/depth/bytes and unstable concurrent reads.
-Publish immutable source snapshots separately from compiled runtime artifacts.
-
-Extend the same validator/worker ports to contract source assembly, schema
-evolution, suite admission and dependency-profile coverage. Execute providers
-only through the existing conformance environment port. Provider code needs
-its own sandbox profile; contract metadata itself is declarative. Reuse the
-generic MCP binding to expose these capabilities after they have admitted
-contracts and enforceable limits.
-
-A future skill can teach source organization, diagnosis, preview iteration and
-which evidence to request. It adds repeatable guidance and examples. It cannot
-replace schema validation, filesystem boundaries, namespace authorization,
-worker isolation, test assertions or review. Write and evaluate that skill only
-after the tool contracts and representative success/failure fixtures stabilize.
+Contract conformance continues through the existing injected environment factory.
+A later collection scenario format can reuse its fixtures and evidence model,
+with bounded DOM/rendering assertions. Passing a future suite, admission and
+human review must remain separate claims.
