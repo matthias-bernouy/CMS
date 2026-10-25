@@ -28,25 +28,31 @@ export class RepositoryReadEndpoint {
     }
 
     async handle(request: Request): Promise<Response | null> {
-        if (request.method !== "GET") {
+        if (request.method !== "GET" && request.method !== "HEAD") {
             return null;
         }
+        const head = request.method === "HEAD";
         const parts = new URL(request.url).pathname.split("/");
         if (parts[1] !== "v1") {
             return notFound();
         }
         const type = parts[2];
         if (parts.length === 6 && type === "conformance-evidence") {
-            return this.conformanceEvidence(parts);
+            return this.conformanceEvidence(parts, head);
         }
         if (parts.length === 3) {
-            return (await readCatalogue(request, type, this.index, this.refreshCatalogueReads)) ?? notFound();
+            const response = (await readCatalogue(request, type, this.index, this.refreshCatalogueReads)) ?? notFound();
+            if (!head) {
+                return response;
+            }
+            await response.body?.cancel();
+            return new Response(null, { status: response.status, headers: response.headers });
         }
         if (parts.length === 8 && type === "contracts" && parts[6] === "fixtures") {
-            return this.contractFixture(parts);
+            return this.contractFixture(parts, head);
         }
         if (parts.length === 8 && type === "collections" && parts[6] === "assets") {
-            return this.collectionAsset(parts);
+            return this.collectionAsset(parts, head);
         }
         if (parts.length !== 6) {
             return notFound();
@@ -55,15 +61,15 @@ export class RepositoryReadEndpoint {
             const [publisherId, id, version] = parts.slice(3).map(decodeURIComponent) as [string, string, string];
             if (type === "collections") {
                 const artifact = await this.collections.getMetadata(publisherId, id, version);
-                return artifact ? releaseResponse(artifact.canonicalJson, artifact.digest) : notFound();
+                return artifact ? releaseResponse(artifact.canonicalJson, artifact.digest, head) : notFound();
             }
             if (type === "contracts") {
                 const artifact = await this.contracts.getMetadata(publisherId, id, version);
-                return artifact ? releaseResponse(artifact.canonicalJson, artifact.digest) : notFound();
+                return artifact ? releaseResponse(artifact.canonicalJson, artifact.digest, head) : notFound();
             }
             if (type === "providers") {
                 const artifact = await this.providers.getMetadata(publisherId, id, version);
-                return artifact ? releaseResponse(artifact.canonicalJson, artifact.digest) : notFound();
+                return artifact ? releaseResponse(artifact.canonicalJson, artifact.digest, head) : notFound();
             }
             return notFound();
         } catch (error) {
@@ -74,7 +80,7 @@ export class RepositoryReadEndpoint {
         }
     }
 
-    private async conformanceEvidence(parts: string[]): Promise<Response> {
+    private async conformanceEvidence(parts: string[], head: boolean): Promise<Response> {
         try {
             const [providerId, contractId, evidenceId] = parts.slice(3).map(decodeURIComponent) as [
                 string,
@@ -86,7 +92,7 @@ export class RepositoryReadEndpoint {
                 return notFound();
             }
             const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
-            return releaseResponse(bytes.toString("utf8"), digest);
+            return releaseResponse(bytes.toString("utf8"), digest, head);
         } catch (error) {
             if (error instanceof URIError) {
                 return notFound();
@@ -95,16 +101,16 @@ export class RepositoryReadEndpoint {
         }
     }
 
-    private async contractFixture(parts: string[]): Promise<Response> {
+    private async contractFixture(parts: string[], head: boolean): Promise<Response> {
         try {
             const [publisherId, id, version, assetId] = [parts[3]!, parts[4]!, parts[5]!, parts[7]!].map(
                 decodeURIComponent,
             );
-            const fixture = await this.contracts.getFixture(publisherId!, id!, version!, assetId!);
+            const fixture = await this.contracts.getFixture(publisherId!, id!, version!, assetId!, head);
             if (!fixture) {
                 return notFound();
             }
-            return assetResponse(fixture.bytes, fixture.definition.mediaType, fixture.definition.digest);
+            return assetResponse(fixture.bytes, fixture.definition.mediaType, fixture.definition.digest, head);
         } catch (error) {
             if (error instanceof URIError) {
                 return notFound();
@@ -113,16 +119,16 @@ export class RepositoryReadEndpoint {
         }
     }
 
-    private async collectionAsset(parts: string[]): Promise<Response> {
+    private async collectionAsset(parts: string[], head: boolean): Promise<Response> {
         try {
             const [publisherId, id, version, assetId] = [parts[3]!, parts[4]!, parts[5]!, parts[7]!].map(
                 decodeURIComponent,
             );
-            const asset = await this.collections.getAsset(publisherId!, id!, version!, assetId!);
+            const asset = await this.collections.getAsset(publisherId!, id!, version!, assetId!, head);
             if (!asset) {
                 return notFound();
             }
-            return assetResponse(asset.bytes, asset.definition.mediaType, asset.definition.digest);
+            return assetResponse(asset.bytes, asset.definition.mediaType, asset.definition.digest, head);
         } catch (error) {
             if (error instanceof URIError) {
                 return notFound();
@@ -132,20 +138,23 @@ export class RepositoryReadEndpoint {
     }
 }
 
-function releaseResponse(canonicalJson: string, digest: string): Response {
-    return new Response(canonicalJson, {
+function releaseResponse(canonicalJson: string, digest: string, head: boolean): Response {
+    return new Response(head ? null : canonicalJson, {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
+            "Content-Length": String(Buffer.byteLength(canonicalJson)),
+            "Content-Security-Policy": "sandbox; default-src 'none'",
             ETag: `"${digest}"`,
             "Cache-Control": "public, max-age=31536000, immutable",
         },
     });
 }
 
-function assetResponse(bytes: Uint8Array | Blob, mediaType: string, digest: string): Response {
-    return new Response(bytes instanceof Blob ? bytes : Buffer.from(bytes), {
+function assetResponse(bytes: Uint8Array | Blob, mediaType: string, digest: string, head: boolean): Response {
+    return new Response(head ? null : bytes instanceof Blob ? bytes : Buffer.from(bytes), {
         headers: {
             "Content-Type": mediaType,
+            "Content-Length": String(bytes instanceof Blob ? bytes.size : bytes.byteLength),
             ETag: `"${digest}"`,
             "Cache-Control": "public, max-age=31536000, immutable",
         },

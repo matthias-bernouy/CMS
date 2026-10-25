@@ -12,6 +12,7 @@
         "layer": "runtimes"
     },
     "dependencies": {
+        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*"

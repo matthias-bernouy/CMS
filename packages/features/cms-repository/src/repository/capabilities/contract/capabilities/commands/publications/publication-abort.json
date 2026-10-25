@@ -1,0 +1,75 @@
+{
+    "id": "publication-abort",
+    "description": "publication-abort",
+    "access": "public",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "uploadId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 36,
+                "format": "uuid"
+            },
+            "proof": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "sensitive": true
+            }
+        },
+        "required": [
+            "namespace",
+            "uploadId",
+            "proof"
+        ]
+    },
+    "output": {
+        "type": "null"
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/v1/uploads/abort",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [
+                    204
+                ],
+                "contentTypes": [],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp"
+        }
+    ]
+}

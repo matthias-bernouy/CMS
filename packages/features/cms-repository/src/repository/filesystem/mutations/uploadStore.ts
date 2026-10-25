@@ -1,3 +1,4 @@
+import { RepositoryRequestError } from "../../core/errors";
 import { createHash, randomUUID } from "node:crypto";
 import { link, lstat, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
@@ -75,6 +76,10 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         };
     }
 
+    async describe(uploadId: string): Promise<PublicationUploadManifest> {
+        return (await this.readDocument(uploadId)).manifest;
+    }
+
     async putAsset(
         uploadId: string,
         assetId: string,
@@ -85,17 +90,23 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         const document = await this.readOpen(uploadId);
         const asset = document.manifest.assets.find((candidate) => candidate.id === assetId);
         if (!asset) {
-            throw new Error("Publication upload asset is not declared");
+            throw new RepositoryRequestError("REJECTED", "Publication upload asset is not declared");
         }
         if (contentDigest !== asset.digest || (contentLength !== undefined && contentLength !== asset.byteLength)) {
-            throw new Error("Publication upload asset metadata does not match its declaration");
+            throw new RepositoryRequestError(
+                "REJECTED",
+                "Publication upload asset metadata does not match its declaration",
+            );
         }
         const destination = join(this.directory(uploadId), "assets", assetFileName(assetId));
         const temporary = `${destination}.${randomUUID()}.tmp`;
         try {
             const actual = await writeUploadStream(temporary, body, asset.byteLength);
             if (actual.digest !== asset.digest || actual.byteLength !== asset.byteLength) {
-                throw new Error("Publication upload asset bytes do not match their declaration");
+                throw new RepositoryRequestError(
+                    "REJECTED",
+                    "Publication upload asset bytes do not match their declaration",
+                );
             }
             try {
                 await link(temporary, destination);
@@ -106,7 +117,10 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
                 }
                 const existing = await digestUploadFile(destination);
                 if (existing.digest !== asset.digest || existing.byteLength !== asset.byteLength) {
-                    throw new Error("A staged publication asset already has different content");
+                    throw new RepositoryRequestError(
+                        "REJECTED",
+                        "A staged publication asset already has different content",
+                    );
                 }
             }
         } finally {
@@ -131,7 +145,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             const document = await this.readOpen(uploadId);
             const verified = await this.verifiedAssetIds(document);
             if (verified.length !== document.manifest.assets.length) {
-                throw new Error("Publication upload is incomplete");
+                throw new RepositoryRequestError("REJECTED", "Publication upload is incomplete");
             }
             const assets = document.manifest.assets.map((asset) => ({
                 id: asset.id,
@@ -172,10 +186,10 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
     private async readOpen(uploadId: string): Promise<UploadDocument> {
         const document = await this.readDocument(uploadId);
         if (Date.parse(document.expiresAt) <= Date.now()) {
-            throw new Error("Publication upload has expired");
+            throw new RepositoryRequestError("REJECTED", "Publication upload has expired");
         }
         if (await this.readResult(uploadId)) {
-            throw new Error("Publication upload is already committed");
+            throw new RepositoryRequestError("REJECTED", "Publication upload is already committed");
         }
         return document;
     }
@@ -308,7 +322,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
 
     private directory(uploadId: string): string {
         if (!UPLOAD_ID.test(uploadId)) {
-            throw new Error("Invalid publication upload ID");
+            throw new RepositoryRequestError("REJECTED", "Invalid publication upload ID");
         }
         return join(this.uploadRoot, uploadId);
     }

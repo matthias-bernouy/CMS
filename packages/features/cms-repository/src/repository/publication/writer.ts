@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { isSha256Digest } from "@bernouy/binary-media";
-import { signRepositoryContentDigest, signRepositoryRequest } from "./auth";
+import { repositoryWriteHeaders, type RepositoryWriteCredential } from "../namespaces/request";
 import { encodePublicationUpload, type PublicationUploadManifest } from "./protocol";
 import type {
     ConformanceEvidencePublicationResult,
@@ -10,13 +10,15 @@ import type {
     RemoteCoordinate,
 } from "./types";
 import { concurrentlyMap } from "./transport/concurrency";
+import { boundedResponseBytes } from "./transport";
+import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 
 const TRANSFER_CONCURRENCY = 4;
 
 export class RemoteRepositoryWriter {
     constructor(
         private readonly base: URL,
-        private readonly token?: string,
+        private readonly credential?: RepositoryWriteCredential,
     ) {}
 
     async push(envelope: PublicationEnvelope): Promise<{ added: boolean; digest: string }> {
@@ -46,12 +48,25 @@ export class RemoteRepositoryWriter {
     }
 
     async yank(coordinate: RemoteCoordinate, reason: string | null): Promise<void> {
-        const body = Buffer.from(JSON.stringify({ reason }));
-        await this.mutateBytes(
-            "PUT",
-            `v1/yanks/${coordinate.kind}/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}`,
-            body,
+        const path = `v1/yanks/${coordinate.kind}/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}`;
+        let expectedRevision: number | undefined;
+        if (this.credential && typeof this.credential !== "string") {
+            const response = await fetch(new URL(path, this.base), {
+                redirect: "error",
+                signal: AbortSignal.timeout(15_000),
+            });
+            const state = parseStrictJson(await boundedResponseBytes(response, 4_096), 4_096, 4) as {
+                revision?: unknown;
+            };
+            if (!response.ok || !Number.isSafeInteger(state.revision) || (state.revision as number) < 0) {
+                throw new Error("Publication metadata revision is unavailable");
+            }
+            expectedRevision = state.revision as number;
+        }
+        const body = Buffer.from(
+            JSON.stringify({ reason, ...(expectedRevision === undefined ? {} : { expectedRevision }) }),
         );
+        await this.mutateBytes("PUT", path, body);
     }
 
     async pushEvidence(canonicalJson: string): Promise<ConformanceEvidencePublicationResult> {
@@ -77,8 +92,13 @@ export class RemoteRepositoryWriter {
     }
 
     private async mutateBytes(method: string, path: string, body: Uint8Array): Promise<unknown> {
-        const signed = signRepositoryRequest(method, new URL(path, this.base), body, this.requiredToken());
-        return this.mutateBody(method, path, Buffer.from(body), signed.contentDigest, "application/json", signed);
+        return this.mutateBody(
+            method,
+            path,
+            Buffer.from(body),
+            createHash("sha256").update(body).digest("hex"),
+            "application/json",
+        );
     }
 
     private async mutateBody(
@@ -87,11 +107,9 @@ export class RemoteRepositoryWriter {
         body: BodyInit,
         contentDigest: string,
         contentType: string,
-        suppliedSignature?: ReturnType<typeof signRepositoryRequest>,
     ): Promise<unknown> {
-        const token = this.requiredToken();
         const url = new URL(path, this.base);
-        const signed = suppliedSignature ?? signRepositoryContentDigest(method, url, contentDigest, token);
+        const authentication = await repositoryWriteHeaders(method, url, contentDigest, this.credential);
         const response = await fetch(url, {
             method,
             body,
@@ -99,26 +117,18 @@ export class RemoteRepositoryWriter {
             signal: AbortSignal.timeout(120_000),
             headers: {
                 Accept: "application/json",
-                Authorization: signed.authorization,
                 "Content-Type": contentType,
-                "X-Ulvia-Timestamp": signed.timestamp,
-                "X-Ulvia-Nonce": signed.nonce,
-                "X-Ulvia-Content-SHA256": signed.contentDigest,
-                "X-Ulvia-Signature": signed.signature,
+                ...authentication,
             },
         });
-        const value = response.status === 204 ? null : ((await response.json().catch(() => null)) as unknown);
+        const value =
+            response.status === 204
+                ? null
+                : parseStrictJson(await boundedResponseBytes(response, 16 * 1024 * 1024), 16 * 1024 * 1024, 64);
         if (!response.ok) {
             throw new Error(remoteError(value, response.status));
         }
         return value;
-    }
-
-    private requiredToken(): string {
-        if (!this.token) {
-            throw new Error("ULVIA_REPOSITORY_TOKEN is required for repository mutations");
-        }
-        return this.token;
     }
 }
 

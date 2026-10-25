@@ -8,6 +8,7 @@ import { LocalArtifactFiles } from "./artifacts/files";
 import { LocalContractReleases } from "./contracts";
 import { LocalProviderReleases } from "./providers";
 import { LocalRepositoryYanks } from "./yanks";
+import { compareCatalogueKeys } from "./core/catalogueOrder";
 
 export type RepositoryCatalogueType = "collections" | "contracts" | "providers";
 export type RepositoryCatalogueEntry = Readonly<Record<string, unknown>>;
@@ -142,13 +143,9 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
 }
 
 function sorted(entries: RepositoryCatalogueEntry[], idKey: string): readonly RepositoryCatalogueEntry[] {
-    return Object.freeze(entries.sort((left, right) => compareOrdinal(key(left, idKey), key(right, idKey))));
+    return Object.freeze(entries.sort((left, right) => compareCatalogueKeys(key(left, idKey), key(right, idKey))));
 }
 
 function key(entry: RepositoryCatalogueEntry, idKey: string): string {
     return `${entry.publisherId}\0${entry[idKey]}\0${entry.version}`;
-}
-
-function compareOrdinal(left: string, right: string): number {
-    return left < right ? -1 : left > right ? 1 : 0;
 }

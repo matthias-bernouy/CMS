@@ -1,0 +1,104 @@
+{
+    "id": "publication-status",
+    "description": "publication-status",
+    "access": "public",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "uploadId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 36,
+                "format": "uuid"
+            },
+            "proof": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "sensitive": true
+            }
+        },
+        "required": [
+            "namespace",
+            "uploadId",
+            "proof"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "uploadId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 36,
+                "format": "uuid"
+            },
+            "expiresAt": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "format": "date-time"
+            },
+            "uploadedAssetIds": {
+                "type": "array",
+                "maxItems": 1024,
+                "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                }
+            }
+        },
+        "required": [
+            "uploadId",
+            "expiresAt",
+            "uploadedAssetIds"
+        ]
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/v1/uploads/status",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [
+                    200
+                ],
+                "contentTypes": [
+                    "application/json"
+                ],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp"
+        }
+    ]
+}

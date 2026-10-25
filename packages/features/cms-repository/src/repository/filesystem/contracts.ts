@@ -126,13 +126,16 @@ export class LocalContractReleases {
         return admission;
     }
 
-    async getFixture(publisherId: string, contractId: string, version: string, assetId: string) {
+    async getFixture(publisherId: string, contractId: string, version: string, assetId: string, metadataOnly = false) {
         const admission = await this.getMetadata(publisherId, contractId, version);
         const definition = admission?.release.fixtureAssets?.find((asset) => asset.id === assetId);
         if (!admission || !definition) {
             return null;
         }
         const bytes = this.files.fixtureBlob(admission.canonicalJson, assetId);
+        if (metadataOnly) {
+            return (await bytes.exists()) && bytes.size === definition.byteLength ? { definition, bytes } : null;
+        }
         await verifyFixtureAssets([definition], [{ id: assetId, bytes }]);
         return { definition, bytes };
     }

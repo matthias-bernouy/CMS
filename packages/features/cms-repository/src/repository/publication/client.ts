@@ -13,6 +13,7 @@ import type {
     RepositoryDownloadAsset,
 } from "./types";
 import { RemoteRepositoryWriter } from "./writer";
+import type { RepositoryWriteCredential } from "../namespaces/request";
 import { boundedStream, verifiedAsset } from "./transport/assets";
 
 export type { RemoteCoordinate } from "./types";
@@ -28,9 +29,9 @@ export class RemoteRepositoryClient {
     private readonly base: URL;
     private readonly writer: RemoteRepositoryWriter;
 
-    constructor(baseUrl: string, token?: string) {
+    constructor(baseUrl: string, credential?: RepositoryWriteCredential) {
         this.base = repositoryUrl(baseUrl);
-        this.writer = new RemoteRepositoryWriter(this.base, token);
+        this.writer = new RemoteRepositoryWriter(this.base, credential);
     }
 
     async pull(

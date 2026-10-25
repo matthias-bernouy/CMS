@@ -1,0 +1,104 @@
+{
+    "id": "publication-begin",
+    "description": "Stage a bounded signed publication manifest; assets are uploaded separately.",
+    "access": "public",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "manifest": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1048576
+            },
+            "proof": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "sensitive": true
+            }
+        },
+        "required": [
+            "namespace",
+            "manifest",
+            "proof"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "uploadId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 36,
+                "format": "uuid"
+            },
+            "expiresAt": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "format": "date-time"
+            },
+            "uploadedAssetIds": {
+                "type": "array",
+                "maxItems": 1024,
+                "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                }
+            }
+        },
+        "required": [
+            "uploadId",
+            "expiresAt",
+            "uploadedAssetIds"
+        ]
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/v1/uploads",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [
+                    200
+                ],
+                "contentTypes": [
+                    "application/json"
+                ],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp"
+        }
+    ]
+}

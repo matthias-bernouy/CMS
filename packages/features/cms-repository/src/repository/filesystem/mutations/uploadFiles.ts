@@ -3,6 +3,7 @@ import { open, readFile, rm } from "node:fs/promises";
 import { isSha256Digest } from "@bernouy/binary-media";
 import type { RepositoryPublicationResult } from "cms-repository/repository/publication/types";
 import { durableRename, durableWriteFile } from "../core/durable";
+import { RepositoryRequestError } from "../../core/errors";
 
 export async function writeUploadStream(path: string, body: ReadableStream<Uint8Array> | null, maximum: number) {
     const handle = await open(path, "wx", 0o600);
@@ -18,7 +19,10 @@ export async function writeUploadStream(path: string, body: ReadableStream<Uint8
             byteLength += part.value.byteLength;
             if (byteLength > maximum) {
                 await reader?.cancel();
-                throw new Error("Publication upload asset exceeds its declared byte length");
+                throw new RepositoryRequestError(
+                    "REJECTED",
+                    "Publication upload asset exceeds its declared byte length",
+                );
             }
             hash.update(part.value);
             await writeAll(handle, part.value);

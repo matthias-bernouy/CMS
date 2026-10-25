@@ -1,4 +1,5 @@
 import type { RepositoryCatalogueEntry, RepositoryCatalogueReader, RepositoryCatalogueType } from "../catalogueIndex";
+import { compareCatalogueKeys } from "../core/catalogueOrder";
 
 const DEFAULT_PAGE_SIZE = 256;
 const MAX_PAGE_SIZE = 256;
@@ -81,7 +82,7 @@ function firstAfter(
     type: RepositoryCatalogueType,
     cursor: string,
 ): number {
-    const index = entries.findIndex((entry) => entryKey(type, entry) > cursor);
+    const index = entries.findIndex((entry) => compareCatalogueKeys(entryKey(type, entry), cursor) > 0);
     return index < 0 ? entries.length : index;
 }
 

@@ -1,0 +1,91 @@
+{
+    "id": "release-download",
+    "description": "release-download",
+    "access": "public",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32,
+                "enum": [
+                    "collection",
+                    "contract",
+                    "provider-manifest"
+                ]
+            },
+            "publisherId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            }
+        },
+        "required": [
+            "kind",
+            "publisherId",
+            "id",
+            "version"
+        ]
+    },
+    "output": {
+        "type": "binary",
+        "maxBytes": 8388608
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/v1/releases/{kind}/{publisherId}/{id}/{version}",
+            "input": {
+                "path": {
+                    "kind": "kind",
+                    "publisherId": "publisherId",
+                    "id": "id",
+                    "version": "version"
+                }
+            },
+            "response": {
+                "successStatuses": [
+                    200
+                ],
+                "contentTypes": [
+                    "application/json"
+                ],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp"
+        }
+    ]
+}

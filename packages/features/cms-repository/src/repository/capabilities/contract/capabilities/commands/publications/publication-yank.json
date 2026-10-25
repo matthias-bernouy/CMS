@@ -1,0 +1,134 @@
+{
+    "id": "publication-yank",
+    "access": "public",
+    "description": "publication-yank",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32,
+                "enum": [
+                    "collection",
+                    "contract",
+                    "provider-manifest"
+                ]
+            },
+            "publisherId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 0
+            },
+            "reason": {
+                "type": "string",
+                "maxLength": 1024,
+                "minLength": 1,
+                "nullable": true
+            },
+            "proof": {
+                "type": "string",
+                "maxLength": 4096,
+                "minLength": 1
+            }
+        },
+        "required": [
+            "kind",
+            "publisherId",
+            "id",
+            "version",
+            "expectedRevision",
+            "reason",
+            "proof"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 0
+            },
+            "yank": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "minLength": 1
+                    },
+                    "yankedAt": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "reason",
+                    "yankedAt"
+                ],
+                "nullable": true
+            }
+        },
+        "required": [
+            "revision",
+            "yank"
+        ]
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/v1/publications/yank",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [
+                    200
+                ],
+                "contentTypes": [
+                    "application/json"
+                ],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp"
+        }
+    ]
+}

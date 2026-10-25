@@ -64,7 +64,12 @@ export type PublicationUploadReceipt = Readonly<{
 export interface RepositoryPublicationRegistry {
     publish(envelope: PublicationEnvelope): Promise<RepositoryPublicationResult>;
     publishEvidence(canonicalJson: string): Promise<ConformanceEvidencePublicationResult>;
-    setYank(coordinate: RemoteCoordinate, reason: string | null): Promise<RepositoryYankResult>;
+    setYank(
+        coordinate: RemoteCoordinate,
+        reason: string | null,
+        expectedRevision?: number,
+    ): Promise<RepositoryYankResult>;
+    getPublicationState?(coordinate: RemoteCoordinate): Promise<{ revision: number; yank: RepositoryYank | null }>;
 }
 
 /** Atomic replay claim. Production multi-node servers should provide a shared durable implementation. */
@@ -74,6 +79,7 @@ export interface RepositoryReplayStore {
 
 /** Durable staging boundary. Assets stay invisible until the supplied publication callback succeeds. */
 export interface RepositoryPublicationUploadStore {
+    describe(uploadId: string): Promise<PublicationUploadManifest>;
     create(manifest: PublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt>;
     status(uploadId: string): Promise<PublicationUploadReceipt>;
     putAsset(

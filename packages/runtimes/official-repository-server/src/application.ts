@@ -8,6 +8,10 @@ import {
 } from "@bernouy/cms-repository/repository/filesystem";
 import { RepositoryMutationEndpoint } from "@bernouy/cms-repository/repository/publication";
 import { probeOfficialRepositoryStorage, validateOfficialRepositoryStorage } from "./storage";
+import { RepositoryNamespaceEndpoint } from "@bernouy/cms-repository/repository/namespaces";
+import { createNamespaceAuthority } from "./community/namespaces";
+import { createRepositoryCapabilities } from "./community/application";
+import { cataloguePorts } from "./community/catalogue";
 
 export type OfficialRepositoryApplication = Readonly<{
     handle(request: Request): Promise<Response>;
@@ -16,6 +20,7 @@ export type OfficialRepositoryApplication = Readonly<{
 export async function createOfficialRepositoryApplication(
     root: string,
     token: string,
+    publicUrl = "http://127.0.0.1:3000",
 ): Promise<OfficialRepositoryApplication> {
     const index = new FilesystemRepositoryCatalogueIndex(root);
     await validateOfficialRepositoryStorage(root, index);
@@ -23,10 +28,24 @@ export async function createOfficialRepositoryApplication(
     const uploads = new FilesystemRepositoryPublicationUploadStore(root);
     await uploads.recover();
     const reads = new RepositoryReadEndpoint(root, index);
-    const mutations = new RepositoryMutationEndpoint(new FilesystemRepositoryPublicationRegistry(root, index), {
+    const namespaces = await createNamespaceAuthority(root);
+    const ownership = new RepositoryNamespaceEndpoint(namespaces);
+    const registry = new FilesystemRepositoryPublicationRegistry(root, index);
+    const capabilities = await createRepositoryCapabilities(
+        root,
+        {
+            namespaces,
+            registry,
+            uploads,
+            ...cataloguePorts(reads),
+        },
+        publicUrl,
+    );
+    const mutations = new RepositoryMutationEndpoint(registry, {
         token,
         uploads,
         replays: new FilesystemRepositoryReplayStore(root),
+        namespaces,
     });
     return {
         async handle(request) {
@@ -40,7 +59,11 @@ export async function createOfficialRepositoryApplication(
                     await readinessResponse(request.method, () => probeOfficialRepositoryStorage(root, index)),
                 );
             }
-            const response = (await mutations.handle(request)) ?? (await reads.handle(request));
+            const response =
+                (await capabilities(request)) ??
+                (await ownership.handle(request)) ??
+                (await mutations.handle(request)) ??
+                (await reads.handle(request));
             return harden(request, response ?? methodOrNotFound(request.method));
         },
     };

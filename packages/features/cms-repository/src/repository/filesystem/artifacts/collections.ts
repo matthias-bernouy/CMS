@@ -1,3 +1,4 @@
+import { RepositoryRequestError } from "../../core/errors";
 import { createHash, randomUUID } from "node:crypto";
 import { link, readFile, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
@@ -161,6 +162,7 @@ export class LocalCollectionRepository {
         collectionId: string,
         version: string,
         assetId: string,
+        metadataOnly = false,
     ): Promise<{ definition: CollectionAssetDefinition; bytes: Blob } | null> {
         const metadata = await this.getMetadata(publisherId, collectionId, version);
         const definition = metadata?.release.assets.find((asset) => asset.id === assetId);
@@ -168,6 +170,9 @@ export class LocalCollectionRepository {
             return null;
         }
         const bytes = Bun.file(join(this.assetDirectory(metadata.canonicalJson), assetFileName(assetId)));
+        if (metadataOnly) {
+            return (await bytes.exists()) && bytes.size === definition.byteLength ? { definition, bytes } : null;
+        }
         const snapshots = snapshotCollectionAssets([definition], [{ id: assetId, bytes }], {
             ...DEFAULT_COLLECTION_LIMITS,
             maxBundleBytes: DEFAULT_COLLECTION_LIMITS.maxAssetBytes,
@@ -195,7 +200,10 @@ type CollectionIdentity = Pick<AdmittedCollectionRelease, "digest" | "release">;
 
 function assertSameDigest(existing: CollectionIdentity, candidate: CollectionIdentity): false {
     if (existing.digest !== candidate.digest) {
-        throw new Error(`Release ${coordinate(candidate)} already exists with different content`);
+        throw new RepositoryRequestError(
+            "REJECTED",
+            `Release ${coordinate(candidate)} already exists with different content`,
+        );
     }
     return false;
 }

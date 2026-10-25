@@ -4,6 +4,7 @@ import { isAbsolute } from "node:path";
 export type OfficialRepositoryEnv = Readonly<{
     host: string;
     port: number;
+    publicUrl: string;
     root: string;
     seedRoot?: string;
     token: string;
@@ -27,9 +28,11 @@ export function readOfficialRepositoryEnv(source: Record<string, string | undefi
     if (seedRoot && !isAbsolute(seedRoot)) {
         throw new Error("ULVIA_REPOSITORY_SEED_DIR must be an absolute path");
     }
+    const port = integer(source.REPOSITORY_PORT, "REPOSITORY_PORT", 3000, 1, 65_535);
     return {
         host,
-        port: integer(source.REPOSITORY_PORT, "REPOSITORY_PORT", 3000, 1, 65_535),
+        port,
+        publicUrl: publicOrigin(source.REPOSITORY_PUBLIC_URL ?? `http://127.0.0.1:${port}`),
         root,
         ...(seedRoot ? { seedRoot } : {}),
         token,
@@ -41,6 +44,22 @@ export function readOfficialRepositoryEnv(source: Record<string, string | undefi
             60_000,
         ),
     };
+}
+
+function publicOrigin(value: string): string {
+    const url = new URL(value);
+    const loopback = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
+    if (
+        (url.protocol !== "https:" && !(url.protocol === "http:" && loopback)) ||
+        url.username ||
+        url.password ||
+        url.pathname !== "/" ||
+        url.search ||
+        url.hash
+    ) {
+        throw new Error("REPOSITORY_PUBLIC_URL must be an HTTPS origin or a loopback HTTP origin");
+    }
+    return url.origin;
 }
 
 function required(source: Record<string, string | undefined>, name: string): string {

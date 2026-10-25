@@ -1,3 +1,4 @@
+import { RepositoryRequestError } from "../core/errors";
 import { isSha256Digest } from "@bernouy/binary-media";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/getBytes";
@@ -32,31 +33,42 @@ export function parsePublicationUpload(bytes: Uint8Array): PublicationUploadMani
         value.assets.length > MAX_ASSETS ||
         Buffer.byteLength(value.canonicalJson) > MAX_CANONICAL_JSON_BYTES
     ) {
-        throw new Error("Invalid publication upload manifest");
+        throw new RepositoryRequestError("REJECTED", "Invalid publication upload manifest");
     }
     const assets = value.assets.map(parseUploadAsset);
     if (new Set(assets.map((asset) => asset.id)).size !== assets.length) {
-        throw new Error("Publication asset IDs must be unique");
+        throw new RepositoryRequestError("REJECTED", "Publication asset IDs must be unique");
     }
     const totalBytes = assets.reduce((total, asset) => total + asset.byteLength, 0);
     if (totalBytes > MAX_PUBLICATION_BUNDLE_BYTES || (value.kind === "provider-manifest" && assets.length)) {
-        throw new Error("Publication asset bundle exceeds its limits");
+        throw new RepositoryRequestError("REJECTED", "Publication asset bundle exceeds its limits");
     }
     return { kind: value.kind, canonicalJson: value.canonicalJson, assets };
 }
 
 export function parseYank(bytes: Uint8Array): string | null {
     const value = parseStrictJson(bytes, 2_048, 2) as Record<string, unknown>;
-    if (!plainRecord(value) || Object.keys(value).some((key) => key !== "reason")) {
-        throw new Error("Invalid yank request");
+    if (!plainRecord(value) || Object.keys(value).some((key) => key !== "reason" && key !== "expectedRevision")) {
+        throw new RepositoryRequestError("REJECTED", "Invalid yank request");
     }
     if (value.reason === null) {
         return null;
     }
     if (typeof value.reason !== "string" || !value.reason.trim() || value.reason.trim().length > 1_024) {
-        throw new Error("Invalid yank reason");
+        throw new RepositoryRequestError("REJECTED", "Invalid yank reason");
     }
     return value.reason.trim();
+}
+
+export function parseYankRevision(bytes: Uint8Array): number | undefined {
+    const value = parseStrictJson(bytes, 2_048, 2) as Record<string, unknown>;
+    if (value.expectedRevision === undefined) {
+        return undefined;
+    }
+    if (!Number.isSafeInteger(value.expectedRevision) || (value.expectedRevision as number) < 0) {
+        throw new RepositoryRequestError("REJECTED", "Invalid publication metadata revision");
+    }
+    return value.expectedRevision as number;
 }
 
 export async function readRepositoryMutationBody(
@@ -65,7 +77,7 @@ export async function readRepositoryMutationBody(
 ): Promise<Uint8Array> {
     const declared = Number(request.headers.get("content-length"));
     if (Number.isFinite(declared) && declared > maximum) {
-        throw new Error("Repository mutation body is too large");
+        throw new RepositoryRequestError("REJECTED", "Repository mutation body is too large");
     }
     if (!request.body) {
         return new Uint8Array();
@@ -82,7 +94,7 @@ export async function readRepositoryMutationBody(
             length += part.value.byteLength;
             if (length > maximum) {
                 await reader.cancel();
-                throw new Error("Repository mutation body is too large");
+                throw new RepositoryRequestError("REJECTED", "Repository mutation body is too large");
             }
             chunks.push(part.value);
         }
@@ -109,7 +121,7 @@ function parseUploadAsset(value: unknown) {
         (value.byteLength as number) > MAX_PUBLICATION_ASSET_BYTES ||
         !isSha256Digest(value.digest)
     ) {
-        throw new Error("Invalid publication upload asset");
+        throw new RepositoryRequestError("REJECTED", "Invalid publication upload asset");
     }
     return {
         id: value.id,

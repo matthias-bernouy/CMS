@@ -1,0 +1,102 @@
+{
+    "id": "publication-commit",
+    "description": "Publish one complete staged immutable artifact. Exact retries reconcile the receipt.",
+    "access": "public",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "uploadId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 36,
+                "format": "uuid"
+            },
+            "proof": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "sensitive": true
+            }
+        },
+        "required": [
+            "namespace",
+            "uploadId",
+            "proof"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32,
+                "enum": [
+                    "collection",
+                    "contract",
+                    "provider-manifest"
+                ]
+            },
+            "added": {
+                "type": "boolean"
+            },
+            "digest": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 71
+            }
+        },
+        "required": [
+            "kind",
+            "added",
+            "digest"
+        ]
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/v1/uploads/commit",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [
+                    200
+                ],
+                "contentTypes": [
+                    "application/json"
+                ],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp"
+        }
+    ]
+}

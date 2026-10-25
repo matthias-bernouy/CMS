@@ -1,0 +1,115 @@
+{
+    "id": "publication-state",
+    "access": "public",
+    "description": "publication-state",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32,
+                "enum": [
+                    "collection",
+                    "contract",
+                    "provider-manifest"
+                ]
+            },
+            "publisherId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            }
+        },
+        "required": [
+            "kind",
+            "publisherId",
+            "id",
+            "version"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 0
+            },
+            "yank": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "minLength": 1
+                    },
+                    "yankedAt": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "reason",
+                    "yankedAt"
+                ],
+                "nullable": true
+            }
+        },
+        "required": [
+            "revision",
+            "yank"
+        ]
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/v1/publications/state",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [
+                    200
+                ],
+                "contentTypes": [
+                    "application/json"
+                ],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp"
+        }
+    ]
+}

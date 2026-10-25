@@ -9,7 +9,7 @@ export function startOfficialRepositoryServer(
     logger: Logger,
 ) {
     const runner = new BunRunner({ hostname: env.host, idleTimeoutSeconds: 120, logger });
-    for (const method of ["GET", "HEAD", "POST", "PUT", "DELETE"] as const) {
+    for (const method of ["GET", "HEAD", "POST", "PUT", "DELETE", "QUERY"] as const) {
         runner.setDefaultEndpoint(method, (request) => application.handle(request));
     }
     runner.start(env.port);

@@ -1,0 +1,126 @@
+{
+    "id": "namespace-claim",
+    "description": "Atomically claim an available namespace with an Ed25519 possession proof.",
+    "access": "public",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "publicKey": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 59
+            },
+            "proof": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "sensitive": true
+            }
+        },
+        "required": [
+            "namespace",
+            "publicKey",
+            "proof"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "publicKey": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 59
+            },
+            "revoked": {
+                "type": "boolean"
+            },
+            "updatedAt": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "format": "date-time"
+            },
+            "action": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16,
+                "enum": [
+                    "claim",
+                    "rotate",
+                    "revoke"
+                ]
+            },
+            "previousDigest": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 71,
+                "nullable": true
+            }
+        },
+        "required": [
+            "namespace",
+            "revision",
+            "publicKey",
+            "revoked",
+            "updatedAt",
+            "action",
+            "previousDigest"
+        ]
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/v1/namespace-actions/claim",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [
+                    200
+                ],
+                "contentTypes": [
+                    "application/json"
+                ],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp"
+        }
+    ]
+}

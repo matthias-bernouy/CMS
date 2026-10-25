@@ -1,3 +1,4 @@
+import { RepositoryRequestError } from "../../core/errors";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -65,7 +66,7 @@ export class LocalArtifactFiles {
         return readFile(join(this.root, "assets", "contracts", releaseHash(canonicalJson), assetId));
     }
 
-    fixtureBlob(canonicalJson: string, assetId: string): Blob {
+    fixtureBlob(canonicalJson: string, assetId: string): Bun.BunFile {
         if (!ASSET_IDENTIFIER.test(assetId)) {
             throw new Error("Invalid fixture asset ID");
         }
@@ -152,7 +153,7 @@ function releaseHash(canonicalJson: string): string {
 
 function sameBytes(existing: Buffer, candidate: string, type: string, id: string, version: string): false {
     if (existing.toString("utf8") !== candidate) {
-        throw new Error(`${type} ${id}@${version} already exists with different content`);
+        throw new RepositoryRequestError("REJECTED", `${type} ${id}@${version} already exists with different content`);
     }
     return false;
 }

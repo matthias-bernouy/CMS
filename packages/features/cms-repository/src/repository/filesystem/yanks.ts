@@ -1,9 +1,11 @@
+import { RepositoryRequestError } from "../core/errors";
 import { randomUUID } from "node:crypto";
 import { readFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
 import { durableRename, durableWriteFile, ensureDurableDirectory } from "./core/durable";
+import { repositoryDigest } from "../namespaces/proofs";
 
 export type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
 export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;
@@ -11,6 +13,8 @@ export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;
 type YankDocument = Readonly<{
     schema: "ulvia.repository-yanks.v1";
     entries: Readonly<Record<string, RepositoryYank>>;
+    revisions?: Readonly<Record<string, number>>;
+    mutations?: Readonly<Record<string, string>>;
 }>;
 
 export class LocalRepositoryYanks {
@@ -18,6 +22,15 @@ export class LocalRepositoryYanks {
 
     async get(kind: RepositoryArtifactKind, publisherId: string, id: string, version: string) {
         return (await this.read()).entries[key(kind, publisherId, id, version)] ?? null;
+    }
+
+    async state(kind: RepositoryArtifactKind, publisherId: string, id: string, version: string) {
+        const document = await this.read();
+        const coordinate = key(kind, publisherId, id, version);
+        return {
+            revision: document.revisions?.[coordinate] ?? (document.entries[coordinate] ? 1 : 0),
+            yank: document.entries[coordinate] ?? null,
+        };
     }
 
     async entries(kind?: RepositoryArtifactKind) {
@@ -33,20 +46,37 @@ export class LocalRepositoryYanks {
         id: string,
         version: string,
         reason: string | null,
+        expectedRevision?: number,
     ): Promise<RepositoryYank | null> {
         const document = await this.read();
         const entries = { ...document.entries };
         const coordinate = key(kind, publisherId, id, version);
+        const revision = document.revisions?.[coordinate] ?? (entries[coordinate] ? 1 : 0);
+        const mutation = repositoryDigest({ coordinate, reason, expectedRevision: expectedRevision ?? revision });
+        if (expectedRevision !== undefined && expectedRevision !== revision) {
+            if (document.mutations?.[coordinate] === mutation) {
+                return entries[coordinate] ?? null;
+            }
+            throw new RepositoryRequestError("REJECTED", "Publication metadata revision is stale");
+        }
+        if ((entries[coordinate]?.reason ?? null) === reason) {
+            return entries[coordinate] ?? null;
+        }
         if (reason === null) {
             delete entries[coordinate];
         } else {
             const normalized = reason.trim();
             if (!normalized || normalized.length > 1_024) {
-                throw new Error("Yank reason must contain between 1 and 1024 characters");
+                throw new RepositoryRequestError("REJECTED", "Yank reason must contain between 1 and 1024 characters");
             }
             entries[coordinate] = Object.freeze({ reason: normalized, yankedAt: new Date().toISOString() });
         }
-        await this.write({ schema: "ulvia.repository-yanks.v1", entries });
+        await this.write({
+            schema: "ulvia.repository-yanks.v1",
+            entries,
+            revisions: { ...document.revisions, [coordinate]: revision + 1 },
+            mutations: { ...document.mutations, [coordinate]: mutation },
+        });
         return entries[coordinate] ?? null;
     }
 
@@ -61,7 +91,17 @@ export class LocalRepositoryYanks {
             return { schema: "ulvia.repository-yanks.v1", entries: {} };
         }
         const value = JSON.parse(bytes) as Partial<YankDocument>;
-        if (value.schema !== "ulvia.repository-yanks.v1" || !validEntries(value.entries)) {
+        if (
+            value.schema !== "ulvia.repository-yanks.v1" ||
+            !validEntries(value.entries) ||
+            (value.revisions !== undefined &&
+                !validMetadata(value.revisions, (item) => Number.isSafeInteger(item) && (item as number) >= 0)) ||
+            (value.mutations !== undefined &&
+                !validMetadata(
+                    value.mutations,
+                    (item) => typeof item === "string" && /^sha256:[0-9a-f]{64}$/u.test(item),
+                ))
+        ) {
             throw new Error("Invalid repository yank metadata");
         }
         return value as YankDocument;
@@ -82,6 +122,10 @@ export class LocalRepositoryYanks {
     private path(): string {
         return join(this.root, "metadata", "yanks.json");
     }
+}
+
+function validMetadata(value: unknown, validate: (item: unknown) => boolean): boolean {
+    return value !== null && typeof value === "object" && !Array.isArray(value) && Object.values(value).every(validate);
 }
 
 function key(kind: RepositoryArtifactKind, publisherId: string, id: string, version: string): string {

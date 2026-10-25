@@ -29,3 +29,4 @@ export {
     type RepositoryArtifactKind,
     type RepositoryYank,
 } from "cms-repository/repository/filesystem/yanks";
+export { FilesystemRepositoryNamespaceStore } from "cms-repository/repository/filesystem/mutations/namespaces";

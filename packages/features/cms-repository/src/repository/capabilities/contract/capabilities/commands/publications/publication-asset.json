@@ -1,0 +1,98 @@
+{
+    "id": "publication-asset",
+    "description": "publication-asset",
+    "access": "public",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "natural"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespace": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "uploadId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 36,
+                "format": "uuid"
+            },
+            "assetId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+            },
+            "proof": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "sensitive": true
+            },
+            "bytes": {
+                "type": "binary",
+                "maxBytes": 104857600
+            }
+        },
+        "required": [
+            "namespace",
+            "uploadId",
+            "assetId",
+            "proof",
+            "bytes"
+        ]
+    },
+    "output": {
+        "type": "null"
+    },
+    "errors": [
+        {
+            "code": "REJECTED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "PUT",
+            "path": "/v1/uploads/{uploadId}/assets/{assetId}",
+            "input": {
+                "path": {
+                    "uploadId": "uploadId",
+                    "assetId": "assetId"
+                },
+                "headers": {
+                    "x-repository-namespace": {
+                        "property": "namespace",
+                        "encoding": "uri-component"
+                    },
+                    "x-repository-proof": {
+                        "property": "proof",
+                        "encoding": "uri-component"
+                    }
+                },
+                "body": {
+                    "binaryProperty": "bytes"
+                }
+            },
+            "response": {
+                "successStatuses": [
+                    204
+                ],
+                "contentTypes": [],
+                "errorStatuses": {
+                    "REJECTED": 409,
+                    "NOT_FOUND": 404
+                }
+            }
+        }
+    ]
+}

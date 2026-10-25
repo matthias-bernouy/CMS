@@ -1,3 +1,4 @@
+import { RepositoryRequestError } from "../../core/errors";
 import { admitCollectionReleaseJson } from "cms-repository/exports/collections/index";
 import { admitConformanceEvidenceJson, parseConformanceSuiteJson } from "cms-repository/exports/contracts/index";
 import { satisfiesVersionRange } from "cms-repository/exports/providers/index";
@@ -41,7 +42,7 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
                 return result(envelope.kind, admission.release, admission.digest, added);
             }
             if (envelope.assets.length) {
-                throw new Error("Provider manifests cannot contain assets");
+                throw new RepositoryRequestError("REJECTED", "Provider manifests cannot contain assets");
             }
             const { added, admission } = await new LocalProviderReleases(files, contracts, yanks).release(
                 envelope.canonicalJson,
@@ -52,7 +53,21 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
         return published;
     }
 
-    async setYank(coordinate: RemoteCoordinate, reason: string | null): Promise<RepositoryYankResult> {
+    async getPublicationState(coordinate: RemoteCoordinate) {
+        await assertPublished(this.root, coordinate);
+        return new LocalRepositoryYanks(this.root).state(
+            coordinate.kind,
+            coordinate.publisherId,
+            coordinate.id,
+            coordinate.version,
+        );
+    }
+
+    async setYank(
+        coordinate: RemoteCoordinate,
+        reason: string | null,
+        expectedRevision?: number,
+    ): Promise<RepositoryYankResult> {
         const result = await withRepositoryWriteLock(this.root, async () => {
             await assertPublished(this.root, coordinate);
             const yank = await new LocalRepositoryYanks(this.root).set(
@@ -61,6 +76,7 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
                 coordinate.id,
                 coordinate.version,
                 reason,
+                expectedRevision,
             );
             return { ...coordinate, yank };
         });
@@ -159,14 +175,14 @@ async function assertPublished(root: string, coordinate: RemoteCoordinate): Prom
             coordinate.version,
         );
         if (!release) {
-            throw new Error("Collection release is not published");
+            throw new RepositoryRequestError("NOT_FOUND", "Collection release is not published");
         }
         return;
     }
     const files = new LocalArtifactFiles(root);
     const type = coordinate.kind === "contract" ? "contracts" : "providers";
     if (!(await files.get(type, coordinate.publisherId, coordinate.id, coordinate.version))) {
-        throw new Error(`${coordinate.kind} release is not published`);
+        throw new RepositoryRequestError("NOT_FOUND", `${coordinate.kind} release is not published`);
     }
 }
 

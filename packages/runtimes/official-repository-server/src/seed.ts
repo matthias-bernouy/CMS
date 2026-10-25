@@ -18,7 +18,7 @@ export async function seedOfficialRepository(root: string, seedRoot?: string): P
         if (!rootMetadata.isDirectory() || rootMetadata.isSymbolicLink()) {
             throw new Error("ULVIA_REPOSITORY_DIR must be a real directory");
         }
-        if ((await readdir(root)).length > 0) {
+        if ((await readdir(root)).some((name) => name !== ".server-lock")) {
             return;
         }
     }

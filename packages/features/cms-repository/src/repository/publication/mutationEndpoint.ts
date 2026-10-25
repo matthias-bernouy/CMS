@@ -4,10 +4,13 @@ import {
     MAX_PUBLICATION_METADATA_BYTES,
     parsePublicationUpload,
     parseYank,
+    parseYankRevision,
     readRepositoryMutationBody,
 } from "./protocol";
 import { parsePublicationUploadPath, parseYankCoordinate } from "./routes";
 import type { RepositoryPublicationRegistry, RepositoryPublicationUploadStore, RepositoryReplayStore } from "./types";
+import type { RepositoryNamespaceAuthority } from "../namespaces/authority";
+import { assertPublicationOwner, manifestPublisher, ownerProofFromRequest } from "../namespaces/publication";
 
 const SIGNATURE_TTL_MS = 5 * 60 * 1_000;
 const UPLOAD_TTL_MS = 60 * 60 * 1_000;
@@ -17,6 +20,7 @@ export type RepositoryMutationOptions = Readonly<{
     token?: string;
     uploads?: RepositoryPublicationUploadStore;
     replays?: RepositoryReplayStore;
+    namespaces?: RepositoryNamespaceAuthority;
 }>;
 
 /** Authenticated mutation transport. Publication bytes are staged before one atomic registry commit. */
@@ -24,6 +28,7 @@ export class RepositoryMutationEndpoint {
     private readonly token?: string;
     private readonly uploads?: RepositoryPublicationUploadStore;
     private readonly replays: RepositoryReplayStore;
+    private readonly namespaces?: RepositoryNamespaceAuthority;
 
     constructor(
         private readonly registry: RepositoryPublicationRegistry,
@@ -32,7 +37,8 @@ export class RepositoryMutationEndpoint {
         this.token = options.token;
         this.uploads = options.uploads;
         this.replays = options.replays ?? new InMemoryRepositoryReplayStore();
-        if (this.token && !this.uploads) {
+        this.namespaces = options.namespaces;
+        if ((this.token || this.namespaces) && !this.uploads) {
             throw new Error("Writable repository mutations require a publication upload store");
         }
     }
@@ -42,45 +48,71 @@ export class RepositoryMutationEndpoint {
         if (url.search) {
             return null;
         }
+        if (request.method === "GET" && url.pathname.startsWith("/v1/yanks/") && this.registry.getPublicationState) {
+            try {
+                return Response.json(await this.registry.getPublicationState(parseYankCoordinate(url.pathname)), {
+                    headers: { "Cache-Control": "no-store" },
+                });
+            } catch {
+                return response(404, "not_found", "Publication metadata is unavailable");
+            }
+        }
         if (request.method === "POST" && url.pathname === "/v1/publication-uploads") {
             return this.withBytes(request, MAX_PUBLICATION_METADATA_BYTES, async (bytes) => {
                 const manifest = parsePublicationUpload(bytes);
+                if (this.namespaces) {
+                    await assertPublicationOwner(this.namespaces, request, manifestPublisher(manifest));
+                }
                 return this.uploads!.create(manifest, new Date(Date.now() + UPLOAD_TTL_MS));
             });
         }
         if (request.method === "POST" && url.pathname === "/v1/conformance-evidence") {
-            return this.withBytes(request, MAX_CONFORMANCE_EVIDENCE_BYTES, (bytes) =>
-                this.registry.publishEvidence(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
-            );
+            return this.withBytes(request, MAX_CONFORMANCE_EVIDENCE_BYTES, async (bytes) => {
+                const canonicalJson = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+                if (this.namespaces) {
+                    await assertPublicationOwner(
+                        this.namespaces,
+                        request,
+                        manifestPublisher({ kind: "contract", canonicalJson }),
+                    );
+                }
+                return this.registry.publishEvidence(canonicalJson);
+            });
         }
         const upload = parsePublicationUploadPath(url.pathname);
         if (upload && !upload.assetId && request.method === "GET") {
-            return this.authorized(request, () => this.uploads!.status(upload.uploadId));
+            return this.authorizedUpload(request, upload.uploadId, () => this.uploads!.status(upload.uploadId));
         }
         if (upload?.assetId && request.method === "PUT") {
             return this.putAsset(request, upload.uploadId, upload.assetId);
         }
         if (upload && !upload.assetId && request.method === "POST") {
-            return this.authorized(request, async () =>
+            return this.authorizedUpload(request, upload.uploadId, async () =>
                 this.uploads!.commit(upload.uploadId, (envelope) => this.registry.publish(envelope)),
             );
         }
         if (upload && !upload.assetId && request.method === "DELETE") {
-            return this.authorized(request, async () => {
+            return this.authorizedUpload(request, upload.uploadId, async () => {
                 await this.uploads!.abort(upload.uploadId);
                 return null;
             });
         }
         if (request.method === "PUT" && url.pathname.startsWith("/v1/yanks/")) {
-            return this.withBytes(request, 2_048, async (bytes) =>
-                this.registry.setYank(parseYankCoordinate(url.pathname), parseYank(bytes)),
-            );
+            return this.withBytes(request, 2_048, async (bytes) => {
+                const coordinate = parseYankCoordinate(url.pathname);
+                await assertPublicationOwner(this.namespaces, request, coordinate.publisherId);
+                const revision = parseYankRevision(bytes);
+                if (ownerProofFromRequest(request) && revision === undefined) {
+                    throw new Error("Owner publication metadata writes require an expected revision");
+                }
+                return this.registry.setYank(coordinate, parseYank(bytes), revision);
+            });
         }
         return null;
     }
 
     private async putAsset(request: Request, uploadId: string, assetId: string): Promise<Response> {
-        return this.authorized(request, async (verified) => {
+        return this.authorizedUpload(request, uploadId, async (verified) => {
             const declared = request.headers.get("content-length");
             const contentLength = declared === null ? undefined : Number(declared);
             if (contentLength !== undefined && (!Number.isSafeInteger(contentLength) || contentLength < 0)) {
@@ -88,6 +120,23 @@ export class RepositoryMutationEndpoint {
             }
             await this.uploads!.putAsset(uploadId, assetId, request.body, verified.contentDigest, contentLength);
             return null;
+        });
+    }
+
+    private async authorizedUpload(
+        request: Request,
+        uploadId: string,
+        operation: (verified: { contentDigest: `sha256:${string}` }) => Promise<unknown>,
+    ): Promise<Response> {
+        return this.authorized(request, async (verified) => {
+            if (this.namespaces) {
+                await assertPublicationOwner(
+                    this.namespaces,
+                    request,
+                    manifestPublisher(await this.uploads!.describe(uploadId)),
+                );
+            }
+            return operation(verified);
         });
     }
 
@@ -115,15 +164,46 @@ export class RepositoryMutationEndpoint {
         request: Request,
         mutation: (verified: { contentDigest: `sha256:${string}` }) => Promise<unknown>,
     ): Promise<Response> {
-        if (!this.token) {
+        if (!this.token && !this.namespaces) {
             return response(405, "repository_read_only", "Repository mutations are disabled");
         }
-        const verified = verifyRepositoryRequestHeaders(request, this.token);
-        if (!verified || !(await this.replays.claim(verified.replayKey, new Date(Date.now() + SIGNATURE_TTL_MS)))) {
-            return response(401, "invalid_signature", "Repository request authentication failed");
-        }
         try {
-            const result = await mutation(verified);
+            const proof = ownerProofFromRequest(request);
+            const verified =
+                proof && this.namespaces
+                    ? {
+                          replayKey: `sha256=${createHash("sha256").update(`ed25519:${proof.signature}`).digest("hex")}`,
+                          contentDigest: proof.digest as `sha256:${string}`,
+                      }
+                    : this.token
+                      ? verifyRepositoryRequestHeaders(request, this.token)
+                      : null;
+            if (!verified) {
+                return response(401, "invalid_signature", "Repository request authentication failed");
+            }
+            const url = new URL(request.url);
+            const execute = async () => {
+                const signedAt = proof?.timestamp ?? Number(request.headers.get("x-ulvia-timestamp"));
+                if (!(await this.replays.claim(verified.replayKey, new Date(signedAt + SIGNATURE_TTL_MS + 1)))) {
+                    throw new RepositoryMutationError(
+                        401,
+                        "invalid_signature",
+                        "Repository request authentication failed",
+                    );
+                }
+                return mutation(verified);
+            };
+            const result =
+                proof && this.namespaces
+                    ? await this.namespaces.execute(
+                          proof.namespace,
+                          `http:${request.method}`,
+                          `${url.pathname}${url.search}`,
+                          proof.digest,
+                          proof,
+                          execute,
+                      )
+                    : await execute();
             return result === null ? new Response(null, { status: 204 }) : Response.json(result, { status: 200 });
         } catch (error) {
             if (error instanceof RepositoryMutationError) {
