@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { seedOfficialRepository } from "../src/seed";
@@ -8,6 +8,18 @@ const roots: string[] = [];
 
 afterEach(async () => {
     await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
+});
+
+test("installs the bundled snapshot into an existing empty mount point", async () => {
+    const parent = await temporaryRoot();
+    const seed = await temporaryRoot();
+    const root = join(parent, "mounted-repository");
+    await mkdir(root);
+    await writeFile(join(seed, "seed-marker"), "mounted");
+
+    await seedOfficialRepository(root, seed);
+
+    expect(await readFile(join(root, "seed-marker"), "utf8")).toBe("mounted");
 });
 
 test("installs a bundled repository snapshot once without replacing existing storage", async () => {
