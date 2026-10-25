@@ -8,6 +8,7 @@ import { renderPage } from "cms-kernel/html/renderPage";
 import { preflightPageGatewayAccess, type PageAccess } from "./access/preflightPageGatewayAccess";
 import { renderRef } from "./renderRef";
 import { resolveRuntimePageIndexingMetadata } from "./resolvePageIndexing";
+import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 
 export async function serveRenderablePage(
     request: Request,
@@ -18,12 +19,8 @@ export async function serveRenderablePage(
     minimumAccess: PageAccess = "public",
     renderInputs?: PageRenderInputs,
 ): Promise<Response> {
-    const decision = await preflightPageGatewayAccess(
-        request,
-        renderable,
-        kernel,
-        minimumAccess,
-        renderInputs?.settings,
+    const decision = await measureCurrentRequestTiming("page_access", () =>
+        preflightPageGatewayAccess(request, renderable, kernel, minimumAccess, renderInputs?.settings),
     );
     if (decision.response) {
         return decision.response;
@@ -66,7 +63,9 @@ async function renderIndexedPage(
             true,
         );
     }
-    const indexing = await resolveRuntimePageIndexingMetadata(request, page, kernel);
+    const indexing = await measureCurrentRequestTiming("page_indexing", () =>
+        resolveRuntimePageIndexingMetadata(request, page, kernel),
+    );
     if (indexing.kind === "not-found") {
         return renderRef(request, kernel, "notFound", 404, "Page not found");
     }
@@ -108,10 +107,15 @@ async function renderWithFallbacks(
         if (!artifactCacheable) {
             return sendCompressed(
                 request,
-                await renderPage(
-                    page,
-                    makeRuntimeRenderContext(kernel, { renderingSettings: settings, pageRenderInputs: renderInputs }),
-                    metadata,
+                await measureCurrentRequestTiming("page_render", () =>
+                    renderPage(
+                        page,
+                        makeRuntimeRenderContext(kernel, {
+                            renderingSettings: settings,
+                            pageRenderInputs: renderInputs,
+                        }),
+                        metadata,
+                    ),
                 ),
                 "no-store",
                 { skipCspHeader: true },
@@ -133,7 +137,7 @@ async function renderWithFallbacks(
             request,
             artifactRevision ? `${cacheKey}:artifact:${artifactRevision}` : cacheKey,
             kernel.cache,
-            () => renderPage(page, renderContext, metadata),
+            () => measureCurrentRequestTiming("page_render", () => renderPage(page, renderContext, metadata)),
             cacheable ? "public, no-cache" : "private, no-store",
             { skipCspHeader: true },
         );

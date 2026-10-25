@@ -11,6 +11,7 @@ import { buildScriptTags } from "cms-kernel/html/head/buildScriptTags";
 import { defineMetaTags, definePageStructuredData } from "@bernouy/cms-content/seo";
 import type { RenderContext } from "cms-kernel/html/RenderContext";
 import { resolvePageMetadata, type PageRenderMetadata } from "@bernouy/cms-content/seo";
+import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 
 /**
  * Render a page to a compressed CacheEntry. Thin orchestrator — every piece
@@ -40,20 +41,24 @@ export async function renderPage(
         : storedSettings;
     const metadata = resolvePageMetadata(page, settings, runtimeMetadata);
 
-    const rendered = await renderPageDocument(document.body, pageDocument(page), {
-        repository: ctx.content,
-        language: settings.site.language || "en",
-        resolveContributedAssets: ctx.resolveContributedAssets,
-        resolveSvgSources: ctx.resolveSvgSources,
-        // A browser may fetch an interpolated img src before the deferred
-        // binding runtime executes. Keep those network attributes inert.
-        prepareBody: async (body) => {
-            await ctx.prepareBody?.(body);
-            prepareNetworkInertBindings(body);
-        },
-    });
+    const rendered = await measureCurrentRequestTiming("page_document", () =>
+        renderPageDocument(document.body, pageDocument(page), {
+            repository: ctx.content,
+            language: settings.site.language || "en",
+            resolveContributedAssets: ctx.resolveContributedAssets,
+            resolveSvgSources: ctx.resolveSvgSources,
+            // A browser may fetch an interpolated img src before the deferred
+            // binding runtime executes. Keep those network attributes inert.
+            prepareBody: async (body) => {
+                await ctx.prepareBody?.(body);
+                prepareNetworkInertBindings(body);
+            },
+        }),
+    );
     const usedTags = [...rendered.usedTags];
-    const assets = await ctx.resolveAssets(usedTags, rendered.renderableBlocs, rendered.blocViews);
+    const assets = await measureCurrentRequestTiming("page_assets", () =>
+        ctx.resolveAssets(usedTags, rendered.renderableBlocs, rendered.blocViews),
+    );
     const requiresBindingRuntime = rendered.requiresBindingRuntime;
 
     // Whitelist asset hosts in CSP. When the build pipeline pre-uploads CSS

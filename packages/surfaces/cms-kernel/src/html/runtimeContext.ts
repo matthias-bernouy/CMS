@@ -6,6 +6,7 @@ import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collec
 import { resolvePageLinks } from "cms-kernel/http/pages/pageLinks";
 import { resolveSvgSources } from "cms-kernel/html/resolveSvgSources";
 import type { ContentReader, PageRenderInputs, RenderingSettings } from "@bernouy/cms-content/rendering";
+import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 
 export type RuntimeRenderSnapshot = {
     readonly renderingSettings?: RenderingSettings;
@@ -26,8 +27,9 @@ export function makeRuntimeRenderContext(kernel: KernelCms, snapshot: RuntimeRen
         ...snapshot,
         resolveContributedAssets: (input) =>
             resolveInstalledCollectionAssets(input, kernel.collectionAssets, kernel.basePath),
-        resolveSvgSources: (sources) => resolveSvgSources(kernel, sources),
-        prepareBody: (body) => resolvePageLinks(body, kernel),
+        resolveSvgSources: (sources) =>
+            measureCurrentRequestTiming("page_svg_sources", () => resolveSvgSources(kernel, sources)),
+        prepareBody: (body) => measureCurrentRequestTiming("page_links", () => resolvePageLinks(body, kernel)),
         resolveAssets: (usedTags, renderableBlocs, blocViews) =>
             resolvePageAssets(
                 {
