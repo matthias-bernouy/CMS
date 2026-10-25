@@ -1,4 +1,5 @@
 import { getOrGenerateEntryAsync, type Cache } from "@bernouy/http-runner";
+import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 import type { ContentReader, RenderableBloc } from "cms-content/application/interfaces/ContentReader";
 import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
 import { generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
@@ -8,7 +9,6 @@ import {
     generateBlocStyleEntry,
     groupBlocStylesByCollection,
 } from "./generateBlocStyleGroupEntry";
-import { getBlocGroupManifest } from "./blocGroupManifest";
 import {
     blocRuntimeCacheKey,
     loadBindingCoreRuntimeEntry,
@@ -44,8 +44,9 @@ export type AssetsManifest = {
  * Loads prebuilt browser runtimes, warms the Kernel cache and produces hashed
  * URLs under `<cmsPathPrefix>/`; the build pipeline uploads its own entries.
  *
- * Bloc behavior ships as stable signature-group `/blocset` bundles. Unknown
- * tags fall into one per-page bundle, while `/bloc?tag=` remains editor-only.
+ * Bloc behavior ships as one content-addressed bundle for the exact behavior
+ * set used by the Page, while `/bloc?tag=` remains editor-only. This keeps a
+ * Page render independent from the complete published-Page corpus.
  *
  * Parallel resolution is a no-op on the warm path and only pays when the
  * process just started.
@@ -82,67 +83,55 @@ export async function resolvePageAssets(
     };
 
     const renderableBlocs = renderableBlocSnapshot ?? (await context.content.getRenderableBlocs());
-    const manifest = await getBlocGroupManifest(
-        context.content,
-        collectionRevision,
-        renderableBlocs,
-        context.blocViews,
-    );
     const blocsById = new Map(renderableBlocs.map((bloc) => [bloc.id, bloc]));
-
-    // Partition the page's blocs into the stable signature groups that cover
-    // them + a fallback bundle for any tag the manifest doesn't know yet.
-    const groupIds = new Set<string>();
-    const uncovered: string[] = [];
-    for (const tag of new Set(usedTags)) {
-        const gid = manifest.tagToGroup.get(tag);
-        if (gid) {
-            groupIds.add(gid);
-        } else {
-            uncovered.push(tag);
-        }
-    }
-
-    // Group tags come from the manifest (already the full group);
-    // the uncovered remainder is its own per-page bundle.
-    const candidateBundles: string[][] = [
-        ...[...groupIds].sort().map((gid) => manifest.groups.get(gid)!),
-        ...(uncovered.length ? [uncovered.sort()] : []),
-    ];
+    const pageTags = [...new Set(usedTags)].sort();
+    const candidateBundles: string[][] = pageTags.length > 0 ? [pageTags] : [];
     const behaviorBundles = candidateBundles
         .map((tags) => tags.filter((tag) => blocsById.get(tag)?.hasBehavior))
         .filter((tags) => tags.length > 0);
     const styleBundles = candidateBundles.flatMap((tags) => groupBlocStylesByCollection(tags, blocsById));
 
     const [blocRuntimeEntry, bindingCoreEntry, styleEntry, behaviorEntries, blocStyleEntries] = await Promise.all([
-        getOrGenerateEntryAsync(blocRuntimeCacheEntryKey, context.cache, loadBlocRuntimeEntry),
-        getOrGenerateEntryAsync(bindingCoreJsCacheKey, context.cache, loadBindingCoreRuntimeEntry),
-        getOrGenerateEntryAsync(CMS_CACHE_KEYS.style(renderingRevisionDigest), context.cache, () =>
-            generateStyleEntry(
-                context.renderingSettings
-                    ? { getRenderingSettings: async () => context.renderingSettings! }
-                    : context.content,
-                [],
-                context.resolveContributedAssets,
-            ),
+        measureCurrentRequestTiming("asset_bloc_runtime", () =>
+            getOrGenerateEntryAsync(blocRuntimeCacheEntryKey, context.cache, loadBlocRuntimeEntry),
         ),
-        Promise.all(
-            behaviorBundles.map((tags) =>
-                getOrGenerateEntryAsync(collectionBlocsetCacheKey(tags, collectionRevisionDigest), context.cache, () =>
-                    generateBlocSetEntry(tags, collectionAssetReader),
+        measureCurrentRequestTiming("asset_binding_runtime", () =>
+            getOrGenerateEntryAsync(bindingCoreJsCacheKey, context.cache, loadBindingCoreRuntimeEntry),
+        ),
+        measureCurrentRequestTiming("asset_theme_style", () =>
+            getOrGenerateEntryAsync(CMS_CACHE_KEYS.style(renderingRevisionDigest), context.cache, () =>
+                generateStyleEntry(
+                    context.renderingSettings
+                        ? { getRenderingSettings: async () => context.renderingSettings! }
+                        : context.content,
+                    [],
+                    context.resolveContributedAssets,
                 ),
             ),
         ),
-        Promise.all(
-            styleBundles.map(({ collectionId, tags }) =>
-                getOrGenerateEntryAsync(
-                    collectionBlocStyleCacheKey(collectionId, tags, collectionRevisionDigest),
-                    context.cache,
-                    () =>
-                        generateBlocStyleEntry(
-                            tags.map((tag) => ({ id: tag, styleCSS: blocsById.get(tag)!.styleCSS! })),
-                            context.resolveContributedAssets,
-                        ),
+        measureCurrentRequestTiming("asset_behaviors", () =>
+            Promise.all(
+                behaviorBundles.map((tags) =>
+                    getOrGenerateEntryAsync(
+                        collectionBlocsetCacheKey(tags, collectionRevisionDigest),
+                        context.cache,
+                        () => generateBlocSetEntry(tags, collectionAssetReader),
+                    ),
+                ),
+            ),
+        ),
+        measureCurrentRequestTiming("asset_bloc_styles", () =>
+            Promise.all(
+                styleBundles.map(({ collectionId, tags }) =>
+                    getOrGenerateEntryAsync(
+                        collectionBlocStyleCacheKey(collectionId, tags, collectionRevisionDigest),
+                        context.cache,
+                        () =>
+                            generateBlocStyleEntry(
+                                tags.map((tag) => ({ id: tag, styleCSS: blocsById.get(tag)!.styleCSS! })),
+                                context.resolveContributedAssets,
+                            ),
+                    ),
                 ),
             ),
         ),

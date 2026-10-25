@@ -107,6 +107,18 @@ describe("resolvePageAssets", () => {
         expect(reads).toBe(1);
     });
 
+    test("does not read unrelated published Pages to resolve one Page's assets", async () => {
+        const content = repositoryWith({
+            pageContent: '<section cms-bloc="collection-card"></section>',
+            blocTags: ["collection-card"],
+        });
+        content.getPublishedPages = async () => {
+            throw new Error("unrelated published Pages must not be read");
+        };
+
+        await expect(resolveAssets(content, ["collection-card"])).resolves.toBeDefined();
+    });
+
     test("does not emit a blocset script for native-only blocs without viewJS", async () => {
         const assets = await resolveAssets(
             repositoryWith({
