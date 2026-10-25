@@ -6,6 +6,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 
 ## Architecture And Development
 
+- [Install Ulvia](installation/README.md): Ubuntu prerequisites, first local
+  instance, public HTTPS, upgrades, backups and troubleshooting.
 - [Repository audit](AUDIT.md): verified strengths, production risks, current
   limits and the recommended delivery sequence.
 - [Workspace architecture](architecture/README.md): layers, dependency rules,

@@ -8,8 +8,9 @@ files explain implementation invariants.
 
 All workspace packages use the repository MIT license. Foundation, feature, and
 surface packages are publishable libraries unless their manifest explicitly sets
-`"private": true`. `@bernouy/ulvia-cli` is also publishable because it is the
-distributed developer command-line application.
+`"private": true`. The CLI source package `@bernouy/ulvia-cli` stays private;
+the release toolchain bundles it into the public `@cyaxis/ulvia` command-line
+package without workspace dependencies.
 
 Server composition roots are deployment units rather than reusable packages:
 `@bernouy/cms-kernel-server`, `@bernouy/ulvia-provider-server` and

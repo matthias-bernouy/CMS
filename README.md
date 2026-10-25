@@ -18,6 +18,23 @@ Direct products that are not reusable CMS layers live under `packages/`.
 `official-repository` contains authored immutable releases and never mounts
 routes or chooses runtime adapters.
 
+## Install Ulvia
+
+The [installation guide](docs/installation/README.md) covers Ubuntu prerequisites,
+the first local instance, public domains and HTTPS, upgrades, backups, and
+troubleshooting. The released CLI is installed with:
+
+```bash
+bun add --global @cyaxis/ulvia@latest
+ulvia services start
+ulvia instance create my-site
+ulvia instance credentials my-site
+```
+
+Stable releases use the npm `latest` tag. An explicitly tested prerelease may
+instead be installed through `next`. Workspace contributors can run the same
+CLI through the development commands below.
+
 ## Layout
 
 ```

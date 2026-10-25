@@ -40,6 +40,38 @@ separate stop and upgrade lifecycles.
 Credential commands print only administrator credentials; technical tokens
 remain private.
 
+The CLI consumes released software images; it never builds them. Workspace and
+CI authors build and publish the three official Docker Hub images explicitly:
+
+```bash
+bun run images:build --version 0.0.1-beta all
+bun run images:publish --version 0.0.1-beta all
+ulvia upgrade kernel --version 0.0.1-beta
+ulvia upgrade provider --version 0.0.1-beta
+ulvia upgrade repository --version 0.0.1-beta
+```
+
+An upgrade pulls the canonical `docker.io/cyaxis` reference, validates its OCI
+labels, and persists its immutable digest. A regular `start` reuses that digest;
+it never upgrades by following a mutable tag. Collection, contract, and provider
+manifest releases remain Repository artifacts and do not become Docker images.
+
+The host CLI is a separate public npm artifact. Its private workspace sources
+are bundled so the published package has no `workspace:*` dependencies:
+
+```bash
+bun run cli:build --version 0.0.3 --stack-version 0.0.1-beta
+bun run cli:publish --version 0.0.3
+bun add --global @cyaxis/ulvia@0.0.3
+```
+
+The build writes the package archive and a SHA-256 release receipt below
+`artifacts/cli`. Publication targets `https://registry.npmjs.org/` explicitly,
+requires npm credentials outside the repository, and refuses a changed archive.
+The CLI and initial Docker stack versions are independent and both are sealed
+into the receipt. Prereleases use the npm `next` tag; stable versions use
+`latest`.
+
 ## Runtime Logs
 
 Kernel, Provider, and repository diagnostics use the
@@ -128,6 +160,10 @@ automatically.
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
 | `bun run typecheck` | TypeScript project-reference check/build. |
 | `bun run build` | Build TypeScript references and the browser runtimes owned by `cms-content`. |
+| `bun run cli:build --version <cli-version> --stack-version <stack-version>` | Bundle and verify the installable `@cyaxis/ulvia` npm archive with its independent initial stack version. |
+| `bun run cli:publish --version <version>` | Publish an unchanged, previously built CLI archive to the public npm registry. |
+| `bun run images:build --version <version> all` | Build all official Cyaxis/Ulvia Docker images locally. |
+| `bun run images:publish --version <version> all` | Publish verified official images to Docker Hub. |
 | `bun test` | Run the test suite. |
 | `bun run test:kernel-smoke` | Exercise a fresh local Kernel installation, representative mutations and restart through Chromium. |
 | `bun run clean` | Clean TypeScript build state, then remove every package `dist` and `tsconfig.tsbuildinfo`. |

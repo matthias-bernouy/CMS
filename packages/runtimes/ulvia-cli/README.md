@@ -1,6 +1,32 @@
-# @bernouy/ulvia-cli
+# Ulvia CLI
 
 Ulvia installation and release CLI.
+
+For the operator journey from a fresh Ubuntu host to a running local or public
+site, follow the [canonical installation guide](../../../docs/installation/README.md).
+
+The workspace package contains private source code. Official releases are
+bundled without workspace dependencies and published publicly as
+`@cyaxis/ulvia`:
+
+```bash
+bun add --global @cyaxis/ulvia@latest
+ulvia --help
+```
+
+From the workspace, build and publish one exact release with:
+
+```bash
+bun run cli:build --version 0.0.3 --stack-version 0.0.1-beta
+bun run cli:publish --version 0.0.3
+```
+
+The build creates a checked npm archive and SHA-256 receipt below
+`artifacts/cli`. The CLI package version and its compatible initial Docker stack
+version are independent and both are sealed into that receipt. Publishing
+accepts only the exact pair, targets the public npm registry, and uses the
+`next` tag for prereleases or `latest` for stable versions. It requires npm
+credentials configured outside the repository.
 
 ```bash
 bun run ulvia -- start
@@ -12,7 +38,9 @@ bun run ulvia -- instance credentials preview
 bun run ulvia -- instance stop preview
 bun run ulvia -- instance delete preview --yes
 bun run ulvia -- services stop
-bun run ulvia -- services upgrade
+bun run ulvia -- upgrade kernel --version 0.0.1-beta
+bun run ulvia -- upgrade provider --version 0.0.1-beta
+bun run ulvia -- upgrade repository --version 0.0.1-beta
 bun run ulvia -- reset --yes
 bun run ulvia -- release packages/official-repository/collections/ulvia-official
 bun run ulvia -- release /path/to/contract-directory
@@ -31,7 +59,10 @@ data lives below `$XDG_DATA_HOME/ulvia` or `~/.local/share/ulvia`;
 CLI stores authored releases in `<data>/repository`. Shared Provider, Repository,
 MongoDB, proxy, files, secrets and logs live below `<data>/services`; each
 stateless Kernel has independent state and logs below `<data>/instances/<name>`.
-The CLI never starts application servers or supervises their PIDs.
+The CLI never starts application servers, supervises their PIDs, or builds
+software images. It pulls only the canonical public images under
+`docker.io/cyaxis`, validates their Ulvia component and stack-API labels, and
+stores the immutable repository digest selected for each component.
 
 The first lifecycle command creates a safe installation configuration bound to
 `127.0.0.1:5100`. Configure public exposure before creating an instance:
@@ -54,6 +85,10 @@ after the first instance because its canonical Kernel URL is part of Provider
 provisioning. Repository and Provider management ports remain loopback-only.
 
 `services start` starts only the shared proxy, MongoDB, Repository and Provider.
+On first initialization it uses the exact version embedded by `cli:build`, or
+an explicit `services start --version <version>` override. Later starts reuse
+the persisted digests and reject a conflicting `--version`; component changes
+must go through `upgrade`.
 `instance create` provisions one isolated Provider tenant and immediately starts
 its dedicated Kernel. `instance start` restarts only an already-provisioned
 instance's Kernel. All Kernels use the shared proxy port: an instance named
@@ -79,7 +114,10 @@ The lifecycle boundary is deliberate:
 `instance credentials <name>` prints only that administrator's email and
 password. Repository, Provider operator and instance bearer tokens remain in
 private runtime files. Shared services and every instance have independent
-`stop`, `status`, `logs` and explicit `upgrade` boundaries. `reset --yes`
+`stop`, `status`, and `logs` boundaries. Software upgrades are explicit and
+component-scoped through `upgrade <component> --version <exact-version>`.
+Normal starts always reuse the installed digest and never follow a newer tag.
+`reset --yes`
 removes every Compose project, instance, shared state and repository
 release. It does not inspect or modify the current working directory.
 `release <resource-directory>` reads `definition.json` and routes by `kind`:
@@ -184,9 +222,10 @@ ID, and discovery stops there so `settings/definition.json` is never mistaken
 for a nested Bloc. Intermediate grouping directories contain only directories
 and do not affect release identity.
 
-The bundled bootstrap already admits the official CMS contracts, provider manifest
-and administration collection before starting local services. To publish the same
-resources manually, release the CMS contracts before the manifest:
+The Official Repository image contains the admitted CMS contracts, provider
+manifest, and administration collection. It installs that snapshot only into
+empty persistent storage. To publish the same resources manually, release the
+CMS contracts before the manifest:
 
 ```bash
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.access
