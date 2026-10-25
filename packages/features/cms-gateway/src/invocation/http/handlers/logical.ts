@@ -1,3 +1,4 @@
+import { logicalHttpBinding } from "../route/bindings";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayActor } from "cms-gateway/invocation/interfaces/Invocation";
 import { actorCredentialFromRequest } from "cms-gateway/protocol/TrustedCapabilityEffects";
@@ -32,6 +33,7 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
                 siteId: config.siteId,
                 contractId,
                 capabilityId,
+                ...(await logicalHttpBinding(config.invoker, { siteId: config.siteId, contractId, capabilityId })),
                 input,
                 actor,
                 ...(contractId === "ulvia.cms.access" && capabilityId === "resolve-actor"
@@ -69,6 +71,7 @@ export function createCapabilityMutationHandler(config: CapabilityMutationHandle
                 siteId: config.siteId,
                 contractId,
                 capabilityId,
+                ...(await logicalHttpBinding(config.invoker, { siteId: config.siteId, contractId, capabilityId })),
                 input,
                 actor,
                 ...(idempotencyKey ? { idempotencyKey } : {}),

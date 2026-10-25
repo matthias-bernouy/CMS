@@ -71,16 +71,12 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
                 }
                 const release = route.requestedRelease.admission.release;
                 for (const capability of release.capabilities) {
-                    const binding = route.requestedRelease.admission.bindings.find(
-                        (item) => item.capabilityId === capability.id,
-                    )?.binding;
                     if (
                         (capability.access !== "public" && capability.access !== "authenticated") ||
                         capability.behavior.execution !== "sync" ||
                         (capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed") ||
                         capability.output.type === "binary" ||
-                        !binding ||
-                        binding.body?.kind === "binary"
+                        Object.values(capability.input.properties).some((schema) => schema.type === "binary")
                     ) {
                         continue;
                     }

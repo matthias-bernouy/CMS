@@ -1,3 +1,6 @@
+import { httpTransportRequest } from "../route/bindings";
+import { validateHttpResponse } from "../response/validate";
+import type { GatewayHttpTransportRequest, GatewayHttpTransportResponse } from "../route/interfaces";
 import { decodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
@@ -7,9 +10,12 @@ import type {
     GatewayTransportRequest,
     GatewayTransportResponse,
 } from "cms-gateway/invocation/interfaces/Invocation";
-import { buildHttpInvocation, type PreparedHttpInvocation } from "cms-gateway/invocation/http/buildHttpInvocation";
-import { readBounded } from "cms-gateway/invocation/http/readBounded";
-import { withAbort } from "cms-gateway/invocation/http/withAbort";
+import {
+    buildHttpInvocation,
+    type PreparedHttpInvocation,
+} from "cms-gateway/invocation/http/transport/buildHttpInvocation";
+import { readBounded } from "cms-gateway/invocation/http/transport/readBounded";
+import { withAbort } from "cms-gateway/invocation/http/transport/withAbort";
 import { decodeSessionEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export interface GatewayHttpExchange extends PreparedHttpInvocation {
@@ -68,7 +74,13 @@ export class HttpGatewayTransport implements GatewayTransport {
         this.#inactivityTimeoutMs = positiveBound(options.inactivityTimeoutMs ?? 15_000, "inactivityTimeoutMs");
     }
 
-    async send(request: GatewayTransportRequest): Promise<GatewayTransportResponse> {
+    async send(value: GatewayTransportRequest): Promise<GatewayTransportResponse> {
+        const request = httpTransportRequest(value);
+        const response = await this.exchange(request);
+        return validateHttpResponse(request.capability, request.binding, response, request.requestId);
+    }
+
+    private async exchange(request: GatewayHttpTransportRequest): Promise<GatewayHttpTransportResponse> {
         const prepared = buildHttpInvocation(request);
         const abort = new AbortController();
         const signal = abort.signal;
@@ -332,7 +344,11 @@ async function readWithTimeout(
     }
 }
 
-function headError(response: Response, request: GatewayTransportRequest, bytes: Uint8Array): GatewayTransportResponse {
+function headError(
+    response: Response,
+    request: GatewayTransportRequest,
+    bytes: Uint8Array,
+): GatewayHttpTransportResponse {
     if (bytes.byteLength) {
         throw new TypeError("HEAD error cannot contain a body");
     }

@@ -283,7 +283,8 @@ describe("capability gateway", () => {
                 output: { items: ["one"] },
             });
             expect(scope.sent).toHaveLength(1);
-            expect(scope.sent[0]?.binding.method).toBe("POST");
+            expect(scope.sent[0]?.capability.behavior).toMatchObject({ effect: "command", idempotency });
+            expect(scope.sent[0]).not.toHaveProperty("binding");
             expect(scope.commandAudit.list().map((event) => event.stage)).toEqual(["started", "completed"]);
         }
     });

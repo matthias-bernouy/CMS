@@ -1,4 +1,4 @@
-import { withAbort } from "cms-gateway/invocation/http/withAbort";
+import { withAbort } from "cms-gateway/invocation/http/transport/withAbort";
 
 /** Bounds bytes and time, cancelling a body reader when either limit is exceeded. */
 export async function readBounded(response: Response, maximum: number, signal: AbortSignal): Promise<Uint8Array> {

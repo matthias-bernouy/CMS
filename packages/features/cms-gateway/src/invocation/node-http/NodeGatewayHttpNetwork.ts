@@ -4,8 +4,11 @@ import {
     assertProviderInvocationSecret,
     signProviderInvocationToken,
 } from "cms-gateway/protocol/ProviderInvocationToken";
-import type { GatewayHttpExchange, GatewayHttpNetwork } from "cms-gateway/invocation/http/HttpGatewayTransport";
-import { withAbort } from "cms-gateway/invocation/http/withAbort";
+import type {
+    GatewayHttpExchange,
+    GatewayHttpNetwork,
+} from "cms-gateway/invocation/http/transport/HttpGatewayTransport";
+import { withAbort } from "cms-gateway/invocation/http/transport/withAbort";
 import {
     isLoopbackLiteral,
     selectGatewayAddress,

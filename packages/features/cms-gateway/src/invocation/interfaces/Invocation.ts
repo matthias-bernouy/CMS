@@ -1,5 +1,5 @@
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
-import type { CompiledHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
+import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts/catalogue";
 import type { CatalogueProviderManifest } from "@bernouy/cms-repository/providers/catalogue";
 import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
@@ -17,10 +17,13 @@ export interface GatewayInvocation {
     readonly contractId: string;
     readonly capabilityId: string;
     readonly input: unknown;
-    /** Streaming body kept outside the JSON input snapshot. Its property is fixed by the admitted binding. */
+    /** Streaming bytes for the single binary input property, kept outside the JSON snapshot. */
     readonly binaryBody?: GatewayBinaryBody;
-    /** Trusted HTTP transport override used only for automatic HEAD on binary GET resources. */
-    readonly httpMethod?: "HEAD";
+    /** Optional explicit exposure selected by a trusted protocol adapter. */
+    readonly bindingId?: string;
+    readonly bindingTransport?: string;
+    /** Request binary representation metadata without consuming its content. */
+    readonly metadataOnly?: boolean;
     /** Constructed by a trusted surface from verified authentication. */
     readonly actor: GatewayActor;
     /** Required by keyed commands and transported outside authored capability input. */
@@ -69,7 +72,9 @@ export interface GatewayTransportRequest {
     readonly providerTokenRef: string;
     readonly release: ContractRelease;
     readonly capability: CapabilityDefinition;
-    readonly binding: CompiledHttpBinding;
+    readonly bindingId?: string;
+    readonly bindingTransport?: string;
+    readonly metadataOnly?: boolean;
     readonly input: Readonly<Record<string, unknown>>;
     readonly binaryBody?: GatewayBinaryBody;
     /** Provider-scoped opaque user identity, included only when the capability requires one. */
@@ -79,7 +84,7 @@ export interface GatewayTransportRequest {
 }
 
 export interface GatewayTransportResponse {
-    readonly status: number;
+    readonly status?: number;
     readonly contentType?: string;
     readonly responseHeaders?: Readonly<Record<string, string>>;
     readonly output?: unknown;
@@ -96,7 +101,7 @@ export interface GatewayTransport {
 
 interface GatewayResultBase {
     readonly requestId: string;
-    readonly status: number;
+    readonly status?: number;
     readonly responseHeaders?: Readonly<Record<string, string>>;
     readonly responseEffect?: GatewayResponseEffect;
 }
@@ -118,21 +123,7 @@ export type GatewayResult =
 
 export interface GatewayInvoker {
     invoke(value: GatewayInvocation): Promise<GatewayResult>;
-    resolveHttp(value: GatewayHttpRouteRequest): Promise<GatewayHttpRoute>;
-}
-
-export interface GatewayHttpRouteRequest {
-    readonly siteId: string;
-    readonly contractId: string;
-    readonly method: string;
-    /** Path relative to the contract ID, beginning with a slash. */
-    readonly path: string;
-}
-
-export interface GatewayHttpRoute {
-    readonly capability: CapabilityDefinition;
-    readonly binding: CompiledHttpBinding;
-    readonly pathValues: Readonly<Record<string, string>>;
+    resolveContract?(value: { siteId: string; contractId: string }): Promise<AdmittedContractRelease>;
 }
 
 export interface GatewayAccessProbe {

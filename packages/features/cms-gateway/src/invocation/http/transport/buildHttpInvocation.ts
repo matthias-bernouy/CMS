@@ -1,3 +1,4 @@
+import { httpTransportRequest } from "../route/bindings";
 import { encodeHttpFieldParameter, encodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import type { CompiledHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
@@ -28,7 +29,7 @@ export function buildHttpInvocation(request: GatewayTransportRequest): PreparedH
     ) {
         throw new TypeError("provider endpoint must be a canonical HTTP origin");
     }
-    const { binding, capability, input } = request;
+    const { binding, capability, input } = httpTransportRequest(request);
     let path = binding.path;
     for (const parameter of binding.pathParameters) {
         const encoded = encode(parameter);

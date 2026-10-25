@@ -1,3 +1,4 @@
+import { resolveGatewayHttpRoute } from "../route/bindings";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayActor } from "cms-gateway/invocation/interfaces/Invocation";
 import { actorCredentialFromRequest } from "cms-gateway/protocol/TrustedCapabilityEffects";
@@ -68,7 +69,7 @@ async function capabilityIdentifiers(request: Request, config: CapabilityHttpHan
     } catch {
         throw new GatewayError("invalid_input", "capability contract identifier is invalid");
     }
-    const route = await config.invoker.resolveHttp({
+    const route = await resolveGatewayHttpRoute(config.invoker, {
         siteId: config.siteId,
         contractId,
         method: request.method,

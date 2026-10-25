@@ -1,18 +1,15 @@
+import type { GatewayHttpRoute } from "./route/interfaces";
+import type { GatewayHttpInvoker } from "./route/interfaces";
+import { resolveGatewayHttpRoute } from "./route/bindings";
 import { decodeHttpFieldParameter, decodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import type { CompiledHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
-import type {
-    GatewayActor,
-    GatewayHttpRoute,
-    GatewayInvocation,
-    GatewayInvoker,
-    GatewayResult,
-} from "cms-gateway/invocation/interfaces/Invocation";
+import type { GatewayActor, GatewayInvocation, GatewayResult } from "cms-gateway/invocation/interfaces/Invocation";
 import { readGatewayHttpInput } from "cms-gateway/invocation/http/readHttpInput";
 import { encodeSessionEffect, SESSION_EFFECT_HEADER } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export interface GatewayHttpCallOptions {
-    readonly invoker: GatewayInvoker;
+    readonly invoker: GatewayHttpInvoker;
     readonly siteId: string;
     readonly actor: GatewayActor;
     readonly prefix: string;
@@ -32,7 +29,7 @@ export type GatewayHttpFailureObserver = (failure: GatewayHttpFailure, error: un
 export async function handleGatewayHttpCall(request: Request, options: GatewayHttpCallOptions): Promise<Response> {
     try {
         const target = parseTarget(request, options.prefix);
-        const route = await options.invoker.resolveHttp({
+        const route = await resolveGatewayHttpRoute(options.invoker, {
             siteId: options.siteId,
             contractId: target.contractId,
             method: request.method,
@@ -45,13 +42,24 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             contractId: target.contractId,
             capabilityId: route.capability.id,
             actor: options.actor,
-            ...(request.method === "HEAD" ? { httpMethod: "HEAD" as const } : {}),
+            ...(request.method === "HEAD" ? { metadataOnly: true } : {}),
+            ...(route.bindingId ? { bindingId: route.bindingId, bindingTransport: "http" } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),
             ...(binaryBody ? { binaryBody } : {}),
             ...(options.actorCredential ? { actorCredential: options.actorCredential } : {}),
             input,
         });
-        return gatewayResultResponse(result, request.method);
+        return gatewayResultResponse(
+            {
+                ...result,
+                status:
+                    result.status ??
+                    (result.kind === "declared-error"
+                        ? route.binding.response.errorStatuses[result.errorCode]
+                        : route.binding.response.successStatuses[0]),
+            },
+            request.method,
+        );
     } catch (error) {
         const head = request.method === "HEAD";
         const code = error instanceof GatewayError ? error.code : "internal_error";
@@ -246,7 +254,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
             void result.stream.cancel();
         }
         return new Response(method === "HEAD" ? null : result.stream, {
-            status: result.status,
+            status: result.status ?? 200,
             headers: {
                 "content-type": result.contentType,
                 "x-content-type-options": "nosniff",
@@ -259,7 +267,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
     }
     if (method === "HEAD" && result.kind === "declared-error") {
         return new Response(null, {
-            status: result.status,
+            status: result.status ?? 409,
             headers: {
                 "cache-control": "private, no-store",
                 "x-ulvia-error-code": encodeURIComponent(result.errorCode),
@@ -271,7 +279,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
     }
     if (result.status === 204 || result.status === 205) {
         return new Response(null, {
-            status: result.status,
+            status: result.status ?? 200,
             headers: {
                 "cache-control": "private, no-store",
                 "x-ulvia-request-id": result.requestId,
@@ -280,7 +288,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
         });
     }
     return result.kind === "success"
-        ? jsonResponse(result.output ?? null, result.status, result.requestId, effectHeader)
+        ? jsonResponse(result.output ?? null, result.status ?? 200, result.requestId, effectHeader)
         : jsonResponse(
               {
                   error: {
@@ -289,7 +297,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
                       ...(result.output === undefined ? {} : { output: result.output }),
                   },
               },
-              result.status,
+              result.status ?? 409,
               result.requestId,
               result.responseHeaders,
           );

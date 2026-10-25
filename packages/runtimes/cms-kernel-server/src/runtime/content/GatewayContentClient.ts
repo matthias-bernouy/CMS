@@ -131,7 +131,7 @@ export class GatewayContentClient {
                     status: result.status,
                     durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
                 });
-                throw new ContentDeliveryError(operation, result.status);
+                throw new ContentDeliveryError(operation, result.status ?? 409);
             }
             const output = await measureCurrentRequestTiming("content_decode", () =>
                 parseDeliveryOutput<T>(result.output),

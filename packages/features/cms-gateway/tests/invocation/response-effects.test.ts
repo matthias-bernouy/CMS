@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
 import type { CompiledHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
-import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
+import { validateHttpResponse as validateResponse } from "cms-gateway/invocation/http/response/validate";
 
 const capability = {
     id: "login-password",

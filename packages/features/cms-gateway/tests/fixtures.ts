@@ -12,10 +12,12 @@ export async function gatewayRoute(
         binary?: boolean;
         binaryInput?: boolean;
         rawRange?: boolean;
+        mcp?: boolean;
+        bindings?: readonly Record<string, unknown>[];
     } = {},
 ): Promise<GatewayRoute> {
     const command = overrides.binaryInput || overrides.behavior?.effect === "command";
-    const contract = await admitContractRelease({
+    const definition = {
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -68,6 +70,7 @@ export async function gatewayRoute(
                             required: ["items"],
                         },
                 errors: [{ code: "NOT_FOUND", retryable: false }],
+                ...(overrides.mcp ? { bindings: [{ id: "mcp", transport: "mcp" as const }] } : {}),
                 binding: {
                     transport: "http",
                     method: overrides.binaryInput ? "PUT" : command ? "POST" : "GET",
@@ -117,7 +120,16 @@ export async function gatewayRoute(
                 },
             },
         ],
-    });
+    };
+    if (overrides.mcp || overrides.bindings) {
+        const capability = definition.capabilities[0]!;
+        (capability as Record<string, unknown>).bindings = overrides.bindings ?? [
+            { id: "http", ...capability.binding },
+            { id: "mcp", transport: "mcp" },
+        ];
+        delete (capability as { binding?: unknown }).binding;
+    }
+    const contract = await admitContractRelease(definition);
     const releases = new InMemoryReleaseCatalogue();
     const release = await releases.publish(contract);
     const admittedManifest = await admitProviderManifest(

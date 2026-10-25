@@ -40,8 +40,14 @@ test("the default provider response budget includes a contract-sized Page docume
         endpoint: "https://provider.example.com",
         providerTokenRef: "${PROVIDER_TOKEN}",
         release: route.release.admission.release,
-        capability: route.release.admission.release.capabilities[0]!,
-        binding: route.release.admission.bindings[0]!.binding,
+        capability: {
+            ...route.release.admission.release.capabilities[0]!,
+            output: {
+                type: "object",
+                properties: { content: { type: "string", maxLength: 1024 * 1024 } },
+                required: ["content"],
+            },
+        },
         input: { term: "page" },
     });
     expect(response).toMatchObject({ output: { content: CONTRACT_SIZED_TEXT } });

@@ -15,7 +15,9 @@ const INVOCATION_FIELDS = new Set([
     "capabilityId",
     "input",
     "binaryBody",
-    "httpMethod",
+    "bindingId",
+    "bindingTransport",
+    "metadataOnly",
     "actor",
     "idempotencyKey",
     "actorCredential",
@@ -42,8 +44,14 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             throw new GatewayError("invalid_input", "contract or capability identifier is invalid");
         }
     }
-    if (value.httpMethod !== undefined && value.httpMethod !== "HEAD") {
-        throw new GatewayError("invalid_input", "HTTP method override is invalid");
+    if (
+        (value.bindingTransport !== undefined &&
+            (typeof value.bindingTransport !== "string" || !/^[a-z]{1,32}$/u.test(value.bindingTransport))) ||
+        (value.bindingId !== undefined &&
+            (typeof value.bindingId !== "string" || !/^[a-z][a-z0-9.-]{0,63}$/u.test(value.bindingId))) ||
+        (value.metadataOnly !== undefined && typeof value.metadataOnly !== "boolean")
+    ) {
+        throw new GatewayError("invalid_input", "binding or representation selection is invalid");
     }
     const actor = snapshotActor(value.actor);
     const idempotencyKey = snapshotIdempotencyKey(value.idempotencyKey);
@@ -59,7 +67,9 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             contractId: value.contractId,
             capabilityId: value.capabilityId,
             actor,
-            ...(value.httpMethod ? { httpMethod: value.httpMethod } : {}),
+            ...(value.bindingId ? { bindingId: value.bindingId } : {}),
+            ...(value.bindingTransport ? { bindingTransport: value.bindingTransport } : {}),
+            ...(value.metadataOnly ? { metadataOnly: true } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),
             ...(actorCredential ? { actorCredential } : {}),
             ...(binaryBody ? { binaryBody } : {}),
