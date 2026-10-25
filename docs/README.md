@@ -8,8 +8,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 
 - [Install Ulvia](installation/README.md): Ubuntu prerequisites, first local
   instance, public HTTPS, upgrades, backups and troubleshooting.
-- [Repository audit](AUDIT.md): verified strengths, production risks, current
-  limits and the recommended delivery sequence.
+- [Repository audit](AUDIT.md): the 2026-10-25 verification snapshot, confirmed
+  CI defects, measured rendering costs, strengths and the delivery sequence.
 - [Workspace architecture](architecture/README.md): layers, dependency rules,
   domain boundaries and runtime composition.
 - [Package map](architecture/packages.md): every current workspace package and
@@ -20,8 +20,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Commit messages](development/commits.md): the recommended message convention.
 - [First published Page](product/first-published-page.md): locked MVP decisions,
   the administrator's golden path and its executable completion gate.
-- [Deferred platform work](TODO.md): explicit trust assumptions and work that
-  must be completed before those assumptions change.
+- [Open platform work](TODO.md): current correctness and operational gaps,
+  trust assumptions and exit conditions.
 - [Provider instance initialization](architecture/provider-instance-initialization.md):
   operator API, exact official profile, isolated instance connection, local
   first run, restart and production composition boundaries.
@@ -38,8 +38,9 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   request correlation, local journals, redaction and CLI inspection.
 
 Use the [repository audit](AUDIT.md), the architecture guides and the referenced
-source code to establish current behavior. Deliberately deferred activation
-gates remain recorded in [Deferred platform work](TODO.md).
+source code to establish current behavior. An implemented API or passing local
+suite does not establish a completed browser journey or working CI delivery.
+Remaining activation gates are recorded in [Open platform work](TODO.md).
 
 ## HTTP Applications
 

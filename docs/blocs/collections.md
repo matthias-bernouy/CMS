@@ -152,12 +152,24 @@ anonymous immutable SVG with a strong ETag.
 ## Releases And Installation
 
 ```bash
-bun run ulvia -- release packages/official-repository/collections/ulvia-official
-bun run ulvia -- dev
+bun run ulvia -- services start --version 0.0.1-beta
+bun run ulvia -- instance create preview
+```
+
+Once the Repository has initialized, validate and store a new authored release:
+
+```bash
+bun run ulvia -- release /path/to/new-collection-version
 ```
 
 `release` assembles, compiles and admits canonical bytes into the local
-repository. `dev` serves stored releases only; it never scans source folders.
+repository. `0.0.1-beta` is an example published stack version required on first
+startup from the unbundled source CLI. The Repository container serves stored
+releases; it never scans authored folders. `dev` is no longer a CLI command.
+Releasing or rebuilding locally does not replace the running server images or
+an installed collection; installation and upgrade remain explicit actions.
+Do not prefill an empty installation with only a collection before starting the
+Repository: its official seed runs only against absent or empty storage.
 Push and pull transfer exact immutable releases and the receiving repository
 re-runs admission. A yank hides a release from new selection without deleting
 historical bytes.

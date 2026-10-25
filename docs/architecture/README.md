@@ -49,19 +49,27 @@ The Provider that implements `ulvia.cms.content` projects its writable
 `@bernouy/cms-content/rendering`. The production Kernel reads that projection
 through the selected Content delivery capabilities; it never receives the
 writable repository. Kernel sees only published Pages/routes, projected
-settings and renderable Bloc artifacts.
+settings and renderable Bloc artifacts. The current `delivery.read` capability
+wraps operation-specific JSON in strings; validation of those inner projections
+is incomplete. Contract admission therefore does not yet establish every field
+the Kernel consumes. See the [audit](../AUDIT.md).
 File references are resolved through the selected `ulvia.cms.files` provider.
 Sitemap storage is an independent dependency of the Content provider runtime.
 
 Every page has a monotonic concurrency revision used by authoring and collection
 migrations. This is not user-facing page history. Page publication is
-`visible === true`; user-facing Page history is not implemented.
+`visible === true`. The editor has bounded in-memory undo/redo; durable
+user-facing Page history is not implemented.
 File visibility and temporary private
 access are enforced by the selected Files provider.
 
 Installed collection Blocs, themes, texts and Pages are projected
 from immutable releases. Breaking stored-data upgrades use the maintenance-mode
 workflow documented in [collections](../blocs/collections.md).
+Container image upgrades are a separate operation: they replace executable
+components, not installed collection releases. A previous-image fallback does
+not reverse MongoDB writes. Internal persistence migrations and verified
+backup/restore remain [open operational work](../TODO.md).
 
 ### Repository And Gateway
 

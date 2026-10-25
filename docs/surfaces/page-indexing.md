@@ -6,7 +6,7 @@ own CMS metadata or sitemap rules. No `/.cms/sources` route is involved.
 
 The Page's browser `cms-query` binding identifies
 `<contractId>:<capabilityId> as <alias>`. A `cms-query-input` field whose source
-is a synchronized `@param:` state identifies a candidate in the administration UI:
+is a synchronized `@param:` state identifies a candidate for the domain detector:
 
 ```html
 <main
@@ -15,11 +15,12 @@ is a synchronized `@param:` state identifies a candidate in the administration U
 ></main>
 ```
 
-The picker matches selected
+The detector matches selected
 query capabilities with an object output containing a property named like the
-bound input. Saving additionally checks scalar input/identity types and the
-configured projection paths. The UI suggests a candidate when exactly one is
-present and requires a choice when several are present.
+bound input. Domain validation additionally checks scalar input/identity types
+and configured projection paths. These helpers do not establish a current
+administration picker: the official Page-detail UI and `pages.*` capability
+inputs do not expose this configuration yet.
 
 `cms-content` resolves metadata through a separate server-side call to the injected
 gateway runtime. The Kernel supplies the authenticated actor adapter; it does
@@ -70,16 +71,16 @@ query values render the base page with `noindex` and no canonical URL. A provide
 publish dynamic URLs in sitemap snapshots. Its `itemsPath` must point to an
 array; `identityPath` and optional `lastModifiedPath` are relative to each item.
 Offset and cursor pagination are bounded and reject loops or malformed output.
-The administration flow validates identity, discovery and pagination projection paths against
-the selected contract schemas. Discovery must use the same contract as resolution.
+Domain validation checks identity, discovery and pagination projection paths
+against the selected contract schemas. Discovery must use the same contract as resolution.
 Discovery runs anonymously so it cannot expose visitor-specific paths.
 
 A page with dynamic resolution but no `discover` remains absent from the
 sitemap. Static pages and localized paths keep their existing sitemap behavior.
-The page settings UI exposes the discovery capability, projection fields, and
-pagination. The page config API also accepts the complete `indexing` object.
-Gateway URLs, Source URNs, and Source entity IDs are not accepted by this
-contract. Candidate detection is transport-independent.
+The internal Page settings model accepts the complete `indexing` object, but
+there is no mounted official authoring flow for discovery, projection fields or
+pagination. Gateway URLs, Source URNs, and Source entity IDs are not accepted by
+that model. Candidate detection is transport-independent.
 
 ## Current Limits
 
@@ -96,5 +97,4 @@ and the browser request have separate execution/error paths.
 
 See [candidate detection](../../packages/features/cms-content/src/pages/core/indexing/detection.ts),
 [SEO resolution](../../packages/features/cms-content/src/pages/seo/indexing/resolvePageIndexingMetadata.ts),
-[gateway execution](../../packages/features/cms-content/src/pages/seo/indexing/executeIndexingCapability.ts),
-and the [Kernel adapter](../../packages/surfaces/cms-kernel/src/http/pages/resolvePageIndexing.ts).
+and the [Kernel adapter and gateway execution](../../packages/surfaces/cms-kernel/src/http/pages/resolvePageIndexing.ts).

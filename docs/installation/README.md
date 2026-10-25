@@ -122,6 +122,14 @@ that digest on subsequent starts. Registry channels such as `next` or `latest`
 may identify releases for humans, but an installation never persists or
 silently follows those mutable tags.
 
+`upgrade kernel` visits every local Kernel instance in sequence. Upgrades of
+Provider and Repository affect shared services. A failed activation attempts
+to restart the previous image, but this does not restore changed database or
+file contents and is not an atomic rollback across all instances.
+Take a complete backup before an upgrade involving persisted data. Internal
+schema migrations and interrupted-upgrade/restore drills remain
+[open platform work](../TODO.md#internal-persistence-migrations).
+
 ## 6. Public Domain And HTTPS
 
 Configure public networking before creating the first instance because the
@@ -154,6 +162,12 @@ Stop the installation before taking a filesystem-level backup of the Ulvia data
 directory. Preserve the complete directory, including MongoDB, files,
 credentials, encryption material, Repository state, and instance definitions.
 Do not restore only selected secret or database files from different snapshots.
+
+The CLI has no general backup/restore command. Stop each Kernel with
+`ulvia instance stop <name>`, then stop shared services before copying their
+data. Restore and verify a complete backup in an isolated installation before
+treating it as a recovery guarantee; do not rely on image fallback to recover
+data. See [operational recovery](../TODO.md#backup-and-operational-recovery).
 
 `reset` permanently removes Ulvia-owned local state:
 

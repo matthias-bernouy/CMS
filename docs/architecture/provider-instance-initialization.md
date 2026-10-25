@@ -48,14 +48,24 @@ then performs the following sequence:
 Repeating `ulvia start` starts the shared services and every previously created
 Kernel without calling the provisioning endpoint again. `ulvia services ...`
 manages the shared services without changing Kernel containers, while
-`ulvia instance ... <name>` creates, starts, stops, upgrades and deletes Kernels
-independently. Nginx routes names through the configured shared ports. Instances
+`ulvia instance ... <name>` creates, starts, stops and deletes named Kernels.
+`ulvia upgrade kernel --version <version>` upgrades the existing Kernels
+sequentially; there is no per-instance upgrade subcommand or atomic fleet switch.
+Nginx routes names through the configured shared ports. Instances
 default to `<name>.localhost`; public instances receive an explicit immutable
 domain during provisioning.
+Deleting a named Kernel disables its Provider instance and retains the Provider
+data; it is not tenant-data erasure.
 The CLI itself owns no server process: it only drives Compose. Restart reopens
 persisted stores and resumes recoverable transitions.
 `ulvia reset --yes` deliberately clears every local instance and shared store;
 ordinary startup never repairs incompatible encrypted state by deleting it.
+
+Packaged CLI releases embed an initial stack version. A first startup from
+workspace source instead requires `ulvia services start --version <published-version>`;
+later starts reuse the persisted image digests. Restarting or replacing an image
+does not automatically upgrade an instance's exact profile or installed
+collections.
 
 ## Operator API
 
@@ -99,6 +109,7 @@ until the durable administrator step is confirmed, including crash recovery.
 
 Failed transitions require an explicit retry, and the active profile changes
 only after every step succeeds. A disabled instance rejects report and contract
-traffic. Backup, restore, deletion, instance-token rotation and automatic
-MongoDB-user provisioning remain explicit lifecycle work rather than hidden
-Kernel startup behavior.
+traffic. Backup, restore, complete tenant-data deletion and instance-token
+rotation remain explicit lifecycle work rather than hidden Kernel startup
+behavior. Shared Provider MongoDB-user provisioning is handled by deployment
+infrastructure; the Kernel never receives those credentials.

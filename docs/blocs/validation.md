@@ -10,8 +10,15 @@ Kernel renderer bridge.
 Run the local CMS with:
 
 ```bash
-bun run ulvia -- dev
+bun run ulvia -- services start --version 0.0.1-beta
+bun run ulvia -- instance create preview
 ```
+
+Choose an exact published stack version on first startup from source. Later
+`bun run ulvia -- start` reuses the installed digests. Source builds and
+`release` do not update running server images or installed collections; use
+the explicit image and collection upgrade workflows. See
+[development](../development/README.md#local-cms).
 
 Keep view code independent from the editor. Verify the same saved Light DOM in
 administration preview and public rendering, including keyboard use, narrow layouts, dark mode,

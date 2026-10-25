@@ -15,7 +15,7 @@ and production storage as separate concerns.
 | --- | --- | --- |
 | `ULVIA_REPOSITORY_DIR` | yes | Absolute persistent data directory |
 | `ULVIA_REPOSITORY_TOKEN` | yes | 32–1024 character mutation signing secret |
-| `ULVIA_REPOSITORY_SEED_DIR` | no | Read-only admitted repository snapshot copied atomically when the persistent directory does not exist |
+| `ULVIA_REPOSITORY_SEED_DIR` | no | Read-only admitted repository snapshot copied when persistent storage is absent or empty |
 | `REPOSITORY_HOST` | no | Listen address, default `0.0.0.0` |
 | `REPOSITORY_PORT` | no | Listen port, default `3000` |
 | `REPOSITORY_SHUTDOWN_TIMEOUT_MS` | no | Graceful-stop bound, default `10000`, maximum `60000` |
@@ -31,10 +31,14 @@ and immutable artifacts all live on that volume. Horizontal or cross-region
 deployment requires shared atomic implementations of the registry, upload store
 and replay store; do not point multiple replicas at unrelated disks.
 
-When `ULVIA_REPOSITORY_SEED_DIR` is configured, startup validates the seed and
-copies it through a sibling staging directory only when
-`ULVIA_REPOSITORY_DIR` does not exist. It never overlays an existing repository;
-restarts therefore preserve published artifacts, yanks and receipts.
+When `ULVIA_REPOSITORY_SEED_DIR` is configured, startup copies and validates the
+snapshot in a staging directory if `ULVIA_REPOSITORY_DIR` is absent or empty.
+An absent directory is installed by renaming the staged root;
+an existing empty mount receives staged entries individually. A non-empty
+repository is never overlaid, so restarts preserve published artifacts, yanks
+and receipts. Replacing the image does not add new bundled releases to existing
+storage. Backup and verified recovery remain
+[open operational work](../../../docs/TODO.md#backup-and-operational-recovery).
 
 Startup verifies that the resulting directory is a real writable directory and
 re-reads all stored catalogues before accepting traffic. It then prunes expired upload

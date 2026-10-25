@@ -11,7 +11,8 @@ The Kernel owns route composition and Page HTTP presentation for:
 - feature-owned handlers for the prebuilt `cms-content` browser runtimes;
 - generic capability calls implemented by `cms-gateway`;
 - every Page path, resolved from the shared site route registry;
-- `/.cms/call/*`, `/.cms/blocset`, `/.cms/blocstyles` and immutable collection asset routes, whose
+- `/.cms/query/*`, `/.cms/mutation/*`, `/.cms/call/*`, `/.cms/blocset`,
+  `/.cms/blocstyles` and immutable collection asset routes, whose
   behavior remains in their owning feature packages;
 - sitemap and robots public URLs, whose responses come from the selected
   `ulvia.cms.content` delivery capabilities.
@@ -41,11 +42,44 @@ Successful capability forms declare the same kind of URL in
 query or fragment interpolation. Before returning HTML, the Kernel resolves
 collection default paths to the current site route override in one batch.
 
-Production Content reads never use a private Provider protocol or a local
-repository shortcut. They invoke the selected `ulvia.cms.content` release
-through the same Gateway as every other contract. Kernel still owns the public
-HTTP presentation boundary: request actor resolution, Page access preflight,
+Production Content reads invoke the selected `ulvia.cms.content` release
+through the same Gateway as every other contract. However, `delivery.read`
+currently carries operation-specific JSON inside string envelopes: Gateway
+validates those envelopes, while the inner projection remains only partially
+validated. This is a remaining contract-boundary gap, not a fully typed delivery
+protocol; see the [audit](../AUDIT.md).
+
+Kernel still owns the public HTTP presentation boundary: request actor
+resolution, Page access preflight,
 dynamic indexing calls, response caching, security headers and document-shell
 assembly. Moving that last assembly step behind Content would require a defined
 delegation model for Content to invoke arbitrary selected capabilities during
 server rendering; that model is intentionally not part of the current runtime.
+
+## Rendering Cache And Freshness
+
+The render-input cache considers entries fresh for 30 seconds and permits stale
+revalidation until 300 seconds after validation. Successful logical Content or
+Installations mutations handled by that Kernel invalidate its render-input
+cache. Changes performed through another Kernel or directly against the
+Provider depend on revalidation; there
+is no cross-process invalidation bus.
+
+The compressed document cache has explicit bounds. The render-input cache uses
+unbounded maps, including negative route entries, and currently retrieves the
+whole renderable Bloc catalogue rather than only a Page's dependency closure.
+Those are measured optimization targets in the [audit](../AUDIT.md), not
+guarantees of bounded memory or constant-sized delivery.
+
+## Editor Preview
+
+The editor iframe loads the saved Page's ordinary URL through the same document
+renderer, access checks, translations and assets as public navigation. There is
+no dedicated Kernel preview route. Draft visibility follows the normal access
+rules. The editor maps editable source nodes to that rendered document and can
+apply supported text and attribute changes locally; structural changes require
+saving and reloading the frame. It is not a complete unsaved-document renderer.
+
+The frame permits same-origin scripts. This preserves real Bloc behavior but
+does not isolate collection JavaScript from the editor or other same-origin
+Pages. See the [JavaScript trust boundary](../TODO.md#collection-javascript-isolation).

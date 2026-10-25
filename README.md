@@ -52,6 +52,8 @@ CmsCore/
 |   |-- features/
 |   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, themes, SEO)
 |   |   |-- cms-auth/          @bernouy/cms-auth
+|   |   |-- cms-emailer/       @bernouy/cms-emailer
+|   |   |-- cms-smtp-emailer/  @bernouy/cms-smtp-emailer
 |   |   |-- cms-files/         @bernouy/cms-files
 |   |   |-- cms-gateway/       @bernouy/cms-gateway
 |   |   |-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
@@ -101,6 +103,14 @@ bun run typecheck           # tsc --build only (project references)
 bun run clean               # cleans TypeScript state, package dist and tsbuildinfo
 bun test                    # workspace test runner
 ```
+
+The source CLI has no embedded initial image version. On an empty installation,
+use `bun run ulvia -- services start --version <published-stack-version>`, then
+create a named instance. Later starts reuse persisted image digests. Running
+from source does not build or deploy the current workspace's server code.
+
+See the [current audit](docs/AUDIT.md) for verified local checks, known CI
+blockers and the remaining end-to-end product gate.
 
 `build.ts` first runs `tsc --build`, then builds the generated Bloc behavior and
 binding-core runtimes owned by `@bernouy/cms-content`, and finally refreshes the

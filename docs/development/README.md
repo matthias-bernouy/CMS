@@ -10,14 +10,21 @@ bun install --frozen-lockfile
 ## Local CMS
 
 ```bash
-bun run ulvia -- start
 bun run ulvia -- configure network
+bun run ulvia -- services start --version 0.0.1-beta
 bun run ulvia -- services status
 bun run ulvia -- instance create preview
 bun run ulvia -- instance credentials preview
 bun run ulvia -- instance stop preview
 bun run ulvia -- services stop
 ```
+
+`0.0.1-beta` is an example exact image version; choose a published version of
+all required components. The source CLI reports `development` and has no
+embedded default stack version, so first startup requires `--version`.
+After initialization, `bun run ulvia -- start` reuses the installed digests.
+Building workspace sources does not update those containers; follow the
+explicit image build/publish and upgrade workflow below.
 
 The CLI manages shared services and any number of named Kernel instances through
 independent Docker Compose projects. It runs the same Kernel, Provider and
@@ -53,7 +60,11 @@ ulvia upgrade repository --version 0.0.1-beta
 
 An upgrade pulls the canonical `docker.io/cyaxis` reference, validates its OCI
 labels, and persists its immutable digest. A regular `start` reuses that digest;
-it never upgrades by following a mutable tag. Collection, contract, and provider
+it never upgrades by following a mutable tag. A failed activation attempts to
+restart the previous image. This is best-effort image recovery, not a rollback
+of persisted data, an automatic backup or a fleet-wide transaction. Kernel
+upgrades process instances in sequence; a later failure can leave earlier
+instances upgraded. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
 
 The host CLI is a separate public npm artifact. Its private workspace sources
@@ -123,43 +134,52 @@ the HTTP boundary; a request ID is diagnostic correlation only and must never be
 used as identity or authorization evidence. Tests that intentionally suppress
 diagnostics pass `NOOP_LOGGER` explicitly.
 
-## Local KEK Rotation
+## Provider Control-Plane KEK Rotation
 
 `CMS_KEK_HEX` remains the backward-compatible key named `legacy`. A versioned
 deployment may additionally set `CMS_KEK_ACTIVE_ID` and a
 `CMS_KEK_RING_JSON` object whose values are 64-character hexadecimal AES-256
-keys. At startup, the server scans every persisted DEK and refuses readiness if
-one references a key absent from the configured ring.
+keys. At startup, the Provider control-plane database is checked for persisted
+DEKs whose wrapping keys are absent. The envelope helper supports rewrapping
+with an audit ledger; this is not a CLI-managed key-rotation workflow.
 
-A supported rotation is an explicit maintenance operation:
+Instance databases use their own key named `instance`, stored inside encrypted
+Provider credentials. `ProviderInstanceHost` supplies that key with
+`rotateOnStart: false`; changing the control-plane ring does not rotate each
+instance's key. CLI Compose currently passes `CMS_KEK_HEX` and does not expose
+the ring or rotation flag through a lifecycle command.
 
-1. stop all CMS replicas and verify a restorable backup;
+For a directly configured Provider deployment, control-plane rewrapping is an
+explicit maintenance operation:
+
+1. stop the Provider and dependent Kernels and verify a restorable backup;
 2. keep the old keys configured, add the new key to `CMS_KEK_RING_JSON`, select
    it with `CMS_KEK_ACTIVE_ID`, and set `CMS_KEK_ROTATE_ON_START=true`;
-3. start one CMS process and wait for the `cms_kek_rotation_audits` record to
+3. start one Provider process and wait for the `cms_kek_rotation_audits` record to
    reach `completed`; listeners are not opened while the rotation runs;
-4. set `CMS_KEK_ROTATE_ON_START=false` and restart the normal replica set with
+4. set `CMS_KEK_ROTATE_ON_START=false` and restart the single-Provider deployment with
    both the active and historical keys still configured;
 5. remove a historical key only after a later backup and startup verification
    prove that no `cms_deks` row references it.
 
 The operation rewraps DEKs in bounded batches; it does not re-encrypt stored
 secret values. Replaying it is idempotent. Historical keys are never deleted
-automatically.
+automatically. Deployment-level restoration and historical-key recovery drills
+remain [open work](../TODO.md#backup-and-operational-recovery).
 
 ## Checks And Build
 
 | Command | Purpose |
 | --- | --- |
 | `bun run check:all` | Architecture, UI contracts, repository shape, style, workspace types, dead code and tooling types. |
-| `bun run verify` | Run every static workspace check, then the complete Bun test suite. This is the default pre-handoff command for code changes. |
+| `bun run verify` | Run static checks, build browser assets, regenerate official bootstrap artifacts and run the Bun test suite. |
 | `bun run verify:full` | Run `verify`, then exercise the complete local Kernel browser journey. |
 | `bun run check:dead-code` | Report unused declarations, exports, exported types and package dependencies. |
 | `bun run check:logging` | Reject server-side `console` references and unstable logger event names outside approved presentation boundaries. |
 | `bun run check:style` | Read-only Biome check. |
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
 | `bun run typecheck` | TypeScript project-reference check/build. |
-| `bun run build` | Build TypeScript references and the browser runtimes owned by `cms-content`. |
+| `bun run build` | Build TypeScript references and Content browser runtimes, then regenerate the official CLI bootstrap snapshot. |
 | `bun run cli:build --version <cli-version> --stack-version <stack-version>` | Bundle and verify the installable `@cyaxis/ulvia` npm archive with its independent initial stack version. |
 | `bun run cli:publish --version <version>` | Publish an unchanged, previously built CLI archive to the public npm registry. |
 | `bun run images:build --version <version> all` | Build all official Cyaxis/Ulvia Docker images locally. |
@@ -175,8 +195,23 @@ journey is in scope. Browser/network integration tests require an environment
 that permits Chromium and local listeners.
 
 The fresh-install Kernel smoke test additionally requires Docker Compose. It is
-opt-in locally and runs for every pull request, every push to `master`, every
-night and on demand through the dedicated GitHub Actions workflow.
+opt-in locally. Workflows are configured for pull requests, pushes to `master`,
+nightly execution and manual dispatch; pushes to `codex/alpha-v0` alone do not
+trigger these push workflows.
+
+### Known Verification Blockers
+
+As reviewed on 2026-10-25, the shared setup action invokes the removed
+`cms-kernel/src/tooling/prebuildAdmin.ts`, and the coverage baseline still lists
+an obsolete package set. The smoke starts the source CLI without an explicit
+initial stack version. These configured jobs must not be described as current
+passing evidence. Repair them and test images built from the candidate commit.
+
+Many Mongo adapter tests use doubles. Real database concurrency, index behavior,
+interruption and restore need additional environment-level tests. The
+[audit](../AUDIT.md) records successful local checks and confirmed gaps.
+Performance work should gate calls, transferred bytes and retained resources;
+the optional `test:performance` suite also records machine-dependent timings.
 
 `check:dead-code` exits with a failure when it finds unused declarations,
 exports, exported types or package dependencies. Public exports can be

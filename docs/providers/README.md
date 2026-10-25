@@ -66,7 +66,7 @@ release and connection steps.
 
 ```text
 Browser request
-  -> Kernel resolves one opaque credential through Access
+  -> Kernel resolves one opaque credential through Access when actor lookup is needed
   -> trusted request actor (anonymous, authenticated or administrator)
   -> exact site selection and approved installation
   -> current readiness and host authorization
@@ -121,9 +121,10 @@ capability's declared access, without a `Referer` or Page execution pin.
 The Ulvia Provider transport is contract-neutral: `@bernouy/ulvia-provider`
 derives its HTTP routes from admitted contract bindings. The same package
 contains thin official capability adapters that coordinate injected feature
-ports; it does not select stores or persistence adapters. Browsers still use
-the normal Kernel `/.cms/call` route. The stateless Kernel resolves the selected
-installation and invokes its admitted binding through the local Gateway.
+ports; it does not select stores or persistence adapters. Browser bindings use
+logical query and mutation routes; canonical binding calls also remain available.
+The stateless Kernel resolves the selected installation and invokes its admitted
+binding through the local Gateway.
 
 Browser credentials follow a separate, narrow path. Kernel extracts either one
 Bearer credential or the fixed `cms-session` cookie and asks the selected
@@ -136,10 +137,16 @@ budget applies at both HTTP boundaries.
 
 | Application | Routes relative to its base path |
 | --- | --- |
+| Kernel query | `/.cms/query/<contractId>/<capabilityId>` for logical query requests using GET or QUERY |
+| Kernel mutation | `/.cms/mutation/<contractId>/<capabilityId>` for logical POST submissions |
 | Kernel | `/.cms/call/<contractId><binding.path>` for every admitted HTTP method, with capability-derived access |
 
 Routes are mounted only when their dependencies are configured. Binary reads,
 including Files representations, use the same generic route.
+Logical GET queries accept empty input; QUERY carries a structured input body.
+Logical routes reject URL parameters. A public capability can be called
+anonymously through its canonical binding without a Page or Referer grant;
+the Provider still applies its own business rules.
 Dynamic SEO invokes the gateway directly; see [page indexing](../surfaces/page-indexing.md).
 The `/admin/providers` Page lists provider installations and their exact
 contract selections. The `ulvia.cms.installations` contract is the shared
@@ -162,8 +169,8 @@ contract for non-secret site configuration; `/admin/access` only covers members,
 authentication and administrator grants.
 Provider health remains the last validated runtime
 observation shown by these Pages, not an implicit live probe of every
-capability. Every collection request uses the common
-`/.cms/call/<contractId>{binding.path}` transport.
+capability. Collection requests use those same generic query, mutation or
+canonical binding transports.
 The selected API origin and token belong to installation state. Manifests list
 allowed origins but do not classify providers as local or remote. The runtime
 accepts HTTPS endpoints and literal loopback HTTP for development, and applies
@@ -189,6 +196,14 @@ transport rules. See [files and responsive images](../images/README.md).
 
 ## Current Integration Gaps
 
+- Content `delivery.read` validates an outer JSON-string envelope rather than
+  every operation-specific inner projection. See the [audit](../AUDIT.md).
+- Publisher-key namespaces and an MCP repository binding are planned on this
+  branch, not mounted services. Current publication uses the configured shared
+  mutation signing secret.
+- Cookie-authenticated browser commands do not yet have one centralized
+  Origin/Fetch Metadata policy. Cookie flags and capability authorization do
+  not replace that policy; see [open platform work](../TODO.md).
 - Administration Pages manage installed releases, approved provider connections and exact
   selections. The CLI can publish and retrieve exact contract and provider
   coordinates through an authenticated immutable repository; automated provider
@@ -213,5 +228,5 @@ The code establishing the production boundary is
 [createKernelGateway](../../packages/runtimes/cms-kernel-server/src/runtime/gateway/createKernelGateway.ts),
 [GatewayContentClient](../../packages/runtimes/cms-kernel-server/src/runtime/content/GatewayContentClient.ts)
 and [mountProductionKernel](../../packages/runtimes/cms-kernel-server/src/runtime/mountKernel.ts).
-The [repository audit](../AUDIT.md) and [deferred platform work](../TODO.md)
+The [repository audit](../AUDIT.md) and [open platform work](../TODO.md)
 track the remaining implementation and activation gates.

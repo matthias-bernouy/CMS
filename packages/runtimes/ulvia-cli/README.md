@@ -29,8 +29,8 @@ accepts only the exact pair, targets the public npm registry, and uses the
 credentials configured outside the repository.
 
 ```bash
-bun run ulvia -- start
 bun run ulvia -- configure network
+bun run ulvia -- services start --version 0.0.1-beta
 bun run ulvia -- services status
 bun run ulvia -- instance create preview --label "Preview site"
 bun run ulvia -- instance list
@@ -51,6 +51,12 @@ bun run ulvia -- yank collection ulvia.official/ulvia-official@1.0.0 --repositor
 bun run ulvia -- restore collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
 bun run ulvia -- prune
 ```
+
+The stack version above is an example of an exact published image tag. Workspace
+source has no embedded initial stack version: its first `services start`
+requires `--version`. Packaged releases embed that default at build time. Later
+starts reuse installed digests. Building workspace source does not replace
+running images or upgrade installed collections.
 
 The lifecycle commands manage the same Docker Compose projects for loopback and
 public installations from any directory. Persistent
@@ -168,9 +174,10 @@ release. An exact republish is idempotent; different bytes at an existing coordi
 reject.
 
 The protocol, exact-coordinate client and mutation endpoint live in
-`@bernouy/cms-repository/repository/publication`; the CLI only composes them with
-the reference filesystem adapter and its loopback listener. The filesystem
-composition persists upload sessions and replay claims below the repository root.
+`@bernouy/cms-repository/repository/publication`. The CLI uses the publication
+client and local filesystem release storage; `official-repository-server`
+composes the HTTP listener inside its container. The filesystem composition
+persists upload sessions and replay claims below the repository root.
 A production repository can replace those ports without depending on this
 executable package.
 
@@ -224,18 +231,19 @@ and do not affect release identity.
 
 The Official Repository image contains the admitted CMS contracts, provider
 manifest, and administration collection. It installs that snapshot only into
-empty persistent storage. To publish the same resources manually, release the
-CMS contracts before the manifest:
+absent or empty persistent storage. A non-empty repository is never overlaid on
+image upgrade. The workspace bootstrap command builds the admitted snapshot
+used by the image:
 
 ```bash
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.access
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.installations
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.content
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.files
-bun run ulvia -- release packages/official-repository/contracts/ulvia.provider.cms-instances
-bun run ulvia -- release packages/official-repository/providers/ulvia.official
-bun run ulvia -- start
+bun run generate:official-bootstrap
 ```
+
+That command neither publishes to a running repository nor upgrades an existing
+instance. For individual manual releases, use `release` in dependency order:
+exact contract dependencies before dependent contracts and provider manifests.
+Publication, provider profile transitions, collection upgrades and container
+image replacement remain separate actions.
 
 `instance create` provisions the named instance through the Provider operator
 API, then starts its Kernel. Connection review validates the runtime report and
