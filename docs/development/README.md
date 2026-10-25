@@ -83,6 +83,13 @@ The CLI and initial Docker stack versions are independent and both are sealed
 into the receipt. Prereleases use the npm `next` tag; stable versions use
 `latest`.
 
+## Instance MCP verification
+
+[Instance MCP V1](../architecture/instance-mcp.md) documents the current tool
+scope, OAuth routes, collection workflow and the isolated real-image Docker
+journey. Build matching local images before running that opt-in test; ordinary
+`verify` skips it when its image environment variables are absent.
+
 ## Runtime Logs
 
 Kernel, Provider, and repository diagnostics use the
@@ -194,8 +201,21 @@ code change. Use `verify:full` when the complete Provider, instance and Kernel
 journey is in scope. Browser/network integration tests require an environment
 that permits Chromium and local listeners.
 
-The fresh-install Kernel smoke test additionally requires Docker Compose. It is
-opt-in locally. Workflows are configured for pull requests, pushes to `master`,
+The fresh-install Kernel smoke test additionally requires Docker Compose and
+Chromium. It builds the three runtime images from the current checkout using
+the local tag `0.1.0-kernel-smoke`, validates their OCI labels and immutable
+repository digests, and prepares those image pins plus the admitted official
+and fixture catalogue in an isolated temporary CLI data directory. All service
+credentials, Provider instances and CMS site data are created by the normal
+CLI flow. Nothing is pushed to a registry. Local image manifests must be
+available by digest (for example with Docker's containerd image store).
+
+To reuse an already built matching trio, set
+`ULVIA_SMOKE_IMAGE_VERSION=<local-version>` explicitly. This skips image builds
+but still verifies each component, stack API, version and digest. Without that
+override, `bun run verify:full` builds and tests the candidate source directly.
+The smoke is opt-in locally. Workflows are configured for pull requests, pushes
+to `master`,
 nightly execution and manual dispatch; pushes to `codex/alpha-v0` alone do not
 trigger these push workflows.
 
@@ -203,9 +223,9 @@ trigger these push workflows.
 
 As reviewed on 2026-10-25, the shared setup action invokes the removed
 `cms-kernel/src/tooling/prebuildAdmin.ts`, and the coverage baseline still lists
-an obsolete package set. The smoke starts the source CLI without an explicit
-initial stack version. These configured jobs must not be described as current
-passing evidence. Repair them and test images built from the candidate commit.
+an obsolete package set. The local smoke now supplies an explicit stack version
+and tests locally built candidate images. The remaining configured CI setup and coverage blockers must
+not be described as passing evidence.
 
 Many Mongo adapter tests use doubles. Real database concurrency, index behavior,
 interruption and restore need additional environment-level tests. The

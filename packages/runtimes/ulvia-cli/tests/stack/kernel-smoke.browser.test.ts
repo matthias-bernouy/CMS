@@ -4,6 +4,9 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 import { runCli } from "../../src/cli";
+import { bootstrapOfficialRepository } from "../../src/commands/bootstrap";
+import { cleanupSmokeRuntime } from "./fixtures/runtimeCleanup";
+import { prepareSmokeRuntimeImages } from "./fixtures/runtimeImages";
 import { prepareSmokeCollectionRelease } from "./fixtures/collectionReleases";
 import { runKernelSmoke, verifyKernelStateAfterRestart } from "./kernelSmoke/flows";
 import { verifySecondInstanceIsolation } from "./kernelSmoke/providerAccess";
@@ -22,6 +25,7 @@ smoke(
         const environment = {
             ...process.env,
             ULVIA_DATA_DIR: data,
+            ULVIA_CONFIG_DIR: join(data, "client"),
             ULVIA_HTTP_PORT: String(PORTS.kernel),
             ULVIA_REPOSITORY_PORT: String(PORTS.repository),
             ULVIA_PROVIDER_PORT: String(PORTS.provider),
@@ -31,12 +35,18 @@ smoke(
         let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
         let browserErrors: string[] = [];
         try {
+            report("prepare local runtime image pins");
+            const version = await prepareSmokeRuntimeImages(environment);
+            await bootstrapOfficialRepository(join(data, "repository"));
             await runCli(["release", smokeCollection], { environment, log: () => undefined });
             const compatibleUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "1.1.0");
             const migrationUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "2.0.0", true);
             await runCli(["release", compatibleUpgrade], { environment, log: () => undefined });
             await runCli(["release", migrationUpgrade], { environment, log: () => undefined });
-            await runCli(["services", "start"], { environment, log: (message) => (output += `${message}\n`) });
+            await runCli(["services", "start", "--version", version], {
+                environment,
+                log: (message) => (output += `${message}\n`),
+            });
             await runCli(["instance", "create", "default"], {
                 environment,
                 log: (message) => (output += `${message}\n`),
@@ -95,17 +105,21 @@ smoke(
             await runCli(["instance", "stop", "default"], { environment, log: () => undefined });
             await runCli(["services", "stop"], { environment, log: () => undefined });
         } catch (error) {
+            await runCli(["services", "logs", "provider", "--level", "error"], {
+                environment,
+                log: (message) => (output += `${message}\n`),
+            }).catch(() => undefined);
             await writeFailureArtifacts(output, browser);
             throw new Error(
                 `${error instanceof Error ? error.message : String(error)}\n\nBrowser errors:\n${browserErrors.join("\n") || "(none)"}\n\nRuntime output:\n${output}`,
             );
         } finally {
             await browser?.close();
-            await runCli(["reset", "--yes"], { environment, log: () => undefined }).catch(() => undefined);
+            await cleanupSmokeRuntime(environment);
             await rm(data, { recursive: true, force: true });
         }
     },
-    540_000,
+    900_000,
 );
 
 function report(step: string): void {
