@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
-import { prepareCollectionRelease } from "../../src/release/source";
+import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 import { startTestRepository } from "../repository/fixture";
 import { officialContractCatalogue } from "../officialContractCatalogue";
 import { isValidRequestId, REQUEST_ID_HEADER } from "@bernouy/http-runner/observability";

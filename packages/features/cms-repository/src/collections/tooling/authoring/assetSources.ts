@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { sha256Digest } from "@bernouy/binary-media";
 import { parseInlineSvgAsset } from "@bernouy/cms-content/page-document";
-import { scanFileSourceTree } from "./authored/sourceTree";
+import { scanFileSourceTree } from "./sourceTree";
 
 const ASSET_DEFINITION = "definition.json";
 const MEDIA_TYPES = new Map([

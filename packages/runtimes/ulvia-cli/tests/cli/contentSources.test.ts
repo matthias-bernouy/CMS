@@ -2,9 +2,9 @@ import { afterEach, expect, test } from "bun:test";
 import { dirname, join } from "node:path";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { loadCollectionBlocs } from "../../src/release/blocSources";
-import { loadCollectionTexts } from "../../src/release/textSources";
-import { loadCollectionMigrations } from "../../src/release/migrationSources";
+import { loadCollectionBlocs } from "@bernouy/cms-repository/collections/build";
+import { loadCollectionTexts } from "@bernouy/cms-repository/collections/build";
+import { loadCollectionMigrations } from "@bernouy/cms-repository/collections/build";
 
 const temporaryDirectories: string[] = [];
 

@@ -13,7 +13,7 @@ import {
 import { compileConformanceSource, prepareConformanceSource } from "../../release/authored/conformance";
 import { resolveConformanceDependencies } from "../../release/authored/conformanceDependencies";
 import { prepareContractSource } from "../../release/authored/contract";
-import { prepareCollectionRelease } from "../../release/source";
+import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 
 export type PreparedResource =
     | Readonly<{ kind: "contract"; admission: AdmittedContractRelease }>

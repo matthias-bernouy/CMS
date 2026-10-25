@@ -1,5 +1,5 @@
 import { basename } from "node:path";
-import { scanJsonSourceTree } from "./authored/sourceTree";
+import { scanJsonSourceTree } from "./sourceTree";
 
 /** Load cumulative adjacent data migrations from an arbitrarily nested source tree. */
 export async function loadCollectionMigrations(directory: string): Promise<unknown[]> {

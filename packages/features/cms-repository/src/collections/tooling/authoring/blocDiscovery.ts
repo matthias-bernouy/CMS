@@ -1,7 +1,7 @@
 import { stat } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { DEFAULT_COLLECTION_LIMITS } from "@bernouy/cms-repository/collections";
-import { readSourceEntries } from "./authored/sourceTree";
+import { readSourceEntries } from "./sourceTree";
 
 const MAX_BLOC_DEPTH = 16;
 const BLOC_ENTRIES = new Set([

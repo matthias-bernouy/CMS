@@ -5,7 +5,7 @@ import { loadCollectionBlocs } from "./blocSources";
 import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
 import { loadCollectionMigrations } from "./migrationSources";
-import { scanFileSourceTree } from "./authored/sourceTree";
+import { scanFileSourceTree } from "./sourceTree";
 import { loadCollectionAssets } from "./assetSources";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */

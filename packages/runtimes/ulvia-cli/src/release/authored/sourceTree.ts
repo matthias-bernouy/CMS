@@ -3,22 +3,11 @@ import { join } from "node:path";
 
 const MAX_TREE_DEPTH = 16;
 const MAX_JSON_FILES = 2_048;
-const MAX_SOURCE_FILES = 2_048;
 
 export type SourceFile = Readonly<{
     absolutePath: string;
     relativePath: string;
 }>;
-
-export async function scanFileSourceTree(root: string): Promise<SourceFile[]> {
-    const files: SourceFile[] = [];
-    await visitFileTree(root, root, 0, files).catch((error: NodeJS.ErrnoException) => {
-        if (error.code !== "ENOENT") {
-            throw error;
-        }
-    });
-    return files.sort((left, right) => left.relativePath.localeCompare(right.relativePath));
-}
 
 export async function scanJsonSourceTree(
     root: string,
@@ -29,29 +18,7 @@ export async function scanJsonSourceTree(
     return files.sort((left, right) => left.relativePath.localeCompare(right.relativePath));
 }
 
-async function visitFileTree(root: string, directory: string, depth: number, files: SourceFile[]): Promise<void> {
-    if (depth > MAX_TREE_DEPTH) {
-        throw new Error(`Source tree must not exceed ${MAX_TREE_DEPTH} directory levels`);
-    }
-    for (const entry of await readSourceEntries(directory)) {
-        const absolutePath = join(directory, entry.name);
-        const relativePath = absolutePath.slice(root.length + 1).replaceAll("\\", "/");
-        if (entry.isDirectory()) {
-            await visitFileTree(root, absolutePath, depth + 1, files);
-        } else if (entry.isFile()) {
-            if (entry.name !== ".gitkeep") {
-                files.push({ absolutePath, relativePath });
-            }
-        } else {
-            throw new Error(`Unsupported entry in source tree: ${relativePath}`);
-        }
-        if (files.length > MAX_SOURCE_FILES) {
-            throw new Error(`Source tree must contain at most ${MAX_SOURCE_FILES} files`);
-        }
-    }
-}
-
-export async function readSourceEntries(directory: string) {
+async function readSourceEntries(directory: string) {
     return (await readdir(directory, { withFileTypes: true })).sort((left, right) =>
         left.name.localeCompare(right.name),
     );

@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import { readSourceEntries, scanJsonSourceTree } from "./authored/sourceTree";
+import { readSourceEntries, scanJsonSourceTree } from "./sourceTree";
 
 type TextDefinition = Readonly<{
     source: Record<string, unknown>;

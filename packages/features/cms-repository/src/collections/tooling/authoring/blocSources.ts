@@ -1,8 +1,9 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import { buildCollectionBloc, compileBlocStyle } from "@bernouy/cms-repository/collections/build";
+import { buildCollectionBloc } from "cms-repository/collections/tooling/buildCollectionBloc";
+import { compileBlocStyle } from "cms-repository/collections/core/validation/blocStyleCompilation";
 import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery";
-import { readSourceEntries, scanFileSourceTree } from "./authored/sourceTree";
+import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
 
 /** Discover recursively grouped Bloc folders and compile them without path-derived identity. */
 export async function loadCollectionBlocs(directory: string): Promise<unknown[]> {

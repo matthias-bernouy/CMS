@@ -6,7 +6,7 @@ import {
     expandCollectionSourceExports,
     loadCollectionTheme,
     loadCollectionTranslations,
-} from "../../src/release/metadataSources";
+} from "@bernouy/cms-repository/collections/build";
 
 const temporaryDirectories: string[] = [];
 

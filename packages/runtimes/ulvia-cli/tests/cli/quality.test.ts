@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { validatePageDocument } from "@bernouy/cms-content/page-document";
 import { buildOfficialBootstrapArtifacts, writeOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
-import { prepareCollectionRelease } from "../../src/release/source";
+import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 import { officialContractCatalogue } from "../officialContractCatalogue";
 
 test("the official collection passes its source quality contract", async () => {
