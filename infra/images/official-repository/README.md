@@ -3,12 +3,8 @@
 Build from the workspace root:
 
 ```bash
-docker build \
-  --build-arg IMAGE_VERSION=0.0.1-alpha.1 \
-  --build-arg VCS_REF="$(git rev-parse HEAD)" \
-  --file infra/images/official-repository/Dockerfile \
-  --tag ulvia-official-repository:0.0.1-alpha.1 \
-  .
+bun run images:build --version 0.0.1-beta repository
+bun run images:publish --version 0.0.1-beta repository
 ```
 
 Mount a persistent volume at `/var/lib/ulvia-repository` and inject

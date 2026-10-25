@@ -19,7 +19,9 @@ ARG VCS_REF=unknown
 LABEL org.opencontainers.image.title="Ulvia Official Repository" \
       org.opencontainers.image.description="Official immutable Ulvia repository runtime" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
-      org.opencontainers.image.revision="${VCS_REF}"
+      org.opencontainers.image.revision="${VCS_REF}" \
+      io.ulvia.component="repository" \
+      io.ulvia.stack-api="1"
 
 WORKDIR /app
 COPY --chown=bun:bun --from=runtime-source /app/package.json /app/bun.lock /app/tsconfig.base.json /app/tsconfig.json ./
