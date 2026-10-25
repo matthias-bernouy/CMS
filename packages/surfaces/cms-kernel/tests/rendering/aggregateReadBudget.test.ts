@@ -28,7 +28,6 @@ test("each HTTP Page request consumes one aggregate snapshot and no legacy paylo
     expect(new Set(responseBytes).size).toBe(1);
     expect(Object.fromEntries([...calls].sort())).toEqual({
         getPageRenderInputs: 32,
-        getPublishedPages: 1,
     });
 });
 
@@ -53,7 +52,6 @@ test("repeated renders analyze one dynamic Page capability surface once", async 
 
     expect(Object.fromEntries([...calls].sort())).toEqual({
         getPageRenderInputs: 32,
-        getPublishedPages: 1,
         requiredAccess: 1,
     });
 });

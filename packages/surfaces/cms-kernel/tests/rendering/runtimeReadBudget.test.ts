@@ -83,7 +83,6 @@ test("reuses Page rendering inputs within a cold render and skips them on a cach
         blocViewJS: 1,
         contentTexts: 1,
         renderingRevision: 1,
-        publishedPages: 1,
     });
 
     expect((await mounted.get(new Request("https://example.test/"))).status).toBe(200);
@@ -94,6 +93,5 @@ test("reuses Page rendering inputs within a cold render and skips them on a cach
         blocViewJS: 1,
         contentTexts: 1,
         renderingRevision: 2,
-        publishedPages: 1,
     });
 });
