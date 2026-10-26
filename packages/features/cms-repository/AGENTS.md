@@ -73,9 +73,11 @@ models and validation for CMS-owned installations and site selections.
 - `./collections/assets` resolves installed immutable asset references into
   public representation URLs. HTTP request parsing, ranges and response headers
   remain in `./collections/http`.
-- `./collections/installations` also exposes collection migration planning,
-  execution, journals and the memory adapter. The Mongo journal adapter is
-  exported from `./collections/mongo`.
+- `./collections/installations` exposes read-only usage inventories, reviewed
+  collection upgrade plans and exact release switches. `./upgrades` owns shared
+  durable site intents and write fencing; its Mongo adapter is exported from
+  `./upgrades/mongo`. Intents contain exact pins and prepared values, never Page
+  snapshots or transformation journals.
 - `src/repository-http/` contains only bounded HTTP transport shared by the
   collection and provider repository sources. It must not import any domain.
   Keep catalogue parsing, references and admission in their respective domains.
@@ -91,8 +93,8 @@ models and validation for CMS-owned installations and site selections.
 
 - New capabilities declare `bindings[]` with unique IDs and explicit `http` or
   `mcp` variants. MCP exposure is opt-in; HTTP aliases compile independently.
-  Preserve canonical bytes and digests when reading legacy single `binding`
-  declarations. Never infer MCP exposure from a legacy or HTTP-only binding.
+  The fresh v1 format rejects single `binding` declarations. Never infer MCP
+  exposure from HTTP-only bindings.
 - A contract release owns the only SemVer; capability IDs are stable and have
   no independent versions. Releases are provider-neutral: HTTP bindings are
   allowed, provider endpoints, credentials and installation state are not.
@@ -314,19 +316,23 @@ models and validation for CMS-owned installations and site selections.
   value schemas, may only widen existing slot/native-element contracts, and
   preserve theme-token types. Validate the candidate installation before the
   revisioned write; remote registry transfer is separate from site installation.
-- Collection releases carry cumulative adjacent data-generation migrations and
-  per-resource generations. Migration operations are closed, declarative data;
-  never accept executable migration code. Contract and implementation digests
-  are derived after admission and do not replace the collection SemVer or
-  immutable release digest.
-- Collection migrations are maintenance-mode operations. Keep their impact
-  plan read-only and bounded, their Page writes revision-checked, their journal
-  resumable and batch-readable, and their rollback snapshots separate from
-  user-facing Page history. Migration writes must retain the exact maintenance
-  lease; never let a stale worker release a successor's lease.
-- Features persisting references to collection resources must register a
-  `CollectionMigrationParticipant`; every mutation of that persisted state must
-  use the shared site migration write fence.
+- Collection resources retain compatible contracts under stable IDs. Incompatible
+  retained resources need new identities, including in major releases. Deprecation
+  metadata is advisory and may identify an existing replacement of the same kind;
+  reject replacement cycles. Resource digests describe impact without generations
+  or transformation chains. Collection configuration may receive explicit target
+  values validated against the target release during a reviewed upgrade.
+- Release changes require a current applicable plan. Missing authoritative usage
+  or changing revisions make the analysis incomplete; incomplete plans cannot
+  authorize a switch. Keep catalogue examples separate from runtime consumers
+  when deriving execution grants. Applying an upgrade never rewrites Pages.
+- Collection and contract switches share the site write fence and durable exact
+  intents. Normal mutations of analysed state must use that fence. Recheck plans
+  under maintenance and resolve uncertain commits before releasing ownership;
+  never let a stale worker release a successor's lease.
+- Features persisting references to collection resources must supply an
+  authoritative `UsageContributor` and register its ID as a required consumer.
+  Missing or failing contributors make the inventory incomplete.
 - Every text definition declares `category`, `group` and `label` as collection
   translation keys; `description` remains optional. Admission verifies every
   declared key against the default translation catalogue, so an incomplete text
@@ -341,8 +347,8 @@ models and validation for CMS-owned installations and site selections.
 - Collection theme categories, entries and Pages are admitted
   and included in the release digest. Cross-collection dependencies import only explicitly
   exported Bloc tags, collection-local theme token IDs, server text IDs and immutable
-  asset IDs from one publisher and bounded version range. Every import pins the
-  exact resource contract generation understood by its dependent. Installation resolves the complete graph, rejects
+  asset IDs from one publisher and bounded version range. Imported IDs retain
+  compatible contracts across that range. Installation resolves the complete graph, rejects
   cycles, and revalidates dependents during upgrades. Reject unsupported fields until validated.
 - Theme defaults may reference local or selectively imported tokens. Reject
   dangling references and local cycles; exact token aliases must preserve types,

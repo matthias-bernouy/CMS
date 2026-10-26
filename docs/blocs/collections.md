@@ -12,11 +12,12 @@ collection/
 ├── blocs/**/<bloc>/
 │   ├── definition.json
 │   ├── markup.html
-│   ├── default.html
 │   ├── style.css
 │   ├── bloc.ts
 │   ├── settings/definition.json
 │   └── runtime/**/*.ts
+├── examples/**/<example>/definition.json
+├── examples/**/<example>/document.html
 ├── pages/**/<page>/definition.json
 ├── pages/**/<page>/page.html
 ├── texts/definitions/**/*.json
@@ -25,15 +26,17 @@ collection/
 ├── theme/definition.json
 ├── theme/**/*.json
 ├── assets/**/*
-├── assets/definition.json           # optional generation overrides
-└── migrations/**/<from>-to-<to>.json
+└── assets/definition.json           # optional resource deprecations
 ```
 
 Bloc folders may be grouped recursively. The folder basename is the Bloc ID;
 grouping paths never become identities. Every Bloc uses `markup.html`;
 `definition.json.kind` decides whether its native host is retained as a
-component or replaced as a server-expanded composition. `default.html`,
-`style.css` and `bloc.ts` are optional where the Bloc kind allows them. There
+component or replaced as a server-expanded composition.
+`style.css` and `bloc.ts` are optional where the Bloc kind allows them.
+Listed Blocs require a translated description, nonempty `categories`, examples
+and one `defaultExample`. Examples carry their documents, text fixtures and
+fixed viewport preview dimensions. Captures are generated outside source releases. There
 are no `template.html`, `lightdom.html` or `shadowdom.html` sources.
 
 ## Bloc Documents
@@ -69,7 +72,7 @@ elements or create Shadow Roots.
 
 Iframe origins and sandbox permissions are exact Bloc capabilities declared in
 `definition.json`. Admission checks them against `markup.html` and
-`default.html`, and rejects programmatic iframe creation.
+example documents, and rejects programmatic iframe creation.
 Catalogue entries expose a deterministic browser-risk report and digest.
 Install and upgrade requests acknowledge that precise digest; a repository
 change to browser authority therefore requires a fresh selection. Collections
@@ -81,7 +84,7 @@ documented in [Deferred Platform Work](../TODO.md).
 The CMS injects no default Page wrapper. Every non-empty Page root must be an
 active installed Bloc on a valid native root. Native elements can appear only
 where a Bloc contract owns them. The same grammar validates collection Pages,
-defaults, local Page writes, publication, installation, upgrade and rollback.
+defaults, local Page writes, publication, installation, reviewed release switches.
 
 Host attributes are limited to declared settings, admitted native root
 attributes and platform binding/placement attributes. Native descendants use
@@ -113,12 +116,12 @@ assets/fonts/interface.woff2 -> fonts/interface.woff2
 
 Assets are not declared in the collection `definition.json`. The optional
 `assets/definition.json` is metadata for the scanner itself and accepts only
-generation overrides:
+lifecycle metadata:
 
 ```json
 {
-    "generations": {
-        "icons/check.svg": 2
+    "deprecations": {
+        "icons/check.svg": { "reason": "icon.deprecation" }
     }
 }
 ```
@@ -152,7 +155,7 @@ anonymous immutable SVG with a strong ETag.
 ## Releases And Installation
 
 ```bash
-bun run ulvia -- services start --version 0.0.1-beta
+bun run ulvia -- services start --version 1.0.0
 bun run ulvia -- instance create preview
 ```
 
@@ -163,7 +166,7 @@ bun run ulvia -- release /path/to/new-collection-version
 ```
 
 `release` assembles, compiles and admits canonical bytes into the local
-repository. `0.0.1-beta` is an example published stack version required on first
+repository. `1.0.0` is an example published stack version required on first
 startup from the unbundled source CLI. The Repository container serves stored
 releases; it never scans authored folders. `dev` is no longer a CLI command.
 Releasing or rebuilding locally does not replace the running server images or
@@ -174,18 +177,22 @@ Push and pull transfer exact immutable releases and the receiving repository
 re-runs admission. A yank hides a release from new selection without deleting
 historical bytes.
 
-Collections use adjacent generation migrations named `<from>-to-<to>.json`.
-Installation and upgrade validate the entire selected dependency graph and
-content compatibility before committing. Breaking stored content changes must
-be represented by explicit migration operations.
+Installation validates the entire selected dependency graph. Release switches
+require a current applicable plan proving compatibility with actual site usage.
+Incompatible resource contracts require new IDs; upgrades never rewrite Pages.
 
 ## Admission Limits
 
 The principal current limits are 8 MiB for the canonical collection document,
 512 Blocs, 1,024 assets, 4,096 texts, 256 Pages, 128 dependencies, 64 theme
 categories and 4,096 theme entries. One asset is limited to 10 MiB and the
-release asset total to 50 MiB. Slots, settings, requirements, migrations and
-operations have their own bounded counts.
+release asset total to 50 MiB. Slots, settings, requirements and examples have their own bounded counts.
 
 See [Create A Collection Bloc](authoring.md) for the source contract and
 [Validation](validation.md) for the full validation path.
+
+## Release Changes
+
+See [Reviewed Release Upgrades](../architecture/release-upgrades.md) for stable
+identities, inventories, explicit target configuration, grants, retention and
+interrupted-switch recovery. Upgrades do not transform site-owned Pages.

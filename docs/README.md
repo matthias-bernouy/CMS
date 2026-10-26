@@ -62,3 +62,6 @@ Remaining activation gates are recorded in [Open platform work](TODO.md).
 - [Files and responsive images](images/README.md).
 - [UI contracts](quality/ui-contracts.md): binding ownership, browser request
   diagnostics, source/form checks and current scanner limitations.
+
+- [Reviewed Release Upgrades](architecture/release-upgrades.md): resource identity,
+  usage inventories, reviewed switches, grants and Provider retention.

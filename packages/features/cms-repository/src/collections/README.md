@@ -4,22 +4,20 @@
 admission, repository transport and site installation state. It is not a Page
 authorization engine or a general-purpose executable package format.
 
-## Collection v2
+## Collection v1
 
-New authored collections use `ulvia-collection/v2`: translated descriptions and
-nonempty `categories[]` are required. Listed Blocs select a collection-owned
-`defaultExample` for insertion. Examples support single and multiple roots,
-explicit frame dimensions and isolated text fixtures. V1 published releases
-retain their original parsing and digest behavior. See
-[collection examples](../../../../../docs/blocs/examples.md) for the format,
-source layout and local preview command. The v1 details below describe existing
-release compatibility; v2 rejects `category`, `thumbnail` and `defaultContent`.
+The fresh `ulvia-collection/v1` format requires translated descriptions,
+nonempty `categories[]` and reusable collection-owned examples. Listed Blocs
+select a `defaultExample` for insertion. Examples support single and multiple
+roots, fixed viewport frames and isolated text fixtures. No historical reader
+accepts `category`, `thumbnail`, `defaultContent` or `default.html`.
+See [collection examples](../../../../../docs/blocs/examples.md).
 
 ## Release contents
 
 The envelope identifies `kind: "collection"`, `protocol: "ulvia-collection/v1"`,
 `schemaDialect: "ulvia-schema/v1"`, collection ID, publisher ID, exact SemVer,
-name translation key, default locale and collection `dataGeneration`. Its immutable `translations` catalogue
+name translation key and default locale. Its immutable `translations` catalogue
 contains static administration copy. Optional configuration has a nonnullable
 object schema and validated defaults. Binary leaves are forbidden in
 configuration schemas.
@@ -42,21 +40,19 @@ This slice supports:
   default path and capability requirements that determine their access policy.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
 - Retained Blocs with required fixed `markup`, optional scoped `style`, behavior and
-  declarative setting items. Optional translated `category`
+  declarative setting items. Required translated `description` and `categories`
   and numeric `order` metadata organize the author-facing catalogue without
   deriving public identity from source paths.
 - Composition Blocs with fixed `markup`: their authoring host is replaced by
   their content at delivery. They have no settings, stylesheet or behavior.
 - Explicit local `uses`, named slots for Blocs, plain text or bounded
-  native-content profiles, optional thumbnail asset, initial editable `defaultContent`
+  native-content profiles, reusable examples, fixed viewport previews
   and resource-level capability requirements.
 - Selective public Bloc/theme-token/text/asset/Page exports and bounded cross-collection imports.
-  Every imported resource pins the exact contract generation understood by the
-  dependent collection.
-- Cumulative adjacent, declarative migration steps for site-owned data.
+  Imported IDs retain compatible contracts across every accepted release.
 
-Collection and bloc configuration are distinct. `defaultContent` belongs to
-the editable page instance; `markup` describes the reusable fixed assembly.
+Collection and Bloc configuration are distinct. Example initial documents belong to
+the editable Page instance; `markup` describes the reusable fixed assembly.
 Updating an installed release updates every page's fixed assembly while each
 page retains its own slot children.
 Initial content is not inserted into the fixed composition during admission.
@@ -76,7 +72,7 @@ and bindings only in Light DOM. CSS is parsed and wrapped in a Bloc-owned
 `@scope`; Shadow DOM selectors and APIs reject.
 Composition-only settings, styles and behaviour fields reject.
 Collection Page roots must be collection or explicitly imported Blocs. Page
-documents and `defaultContent` enforce named slot acceptance and cardinality;
+documents and initial examples enforce named slot acceptance and cardinality;
 native editable content exists only through `plain-text`, `native-content` or
 managed-native contracts. `any-component` excludes compositions. Fixed
 Light DOM remains code-owned native markup, while its nested Bloc placements
@@ -135,9 +131,8 @@ without dots and cannot claim the platform-owned `be5-`, `cms-`, `p9r-`,
 with `<collectionId>-`; DOM instances carry it in `cms-bloc`. Local `uses` and slot `accepts` references resolve inside
 the release. External references must appear in one dependency's exact imported
 Bloc list. A dependency pins the target collection ID, publisher ID and bounded
-SemVer range; it separately imports public resources with their exact contract
-generation. Implementation digests may evolve inside that generation, while a
-generation bump requires a coordinated dependent release. Single-release installation requires the dependency first. The
+SemVer range; it separately imports explicit public resource IDs with stable
+compatible contracts. Single-release installation requires the dependency first. The
 installation store also accepts an exact multi-release plan and validates then
 commits the whole graph atomically, independently of request order. Both paths
 verify every requested resource against its target release's explicit `exports`,
@@ -192,7 +187,7 @@ canonical JSON and immutable Blob snapshots. Every input buffer is snapshotted
 before the first asynchronous step; caller-owned objects are never frozen.
 
 `CollectionLimits` gives documents, Blocs, assets, texts, Pages,
-dependencies, theme resources, migrations, markup, slots, settings and
+dependencies, theme resources, examples, markup, slots, settings and
 requirements independent bounds. Import and export lists use the bound of the
 resource kind they select. `limits.schema` explicitly carries the schema policy
 through configurations. Locale tags normalize using
@@ -211,7 +206,7 @@ bindings name `contract:capability` and require a matching versioned capability
 requirement; admission verifies those witnesses alongside transitive local Bloc
 requirements. Scripts, executable links, dynamic internal paths,
 inline handlers and inline styles reject. Native anchors may use static internal
-paths declared by the release. Page imports pin the exact resource generation
+paths declared by the release. Page imports pin the stable resource ID
 and default path, so admission can reject typos before publication. The
 repository projects installed Pages into the generic content read model and the
 Kernel renders them through the shared Page document pipeline. Current,
@@ -224,34 +219,23 @@ The local release command discovers files below `assets/`, turns them into immut
 and digest metadata, stores exact bytes beside canonical JSON, and serves each
 asset through a bounded immutable HTTP route. CMS import fetches the complete
 bundle, repeats admission with the contract catalogue, stores assets outside the
-Mongo release document and exposes verified image assets to installed Bloc
-thumbnails.
+Mongo release document. Examples provide authored preview frames; screenshots
+are generated outside immutable release artifacts.
 
 Site installation pins the collection digest, repository ID, configuration and
-text overrides. Upgrades require a newer release from the same publisher,
-preserve existing resource IDs and Bloc kinds, keep stored setting value schemas
-stable and revalidate saved configuration and text overrides before changing the
-digest. Setting presentation metadata and order may evolve; slot cardinalities
-and accepted native tags may widen but cannot invalidate existing content.
-Collection configuration is mutable per site through a schema-validated,
-revision-checked store operation exposed by the administrator-only
-`ulvia.cms.installations/update-collection-configuration` capability.
+text overrides. Collection publication enforces compatible stable identities;
+incompatible retained resources require new IDs. Removal requires a major
+release and an instance plan proving that no runtime consumer still needs them.
+Resource contract/implementation digests provide impact information without
+resource generations or transformation chains.
 
-Every independently consumable resource has a positive generation and derived
-contract/implementation SHA-256 digests. The collection SemVer and immutable
-release digest remain authoritative publication identities; resource digests
-provide precise impact reporting. Local publication admits implementation-only
-patches, compatible minor extensions and major breaking changes only when every
-surviving broken resource increments its generation. Breaking site-owned data changes increment
-`dataGeneration`. A generation `N` release retains every adjacent transition
-from generation `1`; the runtime composes those steps for any older installed
-generation. Operations are a closed JSON vocabulary and never executable code.
-
-Migration planning and execution belong to
-`@bernouy/cms-repository/collections/installations`. The collection store validates
-and atomically commits an exact multi-collection replacement or restoration;
-the migration orchestration consumes the generic Page and site-content ports
-published by `@bernouy/cms-content`.
+`CollectionUpgradeService` prepares read-only plans and applies exact reviewed
+replacements through the shared site fence. Explicit target configuration and
+text overrides are validated against the target release, then committed with
+the selected collection digests. Page documents are never transformed or
+restored by this operation. Interrupted switches retain exact durable intents.
+See [Reviewed Release Upgrades](../../../../../docs/architecture/release-upgrades.md)
+for inventory scopes, public capabilities, grants and Provider retention.
 
 The store can remove a collection only when no installed collection depends on
 it. This is deliberately not exposed as an administration HTTP action yet: site Pages,

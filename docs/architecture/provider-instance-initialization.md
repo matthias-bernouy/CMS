@@ -20,7 +20,7 @@ Ulvia Provider owns:
 One Kernel serves one already-provisioned instance. It owns Page rendering,
 public HTTP presentation, provider-neutral Gateway execution and application of
 validated response effects. Content, accounts, session tokens, files, Gateway
-state, installation state and migration journals remain behind contracts. Kernel
+state, installation state and durable release-switch intents remain behind contracts. Kernel
 knows neither the Provider operator secret nor another instance's identity or
 credentials.
 

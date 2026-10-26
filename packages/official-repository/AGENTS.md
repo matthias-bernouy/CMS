@@ -23,7 +23,7 @@
   filename and internal stable ID equal; `theme/definition.json` owns ordering.
 - Collection assets are files below `assets/`; their lowercase relative paths
   are their IDs. Do not duplicate their metadata in the collection definition.
-  Use `assets/definition.json` only when a path needs a generation other than one.
+  Use `assets/definition.json` only for resource `deprecations` metadata.
 - Split collection texts between recursive `texts/definitions/` metadata and
   `texts/locales/<locale>/` content trees. Group Bloc folders recursively below
   `blocs/`; source paths never contribute to stable text or Bloc IDs.

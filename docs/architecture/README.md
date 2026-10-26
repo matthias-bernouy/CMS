@@ -56,16 +56,16 @@ the Kernel consumes. See the [audit](../AUDIT.md).
 File references are resolved through the selected `ulvia.cms.files` provider.
 Sitemap storage is an independent dependency of the Content provider runtime.
 
-Every page has a monotonic concurrency revision used by authoring and collection
-migrations. This is not user-facing page history. Page publication is
+Every Page has a monotonic concurrency revision used by authoring and
+reviewed release-change analysis. This is not user-facing page history. Page publication is
 `visible === true`. The editor has bounded in-memory undo/redo; durable
 user-facing Page history is not implemented.
 File visibility and temporary private
 access are enforced by the selected Files provider.
 
 Installed collection Blocs, themes, texts and Pages are projected
-from immutable releases. Breaking stored-data upgrades use the maintenance-mode
-workflow documented in [collections](../blocs/collections.md).
+from immutable releases. Explicit release switches use the maintenance fence
+documented in [Reviewed Release Upgrades](release-upgrades.md), without rewriting Pages.
 Container image upgrades are a separate operation: they replace executable
 components, not installed collection releases. A previous-image fallback does
 not reverse MongoDB writes. Internal persistence migrations and verified
@@ -128,7 +128,7 @@ databases or storage roots.
 
 The Ulvia Provider surface also owns the thin cross-domain adapters that register the
 official capabilities, project their wire responses and map feature failures.
-Actual page, file, collection, migration, authentication, provider and theme
+Actual page, file, collection, upgrade, authentication, provider and theme
 operations remain in their feature packages. `ulvia-provider-server` injects
 those ports. Each server composition root owns only its concrete adapters;
 there is no aggregate instance-runtime package shared by both processes.
