@@ -15,6 +15,8 @@ const BLOC_WRITE_KEYS = new Set<keyof TBlocWrite>([
     "kind",
     "name",
     "group",
+    "categories",
+    "initialDocument",
     "catalogueOrder",
     "description",
     "thumbnail",
@@ -43,6 +45,25 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     const unknownKey = Object.keys(value).find((key) => !BLOC_WRITE_KEYS.has(key as keyof TBlocWrite));
     if (unknownKey !== undefined) {
         throw new ContentValidationError("bloc", `unknown field ${unknownKey}`);
+    }
+    if (
+        value.categories !== undefined &&
+        (!Array.isArray(value.categories) ||
+            !value.categories.length ||
+            value.categories.length > 64 ||
+            value.categories.some((item) => typeof item !== "string" || !item.trim() || item.length > 120) ||
+            new Set(value.categories).size !== value.categories.length)
+    ) {
+        throw new ContentValidationError("categories", "expected unique nonempty catalogue labels");
+    }
+    if (
+        value.initialDocument !== undefined &&
+        (!isRecord(value.initialDocument) ||
+            Object.keys(value.initialDocument).some((key) => key !== "html") ||
+            typeof value.initialDocument.html !== "string" ||
+            value.initialDocument.html.length > 65536)
+    ) {
+        throw new ContentValidationError("initialDocument", "expected a bounded HTML document");
     }
     if (value.ownership !== undefined) {
         validateOwnership(value.ownership);

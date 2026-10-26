@@ -31,14 +31,26 @@ if (action === "build") {
 async function build(releaseVersion: string, defaultStackVersion: string): Promise<void> {
     await rm(staging, { recursive: true, force: true });
     await mkdir(join(staging, "dist"), { recursive: true });
+    await command(["bun", "run", "build:browser"], root);
+    const previewRuntimes = {
+        blocRuntime: await readFile(
+            join(root, "packages/features/cms-content/dist/runtime-assets/bloc-runtime.js"),
+            "utf8",
+        ),
+        bindingCore: await readFile(
+            join(root, "packages/features/cms-content/dist/runtime-assets/binding-core.js"),
+            "utf8",
+        ),
+    };
     const result = await Bun.build({
         entrypoints: [join(source, "src/index.ts")],
         target: "bun",
         packages: "bundle",
-        external: ["css-tree"],
+        external: ["css-tree", "playwright"],
         outdir: join(staging, "dist"),
         naming: "index.js",
         define: {
+            __ULVIA_PREVIEW_RUNTIMES__: JSON.stringify(previewRuntimes),
             __ULVIA_CLI_VERSION__: JSON.stringify(releaseVersion),
             __ULVIA_DEFAULT_STACK_VERSION__: JSON.stringify(defaultStackVersion),
         },
@@ -112,7 +124,7 @@ function packageManifest(releaseVersion: string): Record<string, unknown> {
         bin: { ulvia: "dist/index.js" },
         files: ["dist/", "README.md", "INSTALLATION.md", "LICENSE"],
         engines: { bun: ">=1.4.2" },
-        dependencies: { "css-tree": "3.2.1" },
+        dependencies: { "css-tree": "3.2.1", playwright: "1.63.0" },
         publishConfig: { access: "public", registry: NPM_REGISTRY },
     };
 }

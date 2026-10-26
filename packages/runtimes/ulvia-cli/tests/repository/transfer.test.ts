@@ -117,7 +117,8 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             [sourceData, targetData, remoteRoot].map((path) => rm(path, { recursive: true, force: true })),
         );
     }
-}, 30_000);
+    // Includes source compilation and repeated admission of every official example and font asset.
+}, 60_000);
 
 async function definitionVersion(directory: string): Promise<string> {
     return ((await Bun.file(join(directory, "definition.json")).json()) as { version: string }).version;

@@ -19,6 +19,8 @@ export type {
 } from "cms-repository/collections/interfaces/CollectionState";
 export type {
     CollectionPage,
+    CollectionExample,
+    CollectionExamplePreview,
     CollectionPageDocument,
     PageDocument,
 } from "cms-repository/collections/interfaces/CollectionPage";
@@ -116,3 +118,5 @@ export {
 } from "cms-repository/collections/core/validation/pageDocument/hostAttributes";
 
 export * from "./texts";
+
+export { collectionExampleDocument } from "cms-repository/collections/core/validation/examples/document";

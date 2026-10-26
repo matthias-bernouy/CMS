@@ -46,7 +46,7 @@ export function validateInstalledCollectionSvgReferences(
                 ? []
                 : [{ value: bloc.defaultContent, path: `Collection Bloc ${bloc.id}.defaultContent` }]),
         ]),
-        ...(release.pages?.map((page) => ({
+        ...([...(release.pages ?? []), ...(release.examples ?? [])].map((page) => ({
             value: page.document.html,
             path: `Collection Page ${release.collectionId}.${page.id}`,
         })) ?? []),

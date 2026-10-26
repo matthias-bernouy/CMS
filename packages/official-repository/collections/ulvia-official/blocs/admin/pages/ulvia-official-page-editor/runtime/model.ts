@@ -29,6 +29,8 @@ export type PageUpdate = {
  * but are not authoring concepts exposed by this model.
  */
 export type AuthoringContract = {
+    categories?: string[];
+    initialDocument?: { html: string };
     settings?: EditorSetting[];
     root?: EditorNativeElement;
     slots?: Record<string, EditorSlot>;

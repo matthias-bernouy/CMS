@@ -2,7 +2,9 @@ import { pageContentPaths } from "@bernouy/cms-content";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 
 /** Parses every authored internal Page path once so admission enforces link budgets. */
-export function validateDeclaredPageLinks(release: Pick<CollectionRelease, "pages" | "blocs" | "dependencies">): void {
+export function validateDeclaredPageLinks(
+    release: Pick<CollectionRelease, "pages" | "blocs" | "dependencies" | "examples">,
+): void {
     const available = new Set([
         ...(release.pages ?? []).map(({ defaultPath }) => defaultPath),
         ...(release.dependencies ?? []).flatMap(
@@ -17,8 +19,9 @@ export function validateDeclaredPageLinks(release: Pick<CollectionRelease, "page
             }
         }
     }
-    for (const page of release.pages ?? []) {
-        const sources = [page.document.html, ...pageLinkSources(release, page.uses)];
+    for (const page of [...(release.pages ?? []), ...(release.examples ?? [])]) {
+        const uses = "uses" in page ? page.uses : [];
+        const sources = [page.document.html, ...pageLinkSources(release, uses)];
         for (const path of sources.flatMap(pageLinks)) {
             if (!available.has(path)) {
                 throw new TypeError(`Collection Page ${page.id} references an undeclared Page route: ${path}`);

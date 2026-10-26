@@ -40,6 +40,10 @@ interface CollectionBlocBase {
     readonly description?: CollectionTranslationKey;
     /** Author-facing library category translation key. */
     readonly category?: CollectionTranslationKey;
+    /** V2 catalogue memberships, all resolved through collection translations. */
+    readonly categories?: readonly CollectionTranslationKey[];
+    readonly examples?: readonly string[];
+    readonly defaultExample?: string;
     /** Stable ascending position inside the category. */
     readonly order?: number;
     /** Hidden Blocs remain usable by Pages and other Blocs but are omitted from authoring catalogues. */

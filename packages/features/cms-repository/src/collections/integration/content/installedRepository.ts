@@ -1,3 +1,4 @@
+import { collectionExampleDocument } from "../../core/validation/examples/document";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import {
     type CollectionComponentSettings,
@@ -123,7 +124,29 @@ export function withInstalledCollections(
                         const artifact = validateBlocWrite({
                             id: bloc.id,
                             name: resolveCollectionTranslation(release, bloc.label),
-                            group: resolveCollectionTranslation(release, bloc.category ?? release.name),
+                            group: resolveCollectionTranslation(
+                                release,
+                                bloc.categories?.[0] ?? bloc.category ?? release.name,
+                            ),
+                            ...(bloc.categories
+                                ? {
+                                      categories: [
+                                          ...new Set(
+                                              bloc.categories.map((key) => resolveCollectionTranslation(release, key)),
+                                          ),
+                                      ],
+                                  }
+                                : {}),
+                            ...(bloc.defaultExample
+                                ? {
+                                      initialDocument: collectionExampleDocument(
+                                          release,
+                                          bloc.defaultExample,
+                                          release.locale,
+                                          snapshot.collections.map((item) => item.release),
+                                      ),
+                                  }
+                                : {}),
                             ...(bloc.order === undefined ? {} : { catalogueOrder: bloc.order }),
                             description: bloc.description
                                 ? resolveCollectionTranslation(release, bloc.description)

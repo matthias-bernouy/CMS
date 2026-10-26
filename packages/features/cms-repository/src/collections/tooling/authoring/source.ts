@@ -1,6 +1,7 @@
 import { basename, dirname, join, resolve } from "node:path";
 import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { loadCollectionExamples } from "../examples/source";
 import { loadCollectionBlocs } from "./blocSources";
 import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
@@ -18,6 +19,10 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     const definition = (await Bun.file(join(collectionRoot, "definition.json")).json()) as Record<string, unknown>;
     const translations = await loadCollectionTranslations(join(collectionRoot, "translations"));
     const blocs = await loadCollectionBlocs(join(collectionRoot, "blocs"));
+    const examples = await loadCollectionExamples(join(collectionRoot, "examples"));
+    if (examples.length && definition.protocol !== "ulvia-collection/v2") {
+        throw new Error("Example sources require collection v2");
+    }
     const texts = await loadCollectionTexts(join(collectionRoot, "texts"));
     const pages = await loadPages(join(collectionRoot, "pages"));
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
@@ -26,6 +31,15 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         throw new Error(
             "Collection source assets are discovered from assets/ and must not be declared in definition.json",
         );
+    }
+    if (
+        definition.protocol === "ulvia-collection/v2" &&
+        blocs.some((bloc) => Object.hasOwn(bloc as object, "defaultContent"))
+    ) {
+        throw new Error("Collection v2 replaces default.html with a defaultExample");
+    }
+    if (Object.hasOwn(definition, "examples")) {
+        throw new Error("Examples must be authored under examples/");
     }
     const assets = await loadCollectionAssets(join(collectionRoot, "assets"));
     const exports = expandCollectionSourceExports(definition.exports, {
@@ -42,6 +56,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         assets: assets.definitions,
         blocs,
         migrations,
+        ...(definition.protocol === "ulvia-collection/v2" ? { examples } : {}),
         ...(texts.length ? { texts } : {}),
         ...(pages.length ? { pages } : {}),
         ...(theme === undefined ? {} : { theme }),

@@ -4,6 +4,17 @@
 admission, repository transport and site installation state. It is not a Page
 authorization engine or a general-purpose executable package format.
 
+## Collection v2
+
+New authored collections use `ulvia-collection/v2`: translated descriptions and
+nonempty `categories[]` are required. Listed Blocs select a collection-owned
+`defaultExample` for insertion. Examples support single and multiple roots,
+explicit frame dimensions and isolated text fixtures. V1 published releases
+retain their original parsing and digest behavior. See
+[collection examples](../../../../../docs/blocs/examples.md) for the format,
+source layout and local preview command. The v1 details below describe existing
+release compatibility; v2 rejects `category`, `thumbnail` and `defaultContent`.
+
 ## Release contents
 
 The envelope identifies `kind: "collection"`, `protocol: "ulvia-collection/v1"`,

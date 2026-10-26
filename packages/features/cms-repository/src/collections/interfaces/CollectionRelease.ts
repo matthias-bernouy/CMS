@@ -3,7 +3,7 @@ import type { CollectionText } from "./CollectionText";
 import type { CollectionTheme } from "./CollectionTheme";
 import type { CollectionBloc } from "./CollectionBloc";
 import type { CollectionAssetDefinition } from "./CollectionAssets";
-import type { CollectionPage } from "./CollectionPage";
+import type { CollectionPage, CollectionExample } from "./CollectionPage";
 import type { CollectionState } from "./CollectionState";
 
 export interface CollectionConfiguration {
@@ -111,7 +111,7 @@ export type CollectionTranslations = Readonly<Record<string, Readonly<Record<str
 /** Immutable release data; admission derives verified rendering fragments but grants no execution authority. */
 export interface CollectionRelease {
     readonly kind: "collection";
-    readonly protocol: "ulvia-collection/v1";
+    readonly protocol: "ulvia-collection/v1" | "ulvia-collection/v2";
     readonly schemaDialect: "ulvia-schema/v1";
     readonly collectionId: string;
     readonly publisherId: string;
@@ -135,4 +135,5 @@ export interface CollectionRelease {
     readonly states?: readonly CollectionState[];
     readonly blocs: readonly CollectionBloc[];
     readonly pages?: readonly CollectionPage[];
+    readonly examples?: readonly CollectionExample[];
 }

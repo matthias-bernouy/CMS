@@ -9,6 +9,8 @@ export function projectBlocList(records: BlocRecord[], options: BlocListOptions 
                   {
                       id: record.tag,
                       name: bloc.name,
+                      ...(bloc.categories ? { categories: [...bloc.categories] } : {}),
+                      ...(bloc.initialDocument ? { initialDocument: structuredClone(bloc.initialDocument) } : {}),
                       group: bloc.group || "",
                       ...(bloc.catalogueOrder === undefined ? {} : { catalogueOrder: bloc.catalogueOrder }),
                       description: bloc.description || "",

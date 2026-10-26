@@ -2,6 +2,7 @@ import type {
     BlocSettings,
     ManagedNativeElement,
     PageSlot,
+    PageDocument,
     PageSlotAccept,
 } from "cms-content/pages/interfaces/document";
 
@@ -30,6 +31,10 @@ export type TBloc = {
     kind: "component" | "composition";
     name: string;
     group: string;
+    /** Localized catalogue memberships supplied by a contribution. */
+    categories?: readonly string[];
+    /** Complete authoring instance copied on insertion, independent of rendering markup. */
+    initialDocument?: PageDocument;
     /** Optional stable order supplied by an external contribution catalogue. */
     catalogueOrder?: number;
     description: string;

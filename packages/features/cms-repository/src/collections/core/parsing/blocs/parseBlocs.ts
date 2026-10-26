@@ -1,3 +1,4 @@
+import { parseBlocExampleMetadata } from "../../validation/examples/catalogue";
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
@@ -19,6 +20,9 @@ const common = [
     "label",
     "description",
     "category",
+    "categories",
+    "examples",
+    "defaultExample",
     "order",
     "catalogue",
     "thumbnail",
@@ -43,12 +47,14 @@ function parseBloc(
     collectionId: string,
     path: string,
     limits: Readonly<CollectionLimits>,
+    modern: boolean,
 ): CollectionBloc {
     const source = record(value, path);
     if (source.kind !== "component" && source.kind !== "composition") {
         invalid("kind must be component or composition", `${path}.kind`);
     }
     keys(source, [...common, ...(source.kind === "component" ? ["style", "settings", "runtime"] : [])], path);
+    const metadata = parseBlocExampleMetadata(source, path, modern);
     const id = parseCollectionBlocTag(source.id, collectionId, `${path}.id`);
     if (source.catalogue !== undefined && source.catalogue !== "listed" && source.catalogue !== "hidden") {
         invalid("must be listed or hidden", `${path}.catalogue`);
@@ -69,6 +75,7 @@ function parseBloc(
         invalid(error instanceof Error ? error.message : "invalid browser capabilities", `${path}.browser`);
     }
     const base = {
+        ...metadata,
         id,
         generation:
             source.generation === undefined
@@ -164,10 +171,11 @@ export function parseBlocs(
     value: unknown,
     collectionId: string,
     limits: Readonly<CollectionLimits>,
+    modern = false,
 ): readonly CollectionBloc[] {
     parseCollectionNamespace(collectionId, "$.collectionId");
     const result = array(value, limits.maxBlocs, "$.blocs").map((item, index) =>
-        parseBloc(item, collectionId, `$.blocs[${index}]`, limits),
+        parseBloc(item, collectionId, `$.blocs[${index}]`, limits, modern),
     );
     unique(
         result.map((bloc) => bloc.id),

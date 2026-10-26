@@ -1,5 +1,5 @@
 import type { EditableInsertionTarget, EditablePageDocument } from "../document/index";
-import type { EditorCatalogueItem } from "../model";
+import { authoringContract, type EditorCatalogueItem } from "../model";
 
 export function renderCatalogue(
     target: HTMLElement,
@@ -20,7 +20,7 @@ export function renderCatalogue(
         const name = document.createElement("strong");
         name.textContent = item.name;
         const details = document.createElement("small");
-        details.textContent = item.group;
+        details.textContent = (authoringContract(item).categories ?? [item.group]).join(" · ");
         button.append(name, details);
         if (item.description) {
             const description = document.createElement("span");
@@ -35,5 +35,10 @@ export function renderCatalogue(
 }
 
 function matches(item: EditorCatalogueItem, query: string): boolean {
-    return !query || `${item.name} ${item.group} ${item.description} ${item.id}`.toLocaleLowerCase().includes(query);
+    return (
+        !query ||
+        `${item.name} ${(authoringContract(item).categories ?? [item.group]).join(" ")} ${item.description} ${item.id}`
+            .toLocaleLowerCase()
+            .includes(query)
+    );
 }

@@ -76,6 +76,7 @@ export function validateCollectionTextReferences(
     textIds: ReadonlySet<string>,
     importedTexts: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
     pages: readonly CollectionPage[] = [],
+    allowLiteralCopy = false,
 ): void {
     for (const bloc of blocs) {
         for (const [field, markup] of [
@@ -100,7 +101,9 @@ export function validateCollectionTextReferences(
     }
     for (const page of pages) {
         const path = `$.pages[${page.id}].document.html`;
-        validateNoHardcodedCopy(page.document.html, path);
+        if (!allowLiteralCopy) {
+            validateNoHardcodedCopy(page.document.html, path);
+        }
         for (const node of nodes(markupTree(page.document.html))) {
             if (node.type === "text") {
                 validateValue(node.data, collectionId, textIds, importedTexts, path);

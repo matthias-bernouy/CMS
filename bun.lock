@@ -14,8 +14,8 @@
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/logging": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
+        "@bernouy/logging": "workspace:*",
         "@bernouy/official-repository-server": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
@@ -232,6 +232,7 @@
       "name": "@bernouy/official-repository-server",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
@@ -240,15 +241,13 @@
     "packages/runtimes/ulvia-cli": {
       "name": "@bernouy/ulvia-cli",
       "version": "0.1.0",
-      "bin": {
-        "ulvia": "./src/index.ts",
-      },
       "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
+        "playwright": "^1.63.0",
       },
       "peerDependencies": {
         "typescript": "^7.0.2",

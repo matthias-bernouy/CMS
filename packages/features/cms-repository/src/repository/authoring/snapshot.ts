@@ -103,7 +103,9 @@ function sourcePath(path: string) {
         !/^[a-zA-Z0-9][a-zA-Z0-9_./-]*$/u.test(path) ||
         path.split("/").some((part) => !part || part.startsWith(".")) ||
         (path !== "definition.json" &&
-            !["blocs", "translations", "assets", "texts", "pages", "theme", "migrations"].includes(path.split("/")[0]!))
+            !["blocs", "translations", "assets", "texts", "pages", "theme", "migrations", "examples"].includes(
+                path.split("/")[0]!,
+            ))
     ) {
         throw new Error("Invalid collection source path");
     }

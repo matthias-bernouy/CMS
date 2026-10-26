@@ -7,6 +7,9 @@ In a fresh checkout or worktree, install the locked dependencies:
 bun install --frozen-lockfile
 ```
 
+Collection authors: see [collection examples](../blocs/examples.md) for v2 metadata,
+reusable insertion examples and locally generated previews.
+
 ## Local CMS
 
 ```bash

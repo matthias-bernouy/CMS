@@ -19,6 +19,8 @@ import { validateCollectionTranslationReferences } from "../texts/translationRef
 import { parseCollectionDependencies, parseCollectionExports, validateCollectionExports } from "./requirements";
 import { parseCollectionMigrations } from "../admission/releaseMigrations";
 import { validateCollectionAssetReferences } from "../validation/markup/assets";
+import { parseCollectionExamples } from "../validation/examples/parse";
+import { validateCollectionExamples } from "../validation/examples/validate";
 import { parseCollectionStates } from "./states";
 import { validateCollectionStateBindings } from "../validation/markup/state";
 import { validateBlocStyles } from "../validation/blocStyles";
@@ -55,17 +57,24 @@ export function parseCollectionRelease(
                 "blocs",
                 "pages",
                 "states",
+                "examples",
             ],
             "$",
         );
         for (const [key, expected] of Object.entries({
             kind: "collection",
-            protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
         })) {
             if (source[key] !== expected) {
                 invalid(`must be ${expected}`, `$.${key}`);
             }
+        }
+        if (source.protocol !== "ulvia-collection/v1" && source.protocol !== "ulvia-collection/v2") {
+            invalid("unsupported collection protocol", "$.protocol");
+        }
+        const modern = source.protocol === "ulvia-collection/v2";
+        if (!modern && source.examples !== undefined) {
+            invalid("examples require collection v2", "$.examples");
         }
         const collectionId = parseCollectionNamespace(source.collectionId, "$.collectionId");
         const version = parseVersion(source.version);
@@ -95,7 +104,7 @@ export function parseCollectionRelease(
                 invalid("font-face must reference a local WOFF2 asset", `$.theme.font-face.${face.id}.asset`);
             }
         }
-        const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits);
+        const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits, modern);
         const importedBlocs = new Set(
             dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? [],
         );
@@ -164,7 +173,7 @@ export function parseCollectionRelease(
         }
         const release: CollectionRelease = {
             kind: "collection",
-            protocol: "ulvia-collection/v1",
+            protocol: source.protocol as CollectionRelease["protocol"],
             schemaDialect: "ulvia-schema/v1",
             collectionId,
             publisherId: identifier(source.publisherId, "$.publisherId"),
@@ -188,7 +197,9 @@ export function parseCollectionRelease(
             ...(states.length ? { states } : {}),
             blocs,
             ...(pages === undefined ? {} : { pages }),
+            ...(modern ? { examples: parseCollectionExamples(source.examples ?? [], locale, limits) } : {}),
         };
+        validateCollectionExamples(release, limits);
         validateCollectionStateBindings(release);
         validateDeclaredPageLinks(release);
         validateCollectionTranslationReferences(release);

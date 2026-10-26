@@ -11,7 +11,7 @@ import {
 } from "@bernouy/cms-content/bindings";
 import type { CollectionBloc } from "../../../../interfaces/CollectionBloc";
 import type { CollectionDependency, CollectionRelease } from "../../../../interfaces/CollectionRelease";
-import type { CollectionPage } from "../../../../interfaces/CollectionPage";
+import type { CollectionPage, CollectionExample } from "../../../../interfaces/CollectionPage";
 import type { CollectionState } from "../../../../interfaces/CollectionState";
 import { invalid } from "../../../errors";
 import { validateDocumentStateCycles } from "./cycles";
@@ -23,6 +23,7 @@ type StateOwner = {
     readonly dependencies?: readonly CollectionDependency[];
     readonly blocs: readonly CollectionBloc[];
     readonly pages?: readonly CollectionPage[];
+    readonly examples?: readonly CollectionExample[];
 };
 
 export function validateCollectionStateBindings(
@@ -207,7 +208,9 @@ function collectionMarkups(owner: StateOwner): readonly { html: string; path: st
                 ? []
                 : [{ html: bloc.defaultContent, path: `$.blocs[${bloc.id}].defaultContent` }]),
         ]),
-        ...(owner.pages?.map((page) => ({ html: page.document.html, path: `$.pages[${page.id}].document.html` })) ??
-            []),
+        ...([...(owner.pages ?? []), ...(owner.examples ?? [])].map((page) => ({
+            html: page.document.html,
+            path: `$.pages[${page.id}].document.html`,
+        })) ?? []),
     ];
 }

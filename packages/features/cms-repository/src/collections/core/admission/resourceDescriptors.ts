@@ -49,6 +49,9 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
         },
         implementation: {
             resource: bloc,
+            ...(bloc.examples
+                ? { examples: release.examples?.filter((example) => bloc.examples!.includes(example.id)) }
+                : {}),
             translations: referencedTranslations(release, {
                 resource: bloc,
                 fallbackCategory: bloc.category ?? release.name,

@@ -2,6 +2,19 @@ import { authoringContract, type EditorCatalogueItem, type EditorSlotAccept, nor
 
 export function createBlocElement(item: EditorCatalogueItem): HTMLElement {
     const contract = authoringContract(item);
+    if (contract.initialDocument) {
+        const template = document.createElement("template");
+        template.innerHTML = contract.initialDocument.html;
+        const root = template.content.firstElementChild;
+        if (
+            root instanceof HTMLElement &&
+            template.content.children.length === 1 &&
+            root.getAttribute("cms-bloc") === item.id
+        ) {
+            return root;
+        }
+        throw new Error(`Bloc ${item.id} has an invalid initial document`);
+    }
     const tag = contract.root?.accepts?.[0];
     if (!tag) {
         throw new Error(`Bloc ${item.id} does not declare an authoring root`);

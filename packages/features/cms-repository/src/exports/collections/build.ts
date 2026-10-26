@@ -21,3 +21,10 @@ export {
 } from "cms-repository/collections/tooling/authoring/metadataSources";
 export { loadCollectionTexts } from "cms-repository/collections/tooling/authoring/textSources";
 export { loadCollectionMigrations } from "cms-repository/collections/tooling/authoring/migrationSources";
+
+export {
+    renderCollectionExamples,
+    type CollectionExampleExport,
+    type CollectionExampleRuntimes,
+    type CollectionExampleFrame,
+} from "cms-repository/collections/tooling/examples/render";

@@ -28,6 +28,7 @@ Usage:
   ulvia upgrade <kernel | provider | repository> --version <version>
   ulvia reset --yes
   ulvia release <resource-directory> [--recursive]
+  ulvia preview <collection-directory> --output <new-directory> [--dependency <directory>] [--no-screenshots] [--serve]
   ulvia push <publisher/id@version | all> [--repository <url>]
   ulvia pull <kind> <publisher/id@version> --repository <url>
   ulvia yank <kind> <publisher/id@version> --repository <url> --reason <text>
@@ -44,6 +45,7 @@ Commands:
   instance     Create and manage independent Kernel instances
   upgrade      Pull and install one exact official Docker image version
   reset        Delete all instances, services data, and repository releases after --yes
+  preview      Generate example frames, captures, and a local explorer
   release      Validate and store one resource or a recursive resource batch
   push         Publish one local release or all non-yanked local releases
   pull         Validate and store one exact remote release locally
@@ -88,6 +90,7 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
             "namespace",
             "identity",
             "release",
+            "preview",
             "push",
             "pull",
             "yank",
@@ -121,6 +124,11 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     }
     if (LOCAL_COMMANDS.has(command)) {
         await localCommand(command, args.slice(1), paths, log, environment);
+        return;
+    }
+    if (command === "preview") {
+        const { previewCommand } = await import("./preview/command");
+        await previewCommand(args.slice(1), cwd, paths.repository, log);
         return;
     }
     const repository = new LocalCollectionRepository(paths.repository);

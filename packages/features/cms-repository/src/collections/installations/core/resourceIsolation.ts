@@ -1,3 +1,4 @@
+import { collectionExampleDocument } from "../../core/validation/examples/document";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { collectionThemeTokenId } from "../../core/namespace";
 import { validateCollectionStateBindings } from "../../core/validation/markup/state";
@@ -57,10 +58,14 @@ function validateInstalledPageDocuments(releases: readonly CollectionRelease[]):
     const blocs = releases.flatMap((release) => release.blocs);
     const definitions = collectionPageDefinitions(blocs);
     for (const release of releases) {
-        for (const page of release.pages ?? []) {
+        for (const page of [...(release.pages ?? []), ...(release.examples ?? [])]) {
             const path = `Collection Page ${release.collectionId}.${page.id}`;
             try {
-                const document = validatePageDocument(page.document.html, blocs);
+                const html =
+                    "previews" in page
+                        ? collectionExampleDocument(release, page.id, release.locale, releases).html
+                        : page.document.html;
+                const document = validatePageDocument(html, blocs);
                 validateExpandedPageDocument(document.html, definitions);
             } catch (error) {
                 reject(`${path} is invalid: ${error instanceof Error ? error.message : "invalid Page document"}`);

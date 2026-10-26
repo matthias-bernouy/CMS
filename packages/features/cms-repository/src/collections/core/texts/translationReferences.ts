@@ -55,6 +55,9 @@ function collectReferences(release: CollectionRelease): Reference[] {
         references.push(reference(bloc.label, `${path}.label`, 120));
         optional(references, bloc.description, `${path}.description`, 4096);
         optional(references, bloc.category, `${path}.category`, 120);
+        for (const [i, category] of (bloc.categories ?? []).entries()) {
+            references.push(reference(category, `${path}.categories[${i}]`, 120));
+        }
         for (const [settingIndex, setting] of (bloc.kind === "component" ? (bloc.settings ?? []) : []).entries()) {
             const settingPath = `${path}.settings[${settingIndex}]`;
             references.push(reference(setting.label, `${settingPath}.label`, 120));
@@ -67,6 +70,10 @@ function collectReferences(release: CollectionRelease): Reference[] {
         const path = `$.pages[${index}]`;
         references.push(reference(page.name, `${path}.name`, 128));
         optional(references, page.description, `${path}.description`, 4096);
+    }
+    for (const [i, example] of (release.examples ?? []).entries()) {
+        references.push(reference(example.label, `$.examples[${i}].label`, 120));
+        references.push(reference(example.description, `$.examples[${i}].description`, 4096));
     }
     return references;
 }

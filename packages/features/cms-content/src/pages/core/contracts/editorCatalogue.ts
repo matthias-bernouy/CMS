@@ -30,6 +30,8 @@ export async function getCmsEditorCatalogue(
             defaultContent: bloc.defaultContent ?? "",
             authoringJson: canonicalJson({
                 slots: bloc.slots ?? {},
+                ...(bloc.categories ? { categories: bloc.categories } : {}),
+                ...(bloc.initialDocument ? { initialDocument: bloc.initialDocument } : {}),
                 settings: bloc.settings ?? [],
                 ...(bloc.root ? { root: bloc.root } : {}),
             }),

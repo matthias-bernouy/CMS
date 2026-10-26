@@ -306,3 +306,12 @@ image replacement remain separate actions.
 `instance create` provisions the named instance through the Provider operator
 API, then starts its Kernel. Connection review validates the runtime report and
 exact manifest claims; it does not yet execute a live conformance suite.
+
+## Collection examples
+
+`ulvia preview <collection-directory> --output <new-directory> [--dependency <directory>] [--no-screenshots] [--serve]`
+exports v2 example frames, generated PNGs, an interactive local explorer and a
+provenance manifest. Screenshots require the Playwright Chromium browser
+(`bunx playwright@1.63.0 install chromium`). Dependencies and required contracts are
+resolved explicitly from local sources/cache; preview never publishes. See
+[collection examples](../../../docs/blocs/examples.md) for source and release formats.

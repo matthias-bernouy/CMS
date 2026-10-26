@@ -235,7 +235,7 @@ function assertStoredReleaseShape(value: unknown): void {
     if (
         !isRecord(value) ||
         value.kind !== "collection" ||
-        value.protocol !== "ulvia-collection/v1" ||
+        (value.protocol !== "ulvia-collection/v1" && value.protocol !== "ulvia-collection/v2") ||
         value.schemaDialect !== "ulvia-schema/v1"
     ) {
         throw new TypeError("Stored collection release is inconsistent");

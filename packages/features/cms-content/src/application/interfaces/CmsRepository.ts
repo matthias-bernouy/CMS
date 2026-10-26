@@ -23,6 +23,8 @@ export type BlocListItemResponse = {
     id: string;
     name: string;
     group: string;
+    categories?: TBloc["categories"];
+    initialDocument?: TBloc["initialDocument"];
     catalogueOrder?: number;
     description: string;
     thumbnail?: TBloc["thumbnail"];

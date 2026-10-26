@@ -4,7 +4,10 @@ import { ContentValidationError } from "cms-content/application/core/validation/
 import { expandCompositions, type CompositionDefinition } from "cms-content/blocs/core/composition/expandCompositions";
 import { validateStateQueryGraph } from "cms-content/blocs/core/markup/bindings/operation/stateGraph";
 import { validateBlocDocument } from "cms-content/blocs/core/markup/validation/documents/blocDocument";
-import type { PageDocumentBlocContract } from "cms-content/blocs/core/markup/validation/documents/pageDocument";
+import {
+    validatePageDocument,
+    type PageDocumentBlocContract,
+} from "cms-content/blocs/core/markup/validation/documents/pageDocument";
 import type { TBloc, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
 import { validateBlocWrite } from "cms-content/blocs/core/validation";
 import { assertAcyclicBlocDependencies } from "cms-content/blocs/core/markup/validation/documents/blocDependencyGraph";
@@ -25,6 +28,18 @@ export async function validateBlocArtifact(
     const catalogueBlocs = (await repository.getBlocsList({ includeHidden: true })).filter(({ id }) => id !== bloc.id);
     const catalogue = catalogueBlocs.map(pageDocumentContract);
     const contract = pageDocumentContract(bloc);
+    if (bloc.initialDocument) {
+        const initial = validatePageDocument(bloc.initialDocument.html, [...catalogue, contract]);
+        const { document } = parseHTML("<html><body></body></html>");
+        document.body.innerHTML = initial.html;
+        const roots = Array.from(document.body.childNodes).filter(
+            (node) => node.nodeType === 1 || node.textContent?.trim(),
+        );
+        if (roots.length !== 1 || document.body.firstElementChild?.getAttribute("cms-bloc") !== bloc.id) {
+            throw new ContentValidationError("initialDocument", "expected one matching Bloc root");
+        }
+        bloc.initialDocument = { html: initial.html };
+    }
     const validated = validateBlocDocument(
         {
             ...contract,
