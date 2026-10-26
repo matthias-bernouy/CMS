@@ -90,16 +90,16 @@ test("quality workflow keeps every G0 check visible", async () => {
     );
     expect(workflow).toContain("uses: ./.github/workflows/quality-integration-contracts.yml");
     expect(integrationWorkflow).toContain("name: Quality runtime contracts");
-    expect(integrationWorkflow).toContain("name: Files provider and binary gateway conformance");
+    expect(integrationWorkflow).toContain("name: Files provider and binary gateway contract integration");
     expect(workflow).toContain("INTEGRATION_RESULT: ${{ needs.integration-contracts.result }}");
     expect(workflow).toContain("name: Quality gate");
     expect(workflow).toContain("path: coverage/");
 });
 
-test("integration CI runs Files and binary gateway conformance", async () => {
+test("integration CI runs Files and binary gateway contract integration", async () => {
     const workflow = await readFile(workflowPath, "utf8");
     const integrationWorkflow = await readFile(integrationWorkflowPath, "utf8");
-    const job = integrationWorkflow.match(/\n  files-provider-conformance:[\s\S]*$/)?.[0];
+    const job = integrationWorkflow.match(/\n  files-provider-contracts:[\s\S]*$/)?.[0];
     const qualityGate = workflow.match(/\n  quality-gate:[\s\S]*$/)?.[0];
 
     expect(job).toBeDefined();

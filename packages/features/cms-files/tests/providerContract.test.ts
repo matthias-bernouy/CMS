@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { CmsFilesService, type FileRecord } from "@bernouy/cms-files";
 import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
-import { AlternativeFilesProvider } from "./conformance/AlternativeFilesProvider";
+import { AlternativeFilesProvider } from "./provider/AlternativeFilesProvider";
 
 type Visibility = "private" | "public";
 type Reference = { namespaceId: string; fileId: string; generation: string; url: string };
@@ -39,7 +39,7 @@ for (const [name, factory] of [
     ["official provider", officialSubject],
     ["independent provider", alternativeSubject],
 ] as const) {
-    describe(`cms-files conformance: ${name}`, () => {
+    describe(`cms-files contract integration: ${name}`, () => {
         test("credentials, immutable streaming, private signatures, ranges, variants, deletion and restart", async () => {
             const files = factory();
             const namespace = await files.namespace();
@@ -141,9 +141,9 @@ function officialSubject(shared?: {
     return {
         namespace: () =>
             service.createNamespace({
-                name: "Conformance",
+                name: "Contract integration",
                 defaultVisibility: "private",
-                createdBy: { kind: "system", id: "conformance" },
+                createdBy: { kind: "system", id: "contract integration" },
             }),
         key: (namespaceId, namespaceKey) =>
             service.createNamespaceKey({

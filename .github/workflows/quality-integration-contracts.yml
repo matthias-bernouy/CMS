@@ -7,8 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  files-provider-conformance:
-    name: Files provider and binary gateway conformance
+  files-provider-contracts:
+    name: Files provider and binary gateway contract integration
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -18,7 +18,7 @@ jobs:
       - name: Set up workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: Run Files provider conformance
+      - name: Run Files provider contract integration
         run: bun test packages/features/cms-files/tests
 
       - name: Run binary gateway contracts
