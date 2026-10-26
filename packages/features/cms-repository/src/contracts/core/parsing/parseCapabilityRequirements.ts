@@ -3,7 +3,8 @@ import { ReleaseValidationError } from "../protocol/errors";
 import type { ReleaseLimits } from "../protocol/limits";
 import { expectArray, expectRecord, rejectUnknownKeys } from "../protocol/values";
 import { parseVersionRange } from "../compatibility/versionRange";
-import { parseRequirementSupportRanges } from "../compatibility/ranges/support";
+import { compileVersionRange } from "../compatibility/ranges/compile";
+import { isVersionSetEmpty } from "../compatibility/ranges/sets";
 import { parseIdentifier } from "./identifiers";
 
 export function parseCapabilityRequirements(
@@ -18,23 +19,19 @@ export function parseCapabilityRequirements(
     const requirements = source.map((item, index) => {
         const itemPath = `${path}[${index}]`;
         const record = expectRecord(item, itemPath, "invalid_contract");
-        rejectUnknownKeys(
-            record,
-            ["contractId", "capabilityId", "versionRange", "supportRanges"],
-            itemPath,
-            "invalid_contract",
-        );
+        rejectUnknownKeys(record, ["contractId", "capabilityId", "versionRange"], itemPath, "invalid_contract");
         const versionRange = parseVersionRange(record.versionRange, `${itemPath}.versionRange`);
-        const supportRanges = parseRequirementSupportRanges(
-            record.supportRanges,
-            versionRange,
-            `${itemPath}.supportRanges`,
-        );
+        if (isVersionSetEmpty(compileVersionRange(versionRange))) {
+            throw new ReleaseValidationError(
+                "invalid_contract",
+                "accepted dependency range must be nonempty",
+                `${itemPath}.versionRange`,
+            );
+        }
         return {
             contractId: parseIdentifier(record.contractId, `${itemPath}.contractId`, 96),
             capabilityId: parseIdentifier(record.capabilityId, `${itemPath}.capabilityId`),
             versionRange,
-            ...(supportRanges === undefined ? {} : { supportRanges }),
         };
     });
     const keys = requirements.map((requirement) => `${requirement.contractId}\u0000${requirement.capabilityId}`);

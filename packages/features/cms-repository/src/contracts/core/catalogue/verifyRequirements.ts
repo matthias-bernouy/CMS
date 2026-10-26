@@ -1,7 +1,6 @@
 import type { CapabilityRequirement, ContractRelease } from "cms-repository/contracts/interfaces/ContractRelease";
 import type { CatalogueContractRelease } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 import { satisfiesVersionRange } from "cms-repository/contracts/core/compatibility/versionRange";
-import { getRequirementSupportRanges } from "cms-repository/contracts/core/compatibility/ranges/support";
 import { ReleaseValidationError } from "cms-repository/contracts/core/protocol/errors";
 
 /** Published references remain valid after yanking; installation availability is a separate concern. */
@@ -30,7 +29,7 @@ export function verifyRequirements(release: ContractRelease, published: readonly
                 ),
             );
             for (const requirement of group) {
-                verifySupportRanges(
+                verifyRequirement(
                     requirement,
                     witnesses,
                     `$.capabilities[${capabilityIndex}].requires[${requirements.indexOf(requirement)}]`,
@@ -40,18 +39,17 @@ export function verifyRequirements(release: ContractRelease, published: readonly
     }
 }
 
-function verifySupportRanges(
+function verifyRequirement(
     requirement: CapabilityRequirement,
     witnesses: readonly ContractRelease[],
     path: string,
 ): void {
-    for (const range of getRequirementSupportRanges(requirement)) {
-        if (!witnesses.some((candidate) => satisfiesVersionRange(candidate.version, range))) {
-            throw new ReleaseValidationError(
-                "invalid_contract",
-                `no published ${requirement.contractId} release in ${range} jointly exposes all required capabilities`,
-                path,
-            );
-        }
+    const range = requirement.versionRange;
+    if (!witnesses.some((candidate) => satisfiesVersionRange(candidate.version, range))) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            `no published ${requirement.contractId} release in ${range} jointly exposes all required capabilities`,
+            path,
+        );
     }
 }

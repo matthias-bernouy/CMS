@@ -72,8 +72,6 @@ export interface CapabilityRequirement {
     readonly capabilityId: string;
     /** Accepted dependency versions. */
     readonly versionRange: string;
-    /** Published-release witness ranges covering the accepted set; defaults to [versionRange]. */
-    readonly supportRanges?: readonly string[];
 }
 
 interface CapabilityCommon {

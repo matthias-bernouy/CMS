@@ -15,11 +15,10 @@ const dependency = (version: string, ids: readonly string[]) =>
         ),
     });
 
-const requirement = (capabilityId: string, versionRange: string, supportRanges?: readonly string[]) => ({
+const requirement = (capabilityId: string, versionRange: string) => ({
     contractId: "payment",
     capabilityId,
     versionRange,
-    ...(supportRanges ? { supportRanges } : {}),
 });
 
 const root = (requires: readonly unknown[]) =>
@@ -51,20 +50,6 @@ describe("capability dependency conjunctions", () => {
         await expect(
             catalogue.publish(await root([requirement("create", "^1.0.0"), requirement("refund", "^2.0.0")])),
         ).rejects.toThrow("jointly exposes all required capabilities");
-    });
-
-    test("requires each support range to retain a joint witness, including historical releases", async () => {
-        const catalogue = new InMemoryReleaseCatalogue();
-        await catalogue.publish(await admitContractRelease(dependency("1.0.0", ["create", "refund"])));
-        await catalogue.publish(await admitContractRelease(dependency("2.0.0", ["create"])));
-        const candidate = await root([
-            requirement("create", "^1.0.0 || ^2.0.0", ["^1.0.0", "^2.0.0"]),
-            requirement("refund", ">=1.0.0 <3.0.0"),
-        ]);
-        await expect(catalogue.publish(candidate)).rejects.toThrow("release in ^2.0.0 jointly");
-        await catalogue.publish(await admitContractRelease(dependency("2.1.0", ["create", "refund"])));
-        await catalogue.setYank("payment", "2.1.0", { reason: "Historical support" });
-        await expect(catalogue.publish(candidate)).resolves.toMatchObject({ admission: { digest: candidate.digest } });
     });
 
     test("does not turn local publication checks into a cross-capability installation solver", async () => {

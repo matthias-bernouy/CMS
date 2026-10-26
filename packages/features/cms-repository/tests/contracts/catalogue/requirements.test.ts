@@ -9,7 +9,7 @@ const payment = (version: string) =>
         version,
         capabilities: [capabilityDocument({ id: "payment.checkout.create" })],
     });
-const commerce = (range: string, version = "1.0.0", supportRanges?: readonly string[]) =>
+const commerce = (range: string, version = "1.0.0") =>
     contractDocument({
         contractId: "trade.commerce",
         version,
@@ -21,7 +21,6 @@ const commerce = (range: string, version = "1.0.0", supportRanges?: readonly str
                         contractId: "money.payment",
                         capabilityId: "payment.checkout.create",
                         versionRange: range,
-                        ...(supportRanges ? { supportRanges } : {}),
                     },
                 ],
             }),
@@ -51,36 +50,14 @@ describe("catalogue requirement resolution", () => {
         });
     });
 
-    test("requires a published target for every explicit support range", async () => {
-        const catalogue = new InMemoryReleaseCatalogue();
-        const candidate = await admitContractRelease(commerce("^1.0.0 || ^2.0.0", "1.0.0", ["^1.0.0", "^2.0.0"]));
-        await catalogue.publish(await admitContractRelease(payment("1.4.5")));
-        await expect(catalogue.publish(candidate)).rejects.toThrow("release in ^2.0.0");
-
-        await catalogue.publish(await admitContractRelease(payment("2.0.0")));
-        await expect(catalogue.publish(candidate)).resolves.toMatchObject({
-            admission: { release: { contractId: "trade.commerce" } },
-        });
-
-        const otherCatalogue = new InMemoryReleaseCatalogue();
-        await otherCatalogue.publish(await admitContractRelease(payment("1.4.5")));
-        await otherCatalogue.publish(await admitContractRelease(payment("2.0.0")));
-        await otherCatalogue.setYank("money.payment", "1.4.5", { reason: "Retired" });
-        await expect(otherCatalogue.publish(candidate)).resolves.toMatchObject({
-            admission: { digest: candidate.digest },
-        });
-    });
-
     test("allows maintenance after an old alternative dependency is yanked", async () => {
         const catalogue = new InMemoryReleaseCatalogue();
         await catalogue.publish(await admitContractRelease(payment("1.0.0")));
         await catalogue.publish(await admitContractRelease(payment("2.0.0")));
-        await catalogue.publish(
-            await admitContractRelease(commerce("^1.0.0 || ^2.0.0", "1.0.0", ["^1.0.0", "^2.0.0"])),
-        );
+        await catalogue.publish(await admitContractRelease(commerce("^1.0.0 || ^2.0.0", "1.0.0")));
         await catalogue.setYank("money.payment", "1.0.0", { reason: "Retired" });
         await expect(
-            catalogue.publish(await admitContractRelease(commerce("^1.0.0 || ^2.0.0", "1.0.1", ["^1.0.0", "^2.0.0"]))),
+            catalogue.publish(await admitContractRelease(commerce("^1.0.0 || ^2.0.0", "1.0.1"))),
         ).resolves.toMatchObject({ admission: { release: { version: "1.0.1" } } });
     });
 

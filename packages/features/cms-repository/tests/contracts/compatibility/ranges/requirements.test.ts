@@ -64,18 +64,4 @@ describe("requirement compatibility", () => {
         const next = release("1.1.0", [{ ...requirement, versionRange: "^1.0.0" }]);
         expect(compareContractReleases(previous, next).requiredBump).toBe("major");
     });
-
-    test("support/test partition changes do not alter accepted-version compatibility", () => {
-        const range = { ...requirement, versionRange: "^1.0.0 || ^2.0.0" };
-        const previous = release("1.0.0", [range]);
-        const explicit = release("1.0.1", [{ ...range, supportRanges: ["^1.0.0", "^2.0.0"] }]);
-        const recombined = release("1.0.2", [{ ...range, supportRanges: [">=1.0.0 <3.0.0"] }]);
-        expect(compareContractReleases(previous, explicit)).toMatchObject({
-            validEvolution: true,
-            consumerCompatible: true,
-            requiredBump: "patch",
-            issues: [],
-        });
-        expect(compareContractReleases(explicit, recombined).requiredBump).toBe("patch");
-    });
 });
