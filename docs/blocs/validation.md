@@ -60,9 +60,7 @@ Use `ulvia release` for explicit authored directories, then `ulvia push` for one
 exact admitted coordinate. Do not restore the removed package repository or
 integration manifests. The receiving repository re-runs collection,
 contract/provider and release-evolution validation before making bytes visible.
-Installation remains a separate administration action. A transport-neutral live
-provider conformance runner exists; production disposable-environment
-composition and approval policy remain open. There is no mounted private Bloc
-import route; authored
-collection Blocs use the explicit release pipeline described in
+Installation remains a separate administration action. Provider implementations
+own their behavioral tests; contract publication validates immutable artifacts.
+There is no mounted private Bloc import route; authored collection Blocs use the explicit release pipeline described in
 [authoring](authoring.md).

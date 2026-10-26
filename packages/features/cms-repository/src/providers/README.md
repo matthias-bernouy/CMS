@@ -94,12 +94,9 @@ routes/UI for importing and approving a connection. See
 [provider workflows](workflows.md) for lifecycle sequencing, optimistic
 revisions and deliberate V1 policies.
 
-Transport-neutral live conformance execution and immutable evidence publication
-are implemented outside this domain in Gateway and the repository publication
-protocol. Production disposable-environment composition, an approval policy,
-provider-to-CMS gateway grant creation and automatic provider upgrades remain
-open. The host must authorize actions and provide coherent dependency snapshots.
-`enabled` is administrative intent, not proof of a ready connection; a report's
-`ready` is a claim, not conformance evidence. See
+The host must authorize actions and provide coherent dependency snapshots.
+`enabled` is administrative intent; a report’s `ready` state describes the exact
+observed releases without certifying provider behavior. Each invocation validates
+its inputs, outputs, declared errors, bindings and access rules. See
 the [package overview](../../README.md) for the shared layout and public entry
 points.

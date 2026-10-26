@@ -1,8 +1,8 @@
 # @bernouy/cms-repository
 
 CMS repository formats, admission rules and pure validation in one feature
-package. The contracts domain defines provider-neutral releases and conformance
-suites; the providers domain defines immutable manifests and separate CMS-owned
+package. The contracts domain defines provider-neutral releases; the providers
+domain defines immutable manifests and separate CMS-owned
 installation, runtime-report and contract-selection models. The collections
 domain starts with authored bundles, assets and Light DOM compositions.
 
@@ -68,7 +68,7 @@ compilation, site installation or execution authorization.
 | Export | Current responsibility |
 | --- | --- |
 | `@bernouy/cms-repository` | Type-only entry point for principal domain models |
-| `@bernouy/cms-repository/contracts` | Release parsing, admission, canonicalization, digests, mocks and conformance suites |
+| `@bernouy/cms-repository/contracts` | Release parsing, admission, canonicalization, digests and mocks |
 | `@bernouy/cms-repository/contracts/schema` | Bounded schema vocabulary, parsing and value validation |
 | `@bernouy/cms-repository/contracts/bindings` | Explicit HTTP/MCP binding types, exposure selection, HTTP plans and pure scalar codecs |
 | `@bernouy/cms-repository/contracts/compatibility` | Release evolution and consumer-compatibility checks |
@@ -118,20 +118,15 @@ replay store is process-local while the filesystem adapter persists replay
 claims for every process sharing one repository root. Multi-node deployments
 without a shared filesystem still need shared atomic implementations. Publication
 creates bounded metadata first, streams each asset separately and only exposes
-the immutable release after a final idempotent commit. The same authenticated
-channel accepts immutable live conformance evidence. Publication re-admits its
-embedded suite against the exact published contract and dependencies, verifies
-the provider manifest and build range, and stores bounded output-free evidence.
-Exact evidence reads are public and digest-verified. The Mongo catalogues expose revision tokens from publication metadata for
-selection planning. Gateway freshness checks compare the selected site route's
-mutable records and do not rescan the global catalogues.
-Admission and graph planning validate
-artifacts and proposed choices; they do not establish live readiness or attest
-that a provider passes a contract. Host authorization and production snapshot
-consistency remain composition responsibilities.
+the immutable release after a final idempotent commit. The Mongo catalogues expose
+revision tokens from publication metadata for selection planning. Gateway freshness
+checks compare the selected site route’s mutable records and do not rescan the
+global catalogues. Admission and graph planning validate artifacts and proposed
+choices; they do not establish live readiness or certify provider behavior. Host
+authorization and production snapshot consistency remain composition responsibilities.
 
 See the [contract guide](src/contracts/README.md) for release evolution, schema
-and transport profiles, and conformance dependencies. The
+and transport profiles and dependency requirements. The
 [provider guide](src/providers/README.md) explains immutable claims, site state
 and the implemented V1 connection protocol. [Provider workflows](src/providers/workflows.md)
 details implemented transitions, upgrade boundaries and remaining runtime work.

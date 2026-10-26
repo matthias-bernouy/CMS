@@ -22,19 +22,6 @@ pins one exact parent through `extends`, and their capability tree contains only
 specialization-specific additions. Inherited capabilities resolve from the
 immutable parent chain.
 
-Conformance metadata lives in `conformance/definition.json`, with individual scenarios and
-coverage exemptions below recursive `conformance/scenarios/` and
-`conformance/exemptions/` trees. Source paths organize review only: assembly is
-sorted by declared identities, so moving a fragment does not change the release.
-
-The independently versioned conformance companion is admitted against the exact
-compiled contract digest and contains only runner-neutral capability scenarios.
-The Gateway live runner consumes that companion through an injected disposable
-provider environment. Published evidence embeds the canonical suite and exact
-digest; suites do not yet have an independent repository catalogue. The
-companion must not contain an endpoint, credential format or deployment
-assumption.
-
 Official collections keep reusable administration copy in recursively scanned
 `translations/<locale>/**/*.json` fragments. Resource definitions contain only
 translation keys; duplicate keys across locale fragments reject, and page-owned,

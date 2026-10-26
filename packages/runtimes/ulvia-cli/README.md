@@ -156,10 +156,9 @@ releases. It preserves independent Repository deployments and signing identities
 immutable release. A provider manifest must reference exact contract releases
 already in the local repository. Release does not connect to or test a provider.
 `release <directory> --recursive` discovers authored resource roots below a
-folder, stopping before nested Bloc or conformance definitions. It orders
-contracts by inheritance and capability requirements, validates conformance
-against the complete planned contract set, then prepares providers and
-collections. Existing local dependencies are reused. Source admission happens
+folder, stopping before nested Bloc definitions. It orders contracts by
+inheritance and capability requirements, then prepares providers and collections.
+Existing local dependencies are reused. Source admission happens
 before any resource is stored; each resource is committed separately, so a
 storage or publication conflict can leave a partial batch. Retrying identical
 releases is idempotent. Duplicate coordinates and symbolic links are rejected.
@@ -191,15 +190,6 @@ object. Optional `mocks/**/*.json` fragments contain one mock plus its explicit
 sorts capabilities and mocks by their declared IDs, so paths never affect the
 immutable digest. `definition.json` cannot contain an inline `capabilities`
 array: the recursive source tree is the only authored contract format.
-
-An optional conformance companion uses `conformance/definition.json`, recursive
-`conformance/scenarios/**/*.json` scenario objects and recursive
-`conformance/exemptions/**/*.json` coverage-exemption objects. Optional suite
-fixture bytes live below `conformance/fixtures/<asset-id>`. The release command
-assembles and admits a present suite, including exact locally released
-dependencies, before storing the contract. Conformance publication and live
-execution are separate Gateway/repository APIs; the CLI does not yet orchestrate
-a disposable provider environment.
 
 `push <publisher/id@version>` infers the kind from local cached releases. If the
 same coordinate exists in several catalogues, specify `push contract`,
@@ -305,7 +295,7 @@ image replacement remain separate actions.
 
 `instance create` provisions the named instance through the Provider operator
 API, then starts its Kernel. Connection review validates the runtime report and
-exact manifest claims; it does not yet execute a live conformance suite.
+exact manifest claims. Provider behavior is covered by implementation-owned tests.
 
 ## Collection examples
 

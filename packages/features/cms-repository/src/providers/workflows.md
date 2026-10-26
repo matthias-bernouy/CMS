@@ -3,7 +3,7 @@
 The provider domain lifecycle runs locally against explicit ports, deterministic
 memory implementations and optional Mongo state stores. It does not send HTTP
 requests, store secret values, authorize administrators, execute business
-capabilities or attest provider conformance. The separate
+capabilities or certify runtime behavior. The separate
 `./providers/management` application workflow orchestrates a host-injected
 runtime-report reader and `SecretStore`; network policy and administrator
 authorization stay in the runtime and surface.
@@ -24,7 +24,7 @@ do not require the manifest's referenced contracts to remain installable.
 `compareProviderManifests` returns deterministic additions, removals and changes
 for implementations, requirements, endpoints, credentials, configuration, build
 ranges, policies and metadata. It verifies artifact integrity but does not claim
-SemVer compatibility or provider conformance. Every different manifest digest
+SemVer compatibility or runtime behavior. Every different manifest digest
 requires explicit approval, even for a metadata-only update. Comparing different
 provider/publisher identities reports `sameIdentity: false`; it does not transfer
 ownership or authorize reconnecting an existing installation.
@@ -130,12 +130,11 @@ selection becomes unusable; hosts must plan coordinated changes before cutover.
 `getProviderInstallationReadiness` separates disabled/revoked state from missing,
 stale or current observations. It lists only exact releases reported ready in a
 fresh observation; it does not turn the whole installation into a ready provider
-or assert conformance. The caller chooses the maximum observation age.
+or certify provider behavior. The caller chooses the maximum observation age.
 
 Memory catalogues and stores are reference adapters. `./providers/mongo` persists
 installation and selection records with revision-checked writes. Production
 composition supplies durable release and manifest catalogues plus a coherent
 dependency-revision source. The Kernel mounts authorized management Pages, and the
 management workflow rotates local credentials. Provider-side credential
-revocation, registration/grants and production composition of disposable
-conformance environments remain separate implementation work.
+revocation and registration/grants remain separate implementation work.

@@ -10,8 +10,6 @@ entry points.
 | Object | Owner and current implementation |
 | --- | --- |
 | Contract release | Immutable schemas, capabilities, bindings and mocks; memory/Mongo catalogue. |
-| Conformance suite | Independently versioned scenarios pinned to one exact contract digest; admission and a transport-neutral live runner exist. |
-| Conformance evidence | Immutable output-free result pinned to one suite, contract, provider manifest, build and runner; authenticated publication and exact public reads exist. |
 | Provider manifest | Immutable provider claims and exact contract references; memory/Mongo catalogue. |
 | Installation | Site-owned configuration, exact approved manifest, administrative lifecycle and runtime observations; revisioned memory/Mongo store. |
 | Selection | Site-owned exact contract/provider choices, validated together as a bounded dependency graph; revisioned memory/Mongo store. |
@@ -41,8 +39,8 @@ repository lists and serves both types at `/v1/contracts` and `/v1/providers`.
 The administration Pages can list and import exact contract and manifest releases from this
 repository. Importing a provider manifest resolves and preflights its exact
 implemented contract releases from the same configured repository before any
-catalogue publication. Releasing an artifact does not contact a provider, execute
-conformance tests, or approve an installation.
+catalogue publication. Releasing an artifact does not contact a provider or
+approve an installation.
 Declared contract fixture assets live in `fixtures/<asset-id>` inside the
 authored folder and are validated before the local release is stored.
 The Mongo contract catalogue does not yet persist fixture assets, so
@@ -174,12 +172,7 @@ canonical binding transports.
 The selected API origin and token belong to installation state. Manifests list
 allowed origins but do not classify providers as local or remote. The runtime
 accepts HTTPS endpoints and literal loopback HTTP for development, and applies
-the gateway's pinned network policy to the report probe. The runtime report
-check is not a live contract conformance run. Live conformance is a separate
-disposable-environment flow exposed by `@bernouy/cms-gateway/conformance`; a
-runtime injects provider provisioning and invocation. Evidence can then be
-pushed and pulled through the signed repository client without publishing
-provider outputs.
+the gateway's pinned network policy to the report probe.
 
 ## Identity And Files
 
@@ -208,12 +201,6 @@ transport rules. See [files and responsive images](../images/README.md).
   selections. The CLI can publish and retrieve exact contract and provider
   coordinates through an authenticated immutable repository; automated provider
   upgrade policy remains open.
-- Conformance suite validation and transport-neutral live execution exist.
-  Immutable evidence can be published remotely after the repository rechecks
-  the exact contract, dependencies, provider manifest and build range. A
-  production disposable-environment adapter, approval policy and
-  operator-visible evidence history are not wired yet; suite artifacts are
-  embedded in evidence rather than catalogued separately.
 - Mongo contract publication rejects fixture assets until a byte store exists.
 - Collection releases can be installed and upgraded from configured repository
   sources. Exact remote `push`/`pull` and reversible yanking are implemented;

@@ -12,11 +12,6 @@
 - Keep specialized contracts as flat sibling directories. Pin their exact
   parent in `definition.json` and author only specialization-specific
   capabilities; inherited capabilities come from that immutable parent chain.
-- Keep conformance metadata in `conformance/definition.json`, scenarios below
-  `conformance/scenarios/**/*.json`, exemptions below
-  `conformance/exemptions/**/*.json`, and optional suite fixture bytes below
-  `conformance/fixtures/`. The authoring compiler sorts by declared identities,
-  rejects duplicates and admits the assembled suite against the exact contract.
 - Split collection administration copy into focused JSON objects below
   `translations/<locale>/`; paths organize authorship and never prefix keys.
 - Theme category files may be grouped recursively below `theme/`. Keep their

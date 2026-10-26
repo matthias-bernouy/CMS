@@ -72,8 +72,8 @@ remain separate. See the
   requires a fresh explicit approval; it cannot become authority via a report.
 - `ProviderRuntimeObservation.observedAt` is a CMS-owned timestamp, not a field
   trusted from the provider. Memory observation storage and pure freshness checks
-  exist; the host chooses the freshness bound. Live health checks and conformance
-  execution remain outside this slice.
+  exist; the host chooses the freshness bound. Live health checks and behavioral
+  verification remain outside this slice.
 
 ## Transport and persistence obligations
 

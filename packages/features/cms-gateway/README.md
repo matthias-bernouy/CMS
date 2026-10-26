@@ -45,8 +45,7 @@ instead of forwarding Provider `Set-Cookie` headers.
 the selected capabilities. Live browser authorization depends only on the
 capability's declared access and a trusted actor; Pages, referrers and execution
 pins are not authorities. `./access` exposes optional durable grant adapters,
-`./identity` owns provider-wide user aliases, and `./conformance` runs admitted
-suites against injected disposable provider environments. `./http` and
+`./identity` owns provider-wide user aliases. `./http` and
 `./http/node` expose the generic binding transport and hardened network adapter.
 
 Synchronous commands are durably audited. A failure after dispatch produces

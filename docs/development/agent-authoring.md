@@ -26,13 +26,10 @@ Pages, files and collection upgrades in a production-shaped Docker stack.
 These tests are repository tests, not a generic collection-authored browser
 scenario format.
 
-For contracts, strict schemas, evolution checks, mocks and fixture assets already
-exist. Conformance suite authoring supports scenarios, actors, captures,
-assertions, dependency profiles and reasoned coverage exemptions pinned to an
-exact contract digest. `@bernouy/cms-gateway/conformance` exposes
-`LiveConformanceRunner` with an injected `ConformanceEnvironmentFactory` that
-provides fresh disposable environments and cleanup. Admission and coverage
-reports do not prove that a live provider passed.
+Contracts provide strict schemas, evolution checks, mocks and fixture assets.
+The Gateway validates each invocation against its selected immutable release.
+Provider implementations own their unit and integration tests; publishing a
+contract does not execute a provider or certify its behavior.
 
 ## Recommended agent workflow today
 
@@ -70,8 +67,3 @@ browser scenarios and packaged skills remain future work. A future preview
 worker should isolate compilation and rendering from signing credentials with
 bounded CPU, memory, temporary storage, network and deadlines. Current static
 admission and Bun macro disabling do not provide an OS sandbox.
-
-Contract conformance continues through the existing injected environment factory.
-A later collection scenario format can reuse its fixtures and evidence model,
-with bounded DOM/rendering assertions. Passing a future suite, admission and
-human review must remain separate claims.

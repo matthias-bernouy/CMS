@@ -13,8 +13,6 @@ publish releases or choose providers.
 - `src/access/` owns durable administrative grants selected by the runtime.
 - `src/identity/` owns provider-wide authority aliases, their contracts, and
   memory, Mongo, and request-scoped implementations.
-- `src/conformance/` executes already-admitted suites against injected disposable
-  live environments. It never provisions production tenants or publishes artifacts itself.
 - `src/exports/` is the public facade. The package root exposes invocation;
   optional HTTP and identity APIs use their named subpaths.
 

@@ -103,7 +103,7 @@ dispatches through `CapabilityGateway`, including normal schema, behavior,
 response and command-audit rules. It exposes the admitted HTTP paths directly
 and through `/.cms/call/ulvia.repository`. It does not invent a second MCP
 execution engine. This local installation is runtime wiring, not a persisted
-CMS site selection or proof that a remote deployment passed conformance.
+CMS site selection or proof of a remote deployment’s runtime behavior.
 
 Current CMS read-only sources continue to use their HTTP catalogue adapters.
 The Provider runtime accepts `CMS_REPOSITORY_URL` and its existing explicit

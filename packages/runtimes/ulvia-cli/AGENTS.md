@@ -51,10 +51,8 @@ Ulvia CMS installation runtime.
 - Collection migrations are recursive JSON files below `migrations/`, named
   `<from>-to-<to>.json`. Release admission enforces a cumulative adjacent chain.
 - Contract sources may split capabilities and mocks recursively below
-  `capabilities/` and `mocks/`. Conformance sources use recursive `scenarios/`
-  and `exemptions/` trees below `conformance/`. Sort assembled records by their
-  declared stable IDs, never by paths, reject duplicate or dangling ownership,
-  and validate a present suite before making its contract release visible.
+  `capabilities/` and `mocks/`. Sort assembled records by their declared stable
+  IDs, never by paths, and reject duplicate or dangling mock ownership.
 - Before storing a collection release, validate namespaced CSS variable
   references against its local tokens, selective dependency imports and
   Bloc-owned custom-property declarations.

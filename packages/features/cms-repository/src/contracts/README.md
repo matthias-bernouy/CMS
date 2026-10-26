@@ -2,8 +2,7 @@
 
 `@bernouy/cms-repository/contracts` defines immutable, provider-neutral capabilities,
 their schemas and compiled HTTP bindings. It also admits mocks and binary
-assets, publishes releases in a catalogue, compares evolutions, and validates
-independently versioned conformance suites.
+assets, publishes releases in a catalogue and compares evolutions.
 
 No provider is contacted by this package. Admission proves that a document is
 internally valid, not that an implementation passes its contract.
@@ -66,7 +65,7 @@ adding `|| ^2.0.0` is minor; removing `^1.0.0` is major. Adding or removing a
 mandatory requirement on an existing capability is also major.
 
 `versionRange` defines accepted versions, not a test matrix. Optional
-`supportRanges` makes evidence partitions explicit: one to four nonempty
+`supportRanges` declares one to four nonempty publication witness ranges:
 subsets whose union covers the accepted set. Omission means `[versionRange]`,
 even when that range contains `||`. Publication requires a published witness
 for each support range. For one capability's requirements to the same contract,
@@ -82,7 +81,7 @@ stabilization. This does not permit a breaking `1.1.0-alpha.2` over stable
 `1.0.0`. Stable minor lines within one major are not independent maintenance
 branches, and `0.x` uses the same conservative compatibility policy.
 
-## Compatibility is not conformance
+## Schema compatibility
 
 `@bernouy/cms-repository/contracts/compatibility` exposes:
 
@@ -102,7 +101,7 @@ even an optional field removal requires a major.
 Projection never truncates strings, arrays or maps to meet older bounds.
 Expanding a possible output string from 100 to 150 characters therefore still
 requires a major. An old selected release retains its own validation rules.
-These flags do not prove old binding support or provider conformance.
+These flags describe schema evolution; runtime exchanges still require validation.
 Equivalent object constraints can remain patches: adding a field to `required`
 does not narrow values when a closed object's `minProperties` already forces it present.
 
@@ -133,66 +132,12 @@ encoding or plain `http-field` strings. GET/HEAD are queries, and HEAD error ide
 uses reserved headers. See the normative
 [HTTP parameter profile](../../fixtures/contracts/protocol-v1/http-parameters.md).
 
-## Conformance with dependencies
-
-A suite remains pinned to one exact root release. Dependency profiles select
-concrete combinations of other releases:
-
-```ts
-dependencyProfiles: [
-    {
-        id: "payment-v1",
-        releases: [
-            { contractId: "payment", version: "1.0.0", digest: paymentV1.digest },
-        ],
-    },
-    {
-        id: "payment-v2",
-        releases: [
-            { contractId: "payment", version: "2.0.0", digest: paymentV2.digest },
-        ],
-    },
-]
-```
-
-Supply the corresponding admitted artifacts explicitly:
-
-```ts
-parseConformanceSuite(document, root, limits, [paymentV1, paymentV2]);
-await admitConformanceSuite(document, root, assets, limits, [paymentV1, paymentV2]);
-```
-
-Parsing expects trusted admitted artifacts; admission re-verifies their
-integrity and suite-owned binary assets. It never fetches dependencies.
-A call with `dependencyContractId: "payment"` targets that profile's selected
-payment release for setup or verification; an omitted field targets the root.
-
-Omitting a scenario's `profiles` applies it to every profile; otherwise a
-nonempty list of known profile IDs selects its matrix. Each profile needs an
-applicable scenario. Validate its applicable inputs, actors, assertions,
-captures and transitive graph, with one release per dependency contract and
-no cycles, unknown capabilities or unused selections.
-
-Each support range of an exercised root requirement needs a matching profile
-that actually calls that root capability. External calls never satisfy root
-coverage. Aggregate and per-profile `profiles[]` coverage describe authored
-checks, not successful execution or every accepted version/combination.
-
-Calls can declare keyed replay, bounded operation completion, eventual sync
-queries and cursor pagination. Templates support recursive `$literal` escaping;
-capture paths include guaranteed object fields, array indices and asserted
-map entries. See
-[conformance controls](../../fixtures/contracts/protocol-v1/conformance-controls.md)
-for exact restrictions. Every applicable scenario/profile pair requires fresh
-disposable state, identities and captures. This contracts package stops at
-admission: the transport-neutral live runner is exported by
-`@bernouy/cms-gateway/conformance`, and immutable output-free evidence is
-published through the repository publication protocol.
-
 ## Remaining boundaries
 
-Provider manifests may claim several exact releases, but each claim still needs
-runtime conformance evidence. Installation and site-selection models belong to
+Provider manifests may claim several exact releases. Each invocation validates
+the selected release’s inputs, outputs, declared errors, bindings and access rules.
+Provider unit and integration tests remain owned by the implementation.
+Installation and site-selection models belong to
 the [providers domain](../providers/README.md), which consumes the contracts
 facade; contracts do not depend on provider or installation state.
 Whole-installation dependency planning, migrations, rollback, HTTP execution,
@@ -210,7 +155,5 @@ rules remain in each HTTP binding. A capability can expose multiple HTTP routes,
 multiple MCP tools or MCP alone. Skills, prompts, resource catalogues and
 WebSocket bindings remain future work.
 
-Legacy single `binding` input remains readable as HTTP-only without changing
-canonical release bytes or digests. Declaring both forms is invalid. See the
-[community Repository architecture](../../../../../docs/architecture/community-repository.md#explicit-capability-bindings)
+See the [community Repository architecture](../../../../../docs/architecture/community-repository.md#explicit-capability-bindings)
 for validation, routing and Gateway boundaries.

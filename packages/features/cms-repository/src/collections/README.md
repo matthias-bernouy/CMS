@@ -248,10 +248,8 @@ Presets remain absent from the public format: unsupported fields reject.
 Static Page capability analysis and access derivation are implemented in
 `cms-gateway`; live invocation authority remains independent of Page documents.
 Remote signed publication is implemented by the CLI and official repository
-server. The live conformance runner and immutable evidence publication exist;
-production disposable-provider composition, resumable publication transfers
-and third-party JavaScript isolation remain open. The current first-party trust
-assumption and the required boundary before third-party collections are
+server. Third-party JavaScript isolation remains open. The current first-party
+trust assumption and the required boundary before third-party collections are
 recorded in the repository
 [deferred-work documentation](../../../../../docs/TODO.md#collection-javascript-isolation).
 The [starter bundle](../../fixtures/collections/v1/README.md) exercises the

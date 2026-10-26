@@ -41,7 +41,7 @@ models and validation for CMS-owned installations and site selections.
   HTTP execution and gateway routing remain outside this package; runtimes own
   environment access and production adapter selection. `./providers/mongo`
   provides durable manifest, installation and selection stores; `./contracts/mongo`
-  provides durable release publication. Live transport and conformance execution
+  provides durable release publication. Live transport execution
   remain outside this package. Mongo release publication currently rejects
   bundles with fixture assets until separate byte storage is implemented.
 - Remote publication is staged: sign bounded metadata first, stream each declared
@@ -132,12 +132,12 @@ models and validation for CMS-owned installations and site selections.
   presence, including required fields and fields forced present by a closed
   object's minimum count; equivalent constraints must not force a bump.
 - Compatibility reports separate valid publication evolution from consumer
-  compatibility. Neither proves provider conformance or old HTTP binding support.
+  compatibility. Neither proves that a running provider supports old HTTP bindings.
   Catalogue publication compares with the latest stable release of the same
   major and checks monotonic order within a prerelease target. Preview shapes
   may change before stabilization without breaking an existing stable major line.
 - A site's selected release remains authoritative for input and output bounds.
-  A newer provider build neither widens it nor proves conformance with earlier
+  A newer provider build neither widens it nor proves runtime support for earlier
   release digests. Installation and gateway enforcement are outside contracts.
 - Binary media types form an explicit per-release set, not a global allowlist.
   Syntax validation does not prove that bytes match their declared format.
@@ -157,28 +157,6 @@ models and validation for CMS-owned installations and site selections.
   Binary mock leaves reference declared fixture assets by ID. Bundle admission
   verifies immutable bytes against declared size and SHA-256 before publication;
   mutable URLs and inline base64 cannot substitute for those bytes.
-- Conformance suites are independently versioned, provider-neutral artifacts
-  pinned to an admitted release's exact digest. Validate scenarios, assets,
-  actors, captures, assertions and reasoned coverage exemptions before hashing;
-  they do not change the release digest. Neither suites nor coverage reports
-  attest that a provider passed. HTTP execution, disposable-tenant provisioning
-  and cleanup remain outside the contracts domain.
-- Suites exercising required capabilities declare bounded dependency profiles
-  with exact contract/version/digest pins. Verify supplied artifacts and each
-  profile's transitive graph from applicable scenario calls. Optional scenario
-  `profiles` selects known IDs; omission applies to all, and each profile needs
-  an applicable scenario. Cover each exercised root requirement's support range
-  in a profile actually calling that root. Do not imply all versions or Cartesian
-  combinations were tested; external setup/verification calls are not root coverage.
-- Conformance templates recursively escape markers with `{ $literal: value }`.
-  Captures need guaranteed paths or an exact successful presence/equality
-  assertion. JSON Pointers traverse objects, arrays and maps; V1 rejects
-  overlapping ancestor/descendant assertions.
-- Replay keys, operation completion, eventual queries and pagination are bounded
-  declarations, not an executor. Preserve the restrictions in
-  [conformance controls](fixtures/contracts/protocol-v1/conformance-controls.md).
-  Aggregate/per-profile coverage is descriptive; fresh disposable isolation
-  applies to every applicable scenario/profile pair, even on failure.
 
 ## Provider manifests
 
@@ -206,14 +184,13 @@ models and validation for CMS-owned installations and site selections.
   ranges and capability existence.
 - A manifest may claim multiple exact releases of one contract, keyed by
   `(contractId, version)`, each verified by digest. Canonical ordering is ordinal,
-  independent of locale. Admission validates claims, not running implementations;
-  each served release still needs release-specific conformance evidence. Never
-  infer old-release support from a newer build or contract SemVer alone.
+  independent of locale. Admission validates claims, not running implementations.
+  Never infer old-release support from a newer build or contract SemVer alone.
 - Manifest publication revalidates artifact integrity and new publication references.
   Exact republishing is idempotent, including historical references later yanked.
   Reject content replacement and publisher changes across every manifest version.
   A manifest yank is reversible catalogue metadata, never artifact deletion.
-- Manifest comparison is descriptive, not a SemVer or conformance guarantee.
+- Manifest comparison is descriptive, not a SemVer or runtime behavior guarantee.
   Every changed digest requires explicit approval. Preserve configured limits
   during comparison, publication and installation verification.
 
