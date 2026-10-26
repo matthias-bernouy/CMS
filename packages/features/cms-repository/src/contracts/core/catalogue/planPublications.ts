@@ -20,7 +20,8 @@ export async function planContractPublications(
     const verified = await Promise.all(admissions.map((admission) => verifyAdmission(admission, snapshotLimits)));
     const published = [...(await catalogue.list())];
     const planned: CatalogueContractRelease[] = [];
-    const candidates = orderCandidatesByLineage(verified);
+    const candidates = [...verified].sort((left, right) => compareSemVer(left.release.version, right.release.version));
+    const staged = candidates.map((admission) => ({ admission, publishedAt: PLANNED_AT }));
     for (const admission of candidates) {
         const { contractId, version, publisherId } = admission.release;
         const existing = [...published, ...planned].find(
@@ -48,7 +49,7 @@ export async function planContractPublications(
             );
         }
         verifyEvolution(admission.release, [...published, ...planned], snapshotLimits);
-        verifySpecialization(admission.release, [...published, ...planned]);
+        verifySpecialization(admission.release, [...published, ...staged]);
         planned.push(Object.freeze({ admission, publishedAt: PLANNED_AT }));
     }
     const complete = [...published, ...planned];
@@ -56,25 +57,6 @@ export async function planContractPublications(
         verifyRequirements(record.admission.release, complete);
     }
     return orderByRequirements(planned, published);
-}
-
-function orderCandidatesByLineage(admissions: readonly AdmittedContractRelease[]): AdmittedContractRelease[] {
-    const pending = [...admissions];
-    const ordered: AdmittedContractRelease[] = [];
-    while (pending.length > 0) {
-        const pendingIds = new Set(pending.map(({ release }) => release.contractId));
-        const ready = pending
-            .filter(({ release }) => !release.extends || !pendingIds.has(release.extends.contractId))
-            .sort((left, right) => compareSemVer(left.release.version, right.release.version));
-        if (ready.length === 0) {
-            throw new ReleaseValidationError("invalid_contract", "contract inheritance contains a cycle");
-        }
-        for (const admission of ready) {
-            pending.splice(pending.indexOf(admission), 1);
-            ordered.push(admission);
-        }
-    }
-    return ordered;
 }
 
 function orderByRequirements(
@@ -87,6 +69,16 @@ function orderByRequirements(
     while (pending.length > 0) {
         const index = pending.findIndex((record) => {
             try {
+                if (
+                    pending.some(
+                        (other) =>
+                            other.admission.release.contractId === record.admission.release.contractId &&
+                            compareSemVer(other.admission.release.version, record.admission.release.version) < 0,
+                    )
+                ) {
+                    return false;
+                }
+                verifySpecialization(record.admission.release, available);
                 verifyRequirements(record.admission.release, available);
                 return true;
             } catch {
@@ -94,8 +86,10 @@ function orderByRequirements(
             }
         });
         if (index === -1) {
-            verifyRequirements(pending[0]!.admission.release, available);
-            throw new ReleaseValidationError("invalid_contract", "cyclic staged contract requirements");
+            throw new ReleaseValidationError(
+                "invalid_contract",
+                "staged contract dependency cycle (requirements or inheritance)",
+            );
         }
         const [record] = pending.splice(index, 1);
         available.push(record!);
