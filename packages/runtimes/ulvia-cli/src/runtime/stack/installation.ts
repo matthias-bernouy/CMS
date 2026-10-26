@@ -39,12 +39,7 @@ export async function loadOrCreateInstallationConfig(
         return existing;
     }
     const defaults = defaultInstallationConfig(environment);
-    const legacyPorts = await loadLegacyPorts(paths);
-    return await saveInstallationConfig(
-        paths,
-        legacyPorts ? parseInstallationConfig({ ...defaults, ports: legacyPorts }) : defaults,
-        true,
-    );
+    return await saveInstallationConfig(paths, defaults, true);
 }
 
 export async function loadInstallationConfig(paths: UlviaPaths): Promise<InstallationConfig | null> {
@@ -150,18 +145,4 @@ function port(value: unknown): number {
 
 function installationPath(paths: UlviaPaths): string {
     return join(paths.services, "installation.json");
-}
-
-async function loadLegacyPorts(paths: UlviaPaths): Promise<ServicePorts | null> {
-    const source = await readFile(join(paths.services, "stack.json"), "utf8").catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") {
-            return null;
-        }
-        throw error;
-    });
-    if (source === null) {
-        return null;
-    }
-    const value = JSON.parse(source) as { schema?: unknown; ports?: unknown };
-    return value.schema === "ulvia.local-services-stack.v1" && value.ports ? parsePorts(value.ports) : null;
 }

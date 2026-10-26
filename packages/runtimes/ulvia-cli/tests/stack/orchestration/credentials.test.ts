@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadOrCreateLocalServicesConfig } from "../../../src/runtime/config";
 
-test("an installed alpha stack gains an isolated Provider Mongo credential", async () => {
+test("obsolete service credentials are rejected without a migration", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-service-credentials-"));
     try {
         await writeFile(
@@ -17,12 +17,9 @@ test("an installed alpha stack gains an isolated Provider Mongo credential", asy
                 mongoPassword: "a".repeat(43),
             }),
         );
-        const config = await loadOrCreateLocalServicesConfig(root);
-        expect(config.schema).toBe("ulvia.services.v2");
-        expect(config.mongoProviderUsername).toBe("ulvia_provider");
-        expect(config.mongoProviderPassword).toHaveLength(43);
-        expect(config.mongoProviderPassword).not.toBe(config.mongoPassword);
-        expect(JSON.parse(await readFile(join(root, "runtime.json"), "utf8"))).toEqual(config);
+        const before = await readFile(join(root, "runtime.json"), "utf8");
+        await expect(loadOrCreateLocalServicesConfig(root)).rejects.toThrow("configuration is invalid");
+        expect(await readFile(join(root, "runtime.json"), "utf8")).toBe(before);
     } finally {
         await rm(root, { recursive: true, force: true });
     }

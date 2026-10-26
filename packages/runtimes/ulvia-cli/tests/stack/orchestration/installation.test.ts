@@ -38,7 +38,7 @@ test("installation configuration defaults to loopback HTTP and persists explicit
     }
 });
 
-test("first configuration preserves ports from an already installed alpha stack", async () => {
+test("fresh configuration does not import historical stack ports", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-installation-upgrade-"));
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
     await ensureUlviaPaths(paths);
@@ -51,9 +51,9 @@ test("first configuration preserves ports from an already installed alpha stack"
             }),
         );
         expect((await loadOrCreateInstallationConfig(paths)).ports).toEqual({
-            http: 5200,
-            repository: 5202,
-            provider: 5203,
+            http: 5100,
+            repository: 5102,
+            provider: 5103,
         });
     } finally {
         await rm(root, { recursive: true, force: true });

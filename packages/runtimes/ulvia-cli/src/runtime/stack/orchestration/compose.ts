@@ -18,6 +18,24 @@ export async function composeUp(project: ComposeProject, removeOrphans = false):
     await compose(project, ["up", "--detach", "--wait", ...(removeOrphans ? ["--remove-orphans"] : [])], true);
 }
 
+export async function checkProviderImageRetention(project: ComposeProject): Promise<void> {
+    await compose(
+        project,
+        [
+            "run",
+            "--rm",
+            "--no-deps",
+            "--entrypoint",
+            "bun",
+            "provider",
+            "--no-macros",
+            "run",
+            "packages/runtimes/ulvia-provider-server/src/checkRetention.ts",
+        ],
+        true,
+    );
+}
+
 export async function composeStop(project: ComposeProject): Promise<void> {
     await compose(project, ["stop"], true);
 }

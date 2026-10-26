@@ -2,7 +2,14 @@ import { loadOrCreateLocalServicesConfig, loadOrCreateProviderOperatorToken } fr
 import type { UlviaPaths } from "../../paths";
 import type { InstallationConfig } from "../installation";
 import { defaultStackVersion } from "../version";
-import { composeDown, composeStop, composeUp, inspectComposeServices, type ComposeProject } from "./compose";
+import {
+    checkProviderImageRetention,
+    composeDown,
+    composeStop,
+    composeUp,
+    inspectComposeServices,
+    type ComposeProject,
+} from "./compose";
 import { localServicesEnvironment } from "./environment";
 import { ensureOfficialImage, pullOfficialImage, type OfficialImageComponent } from "./images";
 import { loadLocalServicesState, localServicesIdentity, saveLocalServicesState } from "./state";
@@ -73,6 +80,9 @@ export async function upgradeLocalService(
         images: { ...installed.images, [component]: image },
     };
     const credentials = await serviceCredentials(paths);
+    if (component === "provider") {
+        await checkProviderImageRetention(serviceProject(paths, updated, credentials));
+    }
     try {
         await composeUp(serviceProject(paths, updated, credentials));
         await saveLocalServicesState(paths, updated.installation, updated.images);

@@ -2,8 +2,7 @@ import { randomBytes } from "node:crypto";
 import { chmod, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-const SCHEMA = "ulvia.services.v2" as const;
-const LEGACY_SCHEMA = "ulvia.local-services.v1" as const;
+const SCHEMA = "ulvia.services.v1" as const;
 
 export type LocalServicesConfig = Readonly<{
     schema: typeof SCHEMA;
@@ -80,22 +79,6 @@ async function readConfig(path: string): Promise<LocalServicesConfig | null> {
     }
     await chmod(path, 0o600);
     const value = JSON.parse(source) as Partial<Omit<LocalServicesConfig, "schema">> & { schema?: unknown };
-    if (
-        value.schema === LEGACY_SCHEMA &&
-        secret(value.sessionSecret) &&
-        /^[a-f0-9]{64}$/u.test(value.kekHex ?? "") &&
-        value.mongoUsername === "ulvia" &&
-        /^[A-Za-z0-9_-]{43}$/u.test(value.mongoPassword ?? "")
-    ) {
-        const upgraded: LocalServicesConfig = {
-            ...(value as Omit<LocalServicesConfig, "schema" | "mongoProviderUsername" | "mongoProviderPassword">),
-            schema: SCHEMA,
-            mongoProviderUsername: "ulvia_provider",
-            mongoProviderPassword: randomBytes(32).toString("base64url"),
-        };
-        await writeFile(path, `${JSON.stringify(upgraded, null, 2)}\n`, { mode: 0o600 });
-        return upgraded;
-    }
     if (
         value.schema !== SCHEMA ||
         !secret(value.sessionSecret) ||
