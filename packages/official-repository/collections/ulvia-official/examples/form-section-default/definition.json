@@ -1,0 +1,14 @@
+{
+    "id": "form-section-default",
+    "label": "bloc.form-section.label",
+    "description": "bloc.form-section.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

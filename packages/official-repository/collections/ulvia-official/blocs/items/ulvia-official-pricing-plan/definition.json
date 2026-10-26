@@ -3,7 +3,6 @@
     "id": "ulvia-official-pricing-plan",
     "label": "bloc.pricing-plan.label",
     "description": "bloc.pricing-plan.description",
-    "category": "bloc.category.components",
     "order": 30,
     "uses": ["ulvia-official-action", "ulvia-official-heading"],
     "requires": [],
@@ -63,5 +62,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.components"],
+    "examples": ["pricing-plan-default"],
+    "defaultExample": "pricing-plan-default"
 }

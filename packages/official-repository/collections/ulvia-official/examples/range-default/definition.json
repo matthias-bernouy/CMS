@@ -1,0 +1,14 @@
+{
+    "id": "range-default",
+    "label": "bloc.range.label",
+    "description": "bloc.range.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

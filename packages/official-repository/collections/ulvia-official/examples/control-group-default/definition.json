@@ -1,0 +1,14 @@
+{
+    "id": "control-group-default",
+    "label": "bloc.control-group.label",
+    "description": "bloc.control-group.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

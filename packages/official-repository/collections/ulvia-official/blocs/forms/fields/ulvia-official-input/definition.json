@@ -3,7 +3,6 @@
     "id": "ulvia-official-input",
     "label": "bloc.input.label",
     "description": "bloc.input.description",
-    "category": "bloc.category.forms",
     "order": 10,
     "uses": [],
     "requires": [],
@@ -41,5 +40,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["input-default"],
+    "defaultExample": "input-default"
 }

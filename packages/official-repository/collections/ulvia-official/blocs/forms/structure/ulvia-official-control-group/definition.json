@@ -3,7 +3,6 @@
     "id": "ulvia-official-control-group",
     "label": "bloc.control-group.label",
     "description": "bloc.control-group.description",
-    "category": "bloc.category.forms",
     "order": 140,
     "uses": ["ulvia-official-action", "ulvia-official-input", "ulvia-official-select"],
     "requires": [],
@@ -44,5 +43,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["control-group-default"],
+    "defaultExample": "control-group-default"
 }

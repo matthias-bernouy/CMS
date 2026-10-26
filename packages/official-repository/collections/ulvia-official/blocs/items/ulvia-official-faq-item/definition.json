@@ -3,7 +3,6 @@
     "id": "ulvia-official-faq-item",
     "label": "bloc.faq-item.label",
     "description": "bloc.faq-item.description",
-    "category": "bloc.category.components",
     "order": 40,
     "uses": [],
     "requires": [],
@@ -31,5 +30,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.components"],
+    "examples": ["faq-item-default"],
+    "defaultExample": "faq-item-default"
 }

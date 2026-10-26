@@ -3,7 +3,6 @@
     "id": "ulvia-official-hero",
     "label": "bloc.hero.label",
     "description": "bloc.hero.description",
-    "category": "bloc.category.sections",
     "order": 10,
     "uses": ["ulvia-official-action", "ulvia-official-heading", "ulvia-official-image", "ulvia-official-media-figure"],
     "requires": [],
@@ -65,5 +64,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.sections"],
+    "examples": ["hero-default", "landing-page"],
+    "defaultExample": "hero-default"
 }

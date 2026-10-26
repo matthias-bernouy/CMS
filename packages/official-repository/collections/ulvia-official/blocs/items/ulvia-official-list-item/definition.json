@@ -3,7 +3,6 @@
     "id": "ulvia-official-list-item",
     "label": "bloc.list-item.label",
     "description": "bloc.list-item.description",
-    "category": "bloc.category.components",
     "order": 35,
     "uses": [],
     "requires": [],
@@ -85,5 +84,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.components"],
+    "examples": ["list-item-default"],
+    "defaultExample": "list-item-default"
 }

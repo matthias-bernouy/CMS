@@ -1,0 +1,14 @@
+{
+    "id": "prose-default",
+    "label": "bloc.prose.label",
+    "description": "bloc.prose.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

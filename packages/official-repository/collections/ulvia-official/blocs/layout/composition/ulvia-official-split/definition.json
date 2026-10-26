@@ -3,7 +3,6 @@
     "id": "ulvia-official-split",
     "label": "bloc.split.label",
     "description": "bloc.split.description",
-    "category": "bloc.category.layout",
     "order": 60,
     "uses": [],
     "requires": [],
@@ -33,5 +32,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["split-default"],
+    "defaultExample": "split-default"
 }

@@ -11,8 +11,16 @@ test("the official collection passes its source quality contract", async () => {
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
     const artifact = await prepareCollectionRelease(source, await officialContractCatalogue());
     const visible = artifact.release.blocs.filter((bloc) => bloc.catalogue !== "hidden");
-    expect(visible.every((bloc) => bloc.category !== undefined && bloc.order !== undefined)).toBeTrue();
-    expect(new Set(visible.map((bloc) => `${bloc.category}:${bloc.order}`)).size).toBe(visible.length);
+    expect(
+        visible.every(
+            (bloc) =>
+                (bloc.categories?.length ?? 0) > 0 &&
+                bloc.description !== undefined &&
+                bloc.defaultExample !== undefined &&
+                bloc.order !== undefined,
+        ),
+    ).toBeTrue();
+    expect(new Set(visible.map((bloc) => `${bloc.categories?.[0]}:${bloc.order}`)).size).toBe(visible.length);
     expect(
         visible.every((bloc) => Object.values(bloc.slots).every((slot) => (slot.accepts?.length ?? 0) > 0)),
     ).toBeTrue();
@@ -33,6 +41,12 @@ test("the official collection passes its source quality contract", async () => {
             (text) => text.values.en?.trim() && text.values.fr?.trim() && text.label && text.category && text.group,
         ),
     ).toBeTrue();
+    expect(artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-data-table-cell")?.categories).toEqual([
+        "bloc.category.data",
+    ]);
+    expect(artifact.release.blocs.find((bloc) => bloc.id === "ulvia-official-field-caption")?.categories).toEqual([
+        "bloc.category.forms",
+    ]);
     expect(artifact.release.exports?.blocs).toEqual(visible.map((bloc) => bloc.id).toSorted());
     expect(
         artifact.release.blocs.some((bloc) =>

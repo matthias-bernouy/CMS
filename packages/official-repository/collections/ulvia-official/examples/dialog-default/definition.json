@@ -1,0 +1,14 @@
+{
+    "id": "dialog-default",
+    "label": "bloc.dialog.label",
+    "description": "bloc.dialog.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

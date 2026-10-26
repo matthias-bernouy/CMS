@@ -42,7 +42,8 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(bundle.assets.map(({ id }) => id)).toEqual(
             [...bundle.assets.map(({ id }) => id)].sort((left, right) => left.localeCompare(right)),
         );
-        expect(bundle.assets).toHaveLength(53);
+        expect(bundle.assets).toHaveLength(artifact.assets.length);
+        expect(bundle.assets.map(({ id }) => id)).toContain("examples/landscape.svg");
         expect(bundle.assets.map(({ id }) => id)).toContain("icons/navigation/collections.svg");
         expect(bundle.assets.map(({ id }) => id)).toContain("fonts/sans/inter/normal.woff2");
         expect(bundle.assets.map(({ id }) => id)).toContain("fonts/serif/source-serif-4/italic.woff2");
@@ -50,7 +51,7 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(svgAssets.find((asset) => asset.id === "icons/controls/check-white.svg")?.profiles).toBeUndefined();
         expect(
             svgAssets
-                .filter((asset) => asset.id !== "icons/controls/check-white.svg")
+                .filter((asset) => asset.id.startsWith("icons/") && asset.id !== "icons/controls/check-white.svg")
                 .every((asset) => asset.profiles?.includes("inline-svg")),
         ).toBe(true);
         expect(
@@ -58,6 +59,7 @@ test("local repository lists immutable metadata and serves matching release byte
                 .filter((asset) => asset.id.endsWith(".woff2"))
                 .every((asset) => asset.mediaType === "font/woff2" && asset.profiles === undefined),
         ).toBe(true);
+        expect(svgAssets.find((asset) => asset.id === "examples/landscape.svg")?.profiles).toBeUndefined();
         const release = bundle.release;
         expect(entries[0]?.blocCount).toBe(release.blocs.length);
         expect(release.exports?.blocs).toEqual(
@@ -90,7 +92,11 @@ test("local repository lists immutable metadata and serves matching release byte
             expect(action.runtime?.styleCSS).toContain('@scope ([cms-bloc="ulvia-official-action"])');
             expect(action.root).toEqual({ accepts: ["button", "a"], defaults: { type: "button" } });
             expect(action.markup).toBe("<slot></slot>");
-            expect(action.defaultContent).toBe("{{ cms.i18n.ulvia-official.ui-action-label }}");
+            expect(action.defaultContent).toBeUndefined();
+            expect(action.defaultExample).toBe("action-default");
+            expect(release.examples?.find((example) => example.id === action.defaultExample)?.document.html).toContain(
+                "{{ cms.i18n.ulvia-official.ui-action-label }}",
+            );
             expect(action.settings?.map((setting) => setting.id)).toEqual([
                 "variant",
                 "tone",

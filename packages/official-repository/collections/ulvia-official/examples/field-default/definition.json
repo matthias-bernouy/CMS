@@ -1,0 +1,14 @@
+{
+    "id": "field-default",
+    "label": "bloc.field.label",
+    "description": "bloc.field.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

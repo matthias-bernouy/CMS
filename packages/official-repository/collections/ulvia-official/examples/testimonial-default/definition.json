@@ -1,0 +1,14 @@
+{
+    "id": "testimonial-default",
+    "label": "bloc.testimonial.label",
+    "description": "bloc.testimonial.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

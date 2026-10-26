@@ -3,7 +3,6 @@
     "id": "ulvia-official-segmented-control",
     "label": "bloc.segmented-control.label",
     "description": "bloc.segmented-control.description",
-    "category": "bloc.category.forms",
     "order": 190,
     "uses": [
         "ulvia-official-option-list",
@@ -34,5 +33,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["segmented-control-default"],
+    "defaultExample": "segmented-control-default"
 }

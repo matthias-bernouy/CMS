@@ -1,0 +1,14 @@
+{
+    "id": "navigation-group-default",
+    "label": "bloc.navigation-group.label",
+    "description": "bloc.navigation-group.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

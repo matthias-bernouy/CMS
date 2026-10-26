@@ -1,0 +1,14 @@
+{
+    "id": "pricing-plan-default",
+    "label": "bloc.pricing-plan.label",
+    "description": "bloc.pricing-plan.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

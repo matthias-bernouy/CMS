@@ -3,7 +3,6 @@
     "id": "ulvia-official-form-actions",
     "label": "bloc.form-actions.label",
     "description": "bloc.form-actions.description",
-    "category": "bloc.category.forms",
     "order": 150,
     "uses": ["ulvia-official-action"],
     "requires": [],
@@ -23,5 +22,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["form-actions-default"],
+    "defaultExample": "form-actions-default"
 }

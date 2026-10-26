@@ -1,0 +1,14 @@
+{
+    "id": "tag-input-default",
+    "label": "bloc.tag-input.label",
+    "description": "bloc.tag-input.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

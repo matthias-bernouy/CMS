@@ -3,7 +3,6 @@
     "id": "ulvia-official-collection-navigation",
     "label": "bloc.collection-navigation.label",
     "description": "bloc.collection-navigation.description",
-    "category": "bloc.category.administration",
     "order": 9,
     "catalogue": "hidden",
     "uses": ["ulvia-official-navigation-item", "ulvia-official-navigation-menu", "ulvia-official-navigation-section"],
@@ -17,5 +16,6 @@
     "slots": {},
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.administration"]
 }

@@ -1,0 +1,14 @@
+{
+    "id": "route-tabs-default",
+    "label": "bloc.route-tabs.label",
+    "description": "bloc.route-tabs.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

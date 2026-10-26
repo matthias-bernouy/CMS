@@ -3,7 +3,6 @@
     "id": "ulvia-official-features",
     "label": "bloc.features.label",
     "description": "bloc.features.description",
-    "category": "bloc.category.sections",
     "order": 20,
     "uses": [
         "ulvia-official-card",
@@ -46,5 +45,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.sections"],
+    "examples": ["features-default"],
+    "defaultExample": "features-default"
 }

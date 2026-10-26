@@ -3,7 +3,6 @@
     "id": "ulvia-official-sidebar",
     "label": "bloc.sidebar.label",
     "description": "bloc.sidebar.description",
-    "category": "bloc.category.layout",
     "order": 70,
     "uses": [],
     "requires": [],
@@ -33,5 +32,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["sidebar-default"],
+    "defaultExample": "sidebar-default"
 }

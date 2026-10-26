@@ -1,0 +1,14 @@
+{
+    "id": "scroll-area-default",
+    "label": "bloc.scroll-area.label",
+    "description": "bloc.scroll-area.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

@@ -3,7 +3,6 @@
     "id": "ulvia-official-surface",
     "label": "bloc.surface.label",
     "description": "bloc.surface.description",
-    "category": "bloc.category.layout",
     "order": 100,
     "uses": [],
     "requires": [],
@@ -26,5 +25,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["surface-default"],
+    "defaultExample": "surface-default"
 }

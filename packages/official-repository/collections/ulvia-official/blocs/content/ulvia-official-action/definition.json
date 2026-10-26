@@ -3,7 +3,6 @@
     "id": "ulvia-official-action",
     "label": "bloc.action.label",
     "description": "bloc.action.description",
-    "category": "bloc.category.actions",
     "order": 10,
     "uses": [],
     "requires": [],
@@ -21,5 +20,8 @@
         "defaults": {
             "type": "button"
         }
-    }
+    },
+    "categories": ["bloc.category.actions"],
+    "examples": ["action-default"],
+    "defaultExample": "action-default"
 }

@@ -1,0 +1,14 @@
+{
+    "id": "detail-layout-default",
+    "label": "bloc.detail-layout.label",
+    "description": "bloc.detail-layout.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

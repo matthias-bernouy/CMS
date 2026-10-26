@@ -3,7 +3,6 @@
     "id": "ulvia-official-range",
     "label": "bloc.range.label",
     "description": "bloc.range.description",
-    "category": "bloc.category.forms",
     "order": 40,
     "uses": [],
     "requires": [],
@@ -23,5 +22,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["range-default"],
+    "defaultExample": "range-default"
 }

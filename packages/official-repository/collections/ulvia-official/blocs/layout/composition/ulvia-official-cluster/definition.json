@@ -3,7 +3,6 @@
     "id": "ulvia-official-cluster",
     "label": "bloc.cluster.label",
     "description": "bloc.cluster.description",
-    "category": "bloc.category.layout",
     "order": 50,
     "uses": [],
     "requires": [],
@@ -26,5 +25,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["cluster-default"],
+    "defaultExample": "cluster-default"
 }

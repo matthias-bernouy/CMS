@@ -3,7 +3,6 @@
     "id": "ulvia-official-file-upload",
     "label": "bloc.file-upload.label",
     "description": "bloc.file-upload.description",
-    "category": "bloc.category.administration",
     "order": 20,
     "catalogue": "hidden",
     "uses": ["ulvia-official-file-upload-input"],
@@ -40,5 +39,6 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.administration"]
 }

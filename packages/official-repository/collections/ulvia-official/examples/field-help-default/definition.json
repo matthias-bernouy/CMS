@@ -1,0 +1,14 @@
+{
+    "id": "field-help-default",
+    "label": "bloc.field-help.label",
+    "description": "bloc.field-help.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

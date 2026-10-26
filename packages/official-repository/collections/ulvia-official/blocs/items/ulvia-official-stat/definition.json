@@ -3,7 +3,6 @@
     "id": "ulvia-official-stat",
     "label": "bloc.stat.label",
     "description": "bloc.stat.description",
-    "category": "bloc.category.components",
     "order": 20,
     "uses": [],
     "requires": [],
@@ -40,5 +39,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.components"],
+    "examples": ["stat-default"],
+    "defaultExample": "stat-default"
 }

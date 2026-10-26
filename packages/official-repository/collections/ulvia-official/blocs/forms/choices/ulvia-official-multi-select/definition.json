@@ -3,7 +3,6 @@
     "id": "ulvia-official-multi-select",
     "label": "bloc.multi-select.label",
     "description": "bloc.multi-select.description",
-    "category": "bloc.category.forms",
     "order": 70,
     "uses": [],
     "requires": [],
@@ -23,5 +22,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["multi-select-default"],
+    "defaultExample": "multi-select-default"
 }

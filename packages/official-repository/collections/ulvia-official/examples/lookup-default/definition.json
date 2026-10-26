@@ -1,0 +1,14 @@
+{
+    "id": "lookup-default",
+    "label": "bloc.lookup.label",
+    "description": "bloc.lookup.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

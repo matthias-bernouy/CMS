@@ -1,0 +1,14 @@
+{
+    "id": "faq-default",
+    "label": "bloc.faq.label",
+    "description": "bloc.faq.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

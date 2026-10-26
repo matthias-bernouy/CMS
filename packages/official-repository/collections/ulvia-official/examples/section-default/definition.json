@@ -1,0 +1,14 @@
+{
+    "id": "section-default",
+    "label": "bloc.section.label",
+    "description": "bloc.section.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

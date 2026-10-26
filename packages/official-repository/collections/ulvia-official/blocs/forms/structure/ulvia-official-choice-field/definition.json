@@ -3,7 +3,6 @@
     "id": "ulvia-official-choice-field",
     "label": "bloc.choice-field.label",
     "description": "bloc.choice-field.description",
-    "category": "bloc.category.forms",
     "order": 120,
     "uses": ["ulvia-official-checkbox", "ulvia-official-choice-copy"],
     "requires": [],
@@ -48,5 +47,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["choice-field-default"],
+    "defaultExample": "choice-field-default"
 }

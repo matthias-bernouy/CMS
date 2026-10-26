@@ -1,0 +1,21 @@
+{
+    "id": "landing-page",
+    "label": "example.landing.label",
+    "description": "example.landing.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 900
+            }
+        },
+        {
+            "id": "mobile",
+            "frame": {
+                "width": 390,
+                "height": 844
+            }
+        }
+    ]
+}

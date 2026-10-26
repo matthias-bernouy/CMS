@@ -3,7 +3,6 @@
     "id": "ulvia-official-collection-theme",
     "label": "bloc.collection-theme.label",
     "description": "bloc.collection-theme.description",
-    "category": "bloc.category.administration",
     "order": 30,
     "catalogue": "hidden",
     "uses": [
@@ -46,5 +45,6 @@
     "slots": {},
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.administration"]
 }

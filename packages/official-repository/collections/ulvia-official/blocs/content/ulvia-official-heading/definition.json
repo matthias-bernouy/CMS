@@ -3,7 +3,6 @@
     "id": "ulvia-official-heading",
     "label": "bloc.heading.label",
     "description": "bloc.heading.description",
-    "category": "bloc.category.content",
     "order": 10,
     "uses": [],
     "requires": [],
@@ -29,5 +28,8 @@
     },
     "root": {
         "accepts": ["h1", "h2", "h3", "h4", "h5", "h6"]
-    }
+    },
+    "categories": ["bloc.category.content"],
+    "examples": ["heading-default"],
+    "defaultExample": "heading-default"
 }

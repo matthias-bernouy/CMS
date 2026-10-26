@@ -3,7 +3,6 @@
     "id": "ulvia-official-file-picker",
     "label": "bloc.file-picker.label",
     "description": "bloc.file-picker.description",
-    "category": "bloc.category.administration",
     "order": 11,
     "catalogue": "hidden",
     "uses": ["ulvia-official-action", "ulvia-official-heading", "ulvia-official-image"],
@@ -17,5 +16,6 @@
     "slots": {},
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.administration"]
 }

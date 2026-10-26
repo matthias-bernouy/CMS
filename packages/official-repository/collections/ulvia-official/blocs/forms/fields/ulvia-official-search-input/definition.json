@@ -3,7 +3,6 @@
     "id": "ulvia-official-search-input",
     "label": "bloc.search-input.label",
     "description": "bloc.search-input.description",
-    "category": "bloc.category.forms",
     "order": 15,
     "uses": ["ulvia-official-input"],
     "requires": [],
@@ -21,5 +20,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["search-input-default"],
+    "defaultExample": "search-input-default"
 }

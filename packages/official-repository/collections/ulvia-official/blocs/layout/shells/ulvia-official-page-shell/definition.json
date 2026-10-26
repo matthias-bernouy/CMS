@@ -3,7 +3,6 @@
     "id": "ulvia-official-page-shell",
     "label": "bloc.page-shell.label",
     "description": "bloc.page-shell.description",
-    "category": "bloc.category.layout",
     "order": 170,
     "uses": ["ulvia-official-heading"],
     "requires": [],
@@ -80,5 +79,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["page-shell-default"],
+    "defaultExample": "page-shell-default"
 }

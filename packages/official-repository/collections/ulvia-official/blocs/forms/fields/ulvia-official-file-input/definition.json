@@ -3,7 +3,6 @@
     "id": "ulvia-official-file-input",
     "label": "bloc.file-input.label",
     "description": "bloc.file-input.description",
-    "category": "bloc.category.forms",
     "order": 50,
     "uses": ["ulvia-official-file-upload-input"],
     "requires": [],
@@ -21,5 +20,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["file-input-default"],
+    "defaultExample": "file-input-default"
 }

@@ -25,12 +25,19 @@ type ProfileDefinition = Readonly<{
 
 const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
     id: "ulvia.official",
+    version: "1.3.0",
+    upgradeFromVersions: Object.freeze([]),
+    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.5.0" }),
+    collection: Object.freeze({ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.1.0" }),
+});
+const PREVIOUS_PROFILE: ProfileDefinition = Object.freeze({
+    id: "ulvia.official",
     version: "1.2.0",
     upgradeFromVersions: Object.freeze([]),
     manifest: Object.freeze({ providerId: "ulvia.official", version: "0.5.0" }),
     collection: Object.freeze({ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.0.0" }),
 });
-const SUPPORTED_PROFILES = Object.freeze([CURRENT_PROFILE]);
+const SUPPORTED_PROFILES = Object.freeze([PREVIOUS_PROFILE, CURRENT_PROFILE]);
 
 export type LoadedOfficialArtifacts = Readonly<{
     profiles: readonly OfficialInstanceProfile[];
@@ -42,9 +49,19 @@ export async function loadOfficialArtifacts(
     providers: ProviderRepositorySource,
     collections: CollectionRepositorySource,
 ): Promise<LoadedOfficialArtifacts> {
-    const manifestEntries = await providers.list("provider-manifest");
-    const available = SUPPORTED_PROFILES.filter((profile) =>
-        hasEntry(manifestEntries, profile.manifest.providerId, profile.manifest.version),
+    const [manifestEntries, collectionEntries] = await Promise.all([
+        providers.list("provider-manifest"),
+        collections.list(),
+    ]);
+    const available = SUPPORTED_PROFILES.filter(
+        (profile) =>
+            hasEntry(manifestEntries, profile.manifest.providerId, profile.manifest.version) &&
+            collectionEntries.some(
+                (entry) =>
+                    entry.publisherId === profile.collection.publisherId &&
+                    entry.collectionId === profile.collection.collectionId &&
+                    entry.version === profile.collection.version,
+            ),
     );
     if (!available.includes(CURRENT_PROFILE)) {
         throw new Error(

@@ -1,0 +1,14 @@
+{
+    "id": "segment-default",
+    "label": "bloc.segment.label",
+    "description": "bloc.segment.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

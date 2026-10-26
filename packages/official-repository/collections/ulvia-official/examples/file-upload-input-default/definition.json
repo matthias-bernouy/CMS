@@ -1,0 +1,14 @@
+{
+    "id": "file-upload-input-default",
+    "label": "bloc.file-upload-input.label",
+    "description": "bloc.file-upload-input.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

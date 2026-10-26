@@ -1,0 +1,14 @@
+{
+    "id": "link-default",
+    "label": "bloc.link.label",
+    "description": "bloc.link.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

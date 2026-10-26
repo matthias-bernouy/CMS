@@ -3,7 +3,6 @@
     "id": "ulvia-official-range-control",
     "label": "bloc.range-control.label",
     "description": "bloc.range-control.description",
-    "category": "bloc.category.forms",
     "order": 45,
     "uses": ["ulvia-official-input", "ulvia-official-range"],
     "requires": [],
@@ -21,5 +20,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["range-control-default"],
+    "defaultExample": "range-control-default"
 }

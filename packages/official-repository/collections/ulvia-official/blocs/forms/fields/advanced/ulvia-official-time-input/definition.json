@@ -3,7 +3,6 @@
     "id": "ulvia-official-time-input",
     "label": "bloc.time-input.label",
     "description": "bloc.time-input.description",
-    "category": "bloc.category.forms",
     "order": 62,
     "uses": [],
     "requires": [],
@@ -23,5 +22,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["time-input-default"],
+    "defaultExample": "time-input-default"
 }

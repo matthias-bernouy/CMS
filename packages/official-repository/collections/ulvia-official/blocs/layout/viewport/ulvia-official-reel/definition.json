@@ -3,7 +3,6 @@
     "id": "ulvia-official-reel",
     "label": "bloc.reel.label",
     "description": "bloc.reel.description",
-    "category": "bloc.category.layout",
     "order": 130,
     "uses": [],
     "requires": [],
@@ -22,5 +21,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["reel-default"],
+    "defaultExample": "reel-default"
 }

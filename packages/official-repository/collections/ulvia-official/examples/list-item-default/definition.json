@@ -1,0 +1,14 @@
+{
+    "id": "list-item-default",
+    "label": "bloc.list-item.label",
+    "description": "bloc.list-item.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

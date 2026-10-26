@@ -1,0 +1,14 @@
+{
+    "id": "center-default",
+    "label": "bloc.center.label",
+    "description": "bloc.center.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

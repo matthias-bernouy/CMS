@@ -3,7 +3,6 @@
     "id": "ulvia-official-segment",
     "label": "bloc.segment.label",
     "description": "bloc.segment.description",
-    "category": "bloc.category.forms",
     "order": 180,
     "uses": ["ulvia-official-radio"],
     "requires": [],
@@ -30,5 +29,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["segment-default"],
+    "defaultExample": "segment-default"
 }

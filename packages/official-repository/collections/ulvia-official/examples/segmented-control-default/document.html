@@ -1,0 +1,11 @@
+<div cms-bloc="ulvia-official-segmented-control" size="md" orientation="horizontal">
+    <span slot="legend">{{ cms.i18n.ulvia-official.ui-view }}</span>
+    <div cms-bloc="ulvia-official-segment" slot="items">
+        <div cms-bloc="ulvia-official-radio" slot="control" size="md"><input type="radio" name="view" value="list" checked></div>
+        <span slot="label">{{ cms.i18n.ulvia-official.ui-list }}</span>
+    </div>
+    <div cms-bloc="ulvia-official-segment" slot="items">
+        <div cms-bloc="ulvia-official-radio" slot="control" size="md"><input type="radio" name="view" value="grid"></div>
+        <span slot="label">{{ cms.i18n.ulvia-official.ui-grid }}</span>
+    </div>
+</div>

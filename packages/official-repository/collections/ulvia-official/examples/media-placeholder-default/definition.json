@@ -1,0 +1,14 @@
+{
+    "id": "media-placeholder-default",
+    "label": "bloc.media-placeholder.label",
+    "description": "bloc.media-placeholder.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

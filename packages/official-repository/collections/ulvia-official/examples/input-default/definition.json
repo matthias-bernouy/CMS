@@ -1,0 +1,14 @@
+{
+    "id": "input-default",
+    "label": "bloc.input.label",
+    "description": "bloc.input.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

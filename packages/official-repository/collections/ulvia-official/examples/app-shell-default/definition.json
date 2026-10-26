@@ -1,0 +1,14 @@
+{
+    "id": "app-shell-default",
+    "label": "bloc.app-shell.label",
+    "description": "bloc.app-shell.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

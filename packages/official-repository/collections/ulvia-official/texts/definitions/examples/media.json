@@ -1,0 +1,8 @@
+[
+    {
+        "id": "example-image-alt",
+        "label": "text.label.example-image",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    }
+]

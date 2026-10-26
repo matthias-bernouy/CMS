@@ -3,7 +3,6 @@
     "id": "ulvia-official-navigation-group",
     "label": "bloc.navigation-group.label",
     "description": "bloc.navigation-group.description",
-    "category": "bloc.category.navigation",
     "order": 45,
     "uses": ["ulvia-official-navigation-item"],
     "requires": [],
@@ -43,5 +42,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.navigation"],
+    "examples": ["navigation-group-default"],
+    "defaultExample": "navigation-group-default"
 }

@@ -1,0 +1,14 @@
+{
+    "id": "card-default",
+    "label": "bloc.card.label",
+    "description": "bloc.card.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

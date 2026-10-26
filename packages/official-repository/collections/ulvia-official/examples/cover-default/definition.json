@@ -1,0 +1,14 @@
+{
+    "id": "cover-default",
+    "label": "bloc.cover.label",
+    "description": "bloc.cover.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

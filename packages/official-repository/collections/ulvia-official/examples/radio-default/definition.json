@@ -1,0 +1,14 @@
+{
+    "id": "radio-default",
+    "label": "bloc.radio.label",
+    "description": "bloc.radio.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

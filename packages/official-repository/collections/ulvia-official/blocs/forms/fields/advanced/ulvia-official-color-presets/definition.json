@@ -3,7 +3,6 @@
     "id": "ulvia-official-color-presets",
     "label": "bloc.color-presets.label",
     "description": "bloc.color-presets.description",
-    "category": "bloc.category.forms",
     "order": 61,
     "uses": [],
     "requires": [],
@@ -23,5 +22,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["color-presets-default"],
+    "defaultExample": "color-presets-default"
 }

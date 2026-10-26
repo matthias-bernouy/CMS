@@ -1,0 +1,14 @@
+{
+    "id": "choice-group-default",
+    "label": "bloc.choice-group.label",
+    "description": "bloc.choice-group.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

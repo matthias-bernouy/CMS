@@ -3,7 +3,6 @@
     "id": "ulvia-official-navigation-item",
     "label": "bloc.navigation-item.label",
     "description": "bloc.navigation-item.description",
-    "category": "bloc.category.navigation",
     "order": 50,
     "uses": [],
     "requires": [],
@@ -29,5 +28,8 @@
         "defaults": {
             "href": ""
         }
-    }
+    },
+    "categories": ["bloc.category.navigation"],
+    "examples": ["navigation-item-default"],
+    "defaultExample": "navigation-item-default"
 }

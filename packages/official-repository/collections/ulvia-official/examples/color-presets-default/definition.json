@@ -1,0 +1,14 @@
+{
+    "id": "color-presets-default",
+    "label": "bloc.color-presets.label",
+    "description": "bloc.color-presets.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

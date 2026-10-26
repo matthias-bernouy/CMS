@@ -3,7 +3,6 @@
     "id": "ulvia-official-grid",
     "label": "bloc.grid.label",
     "description": "bloc.grid.description",
-    "category": "bloc.category.layout",
     "order": 40,
     "uses": [],
     "requires": [],
@@ -26,5 +25,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["grid-default"],
+    "defaultExample": "grid-default"
 }

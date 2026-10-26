@@ -3,7 +3,6 @@
     "id": "ulvia-official-select",
     "label": "bloc.select.label",
     "description": "bloc.select.description",
-    "category": "bloc.category.forms",
     "order": 30,
     "uses": [],
     "requires": [],
@@ -16,5 +15,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["select-default"],
+    "defaultExample": "select-default"
 }

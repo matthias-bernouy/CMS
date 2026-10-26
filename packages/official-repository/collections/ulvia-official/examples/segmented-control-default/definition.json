@@ -1,0 +1,14 @@
+{
+    "id": "segmented-control-default",
+    "label": "bloc.segmented-control.label",
+    "description": "bloc.segmented-control.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "id": "data-table-default",
+    "label": "bloc.data-table.label",
+    "description": "bloc.data-table.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

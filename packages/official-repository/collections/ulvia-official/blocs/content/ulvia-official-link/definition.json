@@ -3,7 +3,6 @@
     "id": "ulvia-official-link",
     "label": "bloc.link.label",
     "description": "bloc.link.description",
-    "category": "bloc.category.actions",
     "order": 20,
     "uses": [],
     "requires": [],
@@ -18,5 +17,8 @@
         "defaults": {
             "href": ""
         }
-    }
+    },
+    "categories": ["bloc.category.actions"],
+    "examples": ["link-default"],
+    "defaultExample": "link-default"
 }

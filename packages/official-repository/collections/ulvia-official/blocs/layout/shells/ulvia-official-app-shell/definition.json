@@ -3,7 +3,6 @@
     "id": "ulvia-official-app-shell",
     "label": "bloc.app-shell.label",
     "description": "bloc.app-shell.description",
-    "category": "bloc.category.layout",
     "order": 160,
     "uses": ["ulvia-official-heading"],
     "requires": [],
@@ -106,5 +105,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["app-shell-default"],
+    "defaultExample": "app-shell-default"
 }

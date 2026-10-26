@@ -17,5 +17,6 @@
     },
     "root": {
         "accepts": ["td"]
-    }
+    },
+    "categories": ["bloc.category.data"]
 }

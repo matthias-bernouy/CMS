@@ -1,0 +1,14 @@
+{
+    "id": "admin-workspace-default",
+    "label": "bloc.admin-workspace.label",
+    "description": "bloc.admin-workspace.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

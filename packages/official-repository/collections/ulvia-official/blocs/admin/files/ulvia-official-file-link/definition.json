@@ -3,7 +3,6 @@
     "id": "ulvia-official-file-link",
     "label": "bloc.file-link.label",
     "description": "bloc.file-link.description",
-    "category": "bloc.category.administration",
     "order": 40,
     "catalogue": "hidden",
     "uses": [],
@@ -32,5 +31,6 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.administration"]
 }

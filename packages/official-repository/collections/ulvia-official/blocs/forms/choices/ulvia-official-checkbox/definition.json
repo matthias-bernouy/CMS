@@ -3,7 +3,6 @@
     "id": "ulvia-official-checkbox",
     "label": "bloc.checkbox.label",
     "description": "bloc.checkbox.description",
-    "category": "bloc.category.forms",
     "order": 80,
     "uses": [],
     "requires": [],
@@ -23,5 +22,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["checkbox-default"],
+    "defaultExample": "checkbox-default"
 }

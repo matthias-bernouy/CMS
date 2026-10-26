@@ -3,7 +3,6 @@
     "id": "ulvia-official-error-summary",
     "label": "bloc.error-summary.label",
     "description": "bloc.error-summary.description",
-    "category": "bloc.category.forms",
     "order": 160,
     "uses": [],
     "requires": [],
@@ -31,5 +30,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["error-summary-default"],
+    "defaultExample": "error-summary-default"
 }

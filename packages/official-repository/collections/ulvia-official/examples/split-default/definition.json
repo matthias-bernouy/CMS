@@ -1,0 +1,14 @@
+{
+    "id": "split-default",
+    "label": "bloc.split.label",
+    "description": "bloc.split.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

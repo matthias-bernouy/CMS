@@ -3,7 +3,6 @@
     "id": "ulvia-official-prose",
     "label": "bloc.prose.label",
     "description": "bloc.prose.description",
-    "category": "bloc.category.content",
     "order": 20,
     "uses": [],
     "requires": [],
@@ -21,5 +20,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.content"],
+    "examples": ["prose-default"],
+    "defaultExample": "prose-default"
 }

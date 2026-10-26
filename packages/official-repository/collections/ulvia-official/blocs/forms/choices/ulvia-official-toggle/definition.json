@@ -3,7 +3,6 @@
     "id": "ulvia-official-toggle",
     "label": "bloc.toggle.label",
     "description": "bloc.toggle.description",
-    "category": "bloc.category.forms",
     "order": 100,
     "uses": [],
     "requires": [],
@@ -26,5 +25,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["toggle-default"],
+    "defaultExample": "toggle-default"
 }

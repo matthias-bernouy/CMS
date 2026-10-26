@@ -1,0 +1,14 @@
+{
+    "id": "textarea-default",
+    "label": "bloc.textarea.label",
+    "description": "bloc.textarea.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

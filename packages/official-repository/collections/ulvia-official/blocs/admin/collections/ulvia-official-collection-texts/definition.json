@@ -3,7 +3,6 @@
     "id": "ulvia-official-collection-texts",
     "label": "bloc.collection-texts.label",
     "description": "bloc.collection-texts.description",
-    "category": "bloc.category.administration",
     "order": 40,
     "catalogue": "hidden",
     "uses": [
@@ -36,5 +35,6 @@
     "slots": {},
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.administration"]
 }

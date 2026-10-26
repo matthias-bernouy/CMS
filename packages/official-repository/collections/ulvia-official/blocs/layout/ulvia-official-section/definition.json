@@ -3,7 +3,6 @@
     "id": "ulvia-official-section",
     "label": "bloc.section.label",
     "description": "bloc.section.description",
-    "category": "bloc.category.layout",
     "order": 10,
     "uses": [],
     "requires": [],
@@ -22,5 +21,8 @@
     },
     "root": {
         "accepts": ["section", "article", "aside", "nav", "header", "footer", "main", "div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["section-default"],
+    "defaultExample": "section-default"
 }

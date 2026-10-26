@@ -3,7 +3,6 @@
     "id": "ulvia-official-route-tab",
     "label": "bloc.route-tab.label",
     "description": "bloc.route-tab.description",
-    "category": "bloc.category.navigation",
     "order": 20,
     "uses": [],
     "requires": [],
@@ -18,5 +17,8 @@
         "defaults": {
             "href": ""
         }
-    }
+    },
+    "categories": ["bloc.category.navigation"],
+    "examples": ["route-tab-default"],
+    "defaultExample": "route-tab-default"
 }

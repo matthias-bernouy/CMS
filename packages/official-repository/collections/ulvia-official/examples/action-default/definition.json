@@ -1,0 +1,14 @@
+{
+    "id": "action-default",
+    "label": "bloc.action.label",
+    "description": "bloc.action.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

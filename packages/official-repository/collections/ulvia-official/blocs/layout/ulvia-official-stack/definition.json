@@ -3,7 +3,6 @@
     "id": "ulvia-official-stack",
     "label": "bloc.stack.label",
     "description": "bloc.stack.description",
-    "category": "bloc.category.layout",
     "order": 30,
     "uses": [],
     "requires": [],
@@ -36,5 +35,8 @@
     },
     "root": {
         "accepts": ["div", "form"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["stack-default"],
+    "defaultExample": "stack-default"
 }

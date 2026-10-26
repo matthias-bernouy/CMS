@@ -1,0 +1,14 @@
+{
+    "id": "page-shell-default",
+    "label": "bloc.page-shell.label",
+    "description": "bloc.page-shell.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

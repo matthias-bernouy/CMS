@@ -1,0 +1,14 @@
+{
+    "id": "error-summary-default",
+    "label": "bloc.error-summary.label",
+    "description": "bloc.error-summary.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

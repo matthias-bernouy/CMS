@@ -3,7 +3,6 @@
     "id": "ulvia-official-lookup",
     "label": "bloc.lookup.label",
     "description": "bloc.lookup.description",
-    "category": "bloc.category.forms",
     "order": 35,
     "uses": [],
     "requires": [],
@@ -16,5 +15,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["lookup-default"],
+    "defaultExample": "lookup-default"
 }

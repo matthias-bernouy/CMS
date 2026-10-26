@@ -3,7 +3,6 @@
     "id": "ulvia-official-form-status",
     "label": "bloc.form-status.label",
     "description": "bloc.form-status.description",
-    "category": "bloc.category.forms",
     "order": 170,
     "uses": [],
     "requires": [],
@@ -23,5 +22,8 @@
         "defaults": {
             "aria-live": "polite"
         }
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["form-status-default"],
+    "defaultExample": "form-status-default"
 }

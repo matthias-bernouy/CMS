@@ -3,7 +3,6 @@
     "id": "ulvia-official-collection-manager",
     "label": "bloc.collection-manager.label",
     "description": "bloc.collection-manager.description",
-    "category": "bloc.category.administration",
     "order": 10,
     "catalogue": "hidden",
     "uses": [
@@ -36,5 +35,6 @@
     "slots": {},
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.administration"]
 }

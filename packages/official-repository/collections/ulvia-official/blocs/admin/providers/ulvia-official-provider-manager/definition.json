@@ -3,7 +3,6 @@
     "id": "ulvia-official-provider-manager",
     "label": "bloc.provider-manager.label",
     "description": "bloc.provider-manager.description",
-    "category": "bloc.category.administration",
     "order": 30,
     "catalogue": "hidden",
     "uses": [
@@ -39,5 +38,6 @@
     "slots": {},
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.administration"]
 }

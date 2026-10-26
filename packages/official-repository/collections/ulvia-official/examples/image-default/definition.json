@@ -1,0 +1,14 @@
+{
+    "id": "image-default",
+    "label": "bloc.image.label",
+    "description": "bloc.image.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "id": "color-input-default",
+    "label": "bloc.color-input.label",
+    "description": "bloc.color-input.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

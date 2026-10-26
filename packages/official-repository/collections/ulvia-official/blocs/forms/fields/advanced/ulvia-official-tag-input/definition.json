@@ -3,7 +3,6 @@
     "id": "ulvia-official-tag-input",
     "label": "bloc.tag-input.label",
     "description": "bloc.tag-input.description",
-    "category": "bloc.category.forms",
     "order": 75,
     "uses": [],
     "requires": [],
@@ -31,5 +30,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["tag-input-default"],
+    "defaultExample": "tag-input-default"
 }

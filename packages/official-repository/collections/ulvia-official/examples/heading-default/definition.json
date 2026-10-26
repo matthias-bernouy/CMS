@@ -1,0 +1,14 @@
+{
+    "id": "heading-default",
+    "label": "bloc.heading.label",
+    "description": "bloc.heading.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

@@ -3,7 +3,6 @@
     "id": "ulvia-official-form-section",
     "label": "bloc.form-section.label",
     "description": "bloc.form-section.description",
-    "category": "bloc.category.forms",
     "order": 145,
     "uses": [
         "ulvia-official-field",
@@ -44,5 +43,8 @@
     },
     "root": {
         "accepts": ["div", "form"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["form-section-default"],
+    "defaultExample": "form-section-default"
 }

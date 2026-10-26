@@ -1,0 +1,14 @@
+{
+    "id": "stat-default",
+    "label": "bloc.stat.label",
+    "description": "bloc.stat.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

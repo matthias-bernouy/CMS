@@ -1,0 +1,14 @@
+{
+    "id": "footer-default",
+    "label": "bloc.footer.label",
+    "description": "bloc.footer.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

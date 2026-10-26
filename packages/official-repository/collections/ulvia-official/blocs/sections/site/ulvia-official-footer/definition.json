@@ -3,7 +3,6 @@
     "id": "ulvia-official-footer",
     "label": "bloc.footer.label",
     "description": "bloc.footer.description",
-    "category": "bloc.category.site",
     "order": 20,
     "uses": ["ulvia-official-image"],
     "requires": [],
@@ -55,5 +54,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.site"],
+    "examples": ["footer-default", "landing-page"],
+    "defaultExample": "footer-default"
 }

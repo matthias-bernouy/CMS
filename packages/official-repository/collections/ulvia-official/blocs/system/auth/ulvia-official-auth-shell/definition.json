@@ -3,7 +3,6 @@
     "id": "ulvia-official-auth-shell",
     "label": "bloc.auth-shell.label",
     "description": "bloc.auth-shell.description",
-    "category": "bloc.category.layout",
     "catalogue": "hidden",
     "uses": ["ulvia-official-cover"],
     "requires": [],
@@ -21,5 +20,6 @@
     },
     "root": {
         "accepts": ["main"]
-    }
+    },
+    "categories": ["bloc.category.layout"]
 }

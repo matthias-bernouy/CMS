@@ -1,0 +1,14 @@
+{
+    "id": "sticky-region-default",
+    "label": "bloc.sticky-region.label",
+    "description": "bloc.sticky-region.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "id": "features-default",
+    "label": "bloc.features.label",
+    "description": "bloc.features.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

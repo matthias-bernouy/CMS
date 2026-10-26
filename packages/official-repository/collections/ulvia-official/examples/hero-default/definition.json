@@ -1,0 +1,14 @@
+{
+    "id": "hero-default",
+    "label": "bloc.hero.label",
+    "description": "bloc.hero.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

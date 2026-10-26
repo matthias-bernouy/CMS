@@ -3,7 +3,6 @@
     "id": "ulvia-official-media-placeholder",
     "label": "bloc.media-placeholder.label",
     "description": "bloc.media-placeholder.description",
-    "category": "bloc.category.media",
     "order": 6,
     "uses": [],
     "requires": [],
@@ -22,5 +21,8 @@
     },
     "root": {
         "accepts": ["div", "span"]
-    }
+    },
+    "categories": ["bloc.category.media"],
+    "examples": ["media-placeholder-default"],
+    "defaultExample": "media-placeholder-default"
 }

@@ -3,7 +3,6 @@
     "id": "ulvia-official-frame",
     "label": "bloc.frame.label",
     "description": "bloc.frame.description",
-    "category": "bloc.category.layout",
     "order": 120,
     "uses": [],
     "requires": [],
@@ -18,5 +17,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["frame-default"],
+    "defaultExample": "frame-default"
 }

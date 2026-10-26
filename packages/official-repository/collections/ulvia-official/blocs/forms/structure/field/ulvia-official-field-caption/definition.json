@@ -20,5 +20,6 @@
     },
     "root": {
         "accepts": ["span"]
-    }
+    },
+    "categories": ["bloc.category.forms"]
 }

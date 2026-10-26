@@ -3,7 +3,6 @@
     "id": "ulvia-official-center",
     "label": "bloc.center.label",
     "description": "bloc.center.description",
-    "category": "bloc.category.layout",
     "order": 80,
     "uses": [],
     "requires": [],
@@ -22,5 +21,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["center-default"],
+    "defaultExample": "center-default"
 }

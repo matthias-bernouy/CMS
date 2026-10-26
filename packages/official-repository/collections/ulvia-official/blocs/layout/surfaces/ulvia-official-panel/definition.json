@@ -3,7 +3,6 @@
     "id": "ulvia-official-panel",
     "label": "bloc.panel.label",
     "description": "bloc.panel.description",
-    "category": "bloc.category.layout",
     "order": 110,
     "uses": ["ulvia-official-heading"],
     "requires": [],
@@ -51,5 +50,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["panel-default"],
+    "defaultExample": "panel-default"
 }

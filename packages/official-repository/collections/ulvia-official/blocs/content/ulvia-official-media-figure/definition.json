@@ -3,7 +3,6 @@
     "id": "ulvia-official-media-figure",
     "label": "bloc.media-figure.label",
     "description": "bloc.media-figure.description",
-    "category": "bloc.category.media",
     "order": 10,
     "uses": ["ulvia-official-image"],
     "requires": [],
@@ -47,5 +46,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.media"],
+    "examples": ["media-figure-default"],
+    "defaultExample": "media-figure-default"
 }

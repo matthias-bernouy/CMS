@@ -1,0 +1,14 @@
+{
+    "id": "container-default",
+    "label": "bloc.container.label",
+    "description": "bloc.container.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

@@ -3,7 +3,6 @@
     "id": "ulvia-official-dialog",
     "label": "bloc.dialog.label",
     "description": "bloc.dialog.description",
-    "category": "bloc.category.layout",
     "order": 105,
     "uses": [],
     "requires": [],
@@ -19,5 +18,8 @@
     },
     "root": {
         "accepts": ["dialog"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["dialog-default"],
+    "defaultExample": "dialog-default"
 }

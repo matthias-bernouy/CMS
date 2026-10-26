@@ -1,0 +1,14 @@
+{
+    "id": "toggle-default",
+    "label": "bloc.toggle.label",
+    "description": "bloc.toggle.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

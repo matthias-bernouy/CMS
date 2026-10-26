@@ -1,0 +1,14 @@
+{
+    "id": "panel-default",
+    "label": "bloc.panel.label",
+    "description": "bloc.panel.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1280,
+                "height": 640
+            }
+        }
+    ]
+}

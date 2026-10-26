@@ -1,0 +1,14 @@
+{
+    "id": "form-status-default",
+    "label": "bloc.form-status.label",
+    "description": "bloc.form-status.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 640,
+                "height": 400
+            }
+        }
+    ]
+}

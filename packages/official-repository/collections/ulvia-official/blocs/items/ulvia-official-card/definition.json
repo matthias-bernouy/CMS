@@ -3,7 +3,6 @@
     "id": "ulvia-official-card",
     "label": "bloc.card.label",
     "description": "bloc.card.description",
-    "category": "bloc.category.components",
     "order": 10,
     "uses": ["ulvia-official-action", "ulvia-official-heading", "ulvia-official-image"],
     "requires": [],
@@ -68,5 +67,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.components"],
+    "examples": ["card-default"],
+    "defaultExample": "card-default"
 }

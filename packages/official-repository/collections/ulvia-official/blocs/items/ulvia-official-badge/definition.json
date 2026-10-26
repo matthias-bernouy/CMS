@@ -3,7 +3,6 @@
     "id": "ulvia-official-badge",
     "label": "bloc.badge.label",
     "description": "bloc.badge.description",
-    "category": "bloc.category.components",
     "order": 15,
     "uses": [],
     "requires": [],
@@ -21,5 +20,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.components"],
+    "examples": ["badge-default"],
+    "defaultExample": "badge-default"
 }

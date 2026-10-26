@@ -3,7 +3,6 @@
     "id": "ulvia-official-cover",
     "label": "bloc.cover.label",
     "description": "bloc.cover.description",
-    "category": "bloc.category.layout",
     "order": 90,
     "uses": ["ulvia-official-heading"],
     "requires": [],
@@ -44,5 +43,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["cover-default"],
+    "defaultExample": "cover-default"
 }

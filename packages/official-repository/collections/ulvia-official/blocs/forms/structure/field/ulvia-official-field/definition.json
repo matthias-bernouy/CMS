@@ -3,7 +3,6 @@
     "id": "ulvia-official-field",
     "label": "bloc.field.label",
     "description": "bloc.field.description",
-    "category": "bloc.category.forms",
     "order": 110,
     "uses": ["ulvia-official-field-caption", "ulvia-official-field-help", "ulvia-official-input"],
     "requires": [],
@@ -57,5 +56,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["field-default"],
+    "defaultExample": "field-default"
 }

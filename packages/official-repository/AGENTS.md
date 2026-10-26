@@ -31,7 +31,7 @@
   metadata. Organize those metadata translations recursively by product domain;
   never make administration Pages display raw text IDs as their primary
   catalogue labels.
-- Keep user-facing copy out of Bloc `default.html`, fixed `markup.html` and
+- Keep user-facing copy out of fixed `markup.html` and
   Page `page.html`. Visible text and accessible labels must be a business-data
   binding or an exact `cms.i18n.<collection>.<text>` reference; author reusable
   values in the recursive collection text trees.
@@ -45,3 +45,9 @@
   `cms-bloc`. A Bloc that owns one Page-authored native child declares it as a
   bounded default slot with `kind: "native-element"`; there is no separate
   `content` contract. All structure is Light DOM; Shadow DOM is forbidden.
+
+- Author collection v2 initial instances under `examples/**/` with
+  `definition.json` and `document.html`. Replace `default.html` with an explicit
+  `defaultExample` reference. Use existing translations and content text IDs
+  for reusable official example copy. Frame dimensions are authored data;
+  generated captures stay outside immutable source releases.

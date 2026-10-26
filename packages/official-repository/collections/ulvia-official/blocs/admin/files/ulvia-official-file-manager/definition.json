@@ -3,7 +3,6 @@
     "id": "ulvia-official-file-manager",
     "label": "bloc.file-manager.label",
     "description": "bloc.file-manager.description",
-    "category": "bloc.category.administration",
     "order": 10,
     "catalogue": "hidden",
     "uses": [
@@ -70,5 +69,6 @@
     "slots": {},
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.administration"]
 }

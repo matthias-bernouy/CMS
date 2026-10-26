@@ -3,7 +3,6 @@
     "id": "ulvia-official-sticky-region",
     "label": "bloc.sticky-region.label",
     "description": "bloc.sticky-region.description",
-    "category": "bloc.category.layout",
     "order": 150,
     "uses": [],
     "requires": [],
@@ -22,5 +21,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.layout"],
+    "examples": ["sticky-region-default"],
+    "defaultExample": "sticky-region-default"
 }

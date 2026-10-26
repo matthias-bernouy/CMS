@@ -18,5 +18,6 @@
             "scope": { "required": true, "values": ["row"] }
         },
         "defaults": { "scope": "row" }
-    }
+    },
+    "categories": ["bloc.category.data"]
 }

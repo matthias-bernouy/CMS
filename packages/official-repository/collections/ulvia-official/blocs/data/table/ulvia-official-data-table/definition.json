@@ -3,7 +3,6 @@
     "id": "ulvia-official-data-table",
     "label": "bloc.data-table.label",
     "description": "bloc.data-table.description",
-    "category": "bloc.category.data",
     "order": 10,
     "uses": [
         "ulvia-official-data-table-cell",
@@ -28,5 +27,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.data"],
+    "examples": ["data-table-default"],
+    "defaultExample": "data-table-default"
 }

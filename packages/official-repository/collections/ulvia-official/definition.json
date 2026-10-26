@@ -1,10 +1,10 @@
 {
     "kind": "collection",
-    "protocol": "ulvia-collection/v1",
+    "protocol": "ulvia-collection/v2",
     "schemaDialect": "ulvia-schema/v1",
     "collectionId": "ulvia-official",
     "publisherId": "ulvia.official",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "name": "collection.name",
     "description": "collection.description",
     "locale": "en",

@@ -3,7 +3,6 @@
     "id": "ulvia-official-textarea",
     "label": "bloc.textarea.label",
     "description": "bloc.textarea.description",
-    "category": "bloc.category.forms",
     "order": 20,
     "uses": [],
     "requires": [],
@@ -22,5 +21,8 @@
     },
     "root": {
         "accepts": ["div"]
-    }
+    },
+    "categories": ["bloc.category.forms"],
+    "examples": ["textarea-default"],
+    "defaultExample": "textarea-default"
 }
