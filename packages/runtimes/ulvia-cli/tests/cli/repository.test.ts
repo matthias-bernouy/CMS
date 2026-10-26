@@ -264,6 +264,7 @@ test("collection source assets keep their verified bytes through the repository 
             join(sourceRoot, "translations", "en", "collection.json"),
             JSON.stringify({
                 "collection.name": "Asset example",
+                "asset.retired": "Use a newer illustration",
                 "bloc.asset-example-card.label": "Card",
                 "bloc.asset-example-card-frame.label": "Card frame",
             }),
@@ -271,13 +272,13 @@ test("collection source assets keep their verified bytes through the repository 
         await writeFile(join(sourceRoot, "assets", "icons", "brand", "mark.svg"), bytes);
         await writeFile(
             join(sourceRoot, "assets", "definition.json"),
-            JSON.stringify({ generations: { "icons/brand/mark.svg": 2 } }),
+            JSON.stringify({ deprecations: { "icons/brand/mark.svg": { reason: "asset.retired" } } }),
         );
 
         const artifact = await prepareCollectionRelease(sourceRoot);
         expect(artifact.release.assets[0]).toMatchObject({
             id: "icons/brand/mark.svg",
-            generation: 2,
+            deprecation: { reason: "asset.retired" },
             mediaType: "image/svg+xml",
             byteLength: bytes.byteLength,
         });

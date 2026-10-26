@@ -8,7 +8,7 @@ import type {
 } from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import type { CollectionLimits } from "../limits";
-import { array, identifier, integer, keys, ordinal, record, string, unique } from "../values";
+import { array, identifier, keys, ordinal, record, string, unique } from "../values";
 import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
 import { textIdentifier } from "../texts/validation";
 import { parseDefaultPath } from "./pages/document";
@@ -131,10 +131,9 @@ function importedPages(value: unknown, maximum: number, path: string) {
     const pages = array(value, maximum, path).map((entry, index) => {
         const at = `${path}[${index}]`;
         const source = record(entry, at);
-        keys(source, ["id", "generation", "defaultPath"], at);
+        keys(source, ["id", "defaultPath"], at);
         return {
             id: identifier(source.id, `${at}.id`),
-            generation: integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${at}.generation`),
             defaultPath: parseDefaultPath(source.defaultPath, `${at}.defaultPath`),
         };
     });
@@ -165,10 +164,9 @@ function importedResources(
     const resources = array(value ?? [], maximum, path).map((entry, index) => {
         const at = `${path}[${index}]`;
         const source = record(entry, at);
-        keys(source, ["id", "generation"], at);
+        keys(source, ["id"], at);
         return {
             id: parseId(source.id, `${at}.id`),
-            generation: integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${at}.generation`),
         };
     });
     unique(

@@ -23,8 +23,8 @@ describe("collection assets", () => {
         const authored = [{ ...emptyAsset, id: "z.txt" }, emptyAsset];
         const parsed = parseAssets(authored, limits);
         expect(parsed.map((asset) => asset.id)).toEqual(["empty.txt", "z.txt"]);
-        expect(parsed.every((asset) => asset.generation === 1)).toBe(true);
-        expect(parseAssets([{ ...emptyAsset, generation: 2 }], limits)[0]!.generation).toBe(2);
+        expect(parsed.every((asset) => !Object.hasOwn(asset, "generation"))).toBe(true);
+        expect(() => parseAssets([{ ...emptyAsset, generation: 2 }], limits)).toThrow("unknown property");
         expect(Object.isFrozen(parsed)).toBe(true);
         expect(Object.isFrozen(parsed[0])).toBe(true);
         expect(Object.isFrozen(authored[0])).toBe(false);

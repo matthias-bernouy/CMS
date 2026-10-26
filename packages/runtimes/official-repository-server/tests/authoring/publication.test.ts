@@ -1,3 +1,6 @@
+import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
+import { MemorySiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
 import { parseUlviaSchema, validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { expect, test } from "bun:test";
 import { join } from "node:path";
@@ -56,7 +59,8 @@ test("source snapshot builds, publishes over signed HTTP, remains private and in
         const admitted = await site.admitRelease(updated.release, updated.assets);
         await site.importAdmittedRelease(admitted);
         expect(
-            (await site.upgrade("site", admitted.digest, installed.revision, "local")).collections[0]!.release.version,
+            (await reviewedUpgrade(site, "site", admitted.digest, installed.revision, "local")).collections[0]!.release
+                .version,
         ).toBe("1.1.0");
         await expect(
             new RepositorySourceClient(f.base, { ...f.credential, resolvePrivateKey: async () => "invalid key" }).get(
@@ -100,3 +104,23 @@ test("changed preparations and foreign publishers fail before any release become
         await f.close();
     }
 });
+
+async function reviewedUpgrade(
+    store: CollectionStore,
+    siteId: string,
+    digest: string,
+    expectedRevision: number,
+    repositoryId: string,
+) {
+    expect(await store.revision(siteId)).toBe(expectedRevision);
+    const service = new CollectionUpgradeService(new InMemoryCmsRepository(), store, new MemorySiteUpgradeStorage(), {
+        contributors: [],
+        requiredConsumers: [],
+        validateCapabilities: async () => [],
+    });
+    const targets = [{ digest, repositoryId }];
+    const plan = await service.plan(siteId, targets);
+    expect(plan.status).toBe("applicable");
+    await service.apply(siteId, targets, plan.planDigest);
+    return store.snapshot(siteId);
+}

@@ -27,7 +27,7 @@ function queryContract(version: string): Record<string, unknown> {
     const contract = contractDocument("catalog.items", "item.list", version);
     const capability = (contract.capabilities as Record<string, unknown>[])[0]!;
     capability.behavior = { effect: "query", execution: "sync" };
-    (capability.binding as Record<string, unknown>).method = "QUERY";
+    (capability.bindings[0] as Record<string, unknown>).method = "QUERY";
     return contract;
 }
 

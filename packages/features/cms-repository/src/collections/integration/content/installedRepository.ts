@@ -226,21 +226,20 @@ export function withInstalledCollections(
                         const path =
                             paths.get(`${release.publisherId}\0${collectionId}\0${page.id}`) ?? page.defaultPath;
                         const language = release.locale;
-                        const generation = page.generation ?? 1;
+                        const revision = 1;
                         return {
                             reference,
                             source: {
                                 ...reference,
                                 version: release.version,
                                 digest,
-                                generation,
                                 defaultPath: page.defaultPath,
                             },
                             language,
                             requirements: pageRequirements(releases, page),
                             page: {
                                 id: page.id,
-                                revision: generation,
+                                revision,
                                 path,
                                 content: page.document.html,
                                 title: resolveCollectionTranslation(release, page.name, language),
@@ -345,7 +344,7 @@ function localizeSettings(
     settings: CollectionComponentSettings,
 ): CollectionComponentSettings {
     return settings.map(
-        (setting) =>
+        ({ deprecation: _deprecation, ...setting }) =>
             ({
                 ...setting,
                 label: resolveCollectionTranslation(release, setting.label),

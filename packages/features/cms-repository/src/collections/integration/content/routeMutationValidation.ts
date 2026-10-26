@@ -118,15 +118,8 @@ function mutationDigests(method: string, args: readonly unknown[]): string[] {
     if (method === "installMany") {
         return (args[1] as readonly { digest: string }[]).map(({ digest }) => digest);
     }
-    if (method === "commitMigration") {
+    if (method === "commitUpgrade") {
         return (args[1] as readonly { digest: string }[]).map(({ digest }) => digest);
-    }
-    if (method === "restoreMigration") {
-        const originals = args[1] as readonly { collectionId: string; digest: string }[];
-        const replaced = new Set(
-            (args[2] as readonly { collectionId: string }[]).map(({ collectionId }) => collectionId),
-        );
-        return originals.filter(({ collectionId }) => replaced.has(collectionId)).map(({ digest }) => digest);
     }
     return [];
 }

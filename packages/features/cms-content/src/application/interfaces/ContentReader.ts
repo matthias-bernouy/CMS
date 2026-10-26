@@ -35,7 +35,6 @@ export type RenderablePageSource =
           readonly version: string;
           readonly digest: string;
           readonly pageId: string;
-          readonly generation: number;
           readonly defaultPath: string;
       };
 

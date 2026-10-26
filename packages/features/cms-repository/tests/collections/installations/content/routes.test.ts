@@ -6,7 +6,7 @@ import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repositor
 
 const page = {
     id: "overview",
-    generation: 1,
+
     defaultPath: "/admin",
     name: "page.overview.name",
     uses: [],
@@ -186,7 +186,7 @@ function collectionRelease(html: string) {
         pages: [
             {
                 id: "overview",
-                generation: 1,
+
                 defaultPath: "/admin",
                 name: "page.overview.name",
                 uses: ["official-page"],

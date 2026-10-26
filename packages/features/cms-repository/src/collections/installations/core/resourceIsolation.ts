@@ -5,28 +5,10 @@ import { validateCollectionStateBindings } from "../../core/validation/markup/st
 import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
-import type { CollectionInstallation, CollectionStorage } from "../interfaces/store";
 import { pageLinks, pageLinkSources } from "../../core/parsing/pages/references";
 import { validateExpandedPageDocument, validatePageDocument } from "@bernouy/cms-content/page-document";
 import { collectionPageDefinitions } from "../../core/parsing/pages/definitions";
 import { validateInstalledCollectionSvgReferences } from "../../core/validation/markup/assets";
-
-export async function assertInstallableCollectionResources(
-    storage: CollectionStorage,
-    installations: readonly Pick<CollectionInstallation, "collectionId" | "digest">[],
-    candidate: CollectionRelease,
-): Promise<void> {
-    const releases = await Promise.all(
-        installations.map(async (installation) => {
-            const artifact = await storage.getReleaseMetadata(installation.digest);
-            if (!artifact || artifact.release.collectionId !== installation.collectionId) {
-                throw new Error("Installed collection artifact is missing or inconsistent");
-            }
-            return artifact.release;
-        }),
-    );
-    assertCollectionResourceIsolation([...releases, candidate]);
-}
 
 export function assertCollectionResourceIsolation(releases: readonly CollectionRelease[]): void {
     const blocTags = new Set<string>();
@@ -134,69 +116,31 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
                 `Collection ${release.collectionId} requires ${dependency.publisherId}/${dependency.collectionId} ${dependency.versionRange}`,
             );
         }
-        const exportedBlocs = new Set(target.exports?.blocs ?? []);
-        const targetBlocs = new Map(target.blocs.map((bloc) => [bloc.id, bloc.generation ?? 1]));
-        for (const bloc of dependency.imports.blocs) {
-            if (!exportedBlocs.has(bloc.id) || targetBlocs.get(bloc.id) !== bloc.generation) {
-                reject(
-                    `Collection ${release.collectionId} imports unavailable bloc ${bloc.id} generation ${bloc.generation}`,
-                );
-            }
-        }
-        const exportedTokens = new Set(target.exports?.themeTokens ?? []);
-        const targetTokens = new Map(
-            target.theme?.categories.flatMap((category) =>
-                category.entries
-                    .filter((entry) => entry.type !== "font-face")
-                    .map((token) => [token.id, token.generation ?? 1] as const),
-            ) ?? [],
-        );
-        for (const token of dependency.imports.themeTokens) {
-            if (!exportedTokens.has(token.id) || targetTokens.get(token.id) !== token.generation) {
-                reject(
-                    `Collection ${release.collectionId} imports unavailable theme token ${target.collectionId}-${token.id} generation ${token.generation}`,
-                );
-            }
-        }
-        const exportedTexts = new Set(target.exports?.texts ?? []);
-        const targetTexts = new Map((target.texts ?? []).map((text) => [text.id, text.generation ?? 1]));
-        for (const text of dependency.imports.texts ?? []) {
-            if (!exportedTexts.has(text.id) || targetTexts.get(text.id) !== text.generation) {
-                reject(
-                    `Collection ${release.collectionId} imports unavailable text ${target.collectionId}.${text.id} generation ${text.generation}`,
-                );
-            }
-        }
-        const exportedAssets = new Set(target.exports?.assets ?? []);
-        const targetAssets = new Map(target.assets.map((asset) => [asset.id, asset.generation ?? 1]));
-        for (const asset of dependency.imports.assets ?? []) {
-            if (!exportedAssets.has(asset.id) || targetAssets.get(asset.id) !== asset.generation) {
-                reject(
-                    `Collection ${release.collectionId} imports unavailable asset ${target.collectionId}.${asset.id} generation ${asset.generation}`,
-                );
-            }
-        }
-        const exportedPages = new Set(target.exports?.pages ?? []);
-        const targetPages = new Map((target.pages ?? []).map((page) => [page.id, page.generation ?? 1]));
-        for (const page of dependency.imports.pages ?? []) {
-            const targetPage = target.pages?.find(({ id }) => id === page.id);
-            if (
-                !exportedPages.has(page.id) ||
-                targetPages.get(page.id) !== page.generation ||
-                targetPage?.defaultPath !== page.defaultPath
-            ) {
-                reject(
-                    `Collection ${release.collectionId} imports unavailable page ${target.collectionId}.${page.id} generation ${page.generation} at ${page.defaultPath}`,
-                );
-            }
-        }
-        const exportedStates = new Set(target.exports?.states ?? []);
-        const targetStates = new Map((target.states ?? []).map((state) => [state.id, state.generation ?? 1]));
-        for (const state of dependency.imports.states ?? []) {
-            if (!exportedStates.has(state.id) || targetStates.get(state.id) !== state.generation) {
-                reject(
-                    `Collection ${release.collectionId} imports unavailable state ${target.collectionId}-${state.id} generation ${state.generation}`,
-                );
+        for (const field of ["blocs", "themeTokens", "texts", "assets", "pages", "states"] as const) {
+            const exported = new Set(target.exports?.[field] ?? []);
+            const available =
+                field === "themeTokens"
+                    ? new Set(
+                          target.theme?.categories.flatMap((category) =>
+                              category.entries.filter((entry) => entry.type !== "font-face").map((entry) => entry.id),
+                          ) ?? [],
+                      )
+                    : new Set((target[field] ?? []).map((entry) => entry.id));
+            for (const imported of dependency.imports[field] ?? []) {
+                if (!exported.has(imported.id) || !available.has(imported.id)) {
+                    reject(
+                        `Collection ${release.collectionId} imports unavailable ${field} ${dependency.collectionId}:${imported.id}`,
+                    );
+                }
+                if (
+                    field === "pages" &&
+                    "defaultPath" in imported &&
+                    target.pages?.find(({ id }) => id === imported.id)?.defaultPath !== imported.defaultPath
+                ) {
+                    reject(
+                        `Collection ${release.collectionId} imports unavailable Page route ${String(imported.defaultPath)}`,
+                    );
+                }
             }
         }
     }

@@ -8,7 +8,7 @@ import type {
 } from "../../interfaces/CollectionRelease";
 import { describeCollectionResources } from "./resourceDescriptors";
 
-/** Enforce collection SemVer, per-resource generations and persisted-data generations at publication time. */
+/** Same-identity resources retain compatible contracts across every release, including majors. */
 export async function verifyCollectionPublicationEvolution(
     previous: CollectionRelease,
     next: CollectionRelease,
@@ -20,101 +20,46 @@ export async function verifyCollectionPublicationEvolution(
     if (!bump) {
         throw new TypeError("Collection publication version must increase");
     }
-    if (next.dataGeneration < previous.dataGeneration || next.dataGeneration > previous.dataGeneration + 1) {
-        throw new TypeError("Collection data generation must stay unchanged or advance by one adjacent step");
-    }
     const [before, after] = await Promise.all([
         describeCollectionResources(previous),
         describeCollectionResources(next),
     ]);
     const afterByKey = new Map(after.map((resource) => [`${resource.kind}:${resource.id}`, resource]));
-    for (const resource of before) {
-        const replacement = afterByKey.get(`${resource.kind}:${resource.id}`);
-        if (replacement && replacement.generation < resource.generation) {
-            throw new TypeError(`Collection resource generation decreased for ${resource.kind} ${resource.id}`);
+    const breaking = collectionUpgradeBreakingResources(previous, next);
+    for (const resource of breaking) {
+        const id = resource.kind === "theme-token" ? `${next.collectionId}-${resource.id}` : resource.id;
+        if (resource.kind !== "configuration" && afterByKey.has(`${resource.kind}:${id}`)) {
+            throw new TypeError(`Incompatible ${resource.kind} ${resource.id} requires a new resource identity`);
         }
     }
-    const structuralBreaks = new Set(
-        collectionUpgradeBreakingResources(previous, next).map(({ kind, id }) => `${kind}:${id}`),
-    );
-    requirementBreaks(previous, next).forEach((key) => structuralBreaks.add(key));
-    if (dependencyContractRestricted(previous, next)) {
-        structuralBreaks.add("dependency:collection-graph");
+    if (requirementBreaks(previous, next).length) {
+        throw new TypeError("Incompatible resource requirements require a new resource identity");
     }
     const removedExports = removedCollectionExports(previous.exports, next.exports);
-    const changedGenerations = before.filter((resource) => {
-        const replacement = afterByKey.get(`${resource.kind}:${resource.id}`);
-        return replacement && replacement.generation !== resource.generation;
+    const restrictedDependencies = (next.dependencies ?? []).some((dependency) => {
+        const prior = previous.dependencies?.find((candidate) => candidate.collectionId === dependency.collectionId);
+        return (
+            prior &&
+            (prior.publisherId !== dependency.publisherId ||
+                !isVersionRangeSubset(prior.versionRange, dependency.versionRange))
+        );
     });
+    if (bump !== "major" && (breaking.length || removedExports.length || restrictedDependencies)) {
+        throw new TypeError("Resource removals and incompatible collection configuration require a major publication");
+    }
     if (bump === "patch") {
-        const contractChanged =
+        const changed =
             before.length !== after.length ||
-            before.some((resource) => {
-                const replacement = afterByKey.get(`${resource.kind}:${resource.id}`);
-                return !replacement || replacement.contractDigest !== resource.contractDigest;
-            }) ||
+            before.some(
+                (resource) =>
+                    resource.contractDigest !== afterByKey.get(`${resource.kind}:${resource.id}`)?.contractDigest,
+            ) ||
             canonicalizeIJson(previous.dependencies ?? []) !== canonicalizeIJson(next.dependencies ?? []) ||
             canonicalizeIJson(previous.exports ?? emptyExports()) !== canonicalizeIJson(next.exports ?? emptyExports());
-        if (contractChanged || next.dataGeneration !== previous.dataGeneration) {
+        if (changed) {
             throw new TypeError("Patch collection publications may change implementations only");
         }
     }
-    if (bump === "minor" && (structuralBreaks.size || removedExports.length || changedGenerations.length)) {
-        throw new TypeError("Minor collection publications must remain compatible and keep resource generations");
-    }
-    if (bump !== "major" && next.dataGeneration !== previous.dataGeneration) {
-        throw new TypeError("Collection data generation changes require a major publication");
-    }
-    if (bump === "major") {
-        for (const key of structuralBreaks) {
-            const oldResource = before.find((resource) => `${resource.kind}:${resource.id}` === key);
-            const replacement = afterByKey.get(key);
-            if (oldResource && replacement && replacement.generation <= oldResource.generation) {
-                throw new TypeError(`Breaking resource ${key} must increase its generation`);
-            }
-        }
-        if (
-            (structuralBreaks.size || removedExports.length || changedGenerations.length) &&
-            next.dataGeneration === previous.dataGeneration
-        ) {
-            throw new TypeError("Breaking collection publications require a data-generation migration");
-        }
-    }
-}
-
-function dependencyContractRestricted(previous: CollectionRelease, next: CollectionRelease): boolean {
-    const old = new Map((previous.dependencies ?? []).map((dependency) => [dependency.collectionId, dependency]));
-    return (next.dependencies ?? []).some((dependency) => {
-        const prior = old.get(dependency.collectionId);
-        if (!prior) {
-            return false;
-        }
-        if (prior.publisherId !== dependency.publisherId) {
-            return true;
-        }
-        if (!isVersionRangeSubset(prior.versionRange, dependency.versionRange)) {
-            return true;
-        }
-        const previousImports = new Map([
-            ...prior.imports.blocs.map((item) => [`bloc:${item.id}`, item.generation] as const),
-            ...prior.imports.themeTokens.map((item) => [`theme-token:${item.id}`, item.generation] as const),
-            ...(prior.imports.texts ?? []).map((item) => [`text:${item.id}`, item.generation] as const),
-            ...(prior.imports.assets ?? []).map((item) => [`asset:${item.id}`, item.generation] as const),
-            ...(prior.imports.pages ?? []).map((item) => [`page:${item.id}`, item.generation] as const),
-            ...(prior.imports.states ?? []).map((item) => [`state:${item.id}`, item.generation] as const),
-        ]);
-        return [
-            ...dependency.imports.blocs.map((item) => [`bloc:${item.id}`, item.generation] as const),
-            ...dependency.imports.themeTokens.map((item) => [`theme-token:${item.id}`, item.generation] as const),
-            ...(dependency.imports.texts ?? []).map((item) => [`text:${item.id}`, item.generation] as const),
-            ...(dependency.imports.assets ?? []).map((item) => [`asset:${item.id}`, item.generation] as const),
-            ...(dependency.imports.pages ?? []).map((item) => [`page:${item.id}`, item.generation] as const),
-            ...(dependency.imports.states ?? []).map((item) => [`state:${item.id}`, item.generation] as const),
-        ].some(([key, generation]) => {
-            const oldGeneration = previousImports.get(key);
-            return oldGeneration !== undefined && oldGeneration !== generation;
-        });
-    });
 }
 
 function requirementBreaks(previous: CollectionRelease, next: CollectionRelease): string[] {

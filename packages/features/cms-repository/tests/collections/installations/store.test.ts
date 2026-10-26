@@ -1,3 +1,4 @@
+import { reviewedUpgrade } from "./upgrades/reviewed";
 import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { CollectionStore, MemoryCollectionStorage } from "../../../src/exports/collections/installations";
@@ -75,14 +76,14 @@ test("compatible repository upgrade preserves site texts and rejects removals", 
             texts: [textDefinition("title", { en: "New", fr: "Nouveau" }), textDefinition("other", { en: "Other" })],
         }),
     );
-    await store.upgrade("site", newer.digest, 2, "local");
+    await reviewedUpgrade(store, "site", newer.digest, 2, "local");
     const current = (await store.snapshot("site")).collections[0]!;
     expect(current.digest).toBe(newer.digest);
     expect(current.textOverrides.title?.fr).toBe("Salut");
     expect(current.repositoryId).toBe("local");
-    await expect(store.upgrade("site", old.digest, 3, "local")).rejects.toThrow("newer");
+    await expect(reviewedUpgrade(store, "site", old.digest, 3, "local")).rejects.toThrow("newer");
     const removing = await store.importRelease(collectionFixture({ ...release(), version: "1.2.0", texts: [] }));
-    await expect(store.upgrade("site", removing.digest, 3, "local")).rejects.toThrow("removes");
+    await expect(reviewedUpgrade(store, "site", removing.digest, 3, "local")).rejects.toThrow("major publication");
 });
 
 test("imports verified assets and contract requirements into the installation store", async () => {
@@ -154,9 +155,7 @@ test("resolves asset metadata in one batch without hydrating unrelated releases"
         { collectionId: "missing", assetId: "none" },
     ]);
 
-    expect(resolved).toEqual([
-        { collectionId: "atlas", digest: first.digest, asset: { ...firstAsset.definition, generation: 1 } },
-    ]);
+    expect(resolved).toEqual([{ collectionId: "atlas", digest: first.digest, asset: { ...firstAsset.definition } }]);
     expect(reads).toEqual([first.digest]);
 });
 
@@ -193,11 +192,15 @@ test("upgrades may widen but never narrow the stored settings contract", async (
     changedSettings.version = "1.1.0";
     changedSettings.blocs[0]!.settings[0]!.maxLength = 32;
     const settingsArtifact = await store.importRelease(collectionFixture(changedSettings));
-    await expect(store.upgrade("site", settingsArtifact.digest, 2, "local")).resolves.toMatchObject({ revision: 3 });
+    await expect(reviewedUpgrade(store, "site", settingsArtifact.digest, 2, "local")).resolves.toMatchObject({
+        revision: 3,
+    });
 
     const narrowedSettings = structuredClone(changedSettings);
     narrowedSettings.version = "1.2.0";
     narrowedSettings.blocs[0]!.settings[0]!.maxLength = 8;
     const narrowedArtifact = await store.importRelease(collectionFixture(narrowedSettings));
-    await expect(store.upgrade("site", narrowedArtifact.digest, 3, "local")).rejects.toThrow("settings");
+    await expect(reviewedUpgrade(store, "site", narrowedArtifact.digest, 3, "local")).rejects.toThrow(
+        "new resource identity",
+    );
 });

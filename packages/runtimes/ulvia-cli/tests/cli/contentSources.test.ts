@@ -1,10 +1,9 @@
 import { afterEach, expect, test } from "bun:test";
-import { dirname, join } from "node:path";
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
+import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { loadCollectionBlocs } from "@bernouy/cms-repository/collections/build";
+import { loadCollectionBlocs, prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 import { loadCollectionTexts } from "@bernouy/cms-repository/collections/build";
-import { loadCollectionMigrations } from "@bernouy/cms-repository/collections/build";
 
 const temporaryDirectories: string[] = [];
 
@@ -143,17 +142,12 @@ test("Bloc discovery follows the collection admission ceiling beyond the former 
     expect(await loadCollectionBlocs(root, "Example")).toHaveLength(257);
 });
 
-test("migration steps are discovered recursively and named after their adjacent generations", async () => {
+test("collection sources reject obsolete migration directories", async () => {
     const root = await temporaryDirectory();
-    expect(await loadCollectionMigrations(join(root, "missing"))).toEqual([]);
-    const first = { fromGeneration: 1, toGeneration: 2, operations: [] };
-    const second = { fromGeneration: 2, toGeneration: 3, operations: [] };
-    await writeJson(join(root, "legacy", "1-to-2.json"), first);
-    await writeJson(join(root, "current", "2-to-3.json"), second);
-    expect(await loadCollectionMigrations(root)).toEqual([second, first]);
-
-    await writeJson(join(root, "current", "wrong.json"), { fromGeneration: 3, toGeneration: 4, operations: [] });
-    await expect(loadCollectionMigrations(root)).rejects.toThrow("must be named 3-to-4.json");
+    const target = join(root, "smoke-kit");
+    await cp(resolve(import.meta.dir, "../stack/fixtures/smoke-kit"), target, { recursive: true });
+    await mkdir(join(target, "migrations"));
+    await expect(prepareCollectionRelease(target)).rejects.toThrow("migration sources are unsupported");
 });
 
 async function writeComposition(root: string, id: string): Promise<void> {

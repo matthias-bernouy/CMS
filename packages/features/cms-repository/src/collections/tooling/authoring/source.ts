@@ -5,8 +5,7 @@ import { loadCollectionExamples } from "../examples/source";
 import { loadCollectionBlocs } from "./blocSources";
 import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
-import { loadCollectionMigrations } from "./migrationSources";
-import { scanFileSourceTree } from "./sourceTree";
+import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
 import { loadCollectionAssets } from "./assetSources";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
@@ -26,7 +25,9 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     const texts = await loadCollectionTexts(join(collectionRoot, "texts"));
     const pages = await loadPages(join(collectionRoot, "pages"));
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
-    const migrations = await loadCollectionMigrations(join(collectionRoot, "migrations"));
+    if ((await readSourceEntries(collectionRoot)).some((entry) => entry.name === "migrations")) {
+        throw new Error("Collection migration sources are unsupported");
+    }
     if (Object.hasOwn(definition, "assets")) {
         throw new Error(
             "Collection source assets are discovered from assets/ and must not be declared in definition.json",
@@ -49,7 +50,6 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         translations,
         assets: assets.definitions,
         blocs,
-        migrations,
         examples,
         ...(texts.length ? { texts } : {}),
         ...(pages.length ? { pages } : {}),

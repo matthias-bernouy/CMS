@@ -13,36 +13,30 @@ export type {
     InstalledCollectionAssetMetadata,
     CollectionSiteState,
     CollectionInstallation,
-    CollectionMigrationReplacement,
+    CollectionUpgradeReplacement,
     StoredCollectionRelease,
     StoredCollectionAssetManifest,
     StoredCollectionReleaseMetadata,
 } from "cms-repository/collections/installations/interfaces/store";
+export { CollectionUpgradeService } from "cms-repository/collections/installations/upgrades/runtime/CollectionUpgradeService";
 export {
-    CollectionMigrationService,
-    type CollectionMigrationServiceOptions,
-} from "cms-repository/collections/installations/migrations/runtime/CollectionMigrationService";
-export { prepareCollectionMigration } from "cms-repository/collections/installations/migrations/plan";
-export {
-    MemoryCollectionMigrationStorage,
-    isCollectionMigrationActive,
-} from "cms-repository/collections/installations/migrations/storage";
-export { withCollectionMigrationWriteFence } from "cms-repository/collections/installations/migrations/storage/writeFence";
+    prepareCollectionUpgrade,
+    type CollectionUpgradeAnalysis,
+} from "cms-repository/collections/installations/upgrades/planning/plan";
+export { siteUsageInventory } from "cms-repository/collections/installations/upgrades/usage/inventory";
+export { collectionUsageInventory } from "cms-repository/collections/installations/upgrades/usage/catalogue";
 export type {
-    CollectionMigrationPageChange,
-    CollectionMigrationActive,
-    CollectionMigrationAudit,
-    CollectionMigrationParticipant,
-    CollectionMigrationParticipantSnapshot,
-    CollectionMigrationTargetSnapshot,
-    CollectionMigrationProgress,
-    CollectionMigrationRecord,
-    CollectionMigrationResourceReference,
-    CollectionMigrationResourceChange,
-    CollectionMigrationStatus,
-    CollectionMigrationStorage,
-    CollectionMigrationWriteFence,
-    CollectionMigrationSummary,
-    CollectionMigrationTarget,
-    PreparedCollectionMigration,
-} from "cms-repository/collections/installations/migrations/interfaces";
+    CollectionUpgradePlan,
+    CollectionUpgradeTarget,
+    UpgradeIssue,
+    CollectionResourceChange,
+} from "cms-repository/collections/installations/upgrades/interfaces";
+export type {
+    UsageInventory,
+    UsageReference,
+    ResourceUse,
+    CapabilityUse,
+    BindingUse,
+    UsageContributor,
+} from "cms-repository/collections/installations/upgrades/usage/interfaces";
+export type { UpgradeIntent } from "cms-repository/collections/installations/upgrades/storage/interfaces";

@@ -283,11 +283,9 @@ describe("collection release parsing", () => {
         };
         expect(parseCollectionRelease(collectionFixture(source), limits).configuration).toEqual({
             ...configuration,
-            generation: 1,
         });
         expect(parseCollectionReleaseJson(JSON.stringify(source), limits).configuration).toEqual({
             ...configuration,
-            generation: 1,
         });
         for (const patch of [
             { defaults: {} },
@@ -602,10 +600,10 @@ describe("collection release parsing", () => {
                 publisherId: "ulvia.official",
                 versionRange: "^1.0.0",
                 imports: {
-                    blocs: [{ id: "ulvia-official-button", generation: 1 }],
-                    themeTokens: [{ id: "primary", generation: 1 }],
-                    pages: [{ id: "home", generation: 2, defaultPath: "/" }],
-                    states: [{ id: "selection", generation: 1 }],
+                    blocs: [{ id: "ulvia-official-button" }],
+                    themeTokens: [{ id: "primary" }],
+                    pages: [{ id: "home", defaultPath: "/" }],
+                    states: [{ id: "selection" }],
                 },
             },
         ];
@@ -627,7 +625,7 @@ describe("collection release parsing", () => {
         expect(parsed.states).toEqual([
             {
                 id: "filters",
-                generation: 1,
+
                 scope: "page",
                 schema: {
                     type: "object",
@@ -641,10 +639,10 @@ describe("collection release parsing", () => {
             publisherId: "ulvia.official",
             versionRange: "^1.0.0",
             imports: {
-                blocs: [{ id: "ulvia-official-button", generation: 1 }],
-                themeTokens: [{ id: "primary", generation: 1 }],
-                pages: [{ id: "home", generation: 2, defaultPath: "/" }],
-                states: [{ id: "selection", generation: 1 }],
+                blocs: [{ id: "ulvia-official-button" }],
+                themeTokens: [{ id: "primary" }],
+                pages: [{ id: "home", defaultPath: "/" }],
+                states: [{ id: "selection" }],
             },
         });
 
@@ -672,7 +670,7 @@ describe("collection release parsing", () => {
                         ...dependency,
                         imports: {
                             blocs: ["ulvia-official-button"],
-                            themeTokens: [{ id: "primary", generation: 1 }],
+                            themeTokens: [{ id: "primary" }],
                         },
                     })),
                 }),
@@ -686,12 +684,12 @@ describe("collection release parsing", () => {
                         ...dependency,
                         imports: {
                             blocs: [{ id: "ulvia-official-button" }],
-                            themeTokens: [{ id: "primary", generation: 1 }],
+                            themeTokens: [{ id: "primary" }],
                         },
                     })),
                 }),
             ),
-        ).toThrow(/generation/);
+        ).not.toThrow();
     });
 
     test("rejects binary state and non-string URL parameter contracts", () => {
@@ -962,7 +960,7 @@ describe("collection release parsing", () => {
         ).toThrow(/missing default translation/);
     });
 
-    test("normalizes resource generations and computes contract and implementation digests separately", async () => {
+    test("computes contract and implementation digests separately without resource generations", async () => {
         const previous = parseCollectionRelease(collectionFixture(collectionDocument()));
         const nextSource = collectionDocument();
         (nextSource.blocs as Record<string, unknown>[])[0]!.style = ":scope { display: grid; }";
@@ -971,9 +969,9 @@ describe("collection release parsing", () => {
             (resource) => resource.id === "atlas-panel",
         )!;
         const nextPanel = (await describeCollectionResources(next)).find((resource) => resource.id === "atlas-panel")!;
-        expect(previous.dataGeneration).toBe(1);
-        expect(previous.migrations).toEqual([]);
-        expect(previousPanel.generation).toBe(1);
+        expect(previous).not.toHaveProperty("dataGeneration");
+        expect(previous).not.toHaveProperty("migrations");
+        expect(previousPanel).not.toHaveProperty("generation");
         expect(nextPanel.contractDigest).toBe(previousPanel.contractDigest);
         expect(nextPanel.implementationDigest).not.toBe(previousPanel.implementationDigest);
 
@@ -992,74 +990,14 @@ describe("collection release parsing", () => {
         expect(unrelatedPanel.implementationDigest).toBe(previousPanel.implementationDigest);
     });
 
-    test("requires one cumulative adjacent migration chain from generation one", () => {
-        const migration = {
-            fromGeneration: 1,
-            toGeneration: 2,
-            operations: [{ kind: "rename-bloc", from: "atlas-panel", to: "atlas-surface" }],
-        };
-        const parsed = parseCollectionRelease(
-            collectionFixture({ ...collectionDocument(), dataGeneration: 2, migrations: [migration] }),
-        );
-        expect(parsed.migrations[0]).toEqual(migration);
-        expect(() =>
-            parseCollectionRelease(
-                collectionFixture({
-                    ...collectionDocument(),
-                    dataGeneration: 3,
-                    migrations: [{ ...migration, fromGeneration: 2, toGeneration: 3 }],
-                }),
-            ),
-        ).toThrow(/cumulative|contiguous/);
-        expect(() =>
-            parseCollectionRelease(
-                collectionFixture({
-                    ...collectionDocument(),
-                    dataGeneration: 2,
-                    migrations: [{ ...migration, toGeneration: 3 }],
-                }),
-            ),
-        ).toThrow(/adjacent/);
-
-        const configurationMigration = parseCollectionRelease(
-            collectionFixture({
-                ...collectionDocument(),
-                dataGeneration: 2,
-                migrations: [
-                    {
-                        fromGeneration: 1,
-                        toGeneration: 2,
-                        operations: [
-                            { kind: "set-configuration-default", path: ["presentation", "density"], value: "compact" },
-                            {
-                                kind: "map-configuration-value",
-                                path: ["presentation", "columns"],
-                                values: [
-                                    { from: 2, to: 3 },
-                                    { from: null, to: 1 },
-                                ],
-                            },
-                            { kind: "remove-configuration-value", path: ["legacy"] },
-                        ],
-                    },
-                ],
-            }),
-        );
-        expect(configurationMigration.migrations[0]?.operations).toHaveLength(3);
-        expect(() =>
-            parseCollectionRelease(
-                collectionFixture({
-                    ...collectionDocument(),
-                    dataGeneration: 2,
-                    migrations: [
-                        {
-                            fromGeneration: 1,
-                            toGeneration: 2,
-                            operations: [{ kind: "remove-configuration-value", path: ["__proto__"] }],
-                        },
-                    ],
-                }),
-            ),
-        ).toThrow(/safe object path/);
+    test("rejects obsolete migration chains and resource generations", () => {
+        for (const extra of [{ dataGeneration: 1 }, { migrations: [] }]) {
+            expect(() => parseCollectionRelease(collectionFixture({ ...collectionDocument(), ...extra }))).toThrow(
+                "unknown property",
+            );
+        }
+        const source = collectionDocument();
+        (source.blocs as Record<string, unknown>[])[0]!.generation = 1;
+        expect(() => parseCollectionRelease(collectionFixture(source))).toThrow('unknown property "generation"');
     });
 });

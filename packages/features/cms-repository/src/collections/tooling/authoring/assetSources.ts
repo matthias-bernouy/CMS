@@ -1,3 +1,5 @@
+import { resourceMetadata } from "../../core/validation/lifecycle/metadata";
+import type { CollectionResourceDeprecation } from "../../interfaces/CollectionRelease";
 import { readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { sha256Digest } from "@bernouy/binary-media";
@@ -30,10 +32,10 @@ const MEDIA_TYPES = new Map([
     [".zip", "application/zip"],
 ]);
 
-type AssetDefinitionSource = Readonly<{ generations?: Readonly<Record<string, number>> }>;
+type AssetDefinitionSource = Readonly<{ deprecations?: Readonly<Record<string, CollectionResourceDeprecation>> }>;
 
 export async function loadCollectionAssets(directory: string) {
-    const generations = await loadGenerations(directory);
+    const deprecations = await loadDeprecations(directory);
     const definitions = [];
     const bundle: { id: string; bytes: Uint8Array }[] = [];
     const seenFolded = new Set<string>();
@@ -53,16 +55,16 @@ export async function loadCollectionAssets(directory: string) {
         bundle.push({ id, bytes });
         definitions.push({
             id,
-            generation: generations.get(id) ?? 1,
+            ...(deprecations.has(id) ? { deprecation: deprecations.get(id)! } : {}),
             mediaType,
             byteLength: bytes.byteLength,
             digest: await sha256Digest(bytes),
             ...(profiles.length ? { profiles } : {}),
         });
     }
-    const unknown = [...generations.keys()].filter((id) => !seenFolded.has(id.toLocaleLowerCase("en-US")));
+    const unknown = [...deprecations.keys()].filter((id) => !seenFolded.has(id.toLocaleLowerCase("en-US")));
     if (unknown.length) {
-        throw new Error(`Collection asset generations reference missing files: ${unknown.join(", ")}`);
+        throw new Error(`Collection asset deprecations reference missing files: ${unknown.join(", ")}`);
     }
     return { definitions, bundle };
 }
@@ -95,7 +97,7 @@ function mediaTypeFor(id: string): string {
     return mediaType;
 }
 
-async function loadGenerations(directory: string): Promise<Map<string, number>> {
+async function loadDeprecations(directory: string): Promise<Map<string, CollectionResourceDeprecation>> {
     const file = Bun.file(join(directory, ASSET_DEFINITION));
     if (!(await file.exists())) {
         return new Map();
@@ -105,23 +107,20 @@ async function loadGenerations(directory: string): Promise<Map<string, number>> 
         !source ||
         typeof source !== "object" ||
         Array.isArray(source) ||
-        Object.keys(source).some((key) => key !== "generations")
+        Object.keys(source).some((key) => key !== "deprecations")
     ) {
-        throw new Error("Asset definition accepts only a generations object");
+        throw new Error("Asset definition accepts only a deprecations object");
     }
-    if (source.generations === undefined) {
+    if (source.deprecations === undefined) {
         return new Map();
     }
-    if (!source.generations || typeof source.generations !== "object" || Array.isArray(source.generations)) {
-        throw new Error("Asset generations must be an object");
+    if (!source.deprecations || typeof source.deprecations !== "object" || Array.isArray(source.deprecations)) {
+        throw new Error("Asset deprecations must be an object");
     }
     return new Map(
-        Object.entries(source.generations).map(([path, generation]) => {
+        Object.entries(source.deprecations).map(([path, deprecation]) => {
             const id = assetPath(path);
-            if (!Number.isSafeInteger(generation) || generation < 1) {
-                throw new Error(`Asset generation must be a positive integer: ${id}`);
-            }
-            return [id, generation];
+            return [id, resourceMetadata({ deprecation }, `assets.${id}`).deprecation!];
         }),
     );
 }

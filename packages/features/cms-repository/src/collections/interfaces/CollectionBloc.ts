@@ -1,10 +1,10 @@
+import type { CollectionResourceDeprecation } from "./CollectionRelease";
 import type { CollectionCapabilityRequirement, CollectionTranslationKey } from "./CollectionRelease";
 import type { CmsBrowserRuntimeAbi } from "@bernouy/cms-content/runtime-abi";
 import type {
     BlocSettingControl,
     BlocSettingItem,
     BlocSettingOption,
-    BlocSettings,
     BlocSettingVisibilityRule,
     BlocSettingVisibilityValue,
     BlocBrowserCapabilities,
@@ -28,14 +28,13 @@ export type CollectionSettingOption = BlocSettingOption;
 export type CollectionSettingControl = BlocSettingControl;
 export type CollectionSettingVisibilityValue = BlocSettingVisibilityValue;
 export type CollectionSettingVisibilityRule = BlocSettingVisibilityRule;
-export type CollectionSettingItem = BlocSettingItem;
-export type CollectionComponentSettings = BlocSettings;
+export type CollectionSettingItem = BlocSettingItem & { readonly deprecation?: CollectionResourceDeprecation };
+export type CollectionComponentSettings = readonly CollectionSettingItem[];
 
 interface CollectionBlocBase {
+    readonly deprecation?: CollectionResourceDeprecation;
     /** A stable namespaced Bloc identifier prefixed by the collection ID. */
     readonly id: string;
-    /** Independent public-contract generation for selective consumers. */
-    readonly generation?: number;
     readonly label: CollectionTranslationKey;
     readonly description: CollectionTranslationKey;
     /** Catalogue memberships resolved through collection translations. */

@@ -42,8 +42,7 @@ function validatePageOrigin(origin: PageContributionOrigin): PageContributionOri
         !identifier.test(origin.pageId) ||
         !version.test(origin.version) ||
         !/^sha256:[0-9a-f]{64}$/u.test(origin.digest) ||
-        !Number.isSafeInteger(origin.generation) ||
-        origin.generation < 1
+        Object.keys(origin).some((key) => !["sourceId", "contributionId", "pageId", "version", "digest"].includes(key))
     ) {
         throw new ContentValidationError("origin", "must identify one exact contributed Page");
     }

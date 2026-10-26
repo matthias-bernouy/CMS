@@ -1,3 +1,4 @@
+import type { CollectionResourceDeprecation } from "./CollectionRelease";
 import type { CollectionCapabilityRequirement, CollectionTranslationKey } from "./CollectionRelease";
 import type { PageDocument } from "@bernouy/cms-content/page-document";
 
@@ -7,8 +8,8 @@ export type CollectionPageDocument = PageDocument;
 
 /** One immutable collection-owned Page document. */
 export interface CollectionPage {
+    readonly deprecation?: CollectionResourceDeprecation;
     readonly id: string;
-    readonly generation?: number;
     /** Collection-provided route used only until the site chooses an override. */
     readonly defaultPath: string;
     readonly name: CollectionTranslationKey;

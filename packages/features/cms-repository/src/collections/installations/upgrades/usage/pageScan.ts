@@ -1,0 +1,36 @@
+import type { CmsRepository } from "@bernouy/cms-content";
+import type { TPage } from "@bernouy/cms-content";
+
+const COLLECTION_USAGE_PAGE_BATCH_SIZE = 500;
+
+/** Bounded ID-ordered scan with cursor-progress checks. */
+export async function* collectionPageBatches(
+    repository: Pick<CmsRepository, "scanPages">,
+    batchSize = COLLECTION_USAGE_PAGE_BATCH_SIZE,
+): AsyncGenerator<readonly TPage[]> {
+    let cursor: string | undefined;
+    for (;;) {
+        const batch = await repository.scanPages(cursor, batchSize);
+        if (!batch.pages.length) {
+            if (batch.nextCursor !== undefined) {
+                throw new Error("Page scan returned a cursor without pages");
+            }
+            return;
+        }
+        const ids = batch.pages.map(({ id }) => id);
+        if (
+            ids.some((id, index) => !id || (index > 0 && id.localeCompare(ids[index - 1]!) <= 0)) ||
+            (cursor !== undefined && ids[0]!.localeCompare(cursor) <= 0)
+        ) {
+            throw new Error("Page scan did not return a strictly ordered batch");
+        }
+        yield batch.pages;
+        if (batch.nextCursor === undefined) {
+            return;
+        }
+        if (batch.nextCursor !== ids.at(-1) || batch.nextCursor === cursor) {
+            throw new Error("Page scan cursor did not match the last page");
+        }
+        cursor = batch.nextCursor;
+    }
+}

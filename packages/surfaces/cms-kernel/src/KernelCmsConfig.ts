@@ -1,5 +1,5 @@
 import type { ContentReader, RenderablePage } from "@bernouy/cms-content/rendering";
-import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
+import type { SiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
 import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
 import type { PageCapabilityAccessPort } from "@bernouy/cms-gateway/analysis";
@@ -17,7 +17,7 @@ export type KernelCmsConfig = {
     sessionCookie?: { readonly secure?: boolean };
     collections?: {
         siteId: string;
-        migrations: CollectionMigrationService;
+        upgrades: Pick<SiteUpgradeStorage, "getActive">;
     };
     collectionAssets?: InstalledCollectionAssetSource;
     cache: Cache;

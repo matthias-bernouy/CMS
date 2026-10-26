@@ -1,9 +1,9 @@
+import type { CollectionResourceDeprecation } from "./CollectionRelease";
 type CollectionAssetProfile = "inline-svg";
 
 export interface CollectionAssetDefinition {
+    readonly deprecation?: CollectionResourceDeprecation;
     readonly id: string;
-    /** Independent public-contract generation for selective consumers. */
-    readonly generation?: number;
     readonly mediaType: string;
     readonly byteLength: number;
     readonly digest: `sha256:${string}`;

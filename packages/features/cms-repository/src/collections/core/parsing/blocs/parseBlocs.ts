@@ -1,3 +1,4 @@
+import { resourceMetadata } from "../../validation/lifecycle/metadata";
 import { parseBlocExampleMetadata } from "../../validation/examples/catalogue";
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
@@ -16,7 +17,7 @@ import { blocSettingAttributeNameIssue, validateBlocBrowserCapabilities } from "
 const common = [
     "kind",
     "id",
-    "generation",
+    "deprecation",
     "label",
     "description",
     "categories",
@@ -65,10 +66,7 @@ function parseBloc(
     const base = {
         ...metadata,
         id,
-        generation:
-            source.generation === undefined
-                ? 1
-                : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
+        ...resourceMetadata(source, path),
         label: string(source.label, 120, `${path}.label`),
         description: string(source.description, 4096, `${path}.description`),
         ...(source.order === undefined

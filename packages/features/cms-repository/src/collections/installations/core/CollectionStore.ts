@@ -1,3 +1,4 @@
+import { assertUpgradePermit, type CollectionUpgradePermit } from "../upgrades/runtime/permit";
 import type { ReleaseCatalogue } from "../../../exports/contracts/catalogue";
 import type { BlobRange } from "@bernouy/blob-store";
 import { admitCollectionRelease } from "../../core/admission/admitCollectionRelease";
@@ -6,18 +7,16 @@ import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
 import type { AdmittedCollectionRelease } from "../../interfaces/CollectionAdmission";
 import type {
     CollectionInstallRequest,
-    CollectionInstallation,
-    CollectionMigrationReplacement,
+    CollectionUpgradeReplacement,
     CollectionStorage,
     InstalledCollection,
     InstalledCollectionAssetMetadata,
 } from "../interfaces/store";
 import { installCollections } from "./mutations/install";
 import { saveCollectionConfiguration, uninstallCollection } from "./mutations/site";
-import { upgradeCollection } from "./mutations/upgrade";
 import { assertCollectionResourceIsolation } from "./resourceIsolation";
 import { validateStoredCollectionInstallation, writeCollectionSiteState } from "./siteState";
-import { replaceCollectionsAfterMigration, restoreCollectionsAfterMigration } from "./mutations/migrate";
+import { replaceCollectionsForUpgrade } from "./mutations/switch";
 
 export class CollectionStore {
     constructor(
@@ -127,27 +126,14 @@ export class CollectionStore {
         return this.snapshot(siteId);
     }
 
-    async upgrade(siteId: string, digest: string, expectedRevision: number, repositoryId: string) {
-        await upgradeCollection(this.storage, siteId, digest, expectedRevision, repositoryId);
-        return this.snapshot(siteId);
-    }
-
-    async commitMigration(
+    async commitUpgrade(
         siteId: string,
-        replacements: readonly CollectionMigrationReplacement[],
+        replacements: readonly CollectionUpgradeReplacement[],
         expectedRevision: number,
+        permit: CollectionUpgradePermit,
     ) {
-        await replaceCollectionsAfterMigration(this.storage, siteId, replacements, expectedRevision);
-        return this.snapshot(siteId);
-    }
-
-    async restoreMigration(
-        siteId: string,
-        installations: readonly CollectionInstallation[],
-        replacements: readonly CollectionMigrationReplacement[],
-        expectedRevision: number,
-    ) {
-        await restoreCollectionsAfterMigration(this.storage, siteId, installations, replacements, expectedRevision);
+        await assertUpgradePermit(permit, siteId, expectedRevision, replacements);
+        await replaceCollectionsForUpgrade(this.storage, siteId, replacements, expectedRevision);
         return this.snapshot(siteId);
     }
 

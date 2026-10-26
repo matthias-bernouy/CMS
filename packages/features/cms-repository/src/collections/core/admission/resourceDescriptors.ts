@@ -9,7 +9,6 @@ import { collectionThemeTokenId } from "../namespace";
 type ResourceProjection = {
     kind: CollectionResourceKind;
     id: string;
-    generation: number;
     contract: unknown;
     implementation: unknown;
 };
@@ -22,10 +21,9 @@ export async function describeCollectionResources(
         `${left.kind}:${left.id}`.localeCompare(`${right.kind}:${right.id}`),
     );
     return Promise.all(
-        projections.map(async ({ kind, id, generation, contract, implementation }) => ({
+        projections.map(async ({ kind, id, contract, implementation }) => ({
             kind,
             id,
-            generation,
             contractDigest: await digest(contract),
             implementationDigest: await digest(implementation),
         })),
@@ -36,16 +34,16 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
     const resources: ResourceProjection[] = release.blocs.map((bloc) => ({
         kind: "bloc",
         id: bloc.id,
-        generation: bloc.generation ?? 1,
         contract: {
             id: bloc.id,
-            generation: bloc.generation ?? 1,
             kind: bloc.kind,
             catalogue: bloc.catalogue ?? "listed",
             uses: bloc.uses,
             requires: bloc.requires,
             slots: bloc.slots,
-            ...(bloc.kind === "component" ? { root: bloc.root, settings: bloc.settings ?? [] } : {}),
+            ...(bloc.kind === "component"
+                ? { root: bloc.root, settings: (bloc.settings ?? []).map(({ deprecation: _, ...setting }) => setting) }
+                : {}),
         },
         implementation: {
             resource: bloc,
@@ -66,8 +64,7 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
         resources.push({
             kind: "theme-token",
             id: collectionThemeTokenId(release.collectionId, token.id),
-            generation: token.generation ?? 1,
-            contract: { id: token.id, generation: token.generation ?? 1, type: token.type },
+            contract: { id: token.id, type: token.type },
             implementation: {
                 resource: token,
                 translations: referencedTranslations(release, {
@@ -86,8 +83,7 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
         resources.push({
             kind: "configuration",
             id: release.collectionId,
-            generation: release.configuration.generation ?? 1,
-            contract: { generation: release.configuration.generation ?? 1, schema: release.configuration.schema },
+            contract: { schema: release.configuration.schema },
             implementation: release.configuration,
         });
     }
@@ -96,10 +92,8 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
         ...release.assets.map((asset) => ({
             kind: "asset" as const,
             id: asset.id,
-            generation: asset.generation ?? 1,
             contract: {
                 id: asset.id,
-                generation: asset.generation ?? 1,
                 mediaType: asset.mediaType,
                 profiles: asset.profiles ?? [],
             },
@@ -113,10 +107,8 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
         ...(release.pages?.map((page) => ({
             kind: "page" as const,
             id: page.id,
-            generation: page.generation ?? 1,
             contract: {
                 id: page.id,
-                generation: page.generation ?? 1,
                 uses: page.uses,
                 requires: page.requires,
             },
@@ -127,10 +119,8 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
         ...(release.states?.map((state) => ({
             kind: "state" as const,
             id: state.id,
-            generation: state.generation ?? 1,
             contract: {
                 id: state.id,
-                generation: state.generation ?? 1,
                 scope: state.scope,
                 schema: state.schema,
             },
@@ -144,13 +134,12 @@ function projection(
     release: CollectionRelease,
     kind: Extract<CollectionResourceKind, "text" | "page">,
     id: string,
-    resource: { readonly generation?: number },
+    resource: { readonly deprecation?: unknown },
 ): ResourceProjection {
     return {
         kind,
         id,
-        generation: resource.generation ?? 1,
-        contract: { id, generation: resource.generation ?? 1 },
+        contract: { id },
         implementation: { resource, translations: referencedTranslations(release, resource) },
     };
 }

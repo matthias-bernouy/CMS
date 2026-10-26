@@ -1,24 +1,25 @@
 import type { Middleware } from "@bernouy/http-runner";
-import type { CollectionMigrationService } from "cms-repository/collections/installations/migrations/runtime/CollectionMigrationService";
+import type { SiteUpgradeStorage } from "cms-repository/site-upgrades/interfaces";
 
 const AVAILABLE_PREFIXES = ["/login", "/.cms/assets", "/.cms/collections"];
-const AVAILABLE_PATHS = new Set(["/favicon.ico", "/.cms/blocset", "/.cms/blocstyles", "/.cms/style"]);
+const AVAILABLE_PATHS = new Set(["/favicon.ico", "/.cms/blocset", "/.cms/blocstyles", "/.cms/style", "/.cms/mcp"]);
 const RECOVERY_CAPABILITIES = new Set([
-    "ulvia.cms.installations/get-collection-migration",
+    "ulvia.cms.installations/get-collection-upgrade",
     "ulvia.cms.installations/get-operation",
     "ulvia.cms.installations/list-operations",
-    "ulvia.cms.installations/get-collection-migration-status",
-    "ulvia.cms.installations/resume-collection-migration",
-    "ulvia.cms.installations/rollback-collection-migration",
+    "ulvia.cms.installations/get-site-upgrade-status",
+    "ulvia.cms.installations/resume-collection-upgrade",
+    "ulvia.cms.installations/get-contract-upgrade",
+    "ulvia.cms.installations/resume-contract-upgrade",
 ]);
 
 export function createCollectionMaintenanceGuard(options: {
     siteId: string;
-    migrations: Pick<CollectionMigrationService, "getActive">;
+    upgrades: Pick<SiteUpgradeStorage, "getActive">;
     basePath: string;
 }): Middleware {
     return async (request, next) => {
-        const active = await options.migrations.getActive(options.siteId);
+        const active = await options.upgrades.getActive(options.siteId);
         if (!active) {
             return next();
         }
@@ -27,9 +28,9 @@ export function createCollectionMaintenanceGuard(options: {
             return next();
         }
         return Response.json(
-            { code: "site_maintenance", migrationId: active.id, status: active.status },
+            { code: "site_maintenance", upgradeId: active.id, status: active.status },
             {
-                status: path.startsWith("/.cms/call/") ? 423 : 503,
+                status: /^\/\.cms\/(call|query|mutation)\//u.test(path) ? 423 : 503,
                 headers: { "Retry-After": "60", "Cache-Control": "no-store" },
             },
         );
@@ -48,6 +49,6 @@ function isAvailableDuringMaintenance(path: string): boolean {
     ) {
         return true;
     }
-    const capability = path.startsWith("/.cms/call/") ? path.slice("/.cms/call/".length) : null;
+    const capability = /^\/\.cms\/(?:call|query|mutation)\/(.+)$/u.exec(path)?.[1] ?? null;
     return capability !== null && RECOVERY_CAPABILITIES.has(capability);
 }

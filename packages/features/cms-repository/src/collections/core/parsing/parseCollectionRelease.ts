@@ -1,9 +1,10 @@
+import { validateCollectionLifecycles } from "../validation/lifecycle/validate";
 import { canonicalIJsonBytes, deepFreeze, parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { satisfiesVersionRange } from "cms-repository/exports/contracts/compatibility";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError, invalid, translateCollectionError } from "../errors";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
-import { identifier, integer, keys, record, string } from "../values";
+import { identifier, keys, record, string } from "../values";
 import { collectionThemeTokenId, parseCollectionNamespace } from "../namespace";
 import { isThemeToken, parseCollectionTheme } from "./theme";
 import { parseCollectionTexts } from "../texts/parseCollectionTexts";
@@ -17,7 +18,6 @@ import { validateCollectionTextReferences } from "../validation/markup/texts";
 import { parseCollectionTranslations } from "../texts/translationCatalogue";
 import { validateCollectionTranslationReferences } from "../texts/translationReferences";
 import { parseCollectionDependencies, parseCollectionExports, validateCollectionExports } from "./requirements";
-import { parseCollectionMigrations } from "../admission/releaseMigrations";
 import { validateCollectionAssetReferences } from "../validation/markup/assets";
 import { parseCollectionExamples } from "../validation/examples/parse";
 import { validateCollectionExamples } from "../validation/examples/validate";
@@ -42,8 +42,6 @@ export function parseCollectionRelease(
                 "collectionId",
                 "publisherId",
                 "version",
-                "dataGeneration",
-                "migrations",
                 "name",
                 "description",
                 "locale",
@@ -74,11 +72,6 @@ export function parseCollectionRelease(
         }
         const collectionId = parseCollectionNamespace(source.collectionId, "$.collectionId");
         const version = parseVersion(source.version);
-        const dataGeneration =
-            source.dataGeneration === undefined
-                ? 1
-                : integer(source.dataGeneration, 1, Number.MAX_SAFE_INTEGER, "$.dataGeneration");
-        const migrations = parseCollectionMigrations(source.migrations ?? [], collectionId, dataGeneration, limits);
         const locale = parseLocale(source.locale);
         const translations = parseCollectionTranslations(source.translations, locale);
         const texts = source.texts === undefined ? undefined : parseTexts(source.texts, locale, limits);
@@ -174,8 +167,6 @@ export function parseCollectionRelease(
             collectionId,
             publisherId: identifier(source.publisherId, "$.publisherId"),
             version,
-            dataGeneration,
-            migrations,
             name: string(source.name, 128, "$.name"),
             ...(source.description === undefined
                 ? {}
@@ -195,6 +186,7 @@ export function parseCollectionRelease(
             ...(pages === undefined ? {} : { pages }),
             examples: parseCollectionExamples(source.examples ?? [], locale, limits),
         };
+        validateCollectionLifecycles(release);
         validateCollectionExamples(release, limits);
         validateCollectionStateBindings(release);
         validateDeclaredPageLinks(release);

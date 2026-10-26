@@ -1,3 +1,4 @@
+import { reviewedUpgrade } from "./upgrades/reviewed";
 import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { CollectionStore, MemoryCollectionStorage } from "../../../src/exports/collections/installations";
@@ -47,7 +48,7 @@ test("installs an exact dependency graph atomically in any request order", async
                 collectionId: "foundation",
                 publisherId: "atlas.official",
                 versionRange: "^1.0.0",
-                imports: { blocs: [{ id: "foundation-block", generation: 1 }], themeTokens: [] },
+                imports: { blocs: [{ id: "foundation-block" }], themeTokens: [] },
             },
         ],
     });
@@ -102,7 +103,7 @@ test("validates mutable configuration and preserves it through compatible upgrad
     wider.configuration.schema.properties.subtitle = { type: "string", maxLength: 64 };
     wider.configuration.defaults.subtitle = "Optional";
     const widerArtifact = await store.importRelease(collectionFixture(wider));
-    const upgraded = await store.upgrade("site", widerArtifact.digest, 2, "local");
+    const upgraded = await reviewedUpgrade(store, "site", widerArtifact.digest, 2, "local");
     expect(upgraded.collections[0]!.configuration).toEqual({ title: "Custom" });
 
     const narrower = structuredClone(initial);
@@ -110,8 +111,8 @@ test("validates mutable configuration and preserves it through compatible upgrad
     narrower.configuration.schema.properties.title.maxLength = 4;
     narrower.configuration.defaults.title = "Tiny";
     const narrowerArtifact = await store.importRelease(collectionFixture(narrower));
-    await expect(store.upgrade("site", narrowerArtifact.digest, 3, "local")).rejects.toThrow(
-        "narrows the collection configuration contract",
+    await expect(reviewedUpgrade(store, "site", narrowerArtifact.digest, 3, "local")).rejects.toThrow(
+        "major publication",
     );
     expect((await store.snapshot("site")).collections[0]!.digest).toBe(widerArtifact.digest);
 });
@@ -150,7 +151,7 @@ test("an upgrade introducing configuration initializes the admitted defaults", a
     };
     const admitted = await store.importRelease(collectionFixture(next));
 
-    const upgraded = await store.upgrade("site", admitted.digest, 1, "local");
+    const upgraded = await reviewedUpgrade(store, "site", admitted.digest, 1, "local");
 
     expect(upgraded.collections[0]!.configuration).toEqual({ mode: "safe" });
 });

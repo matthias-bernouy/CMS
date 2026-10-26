@@ -1,3 +1,4 @@
+import { reviewedUpgrade } from "./upgrades/reviewed";
 import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
@@ -85,7 +86,7 @@ test("installations and upgrades reject global Bloc and theme token collisions",
     const themeCollision = await store.importRelease(
         collectionFixture(release("atlas-tools", "1.1.0", "atlas-tools-welcome", "accent")),
     );
-    await expect(store.upgrade("themes", themeCollision.digest, 2, "local")).rejects.toThrow("theme token");
+    await expect(reviewedUpgrade(store, "themes", themeCollision.digest, 2, "local")).rejects.toThrow("theme token");
 });
 
 test("installations reject collection Pages claiming the same global path", async () => {
@@ -179,11 +180,11 @@ test("installs only declared public resources from compatible collection depende
                 publisherId: "ulvia.official",
                 versionRange: "^1.0.0",
                 imports: {
-                    blocs: [{ id: "ulvia-official-button", generation: 1 }],
-                    themeTokens: [{ id: "primary", generation: 1 }],
-                    texts: [{ id: "submit", generation: 1 }],
-                    assets: [{ id: "empty.svg", generation: 1 }],
-                    pages: [{ id: "home", generation: 1, defaultPath: "/" }],
+                    blocs: [{ id: "ulvia-official-button" }],
+                    themeTokens: [{ id: "primary" }],
+                    texts: [{ id: "submit" }],
+                    assets: [{ id: "empty.svg" }],
+                    pages: [{ id: "home", defaultPath: "/" }],
                 },
             },
         ],
@@ -200,15 +201,15 @@ test("installs only declared public resources from compatible collection depende
     const unsupportedGeneration = structuredClone(consumer);
     unsupportedGeneration.version = "1.0.1";
     unsupportedGeneration.dependencies[0]!.imports.assets[0]!.generation = 2;
-    const unsupportedArtifact = await store.importRelease(collectionFixture(unsupportedGeneration));
-    await store.install("generation", foundationArtifact.digest, 0);
-    await expect(store.install("generation", unsupportedArtifact.digest, 1)).rejects.toThrow("empty.svg generation 2");
+    await expect(store.importRelease(collectionFixture(unsupportedGeneration))).rejects.toThrow(
+        'unknown property "generation"',
+    );
 
     const breakingFoundation = { ...structuredClone(foundation), version: "2.0.0" };
     const breakingArtifact = await store.importRelease(collectionFixture(breakingFoundation), [
         { id: "empty.svg", bytes: assetBytes },
     ]);
-    await expect(store.upgrade("site", breakingArtifact.digest, 2, "local")).rejects.toThrow("requires");
+    await expect(reviewedUpgrade(store, "site", breakingArtifact.digest, 2, "local")).rejects.toThrow("requires");
 
     const wrongType = await store.importRelease(
         collectionFixture({
@@ -277,7 +278,7 @@ test("requires imported cms-svg assets to expose the verified inline profile", a
                 imports: {
                     blocs: [],
                     themeTokens: [],
-                    assets: [{ id: asset.id, generation: 1 }],
+                    assets: [{ id: asset.id }],
                 },
             },
         ],
@@ -318,7 +319,7 @@ test("admits imported Blocs under the same Page grammar", async () => {
                 publisherId: "ulvia.official",
                 versionRange: "^1.0.0",
                 imports: {
-                    blocs: [{ id: "ulvia-official-admin-card", generation: 1 }],
+                    blocs: [{ id: "ulvia-official-admin-card" }],
                     themeTokens: [],
                 },
             },
@@ -365,7 +366,7 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
         collectionId: "foundation",
         publisherId: "atlas.official",
         versionRange: "^1.0.0",
-        imports: { blocs: [{ id: "foundation-card", generation: 1 }], themeTokens: [] },
+        imports: { blocs: [{ id: "foundation-card" }], themeTokens: [] },
     };
     const consumer = (html: string, version: string) => ({
         ...consumerBase,
@@ -424,7 +425,7 @@ test("rejects imports that the dependency does not export", async () => {
                 collectionId: "ulvia-official",
                 publisherId: "ulvia.official",
                 versionRange: ">=0.0.0",
-                imports: { blocs: [{ id: "ulvia-official-button", generation: 1 }], themeTokens: [] },
+                imports: { blocs: [{ id: "ulvia-official-button" }], themeTokens: [] },
             },
         ],
     };

@@ -52,7 +52,7 @@ test("collection Admin Pages render through site routes while preserving path ov
     const projected = withInstalledCollections(repository, collections.store as never, "site-a", routes);
     const mounted = mountPublicPages({
         repository: projected,
-        collections: { siteId: "site-a", migrations: collections.migrations as never },
+        collections: { siteId: "site-a", upgrades: collections.upgrades as never },
     });
 
     const response = await mounted.get(new Request("http://admin.test/admin"));

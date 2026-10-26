@@ -8,10 +8,9 @@ export type {
     CollectionResourceImportSelection,
     CollectionTranslationKey,
     CollectionTranslations,
-    CollectionDataMigration,
-    CollectionMigrationOperation,
     CollectionResourceDescriptor,
     CollectionResourceKind,
+    CollectionResourceDeprecation,
 } from "cms-repository/collections/interfaces/CollectionRelease";
 export type {
     CollectionState,

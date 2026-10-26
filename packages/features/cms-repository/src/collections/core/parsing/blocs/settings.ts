@@ -1,3 +1,4 @@
+import { resourceMetadata } from "../../validation/lifecycle/metadata";
 import type { CollectionComponentSettings, CollectionSettingItem } from "../../../interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
@@ -25,6 +26,7 @@ export function parseComponentSettings(
             source,
             [
                 "id",
+                "deprecation",
                 "label",
                 "group",
                 "help",
@@ -167,7 +169,11 @@ export function parseComponentSettings(
             item.id,
             baseSettings,
         );
-        return visibility ? { ...item, visibleWhen: visibility } : item;
+        return {
+            ...item,
+            ...resourceMetadata(record(inputs[index], itemPath), itemPath),
+            ...(visibility ? { visibleWhen: visibility } : {}),
+        };
     });
     assertVisibilityAcyclic(settings, path);
     return settings;

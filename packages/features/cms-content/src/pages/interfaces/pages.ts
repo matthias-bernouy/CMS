@@ -36,7 +36,7 @@ export type PageIndexingConfiguration = {
 
 export type TPage = {
     id: string;
-    /** Monotonic persistence revision used for optimistic concurrency and migration rollback safety. */
+    /** Monotonic persistence revision used for optimistic concurrency. */
     revision: number;
     /** Informational provenance for a site-owned copy; never live inheritance. */
     origin?: PageContributionOrigin;
@@ -61,7 +61,6 @@ export type PageContributionOrigin = {
     readonly version: string;
     readonly digest: string;
     readonly pageId: string;
-    readonly generation: number;
 };
 
 export type PageCreateOptions = {

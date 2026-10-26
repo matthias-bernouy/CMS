@@ -20,7 +20,6 @@ export {
     loadCollectionTheme,
 } from "cms-repository/collections/tooling/authoring/metadataSources";
 export { loadCollectionTexts } from "cms-repository/collections/tooling/authoring/textSources";
-export { loadCollectionMigrations } from "cms-repository/collections/tooling/authoring/migrationSources";
 
 export {
     renderCollectionExamples,

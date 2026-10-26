@@ -1,3 +1,4 @@
+import { resourceMetadata } from "../validation/lifecycle/metadata";
 import type {
     CollectionTheme,
     CollectionThemeEntry,
@@ -9,7 +10,7 @@ import type { CollectionDependency } from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import type { CollectionLimits } from "../limits";
 import { collectionThemeSourceId, collectionThemeTokenId } from "../namespace";
-import { array, identifier, integer, keys, record, string, unique } from "../values";
+import { array, identifier, keys, record, string, unique } from "../values";
 import { parseAssetId } from "./assets";
 
 const TYPES = new Set<CollectionThemeTokenType>(["color", "font-family", "length", "number", "shadow", "value"]);
@@ -110,7 +111,7 @@ function parseThemeEntry(value: unknown, collectionId: string, path: string): Co
             display: display as CollectionThemeFontFace["display"],
         };
     }
-    keys(source, ["id", "generation", "label", "description", "type", "defaults"], path);
+    keys(source, ["id", "deprecation", "label", "description", "type", "defaults"], path);
     if (!TYPES.has(source.type as CollectionThemeTokenType)) {
         invalid("unsupported theme entry type", `${path}.type`);
     }
@@ -120,7 +121,7 @@ function parseThemeEntry(value: unknown, collectionId: string, path: string): Co
     collectionThemeTokenId(collectionId, id);
     return {
         id,
-        generation: generation(source.generation, path),
+        ...resourceMetadata(source, path),
         label: label(source.label, `${path}.label`),
         ...(source.description === undefined
             ? {}
@@ -131,10 +132,6 @@ function parseThemeEntry(value: unknown, collectionId: string, path: string): Co
             ...(defaults.dark === undefined ? {} : { dark: css(defaults.dark, `${path}.defaults.dark`) }),
         },
     };
-}
-
-function generation(value: unknown, path: string): number {
-    return value === undefined ? 1 : integer(value, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`);
 }
 
 function validFontWeight(value: string): boolean {

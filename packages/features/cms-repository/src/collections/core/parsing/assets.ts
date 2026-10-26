@@ -1,3 +1,4 @@
+import { resourceMetadata } from "../validation/lifecycle/metadata";
 import type { CollectionAssetDefinition } from "cms-repository/collections/interfaces/CollectionAssets";
 import { isSha256Digest } from "@bernouy/binary-media";
 import { invalid } from "cms-repository/collections/core/errors";
@@ -11,12 +12,8 @@ export function parseAssets(value: unknown, limits: Readonly<CollectionLimits>):
     const assets = array(value, limits.maxAssets, "$.assets").map((item, index): CollectionAssetDefinition => {
         const path = `$.assets[${index}]`;
         const source = record(item, path);
-        keys(source, ["id", "generation", "mediaType", "byteLength", "digest", "profiles"], path);
+        keys(source, ["id", "deprecation", "mediaType", "byteLength", "digest", "profiles"], path);
         const id = parseAssetId(source.id, `${path}.id`);
-        const generation =
-            source.generation === undefined
-                ? 1
-                : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`);
         const mediaType = string(source.mediaType, 255, `${path}.mediaType`);
         if (!MEDIA_TYPE.test(mediaType)) {
             invalid("must be a concrete lowercase media type without parameters", `${path}.mediaType`);
@@ -42,7 +39,7 @@ export function parseAssets(value: unknown, limits: Readonly<CollectionLimits>):
         }
         return Object.freeze({
             id,
-            generation,
+            ...resourceMetadata(source, path),
             mediaType,
             byteLength,
             digest,

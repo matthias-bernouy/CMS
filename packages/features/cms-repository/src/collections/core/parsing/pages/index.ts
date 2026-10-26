@@ -1,8 +1,9 @@
+import { resourceMetadata } from "../../validation/lifecycle/metadata";
 import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
 import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
-import { array, identifier, integer, keys, record, string, unique } from "../../values";
+import { array, identifier, keys, record, string, unique } from "../../values";
 import { parseRequirements } from "../requirements";
 import { parseDefaultPath } from "./document";
 import { collectionPageDefinitions } from "./definitions";
@@ -24,7 +25,7 @@ export function parseCollectionPages(
     const pages = array(value, limits.maxPages, "$.pages").map((entry, index) => {
         const path = `$.pages[${index}]`;
         const source = record(entry, path);
-        keys(source, ["id", "generation", "defaultPath", "name", "description", "requires", "uses", "document"], path);
+        keys(source, ["id", "deprecation", "defaultPath", "name", "description", "requires", "uses", "document"], path);
         const id = identifier(source.id, `${path}.id`);
         const defaultPath = parseDefaultPath(source.defaultPath, `${path}.defaultPath`);
         const document = record(source.document, `${path}.document`);
@@ -60,11 +61,8 @@ export function parseCollectionPages(
         }
         return {
             id,
-            generation:
-                source.generation === undefined
-                    ? 1
-                    : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
             defaultPath,
+            ...resourceMetadata(source, path),
             name: string(source.name, 128, `${path}.name`),
             ...(source.description === undefined
                 ? {}

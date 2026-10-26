@@ -26,14 +26,7 @@ export async function synchronizePageRoutes(
     await synchronizePageRouteRegistrations(routes, siteId, desired, () => true);
 }
 
-const ROUTE_MUTATIONS = new Set([
-    "install",
-    "installMany",
-    "upgrade",
-    "commitMigration",
-    "restoreMigration",
-    "uninstall",
-]);
+const ROUTE_MUTATIONS = new Set(["install", "installMany", "upgrade", "commitUpgrade", "uninstall"]);
 
 /** Keeps collection-owned Page routes synchronized outside request handling. */
 export function withCollectionPageRoutes(

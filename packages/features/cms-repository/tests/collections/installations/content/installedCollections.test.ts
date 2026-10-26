@@ -146,17 +146,20 @@ test("site Pages inherit capability requirements from installed Blocs", async ()
                     },
                     output: { type: "binary", maxBytes: 1024 },
                     errors: [],
-                    binding: {
-                        transport: "http",
-                        method: "GET",
-                        path: "/files/{fileId}/{generation}",
-                        input: { path: { fileId: "fileId", generation: "generation" } },
-                        response: {
-                            successStatuses: [200],
-                            contentTypes: [],
-                            errorStatuses: {},
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "GET",
+                            path: "/files/{fileId}/{generation}",
+                            input: { path: { fileId: "fileId", generation: "generation" } },
+                            response: {
+                                successStatuses: [200],
+                                contentTypes: [],
+                                errorStatuses: {},
+                            },
                         },
-                    },
+                    ],
                 },
             ],
         }),
@@ -212,7 +215,7 @@ test("installed Page aliases redirect to their effective collection route", asyn
             pages: [
                 {
                     id: "overview",
-                    generation: 1,
+
                     defaultPath: "/admin",
                     name: "page.overview.name",
                     uses: ["test-welcome"],

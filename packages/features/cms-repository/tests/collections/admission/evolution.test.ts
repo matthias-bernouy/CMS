@@ -28,95 +28,36 @@ test("collection publication separates implementation, compatible contract and b
     await expect(verifyCollectionPublicationEvolution(initial, minorContract)).resolves.toBeUndefined();
 });
 
-test("breaking resources require a major, their own generation and one adjacent data migration", async () => {
+test("retained incompatible resources require new identities even in a major release", async () => {
     const initial = release("1.0.0");
-    const breaking = (version: string, generation: number, dataGeneration: number) =>
-        release(version, (source) => {
-            source.dataGeneration = dataGeneration;
-            source.migrations = Array.from({ length: dataGeneration - 1 }, (_, index) => ({
-                fromGeneration: index + 1,
-                toGeneration: index + 2,
-                operations: [],
-            }));
-            const panel = (source.blocs as Record<string, unknown>[])[0]!;
-            panel.generation = generation;
-            panel.slots = { body: { max: 1 } };
+    for (const version of ["1.1.0", "2.0.0"]) {
+        const incompatible = release(version, (source) => {
+            (source.blocs as Record<string, unknown>[])[0]!.slots = { body: { max: 1 } };
         });
-
-    await expect(verifyCollectionPublicationEvolution(initial, breaking("1.1.0", 2, 2))).rejects.toThrow("Minor");
-    await expect(verifyCollectionPublicationEvolution(initial, breaking("2.0.0", 1, 2))).rejects.toThrow(
-        "must increase its generation",
-    );
-    await expect(verifyCollectionPublicationEvolution(initial, breaking("2.0.0", 2, 1))).rejects.toThrow(
-        "data-generation migration",
-    );
-    await expect(verifyCollectionPublicationEvolution(initial, breaking("2.0.0", 2, 3))).rejects.toThrow(
-        "adjacent step",
-    );
-    await expect(verifyCollectionPublicationEvolution(initial, breaking("2.0.0", 2, 2))).resolves.toBeUndefined();
+        await expect(verifyCollectionPublicationEvolution(initial, incompatible)).rejects.toThrow(
+            "new resource identity",
+        );
+    }
+    const removed = release("2.0.0", (source) => {
+        source.blocs = [];
+        source.examples = [];
+    });
+    await expect(verifyCollectionPublicationEvolution(initial, removed)).resolves.toBeUndefined();
+    const minorRemoved = release("1.1.0", (source) => {
+        source.blocs = [];
+        source.examples = [];
+    });
+    await expect(verifyCollectionPublicationEvolution(initial, minorRemoved)).rejects.toThrow("major publication");
 });
 
-test("publication rejects restricted capabilities, dependency provenance changes and generation regressions", async () => {
+test("retained resource requirements cannot narrow and publication identity is stable", async () => {
     const requirement = { contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" };
     const initial = release("1.0.0", (source) => {
-        const panel = (source.blocs as Record<string, unknown>[])[0]!;
-        panel.generation = 2;
-        panel.requires = [requirement];
-        source.dependencies = [
-            {
-                collectionId: "shared-ui",
-                publisherId: "atlas.official",
-                versionRange: "^1.0.0",
-                imports: { blocs: [{ id: "shared-ui-card", generation: 1 }], themeTokens: [] },
-            },
-        ];
+        (source.blocs as Record<string, unknown>[])[0]!.requires = [requirement];
     });
-    const update = (mutate: (source: Record<string, unknown>) => void, version = "1.1.0") =>
-        release(version, (source) => {
-            const panel = (source.blocs as Record<string, unknown>[])[0]!;
-            panel.generation = 2;
-            panel.requires = [requirement];
-            source.dependencies = [
-                {
-                    collectionId: "shared-ui",
-                    publisherId: "atlas.official",
-                    versionRange: "^1.0.0",
-                    imports: { blocs: [{ id: "shared-ui-card", generation: 1 }], themeTokens: [] },
-                },
-            ];
-            mutate(source);
-        });
-
-    await expect(
-        verifyCollectionPublicationEvolution(
-            initial,
-            update((source) => {
-                (source.blocs as Record<string, unknown>[])[0]!.requires = [
-                    { ...requirement, versionRange: ">=1.2.0 <2.0.0" },
-                ];
-            }),
-        ),
-    ).rejects.toThrow("Minor");
-    await expect(
-        verifyCollectionPublicationEvolution(
-            initial,
-            update((source) => {
-                (source.dependencies as Record<string, unknown>[])[0]!.publisherId = "other.publisher";
-            }),
-        ),
-    ).rejects.toThrow("Minor");
-    await expect(
-        verifyCollectionPublicationEvolution(
-            initial,
-            update((source) => {
-                (source.blocs as Record<string, unknown>[])[0]!.generation = 1;
-            }),
-        ),
-    ).rejects.toThrow("generation decreased");
-    await expect(
-        verifyCollectionPublicationEvolution(
-            initial,
-            update(() => {}, "1.0.0"),
-        ),
-    ).rejects.toThrow("version must increase");
+    const narrowed = release("2.0.0", (source) => {
+        (source.blocs as Record<string, unknown>[])[0]!.requires = [{ ...requirement, versionRange: ">=1.2.0 <2.0.0" }];
+    });
+    await expect(verifyCollectionPublicationEvolution(initial, narrowed)).rejects.toThrow("new resource identity");
+    await expect(verifyCollectionPublicationEvolution(initial, initial)).rejects.toThrow("version must increase");
 });

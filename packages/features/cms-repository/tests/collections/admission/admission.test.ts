@@ -111,8 +111,8 @@ describe("collection authored bundle admission", () => {
             effect: "query",
             execution: "sync",
         };
-        (((query.capabilities as Record<string, unknown>[])[0]!.binding as Record<string, unknown>).method as string) =
-            "QUERY";
+        (((query.capabilities as Record<string, unknown>[])[0]!.bindings[0] as Record<string, unknown>)
+            .method as string) = "QUERY";
         const source = collectionDocument();
         (source.blocs as Record<string, unknown>[]).push({
             description: "bloc.page.label",
@@ -143,7 +143,7 @@ describe("collection authored bundle admission", () => {
         const binaryQuery = structuredClone(query);
         const binaryCapability = (binaryQuery.capabilities as Record<string, unknown>[])[0]!;
         binaryCapability.output = { type: "binary", maxBytes: 1024 };
-        (binaryCapability.binding as Record<string, unknown>).response = {
+        (binaryCapability.bindings[0] as Record<string, unknown>).response = {
             successStatuses: [200],
             contentTypes: ["application/octet-stream"],
             errorStatuses: {},
@@ -157,7 +157,7 @@ describe("collection authored bundle admission", () => {
         const query = contractDocument("catalog.items", "item.list");
         const capability = (query.capabilities as Record<string, unknown>[])[0]!;
         capability.behavior = { effect: "query", execution: "sync" };
-        (capability.binding as Record<string, unknown>).method = "QUERY";
+        (capability.bindings[0] as Record<string, unknown>).method = "QUERY";
         const source = collectionDocument();
         source.states = [
             {

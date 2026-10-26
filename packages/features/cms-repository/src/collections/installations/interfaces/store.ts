@@ -23,7 +23,7 @@ export type CollectionInstallation = {
     textOverrides: CollectionTextOverrides;
 };
 export type CollectionInstallRequest = { digest: string; repositoryId?: string };
-export type CollectionMigrationReplacement = {
+export type CollectionUpgradeReplacement = {
     collectionId: string;
     digest: string;
     repositoryId?: string;

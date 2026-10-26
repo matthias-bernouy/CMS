@@ -12,7 +12,6 @@ const origin = {
     version: "1.0.0",
     digest: `sha256:${"a".repeat(64)}`,
     pageId: "overview",
-    generation: 1,
 } as const;
 
 describe("site Page ownership", () => {

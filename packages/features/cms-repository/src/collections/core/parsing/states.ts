@@ -1,8 +1,9 @@
+import { resourceMetadata } from "../validation/lifecycle/metadata";
 import { parseUlviaSchema, type UlviaSchema } from "cms-repository/exports/contracts/schema";
 import type { CollectionState, CollectionStateScope } from "../../interfaces/CollectionState";
 import { invalid, translateCollectionError } from "../errors";
 import type { CollectionLimits } from "../limits";
-import { array, identifier, integer, keys, ordinal, record, unique } from "../values";
+import { array, identifier, keys, ordinal, record, unique } from "../values";
 
 const SCOPES = new Set<CollectionStateScope>(["param", "page", "session", "persistent"]);
 
@@ -14,7 +15,7 @@ export function parseCollectionStates(
     const states = array(value ?? [], limits.maxStates, "$.states").map((entry, index) => {
         const path = `$.states[${index}]`;
         const source = record(entry, path);
-        keys(source, ["id", "generation", "scope", "schema"], path);
+        keys(source, ["id", "deprecation", "scope", "schema"], path);
         const id = identifier(source.id, `${path}.id`);
         if (`${collectionId}-${id}`.length > 128) {
             invalid("collection-owned state key must contain at most 128 characters", `${path}.id`);
@@ -32,11 +33,8 @@ export function parseCollectionStates(
         assertBrowserStateSchema(schema, scope as CollectionStateScope, `${path}.schema`);
         return {
             id,
-            generation:
-                source.generation === undefined
-                    ? 1
-                    : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
             scope: scope as CollectionStateScope,
+            ...resourceMetadata(source, path),
             schema,
         };
     });

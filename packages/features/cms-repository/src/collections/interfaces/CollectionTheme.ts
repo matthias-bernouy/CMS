@@ -1,10 +1,10 @@
-import type { CollectionTranslationKey } from "./CollectionRelease";
+import type { CollectionTranslationKey, CollectionResourceDeprecation } from "./CollectionRelease";
 
 export type CollectionThemeTokenType = "color" | "font-family" | "length" | "number" | "shadow" | "value";
 
 export type CollectionThemeToken = {
+    readonly deprecation?: CollectionResourceDeprecation;
     readonly id: string;
-    readonly generation?: number;
     /** Collection translation key. */
     readonly label: CollectionTranslationKey;
     /** Collection translation key. */

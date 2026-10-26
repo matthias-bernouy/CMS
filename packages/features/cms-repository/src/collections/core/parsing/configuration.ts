@@ -1,8 +1,9 @@
+import { resourceMetadata } from "../validation/lifecycle/metadata";
 import { parseUlviaSchema, validateSchemaValue, type UlviaSchema } from "cms-repository/exports/contracts/schema";
 import type { CollectionConfiguration } from "../../interfaces/CollectionRelease";
 import { invalid, translateCollectionError } from "../errors";
 import type { CollectionLimits } from "../limits";
-import { integer, keys, record } from "../values";
+import { keys, record } from "../values";
 
 export function parseConfiguration(
     value: unknown,
@@ -10,7 +11,7 @@ export function parseConfiguration(
     limits: Readonly<CollectionLimits>,
 ): CollectionConfiguration {
     const source = record(value, path);
-    keys(source, ["generation", "schema", "defaults"], path);
+    keys(source, ["deprecation", "schema", "defaults"], path);
     let schema: UlviaSchema;
     try {
         schema = parseUlviaSchema(source.schema, limits.schema);
@@ -28,11 +29,8 @@ export function parseConfiguration(
         invalid(`invalid defaults: ${error instanceof Error ? error.message : "schema mismatch"}`, `${path}.defaults`);
     }
     return {
-        generation:
-            source.generation === undefined
-                ? 1
-                : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
         schema,
+        ...resourceMetadata(source, path),
         defaults,
     };
 }
