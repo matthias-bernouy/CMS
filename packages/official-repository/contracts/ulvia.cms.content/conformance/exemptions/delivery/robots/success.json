@@ -1,4 +1,0 @@
-{
-    "capabilityId": "delivery.robots",
-    "reason": "Robots policy assertions depend on the public deployment paths chosen by the CMS surface."
-}

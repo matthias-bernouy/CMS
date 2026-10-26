@@ -80,18 +80,3 @@ test("recursive release rejects symbolic definition files and ambiguous flags", 
         await f.close();
     }
 });
-
-test("invalid conformance sources prevent every contract in the batch from being stored", async () => {
-    const f = await batchFixture();
-    try {
-        await f.contract("batch.first");
-        const directory = await f.contract("batch.second");
-        await mkdir(join(directory, "conformance"));
-        await writeFile(join(directory, "conformance/definition.json"), JSON.stringify({ kind: "conformance-suite" }));
-        await expect(f.run(["release", f.source, "--recursive"])).rejects.toThrow("scenarios/");
-        expect(await f.files.list("contracts")).toEqual([]);
-        expect(f.output).toEqual([]);
-    } finally {
-        await f.close();
-    }
-});

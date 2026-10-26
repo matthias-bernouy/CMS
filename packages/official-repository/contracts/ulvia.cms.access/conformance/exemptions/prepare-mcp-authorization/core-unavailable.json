@@ -1,5 +1,0 @@
-{
-    "capabilityId": "prepare-mcp-authorization",
-    "errorCode": "CORE_UNAVAILABLE",
-    "reason": "OAuth requires browser consent, exact resource audiences and PKCE client state. These outcomes are covered by the CMS OAuth integration tests rather than the portable account read suite."
-}

@@ -11,7 +11,6 @@ import {
     prepareResource,
     resourceCoordinate,
     storeResource,
-    validateConformance,
     type PreparedResource,
 } from "./resource";
 
@@ -54,9 +53,6 @@ export async function releaseBatch(
     );
     for (const admission of ordered) {
         await catalogue.publish(admission);
-    }
-    for (const { directory, resource } of candidates) {
-        await validateConformance(directory, resource.admission, catalogue);
     }
     const byDigest = new Map(candidates.map(({ resource }) => [resource.admission.digest, resource]));
     const planned = new Set(ordered.map((admission) => admission.digest));

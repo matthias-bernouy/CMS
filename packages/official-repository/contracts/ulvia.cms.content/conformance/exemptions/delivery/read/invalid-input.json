@@ -1,5 +1,0 @@
-{
-    "capabilityId": "delivery.read",
-    "errorCode": "INVALID_INPUT",
-    "reason": "The admitted operation enum already validates malformed delivery requests before Provider dispatch."
-}

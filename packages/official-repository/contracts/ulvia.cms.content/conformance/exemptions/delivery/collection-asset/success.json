@@ -1,4 +1,0 @@
-{
-    "capabilityId": "delivery.collection-asset",
-    "reason": "A portable fresh-tenant suite cannot assume an installed collection asset and its exact immutable digest."
-}

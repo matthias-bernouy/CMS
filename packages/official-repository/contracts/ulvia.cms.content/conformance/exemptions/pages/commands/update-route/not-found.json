@@ -1,5 +1,0 @@
-{
-    "capabilityId": "pages.update-route",
-    "errorCode": "NOT_FOUND",
-    "reason": "Missing Page identity depends on the disposable tenant fixture."
-}

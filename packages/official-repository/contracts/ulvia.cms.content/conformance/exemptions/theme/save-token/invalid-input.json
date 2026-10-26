@@ -1,5 +1,0 @@
-{
-    "capabilityId": "theme.token.save",
-    "errorCode": "INVALID_INPUT",
-    "reason": "The portable smoke suite does not prescribe an invalid CSS token override."
-}

@@ -1,4 +1,0 @@
-{
-    "capabilityId": "resume-contract-upgrade",
-    "reason": "Requires an authoritative live site usage snapshot, exact served releases and durable site upgrade storage; exercised by provider integration and upgrade service tests."
-}

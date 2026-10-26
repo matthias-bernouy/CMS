@@ -1,5 +1,0 @@
-{
-    "capabilityId": "pages.rename",
-    "errorCode": "REVISION_CONFLICT",
-    "reason": "The disposable suite does not prescribe concurrent mutation scheduling."
-}

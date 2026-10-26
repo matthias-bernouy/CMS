@@ -2,11 +2,9 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { admitConformanceSuiteJson, admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
 import { runCli } from "../../src/cli";
-import { compileConformanceSource } from "../../src/release/authored/conformance";
-import { resolveConformanceDependencies } from "../../src/release/authored/conformanceDependencies";
 import { compileContractSource } from "../../src/release/authored/contract";
 
 test("recursive contract sources are path-independent and attach separate mocks", async () => {
@@ -22,20 +20,6 @@ test("recursive contract sources are path-independent and attach separate mocks"
         expect(rightAdmission.digest).toBe(leftAdmission.digest);
         expect(leftAdmission.release.capabilities.map(({ id }) => id)).toEqual(["alpha", "zeta"]);
         expect(leftAdmission.release.capabilities[0]!.mocks?.map(({ id }) => id)).toEqual(["success"]);
-
-        await createConformance(left, leftAdmission.digest);
-        const conformance = await compileConformanceSource(left);
-        expect(conformance).toBeString();
-        const suite = await admitConformanceSuiteJson(conformance!, leftAdmission);
-        expect(suite.suite.scenarios.map(({ id }) => id)).toEqual(["alpha-works"]);
-
-        const dependencySource = dependencyProfile(leftAdmission.digest);
-        expect(await resolveConformanceDependencies(dependencySource, async () => leftAdmission)).toEqual([
-            leftAdmission,
-        ]);
-        await expect(
-            resolveConformanceDependencies(dependencyProfile(`sha256:${"f".repeat(64)}`), async () => leftAdmission),
-        ).rejects.toThrow("has another digest");
     } finally {
         await rm(root, { recursive: true, force: true });
     }
@@ -67,39 +51,26 @@ test("authored contracts reject retired monolithic source shapes", async () => {
             capabilities: [capability("alpha")],
         });
         await expect(compileContractSource(root)).rejects.toThrow("capabilities/ source tree");
-
-        await writeJson(join(root, "definition.json"), {
-            kind: "contract",
-            protocol: "ulvia-provider/v1",
-            schemaDialect: "ulvia-schema/v1",
-            contractId: "example.contract",
-            name: "Example contract",
-            version: "1.0.0",
-            publisherId: "example.publisher",
-        });
-        await writeJson(join(root, "capabilities", "alpha.json"), capability("alpha"));
-        await writeJson(join(root, "conformance.json"), { scenarios: [] });
-        await expect(compileConformanceSource(root)).rejects.toThrow("use the conformance/ source tree");
     } finally {
         await rm(root, { recursive: true, force: true });
     }
 });
 
-test("release rejects an invalid authored conformance suite before publishing its contract", async () => {
+test("release publishes a contract and its mocks from the minimal authored source tree", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-contract-release-"));
-    const source = join(root, "example.contract");
-    const data = join(root, "data");
     try {
+        const source = join(root, "example.contract");
+        const data = join(root, "data");
         await createContract(source, ["queries/alpha.json", "queries/zeta.json"]);
-        await createConformance(source, `sha256:${"0".repeat(64)}`);
-        await expect(
-            runCli(["release", source], {
-                environment: { ULVIA_DATA_DIR: data },
-                log: () => undefined,
-            }),
-        ).rejects.toThrow("suite does not match its admitted contract release");
+        const expected = await admitContractReleaseJson(await compileContractSource(source));
+        await runCli(["release", source], {
+            environment: { ULVIA_DATA_DIR: data },
+            log: () => undefined,
+        });
         const releases = new LocalContractReleases(new LocalArtifactFiles(join(data, "repository")));
-        expect(await (await releases.catalogue()).list()).toEqual([]);
+        const published = await releases.getMetadata("example.publisher", "example.contract", "1.0.0");
+        expect(published?.digest).toBe(expected.digest);
+        expect(published?.release.capabilities[0]?.mocks).toEqual(expected.release.capabilities[0]?.mocks);
     } finally {
         await rm(root, { recursive: true, force: true });
     }
@@ -122,35 +93,6 @@ async function createContract(root: string, paths: readonly string[]): Promise<v
     await writeJson(join(root, "mocks", "alpha", "success.json"), {
         capabilityId: "alpha",
         ...mock("success"),
-    });
-}
-
-async function createConformance(root: string, contractDigest: string): Promise<void> {
-    await writeJson(join(root, "conformance", "definition.json"), {
-        kind: "contract-conformance-suite",
-        protocol: "ulvia-conformance/v1",
-        contractId: "example.contract",
-        contractVersion: "1.0.0",
-        contractDigest,
-        publisherId: "example.publisher",
-        version: "1.0.0",
-        isolation: "disposable-tenant",
-    });
-    await writeJson(join(root, "conformance", "scenarios", "queries", "alpha-works.json"), {
-        id: "alpha-works",
-        calls: [
-            {
-                id: "read-alpha",
-                capabilityId: "alpha",
-                actor: { kind: "public" },
-                input: {},
-                expect: { kind: "success", checks: [{ path: "/value", equals: "ok" }] },
-            },
-        ],
-    });
-    await writeJson(join(root, "conformance", "exemptions", "zeta", "success.json"), {
-        capabilityId: "zeta",
-        reason: "Covered by the provider-specific stateful suite.",
     });
 }
 
@@ -181,12 +123,6 @@ function capability(id: string) {
 
 function mock(id: string) {
     return { id, input: {}, outcome: { kind: "success", output: { value: "ok" } } };
-}
-
-function dependencyProfile(digest: string): string {
-    return JSON.stringify({
-        dependencyProfiles: [{ releases: [{ contractId: "example.contract", version: "1.0.0", digest }] }],
-    });
 }
 
 async function writeJson(path: string, value: unknown): Promise<void> {

@@ -1,5 +1,0 @@
-{
-    "capabilityId": "localization.update",
-    "errorCode": "UPGRADE_IN_PROGRESS",
-    "reason": "The portable smoke suite does not prescribe an active site upgrade."
-}

@@ -1,5 +1,0 @@
-{
-    "capabilityId": "workspace.files.update",
-    "reason": "Covered by the stateful cms-files provider and managed workspace harnesses; the portable contract suite cannot share upload and file state between isolated calls.",
-    "errorCode": "INVALID_INPUT"
-}

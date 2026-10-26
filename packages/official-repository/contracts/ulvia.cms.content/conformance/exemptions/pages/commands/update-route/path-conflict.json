@@ -1,5 +1,0 @@
-{
-    "capabilityId": "pages.update-route",
-    "errorCode": "PATH_CONFLICT",
-    "reason": "A collision requires two suite-owned Pages with reserved localized routes."
-}

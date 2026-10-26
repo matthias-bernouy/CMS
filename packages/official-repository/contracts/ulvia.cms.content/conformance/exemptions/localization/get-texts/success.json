@@ -1,4 +1,0 @@
-{
-    "capabilityId": "localization.texts.get",
-    "reason": "This capability requires a stable installed collection identity that a portable fresh-tenant suite cannot assume."
-}

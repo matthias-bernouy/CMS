@@ -10,8 +10,6 @@ import {
     LocalProviderReleases,
     LocalRepositoryYanks,
 } from "@bernouy/cms-repository/repository/filesystem";
-import { compileConformanceSource, prepareConformanceSource } from "../../release/authored/conformance";
-import { resolveConformanceDependencies } from "../../release/authored/conformanceDependencies";
 import { prepareContractSource } from "../../release/authored/contract";
 import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 
@@ -26,28 +24,11 @@ export async function prepareContractResource(directory: string): Promise<Prepar
     return { kind: "contract", admission };
 }
 
-export async function validateConformance(
-    directory: string,
-    release: AdmittedContractRelease,
-    contracts: ReleaseCatalogue,
-): Promise<void> {
-    const source = await compileConformanceSource(directory);
-    if (source) {
-        const dependencies = await resolveConformanceDependencies(
-            source,
-            async (id, version) => (await contracts.get(id, version))?.admission ?? null,
-        );
-        await prepareConformanceSource(directory, release, dependencies, source);
-    }
-}
-
 export async function prepareResource(directory: string, contracts: ReleaseCatalogue): Promise<PreparedResource> {
     const source = await Bun.file(join(directory, "definition.json")).text();
     const definition = JSON.parse(source) as { kind?: unknown };
     if (definition.kind === "contract") {
-        const prepared = await prepareContractResource(directory);
-        await validateConformance(directory, prepared.admission, contracts);
-        return prepared;
+        return prepareContractResource(directory);
     }
     if (definition.kind === "provider-manifest") {
         const admission = await admitProviderManifestJson(source, contracts);

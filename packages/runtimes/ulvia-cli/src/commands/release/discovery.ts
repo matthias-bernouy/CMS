@@ -7,7 +7,7 @@ const MAX_RESOURCES = 256;
 const MAX_DIRECTORIES = 4096;
 const MAX_DEPTH = 32;
 
-/** A resource owns its whole subtree; nested Bloc and conformance definitions are not release roots. */
+/** A resource owns its whole subtree; nested Bloc definitions are not release roots. */
 export async function discoverResources(root: string): Promise<readonly ResourceSource[]> {
     const resources: ResourceSource[] = [];
     let visited = 0;

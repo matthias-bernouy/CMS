@@ -1,5 +1,0 @@
-{
-    "capabilityId": "apply-contract-upgrade",
-    "reason": "Requires an authoritative live site usage snapshot, exact served releases and durable site upgrade storage; exercised by provider integration and upgrade service tests.",
-    "errorCode": "NOT_FOUND"
-}

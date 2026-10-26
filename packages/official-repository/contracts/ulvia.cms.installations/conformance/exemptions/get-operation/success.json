@@ -1,4 +1,0 @@
-{
-    "capabilityId": "get-operation",
-    "reason": "This capability requires a stable collection operation identity that a portable fresh-tenant suite cannot assume."
-}

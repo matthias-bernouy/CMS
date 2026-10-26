@@ -1,4 +1,0 @@
-{
-    "capabilityId": "localization.text.save",
-    "reason": "This state-changing capability requires a stable installed collection text and dedicated cleanup that the portable read smoke suite does not yet prescribe."
-}

@@ -3,8 +3,6 @@ import { dirname, join, resolve } from "node:path";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
-import { compileConformanceSource, prepareConformanceSource } from "../release/authored/conformance";
-import { resolveConformanceDependencies } from "../release/authored/conformanceDependencies";
 import { prepareContractSource } from "../release/authored/contract";
 import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
 
@@ -30,21 +28,6 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
     const publicationOrder = await publishContractSet(catalogue, [...admissions.values()]);
     for (const admission of publicationOrder) {
         contracts[admission.release.contractId] = admission.canonicalJson;
-    }
-    for (const id of contractIds) {
-        const directory = join(root, "contracts", id);
-        const conformance = await compileConformanceSource(directory);
-        if (conformance) {
-            const definition = JSON.parse(conformance) as { contractId?: unknown; contractVersion?: unknown };
-            const release = admissions.get(`${definition.contractId}@${definition.contractVersion}`);
-            if (!release) {
-                throw new Error(`Conformance source ${id} does not identify an official contract release`);
-            }
-            const dependencies = await resolveConformanceDependencies(conformance, async (contractId, version) => {
-                return admissions.get(`${contractId}@${version}`) ?? null;
-            });
-            await prepareConformanceSource(directory, release, dependencies, conformance);
-        }
     }
     const provider = await admitProviderManifestJson(
         await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8"),

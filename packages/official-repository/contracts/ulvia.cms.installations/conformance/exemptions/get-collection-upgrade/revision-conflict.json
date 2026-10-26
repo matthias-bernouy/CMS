@@ -1,5 +1,0 @@
-{
-    "capabilityId": "get-collection-upgrade",
-    "reason": "Covered by collection upgrade planning, interrupted-commit and stale-plan regression tests; requires mutable instance state.",
-    "errorCode": "REVISION_CONFLICT"
-}
