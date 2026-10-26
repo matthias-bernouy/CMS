@@ -54,9 +54,7 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
                 : {}),
             translations: referencedTranslations(release, {
                 resource: bloc,
-                fallbackCategory: bloc.category ?? release.name,
             }),
-            assets: bloc.thumbnail ? release.assets.filter((asset) => asset.id === bloc.thumbnail) : [],
         },
     }));
     for (const { category, categoryIndex, token, tokenIndex } of release.theme?.categories.flatMap(

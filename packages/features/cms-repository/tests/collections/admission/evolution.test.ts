@@ -1,3 +1,4 @@
+import { collectionFixture } from "./examples/buildFixture";
 import { expect, test } from "bun:test";
 import { parseCollectionRelease, verifyCollectionPublicationEvolution } from "../../../src/exports/collections";
 import { collectionDocument, component } from "../fixtures";
@@ -6,7 +7,7 @@ function release(version: string, update: (source: Record<string, unknown>) => v
     const source = collectionDocument();
     source.version = version;
     update(source);
-    return parseCollectionRelease(source);
+    return parseCollectionRelease(collectionFixture(source));
 }
 
 test("collection publication separates implementation, compatible contract and breaking changes", async () => {

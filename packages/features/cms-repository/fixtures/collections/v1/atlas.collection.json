@@ -18,7 +18,11 @@
         }
     },
     "configuration": {
-        "schema": { "type": "object", "properties": {}, "required": [] },
+        "schema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
         "defaults": {}
     },
     "assets": [
@@ -32,13 +36,25 @@
     "blocs": [
         {
             "kind": "component",
-            "root": { "accepts": ["div"] },
+            "root": {
+                "accepts": [
+                    "div"
+                ]
+            },
             "id": "atlas-panel",
             "label": "bloc.panel.label",
-            "thumbnail": "preview",
             "markup": "<section><slot name=\"body\"></slot></section>",
             "style": ":scope { display: block; } :scope([tone=\"muted\"]) { opacity: 0.8; }",
-            "slots": { "body": { "accepts": [{ "kind": "native-content", "profile": "prose" }] } },
+            "slots": {
+                "body": {
+                    "accepts": [
+                        {
+                            "kind": "native-content",
+                            "profile": "prose"
+                        }
+                    ]
+                }
+            },
             "settings": [
                 {
                     "id": "tone",
@@ -47,24 +63,97 @@
                     "control": {
                         "kind": "select",
                         "options": [
-                            { "value": "default", "label": "setting.option.default" },
-                            { "value": "muted", "label": "setting.option.muted" }
+                            {
+                                "value": "default",
+                                "label": "setting.option.default"
+                            },
+                            {
+                                "value": "muted",
+                                "label": "setting.option.muted"
+                            }
                         ]
                     },
                     "maxLength": 7,
                     "default": "default"
                 }
-            ]
+            ],
+            "description": "bloc.panel.label",
+            "categories": [
+                "bloc.panel.label"
+            ],
+            "examples": [
+                "atlas-panel-default"
+            ],
+            "defaultExample": "atlas-panel-default"
         },
         {
             "kind": "composition",
-            "root": { "accepts": ["div"] },
+            "root": {
+                "accepts": [
+                    "div"
+                ]
+            },
             "id": "atlas-page",
             "label": "bloc.page.label",
-            "uses": ["atlas-panel"],
+            "uses": [
+                "atlas-panel"
+            ],
             "markup": "<div cms-bloc=\"atlas-panel\" tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></div>",
-            "slots": { "main": { "accepts": [{ "kind": "native-content", "profile": "prose" }], "max": 8 } },
-            "defaultContent": "<p slot=\"main\"></p>"
+            "slots": {
+                "main": {
+                    "accepts": [
+                        {
+                            "kind": "native-content",
+                            "profile": "prose"
+                        }
+                    ],
+                    "max": 8
+                }
+            },
+            "description": "bloc.page.label",
+            "categories": [
+                "bloc.page.label"
+            ],
+            "examples": [
+                "atlas-page-default"
+            ],
+            "defaultExample": "atlas-page-default"
+        }
+    ],
+    "examples": [
+        {
+            "id": "atlas-panel-default",
+            "label": "bloc.panel.label",
+            "description": "bloc.panel.label",
+            "document": {
+                "html": "<div cms-bloc=\"atlas-panel\"><p slot=\"body\">Example content</p></div>"
+            },
+            "previews": [
+                {
+                    "id": "desktop",
+                    "frame": {
+                        "width": 640,
+                        "height": 240
+                    }
+                }
+            ]
+        },
+        {
+            "id": "atlas-page-default",
+            "label": "bloc.page.label",
+            "description": "bloc.page.label",
+            "document": {
+                "html": "<div cms-bloc=\"atlas-page\"><p slot=\"main\">Example content</p></div>"
+            },
+            "previews": [
+                {
+                    "id": "desktop",
+                    "frame": {
+                        "width": 640,
+                        "height": 240
+                    }
+                }
+            ]
         }
     ]
 }

@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
@@ -81,18 +82,20 @@ test("reports retention failures without changing the completed migration result
 
 async function fixtureWithMigration() {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const previous = await collections.importRelease(release("1.0.0", "atlas-card"));
-    const next = await collections.importRelease({
-        ...release("2.0.0", "atlas-panel"),
-        dataGeneration: 2,
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
-            },
-        ],
-    });
+    const previous = await collections.importRelease(collectionFixture(release("1.0.0", "atlas-card")));
+    const next = await collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-panel"),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
+                },
+            ],
+        }),
+    );
     await collections.install("site", previous.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
@@ -102,7 +105,7 @@ async function fixtureWithMigration() {
 }
 
 function release(version: string, id: string): Record<string, unknown> {
-    return {
+    return collectionFixture({
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -115,6 +118,9 @@ function release(version: string, id: string): Record<string, unknown> {
         assets: [],
         blocs: [
             {
+                description: "bloc.label",
+                categories: ["bloc.label"],
+
                 kind: "component",
                 root: { accepts: ["div"] },
                 id,
@@ -125,7 +131,7 @@ function release(version: string, id: string): Record<string, unknown> {
                 slots: {},
             },
         ],
-    };
+    });
 }
 
 async function eventually(condition: () => Promise<boolean>): Promise<void> {

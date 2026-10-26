@@ -4,7 +4,6 @@ import { elements, isElement, type MarkupElement, type MarkupTree, offeredSlots 
 
 export interface BlocMarkup {
     readonly fixed: MarkupTree;
-    readonly initial?: MarkupTree;
     readonly pageSlots: ReadonlySet<string>;
 }
 

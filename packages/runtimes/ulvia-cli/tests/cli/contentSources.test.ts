@@ -78,6 +78,9 @@ test("component runtime modules stay inside the Bloc source boundary", async () 
     const root = await temporaryDirectory();
     const componentRoot = join(root, "control", "example-manager");
     await writeJson(join(componentRoot, "definition.json"), {
+        description: "bloc.example-manager.label",
+        categories: ["bloc.example-manager.label"],
+
         id: "example-manager",
         kind: "component",
         label: "bloc.example-manager.label",
@@ -107,6 +110,9 @@ test("CSS-only components do not receive a synthetic JavaScript runtime", async 
     const root = await temporaryDirectory();
     const componentRoot = join(root, "content", "example-card");
     await writeJson(join(componentRoot, "definition.json"), {
+        description: "bloc.example-card.label",
+        categories: ["bloc.example-card.label"],
+
         id: "example-card",
         kind: "component",
         label: "bloc.example-card.label",
@@ -152,6 +158,9 @@ test("migration steps are discovered recursively and named after their adjacent 
 
 async function writeComposition(root: string, id: string): Promise<void> {
     await writeJson(join(root, "definition.json"), {
+        description: `bloc.${id}.label`,
+        categories: [`bloc.${id}.label`],
+
         id,
         kind: "composition",
         label: `bloc.${id}.label`,

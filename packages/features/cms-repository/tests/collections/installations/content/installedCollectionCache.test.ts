@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { createHash } from "node:crypto";
@@ -28,7 +29,7 @@ test("indexes installed Blocs once per collection revision", async () => {
     const storage = new CountingStorage();
     const store = new CollectionStore(storage);
     const artifact = await store.importRelease(
-        {
+        collectionFixture({
             kind: "collection",
             protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
@@ -48,18 +49,20 @@ test("indexes installed Blocs once per collection revision", async () => {
             ],
             blocs: [
                 {
+                    description: "bloc.card.label",
+                    categories: ["bloc.card.label"],
+
                     kind: "component",
                     root: { accepts: ["div"] },
                     id: "cached-card",
                     label: "bloc.card.label",
-                    thumbnail: "card.svg",
                     markup: "<article></article>",
                     uses: [],
                     requires: [],
                     slots: {},
                 },
             ],
-        },
+        }),
         [{ id: "card.svg", bytes }],
     );
     await store.install("site", artifact.digest, 0);
@@ -78,14 +81,14 @@ test("indexes installed Blocs once per collection revision", async () => {
     await repository.getContentContributions?.();
     await repository.getContentContributions?.();
     expect(storage.metadataReads).toBe(1);
-    expect(storage.assetReads).toBe(1);
+    expect(storage.assetReads).toBe(0);
 
     await store.saveTexts("site", "cached", 1, {});
     storage.metadataReads = 0;
     storage.assetReads = 0;
     await repository.getBlocViewJS("cached-card");
     expect(storage.metadataReads).toBe(1);
-    expect(storage.assetReads).toBe(1);
+    expect(storage.assetReads).toBe(0);
 });
 
 test("rejects repository methods that have not been classified by the installed-resource boundary", () => {

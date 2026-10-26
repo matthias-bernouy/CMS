@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { referenceFixture, release } from "./fixture";
 
@@ -8,11 +9,13 @@ test("blocks removal of a collection Page used by an external feature", async ()
         },
         pages: [controlPage("legacy", '<div cms-bloc=\"atlas-card\"><p slot="content">{{ page.title }}</p></div>')],
     });
-    const next = await fixture.collections.importRelease({
-        ...release("2.0.0", "atlas-card"),
-        dataGeneration: 2,
-        migrations: [{ fromGeneration: 1, toGeneration: 2, operations: [] }],
-    });
+    const next = await fixture.collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-card"),
+            dataGeneration: 2,
+            migrations: [{ fromGeneration: 1, toGeneration: 2, operations: [] }],
+        }),
+    );
     fixture.service.addParticipant({
         id: "external-pages",
         async collectReferences() {
@@ -26,17 +29,19 @@ test("blocks removal of a collection Page used by an external feature", async ()
 
 test("blocks every externally referenced collection resource kind", async () => {
     const fixture = await referenceFixture(previousResources());
-    const next = await fixture.collections.importRelease({
-        ...release("2.0.0", "atlas-panel"),
-        dataGeneration: 2,
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
-            },
-        ],
-    });
+    const next = await fixture.collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-panel"),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
+                },
+            ],
+        }),
+    );
     fixture.service.addParticipant({
         id: "external-feature",
         async collectReferences() {
@@ -58,7 +63,9 @@ test("digests participant resource identities independently from diagnostic labe
         pages: [controlPage("overview", '<div cms-bloc=\"atlas-card\"><p slot="content">{{ page.title }}</p></div>')],
     };
     const fixture = await referenceFixture(patch);
-    const next = await fixture.collections.importRelease({ ...release("1.1.0", "atlas-card"), ...patch });
+    const next = await fixture.collections.importRelease(
+        collectionFixture({ ...release("1.1.0", "atlas-card"), ...patch }),
+    );
     let location = "Administration Page one";
     fixture.service.addParticipant({
         id: "control-pages",
@@ -83,7 +90,7 @@ test("digests participant resource identities independently from diagnostic labe
 
 test("prepares feature state for the exact forward and rollback collection targets", async () => {
     const fixture = await referenceFixture();
-    const next = await fixture.collections.importRelease(release("1.1.0", "atlas-card"));
+    const next = await fixture.collections.importRelease(collectionFixture(release("1.1.0", "atlas-card")));
     const prepared: string[][] = [];
     fixture.service.addParticipant({
         id: "execution-grants",

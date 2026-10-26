@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia.official",
     "name": "Ulvia Provider",
-    "version": "0.5.0",
+    "version": "0.1.0",
     "provenance": {
         "publisherId": "ulvia.official",
         "publishedAt": "2026-10-01T00:00:00Z"
@@ -30,8 +30,8 @@
     "implementations": [
         {
             "contractId": "ulvia.cms.access",
-            "version": "1.1.0",
-            "digest": "sha256:6bb3c2d1ac516ae559eaa5962d4ff2864b86a59d1907177286f3de5459689f9f",
+            "version": "1.0.0",
+            "digest": "sha256:d6f3b4f05a4ccec142cd1ef22406ac0e307a83035a116247821c7b48ddd82c00",
             "requires": [
                 {
                     "contractId": "ulvia.cms.emailer",
@@ -43,8 +43,8 @@
         },
         {
             "contractId": "ulvia.cms.installations",
-            "version": "1.1.0",
-            "digest": "sha256:675151d45a956dd34f928cb851dc0908f2f57bb97fea6c017fb8a689a98b34f8",
+            "version": "1.0.0",
+            "digest": "sha256:f41c602c3501719fb2571d31e9a0d385a1aad4d15efdabc05e48b8370dc37c27",
             "requires": [
                 {
                     "contractId": "ulvia.cms.secrets",
@@ -80,8 +80,8 @@
         },
         {
             "contractId": "ulvia.cms.content",
-            "version": "1.2.0",
-            "digest": "sha256:5aea7ac696534f21abaa8cdfee95cd4d83df7d5837193f4f0287de5e471d8be8",
+            "version": "1.0.0",
+            "digest": "sha256:d223b18c4bdbd88192dc643ee04064636af91c7a72397c5b48e9335e69b0c3b8",
             "requires": []
         },
         {
@@ -117,8 +117,8 @@
         },
         {
             "contractId": "ulvia.cms.files",
-            "version": "1.1.0",
-            "digest": "sha256:2ce8038ce88e027df8d0d7136645bc3ae84985ff1405a9b02032db2553b04ded",
+            "version": "1.0.0",
+            "digest": "sha256:d5edf6f107dfe9391e5c4a5b6c1a9f0833432712b5d30b705e42c6bcf767df43",
             "requires": [
                 {
                     "contractId": "ulvia.cms.secrets",

@@ -16,7 +16,7 @@ test("builds the official profile from verified repository releases", async () =
     const loaded = await loadOfficialArtifacts(fixture.providers, fixture.collections);
 
     expect(loaded.profiles).toEqual([loaded.defaultProfile]);
-    expect(loaded.defaultProfile.version).toBe("1.3.0");
+    expect(loaded.defaultProfile.version).toBe("1.0.0");
     expect(loaded.defaultProfile.manifest.digest).toBe(fixture.manifestDigest);
     expect(loaded.defaultProfile.collection.digest).toBe(fixture.collectionDigest);
     expect(loaded.defaultProfile.contracts).toEqual(
@@ -39,48 +39,6 @@ test("rejects repository metadata that does not match the official bytes", async
     };
 
     await expect(loadOfficialArtifacts(providers, fixture.collections)).rejects.toThrow("digest mismatch");
-});
-
-test("retains the previous exact profile without repointing existing instance pins", async () => {
-    const fixture = await repositoryFixture();
-    const historical = await admitCollectionRelease({
-        kind: "collection",
-        protocol: "ulvia-collection/v1",
-        schemaDialect: "ulvia-schema/v1",
-        publisherId: "ulvia.official",
-        collectionId: "ulvia-official",
-        version: "1.0.0",
-        locale: "en",
-        name: "name",
-        translations: { en: { name: "Historical official collection" } },
-        blocs: [],
-        assets: [],
-    });
-    const collections: CollectionRepositorySource = {
-        id: "official",
-        list: async () => [
-            ...(await fixture.collections.list()),
-            {
-                repositoryId: "official",
-                publisherId: "ulvia.official",
-                collectionId: "ulvia-official",
-                version: "1.0.0",
-                digest: historical.digest,
-                name: "Historical official collection",
-                blocCount: 0,
-                hasTheme: false,
-            },
-        ],
-        get: async (reference) =>
-            reference.version === "1.0.0"
-                ? { release: historical.release, assets: [] }
-                : fixture.collections.get(reference),
-    };
-    const loaded = await loadOfficialArtifacts(fixture.providers, collections);
-    const previous = loaded.profiles.find((profile) => profile.version === "1.2.0")!;
-    expect(previous.collection).toMatchObject({ version: "1.0.0", digest: historical.digest });
-    expect(loaded.defaultProfile.collection).toMatchObject({ version: "1.1.0", digest: fixture.collectionDigest });
-    expect(loaded.defaultProfile.upgradeFromVersions).toEqual([]);
 });
 
 async function repositoryFixture() {

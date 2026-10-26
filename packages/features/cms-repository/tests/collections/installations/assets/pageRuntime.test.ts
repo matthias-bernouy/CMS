@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../admission/examples/buildFixture";
 import { createHash } from "node:crypto";
 import { expect, test } from "bun:test";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
@@ -12,7 +13,7 @@ test("resolves collection asset expressions inside immutable Bloc CSS bundles", 
     const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}` as const;
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease(
-        {
+        collectionFixture({
             kind: "collection",
             protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
@@ -24,7 +25,7 @@ test("resolves collection asset expressions inside immutable Bloc CSS bundles", 
             translations: { en: { "collection.name": "Design system" } },
             assets: [{ id: "mark.svg", mediaType: "image/svg+xml", byteLength: bytes.byteLength, digest }],
             blocs: [],
-        },
+        }),
         [{ id: "mark.svg", bytes }],
     );
     await store.install("site", artifact.digest, 0);

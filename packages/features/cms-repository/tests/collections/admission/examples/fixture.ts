@@ -8,10 +8,10 @@ export function exampleCollection(): any {
         "example.label": "Panel example",
         "example.description": "A panel containing a greeting.",
     });
-    release.protocol = "ulvia-collection/v2";
+    release.protocol = "ulvia-collection/v1";
     release.texts = [textDefinition("greeting", { "en-US": "Hello", en: "Hello" })];
     for (const bloc of release.blocs) {
-        delete bloc.defaultContent;
+        bloc.catalogue = "listed";
         bloc.description = "bloc.description";
         bloc.categories = ["category.layout", "category.content"];
         bloc.examples = [bloc.id + "-default", "assembled"];

@@ -23,7 +23,7 @@ describe("collection examples", () => {
         expect(release.pages).toBeUndefined();
     });
 
-    test.each(["description", "categories", "defaultExample"])("requires %s for listed v2 blocs", (key) => {
+    test.each(["description", "categories", "defaultExample"])("requires %s for listed v1 blocs", (key) => {
         const release = exampleCollection();
         delete release.blocs[0][key];
         expect(() => parseCollectionRelease(release)).toThrow();
@@ -37,10 +37,16 @@ describe("collection examples", () => {
         expect(() => parseCollectionRelease(release)).toThrow();
     });
 
-    test.each(["category", "defaultContent", "thumbnail"])("rejects obsolete v2 field %s", (key) => {
+    test.each(["category", "defaultContent", "thumbnail"])("rejects removed Bloc field %s", (key) => {
         const release = exampleCollection();
         release.blocs[0][key] = "obsolete";
-        expect(() => parseCollectionRelease(release)).toThrow("not supported");
+        expect(() => parseCollectionRelease(release)).toThrow("unknown property");
+    });
+
+    test("rejects every collection protocol except the fresh v1 format", () => {
+        for (const protocol of ["ulvia-collection/v2", "ulvia-collection/v0", undefined]) {
+            expect(() => parseCollectionRelease({ ...exampleCollection(), protocol })).toThrow("protocol");
+        }
     });
 
     test("rejects a multi-root document as the default insertion", () => {
@@ -94,9 +100,9 @@ describe("collection examples", () => {
         expect(() => parseCollectionRelease(release)).toThrow();
     });
 
-    test("keeps historical v1 canonical bytes stable and hashes example changes", async () => {
-        const legacy = await admitCollectionRelease(collectionDocument());
-        expect((await admitCollectionRelease(JSON.parse(legacy.canonicalJson))).digest).toBe(legacy.digest);
+    test("round-trips canonical v1 bytes and hashes example changes", async () => {
+        const original = await admitCollectionRelease(collectionDocument());
+        expect((await admitCollectionRelease(JSON.parse(original.canonicalJson))).digest).toBe(original.digest);
         const source = exampleCollection();
         const before = await admitCollectionRelease(source);
         source.examples[0].previews[0].frame.width = 800;

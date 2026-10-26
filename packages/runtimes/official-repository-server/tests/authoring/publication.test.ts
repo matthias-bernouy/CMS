@@ -34,7 +34,7 @@ test("source snapshot builds, publishes over signed HTTP, remains private and in
         });
         const privateSource = await f.authoring.sources("community", "sample", "1.0.0");
         expect(privateSource?.releaseDigest).toBe(prepared.digest);
-        expect(parseSourceSnapshot(privateSource!.sourceJson).files).toHaveLength(5);
+        expect(parseSourceSnapshot(privateSource!.sourceJson).files).toHaveLength(7);
         const anonymous = await fetch(`${f.base}v1/source-snapshots`, {
             method: "QUERY",
             headers: { "Content-Type": "application/json" },

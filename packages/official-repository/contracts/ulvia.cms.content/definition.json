@@ -5,7 +5,7 @@
     "contractId": "ulvia.cms.content",
     "name": "CMS Content",
     "description": "Manage site settings, pages, localization and themes for one provider-selected CMS instance.",
-    "version": "1.2.0",
+    "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "pages",

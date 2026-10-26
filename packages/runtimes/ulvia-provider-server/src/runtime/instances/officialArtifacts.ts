@@ -25,19 +25,12 @@ type ProfileDefinition = Readonly<{
 
 const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
     id: "ulvia.official",
-    version: "1.3.0",
+    version: "1.0.0",
     upgradeFromVersions: Object.freeze([]),
-    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.5.0" }),
-    collection: Object.freeze({ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.1.0" }),
-});
-const PREVIOUS_PROFILE: ProfileDefinition = Object.freeze({
-    id: "ulvia.official",
-    version: "1.2.0",
-    upgradeFromVersions: Object.freeze([]),
-    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.5.0" }),
+    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.1.0" }),
     collection: Object.freeze({ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.0.0" }),
 });
-const SUPPORTED_PROFILES = Object.freeze([PREVIOUS_PROFILE, CURRENT_PROFILE]);
+const SUPPORTED_PROFILES = Object.freeze([CURRENT_PROFILE]);
 
 export type LoadedOfficialArtifacts = Readonly<{
     profiles: readonly OfficialInstanceProfile[];

@@ -1,3 +1,4 @@
+import { collectionFixture } from "./examples/buildFixture";
 import { expect, test } from "bun:test";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { collectionDocument } from "../fixtures";
@@ -11,12 +12,14 @@ test("collection query outputs are safe across every release accepted by their r
     (output.required as string[]).push("extra");
     const contracts = await releaseCatalogue(first, second);
 
-    await expect(admitCollectionRelease(collection("id", "^1.0.0"), [], { contracts })).resolves.toBeDefined();
-    await expect(admitCollectionRelease(collection("extra", "^1.0.0"), [], { contracts })).rejects.toThrow(
-        "is not declared by the output schema",
-    );
     await expect(
-        admitCollectionRelease(collection("extra", ">=1.1.0 <2.0.0"), [], { contracts }),
+        admitCollectionRelease(collectionFixture(collection("id", "^1.0.0")), [], { contracts }),
+    ).resolves.toBeDefined();
+    await expect(
+        admitCollectionRelease(collectionFixture(collection("extra", "^1.0.0")), [], { contracts }),
+    ).rejects.toThrow("is not declared by the output schema");
+    await expect(
+        admitCollectionRelease(collectionFixture(collection("extra", ">=1.1.0 <2.0.0")), [], { contracts }),
     ).resolves.toBeDefined();
 });
 
@@ -31,6 +34,9 @@ function queryContract(version: string): Record<string, unknown> {
 function collection(field: string, versionRange: string): Record<string, unknown> {
     const source = collectionDocument();
     (source.blocs as Record<string, unknown>[]).push({
+        description: "bloc.page.label",
+        categories: ["bloc.page.label"],
+
         kind: "composition",
         root: { accepts: ["div"] },
         id: "atlas-catalog",

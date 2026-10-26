@@ -4,15 +4,7 @@ import { DEFAULT_COLLECTION_LIMITS } from "@bernouy/cms-repository/collections";
 import { readSourceEntries } from "./sourceTree";
 
 const MAX_BLOC_DEPTH = 16;
-const BLOC_ENTRIES = new Set([
-    "bloc.ts",
-    "default.html",
-    "definition.json",
-    "markup.html",
-    "runtime",
-    "settings",
-    "style.css",
-]);
+const BLOC_ENTRIES = new Set(["bloc.ts", "definition.json", "markup.html", "runtime", "settings", "style.css"]);
 
 export type BlocSource = Readonly<{
     id: string;

@@ -2,7 +2,7 @@ import { parseBlocExampleMetadata } from "../../validation/examples/catalogue";
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
-import { array, identifier, integer, keys, ordinal, record, string, unique } from "../../values";
+import { array, integer, keys, ordinal, record, string, unique } from "../../values";
 import { parseRequirements } from "../requirements";
 import { parseComponentSettings } from "./settings";
 import { blocReferences, parseSlots } from "./slots";
@@ -19,19 +19,16 @@ const common = [
     "generation",
     "label",
     "description",
-    "category",
     "categories",
     "examples",
     "defaultExample",
     "order",
     "catalogue",
-    "thumbnail",
     "uses",
     "requires",
     "slots",
     "root",
     "markup",
-    "defaultContent",
     "browser",
 ];
 
@@ -47,30 +44,21 @@ function parseBloc(
     collectionId: string,
     path: string,
     limits: Readonly<CollectionLimits>,
-    modern: boolean,
 ): CollectionBloc {
     const source = record(value, path);
     if (source.kind !== "component" && source.kind !== "composition") {
         invalid("kind must be component or composition", `${path}.kind`);
     }
     keys(source, [...common, ...(source.kind === "component" ? ["style", "settings", "runtime"] : [])], path);
-    const metadata = parseBlocExampleMetadata(source, path, modern);
+    const metadata = parseBlocExampleMetadata(source, path);
     const id = parseCollectionBlocTag(source.id, collectionId, `${path}.id`);
     if (source.catalogue !== undefined && source.catalogue !== "listed" && source.catalogue !== "hidden") {
         invalid("must be listed or hidden", `${path}.catalogue`);
     }
     const markup = string(source.markup, limits.maxMarkupLength, `${path}.markup`);
-    const defaultContent =
-        source.defaultContent === undefined
-            ? undefined
-            : optionalText(source.defaultContent, limits.maxMarkupLength, `${path}.defaultContent`);
     let browser;
     try {
-        browser = validateBlocBrowserCapabilities(
-            source.browser,
-            [markup, ...(defaultContent === undefined ? [] : [defaultContent])],
-            `${path}.browser`,
-        );
+        browser = validateBlocBrowserCapabilities(source.browser, [markup], `${path}.browser`);
     } catch (error) {
         invalid(error instanceof Error ? error.message : "invalid browser capabilities", `${path}.browser`);
     }
@@ -82,21 +70,16 @@ function parseBloc(
                 ? 1
                 : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
         label: string(source.label, 120, `${path}.label`),
-        ...(source.description === undefined
-            ? {}
-            : { description: string(source.description, 4096, `${path}.description`) }),
-        ...(source.category === undefined ? {} : { category: string(source.category, 120, `${path}.category`) }),
+        description: string(source.description, 4096, `${path}.description`),
         ...(source.order === undefined
             ? {}
             : { order: integer(source.order, 0, Number.MAX_SAFE_INTEGER, `${path}.order`) }),
         ...(source.catalogue === undefined ? {} : { catalogue: source.catalogue as "listed" | "hidden" }),
-        ...(source.thumbnail === undefined ? {} : { thumbnail: identifier(source.thumbnail, `${path}.thumbnail`) }),
         uses: blocReferences(source.uses === undefined ? [] : source.uses, `${path}.uses`, limits),
         requires: parseRequirements(source.requires === undefined ? [] : source.requires, `${path}.requires`, limits),
         slots: parseSlots(source.slots === undefined ? {} : source.slots, `${path}.slots`, limits),
         root: parseManagedNativeElement(source.root, `${path}.root`),
         markup,
-        ...(defaultContent === undefined ? {} : { defaultContent }),
         ...(browser === undefined ? {} : { browser }),
     };
     if (source.kind === "composition") {
@@ -171,11 +154,10 @@ export function parseBlocs(
     value: unknown,
     collectionId: string,
     limits: Readonly<CollectionLimits>,
-    modern = false,
 ): readonly CollectionBloc[] {
     parseCollectionNamespace(collectionId, "$.collectionId");
     const result = array(value, limits.maxBlocs, "$.blocs").map((item, index) =>
-        parseBloc(item, collectionId, `$.blocs[${index}]`, limits, modern),
+        parseBloc(item, collectionId, `$.blocs[${index}]`, limits),
     );
     unique(
         result.map((bloc) => bloc.id),

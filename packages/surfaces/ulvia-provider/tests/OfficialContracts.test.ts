@@ -92,7 +92,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
                 Authorization: `Bearer ${TOKEN}`,
                 "x-ulvia-request-id": "00000000-0000-4000-8000-000000000099",
                 "x-ulvia-contract-id": "ulvia.cms.installations",
-                "x-ulvia-contract-version": "1.1.0",
+                "x-ulvia-contract-version": "1.0.0",
                 "x-ulvia-capability-id": "list-provider-installations",
             },
         });
@@ -105,7 +105,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
                         "content-type": "application/json",
                         "x-ulvia-request-id": "00000000-0000-4000-8000-000000000100",
                         "x-ulvia-contract-id": "ulvia.cms.secrets",
-                        "x-ulvia-contract-version": "1.1.0",
+                        "x-ulvia-contract-version": "1.0.0",
                         "x-ulvia-capability-id": "namespace.create",
                     },
                     body: '{"name":"Forbidden"}',

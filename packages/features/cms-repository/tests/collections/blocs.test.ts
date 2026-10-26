@@ -6,12 +6,12 @@ import { checkDemoBlocs as check, demoComponent as component, demoComposition as
 describe("collection bloc admission", () => {
     test("accepts component and composition variants with normalized declarations", () => {
         const blocs = check(
-            [composition(), component({ thumbnail: "preview", category: "Content", order: 20 })],
+            [composition(), component({ categories: ["Content", "Layout"], order: 20 })],
             new Set(["preview"]),
         );
         expect(blocs.map((bloc) => bloc.id)).toEqual(["demo-card", "demo-page"]);
         expect(blocs[0]?.uses).toEqual([]);
-        expect(blocs[0]).toMatchObject({ category: "Content", order: 20 });
+        expect(blocs[0]).toMatchObject({ categories: ["Content", "Layout"], order: 20 });
         expect(() => check([component({ order: -1 })])).toThrow("integer");
     });
 
@@ -43,7 +43,7 @@ describe("collection bloc admission", () => {
                 root,
                 markup: "<span><slot></slot></span>",
                 slots: { default: managedSpan },
-                defaultContent: "<span>Action</span>",
+                exampleContent: "<span>Action</span>",
             }),
         ])[0];
         expect(parsed?.root).toEqual(root);
@@ -58,7 +58,7 @@ describe("collection bloc admission", () => {
                     root: { accepts: ["button"] },
                     markup: "<slot></slot>",
                     slots: { default: managedSpan },
-                    defaultContent: "<span></span>",
+                    exampleContent: "<span></span>",
                 }),
             ]),
         ).toThrow("requires text content or a non-empty aria-label");
@@ -68,7 +68,7 @@ describe("collection bloc admission", () => {
                     root: { accepts: ["button"], defaults: { "aria-label": "Save" } },
                     markup: "<slot></slot>",
                     slots: { default: managedSpan },
-                    defaultContent: "<span></span>",
+                    exampleContent: "<span></span>",
                 }),
             ]),
         ).not.toThrow();
@@ -89,7 +89,7 @@ describe("collection bloc admission", () => {
                     root: { accepts: ["div"] },
                     markup: "<slot></slot>",
                     slots: { default: checkbox },
-                    defaultContent: '<input type="checkbox">',
+                    exampleContent: '<input type="checkbox">',
                 }),
             ])[0],
         ).toMatchObject({ slots: { "": checkbox } });
@@ -99,7 +99,7 @@ describe("collection bloc admission", () => {
                     root: { accepts: ["div"] },
                     markup: "<slot></slot>",
                     slots: { default: checkbox },
-                    defaultContent: '<input type="radio">',
+                    exampleContent: '<input type="radio">',
                 }),
             ]),
         ).toThrow('native attribute "type" must be one of "checkbox"');
@@ -110,7 +110,7 @@ describe("collection bloc admission", () => {
                     markup: "<slot></slot>",
                     markupAlias: "<a>Unsupported</a>",
                     slots: { default: managedSpan },
-                    defaultContent: "<span>Action</span>",
+                    exampleContent: "<span>Action</span>",
                 }),
             ]),
         ).toThrow('unknown property "markupAlias"');
@@ -127,11 +127,11 @@ describe("collection bloc admission", () => {
         expect(() => parseBlocs([component()], "demo", { ...limits, maxMarkupLength: 2 })).toThrow("at most 2");
     });
 
-    test("checks duplicates, local references, thumbnails and cycles", () => {
+    test("checks duplicates, local references, removed fields and cycles", () => {
         expect(() => check([component(), component()])).toThrow("duplicate");
         expect(() => check([component({ uses: ["demo-other", "demo-other"] })])).toThrow("duplicate");
         expect(() => check([component({ uses: ["demo-other"] })])).toThrow("neither local nor imported");
-        expect(() => check([component({ thumbnail: "missing" })])).toThrow("thumbnail");
+        expect(() => check([component({ thumbnail: "missing" })])).toThrow('unknown property "thumbnail"');
         expect(() => check([component({ uses: ["demo-page"] }), composition({ uses: ["demo-card"] })])).toThrow(
             "cyclic",
         );

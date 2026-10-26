@@ -27,6 +27,11 @@ export function sourceSnapshot(version = "1.0.0", publisherId = "community") {
             {
                 path: "blocs/sample-panel/definition.json",
                 content: JSON.stringify({
+                    description: "bloc.label",
+                    categories: ["bloc.label"],
+                    examples: ["panel"],
+                    defaultExample: "panel",
+
                     kind: "component",
                     id: "sample-panel",
                     label: "bloc.label",
@@ -35,6 +40,19 @@ export function sourceSnapshot(version = "1.0.0", publisherId = "community") {
                     uses: [],
                     requires: [],
                 }),
+            },
+            {
+                path: "examples/panel/definition.json",
+                content: JSON.stringify({
+                    id: "panel",
+                    label: "bloc.label",
+                    description: "bloc.label",
+                    previews: [{ id: "desktop", frame: { width: 640, height: 240 } }],
+                }),
+            },
+            {
+                path: "examples/panel/document.html",
+                content: '<div cms-bloc="sample-panel"><p slot="body">Example</p></div>',
             },
             { path: "blocs/sample-panel/markup.html", content: '<section><slot name="body"></slot></section>' },
             { path: "blocs/sample-panel/style.css", content: ":scope { display: block; }" },

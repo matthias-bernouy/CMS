@@ -1,9 +1,10 @@
+import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "../../../src/exports/collections/installations";
 
 function release(collectionId: string, version: string, blocId: string, tokenId?: string) {
-    return {
+    return collectionFixture({
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -27,6 +28,9 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
         assets: [],
         blocs: [
             {
+                description: "bloc.welcome.label",
+                categories: ["bloc.welcome.label"],
+
                 kind: "composition",
                 root: { accepts: ["div"] },
                 id: blocId,
@@ -58,21 +62,29 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
                   },
               }
             : {}),
-    };
+    });
 }
 
 test("installations and upgrades reject global Bloc and theme token collisions", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const first = await store.importRelease(release("atlas", "1.0.0", "atlas-tools-card", "tools-accent"));
+    const first = await store.importRelease(
+        collectionFixture(release("atlas", "1.0.0", "atlas-tools-card", "tools-accent")),
+    );
     await store.install("blocs", first.digest, 0);
     await store.install("themes", first.digest, 0);
 
-    const blocCollision = await store.importRelease(release("atlas-tools", "0.9.0", "atlas-tools-card"));
+    const blocCollision = await store.importRelease(
+        collectionFixture(release("atlas-tools", "0.9.0", "atlas-tools-card")),
+    );
     await expect(store.install("blocs", blocCollision.digest, 1)).rejects.toThrow("Bloc tag");
 
-    const initialTools = await store.importRelease(release("atlas-tools", "1.0.0", "atlas-tools-welcome"));
+    const initialTools = await store.importRelease(
+        collectionFixture(release("atlas-tools", "1.0.0", "atlas-tools-welcome")),
+    );
     await store.install("themes", initialTools.digest, 1, "local");
-    const themeCollision = await store.importRelease(release("atlas-tools", "1.1.0", "atlas-tools-welcome", "accent"));
+    const themeCollision = await store.importRelease(
+        collectionFixture(release("atlas-tools", "1.1.0", "atlas-tools-welcome", "accent")),
+    );
     await expect(store.upgrade("themes", themeCollision.digest, 2, "local")).rejects.toThrow("theme token");
 });
 
@@ -98,8 +110,8 @@ test("installations reject collection Pages claiming the same global path", asyn
             ],
         };
     };
-    const first = await store.importRelease(withPage("first", "overview"));
-    const second = await store.importRelease(withPage("second", "settings"));
+    const first = await store.importRelease(collectionFixture(withPage("first", "overview")));
+    const second = await store.importRelease(collectionFixture(withPage("second", "settings")));
 
     await store.install("site", first.digest, 0);
     await expect(store.install("site", second.digest, 1)).rejects.toThrow("Page default path");
@@ -177,8 +189,10 @@ test("installs only declared public resources from compatible collection depende
         ],
     };
 
-    const foundationArtifact = await store.importRelease(foundation, [{ id: "empty.svg", bytes: assetBytes }]);
-    const consumerArtifact = await store.importRelease(consumer);
+    const foundationArtifact = await store.importRelease(collectionFixture(foundation), [
+        { id: "empty.svg", bytes: assetBytes },
+    ]);
+    const consumerArtifact = await store.importRelease(collectionFixture(consumer));
     await expect(store.install("site", consumerArtifact.digest, 0)).rejects.toThrow("requires ulvia-official");
     await store.install("site", foundationArtifact.digest, 0);
     await expect(store.install("site", consumerArtifact.digest, 1)).resolves.toMatchObject({ revision: 2 });
@@ -186,43 +200,47 @@ test("installs only declared public resources from compatible collection depende
     const unsupportedGeneration = structuredClone(consumer);
     unsupportedGeneration.version = "1.0.1";
     unsupportedGeneration.dependencies[0]!.imports.assets[0]!.generation = 2;
-    const unsupportedArtifact = await store.importRelease(unsupportedGeneration);
+    const unsupportedArtifact = await store.importRelease(collectionFixture(unsupportedGeneration));
     await store.install("generation", foundationArtifact.digest, 0);
     await expect(store.install("generation", unsupportedArtifact.digest, 1)).rejects.toThrow("empty.svg generation 2");
 
     const breakingFoundation = { ...structuredClone(foundation), version: "2.0.0" };
-    const breakingArtifact = await store.importRelease(breakingFoundation, [{ id: "empty.svg", bytes: assetBytes }]);
+    const breakingArtifact = await store.importRelease(collectionFixture(breakingFoundation), [
+        { id: "empty.svg", bytes: assetBytes },
+    ]);
     await expect(store.upgrade("site", breakingArtifact.digest, 2, "local")).rejects.toThrow("requires");
 
-    const wrongType = await store.importRelease({
-        ...consumer,
-        version: "1.1.0",
-        translations: {
-            en: {
-                ...consumer.translations.en,
-                "theme.category.layout.label": "Layout",
-                "theme.label": "Shop theme",
-                "theme.token.gap.label": "Gap",
-            },
-        },
-        theme: {
-            label: "theme.label",
-            categories: [
-                {
-                    id: "layout",
-                    label: "theme.category.layout.label",
-                    entries: [
-                        {
-                            id: "gap",
-                            label: "theme.token.gap.label",
-                            type: "length",
-                            defaults: { light: "var(--ulvia-official-primary)" },
-                        },
-                    ],
+    const wrongType = await store.importRelease(
+        collectionFixture({
+            ...consumer,
+            version: "1.1.0",
+            translations: {
+                en: {
+                    ...consumer.translations.en,
+                    "theme.category.layout.label": "Layout",
+                    "theme.label": "Shop theme",
+                    "theme.token.gap.label": "Gap",
                 },
-            ],
-        },
-    });
+            },
+            theme: {
+                label: "theme.label",
+                categories: [
+                    {
+                        id: "layout",
+                        label: "theme.category.layout.label",
+                        entries: [
+                            {
+                                id: "gap",
+                                label: "theme.token.gap.label",
+                                type: "length",
+                                defaults: { light: "var(--ulvia-official-primary)" },
+                            },
+                        ],
+                    },
+                ],
+            },
+        }),
+    );
     await store.install("types", foundationArtifact.digest, 0);
     await expect(store.install("types", wrongType.digest, 1)).rejects.toThrow("cannot use color token");
 });
@@ -266,17 +284,17 @@ test("requires imported cms-svg assets to expose the verified inline profile", a
     };
 
     const rejectedStore = new CollectionStore(new MemoryCollectionStorage());
-    const unprofiled = await rejectedStore.importRelease(foundation, [{ id: asset.id, bytes }]);
-    const dependent = await rejectedStore.importRelease(consumer);
+    const unprofiled = await rejectedStore.importRelease(collectionFixture(foundation), [{ id: asset.id, bytes }]);
+    const dependent = await rejectedStore.importRelease(collectionFixture(consumer));
     await rejectedStore.install("site", unprofiled.digest, 0);
     await expect(rejectedStore.install("site", dependent.digest, 1)).rejects.toThrow("not an admitted inline SVG");
 
     const acceptedStore = new CollectionStore(new MemoryCollectionStorage());
     const profiled = await acceptedStore.importRelease(
-        { ...foundation, assets: [{ ...asset, profiles: ["inline-svg"] }] },
+        collectionFixture({ ...foundation, assets: [{ ...asset, profiles: ["inline-svg"] }] }),
         [{ id: asset.id, bytes }],
     );
-    const acceptedDependent = await acceptedStore.importRelease(consumer);
+    const acceptedDependent = await acceptedStore.importRelease(collectionFixture(consumer));
     await acceptedStore.install("site", profiled.digest, 0);
     await expect(acceptedStore.install("site", acceptedDependent.digest, 1)).resolves.toMatchObject({ revision: 2 });
 });
@@ -315,8 +333,8 @@ test("admits imported Blocs under the same Page grammar", async () => {
         ],
     };
 
-    const foundation = await store.importRelease(foundationSource);
-    const consumer = await store.importRelease(consumerSource);
+    const foundation = await store.importRelease(collectionFixture(foundationSource));
+    const consumer = await store.importRelease(collectionFixture(consumerSource));
     await store.install("site", foundation.digest, 0);
     await expect(store.install("site", consumer.digest, 1)).resolves.toMatchObject({ revision: 2 });
 });
@@ -327,6 +345,9 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
         ...foundationBase,
         blocs: [
             {
+                description: "bloc.welcome.label",
+                categories: ["bloc.welcome.label"],
+
                 kind: "component",
                 root: { accepts: ["div"] },
                 id: "foundation-card",
@@ -366,16 +387,16 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
         ['<div cms-bloc=\"foundation-card\" mystery="value"><p slot="body"></p></div>', "attribute"],
     ] as const) {
         const store = new CollectionStore(new MemoryCollectionStorage());
-        const foundation = await store.importRelease(foundationSource);
-        const imported = await store.importRelease(consumer(html, "1.0.0"));
+        const foundation = await store.importRelease(collectionFixture(foundationSource));
+        const imported = await store.importRelease(collectionFixture(consumer(html, "1.0.0")));
         await store.install("site", foundation.digest, 0);
         await expect(store.install("site", imported.digest, 1)).rejects.toThrow(message);
     }
 
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const foundation = await store.importRelease(foundationSource);
+    const foundation = await store.importRelease(collectionFixture(foundationSource));
     const valid = await store.importRelease(
-        consumer('<div cms-bloc=\"foundation-card\"><p slot="body"></p></div>', "1.0.1"),
+        collectionFixture(consumer('<div cms-bloc=\"foundation-card\"><p slot="body"></p></div>', "1.0.1")),
     );
     await store.install("site", foundation.digest, 0);
     await expect(store.install("site", valid.digest, 1)).resolves.toMatchObject({ revision: 2 });
@@ -408,8 +429,8 @@ test("rejects imports that the dependency does not export", async () => {
         ],
     };
 
-    const foundationArtifact = await store.importRelease(foundation);
-    const consumerArtifact = await store.importRelease(consumer);
+    const foundationArtifact = await store.importRelease(collectionFixture(foundation));
+    const consumerArtifact = await store.importRelease(collectionFixture(consumer));
     await store.install("site", foundationArtifact.digest, 0);
     await expect(store.install("site", consumerArtifact.digest, 1)).rejects.toThrow("unavailable bloc");
 });

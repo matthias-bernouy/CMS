@@ -5,7 +5,7 @@
     "contractId": "ulvia.cms.access",
     "name": "CMS Access",
     "description": "Authenticate actors and manage CMS membership and administrator grants.",
-    "version": "1.1.0",
+    "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "users",

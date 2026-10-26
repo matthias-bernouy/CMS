@@ -116,10 +116,10 @@ remain CLI workflows; the new instance authoring tools focus on collections.
 
 ## Versions and verification
 
-The authored Provider profile is `1.2.0`, pinned to `ulvia.official@0.5.0`:
-Access `1.1.0`, Content `1.2.0`, Files `1.1.0`, Installations `1.1.0` and
+The authored Provider profile is `1.0.0`, pinned to `ulvia.official@0.1.0`:
+Access `1.0.0`, Content `1.0.0`, Files `1.0.0`, Installations `1.0.0` and
 Repository authoring `1.0.0`. Private snapshots require Repository protocol
-`ulvia.repository@0.2.0`. These are source artifacts until explicitly released;
+`ulvia.repository@1.0.0`. These are source artifacts until explicitly released;
 editing them does not upgrade a deployed image or publish a catalogue release.
 This profile currently provisions fresh instances; automatic migration from
 older Provider profiles is not implemented.

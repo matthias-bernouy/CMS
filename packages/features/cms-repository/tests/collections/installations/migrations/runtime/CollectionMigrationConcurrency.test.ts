@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
@@ -11,18 +12,20 @@ import type { CmsRepository } from "@bernouy/cms-content";
 
 test("allows exactly one concurrent migration to commit in memory", async () => {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const previous = await collections.importRelease(release("1.0.0", "atlas-card"));
-    const next = await collections.importRelease({
-        ...release("2.0.0", "atlas-panel"),
-        dataGeneration: 2,
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
-            },
-        ],
-    });
+    const previous = await collections.importRelease(collectionFixture(release("1.0.0", "atlas-card")));
+    const next = await collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-panel"),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
+                },
+            ],
+        }),
+    );
     await collections.install("site", previous.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
@@ -48,18 +51,20 @@ test("allows exactly one concurrent migration to commit in memory", async () => 
 
 test("cancels a plan that acquires the journal only after another migration completed", async () => {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const previous = await collections.importRelease(release("1.0.0", "atlas-card"));
-    const next = await collections.importRelease({
-        ...release("2.0.0", "atlas-panel"),
-        dataGeneration: 2,
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
-            },
-        ],
-    });
+    const previous = await collections.importRelease(collectionFixture(release("1.0.0", "atlas-card")));
+    const next = await collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-panel"),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
+                },
+            ],
+        }),
+    );
     await collections.install("site", previous.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
@@ -115,18 +120,20 @@ test("cancels a plan that acquires the journal only after another migration comp
 
 test("drains an in-flight write before planning and migrating its final snapshot", async () => {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const previous = await collections.importRelease(release("1.0.0", "atlas-card"));
-    const next = await collections.importRelease({
-        ...release("2.0.0", "atlas-panel"),
-        dataGeneration: 2,
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
-            },
-        ],
-    });
+    const previous = await collections.importRelease(collectionFixture(release("1.0.0", "atlas-card")));
+    const next = await collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-panel"),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
+                },
+            ],
+        }),
+    );
     await collections.install("site", previous.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
@@ -188,7 +195,7 @@ test("drains an in-flight write before planning and migrating its final snapshot
 });
 
 function release(version: string, blocId: string): Record<string, unknown> {
-    return {
+    return collectionFixture({
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -201,6 +208,9 @@ function release(version: string, blocId: string): Record<string, unknown> {
         assets: [],
         blocs: [
             {
+                description: "bloc.label",
+                categories: ["bloc.label"],
+
                 kind: "component",
                 root: { accepts: ["div"] },
                 id: blocId,
@@ -211,5 +221,5 @@ function release(version: string, blocId: string): Record<string, unknown> {
                 slots: {},
             },
         ],
-    };
+    });
 }

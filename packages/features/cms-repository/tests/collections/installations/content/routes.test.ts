@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { InMemoryPageRouteRegistry } from "@bernouy/cms-content";
 import { synchronizeCollectionPageRoutes, withCollectionPageRoutes } from "@bernouy/cms-repository/collections/content";
@@ -93,15 +94,15 @@ test("the routed collection facade preserves non-mutating class methods", async 
 
 test("collection admission rejects an undeclared Page target before activation", async () => {
     const raw = new CollectionStore(new MemoryCollectionStorage());
-    await expect(raw.importRelease(collectionRelease('<a href="/missing">{{ page.title }}</a>'))).rejects.toThrow(
-        "undeclared Page route",
-    );
+    await expect(
+        raw.importRelease(collectionFixture(collectionRelease('<a href="/missing">{{ page.title }}</a>'))),
+    ).rejects.toThrow("undeclared Page route");
     expect(await raw.snapshot("site-a")).toEqual({ revision: 0, collections: [] });
 });
 
 test("collection removal cannot orphan an editable Page reference", async () => {
     const raw = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await raw.importRelease(collectionRelease("<main>{{ page.title }}</main>"));
+    const artifact = await raw.importRelease(collectionFixture(collectionRelease("<main>{{ page.title }}</main>")));
     const sitePage = {
         id: "site-page",
         path: "/admin/site-page",
@@ -118,7 +119,7 @@ test("collection removal cannot orphan an editable Page reference", async () => 
 
 test("collection mutations accept a site Page historical redirect", async () => {
     const raw = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await raw.importRelease(collectionRelease("<main>{{ page.title }}</main>"));
+    const artifact = await raw.importRelease(collectionFixture(collectionRelease("<main>{{ page.title }}</main>")));
     const sitePage = {
         id: "site-page",
         path: "/renamed",
@@ -134,7 +135,7 @@ test("collection mutations accept a site Page historical redirect", async () => 
 
 test("collection route collisions with site Page aliases fail before persistence", async () => {
     const raw = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await raw.importRelease(collectionRelease("<main>{{ page.title }}</main>"));
+    const artifact = await raw.importRelease(collectionFixture(collectionRelease("<main>{{ page.title }}</main>")));
     const sitePage = {
         id: "site-page",
         path: "/renamed",
@@ -150,7 +151,7 @@ test("collection route collisions with site Page aliases fail before persistence
 });
 
 function collectionRelease(html: string) {
-    return {
+    return collectionFixture({
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -169,6 +170,9 @@ function collectionRelease(html: string) {
         assets: [],
         blocs: [
             {
+                description: "bloc.page.label",
+                categories: ["bloc.page.label"],
+
                 kind: "composition",
                 root: { accepts: ["div"] },
                 id: "official-page",
@@ -190,5 +194,5 @@ function collectionRelease(html: string) {
                 document: { html: '<div cms-bloc="official-page"></div>' },
             },
         ],
-    };
+    });
 }

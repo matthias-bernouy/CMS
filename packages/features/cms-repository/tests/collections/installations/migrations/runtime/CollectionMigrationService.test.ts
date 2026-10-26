@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { createHash } from "node:crypto";
@@ -49,11 +50,11 @@ test("migrates an installed collection asset reference and restores it on rollba
     const oldBytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><title>Old</title></svg>');
     const newBytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><title>New</title></svg>');
     const previous = await collections.importRelease(
-        { ...release("1.0.0", "atlas-card"), assets: [asset("old.svg", oldBytes)] },
+        collectionFixture({ ...release("1.0.0", "atlas-card"), assets: [asset("old.svg", oldBytes)] }),
         [{ id: "old.svg", bytes: oldBytes }],
     );
     const next = await collections.importRelease(
-        {
+        collectionFixture({
             ...release("2.0.0", "atlas-card"),
             dataGeneration: 2,
             assets: [asset("new.svg", newBytes)],
@@ -64,7 +65,7 @@ test("migrates an installed collection asset reference and restores it on rollba
                     operations: [{ kind: "rename-asset", from: "old.svg", to: "new.svg" }],
                 },
             ],
-        },
+        }),
         [{ id: "new.svg", bytes: newBytes }],
     );
     await collections.install("site", previous.digest, 0, "local");
@@ -102,43 +103,49 @@ test("migrates an installed collection asset reference and restores it on rollba
 
 test("reports removed imported texts and assets before a migration acquires maintenance", () => {
     const bytes = new TextEncoder().encode("asset");
-    const provider = parseCollectionRelease({
-        ...release("1.0.0", "atlas-card"),
-        texts: [
-            {
-                id: "title",
-                label: "text.label.title",
-                category: "text.category.content",
-                group: "text.group.general",
-                values: { en: "Title" },
-            },
-        ],
-        assets: [asset("logo.svg", bytes)],
-        exports: { blocs: [], themeTokens: [], texts: ["title"], assets: ["logo.svg"] },
-    });
-    const consumer = parseCollectionRelease({
-        ...release("1.0.0", "atlas-card"),
-        collectionId: "storefront",
-        publisherId: "storefront.official",
-        blocs: [],
-        dependencies: [
-            {
-                collectionId: "atlas",
-                publisherId: "atlas.official",
-                versionRange: "^2.0.0",
-                imports: {
-                    blocs: [],
-                    themeTokens: [],
-                    texts: [{ id: "title", generation: 1 }],
-                    assets: [{ id: "logo.svg", generation: 1 }],
+    const provider = parseCollectionRelease(
+        collectionFixture({
+            ...release("1.0.0", "atlas-card"),
+            texts: [
+                {
+                    id: "title",
+                    label: "text.label.title",
+                    category: "text.category.content",
+                    group: "text.group.general",
+                    values: { en: "Title" },
                 },
-            },
-        ],
-    });
-    const target = parseCollectionRelease({
-        ...release("2.0.0", "atlas-card"),
-        exports: { blocs: [], themeTokens: [] },
-    });
+            ],
+            assets: [asset("logo.svg", bytes)],
+            exports: { blocs: [], themeTokens: [], texts: ["title"], assets: ["logo.svg"] },
+        }),
+    );
+    const consumer = parseCollectionRelease(
+        collectionFixture({
+            ...release("1.0.0", "atlas-card"),
+            collectionId: "storefront",
+            publisherId: "storefront.official",
+            blocs: [],
+            dependencies: [
+                {
+                    collectionId: "atlas",
+                    publisherId: "atlas.official",
+                    versionRange: "^2.0.0",
+                    imports: {
+                        blocs: [],
+                        themeTokens: [],
+                        texts: [{ id: "title", generation: 1 }],
+                        assets: [{ id: "logo.svg", generation: 1 }],
+                    },
+                },
+            ],
+        }),
+    );
+    const target = parseCollectionRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-card"),
+            exports: { blocs: [], themeTokens: [] },
+        }),
+    );
 
     expect(dependencyIssues([{ release: provider }, { release: consumer }], [target])).toEqual([
         "storefront requires text atlas.title generation 1.",
@@ -207,11 +214,13 @@ test("resumes a partially committed forward migration without reacquiring the in
 
 test("blocks a removed bloc only while stored pages still reference it", async () => {
     const fixture = await migrationFixture();
-    const target = await fixture.collections.importRelease({
-        ...release("2.1.0", "atlas-panel"),
-        dataGeneration: 2,
-        migrations: [{ fromGeneration: 1, toGeneration: 2, operations: [] }],
-    });
+    const target = await fixture.collections.importRelease(
+        collectionFixture({
+            ...release("2.1.0", "atlas-panel"),
+            dataGeneration: 2,
+            migrations: [{ fromGeneration: 1, toGeneration: 2, operations: [] }],
+        }),
+    );
     const blocked = await fixture.service.plan("site", [{ digest: target.digest }], 1);
     expect(blocked.blockedReasons).toContainEqual(expect.stringContaining("Page /demo is incompatible"));
 
@@ -312,51 +321,55 @@ test("cancels cleanly when a page changes before maintenance owns the snapshot",
 
 test("migrates collection configuration through declarative value operations", async () => {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const previous = await collections.importRelease({
-        ...release("1.0.0", "atlas-card"),
-        configuration: {
-            schema: {
-                type: "object",
-                properties: {
-                    mode: { type: "string", maxLength: 20, enum: ["legacy"] },
-                    legacy: { type: "string", maxLength: 20 },
-                },
-                required: ["mode", "legacy"],
-            },
-            defaults: { mode: "legacy", legacy: "remove-me" },
-        },
-    });
-    const next = await collections.importRelease({
-        ...release("2.0.0", "atlas-card"),
-        dataGeneration: 2,
-        configuration: {
-            generation: 2,
-            schema: {
-                type: "object",
-                properties: {
-                    mode: { type: "string", maxLength: 20, enum: ["modern"] },
-                    density: { type: "string", maxLength: 20, enum: ["compact"] },
-                },
-                required: ["mode", "density"],
-            },
-            defaults: { mode: "modern", density: "compact" },
-        },
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [
-                    {
-                        kind: "map-configuration-value",
-                        path: ["mode"],
-                        values: [{ from: "legacy", to: "modern" }],
+    const previous = await collections.importRelease(
+        collectionFixture({
+            ...release("1.0.0", "atlas-card"),
+            configuration: {
+                schema: {
+                    type: "object",
+                    properties: {
+                        mode: { type: "string", maxLength: 20, enum: ["legacy"] },
+                        legacy: { type: "string", maxLength: 20 },
                     },
-                    { kind: "remove-configuration-value", path: ["legacy"] },
-                    { kind: "set-configuration-default", path: ["density"], value: "compact" },
-                ],
+                    required: ["mode", "legacy"],
+                },
+                defaults: { mode: "legacy", legacy: "remove-me" },
             },
-        ],
-    });
+        }),
+    );
+    const next = await collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-card"),
+            dataGeneration: 2,
+            configuration: {
+                generation: 2,
+                schema: {
+                    type: "object",
+                    properties: {
+                        mode: { type: "string", maxLength: 20, enum: ["modern"] },
+                        density: { type: "string", maxLength: 20, enum: ["compact"] },
+                    },
+                    required: ["mode", "density"],
+                },
+                defaults: { mode: "modern", density: "compact" },
+            },
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [
+                        {
+                            kind: "map-configuration-value",
+                            path: ["mode"],
+                            values: [{ from: "legacy", to: "modern" }],
+                        },
+                        { kind: "remove-configuration-value", path: ["legacy"] },
+                        { kind: "set-configuration-default", path: ["density"], value: "compact" },
+                    ],
+                },
+            ],
+        }),
+    );
     await collections.install("site", previous.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
@@ -399,18 +412,20 @@ test("rejects execution when the reviewed plan digest changed", async () => {
 
 async function migrationFixture() {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const previous = await collections.importRelease(release("1.0.0", "atlas-card"));
-    const next = await collections.importRelease({
-        ...release("2.0.0", "atlas-panel"),
-        dataGeneration: 2,
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
-            },
-        ],
-    });
+    const previous = await collections.importRelease(collectionFixture(release("1.0.0", "atlas-card")));
+    const next = await collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-panel"),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
+                },
+            ],
+        }),
+    );
     await collections.install("site", previous.digest, 0, "local");
     const inner = new InMemoryCmsRepository();
     const repository = new ValidatingCmsRepository(withInstalledCollections(inner, collections, "site"));
@@ -429,7 +444,7 @@ async function migrationFixture() {
 }
 
 function release(version: string, id: string): Record<string, unknown> {
-    return {
+    return collectionFixture({
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -450,6 +465,9 @@ function release(version: string, id: string): Record<string, unknown> {
         assets: [],
         blocs: [
             {
+                description: "bloc.label",
+                categories: ["bloc.label"],
+
                 kind: "component",
                 root: { accepts: ["div"] },
                 id,
@@ -460,6 +478,9 @@ function release(version: string, id: string): Record<string, unknown> {
                 slots: { media: { accepts: [{ kind: "component", tag: "atlas-image" }] } },
             },
             {
+                description: "bloc.label",
+                categories: ["bloc.label"],
+
                 kind: "component",
                 root: { accepts: ["div"] },
                 id: "atlas-image",
@@ -474,10 +495,10 @@ function release(version: string, id: string): Record<string, unknown> {
                         max: 1,
                     },
                 },
-                defaultContent: '<img alt="">',
+                exampleContent: '<img src="/.cms/call/ulvia.cms.files/files/fixture/1" alt="Example image">',
             },
         ],
-    };
+    });
 }
 
 function asset(id: string, bytes: Uint8Array) {

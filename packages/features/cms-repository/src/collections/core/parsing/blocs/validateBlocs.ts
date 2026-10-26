@@ -42,16 +42,13 @@ function validateUsesGraph(
 
 export function validateBlocs(
     blocs: readonly CollectionBloc[],
-    assetIds: ReadonlySet<string>,
+    _assetIds: ReadonlySet<string>,
     limits: Readonly<CollectionLimits>,
     importedBlocs: ReadonlySet<string> = new Set(),
 ): void {
     const byId = new Map(blocs.map((bloc) => [bloc.id, bloc]));
     for (const bloc of blocs) {
         const path = `$.blocs[${bloc.id}]`;
-        if (bloc.thumbnail !== undefined && !assetIds.has(bloc.thumbnail)) {
-            invalid(`unknown thumbnail asset ${bloc.thumbnail}`, `${path}.thumbnail`);
-        }
         for (const [name, slot] of Object.entries(bloc.slots)) {
             for (const accept of slot.accepts ?? []) {
                 if (accept.kind === "component" && !byId.has(accept.tag) && !importedBlocs.has(accept.tag)) {

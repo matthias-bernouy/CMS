@@ -46,7 +46,7 @@
   bounded default slot with `kind: "native-element"`; there is no separate
   `content` contract. All structure is Light DOM; Shadow DOM is forbidden.
 
-- Author collection v2 initial instances under `examples/**/` with
+- Author collection v1 initial instances under `examples/**/` with
   `definition.json` and `document.html`. Replace `default.html` with an explicit
   `defaultExample` reference. Use existing translations and content text IDs
   for reusable official example copy. Frame dimensions are authored data;

@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
@@ -92,11 +93,13 @@ test("keeps a deliberately deleted migrated page deleted on rollback", async () 
 test("preserves unrelated collection installations during rollback", async () => {
     const fixture = await rollbackFixture();
     const completed = await fixture.service.execute("site", [{ digest: fixture.next.digest }], 1);
-    const companion = await fixture.collections.importRelease({
-        ...release("1.0.0", "companion-widget", false),
-        collectionId: "companion",
-        publisherId: "companion.official",
-    });
+    const companion = await fixture.collections.importRelease(
+        collectionFixture({
+            ...release("1.0.0", "companion-widget", false),
+            collectionId: "companion",
+            publisherId: "companion.official",
+        }),
+    );
     await fixture.collections.install("site", companion.digest, 2);
 
     await fixture.service.rollback("site", completed.id);
@@ -109,18 +112,20 @@ test("preserves unrelated collection installations during rollback", async () =>
 
 async function rollbackFixture() {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const previous = await collections.importRelease(release("1.0.0", "atlas-card", false));
-    const next = await collections.importRelease({
-        ...release("2.0.0", "atlas-panel", true),
-        dataGeneration: 2,
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
-            },
-        ],
-    });
+    const previous = await collections.importRelease(collectionFixture(release("1.0.0", "atlas-card", false)));
+    const next = await collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-panel", true),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
+                },
+            ],
+        }),
+    );
     await collections.install("site", previous.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
@@ -152,7 +157,7 @@ function stableShell() {
 }
 
 function release(version: string, blocId: string, extended: boolean): Record<string, unknown> {
-    return {
+    return collectionFixture({
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -187,6 +192,9 @@ function release(version: string, blocId: string, extended: boolean): Record<str
             : [],
         blocs: [
             {
+                description: "bloc.label",
+                categories: ["bloc.label"],
+
                 kind: "component",
                 root: { accepts: ["div"] },
                 id: blocId,
@@ -216,5 +224,5 @@ function release(version: string, blocId: string, extended: boolean): Record<str
                   ]
                 : [],
         },
-    };
+    });
 }

@@ -32,7 +32,6 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
     }
     const markupFile = Bun.file(join(root, "markup.html"));
     const style = Bun.file(join(root, "style.css"));
-    const defaults = Bun.file(join(root, "default.html"));
     const script = Bun.file(join(root, "bloc.ts"));
     const settingsRoot = join(root, "settings");
     const runtimeRoot = join(root, "runtime");
@@ -48,7 +47,6 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
     if (hasSettingsDirectory && Object.hasOwn(definition, "settings")) {
         throw new Error(`Bloc ${id} must declare settings in only one place`);
     }
-    const defaultContent = (await defaults.exists()) ? (await defaults.text()).trim() : undefined;
     if (!(await markupFile.exists())) {
         throw new Error(`Bloc ${id} requires markup.html`);
     }
@@ -60,9 +58,9 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
             Object.keys(runtimeSources).length > 0 ||
             hasSettingsDirectory
         ) {
-            throw new Error(`Composition ${id} must have only markup.html and optional default.html`);
+            throw new Error(`Composition ${id} must have only markup.html`);
         }
-        return { ...definition, markup, ...(defaultContent ? { defaultContent } : {}) };
+        return { ...definition, markup };
     }
     if (definition.kind !== "component") {
         throw new Error(`Bloc ${id} kind must be component or composition`);
@@ -84,7 +82,6 @@ async function compileBlocSource(source: BlocSource): Promise<unknown> {
         ...definition,
         ...(hasSettingsDirectory ? { settings: await settingsFile.json() } : {}),
         markup,
-        ...(defaultContent ? { defaultContent } : {}),
         ...(css ? { style: css } : {}),
         ...(compiled ? { runtime: { browserAbi: compiled.browserAbi, viewJS: compiled.viewJS } } : {}),
     };

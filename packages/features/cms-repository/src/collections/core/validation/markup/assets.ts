@@ -15,7 +15,7 @@ export function validateCollectionAssetReferences(
     pages: readonly CollectionPage[] = [],
 ): void {
     for (const bloc of blocs) {
-        const markupValues = [bloc.markup, bloc.defaultContent];
+        const markupValues = [bloc.markup];
         for (const value of markupValues) {
             if (value !== undefined) {
                 const path = `$.blocs[${bloc.id}]`;
@@ -40,12 +40,7 @@ export function validateInstalledCollectionSvgReferences(
     releases: ReadonlyMap<string, CollectionRelease>,
 ): void {
     const documents = [
-        ...release.blocs.flatMap((bloc) => [
-            { value: bloc.markup, path: `Collection Bloc ${bloc.id}.markup` },
-            ...(bloc.defaultContent === undefined
-                ? []
-                : [{ value: bloc.defaultContent, path: `Collection Bloc ${bloc.id}.defaultContent` }]),
-        ]),
+        ...release.blocs.flatMap((bloc) => [{ value: bloc.markup, path: `Collection Bloc ${bloc.id}.markup` }]),
         ...([...(release.pages ?? []), ...(release.examples ?? [])].map((page) => ({
             value: page.document.html,
             path: `Collection Page ${release.collectionId}.${page.id}`,

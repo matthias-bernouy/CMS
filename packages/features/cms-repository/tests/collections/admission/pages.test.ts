@@ -1,3 +1,4 @@
+import { collectionFixture } from "./examples/buildFixture";
 import { expect, test } from "bun:test";
 import { parseCollectionRelease } from "../../../src/exports/collections";
 import { collectionDocument, textDefinition } from "../fixtures";
@@ -13,7 +14,7 @@ const page = {
 
 test("collection Pages keep one bounded document in the global route namespace", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
-    const release = parseCollectionRelease({ ...source, pages: [page] });
+    const release = parseCollectionRelease(collectionFixture({ ...source, pages: [page] }));
     expect(release.pages?.[0]?.document.html).toBe(page.document.html);
     expect(release.pages?.[0]?.uses).toEqual(["atlas-panel"]);
 
@@ -21,7 +22,7 @@ test("collection Pages keep one bounded document in the global route namespace",
         { ...page, defaultPath: "/.cms/catalog" },
         { ...page, defaultPath: "/catalog?preview=true" },
     ]) {
-        expect(() => parseCollectionRelease({ ...source, pages: [invalid] })).toThrow();
+        expect(() => parseCollectionRelease(collectionFixture({ ...source, pages: [invalid] }))).toThrow();
     }
 });
 
@@ -34,7 +35,9 @@ test("collection Page hosts reject undeclared capability and resource attributes
             html: '<div cms-bloc=\"atlas-panel\" cms-mutation="catalog.items:item.list as catalog"></div>',
         },
     };
-    expect(() => parseCollectionRelease({ ...source, pages: [bound] })).toThrow(/mutations are reserved for form/u);
+    expect(() => parseCollectionRelease(collectionFixture({ ...source, pages: [bound] }))).toThrow(
+        /mutations are reserved for form/u,
+    );
 
     const localized = {
         ...source,
@@ -56,17 +59,19 @@ test("collection Page hosts reject undeclared capability and resource attributes
             },
         ],
     };
-    expect(() => parseCollectionRelease(localized)).toThrow(/neither a declared setting/);
+    expect(() => parseCollectionRelease(collectionFixture(localized))).toThrow(/neither a declared setting/);
     expect(() =>
-        parseCollectionRelease({
-            ...localized,
-            pages: [
-                {
-                    ...page,
-                    document: { html: '<div cms-bloc=\"atlas-panel\" title="{{ cms.i18n.atlas.unknown }}"></div>' },
-                },
-            ],
-        }),
+        parseCollectionRelease(
+            collectionFixture({
+                ...localized,
+                pages: [
+                    {
+                        ...page,
+                        document: { html: '<div cms-bloc=\"atlas-panel\" title="{{ cms.i18n.atlas.unknown }}"></div>' },
+                    },
+                ],
+            }),
+        ),
     ).toThrow(/neither a declared setting/);
 });
 
@@ -75,6 +80,9 @@ test("collection Pages admit typed capability forms owned by a composition", () 
     const form =
         '<form cms-mutation="catalog.items:item.rename as renamed"><label for="title">{{ copy }}</label><input id="title" type="text" name="title" required><input type="hidden" name="expectedRevision" value="1" cms-form-value-type="number"><button type="submit">{{ copy }}</button></form>';
     (source.blocs as Record<string, unknown>[]).push({
+        description: "bloc.page.label",
+        categories: ["bloc.page.label"],
+
         kind: "composition",
         root: { accepts: ["div"] },
         id: "atlas-form-page",
@@ -88,7 +96,7 @@ test("collection Pages admit typed capability forms owned by a composition", () 
         ...page,
         document: { html: '<div cms-bloc="atlas-form-page"></div>' },
     };
-    expect(() => parseCollectionRelease({ ...source, pages: [mutation] })).not.toThrow();
+    expect(() => parseCollectionRelease(collectionFixture({ ...source, pages: [mutation] }))).not.toThrow();
     for (const html of [
         form.replace('cms-mutation="catalog.items:item.rename as renamed"', 'action="https://example.com"'),
         form.replace("catalog.items:item.rename as renamed", "catalog.items:item.rename"),
@@ -96,13 +104,16 @@ test("collection Pages admit typed capability forms owned by a composition", () 
     ]) {
         const invalid = structuredClone(source);
         (invalid.blocs as Record<string, unknown>[]).find(({ id }) => id === "atlas-form-page")!.markup = html;
-        expect(() => parseCollectionRelease({ ...invalid, pages: [mutation] })).toThrow();
+        expect(() => parseCollectionRelease(collectionFixture({ ...invalid, pages: [mutation] }))).toThrow();
     }
 });
 
 test("collection Pages use declared Access capabilities instead of Kernel-owned authentication", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const authentication = {
+        description: "bloc.page.label",
+        categories: ["bloc.page.label"],
+
         kind: "composition",
         root: { accepts: ["div"] },
         id: "atlas-authentication",
@@ -126,7 +137,9 @@ test("collection Pages use declared Access capabilities instead of Kernel-owned 
     };
     const login = { ...page, document: { html: '<div cms-bloc="atlas-authentication"></div>' } };
     expect(() =>
-        parseCollectionRelease({ ...source, blocs: [...source.blocs, authentication], pages: [login] }),
+        parseCollectionRelease(
+            collectionFixture({ ...source, blocs: [...source.blocs, authentication], pages: [login] }),
+        ),
     ).not.toThrow();
 
     for (const markup of [
@@ -134,11 +147,13 @@ test("collection Pages use declared Access capabilities instead of Kernel-owned 
         authentication.markup.replace("ulvia.cms.access:login-password", "kernel.auth:secrets"),
     ]) {
         expect(() =>
-            parseCollectionRelease({
-                ...source,
-                blocs: [...source.blocs, { ...authentication, markup }],
-                pages: [login],
-            }),
+            parseCollectionRelease(
+                collectionFixture({
+                    ...source,
+                    blocs: [...source.blocs, { ...authentication, markup }],
+                    pages: [login],
+                }),
+            ),
         ).toThrow();
     }
 });
@@ -155,7 +170,9 @@ test("Pages reject removed kernel file transports", () => {
         </form>
         <a href="/.cms/call/ulvia.cms.files/files/{{ item.id }}/{{ item.generation }}" target="_blank" rel="noopener">{{ copy }}</a>
     </section>`;
-    expect(() => parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }] })).toThrow();
+    expect(() =>
+        parseCollectionRelease(collectionFixture({ ...source, pages: [{ ...page, document: { html } }] })),
+    ).toThrow();
 });
 
 test("collection Pages use native links with statically identifiable paths", () => {
@@ -168,7 +185,7 @@ test("collection Pages use native links with statically identifiable paths", () 
         '<div cms-bloc=\"atlas-panel\"><a slot="body" href="/admin/details?id={{ page.id | urlencode }}">{{ copy }}</a></div>';
     const details = { ...page, id: "details", defaultPath: "/admin/details", name: "page.details.name" };
     expect(() =>
-        parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }, details] }),
+        parseCollectionRelease(collectionFixture({ ...source, pages: [{ ...page, document: { html } }, details] })),
     ).not.toThrow();
     for (const invalidHtml of [
         '<div cms-bloc=\"atlas-panel\"><a slot="body" href="/{{ page.path }}">{{ copy }}</a></div>',
@@ -177,7 +194,9 @@ test("collection Pages use native links with statically identifiable paths", () 
         '<div cms-bloc=\"atlas-panel\"><div slot="body" href="/admin/details">{{ copy }}</div></div>',
     ]) {
         expect(() =>
-            parseCollectionRelease({ ...source, pages: [{ ...page, document: { html: invalidHtml } }] }),
+            parseCollectionRelease(
+                collectionFixture({ ...source, pages: [{ ...page, document: { html: invalidHtml } }] }),
+            ),
         ).toThrow();
     }
 });
@@ -192,11 +211,13 @@ test("collection admission validates links from every Bloc template", () => {
     const details = { ...page, id: "details", defaultPath: "/admin/details", name: "page.details.name" };
     const blocs = structuredClone(source.blocs) as Record<string, unknown>[];
     const composition = blocs.find(({ id }) => id === "atlas-page")!;
-    composition.defaultContent = '<a slot="main" href="/admin/details">{{ cms.i18n.atlas.details }}</a>';
-    expect(() => parseCollectionRelease({ ...source, blocs, pages: [page, details] })).not.toThrow();
+    composition.slots = {};
+    composition.uses = [];
+    composition.markup = '<a href="/admin/details">{{ cms.i18n.atlas.details }}</a>';
+    expect(() => parseCollectionRelease(collectionFixture({ ...source, blocs, pages: [page, details] }))).not.toThrow();
 
-    composition.defaultContent = '<a slot="main" href="/admin/pagez">{{ cms.i18n.atlas.details }}</a>';
-    expect(() => parseCollectionRelease({ ...source, blocs, pages: [page, details] })).toThrow(
+    composition.markup = '<a href="/admin/pagez">{{ cms.i18n.atlas.details }}</a>';
+    expect(() => parseCollectionRelease(collectionFixture({ ...source, blocs, pages: [page, details] }))).toThrow(
         "Collection Bloc atlas-page references an undeclared Page route",
     );
 });
@@ -213,7 +234,7 @@ test("collection Pages use the closed content grammar", () => {
     ];
     for (const html of invalidDocuments) {
         expect(() =>
-            parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }, details] }),
+            parseCollectionRelease(collectionFixture({ ...source, pages: [{ ...page, document: { html } }, details] })),
         ).toThrow();
     }
 });
@@ -225,6 +246,9 @@ test("collection admission validates the outline after expanding local compositi
         "page.overview.name": "Overview",
     });
     const heading = {
+        description: "bloc.heading.label",
+        categories: ["bloc.heading.label"],
+
         kind: "component",
         id: "atlas-heading",
         label: "bloc.heading.label",
@@ -235,6 +259,9 @@ test("collection admission validates the outline after expanding local compositi
         requires: [],
     };
     const outline = (markup: string) => ({
+        description: "bloc.outline.label",
+        categories: ["bloc.outline.label"],
+
         kind: "composition",
         id: "atlas-outline",
         label: "bloc.outline.label",
@@ -247,26 +274,30 @@ test("collection admission validates the outline after expanding local compositi
     const collectionPage = { ...page, document: { html: '<div cms-bloc="atlas-outline"></div>' } };
 
     expect(() =>
-        parseCollectionRelease({
-            ...source,
-            blocs: [
-                ...(source.blocs as unknown[]),
-                heading,
-                outline('<h2 cms-bloc="atlas-heading">{{ copy }}</h2><h4 cms-bloc="atlas-heading">{{ copy }}</h4>'),
-            ],
-            pages: [collectionPage],
-        }),
+        parseCollectionRelease(
+            collectionFixture({
+                ...source,
+                blocs: [
+                    ...(source.blocs as unknown[]),
+                    heading,
+                    outline('<h2 cms-bloc="atlas-heading">{{ copy }}</h2><h4 cms-bloc="atlas-heading">{{ copy }}</h4>'),
+                ],
+                pages: [collectionPage],
+            }),
+        ),
     ).toThrow("skips from h2 to h4");
     expect(() =>
-        parseCollectionRelease({
-            ...source,
-            blocs: [
-                ...(source.blocs as unknown[]),
-                heading,
-                outline('<h1 cms-bloc="atlas-heading">{{ copy }}</h1><h1 cms-bloc="atlas-heading">{{ copy }}</h1>'),
-            ],
-            pages: [collectionPage],
-        }),
+        parseCollectionRelease(
+            collectionFixture({
+                ...source,
+                blocs: [
+                    ...(source.blocs as unknown[]),
+                    heading,
+                    outline('<h1 cms-bloc="atlas-heading">{{ copy }}</h1><h1 cms-bloc="atlas-heading">{{ copy }}</h1>'),
+                ],
+                pages: [collectionPage],
+            }),
+        ),
     ).toThrow("at most one h1");
 });
 
@@ -281,6 +312,8 @@ test("collection Pages reject executable or unbounded markup", () => {
         '<section cms-mutation="catalog.items:item.list as items"></section>',
         '<section cms-query="catalog.items:item.list"></section>',
     ]) {
-        expect(() => parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }] })).toThrow();
+        expect(() =>
+            parseCollectionRelease(collectionFixture({ ...source, pages: [{ ...page, document: { html } }] })),
+        ).toThrow();
     }
 });

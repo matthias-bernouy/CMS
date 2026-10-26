@@ -3,7 +3,7 @@ import type { CollectionBloc } from "cms-repository/collections/interfaces/Colle
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { validateManagedNativeDefinition } from "./managedNative";
-import { validateDeclarative, validateNoBindings } from "./shell";
+import { validateDeclarative } from "./shell";
 import { type BlocMarkup, pageSlots, validatePageSlots, validateSlotTargets } from "./slots";
 import { elements, markupTree, significantRoots } from "./tree";
 
@@ -11,7 +11,6 @@ function inspect(bloc: CollectionBloc): BlocMarkup {
     const fixed = markupTree(bloc.markup);
     return {
         fixed,
-        initial: bloc.defaultContent === undefined ? undefined : markupTree(bloc.defaultContent),
         pageSlots: pageSlots(fixed),
     };
 }
@@ -38,10 +37,6 @@ export function validateMarkup(
         const content = markup.get(bloc.id)!;
         validateManagedNativeDefinition(bloc, path);
         validateDeclarative(content.fixed, `${path}.markup`, bloc.kind === "component");
-        if (content.initial) {
-            validateDeclarative(content.initial, `${path}.defaultContent`);
-            validateNoBindings(content.initial, `${path}.defaultContent`);
-        }
         let canonical: BlocDocumentValidationResult;
         try {
             canonical = validateBlocDocument(
@@ -62,17 +57,6 @@ export function validateMarkup(
         validateDeclaredUses(content.fixed, bloc, `${path}.markup`);
         validateSlotTargets(content.fixed, content.pageSlots, byId, markup, `${path}.markup`, importedBlocs);
         validateRequirements(bloc, canonical!, path);
-        if (content.initial) {
-            validateDeclaredUses(content.initial, bloc, `${path}.defaultContent`);
-            validateSlotTargets(
-                content.initial,
-                content.pageSlots,
-                byId,
-                markup,
-                `${path}.defaultContent`,
-                importedBlocs,
-            );
-        }
     }
 }
 

@@ -86,7 +86,11 @@ test("derives displayed browser authority from the admitted bundle instead of re
         assets: [],
         blocs: [
             {
+                description: "collection.name",
+                categories: ["collection.name"],
+
                 id: "example-interactive",
+                catalogue: "hidden",
                 kind: "component",
                 label: "collection.name",
                 uses: [],

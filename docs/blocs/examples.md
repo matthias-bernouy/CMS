@@ -1,13 +1,12 @@
 # Collection Examples
 
-New authored collections use `protocol: "ulvia-collection/v2"`. Published v1
-releases remain readable with their existing canonical bytes and digests.
-V2 replaces Bloc `category`, `thumbnail` and `defaultContent` with catalogue
-memberships and collection-owned examples.
+Authored collections use `protocol: "ulvia-collection/v1"` with required catalogue
+metadata and collection-owned examples. Bloc `category`, `thumbnail`,
+`defaultContent`, and `default.html` are unsupported.
 
 ## Bloc metadata
 
-Every v2 Bloc requires translated `label`, `description` and a nonempty,
+Every Bloc requires translated `label`, `description` and a nonempty,
 duplicate-free `categories` array of translation keys. Listed Blocs also require
 an associated `defaultExample`. Hidden implementation Blocs may omit examples.
 Catalogue order applies identically to each membership.

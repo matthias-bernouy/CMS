@@ -12,7 +12,7 @@ export function validateDeclaredPageLinks(
         ),
     ]);
     for (const bloc of release.blocs) {
-        const sources = [bloc.markup, bloc.defaultContent];
+        const sources = [bloc.markup];
         for (const path of sources.flatMap((source) => (source ? pageLinks(source) : []))) {
             if (!available.has(path)) {
                 throw new TypeError(`Collection Bloc ${bloc.id} references an undeclared Page route: ${path}`);

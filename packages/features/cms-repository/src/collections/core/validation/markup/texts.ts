@@ -79,10 +79,7 @@ export function validateCollectionTextReferences(
     allowLiteralCopy = false,
 ): void {
     for (const bloc of blocs) {
-        for (const [field, markup] of [
-            ["markup", bloc.markup],
-            ["defaultContent", bloc.defaultContent],
-        ] as const) {
+        for (const [field, markup] of [["markup", bloc.markup]] as const) {
             if (markup === undefined) {
                 continue;
             }

@@ -20,8 +20,8 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     const translations = await loadCollectionTranslations(join(collectionRoot, "translations"));
     const blocs = await loadCollectionBlocs(join(collectionRoot, "blocs"));
     const examples = await loadCollectionExamples(join(collectionRoot, "examples"));
-    if (examples.length && definition.protocol !== "ulvia-collection/v2") {
-        throw new Error("Example sources require collection v2");
+    if (examples.length && definition.protocol !== "ulvia-collection/v1") {
+        throw new Error("Example sources require collection v1");
     }
     const texts = await loadCollectionTexts(join(collectionRoot, "texts"));
     const pages = await loadPages(join(collectionRoot, "pages"));
@@ -31,12 +31,6 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         throw new Error(
             "Collection source assets are discovered from assets/ and must not be declared in definition.json",
         );
-    }
-    if (
-        definition.protocol === "ulvia-collection/v2" &&
-        blocs.some((bloc) => Object.hasOwn(bloc as object, "defaultContent"))
-    ) {
-        throw new Error("Collection v2 replaces default.html with a defaultExample");
     }
     if (Object.hasOwn(definition, "examples")) {
         throw new Error("Examples must be authored under examples/");
@@ -56,7 +50,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         assets: assets.definitions,
         blocs,
         migrations,
-        ...(definition.protocol === "ulvia-collection/v2" ? { examples } : {}),
+        examples,
         ...(texts.length ? { texts } : {}),
         ...(pages.length ? { pages } : {}),
         ...(theme === undefined ? {} : { theme }),

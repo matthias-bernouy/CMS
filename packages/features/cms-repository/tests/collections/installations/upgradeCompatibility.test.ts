@@ -1,3 +1,4 @@
+import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import {
     assertCompatibleCollectionUpgrade,
@@ -49,17 +50,17 @@ function actionText() {
 
 test("upgrades preserve existing slot contracts and theme token types", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const initial = await store.importRelease(release("1.0.0"));
+    const initial = await store.importRelease(collectionFixture(release("1.0.0")));
     await store.install("site", initial.digest, 0, "local");
 
     const changedSlot = release("1.1.0");
     ((changedSlot.blocs as Record<string, unknown>[])[0]!.slots as Record<string, unknown>).body = { max: 1 };
-    const withChangedSlot = await store.importRelease(changedSlot);
+    const withChangedSlot = await store.importRelease(collectionFixture(changedSlot));
     await expect(store.upgrade("site", withChangedSlot.digest, 1, "local")).rejects.toThrow("slot contract");
 
     const changedToken = release("1.2.0");
     changedToken.theme.categories[0]!.entries[0]!.type = "value";
-    const withChangedToken = await store.importRelease(changedToken);
+    const withChangedToken = await store.importRelease(collectionFixture(changedToken));
     await expect(store.upgrade("site", withChangedToken.digest, 1, "local")).rejects.toThrow("theme token");
 
     const compatible = release("1.3.0");
@@ -70,7 +71,7 @@ test("upgrades preserve existing slot contracts and theme token types", async ()
         type: "color",
         defaults: { light: "#ffffff" },
     });
-    const admitted = await store.importRelease(compatible);
+    const admitted = await store.importRelease(collectionFixture(compatible));
     await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
 });
 
@@ -110,12 +111,12 @@ test("asset profiles may expand but cannot remove an existing rendering guarante
 
 test("simple upgrades cannot bypass a resource generation migration", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const initial = await store.importRelease(release("1.0.0"));
+    const initial = await store.importRelease(collectionFixture(release("1.0.0")));
     await store.install("site", initial.digest, 0, "local");
 
     const changed = release("1.1.0");
     (changed.blocs as Record<string, unknown>[])[0]!.generation = 2;
-    const admitted = await store.importRelease(changed);
+    const admitted = await store.importRelease(collectionFixture(changed));
 
     await expect(store.upgrade("site", admitted.digest, 1, "local")).rejects.toThrow("resource generation changed");
 });
@@ -134,19 +135,19 @@ test("upgrades preserve Page identities while allowing route changes", async () 
         },
     ];
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const initial = await store.importRelease(initialSource);
+    const initial = await store.importRelease(collectionFixture(initialSource));
     await store.install("site", initial.digest, 0, "local");
 
     const changedPage = structuredClone(initialSource);
     changedPage.version = "1.1.0";
     changedPage.pages[0]!.defaultPath = "/";
-    const pageArtifact = await store.importRelease(changedPage);
+    const pageArtifact = await store.importRelease(collectionFixture(changedPage));
     await expect(store.upgrade("site", pageArtifact.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
 
     const removedPage = structuredClone(changedPage);
     removedPage.version = "1.2.0";
     removedPage.pages = [];
-    const removedArtifact = await store.importRelease(removedPage);
+    const removedArtifact = await store.importRelease(collectionFixture(removedPage));
     await expect(store.upgrade("site", removedArtifact.digest, 2, "local")).rejects.toThrow("existing Page");
 });
 
@@ -156,12 +157,15 @@ test("upgrades preserve managed native element choices", async () => {
         source.texts = [actionText()];
         source.blocs = [
             {
+                description: "bloc.panel.label",
+                categories: ["bloc.panel.label"],
+
                 kind: "component",
                 id: "atlas-action",
                 label: "bloc.panel.label",
                 root: { accepts: ["div"] },
                 markup: "<slot></slot>",
-                defaultContent: `<${root}>{{ cms.i18n.atlas.submit }}</${root}>`,
+                exampleContent: `<${root}>{{ cms.i18n.atlas.submit }}</${root}>`,
                 uses: [],
                 requires: [],
                 slots: {
@@ -176,9 +180,9 @@ test("upgrades preserve managed native element choices", async () => {
         return source;
     };
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const initial = await store.importRelease(managedRelease("1.0.0", ["button", "a"], "button"));
+    const initial = await store.importRelease(collectionFixture(managedRelease("1.0.0", ["button", "a"], "button")));
     await store.install("site", initial.digest, 0, "local");
-    const changed = await store.importRelease(managedRelease("1.1.0", ["button"], "button"));
+    const changed = await store.importRelease(collectionFixture(managedRelease("1.1.0", ["button"], "button")));
 
     await expect(store.upgrade("site", changed.digest, 1, "local")).rejects.toThrow("existing slot contract");
 });
@@ -187,14 +191,18 @@ test("upgrades accept wider slot and managed native contracts", async () => {
     const initial = release("1.0.0");
     initial.texts = [actionText()];
     const panel = (initial.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
-    panel.slots = { body: { min: 1, max: 1 } };
+    panel.defaultExample = undefined;
+    panel.slots = { body: { accepts: [{ kind: "native-content", profile: "prose" }], min: 1, max: 1 } };
     const managed = {
+        description: "bloc.panel.label",
+        categories: ["bloc.panel.label"],
+
         kind: "component",
         id: "atlas-action",
         label: "bloc.panel.label",
         root: { accepts: ["div"] },
         markup: "<slot></slot>",
-        defaultContent: "<button>{{ cms.i18n.atlas.submit }}</button>",
+        exampleContent: "<button>{{ cms.i18n.atlas.submit }}</button>",
         uses: [],
         requires: [],
         slots: {
@@ -207,13 +215,13 @@ test("upgrades accept wider slot and managed native contracts", async () => {
     };
     initial.blocs = [...initial.blocs, managed];
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const first = await store.importRelease(initial);
+    const first = await store.importRelease(collectionFixture(initial));
     await store.install("site", first.digest, 0, "local");
 
     const next = structuredClone(initial);
     next.version = "1.1.0";
     const nextPanel = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
-    nextPanel.slots = { body: { min: 0, max: 2 } };
+    nextPanel.slots = { body: { accepts: [{ kind: "native-content", profile: "prose" }], min: 0, max: 2 } };
     const nextManaged = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-action")!;
     nextManaged.slots = {
         default: {
@@ -222,7 +230,7 @@ test("upgrades accept wider slot and managed native contracts", async () => {
             max: 1,
         },
     };
-    const admitted = await store.importRelease(next);
+    const admitted = await store.importRelease(collectionFixture(next));
 
     await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
 });
@@ -254,7 +262,7 @@ test("upgrades allow setting presentation changes while preserving the stored va
         },
     ];
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const first = await store.importRelease(initial);
+    const first = await store.importRelease(collectionFixture(initial));
     await store.install("site", first.digest, 0, "local");
 
     const next = structuredClone(initial);
@@ -275,7 +283,7 @@ test("upgrades allow setting presentation changes while preserving the stored va
             control: { kind: "text" },
         },
     ];
-    const admitted = await store.importRelease(next);
+    const admitted = await store.importRelease(collectionFixture(next));
 
     await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
 });

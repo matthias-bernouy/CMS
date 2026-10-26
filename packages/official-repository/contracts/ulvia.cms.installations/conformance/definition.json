@@ -2,9 +2,9 @@
     "kind": "contract-conformance-suite",
     "protocol": "ulvia-conformance/v1",
     "contractId": "ulvia.cms.installations",
-    "contractVersion": "1.1.0",
-    "contractDigest": "sha256:675151d45a956dd34f928cb851dc0908f2f57bb97fea6c017fb8a689a98b34f8",
+    "contractVersion": "1.0.0",
+    "contractDigest": "sha256:f41c602c3501719fb2571d31e9a0d385a1aad4d15efdabc05e48b8370dc37c27",
     "publisherId": "ulvia.official",
-    "version": "1.1.0",
+    "version": "1.0.0",
     "isolation": "disposable-tenant"
 }

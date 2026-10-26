@@ -111,7 +111,7 @@ export type CollectionTranslations = Readonly<Record<string, Readonly<Record<str
 /** Immutable release data; admission derives verified rendering fragments but grants no execution authority. */
 export interface CollectionRelease {
     readonly kind: "collection";
-    readonly protocol: "ulvia-collection/v1" | "ulvia-collection/v2";
+    readonly protocol: "ulvia-collection/v1";
     readonly schemaDialect: "ulvia-schema/v1";
     readonly collectionId: string;
     readonly publisherId: string;

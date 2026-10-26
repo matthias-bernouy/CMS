@@ -87,7 +87,7 @@ test("Repository exposes its HTTP contract and never mounts a standalone MCP", a
             version: string;
             capabilities: { bindings: { transport: string }[] }[];
         };
-        expect(contract.version).toBe("0.2.0");
+        expect(contract.version).toBe("1.0.0");
         expect(
             contract.capabilities.every((capability) =>
                 capability.bindings.every((binding) => binding.transport === "http"),

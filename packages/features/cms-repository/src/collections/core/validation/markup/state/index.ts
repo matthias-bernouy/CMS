@@ -204,9 +204,6 @@ function collectionMarkups(owner: StateOwner): readonly { html: string; path: st
                 html: bloc.markup,
                 path: `$.blocs[${bloc.id}].markup`,
             },
-            ...(bloc.defaultContent === undefined
-                ? []
-                : [{ html: bloc.defaultContent, path: `$.blocs[${bloc.id}].defaultContent` }]),
         ]),
         ...([...(owner.pages ?? []), ...(owner.examples ?? [])].map((page) => ({
             html: page.document.html,

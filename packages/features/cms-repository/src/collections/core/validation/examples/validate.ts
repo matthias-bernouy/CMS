@@ -83,6 +83,9 @@ export function validateCollectionExamples(release: CollectionRelease, limits: R
         pages,
     );
     for (const bloc of release.blocs) {
+        if (bloc.catalogue !== "hidden" && bloc.defaultExample === undefined) {
+            invalid("listed Bloc requires a defaultExample", `$.blocs[${bloc.id}].defaultExample`);
+        }
         for (const id of bloc.examples ?? []) {
             if (!examples.has(id)) {
                 invalid("unknown example", `$.blocs[${bloc.id}].examples`);

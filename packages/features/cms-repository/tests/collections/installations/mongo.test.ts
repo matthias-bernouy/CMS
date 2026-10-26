@@ -1,3 +1,4 @@
+import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { Binary } from "mongodb";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
@@ -20,7 +21,7 @@ async function artifact(bytes = new Uint8Array([1, 2, 3])) {
             },
         ],
     };
-    return { admitted: await admitCollectionRelease(source, [{ id: "payload.bin", bytes }]), bytes };
+    return { admitted: await admitCollectionRelease(collectionFixture(source), [{ id: "payload.bin", bytes }]), bytes };
 }
 
 test("Mongo collection storage validates releases on admission and checks stored chunks on reads", async () => {
@@ -197,7 +198,7 @@ test("Mongo collection storage parses site records and snapshots validate instal
             defaults: { title: "Welcome" },
         },
     };
-    const admitted = await store.importRelease(source);
+    const admitted = await store.importRelease(collectionFixture(source));
     await store.install("site", admitted.digest, 0, "local");
 
     const sites = db.collection<Record<string, unknown>>("collection_installations");

@@ -1,8 +1,9 @@
+import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { CollectionStore, MemoryCollectionStorage } from "../../../src/exports/collections/installations";
 
 function release(collectionId: string, version = "1.0.0") {
-    return {
+    return collectionFixture({
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -15,6 +16,9 @@ function release(collectionId: string, version = "1.0.0") {
         assets: [],
         blocs: [
             {
+                description: "bloc.label",
+                categories: ["bloc.label"],
+
                 kind: "composition",
                 root: { accepts: ["div"] },
                 id: `${collectionId}-block`,
@@ -25,7 +29,7 @@ function release(collectionId: string, version = "1.0.0") {
                 slots: {},
             },
         ],
-    };
+    });
 }
 
 test("installs an exact dependency graph atomically in any request order", async () => {
@@ -47,8 +51,8 @@ test("installs an exact dependency graph atomically in any request order", async
             },
         ],
     });
-    const foundationArtifact = await store.importRelease(foundation);
-    const consumerArtifact = await store.importRelease(consumer);
+    const foundationArtifact = await store.importRelease(collectionFixture(foundation));
+    const consumerArtifact = await store.importRelease(collectionFixture(consumer));
 
     const installed = await store.installMany(
         "site",
@@ -85,7 +89,7 @@ test("validates mutable configuration and preserves it through compatible upgrad
             defaults: { title: "Default" },
         },
     };
-    const first = await store.importRelease(initial);
+    const first = await store.importRelease(collectionFixture(initial));
     await store.install("site", first.digest, 0, "local");
     await store.saveConfiguration("site", "configurable", 1, { title: "Custom" });
     await expect(store.saveConfiguration("site", "configurable", 2, { title: 42 })).rejects.toThrow(
@@ -97,7 +101,7 @@ test("validates mutable configuration and preserves it through compatible upgrad
     wider.version = "1.1.0";
     wider.configuration.schema.properties.subtitle = { type: "string", maxLength: 64 };
     wider.configuration.defaults.subtitle = "Optional";
-    const widerArtifact = await store.importRelease(wider);
+    const widerArtifact = await store.importRelease(collectionFixture(wider));
     const upgraded = await store.upgrade("site", widerArtifact.digest, 2, "local");
     expect(upgraded.collections[0]!.configuration).toEqual({ title: "Custom" });
 
@@ -105,7 +109,7 @@ test("validates mutable configuration and preserves it through compatible upgrad
     narrower.version = "1.2.0";
     narrower.configuration.schema.properties.title.maxLength = 4;
     narrower.configuration.defaults.title = "Tiny";
-    const narrowerArtifact = await store.importRelease(narrower);
+    const narrowerArtifact = await store.importRelease(collectionFixture(narrower));
     await expect(store.upgrade("site", narrowerArtifact.digest, 3, "local")).rejects.toThrow(
         "narrows the collection configuration contract",
     );
@@ -115,7 +119,7 @@ test("validates mutable configuration and preserves it through compatible upgrad
 test("memory storage enforces the same artifact and state boundaries as durable storage", async () => {
     const storage = new MemoryCollectionStorage();
     const store = new CollectionStore(storage);
-    const admitted = await store.importRelease(release("verified"));
+    const admitted = await store.importRelease(collectionFixture(release("verified")));
 
     await expect(
         storage.putRelease({
@@ -131,7 +135,7 @@ test("memory storage enforces the same artifact and state boundaries as durable 
 
 test("an upgrade introducing configuration initializes the admitted defaults", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const initial = await store.importRelease(release("configured-later"));
+    const initial = await store.importRelease(collectionFixture(release("configured-later")));
     await store.install("site", initial.digest, 0, "local");
     const next = {
         ...release("configured-later", "1.1.0"),
@@ -144,7 +148,7 @@ test("an upgrade introducing configuration initializes the admitted defaults", a
             defaults: { mode: "safe" },
         },
     };
-    const admitted = await store.importRelease(next);
+    const admitted = await store.importRelease(collectionFixture(next));
 
     const upgraded = await store.upgrade("site", admitted.digest, 1, "local");
 

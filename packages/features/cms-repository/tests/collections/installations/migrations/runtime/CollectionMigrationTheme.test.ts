@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
@@ -98,8 +99,8 @@ test("rolls back a theme migration that fails after the collection commit", asyn
 
 async function themeFixture(previousRelease: Record<string, unknown>, nextRelease: Record<string, unknown>) {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const previous = await collections.importRelease(previousRelease);
-    const next = await collections.importRelease(nextRelease);
+    const previous = await collections.importRelease(collectionFixture(previousRelease));
+    const next = await collections.importRelease(collectionFixture(nextRelease));
     await collections.install("site", previous.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
@@ -113,7 +114,7 @@ async function themeFixture(previousRelease: Record<string, unknown>, nextReleas
 }
 
 function themedRelease(version: string, tokenId: string, value: string): Record<string, unknown> {
-    return {
+    return collectionFixture({
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -149,7 +150,7 @@ function themedRelease(version: string, tokenId: string, value: string): Record<
                 },
             ],
         },
-    };
+    });
 }
 
 function themeDefault(system: TSystem, id: string): string | undefined {

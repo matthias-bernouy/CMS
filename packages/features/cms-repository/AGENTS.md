@@ -288,14 +288,13 @@ models and validation for CMS-owned installations and site selections.
   native child declares a bounded default slot with `kind: "native-element"`;
   there is no separate Bloc `content` contract. Root settings and child native
   attributes remain separate contracts.
-- Every Bloc declares its author-facing label. V2 requires a translated
-  description and nonempty unique `categories`; v1 retains its optional single
-  `category`. Optional nonnegative order values are stable within each category;
+- Every Bloc declares its author-facing label, translated description and
+  nonempty unique `categories`. Optional nonnegative order values are stable within each category;
   source paths never become catalogue metadata. Slot acceptance is declarative:
   exact Bloc IDs, any retained Bloc, plain text, or the closed inline/prose
   native-content profiles. Rich text remains page-owned HTML and
   never becomes a setting attribute or collection-owned editor document. Verify all local
-  uses, exact component accepts, slots and thumbnail references and reject cycles.
+  uses, exact component accepts, slots and example references and reject cycles.
   Structural markup validation must use a parser. It is not a renderer,
   sanitizer, binding/CSS compiler or permission proof; never treat an admitted
   authored bundle as trusted executable content.
@@ -375,10 +374,10 @@ models and validation for CMS-owned installations and site selections.
   publication; `./repository/sources` owns private immutable owner-authorized
   source snapshots. Neither grants implicit installation or exposes private keys.
 
-- Collection v2 owns explicit `examples` documents and fixed preview frames.
+- Collection v1 owns explicit `examples` documents and fixed preview frames.
   Require translated Bloc descriptions and nonempty unique `categories`.
   Listed Blocs choose a single matching-root `defaultExample`; multi-root
-  examples remain demonstrations. Keep v1 canonical bytes stable. Resolve only
+  examples remain demonstrations. Resolve only
   editable demonstration copy for insertion and never persist example fixtures
   as site text overrides. Preview rendering stays behind `/collections/build`;
   browser execution belongs to the CLI and never the Kernel or admission.

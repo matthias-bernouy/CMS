@@ -69,12 +69,8 @@ export function parseCollectionRelease(
                 invalid(`must be ${expected}`, `$.${key}`);
             }
         }
-        if (source.protocol !== "ulvia-collection/v1" && source.protocol !== "ulvia-collection/v2") {
+        if (source.protocol !== "ulvia-collection/v1") {
             invalid("unsupported collection protocol", "$.protocol");
-        }
-        const modern = source.protocol === "ulvia-collection/v2";
-        if (!modern && source.examples !== undefined) {
-            invalid("examples require collection v2", "$.examples");
         }
         const collectionId = parseCollectionNamespace(source.collectionId, "$.collectionId");
         const version = parseVersion(source.version);
@@ -104,7 +100,7 @@ export function parseCollectionRelease(
                 invalid("font-face must reference a local WOFF2 asset", `$.theme.font-face.${face.id}.asset`);
             }
         }
-        const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits, modern);
+        const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits);
         const importedBlocs = new Set(
             dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? [],
         );
@@ -197,7 +193,7 @@ export function parseCollectionRelease(
             ...(states.length ? { states } : {}),
             blocs,
             ...(pages === undefined ? {} : { pages }),
-            ...(modern ? { examples: parseCollectionExamples(source.examples ?? [], locale, limits) } : {}),
+            examples: parseCollectionExamples(source.examples ?? [], locale, limits),
         };
         validateCollectionExamples(release, limits);
         validateCollectionStateBindings(release);

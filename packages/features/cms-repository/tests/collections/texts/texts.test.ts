@@ -1,3 +1,4 @@
+import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { admitCollectionRelease, parseCollectionRelease } from "../../../src/exports/collections";
 import { parseCollectionTexts, resolveCollectionTexts } from "../../../src/exports/collections/texts";
@@ -7,17 +8,18 @@ const definitions = [
     textDefinition("title", { en: "Order", fr: "Commande" }),
     textDefinition("greeting", { en: "Hello" }),
 ];
-const release = () => parseCollectionRelease({ ...collectionDocument(), locale: "en", texts: definitions });
+const release = () =>
+    parseCollectionRelease(collectionFixture({ ...collectionDocument(), locale: "en", texts: definitions }));
 
 test("collection admission normalizes texts and includes them in immutable release identity", async () => {
     const input = { ...collectionDocument(), locale: "en", texts: structuredClone(definitions) };
-    const first = await admitCollectionRelease(input);
+    const first = await admitCollectionRelease(collectionFixture(input));
     input.texts[0]!.values.en = "Changed";
     expect(first.release.texts?.find((text) => text.id === "title")?.values.en).toBe("Order");
     expect(Object.isFrozen(first.release.texts)).toBe(true);
-    expect((await admitCollectionRelease(input)).digest).not.toBe(first.digest);
+    expect((await admitCollectionRelease(collectionFixture(input))).digest).not.toBe(first.digest);
     input.texts = [...structuredClone(definitions)].reverse();
-    expect((await admitCollectionRelease(input)).digest).toBe(first.digest);
+    expect((await admitCollectionRelease(collectionFixture(input))).digest).toBe(first.digest);
 });
 
 test("locale resolution is per key with regional fallback and site overrides", () => {
@@ -43,7 +45,9 @@ test.each([
     [textDefinition("constructor", { en: "Unsafe key" })],
     [textDefinition("title", { en: "x".repeat(8193) })],
 ])("rejects invalid text definitions", (...values) => {
-    expect(() => parseCollectionRelease({ ...collectionDocument(), locale: "en", texts: values })).toThrow();
+    expect(() =>
+        parseCollectionRelease(collectionFixture({ ...collectionDocument(), locale: "en", texts: values })),
+    ).toThrow();
 });
 
 test("normalization rejects aliases of the same locale and sparse definitions", () => {
@@ -72,17 +76,17 @@ test("text catalogue preserves bounded navigation and label metadata", () => {
 test.each(["label", "category", "group"] as const)("rejects a text without required %s metadata", (key) => {
     const text = { ...textDefinition("title", { en: "Hello" }) };
     delete text[key];
-    expect(() => parseCollectionRelease({ ...collectionDocument(), locale: "en", texts: [text] })).toThrow(
-        new RegExp(`missing text ${key}`),
-    );
+    expect(() =>
+        parseCollectionRelease(collectionFixture({ ...collectionDocument(), locale: "en", texts: [text] })),
+    ).toThrow(new RegExp(`missing text ${key}`));
 });
 
 test.each(["label", "category", "group"] as const)(
     "rejects a text whose %s is absent from the default translation catalogue",
     (key) => {
         const text = { ...textDefinition("title", { en: "Hello" }), [key]: `text.missing.${key}` };
-        expect(() => parseCollectionRelease({ ...collectionDocument(), locale: "en", texts: [text] })).toThrow(
-            /missing default translation/,
-        );
+        expect(() =>
+            parseCollectionRelease(collectionFixture({ ...collectionDocument(), locale: "en", texts: [text] })),
+        ).toThrow(/missing default translation/);
     },
 );

@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import {
     renderCollectionTexts,
@@ -13,7 +14,7 @@ import { compileBlocStyle } from "@bernouy/cms-repository/collections/build";
 import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 
-const release = {
+const release = collectionFixture({
     kind: "collection",
     protocol: "ulvia-collection/v1",
     schemaDialect: "ulvia-schema/v1",
@@ -55,11 +56,13 @@ const release = {
     ],
     blocs: [
         {
+            description: "bloc.heading.label",
+
             kind: "component",
             root: { accepts: ["h1", "h2", "h3", "h4", "h5", "h6"] },
             id: "test-heading",
             label: "bloc.heading.label",
-            category: "bloc.category.content",
+            categories: ["bloc.category.content"],
             order: 20,
             markup: "<slot></slot>",
             uses: [],
@@ -72,11 +75,13 @@ const release = {
             },
         },
         {
+            description: "bloc.welcome.label",
+
             kind: "composition",
             root: { accepts: ["div"] },
             id: "test-welcome",
             label: "bloc.welcome.label",
-            category: "bloc.category.content",
+            categories: ["bloc.category.content"],
             order: 30,
             markup: '<h1 cms-bloc="test-heading">{{ cms.i18n.test.title }}</h1>',
             uses: ["test-heading"],
@@ -84,11 +89,11 @@ const release = {
             slots: {},
         },
     ],
-};
+});
 
 test("installed resources participate in authoring validation and public read models without writable copies", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await store.importRelease(release);
+    const artifact = await store.importRelease(collectionFixture(release));
     await store.install("site", artifact.digest, 0);
     const local = new InMemoryCmsRepository();
     const repository = new ValidatingCmsRepository(withInstalledCollections(local, store, "site"));
@@ -157,23 +162,25 @@ test("site Pages inherit capability requirements from installed Blocs", async ()
         }),
     );
     const store = new CollectionStore(new MemoryCollectionStorage(), contracts);
-    const artifact = await store.importRelease({
-        ...release,
-        blocs: release.blocs.map((bloc) =>
-            bloc.id === "test-welcome"
-                ? {
-                      ...bloc,
-                      requires: [
-                          {
-                              contractId: "example.files",
-                              capabilityId: "files.read",
-                              versionRange: "^1.0.0",
-                          },
-                      ],
-                  }
-                : bloc,
-        ),
-    });
+    const artifact = await store.importRelease(
+        collectionFixture({
+            ...release,
+            blocs: release.blocs.map((bloc) =>
+                bloc.id === "test-welcome"
+                    ? {
+                          ...bloc,
+                          requires: [
+                              {
+                                  contractId: "example.files",
+                                  capabilityId: "files.read",
+                                  versionRange: "^1.0.0",
+                              },
+                          ],
+                      }
+                    : bloc,
+            ),
+        }),
+    );
     await store.install("site", artifact.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), store, "site"),
@@ -193,26 +200,28 @@ test("site Pages inherit capability requirements from installed Blocs", async ()
 
 test("installed Page aliases redirect to their effective collection route", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await store.importRelease({
-        ...release,
-        translations: {
-            en: {
-                ...release.translations.en,
-                "page.overview.name": "Overview",
+    const artifact = await store.importRelease(
+        collectionFixture({
+            ...release,
+            translations: {
+                en: {
+                    ...release.translations.en,
+                    "page.overview.name": "Overview",
+                },
             },
-        },
-        pages: [
-            {
-                id: "overview",
-                generation: 1,
-                defaultPath: "/admin",
-                name: "page.overview.name",
-                uses: ["test-welcome"],
-                requires: [],
-                document: { html: '<div cms-bloc="test-welcome"></div>' },
-            },
-        ],
-    });
+            pages: [
+                {
+                    id: "overview",
+                    generation: 1,
+                    defaultPath: "/admin",
+                    name: "page.overview.name",
+                    uses: ["test-welcome"],
+                    requires: [],
+                    document: { html: '<div cms-bloc="test-welcome"></div>' },
+                },
+            ],
+        }),
+    );
     const snapshot = await store.install("site", artifact.digest, 0);
     const routes = new InMemoryPageRouteRegistry();
     await synchronizeCollectionPageRoutes(routes, "site", snapshot);
@@ -239,28 +248,32 @@ test("installed Page aliases redirect to their effective collection route", asyn
 
 test("installed hidden blocs stay out of the authoring catalogue but remain available to rendering", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await store.importRelease({
-        ...release,
-        translations: {
-            en: {
-                ...release.translations.en,
-                "bloc.helper.label": "Helper",
+    const artifact = await store.importRelease(
+        collectionFixture({
+            ...release,
+            translations: {
+                en: {
+                    ...release.translations.en,
+                    "bloc.helper.label": "Helper",
+                },
             },
-        },
-        blocs: [
-            {
-                kind: "component",
-                root: { accepts: ["div"] },
-                id: "test-helper",
-                label: "bloc.helper.label",
-                catalogue: "hidden",
-                markup: "<div></div>",
-                uses: [],
-                requires: [],
-                slots: {},
-            },
-        ],
-    });
+            blocs: [
+                {
+                    description: "bloc.helper.label",
+                    categories: ["bloc.helper.label"],
+                    kind: "component",
+                    root: { accepts: ["div"] },
+                    id: "test-helper",
+                    label: "bloc.helper.label",
+                    catalogue: "hidden",
+                    markup: "<div></div>",
+                    uses: [],
+                    requires: [],
+                    slots: {},
+                },
+            ],
+        }),
+    );
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
 
@@ -271,26 +284,28 @@ test("installed hidden blocs stay out of the authoring catalogue but remain avai
 
 test("installed collection theme contributes immutable tokens to editing and public CSS", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await store.importRelease({
-        ...release,
-        theme: {
-            label: "theme.label",
-            categories: [
-                {
-                    id: "colors",
-                    label: "theme.category.colors.label",
-                    entries: [
-                        {
-                            id: "accent",
-                            label: "theme.token.accent.label",
-                            type: "color",
-                            defaults: { light: "#116149", dark: "#57cda3" },
-                        },
-                    ],
-                },
-            ],
-        },
-    });
+    const artifact = await store.importRelease(
+        collectionFixture({
+            ...release,
+            theme: {
+                label: "theme.label",
+                categories: [
+                    {
+                        id: "colors",
+                        label: "theme.category.colors.label",
+                        entries: [
+                            {
+                                id: "accent",
+                                label: "theme.token.accent.label",
+                                type: "color",
+                                defaults: { light: "#116149", dark: "#57cda3" },
+                            },
+                        ],
+                    },
+                ],
+            },
+        }),
+    );
     await store.install("site", artifact.digest, 0);
     const repo = new ValidatingCmsRepository(withInstalledCollections(new InMemoryCmsRepository(), store, "site"));
     const system = await repo.getSystem();
@@ -313,12 +328,15 @@ test("installed Light DOM component projects its repository-compiled style witho
     const store = new CollectionStore(new MemoryCollectionStorage());
     const style = ":scope { color: var(--test-card-accent, #123456); }";
     const artifact = await store.importRelease(
-        {
+        collectionFixture({
             ...release,
             assets: [{ id: "mark.svg", mediaType: "image/svg+xml", byteLength: bytes.byteLength, digest }],
             blocs: [
                 ...release.blocs,
                 {
+                    description: "bloc.card.label",
+                    categories: ["bloc.card.label"],
+
                     kind: "component",
                     root: { accepts: ["div"] },
                     id: "test-card",
@@ -330,7 +348,7 @@ test("installed Light DOM component projects its repository-compiled style witho
                     slots: { body: {} },
                 },
             ],
-        },
+        }),
         [{ id: "mark.svg", bytes }],
     );
     await store.install("site", artifact.digest, 0);
@@ -348,45 +366,50 @@ test("installed Light DOM component projects its repository-compiled style witho
 
 test("installed polymorphic native components project their contract and keep wrapper attributes separate", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await store.importRelease({
-        ...release,
-        translations: {
-            en: {
-                ...release.translations.en,
-                "setting.wrapper-label.label": "Wrapper label",
-            },
-        },
-        blocs: [
-            ...release.blocs,
-            {
-                kind: "component",
-                id: "test-action",
-                label: "bloc.card.label",
-                root: { accepts: ["div"] },
-                markup: "<slot></slot>",
-                defaultContent: '<button type="button">{{ cms.i18n.test.title }}</button>',
-                settings: [
-                    {
-                        id: "wrapper-label",
-                        label: "setting.wrapper-label.label",
-                        type: "string",
-                        default: "",
-                        maxLength: 120,
-                        control: { kind: "text" },
-                    },
-                ],
-                uses: [],
-                requires: [],
-                slots: {
-                    default: {
-                        accepts: [{ kind: "native-element", accepts: ["button", "a"] }],
-                        min: 1,
-                        max: 1,
-                    },
+    const artifact = await store.importRelease(
+        collectionFixture({
+            ...release,
+            translations: {
+                en: {
+                    ...release.translations.en,
+                    "setting.wrapper-label.label": "Wrapper label",
                 },
             },
-        ],
-    });
+            blocs: [
+                ...release.blocs,
+                {
+                    description: "bloc.card.label",
+                    categories: ["bloc.card.label"],
+
+                    kind: "component",
+                    id: "test-action",
+                    label: "bloc.card.label",
+                    root: { accepts: ["div"] },
+                    markup: "<slot></slot>",
+                    exampleContent: '<button type="button">{{ cms.i18n.test.title }}</button>',
+                    settings: [
+                        {
+                            id: "wrapper-label",
+                            label: "setting.wrapper-label.label",
+                            type: "string",
+                            default: "",
+                            maxLength: 120,
+                            control: { kind: "text" },
+                        },
+                    ],
+                    uses: [],
+                    requires: [],
+                    slots: {
+                        default: {
+                            accepts: [{ kind: "native-element", accepts: ["button", "a"] }],
+                            min: 1,
+                            max: 1,
+                        },
+                    },
+                },
+            ],
+        }),
+    );
     await store.install("site", artifact.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), store, "site"),
@@ -415,91 +438,68 @@ test("installed polymorphic native components project their contract and keep wr
     ).rejects.toThrow("does not accept native <p>");
 });
 
-test("installed collection thumbnails are projected from verified release assets", async () => {
+test("installed Bloc insertion uses its example without reading unrelated assets", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0"/></svg>');
-    const artifact = await store.importRelease(
-        {
-            ...release,
-            assets: [
-                {
-                    id: "card.svg",
-                    mediaType: "image/svg+xml",
-                    byteLength: bytes.byteLength,
-                    digest: `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`,
-                },
-            ],
-            blocs: [
-                {
-                    kind: "component",
-                    root: { accepts: ["div"] },
-                    id: "test-card",
-                    label: "bloc.card.label",
-                    thumbnail: "card.svg",
-                    markup: "<article></article>",
-                    uses: [],
-                    requires: [],
-                    slots: {},
-                },
-            ],
-        },
-        [{ id: "card.svg", bytes }],
-    );
+    const artifact = await store.importRelease(release);
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
-
-    const projected = (await repository.getBlocRecord("test-card"))!.artifact!;
-    expect(projected.thumbnail).toEqual({ path: "assets/card.svg" });
-    expect(Buffer.from(projected.source!["assets/card.svg"]!, "base64")).toEqual(Buffer.from(bytes));
+    const projected = (await repository.getBlocRecord("test-heading"))!.artifact!;
+    expect(projected.initialDocument?.html).toContain('cms-bloc="test-heading"');
+    expect(projected.thumbnail).toBeUndefined();
 });
 
 test("installed hybrid component keeps its fixed Light DOM and page defaults distinct", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await store.importRelease({
-        ...release,
-        blocs: [
-            {
-                kind: "component",
-                root: { accepts: ["div"] },
-                id: "test-card",
-                label: "bloc.card.label",
-                markup: '<article><slot name="title"></slot><section><p>{{ cms.i18n.test.title }}</p></section></article>',
-                defaultContent: '<h2 slot="title">{{ cms.i18n.test.title }}</h2>',
-                settings: [
-                    {
-                        id: "tone",
-                        label: "setting.tone.label",
-                        group: "setting.group.appearance",
-                        type: "string",
-                        control: {
-                            kind: "select",
-                            options: [
-                                { value: "quiet", label: "setting.option.quiet" },
-                                { value: "accent", label: "setting.option.accent" },
-                            ],
+    const artifact = await store.importRelease(
+        collectionFixture({
+            ...release,
+            blocs: [
+                {
+                    description: "bloc.card.label",
+                    categories: ["bloc.card.label"],
+
+                    kind: "component",
+                    root: { accepts: ["div"] },
+                    id: "test-card",
+                    label: "bloc.card.label",
+                    markup: '<article><slot name="title"></slot><section><p>{{ cms.i18n.test.title }}</p></section></article>',
+                    exampleContent: '<h2 slot="title">{{ cms.i18n.test.title }}</h2>',
+                    settings: [
+                        {
+                            id: "tone",
+                            label: "setting.tone.label",
+                            group: "setting.group.appearance",
+                            type: "string",
+                            control: {
+                                kind: "select",
+                                options: [
+                                    { value: "quiet", label: "setting.option.quiet" },
+                                    { value: "accent", label: "setting.option.accent" },
+                                ],
+                            },
+                            maxLength: 16,
+                            default: "quiet",
                         },
-                        maxLength: 16,
-                        default: "quiet",
-                    },
-                    {
-                        id: "compact",
-                        label: "setting.compact.label",
-                        group: "setting.group.layout",
-                        type: "boolean",
-                        default: false,
-                    },
-                ],
-                uses: [],
-                requires: [],
-                slots: { title: { accepts: [{ kind: "native-content", profile: "inline" }] } },
-            },
-        ],
-    });
+                        {
+                            id: "compact",
+                            label: "setting.compact.label",
+                            group: "setting.group.layout",
+                            type: "boolean",
+                            default: false,
+                        },
+                    ],
+                    uses: [],
+                    requires: [],
+                    slots: { title: { accepts: [{ kind: "native-content", profile: "inline" }] } },
+                },
+            ],
+        }),
+    );
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
     const record = (await repository.getBlocRecord("test-card"))!;
     expect(record.artifact?.markupHTML).toContain("cms.i18n.test.title");
-    expect(record.artifact?.defaultContent).toContain("cms.i18n.test.title");
+    expect(record.artifact?.initialDocument?.html).toContain('<h2 slot="title">Welcome</h2>');
     expect(record.artifact?.settings?.map((item) => [item.id, item.default])).toEqual([
         ["tone", "quiet"],
         ["compact", false],

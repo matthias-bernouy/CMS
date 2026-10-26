@@ -54,7 +54,6 @@ function collectReferences(release: CollectionRelease): Reference[] {
         const path = `$.blocs[${blocIndex}]`;
         references.push(reference(bloc.label, `${path}.label`, 120));
         optional(references, bloc.description, `${path}.description`, 4096);
-        optional(references, bloc.category, `${path}.category`, 120);
         for (const [i, category] of (bloc.categories ?? []).entries()) {
             references.push(reference(category, `${path}.categories[${i}]`, 120));
         }

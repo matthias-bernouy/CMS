@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../../admission/examples/buildFixture";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { InMemoryCmsRepository, ValidatingCmsRepository } from "@bernouy/cms-content";
@@ -8,7 +9,9 @@ import {
 
 export async function referenceFixture(previousPatch: Record<string, unknown> = {}) {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const previous = await collections.importRelease({ ...release("1.0.0", "atlas-card"), ...previousPatch });
+    const previous = await collections.importRelease(
+        collectionFixture({ ...release("1.0.0", "atlas-card"), ...previousPatch }),
+    );
     await collections.install("site", previous.digest, 0);
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
@@ -21,7 +24,7 @@ export async function referenceFixture(previousPatch: Record<string, unknown> = 
 }
 
 export function release(version: string, id: string): Record<string, unknown> {
-    return {
+    return collectionFixture({
         kind: "collection",
         protocol: "ulvia-collection/v1",
         schemaDialect: "ulvia-schema/v1",
@@ -42,6 +45,9 @@ export function release(version: string, id: string): Record<string, unknown> {
         assets: [],
         blocs: [
             {
+                description: "bloc.label",
+                categories: ["bloc.label"],
+
                 kind: "component",
                 root: { accepts: ["div"] },
                 id,
@@ -52,5 +58,5 @@ export function release(version: string, id: string): Record<string, unknown> {
                 slots: { content: { accepts: [{ kind: "native-content", profile: "prose" }] } },
             },
         ],
-    };
+    });
 }

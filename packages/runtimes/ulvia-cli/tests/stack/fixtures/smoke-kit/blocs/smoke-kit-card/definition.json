@@ -3,17 +3,30 @@
     "id": "smoke-kit-card",
     "label": "bloc.card.label",
     "description": "bloc.card.description",
-    "category": "bloc.category.components",
     "order": 10,
     "uses": [],
     "requires": [],
     "root": {
-        "accepts": ["div"]
+        "accepts": [
+            "div"
+        ]
     },
     "slots": {
         "content": {
-            "accepts": [{ "kind": "native-content", "profile": "prose" }],
+            "accepts": [
+                {
+                    "kind": "native-content",
+                    "profile": "prose"
+                }
+            ],
             "max": 1
         }
-    }
+    },
+    "categories": [
+        "bloc.category.components"
+    ],
+    "examples": [
+        "card"
+    ],
+    "defaultExample": "card"
 }

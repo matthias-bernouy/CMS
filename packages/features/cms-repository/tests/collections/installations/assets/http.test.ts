@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
@@ -13,7 +14,7 @@ test("serves installed collection assets publicly through immutable digest URLs"
     const asset = { id: "mark.svg", mediaType: "image/svg+xml", byteLength: bytes.byteLength, digest } as const;
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease(
-        {
+        collectionFixture({
             kind: "collection",
             protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
@@ -26,7 +27,7 @@ test("serves installed collection assets publicly through immutable digest URLs"
             exports: { blocs: [], themeTokens: [] },
             assets: [asset],
             blocs: [],
-        },
+        }),
         [{ id: "mark.svg", bytes }],
     );
     await store.install("site", artifact.digest, 0);

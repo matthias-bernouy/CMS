@@ -6,7 +6,7 @@ export async function writeExampleSource(root: string): Promise<string> {
     const files = {
         "definition.json": JSON.stringify({
             kind: "collection",
-            protocol: "ulvia-collection/v2",
+            protocol: "ulvia-collection/v1",
             schemaDialect: "ulvia-schema/v1",
             collectionId: "sample",
             publisherId: "example",

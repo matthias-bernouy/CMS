@@ -1,3 +1,4 @@
+import { collectionFixture } from "../../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { referenceFixture, release } from "./fixture";
 
@@ -13,17 +14,19 @@ test("blocks removal of a collection text still referenced by a page", async () 
             },
         ],
     });
-    const next = await fixture.collections.importRelease({
-        ...release("2.0.0", "atlas-card"),
-        dataGeneration: 2,
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [{ kind: "remove-text-override", id: "legacy-title" }],
-            },
-        ],
-    });
+    const next = await fixture.collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-card"),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "remove-text-override", id: "legacy-title" }],
+                },
+            ],
+        }),
+    );
     await fixture.repository.insertPage(
         "/demo",
         "Demo",
@@ -36,17 +39,19 @@ test("blocks removal of a collection text still referenced by a page", async () 
 
 test("blocks target changes that would break a site-owned bloc", async () => {
     const fixture = await referenceFixture();
-    const next = await fixture.collections.importRelease({
-        ...release("2.0.0", "atlas-panel"),
-        dataGeneration: 2,
-        migrations: [
-            {
-                fromGeneration: 1,
-                toGeneration: 2,
-                operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
-            },
-        ],
-    });
+    const next = await fixture.collections.importRelease(
+        collectionFixture({
+            ...release("2.0.0", "atlas-panel"),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "rename-bloc", from: "atlas-card", to: "atlas-panel" }],
+                },
+            ],
+        }),
+    );
     await fixture.repository.createBloc({
         id: "local-shell",
         name: "Local shell",

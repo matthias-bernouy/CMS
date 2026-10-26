@@ -77,7 +77,7 @@ must support `flock`, and the runtime must provide the `flock` executable.
 ## Contract and transport clients
 
 `@bernouy/cms-repository/repository/contract` exports `admitRepositoryContract`
-and `RepositoryCapabilityService`. The exact admitted `ulvia.repository@0.2.0`
+and `RepositoryCapabilityService`. The exact admitted `ulvia.repository@1.0.0`
 definition is available at `GET /v1/repository-contract`; its ETag is its release
 digest. This built-in protocol definition is not automatically published into
 the user's mutable catalogue. Consumers explicitly admit and pin it.

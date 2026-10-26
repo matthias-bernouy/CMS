@@ -1,3 +1,4 @@
+import { collectionFixture } from "./admission/examples/buildFixture";
 import { describe, expect, test } from "bun:test";
 import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
 import {
@@ -62,7 +63,7 @@ describe("collection markup admission", () => {
                 },
             },
             root: { accepts: ["div"] },
-            defaultContent: '<input type="checkbox">',
+            exampleContent: '<input type="checkbox">',
         });
         const page = composition({
             uses: ["demo-checkbox"],
@@ -70,7 +71,7 @@ describe("collection markup admission", () => {
             slots: {},
         });
         expect(() => check([input, page])).not.toThrow();
-        expect(() => check([{ ...input, defaultContent: "<input>" }])).toThrow('requires native attribute "type"');
+        expect(() => check([{ ...input, exampleContent: "<input>" }])).toThrow('requires native attribute "type"');
         expect(() =>
             check([input, { ...page, markup: '<div cms-bloc=\"demo-checkbox\"><input type="radio"></div>' }]),
         ).toThrow('native attribute "type" must be one of "checkbox"');
@@ -84,7 +85,7 @@ describe("collection markup admission", () => {
             root: { accepts: ["button", "a"], defaults: { type: "button" } },
             markup: '<span part="label"><slot></slot></span>',
             slots: { default: { accepts: [{ kind: "native-content", profile: "phrasing" }], min: 1 } },
-            defaultContent: "<span>Action</span>",
+            exampleContent: "<span>Action</span>",
         });
         const page = composition({
             uses: ["demo-card"],
@@ -140,12 +141,14 @@ describe("collection markup admission", () => {
         ).toThrow("declared in uses");
     });
 
-    test.each(["markup", "defaultContent"])("excludes script and event handlers in %s", (field) => {
+    test.each(["markup", "exampleContent"])("excludes script and event handlers in %s", (field) => {
         const source =
             field === "markup" ? composition({ slots: {} }) : component({ markup: "<div></div>", slots: {} });
-        expect(() => check([{ ...source, [field]: "<script>run()</script>" }])).toThrow("script elements");
+        expect(() => check([{ ...source, [field]: "<script>run()</script>" }])).toThrow(
+            field === "markup" ? "script elements" : "<script>",
+        );
         expect(() => check([{ ...source, [field]: '<button onclick="run()">Run</button>' }])).toThrow(
-            "event-handler attributes",
+            field === "markup" ? "event-handler attributes" : "onclick",
         );
     });
 
@@ -184,8 +187,8 @@ describe("collection markup admission", () => {
             "class attributes belong only in component markup",
         );
         expect(() =>
-            check([component({ markup: "<div></div>", slots: {}, defaultContent: '<p class="card">Text</p>' })]),
-        ).toThrow("class attributes belong only in component markup");
+            check([component({ markup: "<div></div>", slots: {}, exampleContent: '<p class="card">Text</p>' })]),
+        ).toThrow('attribute "class" is not allowed');
     });
 
     test("resolves collection text bindings in authored markup", () => {
@@ -194,18 +197,17 @@ describe("collection markup admission", () => {
         const composed = (source.blocs as Record<string, unknown>[])[1]!;
         composed.markup =
             '<div cms-bloc=\"atlas-panel\"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.title }}</p></slot></div>';
-        expect(() => parseCollectionRelease(source)).not.toThrow();
+        expect(() => parseCollectionRelease(collectionFixture(source))).not.toThrow();
         composed.markup =
             '<div cms-bloc=\"atlas-panel\"><slot name="main" slot="body"><p>{{ cms.i18n.atlas.missing }}</p></slot></div>';
-        expect(() => parseCollectionRelease(source)).toThrow("unknown collection text missing");
+        expect(() => parseCollectionRelease(collectionFixture(source))).toThrow("unknown collection text missing");
     });
 
-    test("rejects hardcoded user-facing copy in defaults and Pages", () => {
+    test("allows editable example copy while forbidding hardcoded authored Page copy", () => {
         const source = collectionDocument({ "page.demo.name": "Demo" });
-        (source.blocs as Record<string, unknown>[])[0]!.defaultContent = '<p slot="body">Hardcoded copy</p>';
-        expect(() => parseCollectionRelease(source)).toThrow("user-facing copy");
-
-        delete (source.blocs as Record<string, unknown>[])[0]!.defaultContent;
+        (source.examples as any[])[0].document.html =
+            '<div cms-bloc="atlas-panel"><p slot="body">Editable copy</p></div>';
+        expect(() => parseCollectionRelease(collectionFixture(source))).not.toThrow();
         source.pages = [
             {
                 id: "demo",
@@ -216,6 +218,6 @@ describe("collection markup admission", () => {
                 },
             },
         ];
-        expect(() => parseCollectionRelease(source)).toThrow("user-facing copy");
+        expect(() => parseCollectionRelease(collectionFixture(source))).toThrow("user-facing copy");
     });
 });

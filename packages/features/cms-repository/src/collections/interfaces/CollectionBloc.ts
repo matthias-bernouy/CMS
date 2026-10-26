@@ -37,18 +37,15 @@ interface CollectionBlocBase {
     /** Independent public-contract generation for selective consumers. */
     readonly generation?: number;
     readonly label: CollectionTranslationKey;
-    readonly description?: CollectionTranslationKey;
-    /** Author-facing library category translation key. */
-    readonly category?: CollectionTranslationKey;
-    /** V2 catalogue memberships, all resolved through collection translations. */
-    readonly categories?: readonly CollectionTranslationKey[];
+    readonly description: CollectionTranslationKey;
+    /** Catalogue memberships resolved through collection translations. */
+    readonly categories: readonly CollectionTranslationKey[];
     readonly examples?: readonly string[];
     readonly defaultExample?: string;
     /** Stable ascending position inside the category. */
     readonly order?: number;
     /** Hidden Blocs remain usable by Pages and other Blocs but are omitted from authoring catalogues. */
     readonly catalogue?: "listed" | "hidden";
-    readonly thumbnail?: string;
     readonly uses: readonly string[];
     readonly requires: readonly CollectionCapabilityRequirement[];
     readonly slots: Readonly<Record<string, CollectionSlot>>;
@@ -56,8 +53,6 @@ interface CollectionBlocBase {
     readonly root: CollectionManagedNativeElement;
     /** Fixed authored markup expanded according to `kind`. */
     readonly markup: string;
-    /** Editable initial page content, distinct from the fixed composition. */
-    readonly defaultContent?: string;
     /** Exact browser authority exercised by authored iframe elements. */
     readonly browser?: BlocBrowserCapabilities;
 }

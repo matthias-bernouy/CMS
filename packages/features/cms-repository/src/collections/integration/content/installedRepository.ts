@@ -9,7 +9,6 @@ import {
     resolveCollectionTranslation,
 } from "@bernouy/cms-repository/collections";
 import {
-    presentationImageContentType,
     type BlocRecord,
     type CmsRepository,
     createBlocUsageResolver,
@@ -110,24 +109,13 @@ export function withInstalledCollections(
     const loadInstalledState = async (): Promise<InstalledState> => {
         const snapshot = await installedSnapshot();
         const collections = await Promise.all(
-            snapshot.collections.map(async ({ collectionId, digest, release }) =>
+            snapshot.collections.map(async ({ collectionId, release }) =>
                 Promise.all(
                     release.blocs.map(async (bloc) => {
-                        const thumbnail = bloc.thumbnail
-                            ? release.assets.find((asset) => asset.id === bloc.thumbnail)
-                            : undefined;
-                        const thumbnailPath = thumbnail ? `assets/${thumbnail.id}` : undefined;
-                        const thumbnailBytes =
-                            thumbnailPath && presentationImageContentType(thumbnailPath) === thumbnail?.mediaType
-                                ? await store.getReleaseAsset(digest, thumbnail!.id)
-                                : null;
                         const artifact = validateBlocWrite({
                             id: bloc.id,
                             name: resolveCollectionTranslation(release, bloc.label),
-                            group: resolveCollectionTranslation(
-                                release,
-                                bloc.categories?.[0] ?? bloc.category ?? release.name,
-                            ),
+                            group: resolveCollectionTranslation(release, bloc.categories[0]!),
                             ...(bloc.categories
                                 ? {
                                       categories: [
@@ -165,16 +153,9 @@ export function withInstalledCollections(
                                       styleCollectionId: collectionId,
                                   }
                                 : {}),
-                            ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
                             slots: bloc.slots,
                             ...(bloc.kind === "component" && bloc.settings
                                 ? { settings: localizeSettings(release, bloc.settings) }
-                                : {}),
-                            ...(thumbnailPath && thumbnailBytes
-                                ? {
-                                      thumbnail: { path: thumbnailPath },
-                                      source: { [thumbnailPath]: Buffer.from(thumbnailBytes).toString("base64") },
-                                  }
                                 : {}),
                         });
                         return {

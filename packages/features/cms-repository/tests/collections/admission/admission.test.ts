@@ -1,3 +1,4 @@
+import { collectionFixture } from "./examples/buildFixture";
 import { describe, expect, test } from "bun:test";
 import { admitCollectionRelease, admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
 import { canonicalIJsonBytes } from "@bernouy/cms-repository/contracts/protocol";
@@ -12,15 +13,15 @@ describe("collection authored bundle admission", () => {
         (source.blocs as Record<string, unknown>[])[0]!.requires = [
             { contractId: "payment", capabilityId, versionRange: "^1.0.0" },
         ];
-        expect((await admitCollectionRelease(source, [], { contracts })).digest).toMatch(/^sha256:/);
+        expect((await admitCollectionRelease(collectionFixture(source), [], { contracts })).digest).toMatch(/^sha256:/);
     });
 
     test("hashes only fully verified normalized data", async () => {
         const source = collectionDocument();
-        const admission = await admitCollectionRelease(source);
+        const admission = await admitCollectionRelease(collectionFixture(source));
         const reordered = structuredClone(source);
         (reordered.blocs as unknown[]).reverse();
-        expect((await admitCollectionRelease(reordered)).digest).toBe(admission.digest);
+        expect((await admitCollectionRelease(collectionFixture(reordered))).digest).toBe(admission.digest);
         expect((await admitCollectionReleaseJson(JSON.stringify(source))).digest).toBe(admission.digest);
         expect(admission.digest).toBe(
             `sha256:${new Bun.CryptoHasher("sha256").update(canonicalIJsonBytes(admission.release)).digest("hex")}`,
@@ -28,12 +29,12 @@ describe("collection authored bundle admission", () => {
         expect(Object.isFrozen(admission)).toBe(true);
         const renamed = structuredClone(source);
         (renamed.translations as Record<string, Record<string, string>>)["en-US"]!["collection.name"] = "New name";
-        expect((await admitCollectionRelease(renamed)).digest).not.toBe(admission.digest);
+        expect((await admitCollectionRelease(collectionFixture(renamed))).digest).not.toBe(admission.digest);
     });
 
     test("derives immutable scoped CSS fragments while admitting a release", async () => {
         const source = collectionDocument();
-        const admission = await admitCollectionRelease(source);
+        const admission = await admitCollectionRelease(collectionFixture(source));
         const component = admission.release.blocs.find((bloc) => bloc.id === "atlas-panel");
 
         expect(component?.kind === "component" ? component.runtime?.styleCSS : undefined).toContain(
@@ -43,7 +44,7 @@ describe("collection authored bundle admission", () => {
 
         const forged = structuredClone(source);
         (forged.blocs as Record<string, unknown>[])[0]!.runtime = { styleCSS: "forged" };
-        await expect(admitCollectionRelease(forged)).rejects.toThrow(
+        await expect(admitCollectionRelease(collectionFixture(forged))).rejects.toThrow(
             "must be the canonical compilation of the Bloc style",
         );
     });
@@ -58,12 +59,12 @@ describe("collection authored bundle admission", () => {
         const create = { contractId: "payment", capabilityId: "create-link", versionRange: "^1.0.0 || ^2.0.0" };
         const refund = { contractId: "payment", capabilityId: "refund", versionRange: "^1.0.0 || ^2.0.0" };
         blocs[0]!.requires = [create, refund];
-        await expect(admitCollectionRelease(source, [], { contracts })).rejects.toMatchObject({
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toMatchObject({
             code: "resolution_failed",
         });
         blocs[0]!.requires = [create];
         blocs[1]!.requires = [refund];
-        await expect(admitCollectionRelease(source, [], { contracts })).rejects.toMatchObject({
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toMatchObject({
             code: "resolution_failed",
         });
         blocs[1] = {
@@ -71,12 +72,15 @@ describe("collection authored bundle admission", () => {
             markup: "<main>{{ resource.name }}</main>",
             uses: [],
             slots: {},
-            defaultContent: "",
         };
-        expect((await admitCollectionRelease(source, [], { contracts })).release.blocs).toHaveLength(2);
-        await expect(admitCollectionRelease(source)).rejects.toMatchObject({ code: "resolution_failed" });
+        expect((await admitCollectionRelease(collectionFixture(source), [], { contracts })).release.blocs).toHaveLength(
+            2,
+        );
+        await expect(admitCollectionRelease(collectionFixture(source))).rejects.toMatchObject({
+            code: "resolution_failed",
+        });
         await contracts.setYank("payment", "1.0.0", { reason: "Withdrawn" });
-        await expect(admitCollectionRelease(source, [], { contracts })).rejects.toMatchObject({
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toMatchObject({
             code: "resolution_failed",
         });
     });
@@ -95,7 +99,7 @@ describe("collection authored bundle admission", () => {
                 },
             },
         ];
-        await expect(admitCollectionRelease(source, [], { contracts })).rejects.toThrow(
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toThrow(
             "mutations are reserved for form submissions",
         );
     });
@@ -111,6 +115,9 @@ describe("collection authored bundle admission", () => {
             "QUERY";
         const source = collectionDocument();
         (source.blocs as Record<string, unknown>[]).push({
+            description: "bloc.page.label",
+            categories: ["bloc.page.label"],
+
             kind: "composition",
             root: { accepts: ["div"] },
             id: "atlas-catalog",
@@ -128,10 +135,10 @@ describe("collection authored bundle admission", () => {
         });
 
         await expect(
-            admitCollectionRelease(source, [], { contracts: await releaseCatalogue(command) }),
+            admitCollectionRelease(collectionFixture(source), [], { contracts: await releaseCatalogue(command) }),
         ).rejects.toMatchObject({ code: "resolution_failed" });
         await expect(
-            admitCollectionRelease(source, [], { contracts: await releaseCatalogue(query) }),
+            admitCollectionRelease(collectionFixture(source), [], { contracts: await releaseCatalogue(query) }),
         ).resolves.toMatchObject({ release: { collectionId: "atlas" } });
         const binaryQuery = structuredClone(query);
         const binaryCapability = (binaryQuery.capabilities as Record<string, unknown>[])[0]!;
@@ -142,7 +149,7 @@ describe("collection authored bundle admission", () => {
             errorStatuses: {},
         };
         await expect(
-            admitCollectionRelease(source, [], { contracts: await releaseCatalogue(binaryQuery) }),
+            admitCollectionRelease(collectionFixture(source), [], { contracts: await releaseCatalogue(binaryQuery) }),
         ).rejects.toMatchObject({ code: "resolution_failed" });
     });
 
@@ -171,6 +178,9 @@ describe("collection authored bundle admission", () => {
             },
         ];
         (source.blocs as Record<string, unknown>[]).push({
+            description: "bloc.page.label",
+            categories: ["bloc.page.label"],
+
             kind: "composition",
             root: { accepts: ["div"] },
             id: "atlas-catalog",
@@ -192,7 +202,7 @@ describe("collection authored bundle admission", () => {
         });
         const contracts = await releaseCatalogue(query);
 
-        await expect(admitCollectionRelease(source, [], { contracts })).resolves.toMatchObject({
+        await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).resolves.toMatchObject({
             release: { collectionId: "atlas" },
         });
 
@@ -202,16 +212,16 @@ describe("collection authored bundle admission", () => {
         const data = (schema.properties as Record<string, Record<string, unknown>>).data!;
         const id = (data.properties as Record<string, Record<string, unknown>>).id!;
         id.maxLength = 64;
-        await expect(admitCollectionRelease(incompatible, [], { contracts })).rejects.toThrow(
+        await expect(admitCollectionRelease(collectionFixture(incompatible), [], { contracts })).rejects.toThrow(
             "cms-sync producer is incompatible",
         );
 
         const implicitFullSnapshot = structuredClone(source);
         const bloc = (implicitFullSnapshot.blocs as Record<string, unknown>[]).at(-1)!;
         bloc.markup = String(bloc.markup).replace(' cms-sync-select="data.id"', "");
-        await expect(admitCollectionRelease(implicitFullSnapshot, [], { contracts })).rejects.toThrow(
-            "cms-sync producer is incompatible",
-        );
+        await expect(
+            admitCollectionRelease(collectionFixture(implicitFullSnapshot), [], { contracts }),
+        ).rejects.toThrow("cms-sync producer is incompatible");
     });
 
     test("snapshots release and all asset bytes before any asynchronous work", async () => {
@@ -224,7 +234,7 @@ describe("collection authored bundle admission", () => {
             byteLength: bytes.length,
             digest: `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`,
         }));
-        const pending = admitCollectionRelease(source, [
+        const pending = admitCollectionRelease(collectionFixture(source), [
             { id: "asset-0", bytes: first },
             { id: "asset-1", bytes: second },
         ]);
@@ -236,6 +246,8 @@ describe("collection authored bundle admission", () => {
         expect(admission.release.translations["en-US"]![admission.release.name]).toBe("Atlas UI");
         expect(new Uint8Array(await admission.assets[0]!.bytes.arrayBuffer())).toEqual(new Uint8Array([1, 2]));
         expect(new Uint8Array(await admission.assets[1]!.bytes.arrayBuffer())).toEqual(new Uint8Array([3, 4]));
-        await expect(admitCollectionRelease(source)).rejects.toMatchObject({ code: "asset_mismatch" });
+        await expect(admitCollectionRelease(collectionFixture(source))).rejects.toMatchObject({
+            code: "asset_mismatch",
+        });
     });
 });

@@ -232,16 +232,34 @@ test("collection source assets keep their verified bytes through the repository 
             await writeFile(
                 join(root, "definition.json"),
                 JSON.stringify({
+                    description: `bloc.${id}.label`,
+                    categories: [`bloc.${id}.label`],
+
                     id,
                     kind: "composition",
                     root: { accepts: ["div"] },
                     label: `bloc.${id}.label`,
                     catalogue,
+                    ...(catalogue === "listed" ? { examples: ["card"], defaultExample: "card" } : {}),
                     slots: {},
                 }),
             );
             await writeFile(join(root, "markup.html"), "<p>{{ example.name }}</p>");
         }
+        await mkdir(join(sourceRoot, "examples", "card"), { recursive: true });
+        await writeFile(
+            join(sourceRoot, "examples", "card", "definition.json"),
+            JSON.stringify({
+                id: "card",
+                label: "bloc.asset-example-card.label",
+                description: "bloc.asset-example-card.label",
+                previews: [{ id: "desktop", frame: { width: 640, height: 240 } }],
+            }),
+        );
+        await writeFile(
+            join(sourceRoot, "examples", "card", "document.html"),
+            '<div cms-bloc="asset-example-card"></div>',
+        );
         await writeFile(
             join(sourceRoot, "translations", "en", "collection.json"),
             JSON.stringify({

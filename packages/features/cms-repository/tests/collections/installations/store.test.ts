@@ -1,3 +1,4 @@
+import { collectionFixture } from "../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
 import { CollectionStore, MemoryCollectionStorage } from "../../../src/exports/collections/installations";
 import { collectionDocument, textDefinition } from "../fixtures";
@@ -13,6 +14,9 @@ function release() {
         assets: [],
         blocs: [
             {
+                description: "bloc.welcome.label",
+                categories: ["bloc.welcome.label"],
+
                 kind: "composition",
                 root: { accepts: ["div"] },
                 id: "atlas-welcome",
@@ -31,10 +35,10 @@ function release() {
 test("release identity is immutable and installation keeps a digest pin", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const input = release();
-    const artifact = await store.importRelease(input);
+    const artifact = await store.importRelease(collectionFixture(input));
     await store.install("a", artifact.digest, 0);
     input.texts[0]!.values.en = "Changed";
-    await expect(store.importRelease(input)).rejects.toThrow("Immutable");
+    await expect(store.importRelease(collectionFixture(input))).rejects.toThrow("Immutable");
     const state = await store.snapshot("a");
     expect(state.collections[0]!.digest).toBe(artifact.digest);
     expect(state.collections[0]!.release.texts![0]!.values.en).toBe("Hello");
@@ -43,7 +47,7 @@ test("release identity is immutable and installation keeps a digest pin", async 
 
 test("concurrent saves conflict, isolate site overrides and preserve release defaults", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await store.importRelease(release());
+    const artifact = await store.importRelease(collectionFixture(release()));
     await store.install("a", artifact.digest, 0);
     await store.install("b", artifact.digest, 0);
     const results = await Promise.allSettled([
@@ -61,21 +65,23 @@ test("concurrent saves conflict, isolate site overrides and preserve release def
 
 test("compatible repository upgrade preserves site texts and rejects removals", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const old = await store.importRelease(release());
+    const old = await store.importRelease(collectionFixture(release()));
     await store.install("site", old.digest, 0, "local");
     await store.saveTexts("site", "atlas", 1, { title: { fr: "Salut" } });
-    const newer = await store.importRelease({
-        ...release(),
-        version: "1.1.0",
-        texts: [textDefinition("title", { en: "New", fr: "Nouveau" }), textDefinition("other", { en: "Other" })],
-    });
+    const newer = await store.importRelease(
+        collectionFixture({
+            ...release(),
+            version: "1.1.0",
+            texts: [textDefinition("title", { en: "New", fr: "Nouveau" }), textDefinition("other", { en: "Other" })],
+        }),
+    );
     await store.upgrade("site", newer.digest, 2, "local");
     const current = (await store.snapshot("site")).collections[0]!;
     expect(current.digest).toBe(newer.digest);
     expect(current.textOverrides.title?.fr).toBe("Salut");
     expect(current.repositoryId).toBe("local");
     await expect(store.upgrade("site", old.digest, 3, "local")).rejects.toThrow("newer");
-    const removing = await store.importRelease({ ...release(), version: "1.2.0", texts: [] });
+    const removing = await store.importRelease(collectionFixture({ ...release(), version: "1.2.0", texts: [] }));
     await expect(store.upgrade("site", removing.digest, 3, "local")).rejects.toThrow("removes");
 });
 
@@ -92,10 +98,9 @@ test("imports verified assets and contract requirements into the installation st
             digest: `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`,
         },
     ];
-    input.blocs[0]!.thumbnail = "thumbnail.txt";
     input.blocs[0]!.requires = [{ contractId: "catalog", capabilityId: "item.list", versionRange: "^1.0.0" }];
 
-    const artifact = await store.importRelease(input, [{ id: "thumbnail.txt", bytes }]);
+    const artifact = await store.importRelease(collectionFixture(input), [{ id: "thumbnail.txt", bytes }]);
     expect(await store.getReleaseAsset(artifact.digest, "thumbnail.txt")).toEqual(bytes);
     expect(await store.getReleaseAsset(artifact.digest, "thumbnail.txt", { start: 1, end: 2 })).toEqual(
         bytes.slice(1, 3),
@@ -121,17 +126,18 @@ test("resolves asset metadata in one batch without hydrating unrelated releases"
     };
     const firstAsset = await asset("first.txt", "first");
     const secondAsset = await asset("second.txt", "second");
-    const first = await store.importRelease({ ...release(), assets: [firstAsset.definition], blocs: [] }, [
-        { id: firstAsset.definition.id, bytes: firstAsset.bytes },
-    ]);
+    const first = await store.importRelease(
+        collectionFixture({ ...release(), assets: [firstAsset.definition], blocs: [] }),
+        [{ id: firstAsset.definition.id, bytes: firstAsset.bytes }],
+    );
     const second = await store.importRelease(
-        {
+        collectionFixture({
             ...release(),
             collectionId: "other",
             version: "1.0.0",
             assets: [secondAsset.definition],
             blocs: [],
-        },
+        }),
         [{ id: secondAsset.definition.id, bytes: secondAsset.bytes }],
     );
     await store.installMany("site", [{ digest: first.digest }, { digest: second.digest }], 0);
@@ -158,6 +164,9 @@ test("upgrades may widen but never narrow the stored settings contract", async (
     const store = new CollectionStore(new MemoryCollectionStorage());
     const initial = release();
     initial.blocs[0] = {
+        description: "bloc.card.label",
+        categories: ["bloc.card.label"],
+
         kind: "component",
         root: { accepts: ["div"] },
         id: "atlas-card",
@@ -177,18 +186,18 @@ test("upgrades may widen but never narrow the stored settings contract", async (
             },
         ],
     };
-    const old = await store.importRelease(initial);
+    const old = await store.importRelease(collectionFixture(initial));
     await store.install("site", old.digest, 0, "local");
     await store.saveTexts("site", "atlas", 1, { title: { fr: "Salut" } });
     const changedSettings = structuredClone(initial);
     changedSettings.version = "1.1.0";
     changedSettings.blocs[0]!.settings[0]!.maxLength = 32;
-    const settingsArtifact = await store.importRelease(changedSettings);
+    const settingsArtifact = await store.importRelease(collectionFixture(changedSettings));
     await expect(store.upgrade("site", settingsArtifact.digest, 2, "local")).resolves.toMatchObject({ revision: 3 });
 
     const narrowedSettings = structuredClone(changedSettings);
     narrowedSettings.version = "1.2.0";
     narrowedSettings.blocs[0]!.settings[0]!.maxLength = 8;
-    const narrowedArtifact = await store.importRelease(narrowedSettings);
+    const narrowedArtifact = await store.importRelease(collectionFixture(narrowedSettings));
     await expect(store.upgrade("site", narrowedArtifact.digest, 3, "local")).rejects.toThrow("settings");
 });
