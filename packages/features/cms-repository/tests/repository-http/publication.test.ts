@@ -125,25 +125,6 @@ test("assets remain invisible until every streamed byte is verified and committe
     expect(registry.publications).toHaveLength(1);
 });
 
-test("conformance evidence publication uses the authenticated immutable mutation channel", async () => {
-    const root = await temporaryDirectory();
-    const registry = new RecordingRegistry();
-    const { namespaces, credential } = await ownerFixture(root);
-    const endpoint = new RepositoryMutationEndpoint(registry, {
-        namespaces,
-        uploads: new FilesystemRepositoryPublicationUploadStore(root),
-    });
-    const url = new URL("https://repository.example/v1/conformance-evidence");
-    const body = Buffer.from('{"kind":"conformance-evidence","publisherId":"publisher"}');
-    const request = async () => signedRequest(url, "POST", body, await signOwnerRequest("POST", url, body, credential));
-
-    const response = await endpoint.handle(await request());
-
-    expect(response?.status).toBe(200);
-    expect(registry.evidencePublications).toEqual([body.toString("utf8")]);
-    expect(await response!.json()).toMatchObject({ added: true, providerId: "ulvia.example" });
-});
-
 async function temporaryDirectory(): Promise<string> {
     const path = await mkdtemp(join(tmpdir(), "repository-publication-"));
     directories.push(path);

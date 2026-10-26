@@ -24,7 +24,7 @@ export interface ContractSelectionDependency {
     readonly present: boolean;
 }
 
-/** Structural viability at the supplied snapshot, never live readiness or conformance evidence. */
+/** Structural viability at the supplied snapshot, independent of live readiness. */
 export interface ContractSelectionPlan {
     readonly siteId: string;
     readonly selections: readonly ContractSelection[];

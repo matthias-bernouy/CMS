@@ -70,9 +70,9 @@ export interface ContractParentReference {
 export interface CapabilityRequirement {
     readonly contractId: string;
     readonly capabilityId: string;
-    /** Accepted dependency versions; OR spelling does not define a test matrix. */
+    /** Accepted dependency versions. */
     readonly versionRange: string;
-    /** Explicit support/test ranges covering the accepted set; defaults to [versionRange]. */
+    /** Published-release witness ranges covering the accepted set; defaults to [versionRange]. */
     readonly supportRanges?: readonly string[];
 }
 

@@ -2,13 +2,7 @@ import { createHash } from "node:crypto";
 import { isSha256Digest } from "@bernouy/binary-media";
 import { repositoryWriteHeaders, type RepositoryOwnerCredential } from "../namespaces/request";
 import { encodePublicationUpload, type PublicationUploadManifest } from "./protocol";
-import type {
-    ConformanceEvidencePublicationResult,
-    PublicationAsset,
-    PublicationEnvelope,
-    PublicationUploadReceipt,
-    RemoteCoordinate,
-} from "./types";
+import type { PublicationAsset, PublicationEnvelope, PublicationUploadReceipt, RemoteCoordinate } from "./types";
 import { concurrentlyMap } from "./transport/concurrency";
 import { boundedResponseBytes } from "./transport";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
@@ -67,14 +61,6 @@ export class RemoteRepositoryWriter {
             JSON.stringify({ reason, ...(expectedRevision === undefined ? {} : { expectedRevision }) }),
         );
         await this.mutateBytes("PUT", path, body);
-    }
-
-    async pushEvidence(canonicalJson: string): Promise<ConformanceEvidencePublicationResult> {
-        const value = await this.mutateBytes("POST", "v1/conformance-evidence", Buffer.from(canonicalJson));
-        if (!evidencePublicationResult(value)) {
-            throw new Error("Repository returned an invalid conformance evidence result");
-        }
-        return value;
     }
 
     private async uploadAsset(
@@ -164,17 +150,6 @@ function uploadReceipt(value: unknown): value is PublicationUploadReceipt {
         Array.isArray(value.uploadedAssetIds) &&
         value.uploadedAssetIds.every((id) => typeof id === "string") &&
         new Set(value.uploadedAssetIds).size === value.uploadedAssetIds.length
-    );
-}
-
-function evidencePublicationResult(value: unknown): value is ConformanceEvidencePublicationResult {
-    return (
-        plainRecord(value) &&
-        typeof value.providerId === "string" &&
-        typeof value.contractId === "string" &&
-        typeof value.evidenceId === "string" &&
-        typeof value.added === "boolean" &&
-        isSha256Digest(value.digest)
     );
 }
 

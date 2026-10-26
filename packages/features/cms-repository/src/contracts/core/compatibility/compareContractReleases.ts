@@ -28,7 +28,7 @@ export interface CompatibilityIssue {
 export interface ContractCompatibilityReport {
     /** Identity, ownership and the declared version increase allow this evolution. */
     readonly validEvolution: boolean;
-    /** Old consumers remain supported with release-specific output projection; this is not provider conformance. */
+    /** Old consumers remain supported with release-specific output projection; runtime behavior is validated separately. */
     readonly consumerCompatible: boolean;
     readonly declaredBump: VersionBump | null;
     readonly issues: readonly CompatibilityIssue[];

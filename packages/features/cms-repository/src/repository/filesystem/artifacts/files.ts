@@ -1,7 +1,7 @@
 import { RepositoryRequestError } from "../../core/errors";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { stat } from "node:fs/promises";
 import { ensureDurableDirectory } from "../core/durable";
 import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
@@ -107,45 +107,13 @@ export class LocalArtifactFiles {
         return artifacts;
     }
 
-    async storeEvidence(providerId: string, contractId: string, evidenceId: string, canonicalJson: string) {
-        const path = this.evidencePath(providerId, contractId, evidenceId);
-        const existing = await this.getEvidence(providerId, contractId, evidenceId);
-        if (existing) {
-            return sameBytes(existing, canonicalJson, "conformance evidence", evidenceId, "immutable");
-        }
-        await ensureDurableDirectory(dirname(path), this.root);
-        await writeImmutableFile(
-            path,
-            Buffer.from(canonicalJson),
-            `Immutable artifact file already has different content: ${path}`,
-        );
-        return true;
-    }
-
-    async getEvidence(providerId: string, contractId: string, evidenceId: string): Promise<Buffer | null> {
-        if (!isRepositoryIdentifier(providerId) || !isRepositoryIdentifier(contractId) || !UUID.test(evidenceId)) {
-            return null;
-        }
-        return readFile(this.evidencePath(providerId, contractId, evidenceId)).catch((error: NodeJS.ErrnoException) => {
-            if (error.code === "ENOENT") {
-                return null;
-            }
-            throw error;
-        });
-    }
-
     private path(type: ArtifactType, publisherId: string, id: string, version: string): string {
         return join(this.root, type, publisherId, id, `${version}.json`);
-    }
-
-    private evidencePath(providerId: string, contractId: string, evidenceId: string): string {
-        return join(this.root, "conformance-evidence", providerId, contractId, `${evidenceId}.json`);
     }
 }
 
 const ASSET_IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 
 function releaseHash(canonicalJson: string): string {
     return createHash("sha256").update(canonicalJson).digest("hex");

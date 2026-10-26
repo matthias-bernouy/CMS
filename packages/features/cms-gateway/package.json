@@ -11,7 +11,6 @@
         "./audit": "./src/exports/audit/index.ts",
         "./audit/mongo": "./src/exports/audit/mongo.ts",
         "./analysis": "./src/exports/analysis/index.ts",
-        "./conformance": "./src/exports/conformance/index.ts",
         "./mcp": "./src/exports/protocol/mcp.ts",
         "./http": "./src/exports/http/index.ts",
         "./http/handlers": "./src/exports/http/handlers.ts",

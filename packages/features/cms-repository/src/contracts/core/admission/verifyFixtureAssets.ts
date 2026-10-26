@@ -4,13 +4,13 @@ import { ReleaseValidationError } from "../protocol/errors";
 import type { ContractBundleAsset } from "./admitContractBundle";
 import type { VerifiedFixtureAsset } from "./admitContractRelease";
 
-export interface SnapshottedFixtureAsset {
+interface SnapshottedFixtureAsset {
     readonly id: string;
     readonly bytes: Blob;
 }
 
 /** Copies every caller-owned buffer synchronously so later digest work observes one immutable input set. */
-export function snapshotFixtureAssets(assets: readonly ContractBundleAsset[]): readonly SnapshottedFixtureAsset[] {
+function snapshotFixtureAssets(assets: readonly ContractBundleAsset[]): readonly SnapshottedFixtureAsset[] {
     return Object.freeze(
         assets.map((asset) => {
             const value = asset.bytes;

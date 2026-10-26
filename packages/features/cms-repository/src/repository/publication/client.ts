@@ -1,17 +1,10 @@
 import { isSha256Digest } from "@bernouy/binary-media";
 import { parseCollectionReleaseJson } from "cms-repository/exports/collections/index";
-import { admitConformanceEvidenceJson, parseContractReleaseJson } from "cms-repository/exports/contracts/index";
+import { parseContractReleaseJson } from "cms-repository/exports/contracts/index";
 import { parseProviderManifestJson } from "cms-repository/exports/providers/index";
 import { MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/getBytes";
 import { boundedResponseBytes, repositoryUrl } from "./transport";
-import type {
-    ConformanceEvidenceCoordinate,
-    ConformanceEvidencePublicationResult,
-    PublicationEnvelope,
-    RemoteCoordinate,
-    RepositoryArtifactKind,
-    RepositoryDownloadAsset,
-} from "./types";
+import type { PublicationEnvelope, RemoteCoordinate, RepositoryArtifactKind, RepositoryDownloadAsset } from "./types";
 import { RemoteRepositoryWriter } from "./writer";
 import type { RepositoryOwnerCredential } from "../namespaces/request";
 import { boundedStream, verifiedAsset } from "./transport/assets";
@@ -56,27 +49,6 @@ export class RemoteRepositoryClient {
 
     async yank(coordinate: RemoteCoordinate, reason: string | null): Promise<void> {
         return this.writer.yank(coordinate, reason);
-    }
-
-    async pushConformanceEvidence(canonicalJson: string): Promise<ConformanceEvidencePublicationResult> {
-        return this.writer.pushEvidence(canonicalJson);
-    }
-
-    async pullConformanceEvidence(coordinate: ConformanceEvidenceCoordinate) {
-        const path = `v1/conformance-evidence/${encodeURIComponent(coordinate.providerId)}/${encodeURIComponent(coordinate.contractId)}/${encodeURIComponent(coordinate.evidenceId)}`;
-        const response = await this.get(path, 8 * 1024 * 1024, "application/json");
-        const admission = await admitConformanceEvidenceJson(response.bytes);
-        if (admission.digest !== response.digest) {
-            throw new Error("Repository conformance evidence bytes do not match their immutable digest");
-        }
-        if (
-            admission.evidence.providerId !== coordinate.providerId ||
-            admission.evidence.contract.id !== coordinate.contractId ||
-            admission.evidence.id !== coordinate.evidenceId
-        ) {
-            throw new Error("Repository returned conformance evidence that does not match the requested coordinate");
-        }
-        return admission;
     }
 
     private async assets(coordinate: RemoteCoordinate, canonicalJson: string, assetSink?: RepositoryAssetDownloadSink) {

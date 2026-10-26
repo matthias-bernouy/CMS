@@ -4,7 +4,7 @@ import { assertMaxAge, timestamp } from "./state";
 
 export interface ProviderInstallationReadiness {
     readonly status: "disabled" | "revoked" | "unobserved" | "stale" | "observed";
-    /** Exact observed releases only; this is not conformance evidence or a site selection. */
+    /** Exact observed releases only; this is not a site selection or a behavioral guarantee. */
     readonly readyImplementations: readonly ProviderRuntimeImplementation[];
 }
 

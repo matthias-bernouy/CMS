@@ -27,6 +27,6 @@ export interface ProviderManifestComparison {
     readonly sameIdentity: boolean;
     /** Every change to the exact manifest digest requires explicit installation approval. */
     readonly requiresApproval: boolean;
-    /** Descriptive changes only: this report makes no SemVer compatibility or conformance claim. */
+    /** Descriptive changes only: this report makes no SemVer compatibility or runtime behavior claim. */
     readonly changes: readonly ProviderManifestChange[];
 }

@@ -5,7 +5,7 @@ import { compileVersionRange } from "./compile";
 import { parseVersionRange } from "./parse";
 import { isVersionSetEmpty, isVersionSetSubset, unionVersionSets } from "./sets";
 
-/** Test/support partitions are explicit metadata, never inferred from the spelling of an accepted range. */
+/** Publication witness ranges are explicit metadata, never inferred from accepted-range spelling. */
 export function getRequirementSupportRanges(requirement: CapabilityRequirement): readonly string[] {
     return requirement.supportRanges ?? [requirement.versionRange];
 }

@@ -13,7 +13,6 @@ import { assertPublicationOwner, manifestPublisher, ownerProofFromRequest } from
 
 const SIGNATURE_TTL_MS = 5 * 60 * 1_000;
 const UPLOAD_TTL_MS = 60 * 60 * 1_000;
-const MAX_CONFORMANCE_EVIDENCE_BYTES = 8 * 1024 * 1024;
 
 export type RepositoryMutationOptions = Readonly<{
     uploads?: RepositoryPublicationUploadStore;
@@ -60,15 +59,6 @@ export class RepositoryMutationEndpoint {
                     await assertPublicationOwner(request, manifestPublisher(manifest));
                 }
                 return this.uploads!.create(manifest, new Date(Date.now() + UPLOAD_TTL_MS));
-            });
-        }
-        if (request.method === "POST" && url.pathname === "/v1/conformance-evidence") {
-            return this.withBytes(request, MAX_CONFORMANCE_EVIDENCE_BYTES, async (bytes) => {
-                const canonicalJson = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-                if (this.namespaces) {
-                    await assertPublicationOwner(request, manifestPublisher({ kind: "contract", canonicalJson }));
-                }
-                return this.registry.publishEvidence(canonicalJson);
             });
         }
         const upload = parsePublicationUploadPath(url.pathname);

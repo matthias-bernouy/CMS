@@ -38,7 +38,6 @@ test("a receipt write failure after publication remains outcome-unknown in the G
                         }
                         return result;
                     },
-                    publishEvidence: (source) => registry.publishEvidence(source),
                     setYank: (...args) => registry.setYank(...args),
                 },
                 ...cataloguePorts(new RepositoryReadEndpoint(f.root)),
