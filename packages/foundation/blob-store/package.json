@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/blob-store",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Generic opaque stream-first blob storage contracts and memory, local-filesystem, and S3-compatible adapters.",
     "license": "MIT",
     "type": "module",

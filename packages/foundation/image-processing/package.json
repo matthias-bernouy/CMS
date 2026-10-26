@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/image-processing",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Generic bounded image inspection and byte transformation.",
     "license": "MIT",
     "type": "module",

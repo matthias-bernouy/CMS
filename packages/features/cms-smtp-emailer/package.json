@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/cms-smtp-emailer",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Secret-backed SMTP specialization of the CMS Emailer interface.",
     "license": "MIT",
     "type": "module",

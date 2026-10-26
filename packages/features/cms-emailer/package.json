@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/cms-emailer",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Provider-neutral outbound email delivery interface and in-memory implementations.",
     "license": "MIT",
     "type": "module",

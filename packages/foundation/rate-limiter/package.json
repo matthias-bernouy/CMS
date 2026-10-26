@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/rate-limiter",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Fixed-window rate limiting behind a substitutable `RateLimiter` contract — in-memory for dev/tests/single-process, Mongo-backed (under `./mongo`) for multi-instance counting. Generic: keys are caller-defined (login email, IP, endpoint id, …).",
     "license": "MIT",
     "type": "module",

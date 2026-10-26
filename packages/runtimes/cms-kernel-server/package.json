@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/cms-kernel-server",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Production composition root for the CMS Kernel server.",
     "license": "MIT",
     "private": true,

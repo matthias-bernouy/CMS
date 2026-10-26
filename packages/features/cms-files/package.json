@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/cms-files",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Provider-neutral namespaces, uploads, immutable files, private access signatures, and derivatives.",
     "license": "MIT",
     "type": "module",

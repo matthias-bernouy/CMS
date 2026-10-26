@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/cms-kernel",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "CMS HTTP surface for Page rendering, authentication and injected feature handlers.",
     "license": "MIT",
     "type": "module",

@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/ulvia-cli",
     "private": true,
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Ulvia CMS installation and release CLI.",
     "license": "MIT",
     "type": "module",

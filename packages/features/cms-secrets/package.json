@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/cms-secrets",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Credential-scoped CMS secret namespaces, lifecycle and explicit value resolution.",
     "license": "MIT",
     "type": "module",

@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/logging",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Generic structured runtime diagnostics with bounded context and central redaction.",
     "license": "MIT",
     "type": "module",

@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/cms-gateway",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Provider-neutral capability routing, authorization, and streaming transport for CmsCore.",
     "license": "MIT",
     "type": "module",

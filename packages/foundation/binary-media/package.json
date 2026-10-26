@@ -1,6 +1,6 @@
 {
     "name": "@bernouy/binary-media",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Generic immutable binary snapshots, SHA-256 identities, representation fingerprints, and bounded media signature inspection.",
     "license": "MIT",
     "type": "module",
