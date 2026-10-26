@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { DEFAULT_RELEASE_LIMITS } from "@bernouy/cms-repository/contracts";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
-import { scanJsonSourceTree, type SourceFile } from "./sourceTree";
+import { scanJsonSourceTree, type SourceFile } from "@bernouy/cms-repository/repository/authoring";
 
 export type JsonSourceRecord = Readonly<{
     source: string;

@@ -11,3 +11,5 @@ export {
     type NamespaceInventoryQuery,
     type NamespaceInventoryPage,
 } from "cms-repository/repository/authoring/namespaces";
+
+export { scanJsonSourceTree, type SourceFile } from "cms-repository/repository/authoring/sourceTree";

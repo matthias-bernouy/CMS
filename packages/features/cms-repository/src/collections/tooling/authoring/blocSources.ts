@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { buildCollectionBloc } from "cms-repository/collections/tooling/buildCollectionBloc";
 import { compileBlocStyle } from "cms-repository/collections/core/validation/blocStyleCompilation";
 import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery";
-import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
+import { readSourceEntries, scanFileSourceTree } from "cms-repository/repository/authoring/sourceTree";
 
 /** Discover recursively grouped Bloc folders and compile them without path-derived identity. */
 export async function loadCollectionBlocs(directory: string): Promise<unknown[]> {

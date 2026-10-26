@@ -58,6 +58,13 @@ describe("repository domain boundaries", () => {
                             !target.startsWith(`${domain}/`) &&
                             !target.startsWith("repository-http/") &&
                             !target.startsWith("site-upgrades/") &&
+                            // Collection build tooling shares the bounded filesystem scanner,
+                            // not the Repository's publication or workspace services.
+                            !(
+                                domain === "collections" &&
+                                relative(sourceRoot, file).startsWith("collections/tooling/") &&
+                                target === "repository/authoring/sourceTree"
+                            ) &&
                             target !== "exports/contracts" &&
                             !target.startsWith("exports/contracts/")) ||
                         (specifier.startsWith("@bernouy/cms-repository") &&
@@ -71,6 +78,11 @@ describe("repository domain boundaries", () => {
             expect(violations).toEqual([]);
         },
     );
+
+    test("the shared authoring scanner stays independent of CMS business domains", async () => {
+        const source = await Bun.file(resolve(sourceRoot, "repository/authoring/sourceTree.ts")).text();
+        expect(importPaths(source).every((specifier) => specifier.startsWith("node:"))).toBe(true);
+    });
 
     test("keeps repository HTTP transport independent of domains", async () => {
         const violations: string[] = [];

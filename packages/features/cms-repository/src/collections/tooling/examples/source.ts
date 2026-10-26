@@ -1,5 +1,5 @@
 import { basename, dirname } from "node:path";
-import { scanFileSourceTree } from "../authoring/sourceTree";
+import { scanFileSourceTree } from "cms-repository/repository/authoring/sourceTree";
 
 /** Assemble examples independently of path-derived identity. */
 export async function loadCollectionExamples(directory: string): Promise<unknown[]> {

@@ -5,7 +5,7 @@ import { loadCollectionExamples } from "../examples/source";
 import { loadCollectionBlocs } from "./blocSources";
 import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
-import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
+import { readSourceEntries, scanFileSourceTree } from "cms-repository/repository/authoring/sourceTree";
 import { loadCollectionAssets } from "./assetSources";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
