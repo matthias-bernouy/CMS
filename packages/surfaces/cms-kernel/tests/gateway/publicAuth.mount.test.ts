@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import KernelCms from "cms-kernel/KernelCms";
@@ -9,7 +9,7 @@ import { deliveryHandlers } from "./support/deliveryHandlers";
 describe("Kernel authentication boundary", () => {
     test("does not expose authentication endpoints owned by the Access contract", () => {
         const runner = new CaptureRunner();
-        const content = createContentReader(new InMemoryCmsRepository());
+        const content = createContentReader(new InMemoryContentRepository());
         new KernelCms({
             runner,
             cache: new InMemoryCache(),

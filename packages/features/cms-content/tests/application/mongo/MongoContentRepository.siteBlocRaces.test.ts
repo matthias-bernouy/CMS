@@ -4,12 +4,12 @@ import {
     BlocPublicationConflictError,
     SiteBlocLifecycleConflictError,
 } from "@bernouy/cms-content";
-import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+import { MongoContentRepository } from "@bernouy/cms-content/mongo";
 import type { Db } from "mongodb";
 import { siteBlocArtifact, siteBlocDefinition, siteBlocSnapshot } from "../../blocs/siteBlocFixture";
 import { createMongoContentRepository, FakeContentDb } from "./contentMongoFixture";
 
-describe("MongoCmsRepository site bloc lifecycle races", () => {
+describe("MongoContentRepository site bloc lifecycle races", () => {
     test.each(["save", "publish"] as const)(
         "does not let a concurrent %s based on the active record undo archival",
         async (operation) => {
@@ -92,8 +92,8 @@ describe("MongoCmsRepository site bloc lifecycle races", () => {
 
     test("serializes the publication graph across repository instances", async () => {
         const db = new FakeContentDb();
-        const firstRepository = new MongoCmsRepository(db as unknown as Db);
-        const secondRepository = new MongoCmsRepository(db as unknown as Db);
+        const firstRepository = new MongoContentRepository(db as unknown as Db);
+        const secondRepository = new MongoContentRepository(db as unknown as Db);
         const events: string[] = [];
         let releaseFirst!: () => void;
         const firstCanFinish = new Promise<void>((resolve) => {
@@ -127,7 +127,7 @@ describe("MongoCmsRepository site bloc lifecycle races", () => {
             token: "abandoned",
             expiresAt: new Date(0),
         });
-        const repository = new MongoCmsRepository(db as unknown as Db);
+        const repository = new MongoContentRepository(db as unknown as Db);
         let entered = false;
 
         await repository.withSiteBlocPublicationLock(async (guard) => {

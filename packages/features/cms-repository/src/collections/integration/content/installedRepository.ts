@@ -10,7 +10,7 @@ import {
 } from "@bernouy/cms-repository/collections";
 import {
     type BlocRecord,
-    type CmsRepository,
+    type ContentRepository,
     createBlocUsageResolver,
     type PageRouteRegistry,
     type RenderablePage,
@@ -20,11 +20,13 @@ import { createInstalledSnapshotReader } from "./installedSnapshot";
 import { composeCollectionThemes } from "./theme";
 import { projectCollectionTextSource } from "./texts";
 
-type CmsRepositoryMethod = {
-    [Key in keyof CmsRepository]-?: NonNullable<CmsRepository[Key]> extends (...args: never[]) => unknown ? Key : never;
-}[keyof CmsRepository];
+type ContentRepositoryMethod = {
+    [Key in keyof ContentRepository]-?: NonNullable<ContentRepository[Key]> extends (...args: never[]) => unknown
+        ? Key
+        : never;
+}[keyof ContentRepository];
 
-type CmsRepositoryMethodPolicy = "delegate" | "guard-bloc" | "override";
+type ContentRepositoryMethodPolicy = "delegate" | "guard-bloc" | "override";
 
 const CMS_REPOSITORY_METHOD_POLICY = {
     getContentContributions: "override",
@@ -69,15 +71,15 @@ const CMS_REPOSITORY_METHOD_POLICY = {
     getSystem: "override",
     getSystemRevision: "delegate",
     updateSystem: "override",
-} as const satisfies Record<CmsRepositoryMethod, CmsRepositoryMethodPolicy>;
+} as const satisfies Record<ContentRepositoryMethod, ContentRepositoryMethodPolicy>;
 
 /** Installed resources are projected from their immutable release, never copied into editable bloc storage. */
 export function withInstalledCollections(
-    repository: CmsRepository,
+    repository: ContentRepository,
     store: CollectionStore,
     siteId: string,
     routes?: PageRouteRegistry,
-): CmsRepository {
+): ContentRepository {
     type InstalledState = {
         revision: number;
         collections: Awaited<ReturnType<CollectionStore["snapshot"]>>["collections"];
@@ -188,7 +190,7 @@ export function withInstalledCollections(
         return resource ? structuredClone(resource) : repository.getBlocRecord(tag);
     };
     const releases = async () => (await installedState()).collections.map((item) => item.release);
-    const overrides: Partial<CmsRepository> = {
+    const overrides: Partial<ContentRepository> = {
         getSystem: async () => {
             const system = await repository.getSystem();
             return { ...system, theme: composeCollectionThemes(system.theme, await releases()) };
@@ -309,9 +311,9 @@ export function withInstalledCollections(
     };
     return new Proxy(repository, {
         get(target, key) {
-            const policy = CMS_REPOSITORY_METHOD_POLICY[key as CmsRepositoryMethod];
+            const policy = CMS_REPOSITORY_METHOD_POLICY[key as ContentRepositoryMethod];
             if (policy === "override") {
-                const override = overrides[key as keyof CmsRepository];
+                const override = overrides[key as keyof ContentRepository];
                 if (typeof override !== "function") {
                     throw new Error(`Missing installed collection override: ${String(key)}`);
                 }
@@ -322,7 +324,7 @@ export function withInstalledCollections(
                 return value;
             }
             if (!policy) {
-                throw new Error(`Unclassified CmsRepository method: ${String(key)}`);
+                throw new Error(`Unclassified ContentRepository method: ${String(key)}`);
             }
             if (policy === "delegate") {
                 return value.bind(target);

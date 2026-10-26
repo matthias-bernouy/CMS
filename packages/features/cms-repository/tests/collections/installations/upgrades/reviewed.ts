@@ -1,4 +1,4 @@
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 import { CollectionUpgradeService } from "../../../../src/collections/installations/upgrades/runtime/CollectionUpgradeService";
 import { MemorySiteUpgradeStorage } from "../../../../src/site-upgrades/memory";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
@@ -12,11 +12,16 @@ export async function reviewedUpgrade(
     if ((await store.revision(siteId)) !== expectedRevision) {
         throw new Error("Revision conflict");
     }
-    const service = new CollectionUpgradeService(new InMemoryCmsRepository(), store, new MemorySiteUpgradeStorage(), {
-        contributors: [],
-        requiredConsumers: [],
-        validateCapabilities: async () => [],
-    });
+    const service = new CollectionUpgradeService(
+        new InMemoryContentRepository(),
+        store,
+        new MemorySiteUpgradeStorage(),
+        {
+            contributors: [],
+            requiredConsumers: [],
+            validateCapabilities: async () => [],
+        },
+    );
     const targets = [{ digest, repositoryId }];
     const plan = await service.plan(siteId, targets);
     if (plan.status !== "applicable") {

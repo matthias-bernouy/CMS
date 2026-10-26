@@ -1,7 +1,7 @@
 import { resolvePublishedRoute } from "cms-content/pages/core/queries/resolvePublishedRoute";
 import { projectRenderingSettings } from "cms-content/settings/core/renderingSettings";
 import { projectPublishedPage } from "cms-content/pages/core/queries/publishedPage";
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { ContentReader, RenderableBloc, RenderablePage } from "cms-content/application/interfaces/ContentReader";
 import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { RegisteredPageRoute } from "cms-content/pages/interfaces/routing";
@@ -17,7 +17,7 @@ export type ContentReaderOptions = {
  * The returned object deliberately has no repository back-reference and does
  * not expose editorial page operations.
  */
-export function createContentReader(repository: CmsRepository, options: ContentReaderOptions = {}): ContentReader {
+export function createContentReader(repository: ContentRepository, options: ContentReaderOptions = {}): ContentReader {
     const contributedPages = async (): Promise<readonly RenderablePage[]> =>
         (await repository.getContentContributions?.())?.pages ?? [];
     const sitePage = async (page: NonNullable<ReturnType<typeof projectPublishedPage>>): Promise<RenderablePage> => ({

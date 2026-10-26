@@ -2,12 +2,12 @@ import { expect, test } from "bun:test";
 import {
     ContentValidationError,
     DuplicatePagePathError,
-    InMemoryCmsRepository,
+    InMemoryContentRepository,
     type TSystem,
 } from "@bernouy/cms-content";
 
 test("default paths stay at the site root and retired URLs stay reserved", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     await repo.insertPage("/about", "About");
     const original = (await repo.getPage("/about"))!;
     await repo.updatePage({ id: original.id, visible: true });
@@ -38,7 +38,7 @@ test("default paths stay at the site root and retired URLs stay reserved", async
 });
 
 test("deletion alternative redirects every historical path to a stable page id", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     await repo.updateSystem({
         site: { language: "fr", additionalLanguages: ["en"], activeLanguages: ["en"] } as never,
     });
@@ -65,7 +65,7 @@ test("deletion alternative redirects every historical path to a stable page id",
 });
 
 test("changing the default language updates the primary path on the same page", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     await repo.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
     await repo.insertPage("/about", "About");
     const page = (await repo.getPage("/about"))!;
@@ -82,7 +82,7 @@ test("changing the default language updates the primary path on the same page", 
 });
 
 test("in-memory settings saves wait for a language route change before merging", async () => {
-    class PausedRepository extends InMemoryCmsRepository {
+    class PausedRepository extends InMemoryContentRepository {
         pause: Promise<void> | null = null;
         entered: (() => void) | null = null;
 
@@ -119,7 +119,7 @@ test("in-memory settings saves wait for a language route change before merging",
 });
 
 test("a new page path is local even when it begins with the language prefix", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     await repo.updateSystem({ site: { language: "fr" } as never });
     await repo.insertPage("/fr/about", "About");
     expect((await repo.getPage("/fr/about"))?.paths).toEqual({ fr: "/fr/about" });
@@ -127,7 +127,7 @@ test("a new page path is local even when it begins with the language prefix", as
 });
 
 test("updating a default-language path keeps a literal language-looking segment", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     await repo.updateSystem({ site: { language: "en" } as never });
     await repo.insertPage("/before", "Before");
     const page = (await repo.getPage("/before"))!;
@@ -140,7 +140,7 @@ test("updating a default-language path keeps a literal language-looking segment"
 });
 
 test("the default French language makes URL edits available on a fresh repository", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     await repo.insertPage("/before", "Before");
     const page = (await repo.getPage("/before"))!;
 
@@ -150,7 +150,7 @@ test("the default French language makes URL edits available on a fresh repositor
 });
 
 test("a literal language-looking path survives a default language change in memory", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     await repo.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
     await repo.insertPage("/en/about", "About");
     const page = (await repo.getPage("/en/about"))!;
@@ -161,7 +161,7 @@ test("a literal language-looking path survives a default language change in memo
 });
 
 test("the language matrix rejects duplicate language codes with different casing", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     await repo.updateSystem({ site: { language: "fr" } as never });
     await repo.insertPage("/about", "About");
     const page = (await repo.getPage("/about"))!;
@@ -172,7 +172,7 @@ test("the language matrix rejects duplicate language codes with different casing
 });
 
 test("root paths survive configuring the first site language", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     await repo.insertPage("/about", "About");
     await repo.insertPage("/fr/about", "Already prefixed");
     const before = await repo.getAllPages();
@@ -184,7 +184,7 @@ test("root paths survive configuring the first site language", async () => {
 });
 
 test("system settings reject a stale revision", async () => {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     expect(await repo.getSystemRevision()).toBe(0);
 
     await repo.updateSystem({ site: { favicon: "/first.ico" } as never }, 0);

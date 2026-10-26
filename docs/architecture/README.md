@@ -41,11 +41,11 @@ every package must reproduce.
 ### Content And Authoring
 
 `cms-content/src/` groups `pages`, `blocs`, `settings`, `theme`,
-`application` and `exports`. Its `CmsRepository` is the content
+`application` and `exports`. Its `ContentRepository` is the content
 persistence facade; it is distinct from the `@bernouy/cms-repository` package.
 
 The Provider that implements `ulvia.cms.content` projects its writable
-`CmsRepository` into the read-only `ContentReader` from
+`ContentRepository` into the read-only `ContentReader` from
 `@bernouy/cms-content/rendering`. The production Kernel reads that projection
 through the selected Content delivery capabilities; it never receives the
 writable repository. Kernel sees only published Pages/routes, projected

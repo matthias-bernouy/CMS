@@ -1,5 +1,5 @@
 /**
- * @bernouy/cms-content — the content aggregate behind `CmsRepository`.
+ * @bernouy/cms-content — the content aggregate behind `ContentRepository`.
  *
  * Entities live in one package because they form ONE consistency domain
  * Pages, blocs, and settings live in one package because they form one
@@ -141,7 +141,7 @@ export type {
 export { createContentReader } from "cms-content/application/core/createContentReader";
 export { resolvePublishedRoute } from "cms-content/pages/core/queries/resolvePublishedRoute";
 export type {
-    CmsRepository,
+    ContentRepository,
     ContentContributionSnapshot,
     BlocListItemResponse,
     BlocListOptions,
@@ -151,8 +151,8 @@ export type {
     PagesQuery,
     SiteBlocPublicationGuard,
     ValueCount,
-} from "cms-content/application/interfaces/CmsRepository";
-export { InMemoryCmsRepository } from "cms-content/application/default-implementation/memory/InMemoryCmsRepository";
+} from "cms-content/application/interfaces/ContentRepository";
+export { InMemoryContentRepository } from "cms-content/application/default-implementation/memory/InMemoryContentRepository";
 export { filterAndSortPages } from "cms-content/pages/core/queries/pagesQuery";
 export { defaultSystem, mergeSystemUpdate } from "cms-content/settings/core/system";
 export {
@@ -300,7 +300,7 @@ export {
 export type { ProjectedIndexingDiscoveryItem } from "cms-content/pages/core/indexing/projection";
 
 // ── Validation (rules live here; the decorator is the unbypassable barrier) ─
-export { ValidatingCmsRepository } from "cms-content/application/core/ValidatingCmsRepository";
+export { ValidatingContentRepository } from "cms-content/application/core/ValidatingContentRepository";
 export type {
     ContentBindingValidationOptions,
     SvgCapabilityValidator,

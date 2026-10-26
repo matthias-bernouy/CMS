@@ -1,4 +1,4 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { cmsPageDetails, type CmsPageDetails } from "cms-content/pages/core/contracts/pageDetails";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
 import { validatePagePath, validatePageTitle } from "cms-content/pages/core/validation/page";
@@ -10,7 +10,7 @@ export interface CmsPageCreateInput {
 }
 
 export async function createCmsPage(
-    repository: Pick<CmsRepository, "insertPage" | "getPage">,
+    repository: Pick<ContentRepository, "insertPage" | "getPage">,
     input: CmsPageCreateInput,
 ): Promise<CmsPageDetails> {
     const path = validatePagePath(input.path);

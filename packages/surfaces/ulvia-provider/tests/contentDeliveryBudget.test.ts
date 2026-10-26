@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { defaultSystem, type CmsRepository, type RenderablePage, type TPage } from "@bernouy/cms-content";
+import { defaultSystem, type ContentRepository, type RenderablePage, type TPage } from "@bernouy/cms-content";
 import {
     DefaultProviderCapabilityDispatcher,
     ProviderCapabilityDispatchError,
@@ -177,7 +177,7 @@ function deliveryFixture(
                 tags.map((tag) => [tag, options.hasBehavior ? `export const tag = '${tag}';` : null]),
             );
         },
-    } as unknown as CmsRepository;
+    } as unknown as ContentRepository;
     return {
         dependencies: {
             repo: repository,

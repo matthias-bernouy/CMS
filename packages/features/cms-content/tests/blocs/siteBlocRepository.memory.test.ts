@@ -2,18 +2,18 @@ import { describe, expect, test } from "bun:test";
 import {
     BlocOwnershipConflictError,
     BlocRevisionConflictError,
-    InMemoryCmsRepository,
+    InMemoryContentRepository,
     SiteBlocLifecycleConflictError,
     SiteBlocNotFoundError,
     SiteBlocPublicationRequiredError,
     SiteBlocPublishedSlotConflictError,
-    ValidatingCmsRepository,
+    ValidatingContentRepository,
 } from "@bernouy/cms-content";
 import { siteBlocArtifact, siteBlocDefinition, siteBlocSnapshot } from "./siteBlocFixture";
 
-describe("InMemoryCmsRepository site blocs", () => {
+describe("InMemoryContentRepository site blocs", () => {
     test("defaults code writes and enforces one owner per tag", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         const codeWrite = { ...siteBlocArtifact(), id: "basic-card", ownership: undefined };
 
         expect((await repository.createBloc(codeWrite)).ownership).toEqual({ kind: "code-managed" });
@@ -27,8 +27,8 @@ describe("InMemoryCmsRepository site blocs", () => {
     });
 
     test("keeps drafts out of runtime reads and publishes with revision CAS", async () => {
-        const inner = new InMemoryCmsRepository();
-        const repository = new ValidatingCmsRepository(inner);
+        const inner = new InMemoryContentRepository();
+        const repository = new ValidatingContentRepository(inner);
         await repository.createSiteBloc(siteBlocDefinition());
         const draftRevision = await repository.getSiteBlocsRevision();
 
@@ -55,7 +55,7 @@ describe("InMemoryCmsRepository site blocs", () => {
     });
 
     test("preserves published slot ids and public names while allowing metadata changes", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await repository.createSiteBloc(siteBlocDefinition());
         await repository.publishSiteBloc("site-feature-panel", siteBlocArtifact(), 1);
 
@@ -92,7 +92,7 @@ describe("InMemoryCmsRepository site blocs", () => {
         ).rejects.toBeInstanceOf(SiteBlocPublishedSlotConflictError);
         expect((await repository.getBlocRecord("site-feature-panel"))?.siteDefinition?.draftRevision).toBe(2);
 
-        const namedRepository = new InMemoryCmsRepository();
+        const namedRepository = new InMemoryContentRepository();
         const namedSnapshot = siteBlocSnapshot({
             slots: [
                 {
@@ -111,7 +111,7 @@ describe("InMemoryCmsRepository site blocs", () => {
     });
 
     test("archives without withdrawing the publication and restores authoring", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await repository.createSiteBloc(siteBlocDefinition());
         await repository.publishSiteBloc("site-feature-panel", siteBlocArtifact(), 1);
 

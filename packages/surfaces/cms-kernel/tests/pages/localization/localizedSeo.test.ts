@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 import { parseHTML } from "linkedom";
 import { mountPublicPages } from "../publicPage.fixture";
 
 test("each language renders its own SEO copy and inherits untranslated fields", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({
         site: {
             host: "https://example.test",
@@ -43,7 +43,7 @@ test("each language renders its own SEO copy and inherits untranslated fields", 
 });
 
 test("SEO copy stays attached to language codes when the default language changes", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({
         site: {
             host: "https://example.test",
@@ -75,7 +75,7 @@ test("SEO copy stays attached to language codes when the default language change
 });
 
 test("Kernel renders a canonical SEO key for a lowercase configured language", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({ site: { host: "https://example.test", language: "fr-fr" } as never });
     await repository.insertPage("/about", "About");
     const page = (await repository.getPage("/about"))!;

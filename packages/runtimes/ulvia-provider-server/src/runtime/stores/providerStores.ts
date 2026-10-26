@@ -17,8 +17,8 @@ import {
     MongoUsersRepository,
 } from "@bernouy/cms-auth/mongo";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
-import { ValidatingCmsRepository } from "@bernouy/cms-content";
-import { MongoCmsRepository, MongoPageRouteRegistry } from "@bernouy/cms-content/mongo";
+import { ValidatingContentRepository } from "@bernouy/cms-content";
+import { MongoContentRepository, MongoPageRouteRegistry } from "@bernouy/cms-content/mongo";
 import { MongoSiteUpgradeStorage } from "@bernouy/cms-repository/upgrades/mongo";
 import { withSiteWriteFence } from "@bernouy/cms-repository/upgrades";
 import { createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
@@ -82,7 +82,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     });
     const fieldCrypto = await createFieldCrypto(SCOPE_ID, secretCrypto, db);
 
-    const innerRepo = new MongoCmsRepository(db);
+    const innerRepo = new MongoContentRepository(db);
     await innerRepo.init();
     const collectionStorage = new MongoCollectionStorage(db);
     await collectionStorage.init();
@@ -103,7 +103,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
             return route !== null && route.state !== "gone";
         },
     });
-    const validatedRepo = new ValidatingCmsRepository(
+    const validatedRepo = new ValidatingContentRepository(
         withInstalledCollections(innerRepo, upgradeCollections, SCOPE_ID, pageRoutes),
         {
             resolveCapabilities: selectedCapabilityResolver(SCOPE_ID, selections, releases),

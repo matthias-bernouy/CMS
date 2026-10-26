@@ -14,7 +14,7 @@ const card: TBloc = {
     source: { "index.ts": "c291cmNl" },
 };
 
-describe("MongoCmsRepository content persistence", () => {
+describe("MongoContentRepository content persistence", () => {
     test("uses prefixed collections and initializes required unique indexes", async () => {
         const { db, repository } = createMongoContentRepository("tenant_");
 

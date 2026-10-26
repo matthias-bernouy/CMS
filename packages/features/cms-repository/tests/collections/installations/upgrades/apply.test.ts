@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { CollectionUpgradeService } from "../../../../src/collections/installations/upgrades/runtime/CollectionUpgradeService";
 import { MemorySiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
@@ -7,7 +7,7 @@ import { withSiteWriteFence } from "@bernouy/cms-repository/upgrades";
 import { collectionDocument } from "../../fixtures";
 
 async function fixture() {
-    const raw = new InMemoryCmsRepository();
+    const raw = new InMemoryContentRepository();
     const collections = new CollectionStore(new MemoryCollectionStorage());
     const storage = new MemorySiteUpgradeStorage();
     const old = await collections.importRelease(collectionDocument());

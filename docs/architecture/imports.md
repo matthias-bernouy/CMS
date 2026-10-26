@@ -8,15 +8,15 @@ boundaries and keep browser/server/adapters separated.
 Import another package only through its declared package name or subpath:
 
 ```ts
-import { ValidatingCmsRepository } from "@bernouy/cms-content";
-import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+import { ValidatingContentRepository } from "@bernouy/cms-content";
+import { MongoContentRepository } from "@bernouy/cms-content/mongo";
 ```
 
 Do not import another package through a deep filesystem path:
 
 ```ts
 // Wrong
-import { MongoCmsRepository } from "../../cms-content/src/application/default-implementation/mongo/MongoCmsRepository";
+import { MongoContentRepository } from "../../cms-content/src/application/default-implementation/mongo/MongoContentRepository";
 ```
 
 If a symbol must be consumed by another package, export it from the owning

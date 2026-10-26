@@ -1,7 +1,7 @@
 import {
     createContentReader,
     CMS_CACHE_KEYS,
-    type CmsRepository,
+    type ContentRepository,
     type ContentReader,
     type TPage,
     type TSystem,
@@ -37,7 +37,7 @@ type HarnessOptions = Readonly<{
     gateway?: GatewayInvoker;
     sitemapStore?: BlobStore;
     siteHost?: string;
-    repository?: ContentReader | CmsRepository;
+    repository?: ContentReader | ContentRepository;
     collections?: KernelCmsConfig["collections"];
     resolveActor?: (request: Request) => Promise<GatewayActor>;
     editorialPages?: readonly TPage[];

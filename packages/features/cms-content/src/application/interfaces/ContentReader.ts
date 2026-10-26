@@ -75,7 +75,7 @@ export type PublishedRouteResolution =
  * remain available for read-only machine contracts that must survive a path
  * change, such as a published-page snapshot.
  *
- * An adapter that wraps the existing `CmsRepository` is the short-term way
+ * An adapter that wraps the existing `ContentRepository` is the short-term way
  * to satisfy this contract; longer term, the Kernel can bypass the authoring DB
  * entirely and read from a projection (file export, S3 snapshot, etc.).
  */

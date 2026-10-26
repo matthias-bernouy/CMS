@@ -18,7 +18,7 @@ test("Delivery imports only public content capabilities, including type and dyna
                 "./mongo": "./src/mongo.ts",
             },
         }),
-        "packages/features/cms-content/src/index.ts": "export type CmsRepository = {};",
+        "packages/features/cms-content/src/index.ts": "export type ContentRepository = {};",
         "packages/features/cms-content/src/rendering.ts": "export type ContentReader = {};",
         "packages/features/cms-content/src/mongo.ts": "export const persistence = true;",
         "packages/surfaces/cms-kernel/package.json": manifest("@bernouy/cms-kernel", {
@@ -26,7 +26,7 @@ test("Delivery imports only public content capabilities, including type and dyna
         }),
         "packages/surfaces/cms-kernel/src/index.ts": [
             "import type { ContentReader } from '@bernouy/cms-content/rendering';",
-            "import type { CmsRepository } from '@bernouy/cms-content';",
+            "import type { ContentRepository } from '@bernouy/cms-content';",
             "void import('@bernouy/cms-content/mongo');",
         ].join("\n"),
     });

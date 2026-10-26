@@ -9,7 +9,7 @@ import type {
     Subject,
     UsersRepository,
 } from "@bernouy/cms-auth";
-import type { CmsRepository } from "@bernouy/cms-content";
+import type { ContentRepository } from "@bernouy/cms-content";
 import type { RegisteredPageRoute } from "@bernouy/cms-content/kernel";
 import type { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
@@ -33,7 +33,7 @@ import type { BlobStore } from "@bernouy/blob-store";
 import type { Logger } from "@bernouy/logging";
 
 export interface CmsContentDependencies {
-    readonly repo: CmsRepository;
+    readonly repo: ContentRepository;
     readonly collections: CollectionStore;
     readonly resolvePageRoute?: (path: string) => Promise<RegisteredPageRoute | null>;
     readonly sitemapStore?: BlobStore;

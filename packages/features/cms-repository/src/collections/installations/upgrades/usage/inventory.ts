@@ -1,6 +1,6 @@
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import type { UsageContributor, UsageInventory, UsageReference } from "./interfaces";
-import type { CmsRepository } from "@bernouy/cms-content";
+import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionStore } from "../../core/CollectionStore";
 import { collectionUsageInventory } from "./catalogue";
 import { documentBlocIds, documentReferences } from "./scan";
@@ -8,7 +8,7 @@ import { localBlocDocuments } from "./localDocuments";
 import { readUsageSnapshot, usageDigest, type UsageSnapshot } from "./snapshot";
 
 export async function siteUsageInventory(
-    repository: CmsRepository,
+    repository: ContentRepository,
     collections: CollectionStore,
     siteId: string,
     contributors: readonly UsageContributor[],

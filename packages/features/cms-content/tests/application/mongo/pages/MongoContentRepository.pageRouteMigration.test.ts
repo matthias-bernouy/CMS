@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Db } from "mongodb";
-import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+import { MongoContentRepository } from "@bernouy/cms-content/mongo";
 import { createMongoContentRepository } from "../contentMongoFixture";
 
 test("Mongo preserves a literal language-looking path when the default changes", async () => {
@@ -119,7 +119,7 @@ test("another server's init cannot clear a live page write before migration", as
     const { db, repository } = createMongoContentRepository();
     await repository.init();
     await repository.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
-    const second = new MongoCmsRepository(db as unknown as Db);
+    const second = new MongoContentRepository(db as unknown as Db);
     let enterInsert!: () => void;
     let releaseInsert!: () => void;
     const inserting = new Promise<void>((resolve) => {
@@ -206,7 +206,7 @@ test("startup waits for a live migration instead of replaying it", async () => {
     await repository.insertPage("/old", "Old");
     const page = (await repository.getPage("/old"))!;
     await repository.setPagePaths(page.id, { fr: "/old", en: "/new" });
-    const second = new MongoCmsRepository(db as unknown as Db);
+    const second = new MongoContentRepository(db as unknown as Db);
     let enterUpdate!: () => void;
     let releaseUpdate!: () => void;
     const updating = new Promise<void>((resolve) => {

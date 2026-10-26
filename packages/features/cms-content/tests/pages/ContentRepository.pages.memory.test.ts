@@ -3,14 +3,14 @@ import {
     countValues,
     createContentReader,
     DuplicatePagePathError,
-    InMemoryCmsRepository,
+    InMemoryContentRepository,
     isPublishedPage,
     PageRevisionConflictError,
 } from "@bernouy/cms-content";
 
 /** Seed three pages with distinct titles/paths/tags/visibility. */
 async function seeded() {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     const rows = [
         { path: "/about", title: "About us", tags: ["company"], visible: true },
         { path: "/blog", title: "Blog", tags: ["news"], visible: false },
@@ -26,7 +26,7 @@ async function seeded() {
 
 const titles = (rows: { title: string }[]) => rows.map((r) => r.title);
 
-describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
+describe("InMemoryContentRepository.getPagesMetadata — filter + sort", () => {
     test("public reader excludes drafts by path, id, and enumeration", async () => {
         const repository = await seeded();
         const reader = createContentReader(repository);
@@ -71,7 +71,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
     });
 
     test("public reader projects mutable rendering settings without email or initialization state", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         const reader = createContentReader(repository);
         const settings = await reader.getRenderingSettings();
         settings.site.host = "https://mutated.test";
@@ -177,7 +177,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
     });
 
     test("can create a page with initial editorial content", async () => {
-        const repo = new InMemoryCmsRepository();
+        const repo = new InMemoryContentRepository();
         await repo.insertPage("/copy", "Copy", "<main>Copied content</main>");
 
         expect((await repo.getPage("/copy"))?.content).toBe("<main>Copied content</main>");
@@ -191,7 +191,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
     });
 
     test("rejects duplicate paths without replacing either page", async () => {
-        const repo = new InMemoryCmsRepository();
+        const repo = new InMemoryContentRepository();
         await repo.updateSystem({ site: { language: "fr" } as never });
         await repo.insertPage("/about", "About");
         await expect(repo.insertPage("/about", "Replacement")).rejects.toBeInstanceOf(DuplicatePagePathError);
@@ -206,7 +206,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
     });
 
     test("increments page revisions and rejects stale content and route writes", async () => {
-        const repo = new InMemoryCmsRepository();
+        const repo = new InMemoryContentRepository();
         await repo.updateSystem({ site: { language: "en" } as never });
         await repo.insertPage("/before", "Before");
         const initial = (await repo.getPage("/before"))!;

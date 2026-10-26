@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 
 describe("bloc catalogue availability", () => {
     test("hides catalogue resources while retaining their rendering artifact", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await repository.createBloc({
             id: "collection-card",
             name: "Collection card",

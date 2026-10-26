@@ -1,4 +1,4 @@
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 import { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
 import { MemorySiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
 import { parseUlviaSchema, validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
@@ -113,11 +113,16 @@ async function reviewedUpgrade(
     repositoryId: string,
 ) {
     expect(await store.revision(siteId)).toBe(expectedRevision);
-    const service = new CollectionUpgradeService(new InMemoryCmsRepository(), store, new MemorySiteUpgradeStorage(), {
-        contributors: [],
-        requiredConsumers: [],
-        validateCapabilities: async () => [],
-    });
+    const service = new CollectionUpgradeService(
+        new InMemoryContentRepository(),
+        store,
+        new MemorySiteUpgradeStorage(),
+        {
+            contributors: [],
+            requiredConsumers: [],
+            validateCapabilities: async () => [],
+        },
+    );
     const targets = [{ digest, repositoryId }];
     const plan = await service.plan(siteId, targets);
     expect(plan.status).toBe("applicable");

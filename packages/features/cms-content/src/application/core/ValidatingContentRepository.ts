@@ -1,11 +1,11 @@
 import type {
-    CmsRepository,
+    ContentRepository,
     BlocListItemResponse,
     PageLink,
     PageMeta,
     PagesQuery,
     SiteBlocPublicationGuard,
-} from "cms-content/application/interfaces/CmsRepository";
+} from "cms-content/application/interfaces/ContentRepository";
 import type {
     BlocRecord,
     SiteBlocGroup,
@@ -38,11 +38,11 @@ import type { ContentBindingValidationOptions } from "cms-content/application/co
  * passed straight through.
  *
  * Compose it at the composition root around any real implementation:
- *   `new ValidatingCmsRepository(new MongoCmsRepository(db))`
+ *   `new ValidatingContentRepository(new MongoContentRepository(db))`
  */
-export class ValidatingCmsRepository implements CmsRepository {
+export class ValidatingContentRepository implements ContentRepository {
     constructor(
-        private readonly inner: CmsRepository,
+        private readonly inner: ContentRepository,
         private readonly bindingValidation: ContentBindingValidationOptions = {},
     ) {}
     async getContentContributions() {
@@ -141,7 +141,7 @@ export class ValidatingCmsRepository implements CmsRepository {
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T> {
         return this.inner.withSiteBlocPublicationLock(operation);
     }
-    getBlocsList(options?: Parameters<CmsRepository["getBlocsList"]>[0]): Promise<BlocListItemResponse[]> {
+    getBlocsList(options?: Parameters<ContentRepository["getBlocsList"]>[0]): Promise<BlocListItemResponse[]> {
         return this.inner.getBlocsList(options);
     }
     getBlocViewJS(htmlTag: string) {
@@ -165,7 +165,7 @@ export class ValidatingCmsRepository implements CmsRepository {
         return this.inner.scanPages(cursor, limit);
     }
     scanPagesByContentReference(
-        reference: Parameters<CmsRepository["scanPagesByContentReference"]>[0],
+        reference: Parameters<ContentRepository["scanPagesByContentReference"]>[0],
         cursor: string | undefined,
         limit: number,
     ) {

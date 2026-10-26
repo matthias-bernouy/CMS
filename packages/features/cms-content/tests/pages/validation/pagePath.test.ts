@@ -4,8 +4,8 @@ import {
     derivePagePath,
     DuplicatePagePathError,
     isValidPathFormat,
-    ValidatingCmsRepository,
-    type CmsRepository,
+    ValidatingContentRepository,
+    type ContentRepository,
 } from "@bernouy/cms-content";
 
 describe("page path contract", () => {
@@ -43,8 +43,8 @@ describe("page path contract", () => {
                 writes.push(paths);
                 return { id: "page", path: paths.fr, paths };
             },
-        } as CmsRepository;
-        const repository = new ValidatingCmsRepository(inner);
+        } as ContentRepository;
+        const repository = new ValidatingContentRepository(inner);
         await repository.setPagePaths("page", { FR: "/about", en: "/about" });
         expect(writes).toEqual([{ fr: "/about", en: "/about" }]);
         await expect(repository.setPagePaths("page", { fr: "/about", en: "invalid" })).rejects.toBeInstanceOf(

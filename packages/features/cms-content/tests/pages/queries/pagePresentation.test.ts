@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import {
     getCmsPage,
-    InMemoryCmsRepository,
+    InMemoryContentRepository,
     PageRevisionConflictError,
     updateCmsPageRoute,
     updateCmsPageSeo,
 } from "@bernouy/cms-content";
 
-async function pageFixture(): Promise<{ repository: InMemoryCmsRepository; id: string; revision: number }> {
-    const repository = new InMemoryCmsRepository();
+async function pageFixture(): Promise<{ repository: InMemoryContentRepository; id: string; revision: number }> {
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
     await repository.insertPage("/welcome", "Welcome");
     const [page] = await repository.getAllPages();

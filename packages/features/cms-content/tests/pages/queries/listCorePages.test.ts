@@ -1,9 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryCmsRepository, listCmsPages, PageRevisionConflictError, renameCmsPage } from "@bernouy/cms-content";
+import {
+    InMemoryContentRepository,
+    listCmsPages,
+    PageRevisionConflictError,
+    renameCmsPage,
+} from "@bernouy/cms-content";
 
 describe("ulvia.cms.content/pages.list implementation", () => {
     test("projects bounded, cursor-based Page metadata", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await repository.insertPage("/public", "Public");
         await repository.insertPage("/admin", "Admin");
 
@@ -17,7 +22,7 @@ describe("ulvia.cms.content/pages.list implementation", () => {
     });
 
     test("keeps pagination stable when several Pages share a title", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         for (const path of ["/one", "/two", "/three"]) {
             await repository.insertPage(path, "Same title");
         }
@@ -30,7 +35,7 @@ describe("ulvia.cms.content/pages.list implementation", () => {
     });
 
     test("rejects unbounded list inputs", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await expect(listCmsPages(repository, { limit: 101 })).rejects.toThrow(TypeError);
         await expect(listCmsPages(repository, { cursor: "", limit: 1 })).rejects.toThrow(TypeError);
         await expect(listCmsPages(repository, { query: "x".repeat(121) })).rejects.toThrow(TypeError);
@@ -38,7 +43,7 @@ describe("ulvia.cms.content/pages.list implementation", () => {
     });
 
     test("filters Page metadata without exposing editorial documents", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await repository.insertPage("/about", "About");
         await repository.insertPage("/journal", "Journal");
         const journal = await repository.getPage("/journal");
@@ -53,7 +58,7 @@ describe("ulvia.cms.content/pages.list implementation", () => {
 
 describe("ulvia.cms.content/pages.rename implementation", () => {
     test("renames with optimistic concurrency and makes an exact retry naturally idempotent", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await repository.insertPage("/public", "Before");
         const [page] = await repository.getAllPages();
 
@@ -73,7 +78,7 @@ describe("ulvia.cms.content/pages.rename implementation", () => {
     });
 
     test("rejects a stale revision that does not describe the completed command", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await repository.insertPage("/public", "Before");
         const [page] = await repository.getAllPages();
         await renameCmsPage(repository, { id: page!.id, title: "First", expectedRevision: page!.revision });

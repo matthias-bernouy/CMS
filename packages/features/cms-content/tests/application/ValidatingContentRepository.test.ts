@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { ValidatingCmsRepository, ContentValidationError, InMemoryCmsRepository } from "@bernouy/cms-content";
-import type { CmsRepository } from "@bernouy/cms-content";
+import { ValidatingContentRepository, ContentValidationError, InMemoryContentRepository } from "@bernouy/cms-content";
+import type { ContentRepository } from "@bernouy/cms-content";
 import type { BindingQueryCapability } from "@bernouy/cms-content/page-document";
 
 const queryCapability: BindingQueryCapability = {
@@ -79,11 +79,11 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
                           ? '<slot name="title"></slot><slot name="actions"></slot><slot name="illustration"></slot><slot name="label"></slot><slot name="criteria"></slot>'
                           : "<slot></slot>",
             })),
-    } as unknown as CmsRepository;
-    return { repo: new ValidatingCmsRepository(inner), calls };
+    } as unknown as ContentRepository;
+    return { repo: new ValidatingContentRepository(inner), calls };
 }
 
-describe("ValidatingCmsRepository — pages", () => {
+describe("ValidatingContentRepository — pages", () => {
     test("insertPage normalizes title and rejects a bad path", async () => {
         const { repo, calls } = makeRepo();
         await repo.insertPage("/ok", "  Hello  ");
@@ -101,7 +101,7 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 
     test("validates direct and transitive Bloc references with one Page grammar", async () => {
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository());
         const bloc = (id: string, uses: readonly string[] = []) => ({
             id,
             name: id,
@@ -160,7 +160,7 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 
     test("publish revalidates the stored document against the active catalogue", async () => {
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository());
         const bloc = {
             id: "fixture-card",
             name: "Card",
@@ -276,7 +276,7 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 
     test("validates Page query bindings against resolved contract schemas", async () => {
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository(), {
             requireQueryCapabilityResolution: true,
             resolveQueryCapabilities: async () => [queryCapability],
         });
@@ -310,7 +310,7 @@ describe("ValidatingCmsRepository — pages", () => {
 
     test("resolves every capability-backed cms-svg before storing a Page", async () => {
         const targets: string[] = [];
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository(), {
             requireSvgCapabilityResolution: true,
             validateSvgCapabilities: async (requested) => {
                 targets.push(...requested.map(({ contractId, bindingPath }) => `${contractId}${bindingPath}`));
@@ -339,7 +339,7 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 
     test("rejects a capability-backed cms-svg when strict resolution is unavailable", async () => {
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository(), {
             requireSvgCapabilityResolution: true,
         });
         await repo.createBloc({
@@ -365,17 +365,17 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 });
 
-describe("ValidatingCmsRepository — pass-through", () => {
+describe("ValidatingContentRepository — pass-through", () => {
     test("reads delegate unchanged", async () => {
         const { repo } = makeRepo({ blocs: ["x"] });
         expect((await repo.getBlocsList()).map((b) => b.id)).toEqual(["x"]);
     });
 });
 
-describe("ValidatingCmsRepository — blocs", () => {
+describe("ValidatingContentRepository — blocs", () => {
     test("validates local query bindings against resolved contract schemas", async () => {
         const targets: string[] = [];
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository(), {
             requireQueryCapabilityResolution: true,
             resolveQueryCapabilities: async (requested) => {
                 targets.push(...requested.map(({ contractId, capabilityId }) => `${contractId}:${capabilityId}`));
@@ -402,7 +402,7 @@ describe("ValidatingCmsRepository — blocs", () => {
     });
 
     test("collects queries from default Bloc content for strict resolution", async () => {
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository(), {
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository(), {
             requireQueryCapabilityResolution: true,
             resolveQueryCapabilities: async () => [],
         });
@@ -424,7 +424,7 @@ describe("ValidatingCmsRepository — blocs", () => {
     });
 
     test("rejects cycles across persisted Bloc dependencies", async () => {
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository());
         const composition = (id: string, markupHTML: string) => ({
             id,
             name: id,
@@ -462,7 +462,7 @@ describe("ValidatingCmsRepository — blocs", () => {
     });
 
     test("validates published Bloc documents against the same catalogue contracts as Pages", async () => {
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository());
         await repo.createBloc({
             id: "fixture-child",
             name: "Child",

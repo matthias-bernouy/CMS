@@ -3,7 +3,7 @@ import {
     findPagesReferencingBloc,
     findPagesReferencingFile,
     findPagesReferencingText,
-    InMemoryCmsRepository,
+    InMemoryContentRepository,
     pageContentReferenceKeys,
 } from "@bernouy/cms-content";
 
@@ -17,7 +17,7 @@ describe("Page content reference projection", () => {
     });
 
     test("updates reverse lookups without enumerating Pages", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await repository.insertPage(
             "/card",
             "Card",

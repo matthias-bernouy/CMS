@@ -1,4 +1,4 @@
-import type { BlocListItemResponse, BlocListOptions } from "cms-content/application/interfaces/CmsRepository";
+import type { BlocListItemResponse, BlocListOptions } from "cms-content/application/interfaces/ContentRepository";
 import type { BlocRecord } from "cms-content/blocs/interfaces/blocs";
 
 export function projectBlocList(records: BlocRecord[], options: BlocListOptions = {}): BlocListItemResponse[] {

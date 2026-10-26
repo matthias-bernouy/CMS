@@ -2,7 +2,7 @@ import KernelCms from "cms-kernel/KernelCms";
 import {
     createContentReader,
     CMS_CACHE_KEYS,
-    type CmsRepository,
+    type ContentRepository,
     type TPage,
     type TSystem,
 } from "@bernouy/cms-content";
@@ -169,7 +169,7 @@ function pageRepository(
     siteVisible = true,
     pageId = "products",
     pagePath = "/products",
-): CmsRepository {
+): ContentRepository {
     const page: TPage = {
         id: pageId,
         path: pagePath,
@@ -189,7 +189,7 @@ function pageRepository(
         getBlocsList: async () => [],
         getBlocViewJS: async () => null,
         getSystem: async () => ({ ...system, site: { ...system.site, visible: siteVisible, ...systemPages } }),
-    } as unknown as CmsRepository;
+    } as unknown as ContentRepository;
 }
 
 function joinPath(base: string, path: string): string {

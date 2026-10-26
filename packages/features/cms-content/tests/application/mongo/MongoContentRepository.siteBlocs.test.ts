@@ -8,7 +8,7 @@ import {
 import { siteBlocArtifact, siteBlocDefinition, siteBlocSnapshot } from "../../blocs/siteBlocFixture";
 import { createMongoContentRepository } from "./contentMongoFixture";
 
-describe("MongoCmsRepository site blocs", () => {
+describe("MongoContentRepository site blocs", () => {
     test("enforces ownership during replacements", async () => {
         const { repository } = createMongoContentRepository();
         await repository.createBloc({ ...siteBlocArtifact(), id: "basic-card", ownership: undefined });

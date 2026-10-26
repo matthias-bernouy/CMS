@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import {
     createContentReader,
     defaultSystem,
-    type CmsRepository,
+    type ContentRepository,
     type RenderablePage,
     type TPage,
 } from "@bernouy/cms-content";
@@ -51,7 +51,7 @@ test("unrelated contributed Pages do not increase the serialized Page render sna
 });
 
 function renderingFixture(unrelatedPageCount = 0): {
-    repository: CmsRepository;
+    repository: ContentRepository;
     calls(): Record<string, number>;
 } {
     const counts = new Map<string, number>();
@@ -97,7 +97,7 @@ function renderingFixture(unrelatedPageCount = 0): {
             count("getBlocsList");
             return [];
         },
-    } as unknown as CmsRepository;
+    } as unknown as ContentRepository;
     return { repository, calls: () => Object.fromEntries([...counts].sort()) };
 }
 

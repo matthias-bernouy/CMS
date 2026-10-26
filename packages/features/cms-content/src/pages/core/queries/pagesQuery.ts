@@ -1,4 +1,4 @@
-import type { PageMeta, PagesQuery } from "cms-content/application/interfaces/CmsRepository";
+import type { PageMeta, PagesQuery } from "cms-content/application/interfaces/ContentRepository";
 
 /**
  * Apply a `PagesQuery` (filter + sort) to page metadata in memory. Shared by

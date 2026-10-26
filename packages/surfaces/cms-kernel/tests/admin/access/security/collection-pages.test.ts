@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemoryCmsRepository, InMemoryPageRouteRegistry, synchronizeSitePageRoutes } from "@bernouy/cms-content";
+import { InMemoryContentRepository, InMemoryPageRouteRegistry, synchronizeSitePageRoutes } from "@bernouy/cms-content";
 import { synchronizeCollectionPageRoutes, withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { mountPublicPages } from "../../../pages/publicPage.fixture";
 
@@ -38,7 +38,7 @@ test("collection Admin Pages render through site routes while preserving path ov
             pages: [page, details],
         },
     };
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     const collections = {
         siteId: "site-a",
         routes,
@@ -87,7 +87,7 @@ test("collection Admin Pages render through site routes while preserving path ov
 
 test("site-owned Admin Pages use the same renderer and shared route registry", async () => {
     const routes = new InMemoryPageRouteRegistry();
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.insertPage("/admin/custom", "Custom administration", "<main><h1>Custom</h1></main>", {});
     const page = (await repository.getAllPages())[0]!;
     await repository.updatePage({ id: page.id, visible: true }, page.revision);

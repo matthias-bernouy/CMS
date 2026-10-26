@@ -1,15 +1,15 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 
 export async function findPagesReferencingBloc(
-    reader: Pick<CmsRepository, "scanPagesByContentReference">,
+    reader: Pick<ContentRepository, "scanPagesByContentReference">,
     blocTag: string,
 ): Promise<TPage[]> {
     return readReferencePages(reader, { kind: "bloc", tag: blocTag.toLowerCase() });
 }
 
 export async function findPagesReferencingText(
-    reader: Pick<CmsRepository, "scanPagesByContentReference">,
+    reader: Pick<ContentRepository, "scanPagesByContentReference">,
     ref: string,
 ): Promise<TPage[]> {
     const match = /^(?:\{\{\s*)?cms\.i18n\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})(?:\s*\}\})?$/.exec(ref);
@@ -20,15 +20,15 @@ export async function findPagesReferencingText(
 }
 
 export async function findPagesReferencingFile(
-    reader: Pick<CmsRepository, "scanPagesByContentReference">,
+    reader: Pick<ContentRepository, "scanPagesByContentReference">,
     fileId: string,
 ): Promise<TPage[]> {
     return readReferencePages(reader, { kind: "file", fileId });
 }
 
 async function readReferencePages(
-    reader: Pick<CmsRepository, "scanPagesByContentReference">,
-    reference: Parameters<CmsRepository["scanPagesByContentReference"]>[0],
+    reader: Pick<ContentRepository, "scanPagesByContentReference">,
+    reference: Parameters<ContentRepository["scanPagesByContentReference"]>[0],
 ): Promise<TPage[]> {
     const pages: TPage[] = [];
     let cursor: string | undefined;

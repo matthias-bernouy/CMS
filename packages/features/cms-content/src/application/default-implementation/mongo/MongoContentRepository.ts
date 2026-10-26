@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
-import type { CmsRepository, PageMeta, PagesQuery } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository, PageMeta, PagesQuery } from "cms-content/application/interfaces/ContentRepository";
 import type { SiteBlocGroup } from "cms-content/blocs/interfaces/blocs";
 import {
     createSiteBlocGroup,
@@ -13,7 +13,7 @@ import { escapeRegex } from "cms-content/pages/core/queries/escapeRegex";
 import { mergeSystemUpdate } from "cms-content/settings/core/system";
 import { languageRoutesChanged } from "cms-content/pages/core/lifecycle/pagePaths";
 import { countValues, normalizeTags } from "cms-content/pages/core/queries/counts";
-import { MongoContentRepository } from "cms-content/application/default-implementation/mongo/repositories/MongoContentRepository";
+import { MongoPageRepository } from "cms-content/application/default-implementation/mongo/repositories/MongoPageRepository";
 import {
     claimRouteMigration,
     releaseRouteMigration,
@@ -24,7 +24,7 @@ import {
 } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemFence";
 import { SYSTEM_ID } from "cms-content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
 
-export class MongoCmsRepository extends MongoContentRepository implements CmsRepository {
+export class MongoContentRepository extends MongoPageRepository implements ContentRepository {
     async updateSiteBlocGroup(id: string, input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup> {
         const metadata = validateSiteBlocGroupInput(input);
         const result = await this.siteBlocGroups.replaceOne({ _id: id }, metadata, {

@@ -5,7 +5,7 @@ bindings, validation, and read models.
 
 ## Boundaries
 
-- Root export exposes authoring entity types, `CmsRepository`, in-memory
+- Root export exposes authoring entity types, `ContentRepository`, in-memory
   repository, validation, and authoring operations.
 - `@bernouy/cms-content/rendering` exposes `ContentReader`, its composition
   factory and public rendering helpers. It has published-only page operations,
@@ -23,7 +23,7 @@ bindings, validation, and read models.
 - `@bernouy/cms-content/seo` owns metadata, structured data, dynamic indexing
   and persisted sitemap snapshots; `./seo/http` exposes their HTTP handlers.
 - `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.
-- `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
+- `@bernouy/cms-content/mongo` exposes `MongoContentRepository` for composition
   roots.
 - `@bernouy/cms-content/page-document` exposes the provider-neutral Page and
   Bloc document grammar shared by site content and external contributions.
@@ -61,7 +61,7 @@ bindings, validation, and read models.
 ## Rules
 
 - Domain validation belongs with the relevant domain and is enforced by
-  `application/core/ValidatingCmsRepository` for authoring writes.
+  `application/core/ValidatingContentRepository` for authoring writes.
 - Public pages must be observed with `visible === true`. Project returned
   fields explicitly and do not return shared mutable authoring objects.
 - Keep route migration checks and rereads; do not claim snapshot consistency.

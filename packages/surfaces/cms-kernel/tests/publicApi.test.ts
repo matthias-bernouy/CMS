@@ -12,7 +12,7 @@ describe("cms-kernel public API", () => {
                 "-e",
                 `
                     const { KernelCms } = await import("@bernouy/cms-kernel");
-                    const { createContentReader, InMemoryCmsRepository } = await import("@bernouy/cms-content");
+                    const { createContentReader, InMemoryContentRepository } = await import("@bernouy/cms-content");
                     const { TtlCache } = await import("@bernouy/http-runner");
                     const { NOOP_LOGGER } = await import("@bernouy/logging");
                     const { CaptureRunner } = await import(${JSON.stringify(captureRunnerUrl)});
@@ -20,7 +20,7 @@ describe("cms-kernel public API", () => {
                     const kernel = new KernelCms({
                         runner,
                         cache: new TtlCache(),
-                        content: createContentReader(new InMemoryCmsRepository()),
+                        content: createContentReader(new InMemoryContentRepository()),
                         resolveActor: async () => ({ kind: "anonymous" }),
                         robotsHandler: async () => new Response("Not Found", { status: 404 }),
                         sitemapHandler: async () => new Response("Not Found", { status: 404 }),

@@ -1,14 +1,14 @@
 import { expect, test } from "bun:test";
 import {
     createContentReader,
-    InMemoryCmsRepository,
+    InMemoryContentRepository,
     InMemoryPageRouteRegistry,
     validatePageLinks,
     withSitePageRoutes,
 } from "@bernouy/cms-content";
 
 test("a renamed Page keeps authored links valid through its historical route", async () => {
-    const inner = new InMemoryCmsRepository();
+    const inner = new InMemoryContentRepository();
     const routes = new InMemoryPageRouteRegistry();
     const repository = withSitePageRoutes(inner, routes, "site");
     await repository.insertPage("/target", "Target", "<main>Target</main>");
@@ -32,7 +32,7 @@ test("a renamed Page keeps authored links valid through its historical route", a
 });
 
 test("a newly inserted Page may link to its own route", async () => {
-    const repository = withSitePageRoutes(new InMemoryCmsRepository(), new InMemoryPageRouteRegistry(), "site");
+    const repository = withSitePageRoutes(new InMemoryContentRepository(), new InMemoryPageRouteRegistry(), "site");
 
     await expect(
         repository.insertPage("/self", "Self", '<main><a href="/self#details">Details</a></main>'),
@@ -40,7 +40,7 @@ test("a newly inserted Page may link to its own route", async () => {
 });
 
 test("a Page may rename its route and self-link in the same write", async () => {
-    const repository = withSitePageRoutes(new InMemoryCmsRepository(), new InMemoryPageRouteRegistry(), "site");
+    const repository = withSitePageRoutes(new InMemoryContentRepository(), new InMemoryPageRouteRegistry(), "site");
     await repository.insertPage("/before", "Before", '<a href="/before">Before</a>');
     const page = (await repository.getPage("/before"))!;
 
@@ -50,7 +50,7 @@ test("a Page may rename its route and self-link in the same write", async () => 
 });
 
 test("resolves many Page links with one route batch and one Page batch", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     const paths = Array.from({ length: 32 }, (_, index) => `/page-${index}`);
     for (const path of paths) {
         await repository.insertPage(path, path);

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import {
     prepareCollectionUpgrade,
@@ -15,7 +15,7 @@ const analysis: CollectionUpgradeAnalysis = {
     validateCapabilities: async () => [],
 };
 async function fixture() {
-    const repo = new InMemoryCmsRepository();
+    const repo = new InMemoryContentRepository();
     const collections = new CollectionStore(new MemoryCollectionStorage());
     const source = collectionDocument({ "retired.reason": "Use the new panel" }) as any;
     source.blocs[0].deprecation = {

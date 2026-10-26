@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
-    InMemoryCmsRepository,
-    ValidatingCmsRepository,
+    InMemoryContentRepository,
+    ValidatingContentRepository,
     createCmsSiteBloc,
     listCmsSiteBlocs,
     publishCmsSiteBloc,
@@ -11,7 +11,7 @@ import { serializeSiteBlocMarkup } from "cms-content/blocs/core/publication/sour
 
 describe("site Bloc contracts", () => {
     test("creates and publishes an opaque site composition", async () => {
-        const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repository = new ValidatingContentRepository(new InMemoryContentRepository());
         const created = await createCmsSiteBloc(repository, {
             tag: "site-introduction",
             name: "Introduction",
@@ -50,7 +50,7 @@ describe("site Bloc contracts", () => {
             ),
         ).toBe('<section cms-bloc="ulvia-official-hero" tone="soft"><p>Welcome</p></section>\n');
 
-        const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repository = new ValidatingContentRepository(new InMemoryContentRepository());
         await expect(
             createCmsSiteBloc(repository, {
                 tag: "site-hero",

@@ -1,5 +1,5 @@
 import { randomUUIDv7 } from "bun";
-import type { PageLink } from "cms-content/application/interfaces/CmsRepository";
+import type { PageLink } from "cms-content/application/interfaces/ContentRepository";
 import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { pagePathsForSystem, planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
@@ -45,7 +45,7 @@ import { canUsePageRoute, requirePageScan, samePagePaths } from "cms-content/pag
 
 const PAGE_REFERENCE_BACKFILL_BATCH_SIZE = 250;
 
-export class MongoContentRepository extends MongoBlocRepository {
+export class MongoPageRepository extends MongoBlocRepository {
     override async init(): Promise<void> {
         await super.init();
         await this.pages.updateMany({ revision: { $exists: false } }, { $set: { revision: 1 } });

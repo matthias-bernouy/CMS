@@ -1,5 +1,5 @@
 /** Content capabilities required by the unified site Kernel. */
-export type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+export type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 export { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
 export type { TPage } from "cms-content/pages/interfaces/pages";
 export type {

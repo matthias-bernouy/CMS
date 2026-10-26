@@ -1,4 +1,4 @@
-import { InMemoryCmsRepository, type CmsRepository, type TPage } from "@bernouy/cms-content";
+import { InMemoryContentRepository, type ContentRepository, type TPage } from "@bernouy/cms-content";
 
 type CorpusMetrics = {
     scans: number;
@@ -8,7 +8,7 @@ type CorpusMetrics = {
 };
 
 export function syntheticCorpus(pageCount: number, affectedPercent: 1 | 10 | 100) {
-    const base = new InMemoryCmsRepository();
+    const base = new InMemoryContentRepository();
     let metrics: CorpusMetrics = emptyMetrics();
     const repository = new Proxy(base, {
         get(target, property) {
@@ -29,7 +29,7 @@ export function syntheticCorpus(pageCount: number, affectedPercent: 1 | 10 | 100
             const value = Reflect.get(target, property);
             return typeof value === "function" ? value.bind(target) : value;
         },
-    }) as CmsRepository;
+    }) as ContentRepository;
     return {
         repository,
         reset() {

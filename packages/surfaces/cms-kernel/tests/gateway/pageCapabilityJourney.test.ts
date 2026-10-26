@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import {
     createContentReader,
-    type CmsRepository,
-    InMemoryCmsRepository,
-    ValidatingCmsRepository,
+    type ContentRepository,
+    InMemoryContentRepository,
+    ValidatingContentRepository,
 } from "@bernouy/cms-content";
 import type { GatewayInvocation, GatewayInvoker } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
@@ -14,7 +14,7 @@ import { CaptureRunner } from "./support/CaptureRunner";
 import { deliveryHandlers } from "./support/deliveryHandlers";
 
 test("a published Page is analyzed statically and invokes its public capability without a Page grant", async () => {
-    const repository: CmsRepository = new ValidatingCmsRepository(new InMemoryCmsRepository());
+    const repository: ContentRepository = new ValidatingContentRepository(new InMemoryContentRepository());
     await repository.createBloc({
         id: "catalog-products",
         name: "Product catalogue",

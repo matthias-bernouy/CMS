@@ -2,5 +2,5 @@
  * Mongo adapter of @bernouy/cms-content — composition roots only.
  */
 
-export { MongoCmsRepository } from "cms-content/application/default-implementation/mongo/MongoCmsRepository";
+export { MongoContentRepository } from "cms-content/application/default-implementation/mongo/MongoContentRepository";
 export { MongoPageRouteRegistry } from "cms-content/pages/default-implementation/mongo/MongoPageRouteRegistry";

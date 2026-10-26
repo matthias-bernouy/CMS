@@ -1,4 +1,4 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { PageRouteRegistry } from "cms-content/pages/interfaces/routing";
 import { assertPageContentLinks, createPageRouteReader, pageContentPaths } from "cms-content/pages/core/routing/links";
@@ -18,11 +18,11 @@ const PAGE_ROUTE_MUTATIONS = new Set([
 
 /** Reconciles editable Page routes after every canonical Page mutation. */
 export function withSitePageRoutes(
-    repository: CmsRepository,
+    repository: ContentRepository,
     routes: PageRouteRegistry,
     siteId: string,
     coordinator = new PageRouteMutationCoordinator(),
-): CmsRepository {
+): ContentRepository {
     return new Proxy(repository, {
         get(target, property, receiver) {
             const value = Reflect.get(target, property, receiver);
@@ -46,7 +46,7 @@ export function withSitePageRoutes(
 }
 
 async function validateMutationLinks(
-    repository: CmsRepository,
+    repository: ContentRepository,
     routes: PageRouteRegistry,
     siteId: string,
     method: string,
@@ -82,7 +82,7 @@ async function validateMutationLinks(
         const current = await repository.getPageById(String(args[0]));
         if (current) {
             const system =
-                (args[2] as Awaited<ReturnType<CmsRepository["getSystem"]>> | undefined) ??
+                (args[2] as Awaited<ReturnType<ContentRepository["getSystem"]>> | undefined) ??
                 (await repository.getSystem());
             const primaryPath = planPagePaths(args[1] as Record<string, string>, system).primaryPath;
             await assertRouteAvailable(routes, siteId, primaryPath, current.id);
@@ -151,7 +151,7 @@ export async function synchronizeSitePageRoutes(
 }
 
 export async function validatePageLinks(
-    repository: CmsRepository,
+    repository: ContentRepository,
     routes: PageRouteRegistry,
     siteId: string,
 ): Promise<void> {

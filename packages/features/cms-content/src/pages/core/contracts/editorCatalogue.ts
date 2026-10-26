@@ -1,4 +1,4 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 
 export type CmsEditorBloc = Readonly<{
     id: string;
@@ -15,7 +15,7 @@ export type CmsEditorBloc = Readonly<{
 export type CmsEditorCatalogue = Readonly<{ items: readonly CmsEditorBloc[] }>;
 
 export async function getCmsEditorCatalogue(
-    repository: Pick<CmsRepository, "getBlocsList">,
+    repository: Pick<ContentRepository, "getBlocsList">,
 ): Promise<CmsEditorCatalogue> {
     const blocs = await repository.getBlocsList();
     const items = blocs.map(

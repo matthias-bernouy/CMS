@@ -1,5 +1,5 @@
 import type { Db } from "mongodb";
-import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+import { MongoContentRepository } from "@bernouy/cms-content/mongo";
 import { FakeMongoClient, type FakeTransactionSupport } from "./fakeMongoSession";
 
 type StoredDocument = { _id: string } & Record<string, unknown>;
@@ -218,7 +218,7 @@ export class FakeContentDb {
 
 export function createMongoContentRepository(prefix = "") {
     const db = new FakeContentDb();
-    const repository = new MongoCmsRepository(db as unknown as Db, { collectionPrefix: prefix });
+    const repository = new MongoContentRepository(db as unknown as Db, { collectionPrefix: prefix });
     return { db, repository };
 }
 

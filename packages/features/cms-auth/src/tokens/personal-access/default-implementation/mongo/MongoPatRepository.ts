@@ -12,7 +12,7 @@ import { mintPatToken, hashPatToken } from "cms-auth/tokens/personal-access/core
  * MongoDB `PatRepository`. One collection (`<prefix>pats`), the record id as
  * `_id`, a unique index on the token `hash` so `verify` is a single lookup.
  * Only the SHA-256 of each token is stored (never the plaintext).
- * `collectionPrefix` isolates a tenant (same convention as `MongoCmsRepository`).
+ * `collectionPrefix` isolates a tenant (same convention as `MongoContentRepository`).
  * Call `init()` once at boot to create the unique hash index.
  */
 export type MongoPatConfig = { collectionPrefix?: string };

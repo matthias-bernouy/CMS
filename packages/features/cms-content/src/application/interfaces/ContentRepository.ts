@@ -100,7 +100,7 @@ export type PageScan = {
     readonly nextCursor?: string;
 };
 
-export interface CmsRepository {
+export interface ContentRepository {
     /** Runtime projections supplied by package/extension adapters. */
     getContentContributions?(): Promise<ContentContributionSnapshot>;
     getPageRequirements?(page: TPage): Promise<readonly PageCapabilityRequirement[]>;

@@ -1,4 +1,4 @@
-import type { BlocListOptions } from "cms-content/application/interfaces/CmsRepository";
+import type { BlocListOptions } from "cms-content/application/interfaces/ContentRepository";
 import { projectBlocList } from "cms-content/application/core/projectBlocList";
 import type {
     BlocRecord,
@@ -20,7 +20,7 @@ import {
     SiteBlocPublicationRequiredError,
 } from "cms-content/application/core/validation/errors";
 import { SiteBlocPublicationQueue } from "cms-content/blocs/core/publication/SiteBlocPublicationQueue";
-import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/CmsRepository";
+import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/ContentRepository";
 
 export class InMemoryBlocRepository {
     protected readonly blocs = new Map<string, BlocRecord>();

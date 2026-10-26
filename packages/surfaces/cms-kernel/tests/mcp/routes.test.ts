@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { KernelCms } from "@bernouy/cms-kernel";
 import { BunRunner, TtlCache } from "@bernouy/http-runner";
-import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import { cmsMcpFixture } from "./fixture";
 
@@ -11,7 +11,7 @@ test("Kernel registers MCP and OAuth routes on the actual HTTP runner without re
     new KernelCms({
         runner,
         cache: new TtlCache(),
-        content: createContentReader(new InMemoryCmsRepository()),
+        content: createContentReader(new InMemoryContentRepository()),
         mcpHandler: f.handle,
         resolveActor: async () => ({ kind: "anonymous" }),
         robotsHandler: async () => new Response(null, { status: 404 }),

@@ -1,4 +1,4 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { ContentReader, PageRenderInputs, RenderableBloc } from "cms-content/application/interfaces/ContentReader";
 import type { ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
 import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
@@ -11,7 +11,7 @@ type RenderInputLoaders = {
 
 export function installPageRenderInputReaders(
     reader: ContentReader,
-    repository: CmsRepository,
+    repository: ContentRepository,
     loaders: RenderInputLoaders,
 ): void {
     const getRenderingRevision = () => readRenderingRevision(repository);
@@ -50,7 +50,7 @@ export function installPageRenderInputReaders(
     };
 }
 
-async function readRenderingRevision(repository: CmsRepository): Promise<string> {
+async function readRenderingRevision(repository: ContentRepository): Promise<string> {
     const [contentRevision, systemRevision, siteBlocsRevision] = await Promise.all([
         repository.getContentContributions?.().then((contributions) => contributions.revision) ?? 0,
         repository.getSystemRevision?.() ?? 0,

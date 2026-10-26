@@ -1,5 +1,5 @@
 import { randomUUIDv7 } from "bun";
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { ContentValidationError, SiteBlocNotFoundError } from "cms-content/application/core/validation/errors";
 import { generateSiteBlocSourceBundle } from "cms-content/blocs/core/publication/source/generateSiteBlocSourceBundle";
 import { serializeSiteBlocMarkup } from "cms-content/blocs/core/publication/source/siteBlocHtml";
@@ -30,7 +30,7 @@ export type CmsSiteBloc = Readonly<{
     updatedAt: string;
 }>;
 
-export async function listCmsSiteBlocs(repository: Pick<CmsRepository, "getBlocRecords">) {
+export async function listCmsSiteBlocs(repository: Pick<ContentRepository, "getBlocRecords">) {
     const records = await repository.getBlocRecords();
     return {
         items: records
@@ -39,7 +39,7 @@ export async function listCmsSiteBlocs(repository: Pick<CmsRepository, "getBlocR
     };
 }
 
-export async function getCmsSiteBloc(repository: Pick<CmsRepository, "getBlocRecord">, input: { tag: string }) {
+export async function getCmsSiteBloc(repository: Pick<ContentRepository, "getBlocRecord">, input: { tag: string }) {
     const record = await repository.getBlocRecord(requireTag(input.tag));
     if (!record?.siteDefinition) {
         throw new SiteBlocNotFoundError(input.tag);
@@ -48,7 +48,7 @@ export async function getCmsSiteBloc(repository: Pick<CmsRepository, "getBlocRec
 }
 
 export async function createCmsSiteBloc(
-    repository: Pick<CmsRepository, "createSiteBloc">,
+    repository: Pick<ContentRepository, "createSiteBloc">,
     input: SiteBlocCreateInput,
 ): Promise<CmsSiteBloc> {
     const now = new Date();
@@ -73,7 +73,7 @@ export async function createCmsSiteBloc(
 }
 
 export async function publishCmsSiteBloc(
-    repository: Pick<CmsRepository, "getBlocRecord" | "publishSiteBloc" | "withSiteBlocPublicationLock">,
+    repository: Pick<ContentRepository, "getBlocRecord" | "publishSiteBloc" | "withSiteBlocPublicationLock">,
     input: SiteBlocIdentityInput,
 ): Promise<CmsSiteBloc> {
     const tag = requireTag(input.tag);
@@ -92,7 +92,7 @@ export async function publishCmsSiteBloc(
 }
 
 export async function setCmsSiteBlocArchived(
-    repository: Pick<CmsRepository, "archiveSiteBloc" | "restoreSiteBloc">,
+    repository: Pick<ContentRepository, "archiveSiteBloc" | "restoreSiteBloc">,
     input: SiteBlocIdentityInput,
     archived: boolean,
 ): Promise<CmsSiteBloc> {
@@ -163,7 +163,7 @@ function projectSiteBloc(definition: SiteBlocDefinition): CmsSiteBloc {
     };
 }
 
-async function requiredRecord(repository: Pick<CmsRepository, "getBlocRecord">, tag: string): Promise<BlocRecord> {
+async function requiredRecord(repository: Pick<ContentRepository, "getBlocRecord">, tag: string): Promise<BlocRecord> {
     const record = await repository.getBlocRecord(tag);
     if (!record?.siteDefinition) {
         throw new SiteBlocNotFoundError(tag);

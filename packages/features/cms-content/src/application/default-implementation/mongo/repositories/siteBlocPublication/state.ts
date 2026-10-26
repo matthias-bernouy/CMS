@@ -1,6 +1,6 @@
 import type { Collection, Db } from "mongodb";
 import type { SiteBlocPublicationLockDoc } from "cms-content/application/default-implementation/mongo/repositories/documents";
-import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/CmsRepository";
+import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/ContentRepository";
 
 export const LOCK_ID = "published-graph";
 export const LEASE_MS = 30_000;

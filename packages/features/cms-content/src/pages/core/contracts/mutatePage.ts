@@ -1,4 +1,4 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import {
     cmsPageDetails,
@@ -18,7 +18,7 @@ export interface CmsPageUpdateInput {
 }
 
 export async function updateCmsPage(
-    repository: Pick<CmsRepository, "updatePage">,
+    repository: Pick<ContentRepository, "updatePage">,
     input: CmsPageUpdateInput,
 ): Promise<CmsPageDetails> {
     const id = cmsPageId(input.id);
@@ -40,7 +40,7 @@ export async function updateCmsPage(
 }
 
 export async function publishCmsPage(
-    repository: Pick<CmsRepository, "updatePage">,
+    repository: Pick<ContentRepository, "updatePage">,
     input: { readonly id: string; readonly visible: boolean; readonly expectedRevision: number },
 ): Promise<CmsPageDetails> {
     const id = cmsPageId(input.id);
@@ -56,7 +56,7 @@ export async function publishCmsPage(
 }
 
 export async function deleteCmsPage(
-    repository: Pick<CmsRepository, "getPageById" | "deletePage">,
+    repository: Pick<ContentRepository, "getPageById" | "deletePage">,
     input: { readonly id: string; readonly expectedRevision: number },
 ): Promise<{ readonly id: string; readonly deleted: true }> {
     const id = cmsPageId(input.id);

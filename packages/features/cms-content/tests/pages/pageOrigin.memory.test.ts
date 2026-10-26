@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
     ContentValidationError,
-    InMemoryCmsRepository,
+    InMemoryContentRepository,
     pageDocument,
-    ValidatingCmsRepository,
+    ValidatingContentRepository,
 } from "@bernouy/cms-content";
 
 const origin = {
@@ -16,13 +16,13 @@ const origin = {
 
 describe("site Page ownership", () => {
     test("stores one shared Page document", async () => {
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         await repository.insertPage("/about", "About", "<main>About</main>");
         expect(pageDocument((await repository.getPage("/about"))!)).toEqual({ html: "<main>About</main>" });
     });
 
     test("keeps contribution provenance immutable", async () => {
-        const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repository = new ValidatingContentRepository(new InMemoryContentRepository());
         await repository.insertPage("/admin/overview", "Overview", "", { origin });
         const page = (await repository.getPage("/admin/overview"))!;
         expect(page).toMatchObject({ origin });
@@ -32,7 +32,7 @@ describe("site Page ownership", () => {
     });
 
     test("rejects malformed contribution provenance", async () => {
-        const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repository = new ValidatingContentRepository(new InMemoryContentRepository());
         await expect(
             repository.insertPage("/admin/overview", "Overview", undefined, {
                 origin: { ...origin, digest: "not-a-digest" },

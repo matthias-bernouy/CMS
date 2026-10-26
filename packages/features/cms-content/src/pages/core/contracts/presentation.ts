@@ -1,4 +1,4 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
 import {
     cmsPageRouteDetails,
@@ -10,7 +10,7 @@ import {
 } from "cms-content/pages/core/contracts/pageDetails";
 import { pagePathsForSystem } from "cms-content/pages/core/lifecycle/pagePaths";
 
-type PresentationRepository = Pick<CmsRepository, "getPageById" | "getSystem" | "setPagePaths" | "updatePage">;
+type PresentationRepository = Pick<ContentRepository, "getPageById" | "getSystem" | "setPagePaths" | "updatePage">;
 
 export async function updateCmsPageRoute(
     repository: PresentationRepository,

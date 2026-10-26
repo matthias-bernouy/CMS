@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 import {
     CollectionStore,
     MemoryCollectionStorage,
@@ -63,7 +63,7 @@ test("token ownership and state references use exact identities with overlapping
 });
 
 test("contributor failures and changing revisions keep the inventory incomplete", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     const collections = new CollectionStore(new MemoryCollectionStorage());
     const failing = await siteUsageInventory(
         repository,
@@ -100,7 +100,7 @@ test("a malformed Page scan cannot silently claim that usage analysis is complet
 });
 
 test("ordinary configuration keys are not misclassified as theme-token overrides", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     const collections = new CollectionStore(new MemoryCollectionStorage());
     const source = {
         ...collectionDocument(),

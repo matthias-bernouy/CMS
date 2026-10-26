@@ -7,7 +7,11 @@ import {
 } from "@bernouy/cms-repository/collections/content";
 import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { InMemoryCmsRepository, InMemoryPageRouteRegistry, ValidatingCmsRepository } from "@bernouy/cms-content";
+import {
+    InMemoryContentRepository,
+    InMemoryPageRouteRegistry,
+    ValidatingContentRepository,
+} from "@bernouy/cms-content";
 import { createContentReader, expandCompositions, generateStyleEntry } from "@bernouy/cms-content/rendering";
 import { parseHTML } from "linkedom";
 import { compileBlocStyle } from "@bernouy/cms-repository/collections/build";
@@ -95,8 +99,8 @@ test("installed resources participate in authoring validation and public read mo
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease(collectionFixture(release));
     await store.install("site", artifact.digest, 0);
-    const local = new InMemoryCmsRepository();
-    const repository = new ValidatingCmsRepository(withInstalledCollections(local, store, "site"));
+    const local = new InMemoryContentRepository();
+    const repository = new ValidatingContentRepository(withInstalledCollections(local, store, "site"));
     await repository.insertPage("/test", "Test", '<div cms-bloc="test-welcome"></div>');
     const page = (await repository.getPage("/test"))!;
     await repository.updatePage({ id: page.id, visible: true });
@@ -185,8 +189,8 @@ test("site Pages inherit capability requirements from installed Blocs", async ()
         }),
     );
     await store.install("site", artifact.digest, 0);
-    const repository = new ValidatingCmsRepository(
-        withInstalledCollections(new InMemoryCmsRepository(), store, "site"),
+    const repository = new ValidatingContentRepository(
+        withInstalledCollections(new InMemoryContentRepository(), store, "site"),
     );
     await repository.insertPage("/media", "Media", '<div cms-bloc="test-welcome"></div>');
     const page = (await repository.getPage("/media"))!;
@@ -236,7 +240,7 @@ test("installed Page aliases redirect to their effective collection route", asyn
     };
     const initial = (await routes.get("site", reference))!;
     await routes.setOverride("site", reference, "/custom-admin", initial.revision);
-    const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site", routes);
+    const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site", routes);
     const reader = createContentReader(repository, {
         resolvePageRoute: (path) => routes.resolve("site", path),
     });
@@ -278,7 +282,7 @@ test("installed hidden blocs stay out of the authoring catalogue but remain avai
         }),
     );
     await store.install("site", artifact.digest, 0);
-    const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
+    const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
 
     expect((await repository.getBlocsList()).map(({ id }) => id)).toEqual([]);
     expect((await repository.getBlocsList({ includeHidden: true })).map(({ id }) => id)).toEqual(["test-helper"]);
@@ -310,7 +314,9 @@ test("installed collection theme contributes immutable tokens to editing and pub
         }),
     );
     await store.install("site", artifact.digest, 0);
-    const repo = new ValidatingCmsRepository(withInstalledCollections(new InMemoryCmsRepository(), store, "site"));
+    const repo = new ValidatingContentRepository(
+        withInstalledCollections(new InMemoryContentRepository(), store, "site"),
+    );
     const system = await repo.getSystem();
     const source = system.theme.sources.find((item) => item.id === "contribution-test")!;
     expect(source.owner).toEqual({ kind: "contribution", contributionId: "test" });
@@ -355,7 +361,7 @@ test("installed Light DOM component projects its repository-compiled style witho
         [{ id: "mark.svg", bytes }],
     );
     await store.install("site", artifact.digest, 0);
-    const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
+    const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
     const reader = createContentReader(repository);
     expect(await reader.getBlocViewJS("test-card")).toBeNull();
     const projected = (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-card");
@@ -414,8 +420,8 @@ test("installed polymorphic native components project their contract and keep wr
         }),
     );
     await store.install("site", artifact.digest, 0);
-    const repository = new ValidatingCmsRepository(
-        withInstalledCollections(new InMemoryCmsRepository(), store, "site"),
+    const repository = new ValidatingContentRepository(
+        withInstalledCollections(new InMemoryContentRepository(), store, "site"),
     );
     const projected = (await repository.getBlocRecord("test-action"))!.artifact!;
     expect(projected.slots[""]).toEqual({
@@ -445,7 +451,7 @@ test("installed Bloc insertion uses its example without reading unrelated assets
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease(release);
     await store.install("site", artifact.digest, 0);
-    const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
+    const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
     const projected = (await repository.getBlocRecord("test-heading"))!.artifact!;
     expect(projected.initialDocument?.html).toContain('cms-bloc="test-heading"');
     expect(projected.thumbnail).toBeUndefined();
@@ -499,7 +505,7 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
         }),
     );
     await store.install("site", artifact.digest, 0);
-    const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
+    const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
     const record = (await repository.getBlocRecord("test-card"))!;
     expect(record.artifact?.markupHTML).toContain("cms.i18n.test.title");
     expect(record.artifact?.initialDocument?.html).toContain('<h2 slot="title">Welcome</h2>');
@@ -516,7 +522,7 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
     expandCompositions(document.body, await createContentReader(repository).getRenderableBlocs());
     renderCollectionTexts(document.body, "en", [{ collection: artifact.release }]);
     expect(document.querySelector('[cms-bloc="test-card"]')?.textContent).toBe("My pageWelcome");
-    const validated = new ValidatingCmsRepository(repository);
+    const validated = new ValidatingContentRepository(repository);
     await validated.insertPage("/valid-card", "Valid", '<div cms-bloc=\"test-card\" tone="accent" compact></div>');
     await expect(
         validated.insertPage("/invalid-card", "Invalid", '<div cms-bloc=\"test-card\" tone="unknown"></div>'),

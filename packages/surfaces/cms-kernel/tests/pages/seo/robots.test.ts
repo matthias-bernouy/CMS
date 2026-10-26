@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
 import { InMemoryCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import { CaptureRunner } from "../../gateway/support/CaptureRunner";
@@ -9,7 +9,7 @@ import { NOOP_LOGGER } from "@bernouy/logging";
 describe("Kernel robots", () => {
     test("allows rendering assets and generic gateway calls", async () => {
         const runner = new CaptureRunner("/site");
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         const settings = await repository.getSystem();
         await repository.updateSystem({
             site: { ...settings.site, host: "https://canonical.test/store" },
@@ -53,7 +53,7 @@ describe("Kernel robots", () => {
 
     test("omits the sitemap declaration when the canonical host is not configured", async () => {
         const runner = new CaptureRunner();
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         const content = createContentReader(repository);
         new KernelCms({
             runner,
@@ -74,7 +74,7 @@ describe("Kernel robots", () => {
 
     test("blocks crawling and omits the sitemap for a private site", async () => {
         const runner = new CaptureRunner("/private");
-        const repository = new InMemoryCmsRepository();
+        const repository = new InMemoryContentRepository();
         const settings = await repository.getSystem();
         await repository.updateSystem({
             site: { ...settings.site, visible: false, host: "https://canonical.test/private" },

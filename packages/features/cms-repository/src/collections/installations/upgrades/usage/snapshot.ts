@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
-import type { CmsRepository } from "@bernouy/cms-content";
+import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionStore } from "../../core/CollectionStore";
 import { collectionPageBatches } from "./pageScan";
 import type { UsageContributor } from "./interfaces";
@@ -12,7 +12,7 @@ export function usageDigest(value: unknown): string {
 }
 
 export async function readUsageSnapshot(
-    repository: CmsRepository,
+    repository: ContentRepository,
     collections: CollectionStore,
     siteId: string,
     contributors: readonly UsageContributor[],

@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { ContentValidationError, InMemoryCmsRepository, ValidatingCmsRepository } from "@bernouy/cms-content";
+import { ContentValidationError, InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
 import { siteBlocArtifact, siteBlocDefinition, siteBlocSnapshot } from "../siteBlocFixture";
 
 describe("site group persistence", () => {
     test("keeps empty groups and isolates returned values", async () => {
-        const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repository = new ValidatingContentRepository(new InMemoryContentRepository());
         expect(await repository.getSiteBlocGroups()).toEqual([
             { id: "site", name: "Site", description: "Compositions created for this site." },
         ]);
@@ -22,7 +22,7 @@ describe("site group persistence", () => {
     });
 
     test("validates metadata and rejects unknown explicit membership", async () => {
-        const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repository = new ValidatingContentRepository(new InMemoryContentRepository());
         for (const name of [" ", "x".repeat(121)]) {
             await expect(repository.createSiteBlocGroup({ name, description: "" })).rejects.toBeInstanceOf(
                 ContentValidationError,
@@ -38,7 +38,7 @@ describe("site group persistence", () => {
     });
 
     test("preserves membership across draft, publication and lifecycle changes", async () => {
-        const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repository = new ValidatingContentRepository(new InMemoryContentRepository());
         const group = await repository.createSiteBlocGroup({ name: "Sections", description: "" });
         const definition = siteBlocDefinition({ groupId: group.id });
         await repository.createSiteBloc(definition);

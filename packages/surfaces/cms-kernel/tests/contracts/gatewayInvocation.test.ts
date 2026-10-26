@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
 import { TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
@@ -10,7 +10,7 @@ import { NOOP_LOGGER } from "@bernouy/logging";
 test("Kernel mounts every gateway binding method and supplies trusted actor state", async () => {
     const calls: GatewayInvocation[] = [];
     const runner = new CaptureRunner();
-    const content = createContentReader(new InMemoryCmsRepository());
+    const content = createContentReader(new InMemoryContentRepository());
     new KernelCms({
         runner,
         cache: new TtlCache(),

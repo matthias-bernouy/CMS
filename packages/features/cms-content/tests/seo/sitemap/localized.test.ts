@@ -1,13 +1,13 @@
 import { gunzipSync } from "bun";
 import { expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
-import { createContentReader, InMemoryCmsRepository, validateSettingsPatch } from "@bernouy/cms-content";
+import { createContentReader, InMemoryContentRepository, validateSettingsPatch } from "@bernouy/cms-content";
 import { readSitemapManifest, sitemapChunkPath } from "@bernouy/cms-content/seo";
 import { PRODUCT_PAGE } from "../indexing/fixtures";
 import { sitemapRuntime } from "./fixture";
 
 test("sitemap snapshots separate languages and common URLs while retaining reciprocal links", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({
         site: {
             host: "https://example.test",
@@ -82,7 +82,7 @@ test("sitemap snapshots can be read for a valid long language tag", async () => 
     expect(
         validateSettingsPatch({ site: { additionalLanguages: [language] } as never }).site?.additionalLanguages,
     ).toContain(language);
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({
         site: {
             host: "https://example.test",

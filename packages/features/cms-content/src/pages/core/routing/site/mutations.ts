@@ -1,9 +1,9 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { PageRouteRegistry } from "cms-content/pages/interfaces/routing";
 
 export async function pageBeforeMutation(
-    repository: CmsRepository,
+    repository: ContentRepository,
     method: string,
     args: readonly unknown[],
 ): Promise<TPage | null> {
@@ -18,7 +18,7 @@ export async function pageBeforeMutation(
 }
 
 export async function applySiteRouteMutation(
-    repository: CmsRepository,
+    repository: ContentRepository,
     routes: PageRouteRegistry,
     siteId: string,
     method: string,

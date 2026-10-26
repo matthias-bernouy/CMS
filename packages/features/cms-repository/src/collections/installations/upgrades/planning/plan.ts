@@ -1,4 +1,4 @@
-import type { CmsRepository } from "@bernouy/cms-content";
+import type { ContentRepository } from "@bernouy/cms-content";
 import type { CollectionStore } from "../../core/CollectionStore";
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
 import { assertCollectionResourceIsolation } from "../../core/resourceIsolation";
@@ -20,7 +20,7 @@ export type CollectionUpgradeAnalysis = Readonly<{
 
 /** Preparation reads state only. The returned digest pins every analysed revision and explicit value. */
 export async function prepareCollectionUpgrade(
-    repository: CmsRepository,
+    repository: ContentRepository,
     collections: CollectionStore,
     siteId: string,
     targets: readonly CollectionUpgradeTarget[],

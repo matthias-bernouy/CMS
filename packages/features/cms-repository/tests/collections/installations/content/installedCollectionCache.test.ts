@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 
 class CountingStorage extends MemoryCollectionStorage {
     metadataReads = 0;
@@ -68,7 +68,7 @@ test("indexes installed Blocs once per collection revision", async () => {
     await store.install("site", artifact.digest, 0);
     storage.metadataReads = 0;
     storage.assetReads = 0;
-    const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
+    const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
 
     await repository.getBlocViewJS("cached-card");
     await repository.getBlocViewJS("cached-card");
@@ -92,10 +92,10 @@ test("indexes installed Blocs once per collection revision", async () => {
 });
 
 test("rejects repository methods that have not been classified by the installed-resource boundary", () => {
-    const local = Object.assign(new InMemoryCmsRepository(), { accidentalMutation: () => undefined });
+    const local = Object.assign(new InMemoryContentRepository(), { accidentalMutation: () => undefined });
     const repository = withInstalledCollections(local, new CollectionStore(new MemoryCollectionStorage()), "site");
 
     expect(() => (repository as typeof repository & typeof local).accidentalMutation()).toThrow(
-        "Unclassified CmsRepository method",
+        "Unclassified ContentRepository method",
     );
 });

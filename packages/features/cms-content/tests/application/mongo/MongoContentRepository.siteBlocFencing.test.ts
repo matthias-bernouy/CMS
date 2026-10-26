@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { SiteBlocPublicationLockLostError, SiteBlocPublicationRecoveryRequiredError } from "@bernouy/cms-content";
-import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+import { MongoContentRepository } from "@bernouy/cms-content/mongo";
 import type { Db } from "mongodb";
 import { siteBlocArtifact, siteBlocDefinition } from "../../blocs/siteBlocFixture";
 import { FakeContentDb } from "./contentMongoFixture";
 
-describe("MongoCmsRepository site bloc publication fencing", () => {
+describe("MongoContentRepository site bloc publication fencing", () => {
     test("self-wraps direct writes and replaces the bloc in the lock transaction", async () => {
         const db = new FakeContentDb();
-        const repository = new MongoCmsRepository(db as unknown as Db);
+        const repository = new MongoContentRepository(db as unknown as Db);
         await repository.createSiteBloc(siteBlocDefinition());
 
         await repository.publishSiteBloc("site-feature-panel", siteBlocArtifact(), 1);
@@ -22,7 +22,7 @@ describe("MongoCmsRepository site bloc publication fencing", () => {
 
     test("rejects a stale holder after a successor has replaced its lease", async () => {
         const db = new FakeContentDb();
-        const repository = new MongoCmsRepository(db as unknown as Db);
+        const repository = new MongoContentRepository(db as unknown as Db);
         const locks = db.get("site_bloc_publication_locks");
         await repository.createSiteBloc(siteBlocDefinition());
 
@@ -48,7 +48,7 @@ describe("MongoCmsRepository site bloc publication fencing", () => {
 
     test("uses the durable commit phase when Mongo transactions are unavailable", async () => {
         const db = new FakeContentDb("unsupported");
-        const repository = new MongoCmsRepository(db as unknown as Db);
+        const repository = new MongoContentRepository(db as unknown as Db);
         await repository.createSiteBloc(siteBlocDefinition());
 
         const published = await repository.publishSiteBloc("site-feature-panel", siteBlocArtifact(), 1);
@@ -60,7 +60,7 @@ describe("MongoCmsRepository site bloc publication fencing", () => {
 
     test("uses the durable commit phase when a standalone deployment rejects retryable writes", async () => {
         const db = new FakeContentDb("unsupported-retryable-writes");
-        const repository = new MongoCmsRepository(db as unknown as Db);
+        const repository = new MongoContentRepository(db as unknown as Db);
         await repository.createSiteBloc(siteBlocDefinition());
 
         const published = await repository.publishSiteBloc("site-feature-panel", siteBlocArtifact(), 1);
@@ -71,7 +71,7 @@ describe("MongoCmsRepository site bloc publication fencing", () => {
 
     test("does not let a successor reclaim a standalone lock during its commit phase", async () => {
         const db = new FakeContentDb("unsupported");
-        const repository = new MongoCmsRepository(db as unknown as Db);
+        const repository = new MongoContentRepository(db as unknown as Db);
         const locks = db.get("site_bloc_publication_locks");
         await repository.createSiteBloc(siteBlocDefinition());
         let releaseCommit!: () => void;
@@ -107,7 +107,7 @@ describe("MongoCmsRepository site bloc publication fencing", () => {
 
     test("fails closed instead of spinning on an abandoned standalone commit", async () => {
         const db = new FakeContentDb("unsupported");
-        const repository = new MongoCmsRepository(db as unknown as Db);
+        const repository = new MongoContentRepository(db as unknown as Db);
         await db.get("site_bloc_publication_locks").insertOne({
             _id: "published-graph",
             token: "abandoned-commit",

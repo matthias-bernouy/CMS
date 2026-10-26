@@ -1,5 +1,8 @@
-import type { BlocListItemResponse, SiteBlocPublicationGuard } from "cms-content/application/interfaces/CmsRepository";
-import type { BlocListOptions } from "cms-content/application/interfaces/CmsRepository";
+import type {
+    BlocListItemResponse,
+    SiteBlocPublicationGuard,
+} from "cms-content/application/interfaces/ContentRepository";
+import type { BlocListOptions } from "cms-content/application/interfaces/ContentRepository";
 import type {
     BlocRecord,
     SiteBlocDefinition,

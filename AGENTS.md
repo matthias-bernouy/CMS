@@ -45,7 +45,7 @@ New environment reads belong in runtimes. Existing `process.env.MODE` exceptions
 are recorded in `quality/architecture/repository/repositoryPolicy.ts`; do not
 expand that baseline to bypass dependency injection.
 
-`cms-content` owns the content persistence facade named `CmsRepository`.
+`cms-content` owns the content persistence facade named `ContentRepository`.
 `cms-repository` owns contract/provider artifacts, site installation/selection
 models, collection admission and the explicit collection build toolchain.
 `cms-gateway` owns provider-neutral live invocation and provider-wide identities.

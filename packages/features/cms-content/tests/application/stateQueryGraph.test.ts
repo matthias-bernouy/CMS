@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryCmsRepository, ValidatingCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
 
-describe("ValidatingCmsRepository — synchronized query graph", () => {
+describe("ValidatingContentRepository — synchronized query graph", () => {
     test("rejects a cycle formed by sibling composition Blocs", async () => {
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository());
         const composition = (id: string, input: string, output: string) => ({
             id,
             name: id,
@@ -40,7 +40,7 @@ describe("ValidatingCmsRepository — synchronized query graph", () => {
     });
 
     test("rejects a cycle inside a composed Bloc artifact", async () => {
-        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const repo = new ValidatingContentRepository(new InMemoryContentRepository());
 
         await expect(
             repo.createBloc({

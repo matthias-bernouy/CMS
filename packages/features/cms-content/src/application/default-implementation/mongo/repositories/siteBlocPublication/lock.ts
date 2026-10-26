@@ -14,7 +14,7 @@ import {
     STALE_COMMIT_MS,
     leaseExpiry,
 } from "cms-content/application/default-implementation/mongo/repositories/siteBlocPublication/state";
-import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/CmsRepository";
+import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/ContentRepository";
 
 export async function withMongoSiteBlocPublicationLock<T>(
     db: Db,

@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
 import { mountPublicPages } from "./publicPage.fixture";
 
 test("non-Page request paths render the configured fallback without querying the route registry", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.insertPage("/not-found", "Not found", "<main>Configured fallback</main>");
     const fallback = (await repository.getPage("/not-found"))!;
     await repository.updatePage({ id: fallback.id, visible: true });

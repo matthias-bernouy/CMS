@@ -1,9 +1,9 @@
 import { publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { PublishedRouteResolution } from "cms-content/application/interfaces/ContentReader";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 
-type PublishedRouteRepository = Pick<CmsRepository, "getPageById" | "getPageRoute" | "getSystem">;
+type PublishedRouteRepository = Pick<ContentRepository, "getPageById" | "getPageRoute" | "getSystem">;
 
 /** Resolves stored routes without ever returning a hidden page. */
 export async function resolvePublishedRoute(

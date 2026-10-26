@@ -6,7 +6,7 @@ import {
     isCmsFormEmptyBehavior,
     isCmsFormValueType,
 } from "@bernouy/cms-content/bindings";
-import { nativeBindingAttributeIssue, ValidatingCmsRepository, type CmsRepository } from "@bernouy/cms-content";
+import { nativeBindingAttributeIssue, ValidatingContentRepository, type ContentRepository } from "@bernouy/cms-content";
 
 const form = (attributes: string, children = "") =>
     `<div cms-bloc=\"fixture-card\"><form cms-mutation="orders:update as saved" ${attributes}>${children}</form></div>`;
@@ -20,8 +20,8 @@ function repository() {
         ],
         insertPage: async (_path: string, _title: string, content: string) => writes.push(content),
         updatePage: async (page: { content: string }) => writes.push(page.content),
-    } as unknown as CmsRepository;
-    return { repo: new ValidatingCmsRepository(inner), writes };
+    } as unknown as ContentRepository;
+    return { repo: new ValidatingContentRepository(inner), writes };
 }
 
 describe("declarative form contracts", () => {

@@ -1,11 +1,11 @@
-import type { CmsRepository } from "@bernouy/cms-content";
+import type { ContentRepository } from "@bernouy/cms-content";
 import type { TPage } from "@bernouy/cms-content";
 
 const COLLECTION_USAGE_PAGE_BATCH_SIZE = 500;
 
 /** Bounded ID-ordered scan with cursor-progress checks. */
 export async function* collectionPageBatches(
-    repository: Pick<CmsRepository, "scanPages">,
+    repository: Pick<ContentRepository, "scanPages">,
     batchSize = COLLECTION_USAGE_PAGE_BATCH_SIZE,
 ): AsyncGenerator<readonly TPage[]> {
     let cursor: string | undefined;

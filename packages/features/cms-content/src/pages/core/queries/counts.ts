@@ -1,4 +1,4 @@
-import type { ValueCount } from "cms-content/application/interfaces/CmsRepository";
+import type { ValueCount } from "cms-content/application/interfaces/ContentRepository";
 
 export function normalizeTags(raw: unknown): string[] {
     if (Array.isArray(raw)) {

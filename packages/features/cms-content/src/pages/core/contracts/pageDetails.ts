@@ -1,4 +1,4 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
@@ -34,7 +34,7 @@ type CmsPageSeoEntry = {
 };
 
 export async function getCmsPage(
-    repository: Pick<CmsRepository, "getPageById" | "getSystem">,
+    repository: Pick<ContentRepository, "getPageById" | "getSystem">,
     input: { readonly id: string },
 ): Promise<CmsPageEditingDetails> {
     const id = cmsPageId(input.id);

@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
-import { InMemoryCmsRepository, type TSystem } from "@bernouy/cms-content";
+import { InMemoryContentRepository, type TSystem } from "@bernouy/cms-content";
 import { parseHTML } from "linkedom";
 import { mountPublicPages } from "../publicPage.fixture";
 
 test("retired paths redirect while localized variants share one page", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.insertPage("/about", "About", "<main>Shared content</main>");
     const page = (await repository.getPage("/about"))!;
     await repository.updatePage({ id: page.id, visible: true });
@@ -75,7 +75,7 @@ test("retired paths redirect while localized variants share one page", async () 
 });
 
 test("public routes pause while the default language routes are changing", async () => {
-    class PausedRouteChangeRepository extends InMemoryCmsRepository {
+    class PausedRouteChangeRepository extends InMemoryContentRepository {
         pause: Promise<void> | null = null;
 
         protected override async reconfigurePageRoutes(
@@ -121,7 +121,7 @@ test("public routes pause while the default language routes are changing", async
 });
 
 test("deleted localized paths return 410 and stay out of the sitemap", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({
         site: {
             host: "https://example.test",
@@ -149,7 +149,7 @@ test("deleted localized paths return 410 and stay out of the sitemap", async () 
 });
 
 test("the default language home stays at the site root", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.insertPage("/", "Home");
     const home = (await repository.getPage("/"))!;
     await repository.updatePage({ id: home.id, visible: true });
@@ -162,7 +162,7 @@ test("the default language home stays at the site root", async () => {
 });
 
 test("a former prefixed default URL redirects to the current root URL", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
     await repository.insertPage("/about", "About");
     const page = (await repository.getPage("/about"))!;
@@ -179,7 +179,7 @@ test("a former prefixed default URL redirects to the current root URL", async ()
 });
 
 test("a system fallback follows a chosen replacement after its page is deleted", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({ site: { language: "fr" } as never });
     await repository.insertPage("/not-found", "Not found", "<main>Old fallback</main>");
     await repository.insertPage("/replacement", "Replacement", "<main>Replacement fallback</main>");
@@ -197,7 +197,7 @@ test("a system fallback follows a chosen replacement after its page is deleted",
 });
 
 test("a configured language path becomes public only when the language is active", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({
         site: { language: "fr", additionalLanguages: ["en"], activeLanguages: [] } as never,
     });

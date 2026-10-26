@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Db } from "mongodb";
-import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+import { MongoContentRepository } from "@bernouy/cms-content/mongo";
 import { createMongoContentRepository } from "../contentMongoFixture";
 
 test("Mongo rejects overlapping path writes to the same page across repository instances", async () => {
@@ -9,7 +9,7 @@ test("Mongo rejects overlapping path writes to the same page across repository i
     await repository.updateSystem({ site: { language: "fr" } as never });
     await repository.insertPage("/before", "Before");
     const page = (await repository.getPage("/before"))!;
-    const second = new MongoCmsRepository(db as unknown as Db);
+    const second = new MongoContentRepository(db as unknown as Db);
     let entered!: () => void;
     let release!: () => void;
     const committing = new Promise<void>((resolve) => {

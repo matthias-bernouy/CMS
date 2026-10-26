@@ -9,7 +9,7 @@ import {
     type SystemDoc,
 } from "cms-content/application/default-implementation/mongo/repositories/documents";
 
-export type MongoCmsRepositoryConfig = {
+export type MongoContentRepositoryConfig = {
     /** Prefix prepended to every collection name for tenant isolation. */
     collectionPrefix?: string;
 };
@@ -19,7 +19,7 @@ export class MongoRepositoryStorage {
 
     constructor(
         protected readonly db: Db,
-        config: MongoCmsRepositoryConfig = {},
+        config: MongoContentRepositoryConfig = {},
     ) {
         this.prefix = config.collectionPrefix ?? "";
     }

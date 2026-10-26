@@ -1,4 +1,4 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 
 export interface CmsPagesListInput {
     readonly cursor?: string;
@@ -21,7 +21,7 @@ export interface CmsPagesListOutput {
 
 /** Provider-neutral implementation of `ulvia.cms.content/pages.list`. */
 export async function listCmsPages(
-    repository: Pick<CmsRepository, "getPagesMetadata">,
+    repository: Pick<ContentRepository, "getPagesMetadata">,
     input: CmsPagesListInput,
 ): Promise<CmsPagesListOutput> {
     const cursor = input.cursor;

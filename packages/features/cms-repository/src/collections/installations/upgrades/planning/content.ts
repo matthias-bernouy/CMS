@@ -1,4 +1,4 @@
-import type { CmsRepository } from "@bernouy/cms-content";
+import type { ContentRepository } from "@bernouy/cms-content";
 import { assertContentRefsExist } from "@bernouy/cms-content/page-document";
 import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import type { UsageSnapshot } from "../usage/snapshot";
@@ -6,7 +6,7 @@ import { localBlocDocuments } from "../usage/localDocuments";
 import type { UpgradeIssue } from "../interfaces";
 
 export async function validateUpgradeContent(
-    repository: CmsRepository,
+    repository: ContentRepository,
     snapshot: UsageSnapshot,
     releases: readonly CollectionRelease[],
 ): Promise<UpgradeIssue[]> {

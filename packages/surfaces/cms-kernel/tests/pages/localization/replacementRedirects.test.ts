@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 import { mountPublicPages } from "../publicPage.fixture";
 
 test("a replaced URL follows its original language when that replacement translation is added", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({
         site: { language: "fr", additionalLanguages: ["en"], activeLanguages: ["en"] } as never,
     });

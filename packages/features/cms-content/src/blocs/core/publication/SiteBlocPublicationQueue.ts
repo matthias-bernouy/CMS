@@ -1,4 +1,4 @@
-import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/CmsRepository";
+import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/ContentRepository";
 
 const HELD_GUARD: SiteBlocPublicationGuard = {
     assertHeld: async () => {},

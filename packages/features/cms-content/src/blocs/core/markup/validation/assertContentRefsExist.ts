@@ -9,7 +9,7 @@ import {
 } from "cms-content/application/core/validation/bindingCapabilities";
 import { validateSvgCapabilityReferences } from "cms-content/application/core/validation/svgCapabilities";
 
-/** Minimal reader — `CmsRepository` satisfies it structurally. */
+/** Minimal reader — `ContentRepository` satisfies it structurally. */
 export type ContentRefsReader = {
     getBlocsList(options?: { includeHidden?: boolean }): Promise<
         Array<{

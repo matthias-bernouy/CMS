@@ -140,7 +140,7 @@
         "@bernouy/cms-content": {
             "path": "packages/features/cms-content",
             "coveredSourceFiles": [
-                "packages/features/cms-content/src/application/core/ValidatingCmsRepository.ts",
+                "packages/features/cms-content/src/application/core/ValidatingContentRepository.ts",
                 "packages/features/cms-content/src/application/core/cacheKeys.ts",
                 "packages/features/cms-content/src/application/core/createContentReader.ts",
                 "packages/features/cms-content/src/application/core/validation/bindingCapabilities.ts",
@@ -149,11 +149,11 @@
                 "packages/features/cms-content/src/application/core/validation/fields.ts",
                 "packages/features/cms-content/src/application/core/validation/predicates.ts",
                 "packages/features/cms-content/src/application/default-implementation/memory/InMemoryBlocRepository.ts",
-                "packages/features/cms-content/src/application/default-implementation/memory/InMemoryCmsRepository.ts",
                 "packages/features/cms-content/src/application/default-implementation/memory/InMemoryContentRepository.ts",
-                "packages/features/cms-content/src/application/default-implementation/mongo/MongoCmsRepository.ts",
+                "packages/features/cms-content/src/application/default-implementation/memory/InMemoryPageRepository.ts",
+                "packages/features/cms-content/src/application/default-implementation/mongo/MongoContentRepository.ts",
                 "packages/features/cms-content/src/application/default-implementation/mongo/repositories/MongoBlocRepository.ts",
-                "packages/features/cms-content/src/application/default-implementation/mongo/repositories/MongoContentRepository.ts",
+                "packages/features/cms-content/src/application/default-implementation/mongo/repositories/MongoPageRepository.ts",
                 "packages/features/cms-content/src/application/default-implementation/mongo/repositories/MongoRepositoryStorage.ts",
                 "packages/features/cms-content/src/application/default-implementation/mongo/repositories/blocPersistence.ts",
                 "packages/features/cms-content/src/application/default-implementation/mongo/repositories/blocReadModels.ts",
@@ -383,7 +383,7 @@
                 "packages/features/cms-content/src/theme/core/validation.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/features/cms-content/src/application/interfaces/CmsRepository.ts",
+                "packages/features/cms-content/src/application/interfaces/ContentRepository.ts",
                 "packages/features/cms-content/src/application/interfaces/ContentReader.ts",
                 "packages/features/cms-content/src/blocs/core/markup/expression/types.ts",
                 "packages/features/cms-content/src/blocs/core/markup/validation/bindingAnalysis/types.ts",

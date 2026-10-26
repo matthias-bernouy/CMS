@@ -4,7 +4,7 @@ import { replaceSiteBlocRecord } from "cms-content/application/default-implement
 import { requireBlocRecord } from "cms-content/application/default-implementation/mongo/repositories/blocReadModels";
 import type { BlocDoc } from "cms-content/application/default-implementation/mongo/repositories/documents";
 import { commitMongoSiteBlocPublication } from "cms-content/application/default-implementation/mongo/repositories/siteBlocPublication/commit";
-import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/CmsRepository";
+import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/ContentRepository";
 import type { BlocRecord, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
 
 type PublicationLock = (operation: (guard: SiteBlocPublicationGuard) => Promise<BlocRecord>) => Promise<BlocRecord>;

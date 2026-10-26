@@ -1,4 +1,4 @@
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { PageRevisionConflictError } from "cms-content/application/core/validation/errors";
 import { validatePageTitle } from "cms-content/pages/core/validation/page";
 import type { TPage } from "cms-content/pages/interfaces/pages";
@@ -26,7 +26,7 @@ export class CmsPageNotFoundError extends Error {
 
 /** Provider-neutral, naturally idempotent implementation of `ulvia.cms.content/pages.rename`. */
 export async function renameCmsPage(
-    repository: Pick<CmsRepository, "getPageById" | "updatePage">,
+    repository: Pick<ContentRepository, "getPageById" | "updatePage">,
     input: CmsPageRenameInput,
 ): Promise<CmsPageRenameOutput> {
     if (typeof input.id !== "string" || input.id.length === 0 || input.id.length > 200) {

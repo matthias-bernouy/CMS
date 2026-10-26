@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryContentRepository } from "@bernouy/cms-content";
 import { parseHTML } from "linkedom";
 import { mountPublicPages } from "../publicPage.fixture";
 
 test("a gone URL renders the configured 404 page with status 410 and no search identity", async () => {
-    const repository = new InMemoryCmsRepository();
+    const repository = new InMemoryContentRepository();
     await repository.updateSystem({
         site: {
             host: "https://example.test",

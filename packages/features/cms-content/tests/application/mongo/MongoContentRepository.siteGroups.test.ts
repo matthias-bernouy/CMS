@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Db } from "mongodb";
-import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+import { MongoContentRepository } from "@bernouy/cms-content/mongo";
 import { siteBlocDefinition, siteBlocSnapshot } from "../../blocs/siteBlocFixture";
 import { createMongoContentRepository } from "./contentMongoFixture";
 
@@ -11,14 +11,14 @@ describe("Mongo site groups", () => {
             repository.createSiteBlocGroup({ name: "Landing pages", description: "Sections" }),
             repository.createSiteBlocGroup({ name: "Campaigns", description: "" }),
         ]);
-        const reloaded = new MongoCmsRepository(db as unknown as Db, { collectionPrefix: "tenant_" });
+        const reloaded = new MongoContentRepository(db as unknown as Db, { collectionPrefix: "tenant_" });
         expect(await reloaded.getSiteBlocGroups()).toEqual([
             { id: "site", name: "Site", description: "Compositions created for this site." },
             second,
             first,
         ]);
         expect(await db.get("tenant_site_bloc_groups").find({}).toArray()).toHaveLength(2);
-        expect(await new MongoCmsRepository(db as unknown as Db).getSiteBlocGroups()).toHaveLength(1);
+        expect(await new MongoContentRepository(db as unknown as Db).getSiteBlocGroups()).toHaveLength(1);
         expect(await db.get("site_bloc_groups").find({}).toArray()).toHaveLength(0);
     });
 
@@ -46,12 +46,12 @@ test("renames default and named groups without changing membership or duplicatin
         icon: "star",
     });
     await repository.updateSiteBlocGroup("site", { name: "Our site", description: "Private", icon: "layers" });
-    const reloaded = new MongoCmsRepository(db as unknown as Db, { collectionPrefix: "tenant_" });
+    const reloaded = new MongoContentRepository(db as unknown as Db, { collectionPrefix: "tenant_" });
     expect(await reloaded.getSiteBlocGroups()).toEqual([
         { id: "site", name: "Our site", description: "Private", icon: "layers" },
         updated,
     ]);
-    expect(await new MongoCmsRepository(db as unknown as Db).getSiteBlocGroups()).toHaveLength(1);
+    expect(await new MongoContentRepository(db as unknown as Db).getSiteBlocGroups()).toHaveLength(1);
     await expect(repository.updateSiteBlocGroup("unknown", { name: "No", description: "" })).rejects.toThrow(
         "not found",
     );

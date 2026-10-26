@@ -1,5 +1,5 @@
 import { parseHTML } from "linkedom";
-import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { expandCompositions, type CompositionDefinition } from "cms-content/blocs/core/composition/expandCompositions";
 import { validateStateQueryGraph } from "cms-content/blocs/core/markup/bindings/operation/stateGraph";
@@ -17,7 +17,7 @@ import {
 } from "cms-content/application/core/validation/bindingCapabilities";
 import { validateSvgCapabilityReferences } from "cms-content/application/core/validation/svgCapabilities";
 
-type BlocCatalogueReader = Pick<CmsRepository, "getBlocsList">;
+type BlocCatalogueReader = Pick<ContentRepository, "getBlocsList">;
 
 export async function validateBlocArtifact(
     repository: BlocCatalogueReader,
