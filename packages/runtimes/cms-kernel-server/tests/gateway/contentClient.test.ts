@@ -1,3 +1,5 @@
+import { defaultSystem } from "@bernouy/cms-content";
+import { projectRenderingSettings } from "@bernouy/cms-content/rendering";
 import { expect, test } from "bun:test";
 import type { GatewayInvocation, GatewayResult } from "@bernouy/cms-gateway";
 import { createMemoryLogger } from "@bernouy/logging/testing";
@@ -24,14 +26,38 @@ test("projects all Kernel content reads through the selected Content capability"
                     : operation === "assets.metadata"
                       ? {
                             collectionId: "collection-a",
-                            digest: "sha256:digest-a",
-                            asset: { id: "asset-a", mediaType: "text/plain", byteLength: 5 },
+                            digest: `sha256:${"a".repeat(64)}`,
+                            asset: {
+                                id: "asset-a",
+                                mediaType: "text/plain",
+                                byteLength: 5,
+                                digest: `sha256:${"c".repeat(64)}`,
+                            },
                         }
                       : operation === "content.bloc-views"
                         ? { "shop-card": "export function mount() {}" }
                         : operation === "assets.metadata-batch"
                           ? []
-                          : operation;
+                          : operation === "content.rendering-settings"
+                            ? projectRenderingSettings(defaultSystem())
+                            : [
+                                    "content.renderable-pages",
+                                    "content.published-pages",
+                                    "content.renderable-blocs",
+                                ].includes(operation)
+                              ? []
+                              : [
+                                      "content.editorial-route",
+                                      "content.renderable-page",
+                                      "content.resolve-renderable-route",
+                                      "content.published-page",
+                                      "content.published-page-by-id",
+                                      "content.resolve-published-route",
+                                  ].includes(operation)
+                                ? null
+                                : operation === "content.resolve-page-paths"
+                                  ? { "/about": "/about" }
+                                  : operation;
             return {
                 kind: "success",
                 requestId: crypto.randomUUID(),
@@ -50,7 +76,7 @@ test("projects all Kernel content reads through the selected Content capability"
     await client.editorialPages.resolveRoute("/about");
     await client.content.getRenderablePage("/about");
     await client.content.getRenderablePages();
-    await client.content.resolvePageReference({ path: "/about" });
+    await client.content.resolvePageReference({ kind: "site", pageId: "page-a" });
     await client.content.resolvePagePaths(["/about"]);
     await client.content.resolveRenderableRoute("/about");
     await client.content.getPublishedPage("/about");
@@ -97,8 +123,13 @@ test("streams collection assets, sitemap, and robots resources through Content c
                     chunks: [
                         JSON.stringify({
                             collectionId: "collection-a",
-                            digest: "sha256:digest-a",
-                            asset: { id: "asset-a", mediaType: "text/plain", byteLength: 5 },
+                            digest: `sha256:${"a".repeat(64)}`,
+                            asset: {
+                                id: "asset-a",
+                                mediaType: "text/plain",
+                                byteLength: 5,
+                                digest: `sha256:${"c".repeat(64)}`,
+                            },
                         }),
                     ],
                 });
@@ -127,10 +158,10 @@ test("streams collection assets, sitemap, and robots resources through Content c
         "collection-a",
         "asset-a",
     );
-    expect(metadata?.digest).toBe("sha256:digest-a");
+    expect(metadata?.digest).toBe(`sha256:${"a".repeat(64)}`);
     expect(
         new TextDecoder().decode(
-            await client.collectionAssets.store.getReleaseAsset("sha256:digest-a", "asset-a", {
+            await client.collectionAssets.store.getReleaseAsset(`sha256:${"a".repeat(64)}`, "asset-a", {
                 start: 1,
                 end: 3,
             }),
@@ -151,7 +182,7 @@ test("streams collection assets, sitemap, and robots resources through Content c
     expect(invocations[1]?.input).toEqual({
         collectionId: "collection-a",
         assetId: "asset-a",
-        expectedDigest: "sha256:digest-a",
+        expectedDigest: `sha256:${"a".repeat(64)}`,
         rangeStart: 1,
         rangeEnd: 3,
     });
@@ -172,7 +203,7 @@ test("reuses Page render inputs until the rendering revision changes", async () 
                           route: null,
                           artifactRevision: revision,
                           renderingRevision: revision,
-                          settings: { site: { language: "en", activeLanguages: [] } },
+                          settings: projectRenderingSettings(defaultSystem()),
                           renderableBlocs: [],
                           blocViews: {},
                           collectionAssets: [],
@@ -206,7 +237,7 @@ test("rejects malformed and declared-error delivery responses", async () => {
         { invoke: async () => ({ kind: "success", requestId: crypto.randomUUID(), status: 200, output: {} }) } as never,
         memory.logger,
     );
-    await expect(malformed.read("content.revision")).rejects.toThrow("invalid response chunks");
+    await expect(malformed.read("content.revision")).rejects.toThrow("chunks");
 
     const rejected = new GatewayContentClient(
         {

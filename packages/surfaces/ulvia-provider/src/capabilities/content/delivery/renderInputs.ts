@@ -1,10 +1,8 @@
+import type { DeliveredPageRenderInputs } from "@bernouy/cms-content/delivery";
 import type { ContentReader, PageRenderInputs } from "@bernouy/cms-content/rendering";
 import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 import { replaceCollectionAssetExpressions } from "@bernouy/cms-repository/collections";
-import type {
-    CollectionStore,
-    InstalledCollectionAssetMetadata,
-} from "@bernouy/cms-repository/collections/installations";
+import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 
 export async function pageRenderRevision(path: string, content: ContentReader): Promise<number | string> {
     if (content.getPageRenderRevision) {
@@ -99,15 +97,3 @@ function collectCollectionAssetReferences(value: unknown): Array<{ collectionId:
     }
     return [...references.values()];
 }
-
-export type DeliveredPageRenderInputs = Omit<PageRenderInputs, "contentTexts"> & {
-    readonly blocViews: Readonly<Record<string, string | null>>;
-    readonly collectionAssets: readonly InstalledCollectionAssetMetadata[];
-    readonly texts: {
-        readonly defaultLocale: string;
-        readonly sources: readonly {
-            readonly namespace: string;
-            readonly catalogues: Readonly<Record<string, Readonly<Record<string, string>>>>;
-        }[];
-    };
-};

@@ -13,6 +13,7 @@
         "./runtime-assets": "./src/exports/runtime/assets.ts",
         "./runtime-assets/build": "./src/exports/runtime/assets-build.ts",
         "./browser/dom": "./src/exports/runtime/browser-dom.ts",
+        "./delivery": "./src/exports/runtime/delivery.ts",
         "./rendering": "./src/exports/rendering.ts",
         "./http": "./src/exports/runtime/http.ts",
         "./theme": "./src/exports/theme.ts",

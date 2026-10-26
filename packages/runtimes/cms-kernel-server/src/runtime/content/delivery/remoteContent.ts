@@ -4,10 +4,7 @@ import type { GatewayContentClient } from "../GatewayContentClient";
 export function remoteContent(client: GatewayContentClient): ContentReader {
     return {
         getContentTexts: async () => {
-            const projection = await client.read<{
-                defaultLocale: string;
-                sources: { namespace: string; catalogues: Record<string, Record<string, string>> }[];
-            }>("content.texts");
+            const projection = await client.read("content.texts");
             return projection.sources.map((source) => ({
                 namespace: source.namespace,
                 resolve: (locale) => source.catalogues[locale] ?? source.catalogues[projection.defaultLocale] ?? {},

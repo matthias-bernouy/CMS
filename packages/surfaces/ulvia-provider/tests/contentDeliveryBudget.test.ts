@@ -35,8 +35,13 @@ test("one Page render delivery includes behavior and collection-asset dependenci
     expect(payload.collectionAssets).toEqual([
         {
             collectionId: "ulvia-official",
-            digest: "sha256:asset-release",
-            asset: { id: "media/portrait.webp", mediaType: "image/webp", byteLength: 512 },
+            digest: `sha256:${"b".repeat(64)}`,
+            asset: {
+                id: "media/portrait.webp",
+                mediaType: "image/webp",
+                byteLength: 512,
+                digest: `sha256:${"c".repeat(64)}`,
+            },
         },
     ]);
     expect(fixture.calls()).toMatchObject({
@@ -187,8 +192,13 @@ function deliveryFixture(
                     return [
                         {
                             collectionId: "ulvia-official",
-                            digest: "sha256:asset-release",
-                            asset: { id: "media/portrait.webp", mediaType: "image/webp", byteLength: 512 },
+                            digest: `sha256:${"b".repeat(64)}`,
+                            asset: {
+                                id: "media/portrait.webp",
+                                mediaType: "image/webp",
+                                byteLength: 512,
+                                digest: `sha256:${"c".repeat(64)}`,
+                            },
                         },
                     ];
                 },

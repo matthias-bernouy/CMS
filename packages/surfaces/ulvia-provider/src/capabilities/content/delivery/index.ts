@@ -1,12 +1,9 @@
+import { deliveryOperation, parseDeliveryInput, encodeDeliveryOutput } from "@bernouy/cms-content/delivery";
 import { createContentReader, type ContentReader, type RenderablePage } from "@bernouy/cms-content/rendering";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import type { CmsContentDependencies } from "../../../ports";
 import { blocViews, pageRenderRevision, projectPageRenderInputs } from "./renderInputs";
 import { registerContentResourceCapabilities } from "./resources";
-
-const CHUNK_LENGTH = 1024 * 1024;
-const MAX_CHUNKS = 7;
-const MAX_RESPONSE_BYTES = 7 * 1024 * 1024;
 
 export function registerContentDeliveryCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -16,10 +13,23 @@ export function registerContentDeliveryCapabilities(
         ...(dependencies.resolvePageRoute ? { resolvePageRoute: dependencies.resolvePageRoute } : {}),
     });
     dispatcher.register("ulvia.cms.content", "delivery.read", async (request) => {
-        const operation = requiredText(request.operation);
-        const input = parseInput(request.inputJson);
+        let operation: ReturnType<typeof deliveryOperation>;
+        let input: Readonly<Record<string, unknown>>;
+        try {
+            operation = deliveryOperation(request.operation);
+            input = parseDeliveryInput(operation, parseInput(request.inputJson));
+        } catch {
+            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+        }
         const value = await executeDeliveryRead(operation, input, content, dependencies);
-        return encodeDeliveryValue(value);
+        try {
+            return encodeDeliveryOutput(operation, value);
+        } catch (error) {
+            if (error instanceof Error && "status" in error && error.status === 413) {
+                throw new ProviderCapabilityDispatchError("RESPONSE_TOO_LARGE", 413);
+            }
+            throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+        }
     });
     registerContentResourceCapabilities(dispatcher, dependencies, content);
 }
@@ -125,25 +135,6 @@ async function projectContentTexts(content: ContentReader) {
             catalogues: Object.fromEntries(locales.map((locale) => [locale, source.resolve(locale)])),
         })),
     };
-}
-
-function encodeDeliveryValue(value: unknown): { chunks: string[] } {
-    const json = JSON.stringify(value);
-    if (json === undefined) {
-        throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
-    }
-    const chunks: string[] = [];
-    for (let offset = 0; offset < json.length; offset += CHUNK_LENGTH) {
-        chunks.push(json.slice(offset, offset + CHUNK_LENGTH));
-    }
-    const output = { chunks };
-    if (
-        chunks.length > MAX_CHUNKS ||
-        new TextEncoder().encode(JSON.stringify(output)).byteLength > MAX_RESPONSE_BYTES
-    ) {
-        throw new ProviderCapabilityDispatchError("RESPONSE_TOO_LARGE", 413);
-    }
-    return output;
 }
 
 function parseInput(value: unknown): Readonly<Record<string, unknown>> {

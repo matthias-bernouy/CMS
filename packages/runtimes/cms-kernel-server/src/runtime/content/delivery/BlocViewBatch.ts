@@ -1,4 +1,4 @@
-import type { DeliveryRead } from "./protocol";
+import type { DeliveryRead } from "@bernouy/cms-content/delivery";
 
 type Waiter = { resolve(value: string | null): void; reject(reason: unknown): void };
 
@@ -42,7 +42,7 @@ export class BlocViewBatch {
         const batch = new Map(this.#pending);
         this.#pending.clear();
         try {
-            const views = await this.read<Record<string, string | null>>("content.bloc-views", {
+            const views = await this.read("content.bloc-views", {
                 tags: [...batch.keys()],
             });
             for (const [tag, waiters] of batch) {

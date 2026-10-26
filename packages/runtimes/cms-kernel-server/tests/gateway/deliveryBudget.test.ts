@@ -1,3 +1,5 @@
+import { defaultSystem } from "@bernouy/cms-content";
+import { projectRenderingSettings } from "@bernouy/cms-content/rendering";
 import { expect, test } from "bun:test";
 import type { GatewayInvocation, GatewayResult } from "@bernouy/cms-gateway";
 import { createMemoryLogger } from "@bernouy/logging/testing";
@@ -112,14 +114,19 @@ test("one Page snapshot primes Bloc views and collection metadata without more P
                 route: null,
                 artifactRevision: "revision-1",
                 renderingRevision: "rendering-1",
-                settings: { site: { language: "en", activeLanguages: [] } },
+                settings: projectRenderingSettings(defaultSystem()),
                 renderableBlocs: [],
                 blocViews: { "site-card": "export function mount() {}" },
                 collectionAssets: [
                     {
                         collectionId: "ulvia-official",
-                        digest: "sha256:asset-release",
-                        asset: { id: "media/card.webp", mediaType: "image/webp", byteLength: 512 },
+                        digest: `sha256:${"b".repeat(64)}`,
+                        asset: {
+                            id: "media/card.webp",
+                            mediaType: "image/webp",
+                            byteLength: 512,
+                            digest: `sha256:${"c".repeat(64)}`,
+                        },
                     },
                 ],
                 texts: { defaultLocale: "en", sources: [] },
@@ -155,7 +162,7 @@ function contentClient(
                     route: null,
                     artifactRevision: "revision-1",
                     renderingRevision: "rendering-1",
-                    settings: { site: { language: "en", activeLanguages: [] } },
+                    settings: projectRenderingSettings(defaultSystem()),
                     renderableBlocs: [],
                     blocViews: {},
                     collectionAssets: [],

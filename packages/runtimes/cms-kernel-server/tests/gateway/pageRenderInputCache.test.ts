@@ -1,3 +1,5 @@
+import { defaultSystem } from "@bernouy/cms-content";
+import { projectRenderingSettings } from "@bernouy/cms-content/rendering";
 import { expect, test } from "bun:test";
 import { PageRenderInputCache } from "../../src/runtime/content/delivery/PageRenderInputCache";
 
@@ -53,7 +55,7 @@ function renderInputs(revision: string): unknown {
         route: null,
         artifactRevision: revision,
         renderingRevision: revision,
-        settings: { site: { language: "en", activeLanguages: [] } },
+        settings: projectRenderingSettings(defaultSystem()),
         texts: { defaultLocale: "en", sources: [] },
         renderableBlocs: [],
         blocViews: {},

@@ -1,4 +1,4 @@
-import type { DeliveryRead } from "./protocol";
+import type { DeliveryRead } from "@bernouy/cms-content/delivery";
 import { decodePageRenderInputs, type DeliveredPageRenderInputs } from "./protocol";
 
 export class PageRenderInputCache {
@@ -73,7 +73,7 @@ export class PageRenderInputCache {
         generation: number,
     ): Promise<DeliveredPageRenderInputs> {
         if (cached) {
-            const artifactRevision = await this.read<number | string>("content.page-render-revision", { path });
+            const artifactRevision = await this.read("content.page-render-revision", { path });
             if (cached.inputs.artifactRevision === artifactRevision) {
                 if (generation === this.#generation) {
                     this.#cache.set(path, { inputs: cached.inputs, validatedAt: this.#now() });

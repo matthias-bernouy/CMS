@@ -1,3 +1,11 @@
+import {
+    decodeDeliveryOutput,
+    parseDeliveryInput,
+    type DeliveryOperation,
+    type DeliveryInputs,
+    type DeliveryResults,
+    type DeliveryRead,
+} from "@bernouy/cms-content/delivery";
 import type { ContentReader, PageRenderInputs, RenderablePage } from "@bernouy/cms-content/rendering";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
@@ -7,7 +15,7 @@ import type { BlobRange } from "@bernouy/blob-store";
 import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 import { BlocViewBatch } from "./delivery/BlocViewBatch";
 import { PageRenderInputCache, type PageRenderInputCacheOptions } from "./delivery/PageRenderInputCache";
-import { ContentDeliveryError, parseDeliveryOutput, type DeliveryOperation } from "./delivery/protocol";
+import { ContentDeliveryError } from "./delivery/protocol";
 import { remoteContent } from "./delivery/remoteContent";
 import { binaryResponse } from "./delivery/resourceResponse";
 
@@ -27,7 +35,7 @@ export class GatewayContentClient {
         private readonly logger: Logger,
         options: GatewayContentClientOptions = {},
     ) {
-        const read = <T>(operation: DeliveryOperation, input?: unknown) => this.read<T>(operation, input);
+        const read: DeliveryRead = (operation, input) => this.read(operation, input);
         this.#blocViews = new BlocViewBatch(read);
         this.#pageRenderInputs = new PageRenderInputCache(read, options.pageRenderInputs);
         this.content = remoteContent(this);
@@ -42,7 +50,7 @@ export class GatewayContentClient {
                     if (cached) {
                         return cached;
                     }
-                    const installed = await this.read<CollectionAssetMetadata | null>("assets.metadata", {
+                    const installed = await this.read("assets.metadata", {
                         collectionId,
                         assetId,
                     });
@@ -61,7 +69,7 @@ export class GatewayContentClient {
                     );
                     if (missing.length > 0) {
                         installed.push(
-                            ...(await this.read<CollectionAssetMetadata[]>("assets.metadata-batch", {
+                            ...(await this.read("assets.metadata-batch", {
                                 references: missing,
                             })),
                         );
@@ -110,8 +118,9 @@ export class GatewayContentClient {
         }
     }
 
-    async read<T>(operation: DeliveryOperation, input?: unknown): Promise<T> {
+    async read<K extends DeliveryOperation>(operation: K, input?: DeliveryInputs[K]): Promise<DeliveryResults[K]> {
         const startedAt = performance.now();
+        const validatedInput = parseDeliveryInput(operation, input ?? {});
         try {
             const result = await measureCurrentRequestTiming(deliveryTimingName(operation), () =>
                 this.gateway.invoke({
@@ -120,7 +129,7 @@ export class GatewayContentClient {
                     capabilityId: "delivery.read",
                     input: {
                         operation,
-                        ...(input === undefined ? {} : { inputJson: JSON.stringify(input) }),
+                        ...(input === undefined ? {} : { inputJson: JSON.stringify(validatedInput) }),
                     },
                     actor: { kind: "system", serviceId: "cms-kernel" },
                 }),
@@ -134,7 +143,7 @@ export class GatewayContentClient {
                 throw new ContentDeliveryError(operation, result.status ?? 409);
             }
             const output = await measureCurrentRequestTiming("content_decode", () =>
-                parseDeliveryOutput<T>(result.output),
+                decodeDeliveryOutput(operation, result.output),
             );
             this.reportDelivery(operation, performance.now() - startedAt);
             return output;
