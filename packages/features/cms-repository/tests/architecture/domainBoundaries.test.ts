@@ -57,6 +57,7 @@ describe("repository domain boundaries", () => {
                         (target !== undefined &&
                             !target.startsWith(`${domain}/`) &&
                             !target.startsWith("repository-http/") &&
+                            !target.startsWith("site-upgrades/") &&
                             target !== "exports/contracts" &&
                             !target.startsWith("exports/contracts/")) ||
                         (specifier.startsWith("@bernouy/cms-repository") &&

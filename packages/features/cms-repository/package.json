@@ -37,7 +37,9 @@
         "./repository/publication": "./src/exports/repository/publication.ts",
         "./repository/filesystem": "./src/exports/repository/filesystem.ts",
         "./repository/sources": "./src/exports/repository/sources.ts",
-        "./repository/authoring": "./src/exports/repository/authoring.ts"
+        "./repository/authoring": "./src/exports/repository/authoring.ts",
+        "./upgrades": "./src/exports/upgrades/index.ts",
+        "./upgrades/mongo": "./src/exports/upgrades/mongo.ts"
     },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
