@@ -1,7 +1,7 @@
 import { capabilityBindings, pathTemplatesOverlap } from "@bernouy/cms-repository/contracts/bindings";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 
-export type HttpBoundCapability = Omit<CapabilityDefinition, "bindings" | "binding"> & {
+export type HttpBoundCapability = CapabilityDefinition & {
     readonly binding: import("@bernouy/cms-repository/contracts/bindings").HttpBindingDefinition;
 };
 
@@ -18,10 +18,9 @@ export function compileProviderRoutes(releases: readonly ContractRelease[]): rea
     }
     const routes = releases.flatMap((release) =>
         release.capabilities.flatMap((capability) => {
-            const { bindings: _bindings, binding: _legacy, ...domain } = capability;
             return capabilityBindings(capability).flatMap((binding) =>
                 binding.transport === "http"
-                    ? [compileRoute(release.contractId, release.version, { ...domain, binding })]
+                    ? [compileRoute(release.contractId, release.version, { ...capability, binding })]
                     : [],
             );
         }),

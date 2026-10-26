@@ -1,7 +1,7 @@
 import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import { compileProviderRoutes } from "../../src/transport/routes";
 import { expect, test } from "bun:test";
-import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
+import type { HttpBoundCapability as CapabilityDefinition } from "../../src/transport/routes";
 import { decodeProviderContractInput } from "../../src/transport/input";
 
 test("decodes canonical wire names into their declared input properties", async () => {
@@ -37,6 +37,7 @@ test("preserves standard HTTP field syntax for explicitly raw headers", async ()
             required: [],
         },
         binding: {
+            id: "http",
             transport: "http",
             input: {
                 headers: {
@@ -68,6 +69,7 @@ function capability(): CapabilityDefinition {
             required: ["uploadId", "offset", "uploadToken", "bytes"],
         },
         binding: {
+            id: "http",
             transport: "http",
             input: {
                 path: { "upload-id": "uploadId" },
