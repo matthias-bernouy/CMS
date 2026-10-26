@@ -104,13 +104,15 @@ models and validation for CMS-owned installations and site selections.
   depth from exact parent pins rather than directory names. Providers and sites
   claim or select only the concrete contract, never the concrete contract and an
   ancestor together.
+- `ResolvedContract` is the execution view of one admitted release. Preserve its
+  original release/digest and the declaring owner of every effective capability;
+  never flatten inherited capabilities into a `ContractRelease`.
 - A capability may require external capabilities by contract ID, capability ID
   and compatible SemVer range. Requirements are mandatory and provider-neutral.
-  `versionRange` defines accepted versions, not evidence partitions. Optional
-  `supportRanges` has one to four nonempty subsets covering the accepted set,
-  defaulting to `[versionRange]`. Each needs a published witness jointly
-  satisfying one capability's requirements to the same contract, including
-  historical yanked releases. Installability is a later selection decision,
+  `versionRange` defines accepted versions and must describe a nonempty set.
+  Publication needs a known release jointly satisfying one capability's
+  requirements to the same contract, including historical yanked releases.
+  Installability is a later selection decision,
   not historical reference validity. Optional product features need an explicit
   capability/profile model, not optional requirements leaving a capability unusable.
 - Adding or removing a mandatory requirement on an existing capability, or

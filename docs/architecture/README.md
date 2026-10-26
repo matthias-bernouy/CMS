@@ -49,10 +49,10 @@ The Provider that implements `ulvia.cms.content` projects its writable
 `@bernouy/cms-content/rendering`. The production Kernel reads that projection
 through the selected Content delivery capabilities; it never receives the
 writable repository. Kernel sees only published Pages/routes, projected
-settings and renderable Bloc artifacts. The current `delivery.read` capability
-wraps operation-specific JSON in strings; validation of those inner projections
-is incomplete. Contract admission therefore does not yet establish every field
-the Kernel consumes. See the [audit](../AUDIT.md).
+settings and renderable Bloc artifacts. `delivery.read` carries a bounded string
+envelope; the shared `@bernouy/cms-content/delivery` operation protocol deeply
+validates the inputs and decoded projections at both Provider and Kernel
+boundaries. See [typed Content delivery](content-delivery.md).
 File references are resolved through the selected `ulvia.cms.files` provider.
 Sitemap storage is an independent dependency of the Content provider runtime.
 

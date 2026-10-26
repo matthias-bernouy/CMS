@@ -160,7 +160,7 @@ store and records an observation. These workflows are not a second protocol and
 do not give collection JavaScript direct access to credentials.
 
 `/admin/collections` exposes repository discovery, installation, configuration
-and migration through `ulvia.cms.installations`; collection theme editing uses
+and reviewed release upgrades through `ulvia.cms.installations`; collection theme editing uses
 the `theme.*` capabilities of `ulvia.cms.content`, and language/text editing
 uses its `localization.*` capabilities. `/admin/settings` uses the same content
 contract for non-secret site configuration; `/admin/access` only covers members,
@@ -189,8 +189,6 @@ transport rules. See [files and responsive images](../images/README.md).
 
 ## Current Integration Gaps
 
-- Content `delivery.read` validates an outer JSON-string envelope rather than
-  every operation-specific inner projection. See the [audit](../AUDIT.md).
 - Publisher-key namespaces and an MCP repository binding are planned on this
   branch, not mounted services. Current publication uses the configured shared
   mutation signing secret.

@@ -41,15 +41,15 @@ Ulvia CMS installation runtime.
 - Collection assets are discovered recursively below `assets/`; the normalized
   lowercase relative path is their stable collection-local ID. Do not declare
   them in the collection `definition.json`. An optional root
-  `assets/definition.json` contains only per-path generation overrides.
+  `assets/definition.json` contains only per-path `deprecations` metadata.
 - Safe presentation-only SVG assets are admitted with the `inline-svg` profile
   automatically. Invalid or richer SVG files remain ordinary downloadable
   assets and cannot be expanded through `cms-svg`.
 - Authored collection exports may use `"*"` globally or for one resource kind.
   Expand it to exact public resource IDs before admission, never place a wildcard
   in the immutable release, and never accept wildcard dependency imports.
-- Collection migrations are recursive JSON files below `migrations/`, named
-  `<from>-to-<to>.json`. Release admission enforces a cumulative adjacent chain.
+- Collection upgrades use reviewed release switches. Authored `migrations/`
+  directories and resource generation fields are rejected.
 - Contract sources may split capabilities and mocks recursively below
   `capabilities/` and `mocks/`. Sort assembled records by their declared stable
   IDs, never by paths, and reject duplicate or dangling mock ownership.

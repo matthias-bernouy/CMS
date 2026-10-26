@@ -163,7 +163,7 @@ export type CollectionBreakingResource = {
     reason: string;
 };
 
-/** Structural breaks only. Semantic breaks remain author-declared through a resource generation bump. */
+/** Structural breaks only. Semantic breaks require a new resource identity with deprecation metadata. */
 export function collectionUpgradeBreakingResources(
     previous: CollectionRelease,
     next: CollectionRelease,

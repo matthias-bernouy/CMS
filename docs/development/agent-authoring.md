@@ -18,7 +18,7 @@ arbitrary JavaScript is harmless. The Repository server never executes an
 author's build scripts or arbitrary test commands.
 
 Existing collection tests cover admission, styles, assets, dependency graphs,
-installation evolution and migrations. `quality/official-repository` tests
+installation evolution and reviewed release upgrades. `quality/official-repository` tests
 exercise authored official controls and Page-editor behavior. The CLI's
 `tests/stack/kernelSmoke` journey exercises installation, provider access,
 Pages, files and collection upgrades in a production-shaped Docker stack.
@@ -42,7 +42,7 @@ contract does not execute a provider or certify its behavior.
 3. Run focused admission and browser tests relevant to the changed behavior.
    Use a dedicated named preview instance and disposable data for rendering,
    accessibility, settings, locales, assets and dependency interactions.
-4. Review release digest, browser-risk summary, dependency pins, migrations and
+4. Review release digest, browser-risk summary, dependency pins, resource usage and
    declared exports. Run normal workspace verification; use the complete Kernel
    journey when installation/rendering is affected.
 5. Promote the exact reviewed local artifact. An authorized signer claims or

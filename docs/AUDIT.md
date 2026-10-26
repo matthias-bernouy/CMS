@@ -4,6 +4,14 @@ Reviewed on 2026-10-25 against `codex/alpha-v0`, commit `0e660a3c4`.
 This is a source-backed engineering assessment. Passing local checks does not
 establish that the complete deployment or every failure mode has been tested.
 
+## Follow-up status
+
+The typed Content delivery follow-up introduces shared per-operation validators
+at Provider and Kernel boundaries. The shallow-decoder observation below records
+the reviewed revision; see [typed Content delivery](architecture/content-delivery.md)
+for the current protocol and regression coverage. The remaining sections retain
+the original audit context and are not a fresh validation of their current status.
+
 ## Assessment
 
 The platform has coherent ownership, strict artifact admission and useful

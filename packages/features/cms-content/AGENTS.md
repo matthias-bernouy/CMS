@@ -7,6 +7,9 @@ bindings, validation, and read models.
 
 - Root export exposes authoring entity types, `ContentRepository`, in-memory
   repository, validation, and authoring operations.
+- `@bernouy/cms-content/delivery` owns the shared named projection types and deep
+  codecs used by Provider and Kernel. It validates both sides of the bounded
+  transport envelope; it must not depend on cms-repository.
 - `@bernouy/cms-content/rendering` exposes `ContentReader`, its composition
   factory and public rendering helpers. It has published-only page operations,
   rendering settings and renderable bloc artifacts, never editorial queries.
@@ -73,7 +76,7 @@ bindings, validation, and read models.
   i18n or asset filter.
 - Stored HTML/SVG must pass through the existing hardening/sanitizing helpers.
 - Page bloc references should use the existing content-ref helpers.
-- Collection admission, installation, projection and migration orchestration
+- Collection admission, installation, projection and reviewed release upgrades
   belong to `@bernouy/cms-repository`. Content exposes only generic persistence,
   validation and contribution inputs consumed by those projections.
 - Stored Page/Bloc documents, settings and binding contracts must remain stable;

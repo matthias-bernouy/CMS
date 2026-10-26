@@ -8,7 +8,7 @@ The surface owns HTTP authentication, binding dispatch, response mapping and
 the cross-domain adapters from official contract capabilities to feature-owned
 operations. It does not own persistence, environment configuration, listeners,
 provider selection or domain stores.
-Runtimes inject admitted contract releases, an instance runtime report and the
+Runtimes inject resolved views of admitted contract releases, an instance runtime report and the
 feature ports used by those adapters.
 
 Keep domain operations in their owning features. A capability adapter may

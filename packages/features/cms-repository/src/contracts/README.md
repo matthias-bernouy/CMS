@@ -39,6 +39,16 @@ Changing, adding or removing the exact parent is conservatively a major change.
 The parent must already be published, so publication planning orders parents
 before children and cannot admit an unresolved or cyclic lineage.
 
+## Published and resolved contracts
+
+`ContractRelease` is only the authored immutable artifact. Its capability list
+contains declarations owned by that release. `resolveContract(catalogue,
+admission)` returns a separate `ResolvedContract` with the original release and
+digest, its exact lineage and effective capability entries. Each entry keeps
+its `definition` and declaring contract's `owner` coordinate. The execution
+view is never re-admitted or hashed as a new release; Provider and Gateway use
+it without changing the original artifact's capability list.
+
 ## Release and dependency evolution
 
 A capability may declare mandatory requirements:
@@ -49,7 +59,6 @@ requires: [
         contractId: "payment",
         capabilityId: "payment.link.create",
         versionRange: "^1.0.0 || ^2.0.0",
-        supportRanges: ["^1.0.0", "^2.0.0"],
     },
 ]
 ```
@@ -64,14 +73,12 @@ For example, changing `^1.0.0` to `>=1.0.0 <2.0.0` is patch-equivalent;
 adding `|| ^2.0.0` is minor; removing `^1.0.0` is major. Adding or removing a
 mandatory requirement on an existing capability is also major.
 
-`versionRange` defines accepted versions, not a test matrix. Optional
-`supportRanges` declares one to four nonempty publication witness ranges:
-subsets whose union covers the accepted set. Omission means `[versionRange]`,
-even when that range contains `||`. Publication requires a published witness
-for each support range. For one capability's requirements to the same contract,
-that witness must jointly expose all required capabilities and satisfy all
-their ranges. Yanked releases remain historical references; this does not
-prove whole-installation satisfiability or availability.
+`versionRange` declares a nonempty accepted version set. Publication requires
+one known release jointly exposing the required capabilities and satisfying all
+ranges targeting the same dependency contract. A union range needs one compatible
+release, not a representative for every alternative. Yanked releases remain
+historical references; installation separately checks current availability and
+the complete selected dependency graph.
 
 The catalogue keeps publisher ownership across all majors. It compares a
 candidate against the latest stable release in its own major and enforces

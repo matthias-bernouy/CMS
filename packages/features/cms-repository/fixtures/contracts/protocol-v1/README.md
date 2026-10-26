@@ -18,10 +18,9 @@ compatibility.
 
 Capabilities may declare mandatory, provider-neutral `requires` entries naming
 an external contract, capability, and compatible SemVer range. The catalogue
-checks explicit `supportRanges` (defaulting to the whole `versionRange`)
-against published history, including yanked releases. Requirements from one
-capability to the same contract need a joint release witness; installations
-must later select an available release and provider for the whole graph.
+checks that one published release jointly satisfies requirements to the same
+contract, including historical yanked releases. Installation must later select
+an available release and provider for the whole graph.
 
 [HTTP parameters](./http-parameters.md) specifies `json-percent` URL scalar transport and explicit header encoding,
 safe query methods and derived bodyless HEAD error identity. These are validated declarations and codecs,
