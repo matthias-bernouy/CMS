@@ -1,3 +1,4 @@
+import { registerContractUpgradeCapabilities } from "./providers/upgrades";
 import type { ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { ProviderOperationExecutor } from "../../operations/ProviderOperationExecutor";
 import type { CmsCollectionDependencies, UlviaProviderGateway, UlviaProviderManagement } from "../../ports";
@@ -15,6 +16,7 @@ export function registerInstallationCapabilities(
 ): void {
     registerCollectionInstallationCapabilities(dispatcher, dependencies, operations, sources);
     registerProviderInstallationCapabilities(dispatcher, gateway, management);
+    registerContractUpgradeCapabilities(dispatcher, gateway, operations);
 }
 
 export { registerCollectionInstallationCapabilities } from "./collections";

@@ -1,12 +1,12 @@
 import { ProviderCapabilityDispatchError } from "../../dispatch/registry";
-import type { CollectionMigrationTarget } from "@bernouy/cms-repository/collections/installations";
+import type { CollectionUpgradeTarget } from "@bernouy/cms-repository/collections/installations";
 import {
     MAX_CAPABILITY_JSON_BYTES,
     MAX_CAPABILITY_JSON_DEPTH,
     parseStrictJson,
 } from "@bernouy/cms-repository/contracts/protocol";
 
-export function targets(value: unknown): readonly CollectionMigrationTarget[] {
+export function targets(value: unknown): readonly CollectionUpgradeTarget[] {
     if (!Array.isArray(value) || value.length < 1 || value.length > 256) {
         throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
     }
@@ -43,7 +43,7 @@ export async function collectionCommand<T>(operation: () => Promise<T>): Promise
             throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
         }
         if (status === 423) {
-            throw new ProviderCapabilityDispatchError("MIGRATION_IN_PROGRESS", 423);
+            throw new ProviderCapabilityDispatchError("UPGRADE_IN_PROGRESS", 423);
         }
         if (error instanceof TypeError || error instanceof RangeError || status === 400 || status === 422) {
             throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);

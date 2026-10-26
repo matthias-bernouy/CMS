@@ -1,30 +1,30 @@
+import type { SiteUpgradeActive } from "@bernouy/cms-repository/upgrades";
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 import type { CmsCollectionDependencies } from "../../ports";
 
-export function projectMigrationPlan(
-    plan: Awaited<ReturnType<CmsCollectionDependencies["collectionMigrations"]["plan"]>>,
+export function projectUpgradePlan(
+    plan: Awaited<ReturnType<CmsCollectionDependencies["collectionUpgrades"]["plan"]>>,
     references: unknown,
 ) {
     return {
-        expectedRevision: plan.expectedCollectionRevision,
+        expectedRevision: plan.expectedRevision,
         planDigest: plan.planDigest,
-        targets: plan.targets,
-        totalPages: plan.totalPages,
-        operationCount: plan.operationCount,
-        blockedReasons: plan.blockedReasons,
+        status: plan.status,
+        issues: plan.issues.slice(0, 1024),
+        issueCount: plan.issues.length,
+        resources: plan.resources.slice(0, 4096),
+        resourceCount: plan.resources.length,
+        source: plan.source,
+        usageDigest: plan.inventory.digest,
         references,
     };
 }
 
-export function projectMigrationResult(
-    record: Awaited<ReturnType<CmsCollectionDependencies["collectionMigrations"]["execute"]>>,
-) {
+export function projectUpgradeResult(record: SiteUpgradeActive) {
     return {
-        migrationId: record.id,
+        upgradeId: record.id,
         status: record.status,
-        collectionRevision: record.collectionRevisionAfterCommit ?? record.expectedCollectionRevision,
-        totalPages: record.pageCount,
-        operationCount: record.operationGroups.reduce((total, group) => total + group.operations.length, 0),
+        collectionRevision: record.expectedRevision + (record.status === "completed" ? 1 : 0),
     };
 }
 
@@ -47,7 +47,6 @@ export function projectInstalled(
         version: release.version,
         digest: installation.digest,
         ...(installation.repositoryId ? { repositoryId: installation.repositoryId } : {}),
-        dataGeneration: release.dataGeneration ?? 1,
         blocCount: release.blocs.length,
         pageCount: release.pages?.length ?? 0,
         assetCount: release.assets.length,
@@ -73,7 +72,6 @@ export function projectInstalled(
                       description: bloc.description
                           ? resolveCollectionTranslation(release, bloc.description, release.locale)
                           : "",
-                      generation: bloc.generation ?? 1,
                       catalogue: bloc.catalogue ?? "listed",
                   })),
               }

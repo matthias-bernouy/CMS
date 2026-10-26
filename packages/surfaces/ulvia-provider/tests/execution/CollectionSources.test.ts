@@ -65,6 +65,8 @@ test("stages only the exact browser-risk report approved by the caller", async (
         approvedBrowserRiskDigest: browserRiskDigest,
     };
 
+    expect((await sources.prepare([reference]))[0]?.artifact.digest).toBe(artifact.digest);
+    expect(imports).toBe(0);
     await expect(sources.stage([reference])).resolves.toEqual([{ digest: artifact.digest, repositoryId: "official" }]);
     await expect(
         sources.stage([{ ...reference, approvedBrowserRiskDigest: `sha256:${"f".repeat(64)}` }]),

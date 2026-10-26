@@ -11,7 +11,7 @@ import type {
 } from "@bernouy/cms-auth";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { RegisteredPageRoute } from "@bernouy/cms-content/kernel";
-import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
+import type { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { GatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
@@ -20,7 +20,11 @@ import type {
     ProviderInstallationStatus,
     ProviderInstallationStore,
 } from "@bernouy/cms-repository/providers/installations";
-import type { ContractSelection, ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+import type {
+    ContractSelection,
+    ContractSelectionStore,
+    ContractUpgradeService,
+} from "@bernouy/cms-repository/providers/selections";
 import type { FileReference, NamespaceRecord } from "@bernouy/cms-files";
 import type { CmsSecrets } from "@bernouy/cms-secrets";
 import type { Emailer } from "@bernouy/cms-emailer";
@@ -39,7 +43,7 @@ export interface CmsContentDependencies {
 export interface CmsCollectionDependencies {
     readonly collectionAuthoring?: CollectionAuthoring;
     readonly collections: CollectionStore;
-    readonly collectionMigrations: CollectionMigrationService;
+    readonly collectionUpgrades: CollectionUpgradeService;
 }
 
 export interface CmsAccessDependencies {
@@ -84,6 +88,7 @@ interface UlviaProviderAdministratorStore {
 
 export interface UlviaProviderGateway {
     readonly siteId: string;
+    readonly contractUpgrades?: ContractUpgradeService;
     readonly installations: ProviderInstallationStore;
     readonly selections: ContractSelectionStore;
     readonly administrators: UlviaProviderAdministratorStore;

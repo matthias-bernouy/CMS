@@ -1,3 +1,4 @@
+import { parseUlviaSchema, validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { expect, test } from "bun:test";
 import {
     DefaultProviderCapabilityDispatcher,
@@ -13,7 +14,7 @@ const context: ProviderCapabilityInvocationContext = {
     siteId: "default",
     providerId: "ulvia.official",
     subjectId: "00000000-0000-4000-8000-000000000002",
-    idempotencyKey: "migration-1",
+    idempotencyKey: "upgrade-1",
 };
 
 test("Provider operations deduplicate the same input and reject a changed replay", async () => {
@@ -55,7 +56,7 @@ test("Provider operation recovery reclaims an expired lease and records failures
         capabilityId: "resume",
         idempotencyKey: "resume-1",
         inputDigest: `sha256:${"0".repeat(64)}`,
-        input: { id: "migration-1" },
+        input: { id: "upgrade-1" },
         context: { ...context, idempotencyKey: "resume-1" },
         status: "running",
         revision: 2,
@@ -252,14 +253,12 @@ test("Provider operations retain their instance resource until execution finishe
 test("the installations contract exposes a completed operation result only from its detail query", async () => {
     const store = new MemoryProviderOperationStore();
     const executor = new ProviderOperationExecutor(store);
-    executor.register("ulvia.cms.installations", "apply-collection-migration", async () => ({
-        migrationId: "00000000-0000-4000-8000-000000000003",
+    executor.register("ulvia.cms.installations", "apply-collection-upgrade", async () => ({
+        upgradeId: `sha256:${"a".repeat(64)}`,
         status: "completed",
         collectionRevision: 2,
-        totalPages: 1,
-        operationCount: 1,
     }));
-    const queued = await executor.enqueue("ulvia.cms.installations", "apply-collection-migration", {}, context);
+    const queued = await executor.enqueue("ulvia.cms.installations", "apply-collection-upgrade", {}, context);
     executor.register("ulvia.cms.content", "rebuild", async () => ({ rebuilt: true }));
     const unrelated = await executor.enqueue("ulvia.cms.content", "rebuild", {}, context);
     await expectTerminal(store, queued.operationId, "succeeded");
@@ -276,14 +275,25 @@ test("the installations contract exposes a completed operation result only from 
         ),
     );
     expect(detail.result).toEqual({
-        migrationId: "00000000-0000-4000-8000-000000000003",
+        upgradeId: `sha256:${"a".repeat(64)}`,
         status: "completed",
         collectionRevision: 2,
-        totalPages: 1,
-        operationCount: 1,
     });
     const listed = record(await dispatcher.invoke("ulvia.cms.installations", "list-operations", {}, context));
     expect(listed.items).toHaveLength(1);
+    for (const [name, value] of [
+        ["get-operation", detail],
+        ["list-operations", listed],
+    ] as const) {
+        const definition = await Bun.file(
+            new URL(
+                `../../../../official-repository/contracts/ulvia.cms.installations/capabilities/queries/${name}.json`,
+                import.meta.url,
+            ),
+        ).json();
+        validateSchemaValue(parseUlviaSchema(definition.output), value);
+    }
+
     expect((listed.items as unknown[])[0]).not.toHaveProperty("result");
     await expect(
         dispatcher.invoke("ulvia.cms.installations", "get-operation", { operationId: unrelated.operationId }, context),

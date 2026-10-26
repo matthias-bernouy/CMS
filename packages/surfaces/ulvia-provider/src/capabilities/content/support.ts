@@ -14,8 +14,8 @@ export async function configurationCommand<T>(operation: () => Promise<T>): Prom
         if (status === 409) {
             throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
         }
-        if (String(error).includes("migration is in progress")) {
-            throw new ProviderCapabilityDispatchError("MIGRATION_IN_PROGRESS", 423);
+        if (status === 423) {
+            throw new ProviderCapabilityDispatchError("UPGRADE_IN_PROGRESS", 423);
         }
         throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
     }

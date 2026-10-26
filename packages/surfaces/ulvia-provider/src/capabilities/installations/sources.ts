@@ -76,6 +76,16 @@ export class CollectionSources {
     }
 
     async stage(value: unknown): Promise<readonly { digest: string; repositoryId: string }[]> {
+        const prepared = await this.prepare(value);
+        return Promise.all(
+            prepared.map(async ({ target, artifact }) => {
+                await this.store.importAdmittedRelease(artifact);
+                return target;
+            }),
+        );
+    }
+
+    async prepare(value: unknown) {
         if (!Array.isArray(value) || value.length < 1 || value.length > 256) {
             throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
         }
@@ -101,11 +111,7 @@ export class CollectionSources {
                 if (actualBrowserRiskDigest !== reference.approvedBrowserRiskDigest) {
                     throw new ProviderCapabilityDispatchError("BROWSER_CAPABILITIES_APPROVAL_REQUIRED", 409);
                 }
-                const admitted = await this.store.importAdmittedRelease(artifact);
-                if (!sameRelease({ ...admitted.release, digest: admitted.digest }, reference)) {
-                    throw new ProviderCapabilityDispatchError("RELEASE_MISMATCH", 409);
-                }
-                return { digest: admitted.digest, repositoryId: source.id };
+                return { target: { digest: artifact.digest, repositoryId: source.id }, artifact };
             }),
         );
     }

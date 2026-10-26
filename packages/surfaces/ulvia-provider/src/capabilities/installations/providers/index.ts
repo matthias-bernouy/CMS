@@ -1,5 +1,5 @@
-import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
-import type { UlviaProviderGateway, UlviaProviderManagement } from "../../ports";
+import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
+import type { UlviaProviderGateway, UlviaProviderManagement } from "../../../ports";
 import type { GatewayCommandAuditEvent } from "@bernouy/cms-gateway/audit";
 
 export function registerProviderInstallationCapabilities(
@@ -49,15 +49,6 @@ export function registerProviderInstallationCapabilities(
                     .map(projectSelection) ?? [],
         };
     });
-    dispatcher.register("ulvia.cms.installations", "replace-contract-selections", async (input) =>
-        providerCommand(async () => {
-            const selected = await requiredManagement(management).replaceSelections({
-                expectedRevision: revision(input.expectedRevision),
-                selections: selections(input.selections),
-            });
-            return { revision: selected.revision, selections: selected.selected.map(projectSelection) };
-        }),
-    );
     dispatcher.register("ulvia.cms.installations", "set-provider-status", async (input) =>
         providerCommand(() =>
             requiredManagement(management).setStatus({
@@ -245,24 +236,6 @@ async function providerCommand<T>(operation: () => Promise<T>): Promise<T> {
         }
         throw error;
     }
-}
-
-function selections(value: unknown) {
-    if (!Array.isArray(value) || value.length > 256) {
-        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-    }
-    return value.map((entry) => {
-        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-        }
-        const item = entry as Record<string, unknown>;
-        return {
-            installationId: requiredText(item.installationId),
-            contractId: requiredText(item.contractId),
-            version: requiredText(item.version),
-            digest: requiredText(item.digest),
-        };
-    });
 }
 
 function action(value: unknown): "enable" | "disable" | "revoke" {

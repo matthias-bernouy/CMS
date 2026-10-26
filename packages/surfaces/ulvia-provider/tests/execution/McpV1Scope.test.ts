@@ -29,10 +29,19 @@ test("official MCP V1 exposes only Repository, ordinary content, site files and 
             if (release.contractId === "ulvia.cms.installations") {
                 expect(
                     capability.id.includes("collection") ||
-                        ["get-operation", "list-operations"].includes(capability.id),
+                        [
+                            "get-operation",
+                            "list-operations",
+                            "list-site-usage",
+                            "get-site-upgrade-status",
+                            "plan-contract-upgrade",
+                            "apply-contract-upgrade",
+                            "resume-contract-upgrade",
+                            "get-contract-upgrade",
+                        ].includes(capability.id),
                 ).toBe(true);
             }
         }
     }
-    expect(tools).toBe(55);
+    expect(tools).toBe(58);
 });

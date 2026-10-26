@@ -26,7 +26,6 @@ export function projectTextCatalogue(
         );
         return {
             id: text.id,
-            generation: text.generation ?? 1,
             label: text.label ? resolveCollectionTranslation(release, text.label, locale) : text.id,
             description: text.description ? resolveCollectionTranslation(release, text.description, locale) : text.id,
             category: text.category ? resolveCollectionTranslation(release, text.category, locale) : "",

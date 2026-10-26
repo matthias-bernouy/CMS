@@ -1,7 +1,7 @@
 import type { ProviderOperationExecutor } from "../../operations/ProviderOperationExecutor";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { CmsCollectionDependencies } from "../../ports";
-import { projectMigrationPlan, projectMigrationResult, projectSnapshot, projectInstalled } from "./projection";
+import { projectUpgradePlan, projectUpgradeResult, projectSnapshot, projectInstalled } from "./projection";
 import { collectionCommand, integer, parseConfiguration, requiredText, targets } from "./support";
 import type { CollectionSources } from "./sources";
 import { registerCollectionOperationCapabilities } from "./operations";
@@ -17,6 +17,37 @@ export function registerCollectionInstallationCapabilities(
         const snapshot = await dependencies.collections.snapshot(context.siteId);
         return projectSnapshot(snapshot);
     });
+    dispatcher.register("ulvia.cms.installations", "list-site-usage", async (input, context) =>
+        collectionCommand(async () => {
+            const inventory = await dependencies.collectionUpgrades.inventory(context.siteId);
+            const cursor = input.cursor === undefined ? "" : requiredText(input.cursor);
+            const parts = cursor.split(":");
+            const offset = cursor ? Number(parts.pop()) : 0;
+            if (
+                cursor &&
+                (parts.join(":") !== inventory.digest ||
+                    !Number.isSafeInteger(offset) ||
+                    offset < 0 ||
+                    offset > inventory.references.length)
+            ) {
+                throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
+            }
+            const limit = input.limit === undefined ? 100 : integer(input.limit);
+            if (limit < 1 || limit > 500) {
+                throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+            }
+            const next = offset + limit;
+            return {
+                complete: inventory.complete,
+                digest: inventory.digest,
+                unknown: inventory.unknown.slice(0, 1024),
+                unknownCount: inventory.unknown.length,
+                total: inventory.references.length,
+                references: inventory.references.slice(offset, next),
+                ...(next < inventory.references.length ? { cursor: `${inventory.digest}:${next}` } : {}),
+            };
+        }),
+    );
     dispatcher.register("ulvia.cms.installations", "get-collection-installation", async (input, context) => {
         const snapshot = await dependencies.collections.snapshot(context.siteId);
         const collection = snapshot.collections.find(({ collectionId }) => collectionId === input.collectionId);
@@ -53,44 +84,6 @@ export function registerCollectionInstallationCapabilities(
             return projectSnapshot(snapshot);
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "upgrade-collection", async (input, context) => {
-        const expectedRevision = integer(input.expectedRevision);
-        const before = await dependencies.collections.snapshot(context.siteId);
-        assertRevision(before.revision, expectedRevision);
-        const [target] = await collectionTargets([input.target], sources);
-        if (!target) {
-            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-        }
-        const artifact = await dependencies.collections.getRelease(target.digest);
-        const current = artifact
-            ? before.collections.find(({ collectionId }) => collectionId === artifact.release.collectionId)
-            : undefined;
-        if (!artifact || !current) {
-            throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
-        }
-        if ((current.release.dataGeneration ?? 1) !== (artifact.release.dataGeneration ?? 1)) {
-            throw new ProviderCapabilityDispatchError("MIGRATION_REQUIRED", 409);
-        }
-        try {
-            return projectSnapshot(
-                await dependencies.collections.upgrade(
-                    context.siteId,
-                    target.digest,
-                    expectedRevision,
-                    target.repositoryId ?? "",
-                ),
-            );
-        } catch (error) {
-            if (await revisionChanged(dependencies, context.siteId, expectedRevision)) {
-                throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
-            }
-            const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
-            if (status === 409) {
-                throw new ProviderCapabilityDispatchError("INVALID_STATE", 409);
-            }
-            throw error;
-        }
-    });
     dispatcher.register("ulvia.cms.installations", "update-collection-configuration", async (input, context) =>
         collectionCommand(async () => {
             const snapshot = await dependencies.collections.saveConfiguration(
@@ -102,80 +95,94 @@ export function registerCollectionInstallationCapabilities(
             return projectSnapshot(snapshot);
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "plan-collection-migration", async (input, context) =>
+    dispatcher.register("ulvia.cms.installations", "plan-collection-upgrade", async (input, context) =>
         collectionCommand(async () => {
-            const references = structuredClone(input.targets);
-            return projectMigrationPlan(
-                await dependencies.collectionMigrations.plan(
+            const prepared = await sources?.prepare(input.targets);
+            const staged = await collectionTargets(
+                input.targets,
+                sources,
+                prepared?.map(({ target }) => target),
+            );
+            return projectUpgradePlan(
+                await dependencies.collectionUpgrades.plan(
                     context.siteId,
-                    await collectionTargets(input.targets, sources),
-                    await dependencies.collections.revision(context.siteId),
+                    staged,
+                    prepared?.map(({ artifact }) => artifact),
                 ),
-                references,
+                structuredClone(input.targets),
             );
         }),
     );
-    dispatcher.register("ulvia.cms.installations", "get-collection-migration-status", async (input, context) => {
-        const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 20;
-        const [active, audits] = await Promise.all([
-            dependencies.collectionMigrations.getActive(context.siteId),
-            dependencies.collectionMigrations.listAudits(context.siteId, limit),
-        ]);
+    dispatcher.register("ulvia.cms.installations", "get-site-upgrade-status", async (_input, context) => {
+        const active = await dependencies.collectionUpgrades.storage.getActive(context.siteId);
         return {
             maintenance: active !== null,
             ...(active
-                ? { activeMigration: { id: active.id, status: active.status, updatedAt: active.updatedAt } }
+                ? {
+                      activeUpgrade: {
+                          id: active.id,
+                          kind: active.kind,
+                          status: active.status,
+                          createdAt: active.createdAt,
+                      },
+                  }
                 : {}),
-            migrations: audits.map(({ id, status, createdAt, updatedAt, totalPages, operationCount }) => ({
-                id,
-                status,
-                createdAt,
-                updatedAt,
-                totalPages,
-                operationCount,
-            })),
         };
     });
-    dispatcher.register("ulvia.cms.installations", "get-collection-migration", async (input, context) => {
-        const progress = await dependencies.collectionMigrations.getProgress(
+    dispatcher.register("ulvia.cms.installations", "get-collection-upgrade", async (input, context) => {
+        const intent = await dependencies.collectionUpgrades.storage.get(
             context.siteId,
-            requiredText(input.migrationId),
+            requiredText(input.upgradeId),
+            "collection",
         );
-        if (!progress) {
+        if (!intent) {
             throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
         }
-        return progress;
+        return projectUpgradeResult(intent);
     });
-    registerMigrationOperation(dispatcher, operations, "apply-collection-migration", async (input, context) =>
+    registerUpgradeOperation(dispatcher, operations, "apply-collection-upgrade", async (input, context) =>
         collectionCommand(async () =>
-            projectMigrationResult(
-                await dependencies.collectionMigrations.execute(
+            projectUpgradeResult(
+                await dependencies.collectionUpgrades.apply(
                     context.siteId,
                     await collectionTargets(input.targets, sources),
-                    integer(input.expectedRevision),
                     requiredText(input.planDigest),
                 ),
             ),
         ),
     );
-    registerMigrationOperation(dispatcher, operations, "resume-collection-migration", async (input, context) =>
+    registerUpgradeOperation(dispatcher, operations, "resume-collection-upgrade", async (input, context) =>
         collectionCommand(async () =>
-            projectMigrationResult(
-                await dependencies.collectionMigrations.resume(context.siteId, requiredText(input.migrationId)),
-            ),
-        ),
-    );
-    registerMigrationOperation(dispatcher, operations, "rollback-collection-migration", async (input, context) =>
-        collectionCommand(async () =>
-            projectMigrationResult(
-                await dependencies.collectionMigrations.rollback(context.siteId, requiredText(input.migrationId)),
+            projectUpgradeResult(
+                await dependencies.collectionUpgrades.resume(context.siteId, requiredText(input.upgradeId)),
             ),
         ),
     );
 }
 
-async function collectionTargets(value: unknown, sources?: CollectionSources) {
-    return sources ? sources.stage(value) : targets(value);
+async function collectionTargets(
+    value: unknown,
+    sources?: CollectionSources,
+    prepared?: readonly { digest: string; repositoryId: string }[],
+) {
+    const staged = prepared ?? (sources ? await sources.stage(value) : targets(value));
+    return staged.map((target, index) => {
+        const input = (value as Record<string, unknown>[])[index]!;
+        return {
+            ...target,
+            ...(input.configurationJson === undefined
+                ? {}
+                : { configuration: parseConfiguration(input.configurationJson) as Record<string, unknown> }),
+            ...(input.textOverridesJson === undefined
+                ? {}
+                : {
+                      textOverrides: parseConfiguration(input.textOverridesJson) as Record<
+                          string,
+                          Record<string, string>
+                      >,
+                  }),
+        };
+    });
 }
 
 function assertRevision(actual: number, expected: number): void {
@@ -184,15 +191,7 @@ function assertRevision(actual: number, expected: number): void {
     }
 }
 
-async function revisionChanged(
-    dependencies: CmsCollectionDependencies,
-    siteId: string,
-    expected: number,
-): Promise<boolean> {
-    return (await dependencies.collections.revision(siteId)) !== expected;
-}
-
-function registerMigrationOperation(
+function registerUpgradeOperation(
     dispatcher: ProviderCapabilityRegistry,
     operations: ProviderOperationExecutor | undefined,
     capabilityId: string,
