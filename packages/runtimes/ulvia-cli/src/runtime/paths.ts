@@ -68,20 +68,24 @@ function resolveUlviaDataHome(
 }
 
 export async function ensureUlviaPaths(paths: UlviaPaths): Promise<void> {
-    await ensurePrivateDirectory(paths.data);
+    await ensureDirectory(paths.data);
     await Promise.all([
-        ensurePrivateDirectory(paths.repository),
-        ensurePrivateDirectory(paths.services),
-        ensurePrivateDirectory(paths.mongo),
-        ensurePrivateDirectory(paths.cmsFiles),
-        ensurePrivateDirectory(paths.serviceLogs),
-        ...Object.values(paths.proxy).map(ensurePrivateDirectory),
-        ensurePrivateDirectory(paths.instances),
+        ensureDirectory(paths.repository),
+        ensureDirectory(paths.services),
+        ensureDirectory(paths.mongo),
+        ensureDirectory(paths.cmsFiles),
+        ensureDirectory(paths.serviceLogs),
+        ensureDirectory(paths.proxy.certificates),
+        ensureDirectory(paths.proxy.virtualHosts),
+        // Nginx workers serve public HTTP-01 tokens through this dedicated bind mount.
+        ensureDirectory(paths.proxy.challenge, 0o755),
+        ensureDirectory(paths.proxy.acme),
+        ensureDirectory(paths.instances),
     ]);
 }
 
 export async function ensureLocalInstancePaths(paths: LocalInstancePaths): Promise<void> {
-    await Promise.all([ensurePrivateDirectory(paths.root), ensurePrivateDirectory(paths.logs)]);
+    await Promise.all([ensureDirectory(paths.root), ensureDirectory(paths.logs)]);
 }
 
 export async function assertLocalInstancePaths(paths: LocalInstancePaths): Promise<void> {
@@ -96,13 +100,13 @@ export async function assertLocalInstancePaths(paths: LocalInstancePaths): Promi
     }
 }
 
-async function ensurePrivateDirectory(path: string): Promise<void> {
-    await mkdir(path, { recursive: true, mode: 0o700 });
+async function ensureDirectory(path: string, mode = 0o700): Promise<void> {
+    await mkdir(path, { recursive: true, mode });
     const metadata = await lstat(path);
     if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
         throw new Error(`Ulvia data path must be a real directory: ${path}`);
     }
-    await chmod(path, 0o700);
+    await chmod(path, mode);
 }
 
 function absolutePath(value: string, name: string): string {

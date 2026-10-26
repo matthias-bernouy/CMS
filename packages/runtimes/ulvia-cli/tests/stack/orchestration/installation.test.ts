@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ensureUlviaPaths, resolveUlviaPaths } from "../../../src/runtime/paths";
@@ -72,4 +72,31 @@ test("installation configuration rejects ambiguous exposure", () => {
             ports: { http: 5100, repository: 5100, provider: 5103 },
         }),
     ).toThrow(/ports must be distinct/);
+});
+
+test("ACME challenge roots stay readable by Nginx workers across CLI invocations", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-acme-permissions-"));
+    const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
+    try {
+        await ensureUlviaPaths(paths);
+        await chmod(paths.proxy.challenge, 0o700);
+        await chmod(paths.proxy.certificates, 0o755);
+        await ensureUlviaPaths(paths);
+        expect((await stat(paths.proxy.challenge)).mode & 0o777).toBe(0o755);
+        for (const path of [
+            paths.data,
+            paths.services,
+            paths.mongo,
+            paths.cmsFiles,
+            paths.serviceLogs,
+            paths.instances,
+            paths.proxy.certificates,
+            paths.proxy.virtualHosts,
+            paths.proxy.acme,
+        ]) {
+            expect((await stat(path)).mode & 0o777).toBe(0o700);
+        }
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
 });
