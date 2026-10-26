@@ -25,7 +25,7 @@ export function workflowOptions(options: ProviderInstallationWorkflowOptions) {
     const limits = Object.freeze({ ...(options.limits ?? DEFAULT_PROVIDER_INSTALLATION_LIMITS) });
     parseInstallationDocument({}, limits, (value) => value);
     const manifestLimits = normalizeProviderManifestLimits(options.manifestLimits ?? DEFAULT_PROVIDER_MANIFEST_LIMITS);
-    return Object.freeze({ limits, manifestLimits, maxPreparationAgeMs });
+    return Object.freeze({ limits, manifestLimits, maxPreparationAgeMs, retention: options.retention });
 }
 
 function snapshotApproval(command: ProviderInstallationApprovalCommand, limits: Readonly<ProviderInstallationLimits>) {

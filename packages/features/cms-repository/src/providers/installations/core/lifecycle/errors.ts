@@ -6,7 +6,9 @@ export type ProviderInstallationWorkflowCode =
     | "identity_change"
     | "manifest_unavailable"
     | "stale_timestamp"
-    | "invalid_preparation";
+    | "invalid_preparation"
+    | "retention_unknown"
+    | "release_in_use";
 
 export class ProviderInstallationWorkflowError extends Error {
     constructor(

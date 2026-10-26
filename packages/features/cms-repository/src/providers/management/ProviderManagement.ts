@@ -1,3 +1,4 @@
+import type { ProviderReleaseRetention } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import { importProviderManifest } from "cms-repository/providers/sources/importProviderManifest";
 import type { ProviderRepositorySource } from "cms-repository/providers/sources/interfaces";
@@ -12,6 +13,7 @@ import type { ProviderManagementGateway } from "./types";
 
 export type ProviderManagementOptions = Readonly<{
     sources?: readonly ProviderRepositorySource[];
+    retention?: ProviderReleaseRetention;
     readReport: ProviderReportReader;
 }>;
 
@@ -28,9 +30,20 @@ export class ProviderManagement {
     ) {
         this.sources = options.sources ?? [];
         this.readReport = options.readReport;
-        this.connections = new ProviderConnectionWorkflow(gateway, secrets, { readReport: options.readReport });
-        this.lifecycle = new ProviderInstallationLifecycle(gateway.installations, gateway.manifests, () =>
-            new Date().toISOString(),
+        this.connections = new ProviderConnectionWorkflow(gateway, secrets, {
+            readReport: options.readReport,
+            lifecycle: new ProviderInstallationLifecycle(
+                gateway.installations,
+                gateway.manifests,
+                () => new Date().toISOString(),
+                { retention: options.retention },
+            ),
+        });
+        this.lifecycle = new ProviderInstallationLifecycle(
+            gateway.installations,
+            gateway.manifests,
+            () => new Date().toISOString(),
+            { retention: options.retention },
         );
     }
 

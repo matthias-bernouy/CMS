@@ -53,6 +53,7 @@ export type {
     ProviderInstallationScope,
     ProviderInstallationStore,
     ProviderInstallationWorkflowOptions,
+    ProviderReleaseRetention,
     StoredProviderInstallation,
 } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
 export type {

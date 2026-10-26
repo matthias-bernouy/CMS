@@ -1,3 +1,4 @@
+import { checkProviderRetention } from "./retention";
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import { rejectUnknownKeys } from "cms-repository/providers/manifests/core/values";
@@ -97,6 +98,7 @@ export class ProviderInstallationLifecycle {
             this.#options.limits,
             this.#options.manifestLimits,
         );
+        await checkProviderRetention(current, proposal.candidate, this.catalogue, this.#options.retention);
         assertCurrentTimestamp(current, proposal.now);
         return this.issue({
             kind: "provider-installation-preparation",
@@ -122,6 +124,25 @@ export class ProviderInstallationLifecycle {
 
     async modify(preparation: ProviderInstallationPreparation, approvedBy: string) {
         this.assertIssued(preparation, "modify");
+        const current = await this.store.get({
+            siteId: preparation.candidate.siteId,
+            installationId: preparation.candidate.id,
+        });
+        if (!current) {
+            throw new ProviderInstallationWorkflowError("installation_not_found", "Installation is unavailable");
+        }
+        const evidence = await checkProviderRetention(
+            current,
+            preparation.candidate,
+            this.catalogue,
+            this.#options.retention,
+        );
+        if (evidence && !(await this.#options.retention!.isCurrent(evidence.scope, evidence.revision))) {
+            throw new ProviderInstallationWorkflowError(
+                "retention_unknown",
+                "Site release usage changed before manifest approval",
+            );
+        }
         const result = await this.store.reapprove(
             { installationId: preparation.candidate.id, siteId: preparation.candidate.siteId },
             preparation.expectedRevision!,

@@ -36,7 +36,19 @@ export interface ProviderInstallationApprovalCommand {
     readonly approvedBy: string;
 }
 
+export interface ProviderReleaseRetention {
+    snapshot(scope: ProviderInstallationScope): Promise<
+        Readonly<{
+            complete: boolean;
+            revision: string;
+            releases: readonly Readonly<{ contractId: string; version: string; digest: string; location: string }>[];
+        }>
+    >;
+    isCurrent(scope: ProviderInstallationScope, revision: string): Promise<boolean>;
+}
+
 export interface ProviderInstallationWorkflowOptions {
+    readonly retention?: ProviderReleaseRetention;
     readonly limits?: Readonly<ProviderInstallationLimits>;
     readonly manifestLimits?: Readonly<ProviderManifestLimits>;
     readonly maxPreparationAgeMs?: number;
