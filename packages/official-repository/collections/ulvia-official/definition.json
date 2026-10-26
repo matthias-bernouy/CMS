@@ -455,6 +455,30 @@
         { "id": "theme-profile", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
         { "id": "theme-search", "scope": "param", "schema": { "type": "string", "maxLength": 512 } },
         { "id": "theme-token", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
-        { "id": "version", "scope": "param", "schema": { "type": "string", "maxLength": 128 } }
+        { "id": "version", "scope": "param", "schema": { "type": "string", "maxLength": 128 } },
+        {
+            "id": "contract",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "installation",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "upgrade-configuration",
+            "scope": "page",
+            "schema": {
+                "type": "string",
+                "maxLength": 8192
+            }
+        }
     ]
 }

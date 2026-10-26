@@ -54,8 +54,8 @@
         "group": "text.group.admin.diagnostics"
     },
     {
-        "id": "ui-migration-diagnostics-are-unavailable",
-        "label": "text.ui-migration-diagnostics-are-unavailable.label",
+        "id": "ui-upgrade-diagnostics-are-unavailable",
+        "label": "text.ui-upgrade-diagnostics-are-unavailable.label",
         "category": "text.category.admin",
         "group": "text.group.admin.diagnostics"
     },
@@ -102,8 +102,8 @@
         "group": "text.group.admin.diagnostics"
     },
     {
-        "id": "ui-reading-migration-state",
-        "label": "text.ui-reading-migration-state.label",
+        "id": "ui-reading-upgrade-state",
+        "label": "text.ui-reading-upgrade-state.label",
         "category": "text.category.admin",
         "group": "text.group.admin.diagnostics"
     },
@@ -120,8 +120,8 @@
         "group": "text.group.admin.diagnostics"
     },
     {
-        "id": "ui-retained-migration-records",
-        "label": "text.ui-retained-migration-records.label",
+        "id": "ui-retained-upgrade-records",
+        "label": "text.ui-retained-upgrade-records.label",
         "category": "text.category.admin",
         "group": "text.group.admin.diagnostics"
     }

@@ -1,0 +1,67 @@
+<div cms-bloc="ulvia-official-admin-workspace">
+    <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-review-contract-upgrade }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-contract-upgrade-description }}</p>
+    <a cms-bloc="ulvia-official-action" tone="secondary" variant="outline" slot="actions" href="/admin/providers"
+        ><span>{{ cms.i18n.ulvia-official.ui-provider-installations }}</span></a
+    >
+    <section
+        slot="content"
+        cms-query="ulvia.cms.installations:plan-contract-upgrade as plan"
+        cms-query-input='{"selection[contractId]":{"from":"state","key":"@param:ulvia-official-contract"},"selection[installationId]":{"from":"state","key":"@param:ulvia-official-installation"},"selection[version]":{"from":"state","key":"@param:ulvia-official-version"},"selection[digest]":{"from":"state","key":"@param:ulvia-official-digest"}}'
+        cms-query-listen="@param:ulvia-official-contract @param:ulvia-official-installation @param:ulvia-official-version @param:ulvia-official-digest"
+    >
+        <div cms-match="plan.outcome.kind">
+            <span cms-case='"none"'></span>
+            <div cms-case='"error"' cms-match="plan.outcome.code">
+                <p cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                <p cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                <p cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                <p cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                <p cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                <p cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+            </div>
+            <p cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+            <div cms-case='"success"'>
+                <p>{{ plan.data.status }}</p>
+                <div cms-repeat="plan.data.issues as issue">
+                    <strong>{{ issue.message }}</strong>
+                    <p>{{ issue.location }}</p>
+                </div>
+                <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-release-sources }}</h2>
+                <p cms-repeat="plan.data.source as source">{{ source.contractId }} {{ source.version }} {{ source.installationId }}</p>
+                <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-release-targets }}</h2>
+                <div cms-repeat="plan.data.selections as selection">
+                    <p>{{ selection.contractId }} {{ selection.version }} {{ selection.installationId }}</p>
+                </div>
+                <p>{{ cms.i18n.ulvia-official.ui-grants-allow-selected }}</p>
+                <div cms-repeat="plan.data.grants.denied as denied"><p>{{ denied.contractId }} {{ denied.capabilityId }}</p></div>
+                <form
+                    cms-condition="plan.data.status === 'applicable'"
+                    cms-mutation="ulvia.cms.installations:apply-contract-upgrade as mutation"
+                    cms-mutation-redirect="/admin/providers"
+                >
+                    <input type="hidden" name="selections" value="{{ plan.data.selections | json }}" cms-form-value-type="json">
+                    <input type="hidden" name="grants" value="{{ plan.data.grants | json }}" cms-form-value-type="json">
+                    <input type="hidden" name="planDigest" value="{{ plan.data.planDigest }}">
+                    <button cms-bloc="ulvia-official-action" type="submit" tone="primary" variant="filled">
+                        <span>{{ cms.i18n.ulvia-official.ui-apply-upgrade }}</span>
+                    </button>
+                    <div cms-match="mutation.outcome.kind">
+                        <span cms-case='"none"'></span><span cms-case='"success"'></span>
+                        <div cms-case='"error"' cms-match="mutation.outcome.code">
+                            <p cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p cms-case='"UPGRADE_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p cms-case='"IDEMPOTENCY_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        </div>
+                        <p cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>

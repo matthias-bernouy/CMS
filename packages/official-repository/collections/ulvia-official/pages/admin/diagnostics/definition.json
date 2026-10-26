@@ -6,7 +6,7 @@
     "requires": [
         {
             "contractId": "ulvia.cms.installations",
-            "capabilityId": "get-collection-migration-status",
+            "capabilityId": "get-site-upgrade-status",
             "versionRange": "^1.0.0"
         },
         {

@@ -9,12 +9,10 @@
         "ulvia-official-action",
         "ulvia-official-badge",
         "ulvia-official-cluster",
-        "ulvia-official-field",
         "ulvia-official-form-actions",
         "ulvia-official-heading",
         "ulvia-official-list",
         "ulvia-official-list-item",
-        "ulvia-official-select",
         "ulvia-official-stack",
         "ulvia-official-surface"
     ],
@@ -22,11 +20,6 @@
         {
             "contractId": "ulvia.cms.installations",
             "capabilityId": "list-provider-installations",
-            "versionRange": "^1.0.0"
-        },
-        {
-            "contractId": "ulvia.cms.installations",
-            "capabilityId": "replace-contract-selections",
             "versionRange": "^1.0.0"
         },
         {

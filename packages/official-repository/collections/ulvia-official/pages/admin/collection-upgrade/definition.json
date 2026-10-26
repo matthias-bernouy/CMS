@@ -1,0 +1,18 @@
+{
+    "id": "collection-upgrade",
+    "defaultPath": "/admin/collections/upgrade",
+    "name": "page.collection-upgrade.name",
+    "description": "page.collection-upgrade.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "plan-collection-upgrade",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "apply-collection-upgrade",
+            "versionRange": "^1.0.0"
+        }
+    ]
+}

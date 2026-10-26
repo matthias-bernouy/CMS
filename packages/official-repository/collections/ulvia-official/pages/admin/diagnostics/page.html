@@ -2,7 +2,7 @@
     <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-diagnostics }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-live-operational-signals-from-the-selected-cms-contracts }}</p>
     <div cms-bloc="ulvia-official-route-tabs" size="sm" label="{{ cms.i18n.ulvia-official.ui-diagnostics }}" slot="page-navigation">
-        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#migration-health"><span>{{ cms.i18n.ulvia-official.ui-content-maintenance }}</span></a>
+        <a cms-bloc="ulvia-official-route-tab" slot="items" href="#upgrade-health"><span>{{ cms.i18n.ulvia-official.ui-content-maintenance }}</span></a>
         <a cms-bloc="ulvia-official-route-tab" slot="items" href="#collection-operation-health"
             ><span>{{ cms.i18n.ulvia-official.ui-collection-operations }}</span></a
         >
@@ -10,48 +10,40 @@
     </div>
     <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
         <section
-            id="migration-health"
+            id="upgrade-health"
             role="tabpanel"
             slot="items"
-            aria-labelledby="migration-health-title"
-            cms-query="ulvia.cms.installations:get-collection-migration-status as migrations"
-            cms-query-input='{"limit":{"from":"literal","value":20}}'
+            aria-labelledby="upgrade-health-title"
+            cms-query="ulvia.cms.installations:get-site-upgrade-status as upgrades"
         >
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined">
-                <h2 cms-bloc="ulvia-official-heading" slot="content" id="migration-health-title">{{ cms.i18n.ulvia-official.ui-content-maintenance }}</h2>
-                <p slot="content" role="status" cms-condition="migrations.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-migration-state }}</p>
-                <div cms-match="migrations.outcome.kind" slot="content">
+                <h2 cms-bloc="ulvia-official-heading" slot="content" id="upgrade-health-title">{{ cms.i18n.ulvia-official.ui-content-maintenance }}</h2>
+                <p slot="content" role="status" cms-condition="upgrades.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-reading-upgrade-state }}</p>
+                <div cms-match="upgrades.outcome.kind" slot="content">
                     <span cms-case='"none"'></span>
-                    <div cms-match="migrations.outcome.code" cms-case='"error"'>
-                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-migration-diagnostics-are-unavailable }}</p>
+                    <div cms-match="upgrades.outcome.code" cms-case='"error"'>
+                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-upgrade-diagnostics-are-unavailable }}</p>
                     </div>
                     <div cms-bloc="ulvia-official-stack" gap="sm" cms-case='"success"'>
                         <div cms-bloc="ulvia-official-cluster" justify="between" items-align="center" slot="items">
                             <div slot="items">
-                                <strong cms-condition="migrations.data.maintenance">{{ cms.i18n.ulvia-official.ui-maintenance-mode-is-active }}</strong>
-                                <strong cms-condition="migrations.data.maintenance === false">{{
+                                <strong cms-condition="upgrades.data.maintenance">{{ cms.i18n.ulvia-official.ui-maintenance-mode-is-active }}</strong>
+                                <strong cms-condition="upgrades.data.maintenance === false">{{
                                     cms.i18n.ulvia-official.ui-no-maintenance-operation-is-active
                                 }}</strong>
-                                <p>{{ migrations.data.migrations.length }} {{ cms.i18n.ulvia-official.ui-retained-migration-records }}</p>
                             </div>
-                            <div cms-bloc="ulvia-official-badge" tone="warning" cms-condition="migrations.data.maintenance" slot="items">
+                            <div cms-bloc="ulvia-official-badge" tone="warning" cms-condition="upgrades.data.maintenance" slot="items">
                                 <span slot="label">{{ cms.i18n.ulvia-official.ui-maintenance }}</span>
                             </div>
-                            <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="migrations.data.maintenance === false" slot="items">
+                            <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="upgrades.data.maintenance === false" slot="items">
                                 <span slot="label">{{ cms.i18n.ulvia-official.ui-ready }}</span>
                             </div>
                         </div>
-                        <div cms-bloc="ulvia-official-stack" role="list" gap="sm" slot="items">
-                            <article slot="items" cms-repeat="migrations.data.migrations as migration" role="listitem">
-                                <strong>{{ migration.status }} {{ cms.i18n.ulvia-official.ui-copy-a137f17a }} {{ migration.id }}</strong>
-                                <p>
-                                    {{ migration.totalPages }} {{ cms.i18n.ulvia-official.ui-pages }} {{ migration.operationCount }}
-                                    {{ cms.i18n.ulvia-official.ui-operations-9b1b6f78 }} {{ migration.updatedAt | dateLong }}
-                                </p>
-                            </article>
-                        </div>
+                        <p slot="items" cms-condition="upgrades.data.activeUpgrade">
+                            {{ upgrades.data.activeUpgrade.status }} {{ upgrades.data.activeUpgrade.createdAt | dateLong }}
+                        </p>
                     </div>
-                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-migration-diagnostics-are-unavailable }}</p>
+                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-upgrade-diagnostics-are-unavailable }}</p>
                 </div>
             </div>
         </section>

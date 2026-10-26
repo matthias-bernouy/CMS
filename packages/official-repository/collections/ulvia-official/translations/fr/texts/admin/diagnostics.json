@@ -8,7 +8,7 @@
     "text.ui-maintenance.label": "Maintenance",
     "text.ui-maintenance-mode-is-active.label": "Le mode maintenance est actif",
     "text.ui-manifest.label": "· manifeste",
-    "text.ui-migration-diagnostics-are-unavailable.label": "Les diagnostics de migration sont indisponibles.",
+    "text.ui-upgrade-diagnostics-are-unavailable.label": "Les diagnostics de upgrade sont indisponibles.",
     "text.ui-no-collection-operations.label": "Aucune opération de collection n’est actuellement conservée.",
     "text.ui-no-maintenance-operation-is-active.label": "Aucune opération de maintenance n’est active",
     "text.ui-operations-9b1b6f78.label": "opérations ·",
@@ -16,8 +16,8 @@
     "text.ui-provider-diagnostics-are-unavailable.label": "Les diagnostics des providers sont indisponibles.",
     "text.ui-provider-installations.label": "Installations de providers",
     "text.ui-reading-collection-operations.label": "Lecture des opérations de collections…",
-    "text.ui-reading-migration-state.label": "Lecture de l’état de la migration…",
+    "text.ui-reading-upgrade-state.label": "Lecture de l’état de la upgrade…",
     "text.ui-reading-provider-state.label": "Lecture de l’état des providers…",
     "text.ui-ready.label": "Prêt",
-    "text.ui-retained-migration-records.label": "enregistrements de migration conservés"
+    "text.ui-retained-upgrade-records.label": "enregistrements de upgrade conservés"
 }

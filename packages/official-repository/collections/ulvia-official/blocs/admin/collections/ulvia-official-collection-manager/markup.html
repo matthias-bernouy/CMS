@@ -124,48 +124,15 @@
                             </div>
                         </form>
                         <div cms-bloc="ulvia-official-cluster" gap="sm" cms-condition="release.action === 'upgrade'" slot="items">
-                            <form
-                                slot="items"
-                                cms-mutation="ulvia.cms.installations:upgrade-collection as mutation"
-                                cms-sync="@page:ulvia-official-collection-catalogue-mutation"
-                                cms-sync-select="lastSuccess.requestId"
-                            >
-                                <input type="hidden" name="expectedRevision" value="{{ catalogue.data.revision }}" cms-form-value-type="number">
-                                <input type="hidden" name="target[repositoryId]" value="{{ release.repositoryId }}">
-                                <input type="hidden" name="target[publisherId]" value="{{ release.publisherId }}">
-                                <input type="hidden" name="target[collectionId]" value="{{ release.collectionId }}">
-                                <input type="hidden" name="target[version]" value="{{ release.version }}">
-                                <input type="hidden" name="target[digest]" value="{{ release.digest }}">
-                                <input type="hidden" name="target[approvedBrowserRiskDigest]" value="{{ release.browserRiskDigest }}">
-                                <button cms-bloc="ulvia-official-action" size="sm" tone="secondary" variant="outline" type="submit">
-                                    <span>{{ cms.i18n.ulvia-official.ui-try-compatible-upgrade }}</span>
-                                </button>
-
-                                <div cms-match="mutation.outcome.kind">
-                                    <span cms-case='"none"' hidden></span>
-                                    <span cms-case='"success"' hidden></span>
-                                    <div cms-case='"error"' cms-match="mutation.outcome.code">
-                                        <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"INVALID_STATE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"MIGRATION_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                    </div>
-                                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                                </div>
-                            </form>
                             <a
                                 cms-bloc="ulvia-official-action"
                                 size="sm"
                                 tone="primary"
                                 variant="filled"
                                 slot="items"
-                                href="/admin/collections/migration?ulvia-official-repository={{ release.repositoryId | urlencode }}&ulvia-official-publisher={{ release.publisherId | urlencode }}&ulvia-official-collection={{ release.collectionId | urlencode }}&ulvia-official-version={{ release.version | urlencode }}&ulvia-official-digest={{ release.digest | urlencode }}&ulvia-official-browser-risk={{ release.browserRiskDigest | urlencode }}"
+                                href="/admin/collections/upgrade?ulvia-official-repository={{ release.repositoryId | urlencode }}&ulvia-official-publisher={{ release.publisherId | urlencode }}&ulvia-official-collection={{ release.collectionId | urlencode }}&ulvia-official-version={{ release.version | urlencode }}&ulvia-official-digest={{ release.digest | urlencode }}&ulvia-official-browser-risk={{ release.browserRiskDigest | urlencode }}"
                                 ><span>
-                                    {{ cms.i18n.ulvia-official.ui-plan-migration }}
+                                    {{ cms.i18n.ulvia-official.ui-plan-upgrade }}
                                 </span></a
                             >
                         </div>

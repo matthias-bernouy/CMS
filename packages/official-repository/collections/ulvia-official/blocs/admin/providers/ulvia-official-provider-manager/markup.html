@@ -163,67 +163,26 @@
             </div>
 
             <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items" id="contract-routing" role="tabpanel">
-                <form
-                    slot="content"
-                    cms-mutation="ulvia.cms.installations:replace-contract-selections as mutation"
-                    cms-sync="@page:ulvia-official-providers-mutation"
-                    cms-sync-select="lastSuccess.requestId"
-                    cms-mutation-reset="false"
-                >
-                    <input type="hidden" name="expectedRevision" value="{{ providers.data.selectionRevision }}" cms-form-value-type="number">
-                    <div cms-bloc="ulvia-official-stack" gap="lg">
-                        <header slot="items">
-                            <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-contract-routing }}</h3>
-                        </header>
-                        <div cms-bloc="ulvia-official-field" label-position="top" cms-repeat="providers.data.routes as route" slot="items">
-                            <span slot="label">{{ route.contractId }}</span>
-                            <span slot="description">
-                                {{ cms.i18n.ulvia-official.ui-choose-an-exact-immutable-release }}
-                            </span>
-                            <div cms-bloc="ulvia-official-select" slot="control">
-                                <select id="provider-route-{{ route.contractId }}" name="selections[]" cms-form-value-type="json" cms-form-empty="omit">
-                                    <option value="" selected="{{ !route.selectedDigest }}">
-                                        {{ cms.i18n.ulvia-official.ui-not-selected }}
-                                    </option>
-                                    <option
-                                        cms-repeat="route.options as option"
-                                        cms-condition="option.status === 'ready' || (option.selection.installationId === route.selectedInstallationId && option.selection.digest === route.selectedDigest)"
-                                        value="{{ option.selection | json }}"
-                                        selected="{{ option.selection.installationId === route.selectedInstallationId && option.selection.digest === route.selectedDigest }}"
-                                    >
-                                        {{ option.providerId }} {{ option.accountId }} {{ option.selection.version }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <p slot="items" cms-condition="providers.data.routes.length === 0">
-                            {{ cms.i18n.ulvia-official.ui-no-contract-route-is-available }}
-                        </p>
-                        <div cms-bloc="ulvia-official-form-actions" actions-align="end" slot="items">
-                            <p slot="actions" role="status" aria-live="polite" cms-condition="mutation.activity === 'submitting'">
-                                {{ cms.i18n.ulvia-official.ui-saving }}
-                            </p>
-                            <p slot="actions" role="alert" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
-                                {{ cms.i18n.ulvia-official.ui-request-failed }}
-                            </p>
-                            <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" type="submit">
-                                <span>{{ cms.i18n.ulvia-official.ui-save-contract-routing }}</span>
-                            </button>
+                <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
+                    <h3 cms-bloc="ulvia-official-heading" slot="items">{{ cms.i18n.ulvia-official.ui-contract-routing }}</h3>
+                    <div slot="items" cms-repeat="providers.data.routes as route">
+                        <h4 cms-bloc="ulvia-official-heading">{{ route.contractId }}</h4>
+                        <p>{{ cms.i18n.ulvia-official.ui-choose-an-exact-immutable-release }}</p>
+                        <div cms-repeat="route.options as option" cms-condition="option.status === 'ready'">
+                            <a
+                                cms-bloc="ulvia-official-action"
+                                tone="secondary"
+                                variant="outline"
+                                href="/admin/providers/upgrade?ulvia-official-contract={{ option.selection.contractId | urlencode }}&ulvia-official-installation={{ option.selection.installationId | urlencode }}&ulvia-official-version={{ option.selection.version | urlencode }}&ulvia-official-digest={{ option.selection.digest | urlencode }}"
+                            >
+                                <span
+                                    >{{ option.providerId }} {{ option.accountId }} {{ option.selection.version }}
+                                    {{ cms.i18n.ulvia-official.ui-review-contract-upgrade }}</span
+                                >
+                            </a>
                         </div>
                     </div>
-
-                    <div cms-match="mutation.outcome.kind">
-                        <span cms-case='"none"' hidden></span>
-                        <span cms-case='"success"' hidden></span>
-                        <div cms-case='"error"' cms-match="mutation.outcome.code">
-                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                            <p role="alert" cms-case='"INVALID_SELECTION"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                        </div>
-                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
         <div role="alert" cms-case='"failure"'>

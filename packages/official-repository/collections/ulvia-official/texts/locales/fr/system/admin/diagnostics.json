@@ -8,7 +8,7 @@
     "ui-maintenance": "Maintenance",
     "ui-maintenance-mode-is-active": "Le mode maintenance est actif",
     "ui-manifest": "· manifeste",
-    "ui-migration-diagnostics-are-unavailable": "Les diagnostics de migration sont indisponibles.",
+    "ui-upgrade-diagnostics-are-unavailable": "Les diagnostics de upgrade sont indisponibles.",
     "ui-no-collection-operations": "Aucune opération de collection n’est actuellement conservée.",
     "ui-no-maintenance-operation-is-active": "Aucune opération de maintenance n’est active",
     "ui-operations-9b1b6f78": "opérations ·",
@@ -16,8 +16,8 @@
     "ui-provider-diagnostics-are-unavailable": "Les diagnostics des providers sont indisponibles.",
     "ui-provider-installations": "Installations de providers",
     "ui-reading-collection-operations": "Lecture des opérations de collections…",
-    "ui-reading-migration-state": "Lecture de l’état de la migration…",
+    "ui-reading-upgrade-state": "Lecture de l’état de la upgrade…",
     "ui-reading-provider-state": "Lecture de l’état des providers…",
     "ui-ready": "Prêt",
-    "ui-retained-migration-records": "enregistrements de migration conservés"
+    "ui-retained-upgrade-records": "enregistrements de upgrade conservés"
 }

@@ -12,8 +12,8 @@
         "group": "text.group.admin.workspaces"
     },
     {
-        "id": "ui-install-immutable-releases-configure-collections-and-preview-migrations-before-applying-them",
-        "label": "text.ui-install-immutable-releases-configure-collections-and-preview-migrations-before-applying-them.label",
+        "id": "ui-install-immutable-releases-configure-collections-and-preview-upgrades-before-applying-them",
+        "label": "text.ui-install-immutable-releases-configure-collections-and-preview-upgrades-before-applying-them.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },
@@ -192,8 +192,8 @@
         "group": "text.group.admin.workspaces"
     },
     {
-        "id": "ui-migration-status",
-        "label": "text.ui-migration-status.label",
+        "id": "ui-upgrade-status",
+        "label": "text.ui-upgrade-status.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },
@@ -210,8 +210,8 @@
         "group": "text.group.admin.workspaces"
     },
     {
-        "id": "ui-plan-migration",
-        "label": "text.ui-plan-migration.label",
+        "id": "ui-plan-upgrade",
+        "label": "text.ui-plan-upgrade.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },
@@ -240,8 +240,8 @@
         "group": "text.group.admin.workspaces"
     },
     {
-        "id": "ui-apply-migration",
-        "label": "text.ui-apply-migration.label",
+        "id": "ui-apply-upgrade",
+        "label": "text.ui-apply-upgrade.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },
@@ -288,14 +288,14 @@
         "group": "text.group.admin.workspaces"
     },
     {
-        "id": "ui-migration-plan-unavailable",
-        "label": "text.ui-migration-plan-unavailable.label",
+        "id": "ui-upgrade-plan-unavailable",
+        "label": "text.ui-upgrade-plan-unavailable.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },
     {
-        "id": "ui-migration-preview",
-        "label": "text.ui-migration-preview.label",
+        "id": "ui-upgrade-preview",
+        "label": "text.ui-upgrade-preview.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },
@@ -306,8 +306,8 @@
         "group": "text.group.admin.workspaces"
     },
     {
-        "id": "ui-preparing-migration-plan",
-        "label": "text.ui-preparing-migration-plan.label",
+        "id": "ui-preparing-upgrade-plan",
+        "label": "text.ui-preparing-upgrade-plan.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },
@@ -324,14 +324,14 @@
         "group": "text.group.admin.workspaces"
     },
     {
-        "id": "ui-review-the-plan-before-applying-the-migration",
-        "label": "text.ui-review-the-plan-before-applying-the-migration.label",
+        "id": "ui-review-the-plan-before-applying-the-upgrade",
+        "label": "text.ui-review-the-plan-before-applying-the-upgrade.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },
     {
-        "id": "ui-starting-migration",
-        "label": "text.ui-starting-migration.label",
+        "id": "ui-starting-upgrade",
+        "label": "text.ui-starting-upgrade.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
     },

@@ -25,11 +25,6 @@
             "contractId": "ulvia.cms.installations",
             "capabilityId": "install-collection",
             "versionRange": "^1.0.0"
-        },
-        {
-            "contractId": "ulvia.cms.installations",
-            "capabilityId": "upgrade-collection",
-            "versionRange": "^1.0.0"
         }
     ],
     "slots": {},

@@ -1,0 +1,100 @@
+<div cms-bloc="ulvia-official-admin-workspace">
+    <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-upgrade-preview }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-review-the-plan-before-applying-the-upgrade }}</p>
+    <a cms-bloc="ulvia-official-action" tone="secondary" variant="outline" slot="actions" href="/admin/collections"
+        ><span>{{ cms.i18n.ulvia-official.ui-back-to-collections }}</span></a
+    >
+    <span slot="secondary-label">{{ cms.i18n.ulvia-official.ui-collections }}</span>
+    <div cms-bloc="ulvia-official-collection-navigation" slot="secondary-navigation"></div>
+    <div slot="content" cms-bloc="ulvia-official-field" label-position="top">
+        <span slot="label">{{ cms.i18n.ulvia-official.ui-upgrade-target-configuration }}</span>
+        <span slot="description">{{ cms.i18n.ulvia-official.ui-upgrade-target-configuration-help }}</span>
+        <div cms-bloc="ulvia-official-textarea" slot="control">
+            <textarea
+                cms-sync="@page:ulvia-official-upgrade-configuration"
+                aria-label="{{ cms.i18n.ulvia-official.ui-upgrade-target-configuration }}"
+            ></textarea>
+        </div>
+    </div>
+    <section
+        slot="content"
+        cms-query="ulvia.cms.installations:plan-collection-upgrade as plan"
+        cms-query-input='{"targets[0][repositoryId]":{"from":"state","key":"@param:ulvia-official-repository"},"targets[0][publisherId]":{"from":"state","key":"@param:ulvia-official-publisher"},"targets[0][collectionId]":{"from":"state","key":"@param:ulvia-official-collection"},"targets[0][version]":{"from":"state","key":"@param:ulvia-official-version"},"targets[0][digest]":{"from":"state","key":"@param:ulvia-official-digest"},"targets[0][approvedBrowserRiskDigest]":{"from":"state","key":"@param:ulvia-official-browser-risk"},"targets[0][configurationJson]":{"from":"state","key":"@page:ulvia-official-upgrade-configuration","optional":true}}'
+        cms-query-listen="@page:ulvia-official-upgrade-configuration @param:ulvia-official-repository @param:ulvia-official-publisher @param:ulvia-official-collection @param:ulvia-official-version @param:ulvia-official-digest @param:ulvia-official-browser-risk"
+    >
+        <div cms-condition="plan.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-preparing-upgrade-plan }}</div>
+        <div cms-match="plan.outcome.kind">
+            <span cms-case='"none"'></span>
+            <div cms-case='"error"' cms-match="plan.outcome.code">
+                <div cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-upgrade-plan-unavailable }}</div>
+                <div cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-upgrade-plan-unavailable }}</div>
+                <div cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-upgrade-plan-unavailable }}</div>
+                <div cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-upgrade-plan-unavailable }}</div>
+                <div cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-upgrade-plan-unavailable }}</div>
+                <div cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-upgrade-plan-unavailable }}</div>
+            </div>
+            <div cms-case='"success"'>
+                <div cms-bloc="ulvia-official-stack" gap="lg">
+                    <div cms-bloc="ulvia-official-surface" radius="sm" padding="md" appearance="outlined" slot="items">
+                        <div cms-bloc="ulvia-official-stack" gap="md" slot="content">
+                            <h2 cms-bloc="ulvia-official-heading" slot="items">{{ cms.i18n.ulvia-official.ui-plan-summary }}</h2>
+                            <p slot="items">{{ plan.data.status }}</p>
+                            <div slot="items">
+                                <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-release-sources }}</h3>
+                                <p cms-repeat="plan.data.source as source">{{ source.collectionId }} {{ source.version }}</p>
+                                <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-release-targets }}</h3>
+                                <p cms-repeat="plan.data.references as target">{{ target.collectionId }} {{ target.version }}</p>
+                            </div>
+                            <div slot="items" cms-repeat="plan.data.issues as issue">
+                                <strong>{{ issue.message }}</strong>
+                                <p>{{ issue.location }}</p>
+                                <p cms-condition="issue.replacement">{{ issue.replacement }}</p>
+                            </div>
+                            <div slot="items" cms-repeat="plan.data.resources as resource">
+                                <p>{{ resource.change }} {{ resource.kind }} {{ resource.id }}</p>
+                                <p cms-condition="resource.replacement">{{ resource.replacement }}</p>
+                            </div>
+                            <form
+                                slot="items"
+                                cms-condition="plan.data.status === 'applicable'"
+                                cms-mutation="ulvia.cms.installations:apply-collection-upgrade as mutation"
+                                cms-mutation-redirect="/admin/collections"
+                            >
+                                <input type="hidden" name="planDigest" value="{{ plan.data.planDigest }}">
+                                <input type="hidden" name="targets" value="{{ plan.data.references | json }}" cms-form-value-type="json">
+                                <div cms-bloc="ulvia-official-form-actions" actions-align="end">
+                                    <div slot="actions" cms-condition="mutation.activity === 'submitting'">
+                                        {{ cms.i18n.ulvia-official.ui-starting-upgrade }}
+                                    </div>
+                                    <div slot="actions" cms-condition="(mutation.outcome.kind === 'error' || mutation.outcome.kind === 'failure')">
+                                        {{ cms.i18n.ulvia-official.ui-request-failed }}
+                                    </div>
+                                    <button cms-bloc="ulvia-official-action" tone="primary" variant="filled" slot="actions" type="submit">
+                                        <span>{{ cms.i18n.ulvia-official.ui-apply-upgrade }}</span>
+                                    </button>
+                                </div>
+
+                                <div cms-match="mutation.outcome.kind">
+                                    <span cms-case='"none"'></span>
+                                    <span cms-case='"success"'></span>
+                                    <div cms-case='"error"' cms-match="mutation.outcome.code">
+                                        <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"RELEASE_MISMATCH"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"BROWSER_CAPABILITIES_APPROVAL_REQUIRED"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"UPGRADE_IN_PROGRESS"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"IDEMPOTENCY_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                    </div>
+                                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-upgrade-plan-unavailable }}</div>
+        </div>
+    </section>
+</div>

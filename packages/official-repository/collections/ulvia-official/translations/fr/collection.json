@@ -9,8 +9,8 @@
     "page.confirm-email.name": "Confirmer l’adresse e-mail",
     "page.collection-details.description": "Consultez et configurez une Collection installée.",
     "page.collection-details.name": "Détails de la Collection",
-    "page.collection-migration.description": "Vérifiez le plan de migration d’une Collection avant de l’appliquer.",
-    "page.collection-migration.name": "Migration de Collection",
+    "page.collection-upgrade.description": "Vérifiez le plan de upgrade d’une Collection avant de l’appliquer.",
+    "page.collection-upgrade.name": "Upgrade de Collection",
     "page.page-details.description": "Gérez une Page, ses routes localisées, sa publication et ses métadonnées de recherche.",
     "page.page-details.name": "Détails de la Page",
     "page.page-editor.description": "Composez une Page avec les Blocs statiques installés sur ce site.",
@@ -30,5 +30,7 @@
     "page.reset-password.description": "Choisissez un nouveau mot de passe à l’aide d’un lien de récupération à usage unique.",
     "page.reset-password.name": "Réinitialiser le mot de passe",
     "page.settings.description": "Configurez l’identité, la disponibilité et les langues du site.",
-    "page.settings.name": "Paramètres"
+    "page.settings.name": "Paramètres",
+    "page.contract-upgrade.name": "Mise à jour des contrats",
+    "page.contract-upgrade.description": "Vérifier les sélections de contrats et les autorisations du site."
 }

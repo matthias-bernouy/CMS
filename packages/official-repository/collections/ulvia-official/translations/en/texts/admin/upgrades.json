@@ -1,0 +1,9 @@
+{
+    "text.ui-review-contract-upgrade.label": "Review contract upgrade",
+    "text.ui-contract-upgrade-description.label": "Contract upgrade guidance",
+    "text.ui-grants-allow-selected.label": "Selected capabilities are allowed except the explicit denials below.",
+    "text.ui-upgrade-target-configuration.label": "Target configuration (JSON, optional)",
+    "text.ui-upgrade-target-configuration-help.label": "Target configuration guidance",
+    "text.ui-release-sources.label": "Current releases",
+    "text.ui-release-targets.label": "Target releases"
+}
