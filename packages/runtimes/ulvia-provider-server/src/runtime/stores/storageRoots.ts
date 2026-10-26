@@ -22,3 +22,15 @@ async function resolveStorageRoot(path: string, name: string): Promise<StorageRo
         throw new Error(`${name} must reference an existing directory`, { cause: error });
     }
 }
+
+export function instanceDatabaseName(storageKey: string): string {
+    if (!/^[a-z0-9][a-z0-9-]{0,62}$/u.test(storageKey)) {
+        throw new TypeError("Provider instance storage key is invalid");
+    }
+    return `ulvia_${storageKey.replaceAll("-", "_")}`;
+}
+export function instanceMongoUrl(controlUrl: string, storageKey: string): string {
+    const url = new URL(controlUrl);
+    url.pathname = `/${instanceDatabaseName(storageKey)}`;
+    return url.toString();
+}

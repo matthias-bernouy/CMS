@@ -35,16 +35,6 @@ export function parseHttpUrl(raw: string, name: string): string {
     return url.href.replace(/\/$/, "");
 }
 
-export function parseNonNegativeInteger(raw: string | undefined, name: string, fallback: number): number {
-    if (raw === undefined) {
-        return fallback;
-    }
-    if (!/^\d+$/.test(raw)) {
-        throw new Error(`${name} must be a non-negative integer`);
-    }
-    return Number(raw);
-}
-
 export function parseBoolean(raw: string | undefined, name: string, fallback: boolean): boolean {
     if (raw === undefined) {
         return fallback;

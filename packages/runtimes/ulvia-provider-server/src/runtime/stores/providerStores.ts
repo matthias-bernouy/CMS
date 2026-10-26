@@ -1,3 +1,4 @@
+import { createCollectionUpgradeAnalysis } from "./collections/upgradeAnalysis";
 import { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
@@ -7,10 +8,7 @@ import {
     withCollectionPageRoutes,
     withInstalledCollections,
 } from "@bernouy/cms-repository/collections/content";
-import {
-    CollectionMigrationService,
-    withCollectionMigrationWriteFence,
-} from "@bernouy/cms-repository/collections/installations";
+import { CollectionUpgradeService } from "@bernouy/cms-repository/collections/installations";
 import {
     MongoOAuthStore,
     MongoAuthTokenStore,
@@ -21,13 +19,14 @@ import {
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { MongoCmsRepository, MongoPageRouteRegistry } from "@bernouy/cms-content/mongo";
-import { MongoCollectionMigrationStorage } from "@bernouy/cms-repository/collections/mongo";
+import { MongoSiteUpgradeStorage } from "@bernouy/cms-repository/upgrades/mongo";
+import { withSiteWriteFence } from "@bernouy/cms-repository/upgrades";
 import { createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { ValidatingSecretStore } from "@bernouy/secret-store";
 import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
 import { MongoClient } from "mongodb";
 import type { RuntimeKekConfig } from "../../runtimeEnvKek";
-import { CMS_REPOSITORY_FENCED_MUTATIONS, COLLECTION_STORE_FENCED_MUTATIONS } from "./migrationWritePolicy";
+import { CMS_REPOSITORY_FENCED_MUTATIONS, COLLECTION_STORE_FENCED_MUTATIONS } from "./collections/siteWritePolicy";
 import { createEnvelopeSecretCrypto } from "./envelopeCrypto";
 import { CmsFilesService, CmsImageDerivatives } from "@bernouy/cms-files";
 import { MongoCmsFilesStore } from "@bernouy/cms-files/mongo";
@@ -53,7 +52,6 @@ const SCOPE_ID = "default";
 export type ProviderStoreConfig = Readonly<{
     MONGO_URL: string;
     CMS_KEK: RuntimeKekConfig;
-    CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: number;
     CMS_FILES_DIR: string;
     CMS_SESSION_SECRET: string;
     KERNEL_PUBLIC_URL: string;
@@ -65,12 +63,18 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     const db = mongo.db();
     const releases = new MongoReleaseCatalogue(db);
     const manifests = new MongoProviderManifestCatalogue(db, releases);
-    const installations = new MongoProviderInstallationStore(db, manifests, () => new Date().toISOString());
-    await installations.init();
-    const selections = new MongoContractSelectionStore(
-        db,
-        new CatalogueSelectionDependencies(releases, manifests, installations),
-    );
+    const upgradeStorage = new MongoSiteUpgradeStorage(db);
+    await upgradeStorage.init();
+    const rawInstallations = new MongoProviderInstallationStore(db, manifests, () => new Date().toISOString());
+    await rawInstallations.init();
+    const installations = withSiteWriteFence(rawInstallations, upgradeStorage, SCOPE_ID, [
+        "approve",
+        "reapprove",
+        "setStatus",
+    ]);
+    const selectionDependencies = new CatalogueSelectionDependencies(releases, manifests, installations);
+    const selectionStore = new MongoContractSelectionStore(db, selectionDependencies);
+    const selections = withSiteWriteFence(selectionStore, upgradeStorage, SCOPE_ID, ["replace"]);
 
     const secretCrypto = await createEnvelopeSecretCrypto(db, env.CMS_KEK).catch(async (error) => {
         await mongo.close();
@@ -91,7 +95,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         await rawCollections.snapshot(SCOPE_ID),
         await innerRepo.getAllPages(),
     );
-    const migrationCollections = withCollectionPageRoutes(rawCollections, pageRoutes, {
+    const upgradeCollections = withCollectionPageRoutes(rawCollections, pageRoutes, {
         coordinator: pageRouteMutations,
         getSitePages: () => innerRepo.getAllPages(),
         resolveSitePath: async (path) => {
@@ -100,7 +104,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         },
     });
     const validatedRepo = new ValidatingCmsRepository(
-        withInstalledCollections(innerRepo, migrationCollections, SCOPE_ID, pageRoutes),
+        withInstalledCollections(innerRepo, upgradeCollections, SCOPE_ID, pageRoutes),
         {
             resolveCapabilities: selectedCapabilityResolver(SCOPE_ID, selections, releases),
             requireQueryCapabilityResolution: true,
@@ -109,22 +113,24 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         },
     );
     await validatePageLinks(validatedRepo, pageRoutes, SCOPE_ID);
-    const migrationRepo = withSitePageRoutes(validatedRepo, pageRoutes, SCOPE_ID, pageRouteMutations);
-    const migrationStorage = new MongoCollectionMigrationStorage(db);
-    await migrationStorage.init();
-    const collectionMigrations = new CollectionMigrationService(migrationRepo, migrationCollections, migrationStorage, {
-        rollbackRetentionCount: env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
-        onRetentionError: (error) => logger.error("collection.migration.retention.failed", {}, error),
-    });
-    const repo = withCollectionMigrationWriteFence(
-        migrationRepo,
-        migrationStorage,
-        SCOPE_ID,
-        CMS_REPOSITORY_FENCED_MUTATIONS,
+    const upgradeRepo = withSitePageRoutes(validatedRepo, pageRoutes, SCOPE_ID, pageRouteMutations);
+    const collectionUpgrades = new CollectionUpgradeService(
+        upgradeRepo,
+        upgradeCollections,
+        upgradeStorage,
+        createCollectionUpgradeAnalysis(SCOPE_ID, selections, releases, selectionDependencies),
+        async (siteId) =>
+            synchronizePageRoutes(
+                pageRoutes,
+                siteId,
+                await rawCollections.snapshot(siteId),
+                await innerRepo.getAllPages(),
+            ),
     );
-    const collections = withCollectionMigrationWriteFence(
-        migrationCollections,
-        migrationStorage,
+    const repo = withSiteWriteFence(upgradeRepo, upgradeStorage, SCOPE_ID, CMS_REPOSITORY_FENCED_MUTATIONS);
+    const collections = withSiteWriteFence(
+        upgradeCollections,
+        upgradeStorage,
         (_method, args) => String(args[0]),
         COLLECTION_STORE_FENCED_MUTATIONS,
     );
@@ -187,8 +193,8 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         runtimeSessionSecret: env.CMS_SESSION_SECRET,
         collections,
         pageRoutes,
-        collectionMigrations,
-        migrationStorage,
+        collectionUpgrades,
+        upgradeStorage,
         mongo,
         db,
         repo,
@@ -208,6 +214,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         manifests,
         installations,
         selections,
+        selectionChanges: { store: selectionStore, dependencies: selectionDependencies },
         sitemapStore: new LocalFsBlobStore(join(env.CMS_FILES_DIR, "sitemaps")),
         close: () => mongo.close(),
     };

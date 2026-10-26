@@ -1,3 +1,6 @@
+import { createProviderRetention } from "../stores/collections/retention";
+import { instanceMongoUrl } from "../stores/storageRoots";
+import { createNativeInvocationAuthorizer } from "../gateway/nativeAuthorization";
 import { join } from "node:path";
 import { mkdir } from "node:fs/promises";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
@@ -159,7 +162,6 @@ export class ProviderInstanceHost {
         const storesStartedAt = performance.now();
         const stores = await createProviderStores(
             {
-                CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: this.env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
                 CMS_SESSION_SECRET: credentials.sessionSecret,
                 CMS_KEK: {
                     activeKeyId: "instance",
@@ -178,6 +180,7 @@ export class ProviderInstanceHost {
             const gateway = await createProviderGateway(stores, SITE_ID);
             const managementForProfile = (profile: OfficialInstanceProfile) =>
                 new ProviderManagement(gateway, stores.contractSecrets.installations, {
+                    retention: createProviderRetention(gateway, stores.upgradeStorage, profile, instance.id),
                     sources: [this.#providerSource],
                     readReport: async () => providerReport(instance, profile),
                 });
@@ -273,6 +276,12 @@ export class ProviderInstanceHost {
                     siteId: SITE_ID,
                     report,
                     dispatcher,
+                    authorizeInvocation: createNativeInvocationAuthorizer(
+                        SITE_ID,
+                        report,
+                        stores.selections,
+                        stores.installations,
+                    ),
                 },
             };
             this.logger.info("provider.instance.composition.created", {
@@ -323,7 +332,7 @@ function providerReport(instance: ProviderInstanceRecord, profile: OfficialInsta
         providerId: profile.manifest.providerId,
         instanceId: instance.id,
         account: { id: instance.id, label: instance.label },
-        buildVersion: profile.manifest.version,
+        buildVersion: "1.0.0",
         manifest: { version: profile.manifest.version, digest: profile.manifest.digest as ProviderManifestDigest },
         implementations: profile.contracts.map((contract) => ({
             ...contract,
@@ -335,13 +344,4 @@ function providerReport(instance: ProviderInstanceRecord, profile: OfficialInsta
 
 function compositionKey(instance: ProviderInstanceRecord): string {
     return `${instance.id}\0${instance.profile.id}\0${instance.profile.version}`;
-}
-
-function instanceMongoUrl(controlUrl: string, storageKey: string): string {
-    if (!/^[a-z0-9][a-z0-9-]{0,62}$/u.test(storageKey)) {
-        throw new TypeError("Provider instance storage key is invalid");
-    }
-    const url = new URL(controlUrl);
-    url.pathname = `/ulvia_${storageKey.replaceAll("-", "_")}`;
-    return url.toString();
 }

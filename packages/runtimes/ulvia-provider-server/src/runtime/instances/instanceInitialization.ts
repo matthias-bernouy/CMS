@@ -42,8 +42,13 @@ export async function installOfficialCollection(
         throw new Error("Official administration collection does not provide its login Page");
     }
     if (installed?.digest !== imported.digest) {
-        const method = installed ? "upgrade" : "install";
-        await composition.stores.collections[method](SITE_ID, imported.digest, snapshot.revision, source.id);
+        if (installed) {
+            const targets = [{ digest: imported.digest, repositoryId: source.id }];
+            const plan = await composition.stores.collectionUpgrades.plan(SITE_ID, targets);
+            await composition.stores.collectionUpgrades.apply(SITE_ID, targets, plan.planDigest);
+        } else {
+            await composition.stores.collections.install(SITE_ID, imported.digest, snapshot.revision, source.id);
+        }
         execution.throwIfLeaseLost();
     }
     await initializeOfficialLoginPage(composition, entry.publisherId, entry.collectionId, execution);

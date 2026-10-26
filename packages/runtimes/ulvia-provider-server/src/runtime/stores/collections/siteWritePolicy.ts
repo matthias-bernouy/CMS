@@ -52,9 +52,7 @@ const CMS_REPOSITORY_NON_MUTATIONS = [
 export const COLLECTION_STORE_FENCED_MUTATIONS = [
     "install",
     "installMany",
-    "upgrade",
-    "commitMigration",
-    "restoreMigration",
+    "commitUpgrade",
     "saveConfiguration",
     "uninstall",
     "saveTexts",

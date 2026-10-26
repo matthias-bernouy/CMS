@@ -1,3 +1,5 @@
+import { ContractUpgradeService } from "@bernouy/cms-repository/providers/selections";
+import { capabilityGranted } from "@bernouy/cms-repository/providers/selections";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { CapabilityGateway, CatalogueGatewayRouteResolver } from "@bernouy/cms-gateway";
 import { MongoGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit/mongo";
@@ -30,7 +32,14 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
         routes,
         identities,
         transport: new HttpGatewayTransport({ network }),
-        authorize: access.authorize,
+        authorize: async (actor, capability, route) => {
+            const current = await selections.get(siteId);
+            return Boolean(
+                current &&
+                    capabilityGranted(current.grants, route.selection.contractId, capability.id) &&
+                    (await access.authorize(actor, capability, route)),
+            );
+        },
         commandAudit,
     });
     const authenticateProvider = async (token: string): Promise<string | null> => {
@@ -79,9 +88,19 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
         ) {
             throw Object.assign(new Error("Gateway invocation route is unavailable"), { code: "route_not_found" });
         }
+        const current = await selections.get(siteId);
+        if (!current || !capabilityGranted(current.grants, input.contractId, input.capabilityId)) {
+            throw Object.assign(new Error("Capability is not granted for this site"), {
+                code: "forbidden",
+                status: 403,
+            });
+        }
         const secret = await resolveSecret(route.installation.installation.providerTokenRef);
         if (!secret) {
             throw new Error("Provider invocation credential is unavailable");
+        }
+        if (!(await routes.isCurrent(route))) {
+            throw Object.assign(new Error("Invocation authorization changed"), { code: "stale_route", status: 409 });
         }
         const issuedAt = Math.floor(Date.now() / 1_000);
         return {
@@ -100,8 +119,48 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
         };
     };
 
+    const contractUpgrades = new ContractUpgradeService(
+        stores.selectionChanges.store,
+        stores.selectionChanges.dependencies,
+        stores.upgradeStorage,
+        {
+            protectedContracts: ["ulvia.cms.installations"],
+            usage: async () => {
+                const inventory = await stores.collectionUpgrades.inventory(siteId);
+                return {
+                    complete: inventory.complete,
+                    revision: inventory.digest,
+                    unknown: inventory.unknown,
+                    requirements: inventory.references.flatMap((reference) =>
+                        reference.type !== "resource" && reference.scope === "runtime" ? [reference] : [],
+                    ),
+                };
+            },
+            served: async (selection) => {
+                const stored = await installations.get({ siteId, installationId: selection.installationId });
+                const report = stored?.observation?.report;
+                const served = report?.implementations.find(
+                    (implementation) =>
+                        implementation.contractId === selection.contractId &&
+                        implementation.version === selection.version &&
+                        implementation.digest === selection.digest,
+                );
+                return {
+                    available: stored?.installation.status === "enabled" && served?.status === "ready",
+                    revision: JSON.stringify({
+                        installation: stored?.installation,
+                        instanceId: report?.instanceId,
+                        manifest: report?.manifest,
+                        implementations: report?.implementations,
+                    }),
+                };
+            },
+        },
+    );
+
     return {
         siteId,
+        contractUpgrades,
         releases,
         manifests,
         installations,

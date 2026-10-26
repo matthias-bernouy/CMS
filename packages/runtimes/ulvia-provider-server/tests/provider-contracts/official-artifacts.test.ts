@@ -7,7 +7,7 @@ import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
-import { loadOfficialArtifacts } from "../../src/runtime/instances/officialArtifacts";
+import { loadOfficialArtifacts } from "../../src/runtime/instances/profiles/artifacts";
 
 const ROOT = resolve(import.meta.dir, "../../../ulvia-cli/dist/bootstrap");
 

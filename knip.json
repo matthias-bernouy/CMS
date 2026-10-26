@@ -29,7 +29,16 @@
             ]
         },
         "packages/surfaces/cms-kernel": {
-            "entry": ["src/index.ts", "tests/contracts/publicReader.fixture.ts"]
+            "entry": [
+                "src/index.ts",
+                "tests/contracts/publicReader.fixture.ts"
+            ]
+        },
+        "packages/runtimes/ulvia-provider-server": {
+            "entry": [
+                "src/index.ts",
+                "src/checkRetention.ts"
+            ]
         }
     },
     "ignoreFiles": [

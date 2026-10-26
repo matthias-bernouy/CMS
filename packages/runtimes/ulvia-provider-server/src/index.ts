@@ -1,3 +1,4 @@
+import { assertHostedReleaseRetention, managedReleaseReader } from "./runtime/instances/profiles/retention";
 import { MongoClient } from "mongodb";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
@@ -16,7 +17,7 @@ import { ProviderInstanceHost } from "./runtime/instances/ProviderInstanceHost";
 import { RecoverySupervisor } from "./runtime/recovery/RecoverySupervisor";
 import { MongoProviderInstanceRegistry } from "./runtime/instances/MongoProviderInstanceRegistry";
 import { MongoInstanceTransitionStore } from "./runtime/instances/MongoInstanceTransitionStore";
-import { loadOfficialArtifacts } from "./runtime/instances/officialArtifacts";
+import { loadOfficialArtifacts } from "./runtime/instances/profiles/artifacts";
 import { mountUlviaProvider } from "./runtime/gateway/mountUlviaProvider";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
 import { readProviderRuntimeEnv } from "./runtimeEnv";
@@ -65,6 +66,13 @@ try {
         });
         const artifacts = await loadOfficialArtifacts(providerSource, collectionSource);
         const profiles = new OfficialInstanceProfiles(artifacts.profiles, artifacts.defaultProfile);
+        const managedInstances = await instances.list();
+        await assertHostedReleaseRetention(
+            profiles,
+            managedInstances,
+            await transitions.listRetained(),
+            managedReleaseReader(mongo, profiles, managedInstances),
+        );
         const instanceHost = new ProviderInstanceHost(env, credentials, profiles, logger);
         host = instanceHost;
         const provisioner = new OfficialInstanceProvisioner(

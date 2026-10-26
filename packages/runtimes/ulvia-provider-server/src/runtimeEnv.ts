@@ -1,11 +1,4 @@
-import {
-    parseHttpUrl,
-    parseBoolean,
-    parseNonNegativeInteger,
-    parsePort,
-    requiredEnv,
-    type RuntimeEnvSource,
-} from "./runtimeEnvParsing";
+import { parseHttpUrl, parseBoolean, parsePort, requiredEnv, type RuntimeEnvSource } from "./runtimeEnvParsing";
 import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
 import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
 
@@ -20,7 +13,6 @@ export type ProviderRuntimeEnv = Readonly<{
     CMS_FILES_DIR: string;
     CMS_SESSION_SECRET: string;
     CMS_KEK: RuntimeKekConfig;
-    CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: number;
 }>;
 
 export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntimeEnv {
@@ -40,14 +32,6 @@ export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntim
     } catch {
         throw new Error("ULVIA_PROVIDER_OPERATOR_TOKEN is invalid");
     }
-    const migrationRetention = parseNonNegativeInteger(
-        source.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
-        "CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION",
-        100,
-    );
-    if (migrationRetention > 10_000) {
-        throw new Error("CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION must be at most 10000");
-    }
     return {
         ULVIA_PROVIDER_PORT,
         ULVIA_PROVIDER_HOST: parseListenerHost(source.ULVIA_PROVIDER_HOST),
@@ -63,7 +47,6 @@ export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntim
         CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
         CMS_KEK: parseRuntimeKekConfig(source),
-        CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: migrationRetention,
     };
 }
 

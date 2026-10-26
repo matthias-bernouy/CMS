@@ -9,7 +9,7 @@ import type {
 } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
 import type { InstanceComposition } from "./ProviderInstanceHost";
-import { loadOfficialManifest } from "./officialArtifacts";
+import { loadOfficialManifest } from "./profiles/artifacts";
 import { initializeOfficialAdministrator, installOfficialCollection } from "./instanceInitialization";
 
 const BOOTSTRAP_ACTOR = "system:provider-provisioner";

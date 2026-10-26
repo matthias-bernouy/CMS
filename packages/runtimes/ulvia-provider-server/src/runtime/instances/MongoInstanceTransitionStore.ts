@@ -49,6 +49,10 @@ export class MongoInstanceTransitionStore implements InstanceTransitionStore {
         return value ? fromDocument(value) : null;
     }
 
+    async listRetained(): Promise<readonly InstanceTransitionRecord[]> {
+        return (await this.#transitions.find({ status: { $ne: "succeeded" } }).toArray()).map(fromDocument);
+    }
+
     async listRecoverable(now: string, limit: number): Promise<readonly InstanceTransitionRecord[]> {
         return (
             await this.#transitions
