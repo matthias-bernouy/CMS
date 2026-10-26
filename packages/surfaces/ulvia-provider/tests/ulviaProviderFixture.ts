@@ -20,11 +20,13 @@ export function providerOptions(
     dispatcher: DefaultProviderCapabilityDispatcher,
     instanceId = PROVIDER_INSTANCE_ID,
     logger: Logger = NOOP_LOGGER,
+    authorizeInvocation?: UlviaProviderInstanceRuntime["authorizeInvocation"],
 ): UlviaProviderOptions {
     const runtime: UlviaProviderInstanceRuntime = {
         siteId: "default",
         report: { ...providerReport(...contracts), instanceId },
         dispatcher,
+        ...(authorizeInvocation ? { authorizeInvocation } : {}),
     };
     return {
         contracts: contracts.map(({ release }) => release),
@@ -132,13 +134,16 @@ export async function contractRelease(version = "1.0.0") {
                         required: ["id", "value"],
                     },
                     errors: [],
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/provider/echo/{id}",
-                        input: { path: { id: "id" }, body: { properties: ["value"] } },
-                        response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/provider/echo/{id}",
+                            input: { path: { id: "id" }, body: { properties: ["value"] } },
+                            response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
+                        },
+                    ],
                 },
             ],
         }),

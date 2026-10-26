@@ -11,6 +11,7 @@ export type UlviaProviderInstanceRuntime = Readonly<{
     siteId: string;
     report: ProviderRuntimeReport;
     dispatcher: ProviderCapabilityRegistry;
+    authorizeInvocation?: (claims: ProviderInvocationClaims) => Promise<boolean>;
 }>;
 
 export type UlviaProviderInstanceLease = Readonly<{
@@ -75,6 +76,7 @@ export class UlviaProvider {
                                 providerId: runtime.report.providerId,
                             },
                             options.logger,
+                            runtime.authorizeInvocation,
                         );
                         relays.set(runtime.dispatcher, relay);
                     }

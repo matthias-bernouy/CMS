@@ -201,3 +201,31 @@ describe("UlviaProvider", () => {
         }
     });
 });
+
+test("revoked site grants block invocation tokens issued before revocation", async () => {
+    const contract = await contractRelease();
+    const dispatcher = new DefaultProviderCapabilityDispatcher();
+    let allowed = true;
+    let calls = 0;
+    dispatcher.register("ulvia.cms.fixture", "echo", async (input) => {
+        calls++;
+        return { id: input.id, value: input.value };
+    });
+    const runner = new BunRunner();
+    new UlviaProvider(
+        runner,
+        providerOptions([contract], dispatcher, undefined, undefined, async () => allowed),
+    );
+    const server = serveForTest(runner);
+    const headers = { ...invocationHeaders("issued-before-revocation"), "Content-Type": "application/json" };
+    const request = () =>
+        server.request("POST", "/v1/provider/echo/record-1", { headers, body: JSON.stringify({ value: "hello" }) });
+    try {
+        expect((await request()).status).toBe(200);
+        allowed = false;
+        expect((await request()).status).toBe(403);
+        expect(calls).toBe(1);
+    } finally {
+        await server.stop();
+    }
+});

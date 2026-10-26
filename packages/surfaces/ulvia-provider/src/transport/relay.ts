@@ -21,6 +21,7 @@ export function createProviderContractRelay(
     dispatcher: ProviderCapabilityDispatcher,
     scope: { readonly siteId: string; readonly providerId: string },
     logger: Logger,
+    authorize: (claims: ProviderInvocationClaims) => Promise<boolean> = async () => true,
 ): (request: Request, claims: ProviderInvocationClaims) => Promise<Response | null> {
     return async (request, claims) => {
         const url = new URL(request.url);
@@ -64,6 +65,9 @@ export function createProviderContractRelay(
             });
         }
         try {
+            if (!(await authorize(claims))) {
+                return new Response(null, { status: 403, headers: { "Cache-Control": "no-store" } });
+            }
             const dispatchStartedAt = performance.now();
             const dispatched = await dispatcher.invoke(contractId, capability.id, input, context);
             reportDispatch(logger, contractId, capability.id, performance.now() - dispatchStartedAt);
