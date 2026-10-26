@@ -91,10 +91,13 @@ test("a parent contract call is routed through its selected specialization", asy
             {
                 ...parentRoute.release.admission.release.capabilities[0],
                 id: "sql.configure",
-                binding: {
-                    ...parentRoute.release.admission.release.capabilities[0]!.binding,
-                    path: "/sql/configuration",
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        ...parentRoute.release.admission.release.capabilities[0]!.bindings[0],
+                        path: "/sql/configuration",
+                    },
+                ],
             },
         ],
         extends: {

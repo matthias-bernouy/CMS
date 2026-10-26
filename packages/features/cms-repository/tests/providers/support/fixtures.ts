@@ -26,13 +26,16 @@ export function contractDocument(contractId: string, capabilityId: string, versi
                     required: ["id"],
                 },
                 errors: [],
-                binding: {
-                    transport: "http",
-                    method: "POST",
-                    path: `/v1/${contractId.replaceAll(".", "/")}`,
-                    input: { body: true },
-                    response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "POST",
+                        path: `/v1/${contractId.replaceAll(".", "/")}`,
+                        input: { body: true },
+                        response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
+                    },
+                ],
             },
         ],
     };

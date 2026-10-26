@@ -41,12 +41,15 @@ test.skipIf(!image)(
                         input: { type: "object", properties: {}, required: [] },
                         output: { type: "null" },
                         errors: [],
-                        binding: {
-                            transport: "http",
-                            method: "GET",
-                            path: "/ping",
-                            response: { successStatuses: [204], contentTypes: [], errorStatuses: {} },
-                        },
+                        bindings: [
+                            {
+                                id: "http",
+                                transport: "http",
+                                method: "GET",
+                                path: "/ping",
+                                response: { successStatuses: [204], contentTypes: [], errorStatuses: {} },
+                            },
+                        ],
                     },
                 ],
             });

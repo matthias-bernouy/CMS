@@ -39,17 +39,20 @@ describe("HTTP body representation", () => {
                     },
                     ["attachment"],
                 ),
-                binding: {
-                    transport: "http",
-                    method: "POST",
-                    path: "/v1/files",
-                    input: { body: { binaryProperty: "attachment" } },
-                    response: {
-                        successStatuses: [200],
-                        contentTypes: ["application/json"],
-                        errorStatuses: { INVALID_RECIPIENT: 422 },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "POST",
+                        path: "/v1/files",
+                        input: { body: { binaryProperty: "attachment" } },
+                        response: {
+                            successStatuses: [200],
+                            contentTypes: ["application/json"],
+                            errorStatuses: { INVALID_RECIPIENT: 422 },
+                        },
                     },
-                },
+                ],
             }),
         );
 

@@ -41,12 +41,9 @@ describe("contract specialization", () => {
         const parent = await admitContractRelease(contractDocument({ version: "1.0.0" }));
         const smtp = capabilityDocument({
             id: "email.smtp.configure",
-            binding: {
-                transport: "http",
-                method: "PUT",
-                path: "/v1/smtp/configuration",
-                input: { body: true },
-            },
+            bindings: [
+                { id: "http", transport: "http", method: "PUT", path: "/v1/smtp/configuration", input: { body: true } },
+            ],
         });
         const child = await admitContractRelease(
             contractDocument({

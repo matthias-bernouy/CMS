@@ -15,20 +15,23 @@ describe("HTTP input binding compilation", () => {
                     },
                     ["messageId", "payload"],
                 ),
-                binding: {
-                    transport: "http",
-                    method: "PATCH",
-                    path: "/v1/messages/{messageId}",
-                    input: {
-                        path: { messageId: "messageId" },
-                        query: { locale: "locale" },
-                        headers: {
-                            "x-sender-alias": { property: "sender", encoding: "uri-component" },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "PATCH",
+                        path: "/v1/messages/{messageId}",
+                        input: {
+                            path: { messageId: "messageId" },
+                            query: { locale: "locale" },
+                            headers: {
+                                "x-sender-alias": { property: "sender", encoding: "uri-component" },
+                            },
+                            body: { properties: ["payload"] },
                         },
-                        body: { properties: ["payload"] },
+                        response: { successStatuses: [200], contentTypes: ["application/json"] },
                     },
-                    response: { successStatuses: [200], contentTypes: ["application/json"] },
-                },
+                ],
             }),
         );
 
@@ -51,13 +54,16 @@ describe("HTTP input binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: { body: { properties: ["recipient"] } },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: { body: { properties: ["recipient"] } },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("unmapped input properties: templateId");
@@ -65,16 +71,19 @@ describe("HTTP input binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: {
-                            query: { recipient: "recipient" },
-                            body: { properties: ["recipient", "templateId"] },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: {
+                                query: { recipient: "recipient" },
+                                body: { properties: ["recipient", "templateId"] },
+                            },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
                         },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    ],
                 }),
             ),
         ).toThrow("mapped more than once");
@@ -85,18 +94,21 @@ describe("HTTP input binding compilation", () => {
             expect(() =>
                 compileHttpBinding(
                     capability({
-                        binding: {
-                            transport: "http",
-                            method: "POST",
-                            path: "/v1/messages",
-                            input: {
-                                headers: {
-                                    [header]: { property: "recipient", encoding: "uri-component" },
+                        bindings: [
+                            {
+                                id: "http",
+                                transport: "http",
+                                method: "POST",
+                                path: "/v1/messages",
+                                input: {
+                                    headers: {
+                                        [header]: { property: "recipient", encoding: "uri-component" },
+                                    },
+                                    body: { properties: ["templateId"] },
                                 },
-                                body: { properties: ["templateId"] },
+                                response: { successStatuses: [200], contentTypes: ["application/json"] },
                             },
-                            response: { successStatuses: [200], contentTypes: ["application/json"] },
-                        },
+                        ],
                     }),
                 ),
             ).toThrow("gateway-owned");
@@ -107,18 +119,21 @@ describe("HTTP input binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: {
-                            headers: {
-                                range: { property: "recipient", encoding: "http-field" },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: {
+                                headers: {
+                                    range: { property: "recipient", encoding: "http-field" },
+                                },
+                                body: { properties: ["templateId"] },
                             },
-                            body: { properties: ["templateId"] },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
                         },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    ],
                 }),
             ),
         ).not.toThrow();
@@ -133,16 +148,19 @@ describe("HTTP input binding compilation", () => {
                         },
                         ["count", "templateId"],
                     ),
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: {
-                            headers: { count: { property: "count", encoding: "http-field" } },
-                            body: { properties: ["templateId"] },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: {
+                                headers: { count: { property: "count", encoding: "http-field" } },
+                                body: { properties: ["templateId"] },
+                            },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
                         },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    ],
                 }),
             ),
         ).toThrow("non-nullable string");
@@ -155,13 +173,16 @@ describe("HTTP input binding compilation", () => {
                 capability({
                     behavior: { effect: "query", execution: "sync" },
                     input: objectSchema({ secret: sensitive }, ["secret"]),
-                    binding: {
-                        transport: "http",
-                        method: "GET",
-                        path: "/v1/private",
-                        input: { query: { secret: "secret" } },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "GET",
+                            path: "/v1/private",
+                            input: { query: { secret: "secret" } },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("sensitive parameters must use headers");
@@ -170,13 +191,16 @@ describe("HTTP input binding compilation", () => {
             capability({
                 behavior: { effect: "query", execution: "sync" },
                 input: objectSchema({ access: sensitive }, []),
-                binding: {
-                    transport: "http",
-                    method: "GET",
-                    path: "/v1/private",
-                    input: { query: { access: "access" } },
-                    response: { successStatuses: [200], contentTypes: ["application/json"] },
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "GET",
+                        path: "/v1/private",
+                        input: { query: { access: "access" } },
+                        response: { successStatuses: [200], contentTypes: ["application/json"] },
+                    },
+                ],
             }),
         );
         expect(access.query).toEqual([{ encoding: "uri-component", wireName: "access", property: "access" }]);
@@ -187,13 +211,16 @@ describe("HTTP input binding compilation", () => {
             compileHttpBinding(
                 capability({
                     behavior: { effect: "query", execution: "sync" },
-                    binding: {
-                        transport: "http",
-                        method: "GET",
-                        path: "/v1/messages",
-                        input: { body: true },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "GET",
+                            path: "/v1/messages",
+                            input: { body: true },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("GET capabilities cannot have a body");

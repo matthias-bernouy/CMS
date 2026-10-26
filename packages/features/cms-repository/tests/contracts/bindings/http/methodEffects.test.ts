@@ -12,15 +12,18 @@ describe("HTTP method and capability effect", () => {
                             behavior: { effect: "command", execution: "sync", idempotency },
                             input: objectSchema({}),
                             output: { type: "null" },
-                            binding: {
-                                transport: "http",
-                                method,
-                                path: "/v1/items",
-                                response: {
-                                    successStatuses: [200],
-                                    contentTypes: ["application/json"],
+                            bindings: [
+                                {
+                                    id: "http",
+                                    transport: "http",
+                                    method,
+                                    path: "/v1/items",
+                                    response: {
+                                        successStatuses: [200],
+                                        contentTypes: ["application/json"],
+                                    },
                                 },
-                            },
+                            ],
                         }),
                     ),
                 ).toThrow(`${method} capabilities must be queries`);
@@ -44,12 +47,15 @@ describe("HTTP method and capability effect", () => {
                 capability({
                     behavior: { effect: "query", execution: "sync" },
                     input: objectSchema({}),
-                    binding: {
-                        transport: "http",
-                        method: "QUERY",
-                        path: "/v1/items",
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "QUERY",
+                            path: "/v1/items",
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("QUERY capabilities require a JSON body");
@@ -58,13 +64,16 @@ describe("HTTP method and capability effect", () => {
                 capability({
                     behavior: { effect: "query", execution: "sync" },
                     input: objectSchema({ id: { type: "string", maxLength: 20 } }, ["id"]),
-                    binding: {
-                        transport: "http",
-                        method: "QUERY",
-                        path: "/v1/items",
-                        input: { body: true },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "QUERY",
+                            path: "/v1/items",
+                            input: { body: true },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ).method,
         ).toBe("QUERY");
@@ -77,12 +86,15 @@ describe("HTTP method and capability effect", () => {
                     behavior: { effect: "query", execution: "sync" },
                     input: objectSchema({}),
                     output: { type: "null" },
-                    binding: {
-                        transport: "http",
-                        method: "HEAD",
-                        path: "/v1/items",
-                        response: { successStatuses: [200], contentTypes: [] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "HEAD",
+                            path: "/v1/items",
+                            response: { successStatuses: [200], contentTypes: [] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow('unsupported HTTP method "HEAD"');
@@ -93,13 +105,16 @@ describe("HTTP method and capability effect", () => {
             capability({
                 behavior: { effect: "query", execution: "sync" },
                 input: objectSchema({ id: { type: "string", maxLength: 20 } }, ["id"]),
-                binding: {
-                    transport: "http",
-                    method: "GET",
-                    path: "/v1/items/{id}",
-                    input: { path: { id: "id" } },
-                    response: { successStatuses: [200], contentTypes: ["application/json"] },
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "GET",
+                        path: "/v1/items/{id}",
+                        input: { path: { id: "id" } },
+                        response: { successStatuses: [200], contentTypes: ["application/json"] },
+                    },
+                ],
             }),
         );
         expect(compiled.pathParameters).toEqual([{ encoding: "uri-component", property: "id", wireName: "id" }]);

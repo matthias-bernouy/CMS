@@ -53,7 +53,6 @@ export function parseCapability(
             "input",
             "output",
             "errors",
-            "binding",
             "bindings",
             "mocks",
             "requires",
@@ -82,7 +81,7 @@ export function parseCapability(
     const errors = parseErrors(record.errors, `${path}.errors`, schemaState);
     const behavior = parseBehavior(record.behavior, `${path}.behavior`);
     const bindings = parseCapabilityBindings(record, path, limits);
-    if (bindings.bindings?.some((binding) => binding.transport === "mcp")) {
+    if (bindings.bindings.some((binding) => binding.transport === "mcp")) {
         validateMcpSchemas(input as UlviaObjectSchema, output, errors, path);
     }
     const responseEffects = parseResponseEffects(record.responseEffects, `${path}.responseEffects`);

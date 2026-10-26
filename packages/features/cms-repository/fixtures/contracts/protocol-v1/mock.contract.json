@@ -44,7 +44,7 @@
                     "retryable": false
                 }
             ],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "GET",
                 "path": "/v1/receipts/{receiptId}",
@@ -64,7 +64,7 @@
                         "NOT_FOUND": 404
                     }
                 }
-            },
+             }],
             "mocks": [
                 {
                     "id": "found",

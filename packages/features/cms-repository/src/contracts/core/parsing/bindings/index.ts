@@ -9,12 +9,6 @@ export function parseCapabilityBindings(
     path: string,
     limits: Readonly<ReleaseLimits>,
 ) {
-    if (record.binding !== undefined) {
-        if (record.bindings !== undefined) {
-            throw new ReleaseValidationError("invalid_binding", "binding and bindings are mutually exclusive", path);
-        }
-        return { binding: parseHttpBinding(record.binding, `${path}.binding`, limits) };
-    }
     const source = expectArray(record.bindings, `${path}.bindings`, "invalid_binding");
     if (!source.length || source.length > 16) {
         throw new ReleaseValidationError(

@@ -29,13 +29,16 @@ function binaryRelease(overrides: Record<string, unknown> = {}): Record<string, 
         capabilities: [
             capabilityDocument({
                 output: { type: "binary", maxBytes: 1024 },
-                binding: {
-                    transport: "http",
-                    method: "POST",
-                    path: "/v1/messages",
-                    input: { body: true },
-                    response: { successStatuses: [200], contentTypes: ["image/svg+xml"] },
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "POST",
+                        path: "/v1/messages",
+                        input: { body: true },
+                        response: { successStatuses: [200], contentTypes: ["image/svg+xml"] },
+                    },
+                ],
                 mocks: [{ id: "sample", input, outcome: { kind: "success", output: { assetId: asset.id } } }],
                 ...overrides,
             }),
@@ -49,7 +52,7 @@ describe("contract mock assets", () => {
             new URL("../../../fixtures/contracts/protocol-v1/mock.contract.json", import.meta.url),
         ).text();
         const admitted = await admitContractBundleJson(json, [{ id: asset.id, bytes: assetBytes }]);
-        expect(admitted.digest).toBe("sha256:155d407e13a70dff204944c01343f8e13f4790a350e022f0bc505c3fec770fb9");
+        expect(admitted.digest).toBe("sha256:aa21a94ab76221e4a52cee1e78d5fa376a6acdcbf6508ade1943718694b62e82");
         expect(admitted.release.capabilities[0]?.mocks).toHaveLength(2);
     });
 
@@ -105,13 +108,16 @@ describe("contract mock assets", () => {
             capabilities: [
                 capabilityDocument({
                     output: { type: "binary", maxBytes: 8 },
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: { body: true },
-                        response: { successStatuses: [200], contentTypes: ["application/octet-stream"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: { body: true },
+                            response: { successStatuses: [200], contentTypes: ["application/octet-stream"] },
+                        },
+                    ],
                     mocks: fixtureAssets.map(({ id }) => ({
                         id,
                         input,
@@ -136,13 +142,16 @@ describe("contract mock assets", () => {
             capabilities: [
                 capabilityDocument({
                     input: objectSchema({ attachment: { type: "binary", maxBytes: 1024 } }, ["attachment"]),
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: { body: { binaryProperty: "attachment" } },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: { body: { binaryProperty: "attachment" } },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
+                        },
+                    ],
                     mocks: [{ id: "upload", input: { attachment: { assetId: asset.id } }, outcome: success }],
                 }),
             ],

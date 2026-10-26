@@ -10,7 +10,7 @@ const dependency = (version: string, ids: readonly string[]) =>
         capabilities: ids.map((id) =>
             capabilityDocument({
                 id,
-                binding: { transport: "http", method: "POST", path: `/${id}`, input: { body: true } },
+                bindings: [{ id: "http", transport: "http", method: "POST", path: `/${id}`, input: { body: true } }],
             }),
         ),
     });
@@ -75,7 +75,15 @@ describe("capability dependency conjunctions", () => {
             capabilityDocument({
                 id: `feature.${index === 0 ? "first" : "second"}`,
                 requires: [requirement("create", range)],
-                binding: { transport: "http", method: "POST", path: `/features/${index}`, input: { body: true } },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "POST",
+                        path: `/features/${index}`,
+                        input: { body: true },
+                    },
+                ],
             }),
         );
         const candidate = await admitContractRelease(contractDocument({ version: "1.0.0", capabilities }));

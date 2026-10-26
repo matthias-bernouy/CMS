@@ -28,7 +28,7 @@ export function capabilityDocument(overrides: Record<string, unknown> = {}): Rec
         input: { body: true },
         response,
     };
-    const overrideBinding = overrides.binding as Record<string, unknown> | undefined;
+    const overrideBinding = (overrides.bindings as Record<string, unknown>[] | undefined)?.[0];
     const overrideResponse = overrideBinding?.response as Record<string, unknown> | undefined;
     return {
         id: "email.message.send",
@@ -44,9 +44,11 @@ export function capabilityDocument(overrides: Record<string, unknown> = {}): Rec
         ),
         output: objectSchema({ messageId: stringSchema(128) }, ["messageId"]),
         errors: [{ code: "INVALID_RECIPIENT", retryable: false }],
-        binding,
+        bindings: [{ id: "http", ...binding }],
         ...overrides,
-        ...(overrideBinding ? { binding: { ...overrideBinding, response: { ...response, ...overrideResponse } } } : {}),
+        ...(overrideBinding
+            ? { bindings: [{ id: "http", ...overrideBinding, response: { ...response, ...overrideResponse } }] }
+            : {}),
     };
 }
 

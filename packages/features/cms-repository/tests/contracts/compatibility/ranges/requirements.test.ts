@@ -25,7 +25,7 @@ describe("requirement compatibility", () => {
     test("adding a capability with its own requirement remains a minor addition", () => {
         const previous = release("1.0.0");
         const addition = capabilityDocument({ id: "commerce.payment.start", requires: [requirement] });
-        addition.binding = { ...(addition.binding as Record<string, unknown>), path: "/v1/payments" };
+        addition.bindings[0] = { ...(addition.bindings[0] as Record<string, unknown>), path: "/v1/payments" };
         const next = parseContractRelease(
             contractDocument({
                 version: "1.1.0",

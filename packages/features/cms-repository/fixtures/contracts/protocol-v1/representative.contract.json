@@ -71,7 +71,7 @@
                     "retryable": false
                 }
             ],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "GET",
                 "path": "/v1/catalog/items",
@@ -92,7 +92,7 @@
                         "CURSOR_EXPIRED": 410
                     }
                 }
-            }
+             }]
         },
         {
             "id": "form.submission.create",
@@ -150,7 +150,7 @@
                     "retryable": false
                 }
             ],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "POST",
                 "path": "/v1/forms/submissions",
@@ -168,7 +168,7 @@
                         "INVALID_SUBMISSION": 422
                     }
                 }
-            }
+             }]
         },
         {
             "id": "file.asset.upload",
@@ -209,7 +209,7 @@
                     "retryable": false
                 }
             ],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "POST",
                 "path": "/v1/files",
@@ -229,7 +229,7 @@
                         "FILE_TOO_LARGE": 413
                     }
                 }
-            }
+             }]
         },
         {
             "id": "file.asset.download",
@@ -261,7 +261,7 @@
                     "retryable": false
                 }
             ],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "GET",
                 "path": "/v1/files/{fileId}",
@@ -282,7 +282,7 @@
                         "FILE_NOT_FOUND": 404
                     }
                 }
-            }
+             }]
         },
         {
             "id": "report.export",
@@ -317,7 +317,7 @@
                     "retryable": true
                 }
             ],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "POST",
                 "path": "/v1/reports",
@@ -335,7 +335,7 @@
                         "EXPORT_FAILED": 500
                     }
                 }
-            }
+             }]
         },
         {
             "id": "catalog.item.changes",
@@ -412,7 +412,7 @@
                     "retryable": false
                 }
             ],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "GET",
                 "path": "/v1/catalog/changes",
@@ -432,7 +432,7 @@
                         "CURSOR_EXPIRED": 410
                     }
                 }
-            }
+             }]
         },
         {
             "id": "catalog.item.snapshot",
@@ -489,7 +489,7 @@
                 ]
             },
             "errors": [],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "GET",
                 "path": "/v1/catalog/snapshot",
@@ -508,7 +508,7 @@
                     ],
                     "errorStatuses": {}
                 }
-            }
+             }]
         }
     ]
 }

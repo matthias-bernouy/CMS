@@ -10,17 +10,20 @@ describe("contract release compatibility", () => {
             id: "email.message.get",
             behavior: { effect: "query", execution: "sync" },
             input: objectSchema({ id: stringSchema(64) }, ["id"]),
-            binding: {
-                transport: "http",
-                method: "GET",
-                path: "/v1/messages/{id}",
-                input: { path: { id: "id" } },
-                response: {
-                    successStatuses: [200],
-                    contentTypes: ["application/json"],
-                    errorStatuses: { INVALID_RECIPIENT: 422 },
+            bindings: [
+                {
+                    id: "http",
+                    transport: "http",
+                    method: "GET",
+                    path: "/v1/messages/{id}",
+                    input: { path: { id: "id" } },
+                    response: {
+                        successStatuses: [200],
+                        contentTypes: ["application/json"],
+                        errorStatuses: { INVALID_RECIPIENT: 422 },
+                    },
                 },
-            },
+            ],
         });
         const next = parseContractRelease(
             contractDocument({ version: "1.1.0", capabilities: [capabilityDocument(), added] }),
@@ -133,12 +136,15 @@ describe("contract release compatibility", () => {
                                 },
                                 ["attachment"],
                             ),
-                            binding: {
-                                transport: "http",
-                                method: "POST",
-                                path: "/v1/files",
-                                input: { body: { binaryProperty: "attachment" } },
-                            },
+                            bindings: [
+                                {
+                                    id: "http",
+                                    transport: "http",
+                                    method: "POST",
+                                    path: "/v1/files",
+                                    input: { body: { binaryProperty: "attachment" } },
+                                },
+                            ],
                         }),
                     ],
                 }),

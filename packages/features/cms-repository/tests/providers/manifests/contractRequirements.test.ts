@@ -48,7 +48,7 @@ describe("mandatory contract requirements in provider manifests", () => {
         capabilities.push({
             ...original,
             id: "refund",
-            binding: { ...(original.binding as object), path: "/v1/refund" },
+            bindings: [{ id: "http", ...(original.bindings[0] as object), path: "/v1/refund" }],
             requires: [{ contractId: "payment", capabilityId: "pay", versionRange: "^1.0.0" }],
         });
         const catalogue = await releaseCatalogue(contractDocument("payment", "pay"), commerce);

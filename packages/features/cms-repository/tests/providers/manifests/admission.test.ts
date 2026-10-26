@@ -25,7 +25,7 @@ describe("provider manifest admission", () => {
 
         expect(admitted.kind).toBe("admitted-provider-manifest");
         expect(admitted.manifest.implementations[0]?.contractId).toBe("protocol.examples");
-        expect(admitted.digest).toBe("sha256:ed76e8f7276ed2f105eb5d6ccc5f16e2f01bb584e306aff5e5636181e265c1e8");
+        expect(admitted.digest).toBe("sha256:e945db3c5c1bd65870021332a9c6167e7a4b034b473ade7e94bff21a8f681e3c");
         expect(Object.isFrozen(admitted.manifest)).toBe(true);
     });
 

@@ -143,17 +143,20 @@ describe("contract release parsing", () => {
             behavior: { effect: "query", execution: "sync" },
             input: objectSchema({ fileId: stringSchema(64) }, ["fileId"]),
             output: { type: "binary", maxBytes: 1024 },
-            binding: {
-                transport: "http",
-                method: "GET",
-                path: "/v1/media/{fileId}",
-                input: { path: { fileId: "fileId" } },
-                response: {
-                    successStatuses: [200],
-                    contentTypes: ["image/png"],
-                    errorStatuses: { INVALID_RECIPIENT: 422 },
+            bindings: [
+                {
+                    id: "http",
+                    transport: "http",
+                    method: "GET",
+                    path: "/v1/media/{fileId}",
+                    input: { path: { fileId: "fileId" } },
+                    response: {
+                        successStatuses: [200],
+                        contentTypes: ["image/png"],
+                        errorStatuses: { INVALID_RECIPIENT: 422 },
+                    },
                 },
-            },
+            ],
         });
         const capability = parseContractRelease(contractDocument({ capabilities: [binaryCapability] })).capabilities[0];
         expect(capability?.output).toEqual({ type: "binary", maxBytes: 1024 });
@@ -181,8 +184,8 @@ describe("contract release parsing", () => {
     test("refuses to hash a release with invalid binding semantics", async () => {
         const document = contractDocument();
         const capability = (document.capabilities as Record<string, unknown>[])[0]!;
-        capability.binding = {
-            ...(capability.binding as Record<string, unknown>),
+        capability.bindings[0] = {
+            ...(capability.bindings[0] as Record<string, unknown>),
             response: {
                 successStatuses: [400],
                 contentTypes: ["application/json"],
@@ -207,17 +210,20 @@ describe("contract release parsing", () => {
         input.nullable = true;
         const capability = capabilityDocument({
             input,
-            binding: {
-                transport: "http",
-                method: "GET",
-                path: "/v1/messages/{id}",
-                input: { path: { id: "id" } },
-                response: {
-                    successStatuses: [200],
-                    contentTypes: ["application/json"],
-                    errorStatuses: { INVALID_RECIPIENT: 422 },
+            bindings: [
+                {
+                    id: "http",
+                    transport: "http",
+                    method: "GET",
+                    path: "/v1/messages/{id}",
+                    input: { path: { id: "id" } },
+                    response: {
+                        successStatuses: [200],
+                        contentTypes: ["application/json"],
+                        errorStatuses: { INVALID_RECIPIENT: 422 },
+                    },
                 },
-            },
+            ],
         });
 
         expect(() => parseContractRelease(contractDocument({ capabilities: [capability] }))).toThrow(

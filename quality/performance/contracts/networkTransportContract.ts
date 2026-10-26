@@ -34,13 +34,16 @@ export async function performanceContract(): Promise<AdmittedContractRelease> {
                         required: ["value"],
                     },
                     errors: [],
-                    binding: {
-                        transport: "http",
-                        method: "QUERY",
-                        path: "/v1/performance/echo",
-                        input: { body: true },
-                        response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "QUERY",
+                            path: "/v1/performance/echo",
+                            input: { body: true },
+                            response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
+                        },
+                    ],
                 },
             ],
         }),

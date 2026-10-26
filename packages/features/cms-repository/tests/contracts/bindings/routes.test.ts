@@ -10,13 +10,16 @@ describe("HTTP route binding compilation", () => {
                 capability({
                     behavior: { effect: "query", execution: "sync" },
                     input: objectSchema({ id: stringSchema(64) }, ["id"]),
-                    binding: {
-                        transport: "http",
-                        method: "GET",
-                        path: "/v1/messages/{messageId}",
-                        input: { path: { wrong: "id" } },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "GET",
+                            path: "/v1/messages/{messageId}",
+                            input: { path: { wrong: "id" } },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("exactly match placeholders");
@@ -28,13 +31,16 @@ describe("HTTP route binding compilation", () => {
                 capability({
                     behavior: { effect: "query", execution: "sync" },
                     input: objectSchema({ id: { type: "string", maxLength: 64, nullable: true } }),
-                    binding: {
-                        transport: "http",
-                        method: "GET",
-                        path: "/v1/messages/{id}",
-                        input: { path: { id: "id" } },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "GET",
+                            path: "/v1/messages/{id}",
+                            input: { path: { id: "id" } },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("required and non-nullable");
@@ -45,24 +51,30 @@ describe("HTTP route binding compilation", () => {
             id: "email.message.get",
             behavior: { effect: "query", execution: "sync" },
             input: objectSchema({ id: stringSchema(64) }, ["id"]),
-            binding: {
-                transport: "http",
-                method: "GET",
-                path: "/v1/messages/{id}",
-                input: { path: { id: "id" } },
-                response: { successStatuses: [200], contentTypes: ["application/json"] },
-            },
+            bindings: [
+                {
+                    id: "http",
+                    transport: "http",
+                    method: "GET",
+                    path: "/v1/messages/{id}",
+                    input: { path: { id: "id" } },
+                    response: { successStatuses: [200], contentTypes: ["application/json"] },
+                },
+            ],
         });
         const second = capabilityDocument({
             id: "email.message.current",
             behavior: { effect: "query", execution: "sync" },
             input: objectSchema({}),
-            binding: {
-                transport: "http",
-                method: "GET",
-                path: "/v1/messages/current",
-                response: { successStatuses: [200], contentTypes: ["application/json"] },
-            },
+            bindings: [
+                {
+                    id: "http",
+                    transport: "http",
+                    method: "GET",
+                    path: "/v1/messages/current",
+                    response: { successStatuses: [200], contentTypes: ["application/json"] },
+                },
+            ],
         });
         const release = parseContractRelease(contractDocument({ capabilities: [first, second] }));
 

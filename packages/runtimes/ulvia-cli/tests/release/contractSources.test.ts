@@ -166,13 +166,16 @@ function capability(id: string) {
             required: ["value"],
         },
         errors: [],
-        binding: {
-            transport: "http",
-            method: "GET",
-            path: `/v1/${id}`,
-            input: {},
-            response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
-        },
+        bindings: [
+            {
+                id: "http",
+                transport: "http",
+                method: "GET",
+                path: `/v1/${id}`,
+                input: {},
+                response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
+            },
+        ],
     };
 }
 

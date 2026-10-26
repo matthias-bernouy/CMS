@@ -6,13 +6,16 @@ describe("HTTP response binding compilation", () => {
     test("sorts successful statuses into an immutable plan", () => {
         const compiled = compileHttpBinding(
             capability({
-                binding: {
-                    transport: "http",
-                    method: "POST",
-                    path: "/v1/messages",
-                    input: { body: true },
-                    response: { successStatuses: [201, 200], contentTypes: ["application/json"] },
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "POST",
+                        path: "/v1/messages",
+                        input: { body: true },
+                        response: { successStatuses: [201, 200], contentTypes: ["application/json"] },
+                    },
+                ],
             }),
         );
 
@@ -26,26 +29,32 @@ describe("HTTP response binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: { body: true },
-                        response: { successStatuses: [400], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: { body: true },
+                            response: { successStatuses: [400], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("must be 2xx");
         expect(() =>
             compileHttpBinding(
                 capability({
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: { body: true },
-                        response: { successStatuses: [200], contentTypes: ["application/problem+json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: { body: true },
+                            response: { successStatuses: [200], contentTypes: ["application/problem+json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("only application/json");
@@ -59,13 +68,16 @@ describe("HTTP response binding compilation", () => {
         const compiled = compileHttpBinding(
             capability({
                 output: binary,
-                binding: {
-                    transport: "http",
-                    method: "POST",
-                    path: "/v1/messages",
-                    input: { body: true },
-                    response: { successStatuses: [200], contentTypes: [] },
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "POST",
+                        path: "/v1/messages",
+                        input: { body: true },
+                        response: { successStatuses: [200], contentTypes: [] },
+                    },
+                ],
             }),
         );
         expect(compiled.response.contentTypes).toEqual([]);
@@ -80,13 +92,16 @@ describe("HTTP response binding compilation", () => {
                         nullable: true,
                         maxBytes: 1024,
                     },
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: { body: true },
-                        response: { successStatuses: [200], contentTypes: ["application/pdf"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: { body: true },
+                            response: { successStatuses: [200], contentTypes: ["application/pdf"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("binary response outputs must be non-nullable");
@@ -97,13 +112,16 @@ describe("HTTP response binding compilation", () => {
             compileHttpBinding(
                 capability({
                     output: { type: "null" },
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: { body: true },
-                        response: { successStatuses: [204], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: { body: true },
+                            response: { successStatuses: [204], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("cannot declare a response content type");

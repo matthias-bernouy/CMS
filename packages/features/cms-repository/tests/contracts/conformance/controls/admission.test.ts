@@ -20,19 +20,19 @@ async function example() {
             },
             required: ["items", "next"],
         },
-        binding: {
-            ...capability("item.list").binding,
-            method: "QUERY" as const,
-        },
+        bindings: [{ id: "http", ...capability("item.list").bindings[0], method: "QUERY" as const }],
     };
     const operation = {
         ...capability("item.export"),
         behavior: { effect: "command" as const, execution: "operation" as const, idempotency: "keyed" as const },
         output: { type: "binary" as const, maxBytes: 1000 },
-        binding: {
-            ...capability("item.export").binding,
-            response: { contentTypes: ["application/json"], successStatuses: [202], errorStatuses: {} },
-        },
+        bindings: [
+            {
+                id: "http",
+                ...capability("item.export").bindings[0],
+                response: { contentTypes: ["application/json"], successStatuses: [202], errorStatuses: {} },
+            },
+        ],
     };
     const admission = await admitContractRelease(contract("example", "1.0.0", [create, list, operation]));
     const base = { actor: { kind: "admin" }, expect: { kind: "success" } };

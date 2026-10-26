@@ -28,17 +28,20 @@ export function query(overrides: Record<string, unknown> = {}): CapabilityDefini
 export function operation(): CapabilityDefinition {
     return target({
         behavior: { effect: "command", execution: "operation", idempotency: "keyed" },
-        binding: {
-            transport: "http",
-            method: "POST",
-            path: "/jobs",
-            input: { body: true },
-            response: {
-                successStatuses: [202],
-                contentTypes: ["application/json"],
-                errorStatuses: { INVALID_RECIPIENT: 422 },
+        bindings: [
+            {
+                id: "http",
+                transport: "http",
+                method: "POST",
+                path: "/jobs",
+                input: { body: true },
+                response: {
+                    successStatuses: [202],
+                    contentTypes: ["application/json"],
+                    errorStatuses: { INVALID_RECIPIENT: 422 },
+                },
             },
-        },
+        ],
     });
 }
 

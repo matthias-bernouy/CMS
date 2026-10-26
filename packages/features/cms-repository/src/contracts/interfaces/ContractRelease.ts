@@ -1,4 +1,3 @@
-import type { HttpBindingDefinition } from "./HttpBinding";
 import type { CapabilityBinding } from "./CapabilityBinding";
 import type { UlviaObjectSchema, UlviaSchema } from "./UlviaSchema";
 import type { ReleaseDigest } from "../core/admission/digest";
@@ -92,12 +91,7 @@ interface CapabilityCommon {
     readonly deprecation?: CapabilityDeprecation;
 }
 
-/** Legacy single HTTP bindings remain readable without rewriting immutable release identities. */
-export type CapabilityDefinition = CapabilityCommon &
-    (
-        | { readonly bindings: readonly CapabilityBinding[]; readonly binding?: undefined }
-        | { readonly binding: HttpBindingDefinition; readonly bindings?: undefined }
-    );
+export type CapabilityDefinition = CapabilityCommon & { readonly bindings: readonly CapabilityBinding[] };
 
 export interface ContractRelease {
     readonly catalogue?: ContractCatalogueMetadata;

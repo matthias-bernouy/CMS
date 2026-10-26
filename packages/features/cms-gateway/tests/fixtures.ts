@@ -71,60 +71,63 @@ export async function gatewayRoute(
                         },
                 errors: [{ code: "NOT_FOUND", retryable: false }],
                 ...(overrides.mcp ? { bindings: [{ id: "mcp", transport: "mcp" as const }] } : {}),
-                binding: {
-                    transport: "http",
-                    method: overrides.binaryInput ? "PUT" : command ? "POST" : "GET",
-                    path: overrides.binary
-                        ? "/v1/files/{fileId}"
-                        : overrides.binaryInput
-                          ? "/v1/uploads/{uploadId}"
-                          : "/v1/items",
-                    input: overrides.binary
-                        ? {
-                              path: { fileId: "fileId" },
-                              ...(overrides.rawRange
-                                  ? {
-                                        headers: {
-                                            range: { property: "range", encoding: "http-field" as const },
-                                            "if-range": { property: "ifRange", encoding: "http-field" as const },
-                                        },
-                                    }
-                                  : {}),
-                          }
-                        : overrides.binaryInput
-                          ? { path: { uploadId: "uploadId" }, body: { binaryProperty: "bytes" } }
-                          : command
-                            ? { body: true }
-                            : { query: { term: "term" } },
-                    response: {
-                        successStatuses:
-                            overrides.binary && overrides.rawRange
-                                ? [200, 206]
-                                : [
-                                      overrides.binaryInput
-                                          ? 204
-                                          : overrides.behavior?.execution === "operation"
-                                            ? 202
-                                            : 200,
-                                  ],
-                        contentTypes:
-                            overrides.binary || overrides.binaryInput
-                                ? []
-                                : [
-                                      overrides.behavior?.execution === "operation"
-                                          ? "application/json"
-                                          : "application/json",
-                                  ],
-                        errorStatuses: { NOT_FOUND: 404 },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: overrides.binaryInput ? "PUT" : command ? "POST" : "GET",
+                        path: overrides.binary
+                            ? "/v1/files/{fileId}"
+                            : overrides.binaryInput
+                              ? "/v1/uploads/{uploadId}"
+                              : "/v1/items",
+                        input: overrides.binary
+                            ? {
+                                  path: { fileId: "fileId" },
+                                  ...(overrides.rawRange
+                                      ? {
+                                            headers: {
+                                                range: { property: "range", encoding: "http-field" as const },
+                                                "if-range": { property: "ifRange", encoding: "http-field" as const },
+                                            },
+                                        }
+                                      : {}),
+                              }
+                            : overrides.binaryInput
+                              ? { path: { uploadId: "uploadId" }, body: { binaryProperty: "bytes" } }
+                              : command
+                                ? { body: true }
+                                : { query: { term: "term" } },
+                        response: {
+                            successStatuses:
+                                overrides.binary && overrides.rawRange
+                                    ? [200, 206]
+                                    : [
+                                          overrides.binaryInput
+                                              ? 204
+                                              : overrides.behavior?.execution === "operation"
+                                                ? 202
+                                                : 200,
+                                      ],
+                            contentTypes:
+                                overrides.binary || overrides.binaryInput
+                                    ? []
+                                    : [
+                                          overrides.behavior?.execution === "operation"
+                                              ? "application/json"
+                                              : "application/json",
+                                      ],
+                            errorStatuses: { NOT_FOUND: 404 },
+                        },
                     },
-                },
+                ],
             },
         ],
     };
     if (overrides.mcp || overrides.bindings) {
         const capability = definition.capabilities[0]!;
         (capability as Record<string, unknown>).bindings = overrides.bindings ?? [
-            { id: "http", ...capability.binding },
+            { id: "http", ...capability.bindings[0] },
             { id: "mcp", transport: "mcp" },
         ];
         delete (capability as { binding?: unknown }).binding;

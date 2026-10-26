@@ -13,13 +13,16 @@ describe("HTTP operation response compilation", () => {
             capability({
                 behavior: { effect: "command", idempotency: "keyed", execution: "operation" },
                 output: binaryResult,
-                binding: {
-                    transport: "http",
-                    method: "POST",
-                    path: "/v1/exports",
-                    input: { body: true },
-                    response: { successStatuses: [202], contentTypes: ["application/json"] },
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "POST",
+                        path: "/v1/exports",
+                        input: { body: true },
+                        response: { successStatuses: [202], contentTypes: ["application/json"] },
+                    },
+                ],
             }),
         );
 
@@ -37,13 +40,16 @@ describe("HTTP operation response compilation", () => {
             compileHttpBinding(
                 capability({
                     behavior: { effect: "command", idempotency: "keyed", execution: "operation" },
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/exports",
-                        input: { body: true },
-                        response: { successStatuses: [200], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/exports",
+                            input: { body: true },
+                            response: { successStatuses: [200], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("operation responses must declare only status 202");
@@ -55,13 +61,16 @@ describe("HTTP operation response compilation", () => {
                 capability({
                     behavior: { effect: "command", idempotency: "keyed", execution: "operation" },
                     output: { ...binaryResult, nullable: true },
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/exports",
-                        input: { body: true },
-                        response: { successStatuses: [202], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/exports",
+                            input: { body: true },
+                            response: { successStatuses: [202], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("binary response outputs must be non-nullable");
@@ -73,13 +82,16 @@ describe("HTTP operation response compilation", () => {
                 capability({
                     behavior: { effect: "command", idempotency: "keyed", execution: "operation" },
                     output: objectSchema({ report: binaryResult }, ["report"]),
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/exports",
-                        input: { body: true },
-                        response: { successStatuses: [202], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/exports",
+                            input: { body: true },
+                            response: { successStatuses: [202], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("explicit transport encoding");
@@ -89,13 +101,16 @@ describe("HTTP operation response compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: { body: true },
-                        response: { successStatuses: [202], contentTypes: ["application/json"] },
-                    },
+                    bindings: [
+                        {
+                            id: "http",
+                            transport: "http",
+                            method: "POST",
+                            path: "/v1/messages",
+                            input: { body: true },
+                            response: { successStatuses: [202], contentTypes: ["application/json"] },
+                        },
+                    ],
                 }),
             ),
         ).toThrow("status 202 requires operation execution");

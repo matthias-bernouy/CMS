@@ -22,9 +22,9 @@ function suite(): Record<string, unknown> {
 describe("conformance suite admission", () => {
     test("pins a separately versioned suite to the exact release digest", async () => {
         const release = await admitContractRelease(releaseFixture);
-        expect(release.digest).toBe("sha256:cfd67479c4a797381731ed58b9799351ffb619659f789a070ab5f7665c7cf98f");
+        expect(release.digest).toBe("sha256:b7756118202aaa13981b39b5615cbfcd3c25c9eb4ba3ef07f296d3036b01e789");
         const first = await admitConformanceSuite(suite(), release);
-        expect(first.digest).toBe("sha256:dc5b4fdf05033ca81328d4b007c84bf3be1e20391ee2ccfd8a899d1b0a0411c3");
+        expect(first.digest).toBe("sha256:eb1c09a64b85b4150bb2a1844aa5ea2c01b932314fd77ca70d65bfc558bbcd69");
         expect(first.suite).not.toHaveProperty("dependencyProfiles");
         const next = suite();
         next.version = "0.1.1";

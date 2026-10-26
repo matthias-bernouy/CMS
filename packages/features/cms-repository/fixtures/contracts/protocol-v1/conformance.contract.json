@@ -26,13 +26,13 @@
                 "required": ["id", "name"]
             },
             "errors": [],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "POST",
                 "path": "/v1/items",
                 "input": { "body": true },
                 "response": { "successStatuses": [201], "contentTypes": ["application/json"], "errorStatuses": {} }
-            }
+             }]
         },
         {
             "id": "item.find",
@@ -52,13 +52,13 @@
                 "required": ["id", "name"]
             },
             "errors": [],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "GET",
                 "path": "/v1/items",
                 "input": { "query": { "name": "name" } },
                 "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": {} }
-            }
+             }]
         },
         {
             "id": "item.get",
@@ -78,7 +78,7 @@
                 "required": ["id", "name"]
             },
             "errors": [{ "code": "NOT_FOUND", "retryable": false }],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "GET",
                 "path": "/v1/items/{id}",
@@ -88,7 +88,7 @@
                     "contentTypes": ["application/json"],
                     "errorStatuses": { "NOT_FOUND": 404 }
                 }
-            }
+             }]
         },
         {
             "id": "item.delete",
@@ -102,13 +102,13 @@
             },
             "output": { "type": "null" },
             "errors": [],
-            "binding": {
+            "bindings": [{ "id": "http",
                 "transport": "http",
                 "method": "DELETE",
                 "path": "/v1/items/{id}",
                 "input": { "path": { "id": "id" } },
                 "response": { "successStatuses": [204], "contentTypes": [], "errorStatuses": {} }
-            }
+             }]
         }
     ]
 }

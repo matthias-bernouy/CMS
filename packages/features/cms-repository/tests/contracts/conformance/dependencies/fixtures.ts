@@ -22,13 +22,16 @@ export function capability(id: string, requires?: readonly CapabilityRequirement
         input: schema,
         output: schema,
         errors: [],
-        binding: {
-            transport: "http",
-            method: "POST",
-            path: `/${id}`,
-            input: { body: true },
-            response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
-        },
+        bindings: [
+            {
+                id: "http",
+                transport: "http",
+                method: "POST",
+                path: `/${id}`,
+                input: { body: true },
+                response: { successStatuses: [200], contentTypes: ["application/json"], errorStatuses: {} },
+            },
+        ],
         ...(requires ? { requires } : {}),
     };
 }

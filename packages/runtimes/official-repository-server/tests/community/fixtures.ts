@@ -77,12 +77,15 @@ export function simpleContract(publisherId = "community", version = "1.0.0", nam
                 input: { type: "object", properties: {}, required: [] },
                 output: { type: "null" },
                 errors: [],
-                binding: {
-                    transport: "http",
-                    method: "GET",
-                    path: "/ping",
-                    response: { successStatuses: [204], contentTypes: [], errorStatuses: {} },
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        transport: "http",
+                        method: "GET",
+                        path: "/ping",
+                        response: { successStatuses: [204], contentTypes: [], errorStatuses: {} },
+                    },
+                ],
             },
         ],
     });

@@ -67,12 +67,15 @@ describe("container and binary schema compatibility", () => {
     test("expanding accepted binary input size is minor", () => {
         const binary = (maxBytes: number) => ({
             input: objectSchema({ attachment: { type: "binary", maxBytes } }, ["attachment"]),
-            binding: {
-                transport: "http",
-                method: "POST",
-                path: "/v1/files",
-                input: { body: { binaryProperty: "attachment" } },
-            },
+            bindings: [
+                {
+                    id: "http",
+                    transport: "http",
+                    method: "POST",
+                    path: "/v1/files",
+                    input: { body: { binaryProperty: "attachment" } },
+                },
+            ],
         });
 
         expect(compare(binary(1024), binary(2048))).toMatchObject({
@@ -88,17 +91,20 @@ describe("container and binary schema compatibility", () => {
     test("narrowing possible binary output size is minor", () => {
         const binary = (maxBytes: number) => ({
             output: { type: "binary", maxBytes },
-            binding: {
-                transport: "http",
-                method: "POST",
-                path: "/v1/files",
-                input: { body: true },
-                response: {
-                    successStatuses: [200],
-                    contentTypes: [],
-                    errorStatuses: { INVALID_RECIPIENT: 422 },
+            bindings: [
+                {
+                    id: "http",
+                    transport: "http",
+                    method: "POST",
+                    path: "/v1/files",
+                    input: { body: true },
+                    response: {
+                        successStatuses: [200],
+                        contentTypes: [],
+                        errorStatuses: { INVALID_RECIPIENT: 422 },
+                    },
                 },
-            },
+            ],
         });
 
         expect(compare(binary(2048), binary(1024))).toMatchObject({

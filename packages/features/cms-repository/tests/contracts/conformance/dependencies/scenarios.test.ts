@@ -124,10 +124,13 @@ describe("dependency scenario validation", () => {
                     ? {
                           ...entry,
                           output: { type: "binary" as const, maxBytes: 100 },
-                          binding: {
-                              ...entry.binding,
-                              response: { ...entry.binding.response, contentTypes: ["application/pdf"] },
-                          },
+                          bindings: [
+                              {
+                                  id: "http",
+                                  ...entry.bindings[0],
+                                  response: { ...entry.bindings[0].response, contentTypes: ["application/pdf"] },
+                              },
+                          ],
                       }
                     : entry,
             ),
