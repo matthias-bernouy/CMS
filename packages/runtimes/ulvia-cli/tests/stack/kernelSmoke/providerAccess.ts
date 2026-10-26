@@ -1,3 +1,4 @@
+import { submitSiteUpgrade } from "../fixtures/operationCompletion";
 import { expect } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -56,14 +57,9 @@ export async function mutateProviders(page: Page): Promise<void> {
         'form[cms-mutation="ulvia.cms.installations:apply-contract-upgrade as mutation"] button[type="submit"]',
     );
     await apply.waitFor();
-    const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.installations/apply-contract-upgrade")),
-        apply.click(),
-    ]);
-    if (!response.ok()) {
-        throw new Error(`Contract routing review failed (${response.status()}).`);
-    }
+    await submitSiteUpgrade(page, apply, "apply-contract-upgrade");
     await page.waitForURL(/\/admin\/providers$/u);
+    await page.reload({ waitUntil: "domcontentloaded" });
     const installation = page.locator("#provider-installations [role=listitem]").first();
     for (const action of ["disable", "revoke"]) {
         const button = installation

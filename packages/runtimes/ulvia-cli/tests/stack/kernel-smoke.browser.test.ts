@@ -1,3 +1,4 @@
+import { captureCapabilityFailures } from "./fixtures/browserDiagnostics";
 import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -36,6 +37,7 @@ smoke(
         let output = "";
         let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
         let browserErrors: string[] = [];
+        let browserFailures = () => "(none)";
         try {
             report("prepare local runtime image pins");
             const version = await prepareSmokeRuntimeImages(environment);
@@ -63,6 +65,7 @@ smoke(
             browser = await chromium.launch({ headless: true });
             const page = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             page.setDefaultTimeout(15_000);
+            browserFailures = captureCapabilityFailures(page);
             page.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
 
             report("initial browser journey");
@@ -94,6 +97,7 @@ smoke(
             browser = await chromium.launch({ headless: true });
             const restartedPage = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             restartedPage.setDefaultTimeout(15_000);
+            browserFailures = captureCapabilityFailures(restartedPage);
             const restartErrors: string[] = [];
             browserErrors = restartErrors;
             restartedPage.on("pageerror", (error) => restartErrors.push(error.stack ?? error.message));
@@ -111,6 +115,7 @@ smoke(
                 environment,
                 log: (message) => (output += `${message}\n`),
             }).catch(() => undefined);
+            output += `\nCapability HTTP failures:\n${browserFailures()}\n`;
             await writeFailureArtifacts(output, browser);
             throw new Error(
                 `${error instanceof Error ? error.message : String(error)}\n\nBrowser errors:\n${browserErrors.join("\n") || "(none)"}\n\nRuntime output:\n${output}`,
