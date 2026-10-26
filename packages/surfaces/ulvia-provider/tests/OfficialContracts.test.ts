@@ -1,3 +1,4 @@
+import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -10,7 +11,7 @@ import {
     type UlviaProviderDependencies,
     type CmsFileWorkspace,
 } from "@bernouy/ulvia-provider";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractReleaseJson, resolveContract } from "@bernouy/cms-repository/contracts";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";
@@ -39,8 +40,8 @@ test("mounts and dispatches every official CMS contract release", async () => {
         [...new Set(ROUTES.map(([contractId]) => contractId))].map(loadOfficialContract),
     );
     const dispatcher = new DefaultProviderCapabilityDispatcher();
-    for (const { release } of contracts) {
-        for (const capability of release.capabilities) {
+    for (const { release, resolved } of contracts) {
+        for (const { definition: capability } of resolved.capabilities) {
             dispatcher.register(release.contractId, capability.id, async () => {
                 throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
             });
@@ -54,7 +55,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
         report: report(contracts),
     };
     new UlviaProvider(runner, {
-        contracts: contracts.map(({ release }) => release),
+        contracts: contracts.map(({ resolved }) => resolved),
         logger: NOOP_LOGGER,
         authenticateControlToken: async (token) =>
             token === TOKEN ? { resource: runtime, release: () => undefined } : null,
@@ -137,7 +138,7 @@ test("the official adapters implement the complete declared capability matrix", 
         new Set(contracts.map(({ release }) => release.contractId)),
     );
 
-    expect(() => dispatcher.seal(contracts.map(({ release }) => release))).not.toThrow();
+    expect(() => dispatcher.seal(contracts.map(({ resolved }) => resolved))).not.toThrow();
 });
 
 function report(contracts: Awaited<ReturnType<typeof loadOfficialContract>>[]) {
@@ -158,32 +159,15 @@ function report(contracts: Awaited<ReturnType<typeof loadOfficialContract>>[]) {
 }
 
 async function loadOfficialContract(contractId: string) {
-    const path = resolve(
-        import.meta.dir,
-        `../../../runtimes/ulvia-cli/dist/bootstrap/contracts/cms/${contractId}/definition.json`,
+    const root = resolve(import.meta.dir, "../../../runtimes/ulvia-cli/dist/bootstrap");
+    const index = JSON.parse(await readFile(resolve(root, "index.json"), "utf8")) as { contracts: string[] };
+    const admissions = await Promise.all(
+        index.contracts.map(async (path) => admitContractReleaseJson(await readFile(resolve(root, path)))),
     );
-    const admission = await admitContractReleaseJson(await readFile(path));
-    const inherited = [];
-    let parent = admission.release.extends;
-    while (parent) {
-        const parentPath = resolve(
-            import.meta.dir,
-            `../../../runtimes/ulvia-cli/dist/bootstrap/contracts/cms/${parent.contractId}/definition.json`,
-        );
-        const parentAdmission = await admitContractReleaseJson(await readFile(parentPath));
-        if (parentAdmission.release.version !== parent.version || parentAdmission.digest !== parent.digest) {
-            throw new Error(`Official parent contract mismatch: ${parent.contractId}@${parent.version}`);
-        }
-        inherited.unshift(...parentAdmission.release.capabilities);
-        parent = parentAdmission.release.extends;
-    }
-    return {
-        ...admission,
-        release: Object.freeze({
-            ...admission.release,
-            capabilities: Object.freeze([...inherited, ...admission.release.capabilities]),
-        }),
-    };
+    const admission = admissions.find(({ release }) => release.contractId === contractId)!;
+    const catalogue = new InMemoryReleaseCatalogue();
+    await publishContractSet(catalogue, admissions);
+    return { ...admission, resolved: await resolveContract(catalogue, admission) };
 }
 
 function requestHeaders(

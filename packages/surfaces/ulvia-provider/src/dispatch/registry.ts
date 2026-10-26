@@ -1,4 +1,4 @@
-import type { ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
 import type { GatewayActorCredential, GatewayResponseEffect } from "@bernouy/cms-gateway/protocol";
 
 /** Verified invocation metadata. Site and provider identity are injected by the runtime. */
@@ -56,7 +56,7 @@ export interface ProviderCapabilityDispatcher {
 
 export interface ProviderCapabilityRegistry extends ProviderCapabilityDispatcher {
     register(contractId: string, capabilityId: string, handler: ProviderCapabilityHandler): void;
-    seal(contracts: readonly ContractRelease[]): void;
+    seal(contracts: readonly ResolvedContract[]): void;
 }
 
 export class ProviderCapabilityDispatchError extends Error {
@@ -87,13 +87,15 @@ export class DefaultProviderCapabilityDispatcher implements ProviderCapabilityRe
         this.#handlers.set(key, handler);
     }
 
-    seal(contracts: readonly ContractRelease[]): void {
+    seal(contracts: readonly ResolvedContract[]): void {
         if (this.#sealed) {
             throw new Error("The Ulvia Provider capability registry is already sealed.");
         }
         const declared = new Set(
             contracts.flatMap((contract) =>
-                contract.capabilities.map((capability) => capabilityKey(contract.contractId, capability.id)),
+                contract.capabilities.map(({ definition }) =>
+                    capabilityKey(contract.release.contractId, definition.id),
+                ),
             ),
         );
         const missing = [...declared].filter((key) => !this.#handlers.has(key));

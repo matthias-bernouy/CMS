@@ -38,9 +38,12 @@ export {
     parseContractReleaseJson,
 } from "cms-repository/contracts/core/parsing/parseContractRelease";
 export {
+    resolveContract,
     effectiveLineageCapabilities,
     findImplementedContract,
     resolveContractLineage,
 } from "cms-repository/contracts/core/compatibility/lineage/resolveLineage";
 
 export type { CapabilityBinding, McpBindingDefinition } from "cms-repository/contracts/interfaces/CapabilityBinding";
+
+export type { ResolvedContract, ResolvedCapability } from "cms-repository/contracts/interfaces/ResolvedContract";

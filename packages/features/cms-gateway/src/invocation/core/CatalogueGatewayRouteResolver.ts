@@ -1,4 +1,4 @@
-import { resolveContractLineage, type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { resolveContract, type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
@@ -31,7 +31,7 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
                   selection: (typeof stored.plan.selections)[number];
                   release: NonNullable<Awaited<ReturnType<ReleaseCatalogue["get"]>>>;
                   requestedRelease: NonNullable<Awaited<ReturnType<ReleaseCatalogue["get"]>>>;
-                  lineage: Awaited<ReturnType<typeof resolveContractLineage>>;
+                  lineage: Awaited<ReturnType<typeof resolveContract>>["lineage"];
               }
             | undefined;
         for (const selection of stored.plan.selections) {
@@ -39,16 +39,15 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
             if (!release || release.admission.digest !== selection.digest) {
                 throw new GatewayError("invalid_route", "selected release is missing or has a different digest");
             }
-            const lineage = await resolveContractLineage(this.#options.releases, release.admission.release);
-            const requestedIndex = lineage.findIndex((candidate) => candidate.contractId === contractId);
+            const lineage = (await resolveContract(this.#options.releases, release.admission)).lineage;
+            const requestedIndex = lineage.findIndex((candidate) => candidate.release.contractId === contractId);
             if (requestedIndex >= 0) {
-                const requested = lineage[requestedIndex]!;
+                const requested = lineage[requestedIndex]!.release;
                 const requestedRelease =
                     requestedIndex === 0
                         ? release
                         : await this.#options.releases.get(requested.contractId, requested.version);
-                const expectedDigest =
-                    requestedIndex === 0 ? selection.digest : lineage[requestedIndex - 1]!.extends!.digest;
+                const expectedDigest = requestedIndex === 0 ? selection.digest : lineage[requestedIndex]!.digest;
                 if (!requestedRelease || requestedRelease.admission.digest !== expectedDigest) {
                     throw new GatewayError("invalid_route", "requested ancestor release is missing or changed");
                 }
@@ -77,10 +76,10 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
             requestedRelease,
             manifest,
             installation,
-            lineage: lineage.map((candidate, index) => ({
+            lineage: lineage.map(({ release: candidate, digest }) => ({
                 contractId: candidate.contractId,
                 version: candidate.version,
-                digest: index === 0 ? selection.digest : lineage[index - 1]!.extends!.digest,
+                digest,
                 name: candidate.name,
                 capabilityIds: candidate.capabilities.map((capability) => capability.id),
                 ...(candidate.extends ? { extends: candidate.extends } : {}),

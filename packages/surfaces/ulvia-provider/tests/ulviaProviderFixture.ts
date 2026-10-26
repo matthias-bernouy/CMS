@@ -1,6 +1,10 @@
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { NOOP_LOGGER, type Logger } from "@bernouy/logging";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import {
+    admitContractReleaseJson,
+    type AdmittedContractRelease,
+    type ResolvedContract,
+} from "@bernouy/cms-repository/contracts";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
 import type {
     DefaultProviderCapabilityDispatcher,
@@ -29,7 +33,7 @@ export function providerOptions(
         ...(authorizeInvocation ? { authorizeInvocation } : {}),
     };
     return {
-        contracts: contracts.map(({ release }) => release),
+        contracts: contracts.map(resolveFixtureContract),
         logger,
         authenticateControlToken: async (token) =>
             token === PROVIDER_TOKEN ? { resource: runtime, release: () => undefined } : null,
@@ -152,4 +156,17 @@ export async function contractRelease(version = "1.0.0") {
 
 function digest(character: string): ProviderManifestDigest {
     return `sha256:${character.repeat(64)}` as ProviderManifestDigest;
+}
+
+export function resolveFixtureContract(admission: AdmittedContractRelease): ResolvedContract {
+    const { release, digest } = admission;
+    return {
+        release,
+        digest,
+        lineage: [{ release, digest }],
+        capabilities: release.capabilities.map((definition) => ({
+            owner: { contractId: release.contractId, version: release.version, digest },
+            definition,
+        })),
+    };
 }

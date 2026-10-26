@@ -5,6 +5,7 @@ import {
     findImplementedContract,
     parseContractRelease,
     resolveContractLineage,
+    resolveContract,
 } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { compareContractReleases } from "@bernouy/cms-repository/contracts/compatibility";
@@ -129,3 +130,28 @@ function parentReference(parent: Awaited<ReturnType<typeof admitContractRelease>
 function digest(character: string): `sha256:${string}` {
     return `sha256:${character.repeat(64)}`;
 }
+
+test("resolved contracts preserve canonical artifacts and the owner of inherited capabilities", async () => {
+    const parent = await admitContractRelease(contractDocument({ version: "1.0.0" }));
+    const child = await admitContractRelease(
+        contractDocument({
+            contractId: "communication.email.smtp",
+            version: "1.0.0",
+            extends: parentReference(parent),
+            capabilities: [capabilityDocument({ id: "smtp.configure" })],
+        }),
+    );
+    const catalogue = new InMemoryReleaseCatalogue();
+    await publishContractSet(catalogue, [child, parent]);
+    const resolved = await resolveContract(catalogue, child);
+    expect(resolved.release).toBe(child.release);
+    expect(resolved.digest).toBe(child.digest);
+    expect(resolved.release.capabilities.map(({ id }) => id)).toEqual(["smtp.configure"]);
+    expect(resolved.capabilities.map(({ owner, definition }) => [owner.contractId, definition.id])).toEqual([
+        [parent.release.contractId, "email.message.send"],
+        [child.release.contractId, "smtp.configure"],
+    ]);
+    expect(resolved.lineage.map(({ digest }) => digest)).toEqual([child.digest, parent.digest]);
+    expect(Object.isFrozen(resolved.capabilities)).toBe(true);
+    expect((await admitContractRelease(resolved.release)).digest).toBe(child.digest);
+});

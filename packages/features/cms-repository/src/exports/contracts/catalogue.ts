@@ -8,7 +8,10 @@ export type {
 export { planContractPublications } from "cms-repository/contracts/core/catalogue/planPublications";
 export { publishContractSet } from "cms-repository/contracts/core/catalogue/publishContractSet";
 export {
+    resolveContract,
     effectiveLineageCapabilities,
     findImplementedContract,
     resolveContractLineage,
 } from "cms-repository/contracts/core/compatibility/lineage/resolveLineage";
+
+export type { ResolvedContract, ResolvedCapability } from "cms-repository/contracts/interfaces/ResolvedContract";

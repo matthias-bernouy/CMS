@@ -1,5 +1,5 @@
 import { capabilityBindings, pathTemplatesOverlap } from "@bernouy/cms-repository/contracts/bindings";
-import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { CapabilityDefinition, ResolvedContract } from "@bernouy/cms-repository/contracts";
 
 export type HttpBoundCapability = CapabilityDefinition & {
     readonly binding: import("@bernouy/cms-repository/contracts/bindings").HttpBindingDefinition;
@@ -12,12 +12,12 @@ export type ProviderRoute = {
     readonly match: (method: string, path: string) => Readonly<Record<string, string>> | null;
 };
 
-export function compileProviderRoutes(releases: readonly ContractRelease[]): readonly ProviderRoute[] {
-    if (releases.length === 0 || releases.some((release) => !release.contractId.startsWith("ulvia.cms."))) {
+export function compileProviderRoutes(releases: readonly ResolvedContract[]): readonly ProviderRoute[] {
+    if (releases.length === 0 || releases.some(({ release }) => !release.contractId.startsWith("ulvia.cms."))) {
         throw new TypeError("Ulvia Provider only accepts ulvia.cms.* contract releases.");
     }
-    const routes = releases.flatMap((release) =>
-        release.capabilities.flatMap((capability) => {
+    const routes = releases.flatMap(({ release, capabilities }) =>
+        capabilities.flatMap(({ definition: capability }) => {
             return capabilityBindings(capability).flatMap((binding) =>
                 binding.transport === "http"
                     ? [compileRoute(release.contractId, release.version, { ...capability, binding })]

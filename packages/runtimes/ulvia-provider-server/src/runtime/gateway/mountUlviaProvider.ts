@@ -1,4 +1,4 @@
-import type { ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
 import { BunRunner } from "@bernouy/http-runner";
 import { ProviderOperatorApi, UlviaProvider, type ProviderInstanceLifecycle } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
@@ -13,7 +13,7 @@ export type UlviaProviderServerHandle = Readonly<{
 /** Mounts one Provider host that resolves every request to an isolated instance runtime. */
 export function mountUlviaProvider(options: {
     env: ProviderRuntimeEnv;
-    contracts: readonly ContractRelease[];
+    contracts: readonly ResolvedContract[];
     authenticator: ProviderInstanceAuthenticator;
     host: ProviderInstanceHost;
     lifecycle: ProviderInstanceLifecycle;

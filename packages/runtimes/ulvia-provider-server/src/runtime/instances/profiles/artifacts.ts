@@ -3,13 +3,12 @@ import type { CollectionRepositorySource } from "@bernouy/cms-repository/collect
 import {
     admitContractReleaseJson,
     type AdmittedContractRelease,
-    type ContractRelease,
+    type ResolvedContract,
 } from "@bernouy/cms-repository/contracts";
 import {
-    effectiveLineageCapabilities,
+    resolveContract,
     InMemoryReleaseCatalogue,
     publishContractSet,
-    resolveContractLineage,
 } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson, verifyStoredProviderManifestJson } from "@bernouy/cms-repository/providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
@@ -35,7 +34,7 @@ const SUPPORTED_PROFILES = Object.freeze([CURRENT_PROFILE]);
 export type LoadedOfficialArtifacts = Readonly<{
     profiles: readonly OfficialInstanceProfile[];
     defaultProfile: OfficialInstanceProfile;
-    contracts: readonly ContractRelease[];
+    contracts: readonly ResolvedContract[];
 }>;
 
 export async function loadOfficialArtifacts(
@@ -68,10 +67,10 @@ export async function loadOfficialArtifacts(
     if (!defaultProfile) {
         throw new Error(`Official default profile is unavailable: ${CURRENT_PROFILE.id}@${CURRENT_PROFILE.version}`);
     }
-    const contracts = new Map<string, ContractRelease>();
+    const contracts = new Map<string, ResolvedContract>();
     for (const artifacts of loaded) {
         for (const release of artifacts.contracts) {
-            contracts.set(`${release.contractId}\0${release.version}`, release);
+            contracts.set(`${release.release.contractId}\0${release.release.version}`, release);
         }
     }
     return Object.freeze({
@@ -86,7 +85,7 @@ async function loadOfficialProfile(
     collections: CollectionRepositorySource,
     manifestEntries: readonly RepositoryArtifactEntry[],
     definition: ProfileDefinition,
-): Promise<Readonly<{ profile: OfficialInstanceProfile; contracts: readonly ContractRelease[] }>> {
+): Promise<Readonly<{ profile: OfficialInstanceProfile; contracts: readonly ResolvedContract[] }>> {
     const manifestEntry = exactEntry(manifestEntries, definition.manifest.providerId, definition.manifest.version);
     const manifestBytes = await providers.get(manifestEntry);
     const storedManifest = await verifyStoredProviderManifestJson(manifestBytes, manifestEntry.digest);
@@ -100,12 +99,7 @@ async function loadOfficialProfile(
     );
     await publishContractSet(catalogue, [...loadedAdmissions.values()]);
     const effectiveContracts = await Promise.all(
-        implementationAdmissions.map(async ({ release }) =>
-            Object.freeze({
-                ...release,
-                capabilities: effectiveLineageCapabilities(await resolveContractLineage(catalogue, release)),
-            }),
-        ),
+        implementationAdmissions.map((admission) => resolveContract(catalogue, admission)),
     );
     const manifest = await admitProviderManifestJson(manifestBytes, catalogue);
     if (manifest.digest !== manifestEntry.digest) {

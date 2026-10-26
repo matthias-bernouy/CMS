@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 
 const context = {
@@ -41,9 +41,9 @@ test("the provider dispatcher rejects missing, unexpected and duplicate handlers
     expect(() => duplicate.register("ulvia.cms.settings", "get", async () => ({}))).toThrow("already registered");
 });
 
-function contract(contractId: string, capabilityIds: readonly string[]): ContractRelease {
+function contract(contractId: string, capabilityIds: readonly string[]): ResolvedContract {
     return {
-        contractId,
-        capabilities: capabilityIds.map((id) => ({ id })),
-    } as unknown as ContractRelease;
+        release: { contractId },
+        capabilities: capabilityIds.map((id) => ({ definition: { id } })),
+    } as unknown as ResolvedContract;
 }

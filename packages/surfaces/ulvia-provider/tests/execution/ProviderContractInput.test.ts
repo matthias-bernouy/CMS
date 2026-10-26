@@ -1,3 +1,4 @@
+import { resolveFixtureContract } from "../ulviaProviderFixture";
 import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import { compileProviderRoutes } from "../../src/transport/routes";
 import { expect, test } from "bun:test";
@@ -127,7 +128,7 @@ test("provider aliases decode the selected binding rather than the first HTTP bi
             },
         ],
     });
-    const routes = compileProviderRoutes([admitted.release]);
+    const routes = compileProviderRoutes([resolveFixtureContract(admitted)]);
     expect(routes).toHaveLength(2);
     const request = new Request("https://provider.test/second/selected");
     const route = routes.find((candidate) => candidate.match("GET", "/second/selected"));

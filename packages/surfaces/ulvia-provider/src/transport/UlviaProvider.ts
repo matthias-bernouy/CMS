@@ -1,6 +1,6 @@
 import type { HttpMethod, Runner } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
-import type { ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { ProviderCapabilityRegistry } from "../dispatch/registry";
@@ -20,7 +20,7 @@ export type UlviaProviderInstanceLease = Readonly<{
 }>;
 
 export type UlviaProviderOptions = Readonly<{
-    contracts: readonly ContractRelease[];
+    contracts: readonly ResolvedContract[];
     logger: Logger;
     authenticateControlToken(token: string): Promise<UlviaProviderInstanceLease | null>;
     authenticateInvocationToken(

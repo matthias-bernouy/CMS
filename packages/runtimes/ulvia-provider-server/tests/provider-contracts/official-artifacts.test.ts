@@ -20,12 +20,18 @@ test("builds the official profile from verified repository releases", async () =
     expect(loaded.defaultProfile.manifest.digest).toBe(fixture.manifestDigest);
     expect(loaded.defaultProfile.collection.digest).toBe(fixture.collectionDigest);
     expect(loaded.defaultProfile.contracts).toEqual(
-        loaded.contracts.map((release) => ({
+        loaded.contracts.map(({ release, digest }) => ({
             contractId: release.contractId,
             version: release.version,
-            digest: fixture.contractDigests.get(release.contractId),
+            digest,
         })),
     );
+    const smtp = loaded.contracts.find(({ release }) => release.contractId === "ulvia.cms.emailer.smtp")!;
+    expect(smtp.release.capabilities.some(({ id }) => id === "emailer.send")).toBe(false);
+    expect(smtp.capabilities.find(({ definition }) => definition.id === "emailer.send")?.owner.contractId).toBe(
+        "ulvia.cms.emailer",
+    );
+    expect(smtp.digest).toBe(fixture.contractDigests.get(smtp.release.contractId));
 });
 
 test("rejects repository metadata that does not match the official bytes", async () => {

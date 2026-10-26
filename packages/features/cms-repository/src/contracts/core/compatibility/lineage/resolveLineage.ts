@@ -44,3 +44,31 @@ export async function findImplementedContract(
 export function effectiveLineageCapabilities(lineage: readonly ContractRelease[]): readonly CapabilityDefinition[] {
     return Object.freeze(lineage.toReversed().flatMap((release) => release.capabilities));
 }
+
+/** Preserve published bytes and ownership while resolving the effective execution surface. */
+export async function resolveContract(
+    catalogue: ReleaseCatalogue,
+    admission: import("../../admission/admitContractRelease").AdmittedContractRelease,
+): Promise<import("../../../interfaces/ResolvedContract").ResolvedContract> {
+    const releases = await resolveContractLineage(catalogue, admission.release);
+    const lineage = releases.map((release, index) =>
+        Object.freeze({
+            release,
+            digest: index === 0 ? admission.digest : releases[index - 1]!.extends!.digest,
+        }),
+    );
+    const capabilities = lineage.toReversed().flatMap(({ release, digest }) =>
+        release.capabilities.map((definition) =>
+            Object.freeze({
+                owner: Object.freeze({ contractId: release.contractId, version: release.version, digest }),
+                definition,
+            }),
+        ),
+    );
+    return Object.freeze({
+        release: admission.release,
+        digest: admission.digest,
+        lineage: Object.freeze(lineage),
+        capabilities: Object.freeze(capabilities),
+    });
+}
