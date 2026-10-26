@@ -66,6 +66,28 @@ The site is available at `http://my-site.localhost:5100`. The credentials
 command prints the initial administrator email and password. It never prints
 the Provider, Repository, encryption, or instance service secrets.
 
+The Provider uses `https://repo.ulvia.fr` by default for official artifacts,
+collection discovery and instance-owned publications. The shared stack still
+contains a loopback-only Repository service, but the Provider uses it only
+when explicitly configured.
+
+When initializing a node, select another Repository by setting
+`CMS_REPOSITORY_URL` on the first configuration or startup command. For an
+isolated local installation:
+
+```bash
+CMS_REPOSITORY_URL=http://repository:3000 \
+CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true ulvia services start
+```
+
+The selected connection is persisted as `repository.url` and
+`repository.allowInsecureHttp` in
+`~/.local/share/ulvia/services/installation.json`. Later environment changes
+do not replace an existing connection. To change it, update those fields and
+run `ulvia services start`. The target Repository must contain the exact
+official contracts, Provider manifest and collection required by the installed
+Provider image.
+
 Ulvia deliberately separates shared services from sites:
 
 | Command | Responsibility |

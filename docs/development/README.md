@@ -26,6 +26,19 @@ After initialization, `bun run ulvia -- start` reuses the installed digests.
 Building workspace sources does not update those containers; follow the
 explicit image build/publish and upgrade workflow below.
 
+Standard installations use `https://repo.ulvia.fr` for the Provider's Repository
+connection. Tests and offline development must select a local Repository
+explicitly before initialization:
+
+```bash
+CMS_REPOSITORY_URL=http://repository:3000 \
+CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --version 0.0.1-beta
+```
+
+The connection is persisted in `services/installation.json` independently of
+network exposure and client signing identities. The Kernel smoke supplies this
+local override itself and never uses the public Repository.
+
 The CLI manages shared services and any number of named Kernel instances through
 independent Docker Compose projects. It runs the same Kernel, Provider and
 Official Repository images for loopback and public installations, plus Nginx

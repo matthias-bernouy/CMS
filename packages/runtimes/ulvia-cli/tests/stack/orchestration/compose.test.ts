@@ -37,6 +37,8 @@ test("Compose receives explicit user-owned storage and loopback port configurati
         },
     };
     const environment = localServicesEnvironment(paths, defaultInstallationConfig(), identity);
+    expect(environment.CMS_REPOSITORY_URL).toBe("https://repo.ulvia.fr");
+    expect(environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBe("false");
     expect(environment.ULVIA_MONGO_DIR).toBe(paths.mongo);
     expect(environment.ULVIA_FILES_DIR).toBe(paths.cmsFiles);
     expect(environment.ULVIA_REPOSITORY_DIR).toBe(paths.repository);

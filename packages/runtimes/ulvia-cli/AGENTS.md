@@ -6,6 +6,10 @@ Ulvia CMS installation runtime.
 
 - Orchestrate shared services and independent named Kernel instances through Docker Compose.
 - Keep runtime data and generated credentials private and persistent.
+- Standard Provider connections default to `https://repo.ulvia.fr`. Persist the
+  selected Repository connection with installation configuration. Local tests
+  must explicitly select their isolated Repository and opt into HTTP; never
+  let their default setup contact the public Repository.
 - Expose lifecycle commands for starting, inspecting, and stopping the stack.
 
 ## Rules

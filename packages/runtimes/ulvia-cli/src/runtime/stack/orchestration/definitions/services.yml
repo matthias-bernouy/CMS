@@ -125,8 +125,8 @@ services:
             MODE: PROD
             NODE_ENV: production
             CMS_FILES_DIR: /var/lib/cms/files
-            CMS_REPOSITORY_URL: http://repository:3000
-            CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true"
+            CMS_REPOSITORY_URL: ${CMS_REPOSITORY_URL:-https://repo.ulvia.fr}
+            CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "${CMS_REPOSITORY_ALLOW_INSECURE_HTTP:-false}"
             CMS_SESSION_SECRET: ${ULVIA_PROVIDER_SESSION_SECRET}
             CMS_KEK_HEX: ${ULVIA_PROVIDER_KEK_HEX}
             MONGO_URL: mongodb://${ULVIA_MONGO_PROVIDER_USERNAME}:${ULVIA_MONGO_PROVIDER_PASSWORD}@mongo:27017/ulvia_provider_control?authSource=admin&retryWrites=false

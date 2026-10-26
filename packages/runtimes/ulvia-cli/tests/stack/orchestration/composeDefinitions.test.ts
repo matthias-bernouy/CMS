@@ -12,6 +12,8 @@ composeTest("one Compose model renders loopback HTTP and public ACME exposure", 
         { mode: "ingress", host_ip: "127.0.0.1", target: 80, published: "15100", protocol: "tcp" },
     ]);
     expect(base.services.provider.environment.MODE).toBe("PROD");
+    expect(base.services.provider.environment.CMS_REPOSITORY_URL).toBe("https://repo.ulvia.fr");
+    expect(base.services.provider.environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBe("false");
     expect(base.services.provider.environment.MONGO_URL).toContain("ulvia_provider:bbbb");
     expect(base.services.provider.environment.MONGO_URL).not.toContain("ulvia:aaaa");
     expect(base.services.mongo.ports).toBeUndefined();
@@ -76,7 +78,7 @@ type RenderedService = {
 
 type RenderedCompose = { services: Record<string, RenderedService> };
 
-function render(files: readonly string[]): RenderedCompose {
+function render(files: readonly string[], overrides: Record<string, string> = {}): RenderedCompose {
     const result = Bun.spawnSync({
         cmd: [
             "docker",
@@ -89,7 +91,7 @@ function render(files: readonly string[]): RenderedCompose {
             "json",
         ],
         cwd: definitions,
-        env: { ...minimalEnvironment(), ...composeEnvironment() },
+        env: { ...minimalEnvironment(), ...composeEnvironment(), ...overrides },
         stdout: "pipe",
         stderr: "pipe",
     });
@@ -147,3 +149,12 @@ function commandSucceeds(command: string[]): boolean {
         Bun.spawnSync({ cmd: command, env: minimalEnvironment(), stdout: "ignore", stderr: "ignore" }).exitCode === 0
     );
 }
+
+composeTest("an explicit local Repository override reaches the Provider without contacting the public service", () => {
+    const config = render(["services.yml"], {
+        CMS_REPOSITORY_URL: "http://repository:3000",
+        CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
+    });
+    expect(config.services.provider.environment.CMS_REPOSITORY_URL).toBe("http://repository:3000");
+    expect(config.services.provider.environment.CMS_REPOSITORY_ALLOW_INSECURE_HTTP).toBe("true");
+});

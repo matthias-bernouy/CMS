@@ -25,6 +25,8 @@ smoke(
         const environment = {
             ...process.env,
             ULVIA_DATA_DIR: data,
+            CMS_REPOSITORY_URL: "http://repository:3000",
+            CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
             ULVIA_CONFIG_DIR: join(data, "client"),
             ULVIA_HTTP_PORT: String(PORTS.kernel),
             ULVIA_REPOSITORY_PORT: String(PORTS.repository),

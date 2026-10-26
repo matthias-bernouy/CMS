@@ -21,6 +21,7 @@ test("installation configuration defaults to loopback HTTP and persists explicit
             schema: "ulvia.installation.v1",
             bindAddress: "127.0.0.1",
             ports: { http: 5100, repository: 5102, provider: 5103 },
+            repository: { url: "https://repo.ulvia.fr", allowInsecureHttp: false },
             tls: { mode: "disabled" },
         });
         const publicConfig = parseInstallationConfig({
@@ -99,4 +100,31 @@ test("ACME challenge roots stay readable by Nginx workers across CLI invocations
     } finally {
         await rm(root, { recursive: true, force: true });
     }
+});
+
+test("an explicit local Repository is persisted independently of later environment defaults", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-repository-connection-"));
+    const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
+    await ensureUlviaPaths(paths);
+    try {
+        const installation = await loadOrCreateInstallationConfig(paths, {
+            CMS_REPOSITORY_URL: "http://repository:3000",
+            CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
+        });
+        expect(installation.repository).toEqual({ url: "http://repository:3000", allowInsecureHttp: true });
+        expect((await loadOrCreateInstallationConfig(paths)).repository).toEqual(installation.repository);
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
+test("Repository connections reject implicit HTTP and credentials in URLs", () => {
+    for (const url of [
+        "http://repository:3000",
+        "https://user:password@repo.example",
+        "https://repo.example/?token=x",
+    ]) {
+        expect(() => defaultInstallationConfig({ CMS_REPOSITORY_URL: url })).toThrow();
+    }
+    expect(() => defaultInstallationConfig({ CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "yes" })).toThrow();
 });

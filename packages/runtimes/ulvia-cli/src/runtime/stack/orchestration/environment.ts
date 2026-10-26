@@ -19,6 +19,8 @@ export function localServicesEnvironment(
     credentials?: ServiceCredentials,
 ): Record<string, string> {
     return {
+        CMS_REPOSITORY_URL: installation.repository.url,
+        CMS_REPOSITORY_ALLOW_INSECURE_HTTP: String(installation.repository.allowInsecureHttp),
         PROVIDER_IMAGE: pinnedOfficialImageReference(state.images.provider),
         OFFICIAL_REPOSITORY_IMAGE: pinnedOfficialImageReference(state.images.repository),
         ULVIA_BIND_ADDRESS: installation.bindAddress,
