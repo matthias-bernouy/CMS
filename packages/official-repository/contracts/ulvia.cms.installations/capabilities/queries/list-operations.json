@@ -37,9 +37,10 @@
                         "capabilityId": {
                             "type": "string",
                             "enum": [
-                                "apply-collection-migration",
-                                "resume-collection-migration",
-                                "rollback-collection-migration"
+                                "apply-collection-upgrade",
+                                "resume-collection-upgrade",
+                                "apply-contract-upgrade",
+                                "resume-contract-upgrade"
                             ],
                             "maxLength": 32
                         },
@@ -106,7 +107,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "installations_list_operations",
-                "description": "List this instance\u2019s asynchronous operations, including collection migration progress."
+                "description": "List this instance\u2019s asynchronous operations, including site upgrade progress."
             }
         }
     ]

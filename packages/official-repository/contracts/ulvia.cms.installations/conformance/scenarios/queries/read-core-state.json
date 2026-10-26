@@ -49,23 +49,17 @@
             }
         },
         {
-            "id": "get-collection-migration-status",
-            "capabilityId": "get-collection-migration-status",
+            "id": "get-site-upgrade-status",
+            "capabilityId": "get-site-upgrade-status",
             "actor": {
                 "kind": "admin"
             },
-            "input": {
-                "limit": 25
-            },
+            "input": {},
             "expect": {
                 "kind": "success",
                 "checks": [
                     {
                         "path": "/maintenance",
-                        "present": true
-                    },
-                    {
-                        "path": "/migrations",
                         "present": true
                     }
                 ]

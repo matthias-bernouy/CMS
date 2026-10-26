@@ -48,33 +48,36 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "PUT",
-        "path": "/uploads/{uploadId}",
-        "input": {
-            "path": {
-                "uploadId": "uploadId"
-            },
-            "headers": {
-                "upload-token": {
-                    "property": "uploadToken",
-                    "encoding": "uri-component"
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "PUT",
+            "path": "/uploads/{uploadId}",
+            "input": {
+                "path": {
+                    "uploadId": "uploadId"
+                },
+                "headers": {
+                    "upload-token": {
+                        "property": "uploadToken",
+                        "encoding": "uri-component"
+                    }
+                },
+                "body": {
+                    "binaryProperty": "bytes"
                 }
             },
-            "body": {
-                "binaryProperty": "bytes"
-            }
-        },
-        "response": {
-            "successStatuses": [204],
-            "contentTypes": [],
-            "errorStatuses": {
-                "INVALID_INPUT": 422,
-                "NOT_AUTHORIZED": 403,
-                "SIZE_MISMATCH": 409,
-                "CORE_UNAVAILABLE": 503
+            "response": {
+                "successStatuses": [204],
+                "contentTypes": [],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_AUTHORIZED": 403,
+                    "SIZE_MISMATCH": 409,
+                    "CORE_UNAVAILABLE": 503
+                }
             }
         }
-    }
+    ]
 }

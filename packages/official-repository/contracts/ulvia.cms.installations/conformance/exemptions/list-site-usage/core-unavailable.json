@@ -1,0 +1,5 @@
+{
+    "capabilityId": "list-site-usage",
+    "reason": "Requires persisted site content and an authoritative consumer inventory; tested by upgrade service and provider integration tests.",
+    "errorCode": "CORE_UNAVAILABLE"
+}

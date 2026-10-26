@@ -11,14 +11,17 @@
     },
     "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
     "responseEffects": ["session"],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/logout",
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/logout",
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+            }
         }
-    }
+    ]
 }

@@ -72,17 +72,20 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms-instances/current",
-        "input": {},
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "INSTANCE_UNAVAILABLE": 503
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/v1/cms-instances/current",
+            "input": {},
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INSTANCE_UNAVAILABLE": 503
+                }
             }
         }
-    }
+    ]
 }

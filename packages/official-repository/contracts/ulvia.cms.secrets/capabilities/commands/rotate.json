@@ -33,24 +33,27 @@
         { "code": "VERSION_CONFLICT", "retryable": false },
         { "code": "CORE_UNAVAILABLE", "retryable": true }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/namespaces/{namespaceId}/secrets/{secretId}/rotate",
-        "input": {
-            "path": { "namespaceId": "namespaceId", "secretId": "secretId" },
-            "body": { "properties": ["namespaceKey", "value", "expectedVersion"] }
-        },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "INVALID_INPUT": 422,
-                "NOT_AUTHORIZED": 403,
-                "NOT_FOUND": 404,
-                "VERSION_CONFLICT": 409,
-                "CORE_UNAVAILABLE": 503
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/namespaces/{namespaceId}/secrets/{secretId}/rotate",
+            "input": {
+                "path": { "namespaceId": "namespaceId", "secretId": "secretId" },
+                "body": { "properties": ["namespaceKey", "value", "expectedVersion"] }
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_AUTHORIZED": 403,
+                    "NOT_FOUND": 404,
+                    "VERSION_CONFLICT": 409,
+                    "CORE_UNAVAILABLE": 503
+                }
             }
         }
-    }
+    ]
 }

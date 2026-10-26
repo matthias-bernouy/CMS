@@ -26,7 +26,12 @@
             },
             "capabilityId": {
                 "type": "string",
-                "enum": ["apply-collection-migration", "resume-collection-migration", "rollback-collection-migration"],
+                "enum": [
+                    "apply-collection-upgrade",
+                    "resume-collection-upgrade",
+                    "apply-contract-upgrade",
+                    "resume-contract-upgrade"
+                ],
                 "maxLength": 32
             },
             "status": {
@@ -56,32 +61,27 @@
             "result": {
                 "type": "object",
                 "properties": {
-                    "migrationId": {
+                    "upgradeId": {
                         "type": "string",
-                        "format": "uuid",
-                        "maxLength": 36
+                        "maxLength": 71
                     },
                     "status": {
                         "type": "string",
-                        "maxLength": 32
+                        "maxLength": 16,
+                        "enum": ["prepared", "applying", "completed", "cancelled"]
                     },
                     "collectionRevision": {
                         "type": "integer",
                         "minimum": 0,
                         "maximum": 9007199254740991
                     },
-                    "totalPages": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 9007199254740991
-                    },
-                    "operationCount": {
+                    "selectionRevision": {
                         "type": "integer",
                         "minimum": 0,
                         "maximum": 9007199254740991
                     }
                 },
-                "required": ["migrationId", "status", "collectionRevision", "totalPages", "operationCount"]
+                "required": ["upgradeId", "status"]
             }
         },
         "required": ["operationId", "capabilityId", "status", "revision", "createdAt", "updatedAt"]
@@ -124,7 +124,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "installations_get_operation",
-                "description": "Read one asynchronous operation until it succeeds or fails. Use this after a collection migration command."
+                "description": "Read one asynchronous operation until it succeeds or fails. Use this after a site upgrade command."
             }
         }
     ]

@@ -137,34 +137,37 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "GET",
-        "path": "/files/{fileId}",
-        "input": {
-            "path": {
-                "fileId": "fileId"
-            },
-            "headers": {
-                "namespace-key": {
-                    "property": "namespaceKey",
-                    "encoding": "uri-component"
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/files/{fileId}",
+            "input": {
+                "path": {
+                    "fileId": "fileId"
                 },
-                "namespace-id": {
-                    "property": "namespaceId",
-                    "encoding": "uri-component"
+                "headers": {
+                    "namespace-key": {
+                        "property": "namespaceKey",
+                        "encoding": "uri-component"
+                    },
+                    "namespace-id": {
+                        "property": "namespaceId",
+                        "encoding": "uri-component"
+                    }
+                }
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_AUTHORIZED": 403,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
                 }
             }
-        },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "INVALID_INPUT": 422,
-                "NOT_AUTHORIZED": 403,
-                "NOT_FOUND": 404,
-                "CORE_UNAVAILABLE": 503
-            }
         }
-    }
+    ]
 }

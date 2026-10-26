@@ -26,14 +26,17 @@
         "required": ["enabled", "fromEmail", "fromName", "replyTo", "smtp"]
     },
     "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
-    "binding": {
-        "transport": "http",
-        "method": "GET",
-        "path": "/configuration",
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/configuration",
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+            }
         }
-    }
+    ]
 }

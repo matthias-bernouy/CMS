@@ -78,7 +78,7 @@
             "retryable": false
         },
         {
-            "code": "MIGRATION_IN_PROGRESS",
+            "code": "UPGRADE_IN_PROGRESS",
             "retryable": true
         },
         {
@@ -102,7 +102,7 @@
                     "INVALID_INPUT": 422,
                     "NOT_FOUND": 404,
                     "REVISION_CONFLICT": 409,
-                    "MIGRATION_IN_PROGRESS": 423,
+                    "UPGRADE_IN_PROGRESS": 423,
                     "CORE_UNAVAILABLE": 503
                 }
             }

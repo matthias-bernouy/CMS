@@ -1,0 +1,5 @@
+{
+    "capabilityId": "plan-contract-upgrade",
+    "reason": "Requires an authoritative live site usage snapshot, exact served releases and durable site upgrade storage; exercised by provider integration and upgrade service tests.",
+    "errorCode": "BROWSER_CAPABILITIES_APPROVAL_REQUIRED"
+}

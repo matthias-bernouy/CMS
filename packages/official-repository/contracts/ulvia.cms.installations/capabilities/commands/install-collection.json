@@ -98,11 +98,6 @@
                             "type": "string",
                             "maxLength": 96
                         },
-                        "dataGeneration": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 9007199254740991
-                        },
                         "blocCount": {
                             "type": "integer",
                             "minimum": 0,
@@ -137,7 +132,6 @@
                         "publisherId",
                         "version",
                         "digest",
-                        "dataGeneration",
                         "blocCount",
                         "pageCount",
                         "assetCount",

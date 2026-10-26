@@ -21,17 +21,20 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "GET",
-        "path": "/delivery/robots",
-        "input": {},
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": [],
-            "errorStatuses": {
-                "CORE_UNAVAILABLE": 503
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/delivery/robots",
+            "input": {},
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": [],
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503
+                }
             }
         }
-    }
+    ]
 }

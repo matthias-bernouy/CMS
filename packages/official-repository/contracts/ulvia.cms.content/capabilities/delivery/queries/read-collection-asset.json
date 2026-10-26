@@ -55,29 +55,32 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "GET",
-        "path": "/delivery/collections/{collectionId}/assets/{assetId}",
-        "input": {
-            "path": {
-                "collectionId": "collectionId",
-                "assetId": "assetId"
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/delivery/collections/{collectionId}/assets/{assetId}",
+            "input": {
+                "path": {
+                    "collectionId": "collectionId",
+                    "assetId": "assetId"
+                },
+                "query": {
+                    "digest": "expectedDigest",
+                    "start": "rangeStart",
+                    "end": "rangeEnd"
+                }
             },
-            "query": {
-                "digest": "expectedDigest",
-                "start": "rangeStart",
-                "end": "rangeEnd"
-            }
-        },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": [],
-            "errorStatuses": {
-                "INVALID_INPUT": 422,
-                "NOT_FOUND": 404,
-                "CORE_UNAVAILABLE": 503
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": [],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
+                }
             }
         }
-    }
+    ]
 }

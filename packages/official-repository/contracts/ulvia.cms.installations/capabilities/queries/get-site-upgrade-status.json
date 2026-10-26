@@ -1,0 +1,77 @@
+{
+    "id": "get-site-upgrade-status",
+    "access": "admin",
+    "description": "Read the active site release-switch intent and its maintenance fence.",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "maintenance": {
+                "type": "boolean"
+            },
+            "activeUpgrade": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 71
+                    },
+                    "status": {
+                        "type": "string",
+                        "maxLength": 16
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "maxLength": 40,
+                        "format": "date-time"
+                    },
+                    "kind": {
+                        "type": "string",
+                        "maxLength": 16,
+                        "enum": ["collection", "contracts"]
+                    }
+                },
+                "required": ["id", "status", "createdAt", "kind"]
+            }
+        },
+        "required": ["maintenance"]
+    },
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/get-site-upgrade-status",
+            "input": {},
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "installations_get_site_upgrade_status",
+                "description": "get collection upgrade status"
+            }
+        }
+    ]
+}

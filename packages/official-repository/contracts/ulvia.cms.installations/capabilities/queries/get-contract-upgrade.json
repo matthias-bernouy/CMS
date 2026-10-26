@@ -1,0 +1,97 @@
+{
+    "id": "get-contract-upgrade",
+    "access": "admin",
+    "description": "Read the state of one site contract release switch.",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "upgradeId": {
+                "type": "string",
+                "minLength": 71,
+                "maxLength": 71
+            }
+        },
+        "required": ["upgradeId"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "upgradeId": {
+                "type": "string",
+                "maxLength": 71
+            },
+            "status": {
+                "type": "string",
+                "maxLength": 16,
+                "enum": ["prepared", "applying", "completed", "cancelled"]
+            },
+            "selectionRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            }
+        },
+        "required": ["upgradeId", "status", "selectionRevision"]
+    },
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "RELEASE_MISMATCH",
+            "retryable": false
+        },
+        {
+            "code": "BROWSER_CAPABILITIES_APPROVAL_REQUIRED",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/get-contract-upgrade",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503,
+                    "NOT_FOUND": 404,
+                    "INVALID_INPUT": 422,
+                    "REVISION_CONFLICT": 409,
+                    "RELEASE_MISMATCH": 409,
+                    "BROWSER_CAPABILITIES_APPROVAL_REQUIRED": 409
+                }
+            }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "installations_get_contract_upgrade",
+                "description": "Read the state of one site contract release switch."
+            }
+        }
+    ]
+}

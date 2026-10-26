@@ -15,14 +15,17 @@
         "required": ["state"]
     },
     "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
-    "binding": {
-        "transport": "http",
-        "method": "GET",
-        "path": "/resolve-actor",
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/resolve-actor",
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+            }
         }
-    }
+    ]
 }

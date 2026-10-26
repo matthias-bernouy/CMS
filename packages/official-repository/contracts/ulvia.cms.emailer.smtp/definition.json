@@ -8,7 +8,7 @@
     "extends": {
         "contractId": "ulvia.cms.emailer",
         "version": "1.0.0",
-        "digest": "sha256:e2f4fe7c4e4d9561ac4f490a5e3b777d4deaaaca3d38e7bc7e092eb3db0ca41c"
+        "digest": "sha256:a4ab9aeb37db8f66166f8825de2fbf58c36a799ac0e7fb6a343b08f2b36b0bbb"
     },
     "version": "1.0.0",
     "publisherId": "ulvia.official",

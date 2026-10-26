@@ -79,27 +79,30 @@
             "retryable": true
         }
     ],
-    "binding": {
-        "transport": "http",
-        "method": "POST",
-        "path": "/namespaces/{namespaceId}/keys",
-        "input": {
-            "path": {
-                "namespaceId": "namespaceId"
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/namespaces/{namespaceId}/keys",
+            "input": {
+                "path": {
+                    "namespaceId": "namespaceId"
+                },
+                "body": {
+                    "properties": ["namespaceKey", "permissions", "expiresAt"]
+                }
             },
-            "body": {
-                "properties": ["namespaceKey", "permissions", "expiresAt"]
-            }
-        },
-        "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
-            "errorStatuses": {
-                "INVALID_INPUT": 422,
-                "NOT_AUTHORIZED": 403,
-                "NOT_FOUND": 404,
-                "CORE_UNAVAILABLE": 503
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_AUTHORIZED": 403,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503
+                }
             }
         }
-    }
+    ]
 }

@@ -90,11 +90,6 @@
                             "type": "string",
                             "maxLength": 96
                         },
-                        "generation": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 9007199254740991
-                        },
                         "label": {
                             "type": "string",
                             "maxLength": 300
@@ -120,16 +115,7 @@
                             "maxLength": 65536
                         }
                     },
-                    "required": [
-                        "id",
-                        "generation",
-                        "label",
-                        "description",
-                        "category",
-                        "group",
-                        "sourceValue",
-                        "overrideValue"
-                    ]
+                    "required": ["id", "label", "description", "category", "group", "sourceValue", "overrideValue"]
                 }
             }
         },
