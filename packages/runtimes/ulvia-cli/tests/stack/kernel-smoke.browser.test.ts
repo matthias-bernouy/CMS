@@ -42,9 +42,9 @@ smoke(
             await bootstrapOfficialRepository(join(data, "repository"));
             await runCli(["release", smokeCollection], { environment, log: () => undefined });
             const compatibleUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "1.1.0");
-            const migrationUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "2.0.0", true);
+            const majorUpgrade = await prepareSmokeCollectionRelease(smokeCollection, data, "2.0.0");
             await runCli(["release", compatibleUpgrade], { environment, log: () => undefined });
-            await runCli(["release", migrationUpgrade], { environment, log: () => undefined });
+            await runCli(["release", majorUpgrade], { environment, log: () => undefined });
             await runCli(["services", "start", "--version", version], {
                 environment,
                 log: (message) => (output += `${message}\n`),

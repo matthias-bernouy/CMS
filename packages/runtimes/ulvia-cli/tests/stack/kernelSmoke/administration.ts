@@ -128,7 +128,7 @@ export async function mutateSettings(page: Page): Promise<void> {
 export async function inspectDiagnostics(page: Page): Promise<void> {
     await adminPageLink(page, "diagnostics").click();
     await page.getByRole("heading", { name: "Diagnostics", exact: true }).waitFor();
-    await page.locator("#migration-health").waitFor();
+    await page.locator("#upgrade-health").waitFor();
     await page.locator('a[href="#collection-operation-health"]').click();
     await page.waitForURL(/#collection-operation-health$/u);
     const operations = page.locator('section[cms-query*="ulvia.cms.installations:list-operations"]');

@@ -28,12 +28,26 @@ function snapshot(namespace: string, macroMarker?: string) {
                 kind: "component",
                 id: "mcp-kit-panel",
                 label: "bloc.label",
+                description: "bloc.label",
+                categories: ["bloc.label"],
+                examples: ["panel"],
+                defaultExample: "panel",
                 root: { accepts: ["div"] },
                 slots: { body: { accepts: [{ kind: "native-content", profile: "prose" }] } },
                 uses: [],
                 requires: [],
             }),
         },
+        {
+            path: "examples/panel/definition.json",
+            content: JSON.stringify({
+                id: "panel",
+                label: "bloc.label",
+                description: "bloc.label",
+                previews: [{ id: "desktop", frame: { width: 640, height: 240 } }],
+            }),
+        },
+        { path: "examples/panel/document.html", content: '<div cms-bloc="mcp-kit-panel"></div>' },
         { path: "blocs/mcp-kit-panel/markup.html", content: '<section><slot name="body"></slot></section>' },
     ];
     if (macroMarker) {

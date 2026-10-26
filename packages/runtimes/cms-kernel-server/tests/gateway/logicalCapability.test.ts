@@ -7,7 +7,7 @@ test("logical capability resolution preserves command idempotency", async () => 
         getGatewayRoute: async () => JSON.stringify(routeSnapshot()),
     } as ControlProviderClient);
 
-    await expect(gateway.resolveCapability("ulvia.cms.installations", "apply-collection-migration")).resolves.toEqual({
+    await expect(gateway.resolveCapability("ulvia.cms.installations", "apply-collection-upgrade")).resolves.toEqual({
         access: "admin",
         version: "1.0.0",
         effect: "command",
@@ -32,7 +32,7 @@ function routeSnapshot() {
                     version: "1.0.0",
                     capabilities: [
                         {
-                            id: "apply-collection-migration",
+                            id: "apply-collection-upgrade",
                             access: "admin",
                             behavior: { effect: "command", execution: "operation", idempotency: "keyed" },
                             output: { type: "object" },
@@ -48,7 +48,7 @@ function routeSnapshot() {
                 version: "1.0.0",
                 digest,
                 name: "Installations",
-                capabilityIds: ["apply-collection-migration"],
+                capabilityIds: ["apply-collection-upgrade"],
             },
         ],
         manifest: {},

@@ -125,13 +125,16 @@ function svgReleases(
                                 },
                                 output: { type: "binary", maxBytes: 65_536 },
                                 errors: [],
-                                binding: {
-                                    transport: "http",
-                                    method: "GET",
-                                    path: "/icons/{name}",
-                                    input: { path: { name: "name" } },
-                                    response: { successStatuses: [200], errorStatuses: {}, contentTypes },
-                                },
+                                bindings: [
+                                    {
+                                        id: "http",
+                                        transport: "http",
+                                        method: "GET",
+                                        path: "/icons/{name}",
+                                        input: { path: { name: "name" } },
+                                        response: { successStatuses: [200], errorStatuses: {}, contentTypes },
+                                    },
+                                ],
                             },
                         ],
                     },

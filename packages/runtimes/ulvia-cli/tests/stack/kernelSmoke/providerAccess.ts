@@ -51,19 +51,19 @@ export async function mutateProviders(page: Page): Promise<void> {
     await page.locator('a[href="#contract-routing"]').click();
     await page.waitForURL(/#contract-routing$/u);
     await page.locator("#contract-routing").waitFor();
+    await page.locator('a[href^="/admin/providers/upgrade?ulvia-official-contract=ulvia.cms.content&"]').click();
+    const apply = page.locator(
+        'form[cms-mutation="ulvia.cms.installations:apply-contract-upgrade as mutation"] button[type="submit"]',
+    );
+    await apply.waitFor();
     const [response] = await Promise.all([
-        page.waitForResponse((candidate) =>
-            candidate.url().includes("ulvia.cms.installations/replace-contract-selections"),
-        ),
-        page
-            .locator('form[cms-mutation^="ulvia.cms.installations:replace-contract-selections "] button[type="submit"]')
-            .click(),
+        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.installations/apply-contract-upgrade")),
+        apply.click(),
     ]);
     if (!response.ok()) {
-        throw new Error(`Contract routing flow failed (${response.status()}).`);
+        throw new Error(`Contract routing review failed (${response.status()}).`);
     }
-    await page.locator('a[href="#provider-installations"]').click();
-    await page.waitForURL(/#provider-installations$/u);
+    await page.waitForURL(/\/admin\/providers$/u);
     const installation = page.locator("#provider-installations [role=listitem]").first();
     for (const action of ["disable", "revoke"]) {
         const button = installation

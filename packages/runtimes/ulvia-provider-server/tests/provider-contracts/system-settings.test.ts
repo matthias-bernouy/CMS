@@ -93,8 +93,6 @@ test("localization settings use the collection locale before a fresh site select
                             collectionId: "example",
                             publisherId: "example.publisher",
                             version: "1.0.0",
-                            dataGeneration: 1,
-                            migrations: [],
                             name: "collection.name",
                             locale: "en",
                             translations: { en: { "collection.name": "Example", "theme.label": "Example theme" } },

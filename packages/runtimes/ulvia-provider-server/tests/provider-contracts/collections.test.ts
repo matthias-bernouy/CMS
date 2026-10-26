@@ -129,7 +129,6 @@ test("collection details expose translated metadata and the installed bloc catal
                             publisherId: "ulvia.official",
                             collectionId: "sample",
                             version: "1.0.0",
-                            dataGeneration: 1,
                             locale: "en",
                             name: "collection.name",
                             description: "collection.description",
@@ -149,7 +148,6 @@ test("collection details expose translated metadata and the installed bloc catal
                                     id: "sample-card",
                                     label: "bloc.card.label",
                                     description: "bloc.card.description",
-                                    generation: 2,
                                     catalogue: "listed",
                                 },
                             ],
@@ -176,25 +174,23 @@ test("collection details expose translated metadata and the installed bloc catal
                 id: "sample-card",
                 label: "Card",
                 description: "A reusable card.",
-                generation: 2,
                 catalogue: "listed",
             },
         ],
     });
 });
 
-test("collection commands stage installs and require migrations for generation changes", async () => {
+test("collection commands stage installs and expose no direct unreviewed upgrade", async () => {
     const installedRelease = {
         publisherId: "ulvia.official",
         collectionId: "sample",
         version: "0.9.0",
-        dataGeneration: 1,
         blocs: [],
         pages: [],
         assets: [],
         texts: [],
     };
-    const targetRelease = { ...installedRelease, version: "1.0.0", dataGeneration: 2 };
+    const targetRelease = { ...installedRelease, version: "1.0.0" };
     let installed = false;
     const core = {
         collections: {
@@ -254,5 +250,5 @@ test("collection commands stage installs and require migrations for generation c
             { expectedRevision: 1, target: reference },
             context,
         ),
-    ).rejects.toMatchObject({ code: "MIGRATION_REQUIRED", status: 409 });
+    ).rejects.toThrow();
 });

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mcpContainers } from "./containers";
+import { docker, mcpContainers } from "./containers";
 import { connectBrowser } from "./oauth";
 import { exerciseCollections, exerciseContent, exerciseFiles } from "./collections";
 
@@ -19,8 +19,16 @@ integration(
             expect((await fetch(`${f.repositoryUrl}/mcp`, { method: "POST", body: "{}" })).status).toBe(404);
             expect((await fetch(`${f.kernelUrl}/.cms/mcp`, { method: "POST", body: "{}" })).status).toBe(401);
             expect(f.namedStatus).toBe("ready");
+            await docker([
+                "exec",
+                f.providerName,
+                "bun",
+                "--no-macros",
+                "run",
+                "packages/runtimes/ulvia-provider-server/src/checkRetention.ts",
+            ]);
             connection = await connectBrowser(f.kernelUrl, f.administrator);
-            expect(connection.tools).toHaveLength(55);
+            expect(connection.tools).toHaveLength(58);
             const namespace = f.id.replaceAll("-", "");
             const publicKey = await exerciseCollections(connection.call, namespace, f.providerName);
             const namespaces = await connection.call("ulvia.cms.repository", "list-namespaces");

@@ -1,41 +1,33 @@
 import type { Page } from "playwright";
 
 export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
-    const compatible = collectionReleaseCard(page, "ulvia.test 1.1.0");
-    const [upgradeResponse] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.installations/upgrade-collection")),
-        compatible.getByRole("button", { name: /^(Try compatible upgrade|Essayer l’upgrade compatible)$/u }).click(),
-    ]);
-    if (!upgradeResponse.ok()) {
-        throw new Error(`Compatible collection upgrade failed (${upgradeResponse.status()}).`);
-    }
-    await installedRelease(page, "ulvia.test 1.1.0").waitFor();
-
-    const migration = collectionReleaseCard(page, "ulvia.test 2.0.0");
-    await migration.getByRole("link", { name: /^(Plan migration|Planifier la migration)$/u }).click();
-    await page.getByRole("heading", { name: /^(Migration preview|Aperçu de la migration)$/u }).waitFor();
-    const [migrationResponse] = await Promise.all([
-        page.waitForResponse((candidate) =>
-            candidate.url().includes("ulvia.cms.installations/apply-collection-migration"),
-        ),
-        page.getByRole("button", { name: /^(Apply migration|Appliquer la migration)$/u }).click(),
-    ]);
-    if (!migrationResponse.ok()) {
-        throw new Error(
-            `Collection migration failed (${migrationResponse.status()}): ${await migrationResponse.text()}. ` +
-                `Input: ${migrationResponse.request().postData() ?? "<none>"}`,
+    for (const version of ["1.1.0", "2.0.0"]) {
+        const card = collectionReleaseCard(page, `ulvia.test ${version}`);
+        await card.locator('a[href^="/admin/collections/upgrade?"]').click();
+        const apply = page.locator(
+            'form[cms-mutation="ulvia.cms.installations:apply-collection-upgrade as mutation"] button[type="submit"]',
         );
+        await apply.waitFor();
+        const [response] = await Promise.all([
+            page.waitForResponse((candidate) =>
+                candidate.url().includes("ulvia.cms.installations/apply-collection-upgrade"),
+            ),
+            apply.click(),
+        ]);
+        if (!response.ok()) {
+            throw new Error(`Collection upgrade failed (${response.status()}): ${await response.text()}`);
+        }
+        await page.waitForURL(/\/admin\/collections$/u);
+        await page.locator('a[href="/admin/diagnostics"]').first().click();
+        await waitForMaintenanceCompletion(page);
+        await page.locator('a[href="/admin/collections"]').first().click();
+        await installedRelease(page, `ulvia.test ${version}`).waitFor({ timeout: 60_000 });
     }
-    await page.waitForURL(/\/admin\/collections$/u);
-    await page.locator('a[href="/admin/diagnostics"]').first().click();
-    await waitForMaintenanceCompletion(page);
-    await page.locator('a[href="/admin/collections"]').first().click();
-    await installedRelease(page, "ulvia.test 2.0.0").waitFor({ timeout: 60_000 });
 }
 
 async function waitForMaintenanceCompletion(page: Page): Promise<void> {
-    const completed = '#migration-health strong[cms-condition="migrations.data.maintenance === false"]';
-    const loading = "#migration-health p[cms-condition=\"migrations.activity === 'fetching'\"]";
+    const completed = '#upgrade-health strong[cms-condition="upgrades.data.maintenance === false"]';
+    const loading = "#upgrade-health p[cms-condition=\"upgrades.activity === 'fetching'\"]";
     const deadline = Date.now() + 60_000;
     while (Date.now() < deadline) {
         await page.locator(loading).waitFor({ state: "hidden", timeout: 10_000 });
@@ -50,8 +42,8 @@ async function waitForMaintenanceCompletion(page: Page): Promise<void> {
         await page.waitForTimeout(500);
         await page.reload({ waitUntil: "domcontentloaded" });
     }
-    const migration = await page
-        .locator("#migration-health")
+    const upgrade = await page
+        .locator("#upgrade-health")
         .innerText()
         .catch(() => "unavailable");
     const operations = await page
@@ -59,7 +51,7 @@ async function waitForMaintenanceCompletion(page: Page): Promise<void> {
         .innerText()
         .catch(() => "unavailable");
     throw new Error(
-        `Collection migration did not leave maintenance mode.\nMigration: ${migration}\nOperations: ${operations}`,
+        `Collection upgrade did not leave maintenance mode.\nUpgrade: ${upgrade}\nOperations: ${operations}`,
     );
 }
 

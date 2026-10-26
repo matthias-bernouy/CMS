@@ -32,10 +32,7 @@ test("all administration capability areas dispatch outputs matching their offici
                 hasMore: false,
             }),
         },
-        collectionMigrations: {
-            getActive: async () => null,
-            listAudits: async () => [],
-        },
+        collectionUpgrades: { storage: { getActive: async () => null } },
     };
     const gateway = {
         siteId: "default",
@@ -107,7 +104,7 @@ test("all administration capability areas dispatch outputs matching their offici
     const calls = [
         ["ulvia.cms.installations", "list-collection-installations", {}],
         ["ulvia.cms.installations", "list-operations", {}],
-        ["ulvia.cms.installations", "get-collection-migration-status", {}],
+        ["ulvia.cms.installations", "get-site-upgrade-status", {}],
         ["ulvia.cms.files", "namespace.create", { name: "Smoke files", defaultVisibility: "private" }],
         ["ulvia.cms.content", "localization.get", {}],
         ["ulvia.cms.content", "theme.get", {}],
