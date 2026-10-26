@@ -9,10 +9,9 @@ test("remote site selection requires HTTP beside MCP while contract admission st
         const document = contractDocument("remote.example", "invoke");
         const capability = (document.capabilities as Record<string, unknown>[])[0]!;
         capability.bindings = [
-            ...(http ? [{ id: "http", ...(capability.binding as object) }] : []),
+            ...(http ? [{ id: "http", ...(capability.bindings[0] as object) }] : []),
             { id: "mcp", transport: "mcp" },
         ];
-        delete capability.binding;
         const releases = await releaseCatalogue(document);
         const record = (await releases.get("remote.example", "1.0.0"))!;
         const manifests = new InMemoryProviderManifestCatalogue(releases);

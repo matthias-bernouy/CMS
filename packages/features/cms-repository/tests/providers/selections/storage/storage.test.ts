@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryContractSelectionStore, planContractSelections } from "@bernouy/cms-repository/providers/selections";
-import { graphFixture, siteId } from "./fixtures";
+import { graphFixture, siteId } from ".././fixtures";
 
 async function fixture() {
     const graph = await graphFixture();

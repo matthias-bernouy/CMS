@@ -1,3 +1,5 @@
+import { parseCapabilityGrants } from "../../core/grants";
+import type { CapabilityGrantPolicy } from "../../interfaces/ContractSelectionStore";
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
 import { assertIJson, deepFreeze } from "cms-repository/exports/contracts/protocol";
@@ -35,7 +37,12 @@ export class MongoContractSelectionStore implements ContractSelectionStore {
         return document ? readSelectionDocument(document, site, this.#limits) : null;
     }
 
-    async replace(siteId: string, value: unknown, expectedRevision: number): Promise<StoredContractSelections> {
+    async replace(
+        siteId: string,
+        value: unknown,
+        expectedRevision: number,
+        proposedGrants?: CapabilityGrantPolicy,
+    ): Promise<StoredContractSelections> {
         const site = parseSelectionSiteId(siteId);
         if (
             !Number.isSafeInteger(expectedRevision) ||
@@ -49,6 +56,7 @@ export class MongoContractSelectionStore implements ContractSelectionStore {
         }
         // Snapshot before awaiting the dependency graph so caller mutations cannot change the proposal.
         const selections = parseContractSelections(value, this.#limits);
+        const suppliedGrants = proposedGrants === undefined ? undefined : parseCapabilityGrants(proposedGrants);
         const snapshot = await this.dependencies.capture(site);
         const revision = snapshot.revision;
         if (typeof revision !== "string" || !revision.length || revision.length > 256) {
@@ -64,7 +72,11 @@ export class MongoContractSelectionStore implements ContractSelectionStore {
                 "dependencies changed during selection validation",
             );
         }
+        const previous = await this.get(site);
+        const grants =
+            suppliedGrants ?? previous?.grants ?? parseCapabilityGrants({ default: "allow-selected", denied: [] });
         const record: StoredContractSelections = {
+            grants,
             siteId: site,
             revision: expectedRevision + 1,
             dependencyRevision: revision,
@@ -132,6 +144,7 @@ function readSelectionDocument(
     ) {
         throw new Error("Stored contract selections have invalid metadata");
     }
+    parseCapabilityGrants(document.grants);
     const selections = parseContractSelections(document.plan.selections, limits);
     if (selections.some((selection) => selection.siteId !== site)) {
         throw new Error("Stored contract selections contain another site");

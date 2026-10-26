@@ -1,3 +1,5 @@
+import { parseCapabilityGrants } from "../core/grants";
+import type { CapabilityGrantPolicy } from "../interfaces/ContractSelectionStore";
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import { ContractSelectionValidationError } from "../core/errors";
 import { DEFAULT_CONTRACT_SELECTION_LIMITS, type ContractSelectionLimits, selectionLimits } from "../core/limits";
@@ -27,7 +29,12 @@ export class InMemoryContractSelectionStore implements ContractSelectionStore {
         return record ? deepFreeze(structuredClone(record)) : null;
     }
 
-    async replace(siteId: string, value: unknown, expectedRevision: number): Promise<StoredContractSelections> {
+    async replace(
+        siteId: string,
+        value: unknown,
+        expectedRevision: number,
+        proposedGrants?: CapabilityGrantPolicy,
+    ): Promise<StoredContractSelections> {
         const site = parseSelectionSiteId(siteId);
         if (
             !Number.isSafeInteger(expectedRevision) ||
@@ -41,6 +48,7 @@ export class InMemoryContractSelectionStore implements ContractSelectionStore {
         }
         // Parse before enqueueing so caller mutation cannot change the pending replacement.
         const selections = parseContractSelections(value, this.#limits);
+        const suppliedGrants = proposedGrants === undefined ? undefined : parseCapabilityGrants(proposedGrants);
         const previous = this.#pending.get(site) ?? Promise.resolve();
         const pending = previous
             .catch(() => undefined)
@@ -71,6 +79,10 @@ export class InMemoryContractSelectionStore implements ContractSelectionStore {
                     );
                 }
                 const record = deepFreeze({
+                    grants:
+                        suppliedGrants ??
+                        this.#records.get(site)?.grants ??
+                        parseCapabilityGrants({ default: "allow-selected", denied: [] }),
                     siteId: site,
                     revision: expectedRevision + 1,
                     dependencyRevision: revision,

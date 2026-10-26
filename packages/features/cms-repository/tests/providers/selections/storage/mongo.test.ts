@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import type { Db } from "mongodb";
 import { MongoContractSelectionStore } from "@bernouy/cms-repository/providers/mongo";
-import { graphFixture, siteId } from "./fixtures";
+import { graphFixture, siteId } from ".././fixtures";
 
 type Document = { _id: string; revision: number; siteId: string };
 

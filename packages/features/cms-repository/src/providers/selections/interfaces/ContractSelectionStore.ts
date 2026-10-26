@@ -13,10 +13,17 @@ export interface ContractSelectionDependencySource {
     isCurrent(siteId: string, revision: string): Promise<boolean>;
 }
 
+/** Site execution policy is independent from exact release/provider choices and actor roles. */
+export interface CapabilityGrantPolicy {
+    readonly default: "allow-selected";
+    readonly denied: readonly Readonly<{ contractId: string; capabilityId: string }>[];
+}
+
 export interface StoredContractSelections {
     readonly siteId: string;
     readonly revision: number;
     readonly dependencyRevision: string;
+    readonly grants: CapabilityGrantPolicy;
     readonly plan: ContractSelectionPlan;
 }
 
@@ -24,5 +31,10 @@ export interface ContractSelectionStore {
     /** Historical snapshots remain readable after dependencies change or are yanked. */
     get(siteId: string): Promise<StoredContractSelections | null>;
     /** Revalidates the entire proposed site graph. Zero is the revision of an absent site. */
-    replace(siteId: string, selections: unknown, expectedRevision: number): Promise<StoredContractSelections>;
+    replace(
+        siteId: string,
+        selections: unknown,
+        expectedRevision: number,
+        grants?: CapabilityGrantPolicy,
+    ): Promise<StoredContractSelections>;
 }

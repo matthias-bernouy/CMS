@@ -45,7 +45,7 @@ describe("full selection dependency graph", () => {
         capabilities.push({
             ...capabilities[0],
             id: "refund",
-            binding: { ...(capabilities[0]!.binding as object), path: "/refund" },
+            bindings: [{ id: "http", ...(capabilities[0]!.bindings[0] as object), path: "/refund" }],
             requires: [{ contractId: "payment", capabilityId: "pay", versionRange: "^1.0.0" }],
         });
         const releases = await releaseCatalogue(contractDocument("payment", "pay"), document);
@@ -124,10 +124,13 @@ describe("full selection dependency graph", () => {
             {
                 ...(smtpDocument.capabilities as Record<string, unknown>[])[0],
                 id: "smtp.configure",
-                binding: {
-                    ...((smtpDocument.capabilities as Record<string, unknown>[])[0]!.binding as object),
-                    path: "/v1/smtp/configuration",
-                },
+                bindings: [
+                    {
+                        id: "http",
+                        ...((smtpDocument.capabilities as Record<string, unknown>[])[0]!.bindings[0] as object),
+                        path: "/v1/smtp/configuration",
+                    },
+                ],
             },
         ];
         const smtp = await admitContractRelease(smtpDocument);
