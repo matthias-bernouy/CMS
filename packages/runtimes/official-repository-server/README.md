@@ -75,7 +75,7 @@ Build the candidate image locally, then run the real-image tests without pushing
 
 ```sh
 bun run infra/images/build.ts build --version 0.1.0-community.0 repository
-ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:0.1.0-community.0 bun test infra/images/official-repository/tests
+ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:0.1.0-community.0 bun test ./tests/images/official-repository
 ```
 
 The test uses temporary bind storage, rejects a competing replica, publishes

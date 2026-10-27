@@ -16,7 +16,13 @@ export async function provisionInstance(
         signal: AbortSignal.timeout(90_000),
     });
     if (created.status !== 201) {
-        throw new Error(`Instance provisioning failed (${created.status})`);
+        const diagnostic = await fetch(`${providerUrl}/ulvia/operator/instances`, {
+            headers: { Authorization: `Bearer ${operatorToken}` },
+        });
+        const state = (await diagnostic.json()) as { instances: { status: string; failure?: string }[] };
+        throw new Error(
+            `Instance provisioning failed (${created.status}): ${state.instances.map((item) => item.failure ?? item.status).join("; ")}`,
+        );
     }
     const value = (await created.json()) as {
         instance: { status: string };

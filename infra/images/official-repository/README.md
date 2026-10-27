@@ -17,3 +17,6 @@ The image contains a pre-admitted snapshot of the official resources authored
 in this workspace. It copies that snapshot into an empty persistent repository
 on first start. Later image upgrades never overwrite an existing repository;
 new immutable releases still use the signed publication protocol.
+
+Image tests live in [`tests/images/official-repository`](../../../tests/images/official-repository).
+Run them from the workspace root with `bun test ./tests/images/official-repository`.

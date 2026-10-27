@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const root = resolve(import.meta.dir, "../../../..");
+const root = resolve(import.meta.dir, "../../..");
 
 test("official repository image keeps its production storage and secret boundaries", async () => {
     const dockerfile = await readFile(resolve(root, "infra/images/official-repository/Dockerfile"), "utf8");

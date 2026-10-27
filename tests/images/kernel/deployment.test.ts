@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const root = resolve(import.meta.dir, "../../../..");
+const root = resolve(import.meta.dir, "../../..");
 
 test("Kernel image contains only the stateless Kernel runtime", async () => {
     const dockerfile = await readFile(resolve(root, "infra/images/kernel/Dockerfile"), "utf8");

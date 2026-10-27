@@ -127,6 +127,9 @@ export async function mcpContainers(images: { kernel: string; provider: string; 
         return {
             id,
             namedStatus: named.instance.status,
+            providerUrl: () => mappedPort(providerName, 5103),
+            instanceToken: instance.credentials.instanceAccessToken,
+            namedToken: named.credentials.instanceAccessToken,
             kernelUrl,
             repositoryUrl,
             administrator,

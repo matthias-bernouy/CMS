@@ -1,4 +1,6 @@
+import { exerciseProviders } from "./providers/flow";
 import { expect, test } from "bun:test";
+import { exerciseObservability, verifyObservabilityPersistence } from "./observability";
 import { docker, mcpContainers } from "./containers";
 import { connectBrowser } from "./oauth";
 import { exerciseCollections, exerciseContent, exerciseFiles } from "./collections";
@@ -29,6 +31,7 @@ integration(
             ]);
             connection = await connectBrowser(f.kernelUrl, f.administrator);
             expect(connection.tools).toHaveLength(58);
+            await exerciseProviders(f, connection.page);
             const namespace = f.id.replaceAll("-", "");
             const publicKey = await exerciseCollections(connection.call, namespace, f.providerName);
             const namespaces = await connection.call("ulvia.cms.repository", "list-namespaces");
@@ -38,7 +41,9 @@ integration(
             );
             await exerciseContent(connection.call, f.kernelUrl);
             await exerciseFiles(connection.call, f.kernelUrl, connection.token.access_token);
+            const logId = await exerciseObservability(await f.providerUrl(), f.instanceToken, f.namedToken);
             await f.restartProvider();
+            await verifyObservabilityPersistence(await f.providerUrl(), f.instanceToken, logId);
             expect((await connection.call("ulvia.cms.repository", "get-identity")).publicKey).toBe(publicKey);
             expect((await connection.call("ulvia.cms.repository", "list-namespaces")).items).toContainEqual(
                 expect.objectContaining({ namespace, access: "owned" }),
@@ -61,13 +66,16 @@ integration(
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ redirect_uris: ["https://client.example/callback"] }),
                     }).then(async (response) => {
-                        await response.body?.cancel();
-                        return response.status;
+                        const { error } = await response.json();
+                        return { status: response.status, error };
                     }),
                 ),
             );
-            expect(registrations).toContain(429);
-            expect(registrations.every((status) => status === 201 || status === 429)).toBe(true);
+            expect(
+                registrations.map((item) => item.status),
+                JSON.stringify(registrations),
+            ).toContain(429);
+            expect(registrations.every(({ status }) => status === 201 || status === 429)).toBe(true);
         } catch (error) {
             throw new Error(`${String(error)}\n${await f.diagnostics()}`);
         } finally {
@@ -75,5 +83,5 @@ integration(
             await f.close();
         }
     },
-    240_000,
+    360_000,
 );

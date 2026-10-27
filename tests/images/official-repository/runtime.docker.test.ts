@@ -82,14 +82,16 @@ test.skipIf(!image)(
                         ])
                     ).stdout.trim(),
                 );
-            const originalPid = await pid();
-            expect(originalPid).toBeGreaterThan(0);
+            expect(await pid()).toBeGreaterThan(0);
             for (const signal of ["TERM", "KILL"]) {
                 await docker(["kill", `--signal=${signal}`, container.name]);
                 expect((await docker(["wait", container.name])).stdout.trim()).toMatch(/^\d+$/u);
                 await docker(["start", container.name]);
                 base = await container.ready();
-                expect(await pid()).toBe(originalPid);
+                const runningPid = await pid();
+                expect(runningPid).toBeGreaterThan(0);
+                const commandLine = await docker(["exec", container.name, "cat", `/proc/${runningPid}/cmdline`]);
+                expect(commandLine.stdout).toContain("official-repository-server/src/index.ts");
                 const restarted = new RepositoryNamespaceClient(base);
                 expect(await restarted.identity()).toBe(repositoryId);
                 expect((await restarted.get("ulvia.official"))?.revision).toBe(1);

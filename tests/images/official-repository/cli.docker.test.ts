@@ -11,7 +11,7 @@ test.skipIf(!image)(
     async () => {
         const container = await repositoryContainer(image!);
         const data = await mkdtemp(join(tmpdir(), "repository-cli-docker-"));
-        const workspace = resolve(import.meta.dir, "../../../..");
+        const workspace = resolve(import.meta.dir, "../../..");
         const environment = {
             ...process.env,
             ULVIA_DATA_DIR: data,
