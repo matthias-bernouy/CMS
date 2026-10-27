@@ -17,6 +17,7 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Imports](architecture/imports.md): public exports, local aliases, adapters and
   browser boundaries.
 - [Development](development/README.md): local startup, builds and validation.
+- [Workspace tests](../tests/README.md): cross-component journeys and image checks.
 - [Commit messages](development/commits.md): the recommended message convention.
 - [First published Page](product/first-published-page.md): locked MVP decisions,
   the administrator's golden path and its executable completion gate.

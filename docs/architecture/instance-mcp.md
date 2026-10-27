@@ -126,15 +126,17 @@ older Provider profiles is not implemented.
 
 Normal `bun run verify` includes domain, HTTP protocol and source-pipeline
 regressions. The opt-in real-image journey uses isolated local Docker containers
-for MongoDB, Repository, Provider and Kernel, plus Chromium. It checks consent,
-publication, installation, rendering, file bytes, persistence and revocation.
+for MongoDB, Repository, Provider and Kernel, plus Chromium. The harness lives in
+[`tests/integration/instance`](../../tests/integration/instance/README.md).
+It checks consent, publication, installation, rendering, file bytes, Provider
+connections, log isolation, key rotation, persistence and revocation.
 With matching local images already built, run:
 
 ```sh
 ULVIA_MCP_KERNEL_DOCKER_IMAGE=docker.io/cyaxis/ulvia-kernel:<tag> \
 ULVIA_MCP_PROVIDER_DOCKER_IMAGE=docker.io/cyaxis/ulvia-provider:<tag> \
 ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:<tag> \
-bun test infra/images/mcp/tests infra/images/official-repository/tests
+bun test ./tests/integration/instance ./tests/images/official-repository
 ```
 
 The journey never uses the public Repository. It removes its own containers,

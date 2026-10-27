@@ -147,3 +147,5 @@ set of existing `process.env.MODE` reads elsewhere is recorded in the
 See [development](../development/README.md),
 [Kernel routing](../surfaces/kernel.md) and
 [responsive images](../images/README.md).
+
+[CMS observability](observability.md) describes instance-scoped journal collection and queries.

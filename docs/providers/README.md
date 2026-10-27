@@ -52,9 +52,10 @@ duplicate, loop and memory bounds. Exact-coordinate reads are independent of
 the metadata-only catalogue index.
 
 The official repository publishes the `ulvia.cms.*` CMS contracts, the
-provider-only `ulvia.provider.cms-instances` contract reserved for future
-instance providers, and the `ulvia.official` provider manifest. The local
-runtime implements only the CMS contracts. The former `catalog.items`,
+`ulvia.provider.connections` return-channel contract, the provider-only
+`ulvia.provider.cms-instances` contract reserved for future instance providers,
+and the `ulvia.official` provider manifest. The local runtime implements the CMS
+contracts and `ulvia.provider.connections`. The former `catalog.items`,
 `forms.submissions` and `media.assets` demonstration contracts are not official
 resources.
 The [CLI guide](../../packages/runtimes/ulvia-cli/README.md) gives the local
@@ -75,17 +76,20 @@ Browser request
 
 Provider-to-provider calls authenticate the source installation with its Bearer
 credential. The host then checks that the source manifest declares the exact
-contract capability and compatible target version, that an exact source/target
-grant is enabled, and that its quota allows the call. Cycles and paths longer
+contract capability and compatible target version, that the instance selection
+restrictions permit it, and that its quota allows the call. Approving the source
+manifest accepts its `implementations[].requires`; no additional per-source
+permission list must be maintained. Cycles and paths longer
 than eight contracts are rejected when the site selection graph is validated;
-the source installation identity remains inside the gateway policy and audit.
+the signed source identifier is forwarded as opaque machine provenance.
 
 For a live capability call, the gateway derives a short-lived HMAC Bearer from
 the installation's provider credential. Its closed claims contain only the
 request ID, provider-owned opaque instance audience, exact contract version and
-capability, timestamps, and the provider-scoped opaque subject when the
-capability requires an authenticated identity. Site, installation and
-actor-role metadata are never forwarded. The provider checks the audience,
+capability, timestamps, an opaque destination connection identifier, and either
+a provider-scoped subject, a source Provider identifier, or an authorized system
+service. These identities cannot be combined. Site and user-role metadata are
+never forwarded. The provider checks the audience,
 selects the exact release route from the verified claims and receives its local
 site/provider scope from runtime configuration. The durable credential itself
 is sent only to the authenticated `/ulvia/report` control endpoint.
@@ -215,3 +219,5 @@ The code establishing the production boundary is
 and [mountProductionKernel](../../packages/runtimes/cms-kernel-server/src/runtime/mountKernel.ts).
 The [repository audit](../AUDIT.md) and [open platform work](../TODO.md)
 track the remaining implementation and activation gates.
+
+See [Connecting Providers from the CMS](connections.md) for approval, return credentials and SDK usage.

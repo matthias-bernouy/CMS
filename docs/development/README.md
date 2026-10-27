@@ -99,46 +99,45 @@ The CLI and initial Docker stack versions are independent and both are sealed
 into the receipt. Prereleases use the npm `next` tag; stable versions use
 `latest`.
 
-## Instance MCP verification
+## Instance integration verification
 
-[Instance MCP V1](../architecture/instance-mcp.md) documents the current tool
-scope, OAuth routes, collection workflow and the isolated real-image Docker
-journey. Build matching local images before running that opt-in test; ordinary
-`verify` skips it when its image environment variables are absent.
+[Workspace tests](../../tests/README.md) groups the cross-component journeys and
+image checks. Package-owned tests remain with their packages.
+
+The [instance integration tests](../../tests/integration/instance/README.md)
+run an isolated real-image Docker journey covering MCP consent, collections,
+files, Provider connections, observability, key rotation and revocation.
+[Instance MCP V1](../architecture/instance-mcp.md) documents the tool scope and
+OAuth routes. Build matching local images before running the opt-in test;
+ordinary `verify` discovers and skips it when its image environment variables
+are absent.
 
 ## Runtime Logs
 
-Kernel, Provider, and repository diagnostics use the
-shared structured logger. Local development keeps private rotating NDJSON files
-below `<data>/services/logs` and `<data>/instances/<name>/logs` while the terminal defaults to the less
-noisy `info` level. An explicit file journal remains available even though the
-containers use production HTTP and CSP behavior. Inspect the last 200 matching records with:
+Kernel, Provider, and Repository operator diagnostics use structured stdout/stderr.
+Instance diagnostics are collected through the selected Observability contract.
+Inspect the last 200 matching instance records with:
 
 ```bash
-ulvia services logs provider --level warn
-ulvia services logs all --request-id <uuid>
-ulvia services logs provider --event provider.operation.failed --instance-id <uuid> --stack
-ulvia services logs all --json
+ulvia instance logs default provider --level warn
+ulvia instance logs default all --request-id <uuid>
+ulvia instance logs default provider --event provider.operation.failed --stack
+ulvia instance logs default all --json
 ulvia instance logs default kernel --follow
 ```
 
-`ULVIA_LOG_LEVEL` accepts `trace`, `debug`, `info`, `warn`, `error`, or `fatal`.
-In local development it controls the private journal; `ULVIA_LOG_CONSOLE_LEVEL`
-independently controls terminal verbosity and defaults to `info`.
-`ULVIA_LOG_FORMAT` accepts `pretty` or `json`. Production runtimes default to
-JSON on stdout/stderr; deployment infrastructure remains responsible for
-collecting and retaining that stream. The synchronous rotating file journal is
-enabled only when `ULVIA_LOG_FILE` is explicitly configured. Invalid logging
-configuration is reported as a structured warning before the safe default is
-used.
+CMS instance journals are collected through the selected `ulvia.cms.observability` contract.
+Use `/admin/observability` or `ulvia instance logs <name>` to search them. Filters run
+in the selected Provider rather than on downloaded journal files. Production
+processes also write structured stdout/stderr for startup and operator diagnosis;
+`ulvia services logs provider` reads that container output. Application file
+journals and per-runtime `ULVIA_LOG_*` settings have been removed.
 
-Logging is diagnostic, bounded, and centrally redacted. It does not replace
-durable domain audit records, metrics, or traces. Remote telemetry is not sent:
-future support bundles or telemetry exporters must remain opt-in and apply a
-second redaction pass before leaving the machine.
+See [CMS observability](../architecture/observability.md) for authority, bounded
+collection, retention, pagination and delivery guarantees.
 
-Each runtime owns its logger and injects it only into coarse HTTP or process
-boundaries. The HTTP runner keeps only the current `requestId` in asynchronous
+Each runtime injects a logger into coarse HTTP and process boundaries. Instance
+loggers collect into their authenticated instance journal. The HTTP runner keeps only the current `requestId` in asynchronous
 request context; this enriches nested records automatically without creating a
 global logger or passing request metadata through domain APIs. The Kernel
 forwards the same `x-request-id` to the Provider, and the Provider runtime
@@ -165,6 +164,9 @@ deployment may additionally set `CMS_KEK_ACTIVE_ID` and a
 keys. At startup, the Provider control-plane database is checked for persisted
 DEKs whose wrapping keys are absent. The envelope helper supports rewrapping
 with an audit ledger; this is not a CLI-managed key-rotation workflow.
+
+Persisted DEK records require an explicit `keyId`; unversioned records are rejected.
+There is no implicit key assignment or reader for the pre-versioning storage format.
 
 Instance databases use their own key named `instance`, stored inside encrypted
 Provider credentials. `ProviderInstanceHost` supplies that key with

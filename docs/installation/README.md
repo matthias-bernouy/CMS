@@ -415,5 +415,5 @@ are separate from the installation procedure:
 
 ```bash
 bun run infra/images/build.ts build --version 0.1.0-repository.0 repository
-ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:0.1.0-repository.0 bun test infra/images/official-repository/tests
+ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:0.1.0-repository.0 bun test ./tests/images/official-repository
 ```
