@@ -29,6 +29,9 @@
                     <div cms-bloc="ulvia-official-list-item" role="listitem" cms-repeat="providers.data.installations as installation" slot="items">
                         <h3 cms-bloc="ulvia-official-heading" slot="title">{{ installation.providerId }}</h3>
                         <p slot="description">{{ installation.accountId }}</p>
+                        <a slot="body" href="/admin/providers/access?ulvia-official-provider-access-id={{ installation.id | urlencode }}">{{
+                            cms.i18n.ulvia-official.ui-provider-access
+                        }}</a>
                         <div cms-bloc="ulvia-official-badge" tone="success" cms-condition="installation.status === 'enabled'" slot="meta">
                             <span slot="label">{{ cms.i18n.ulvia-official.ui-enabled }}</span>
                         </div>

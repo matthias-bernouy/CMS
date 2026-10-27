@@ -1,0 +1,20 @@
+{
+    "ui-provider-connect": "Connecter un Provider",
+    "ui-provider-catalogue": "Providers disponibles",
+    "ui-provider-import": "Importer la release",
+    "ui-provider-preview": "Examiner la connexion",
+    "ui-provider-approve": "Approuver la connexion",
+    "ui-provider-account": "Compte du Provider",
+    "ui-provider-token": "Identifiant secret du Provider",
+    "ui-provider-id": "Identifiant du Provider",
+    "ui-provider-version": "Version du manifeste",
+    "ui-provider-endpoint": "URL du Provider",
+    "ui-provider-access": "Autorisations du Provider",
+    "ui-provider-pair": "Appairer ou renouveler la connexion",
+    "ui-provider-paired": "Connexion appairée",
+    "ui-provider-unpaired": "Connexion non appairée",
+    "ui-provider-pair-help": "L’appairage configure le retour vers le CMS. Les accès suivent les requires du manifeste approuvé.",
+    "ui-provider-connect-help": "Choisissez une release, importez-la, puis vérifiez et approuvez le compte du Provider distant.",
+    "ui-provider-requests": "Accès demandés aux capabilities",
+    "ui-provider-none": "Aucun accès sortant demandé."
+}

@@ -1,0 +1,135 @@
+<div
+    cms-bloc="ulvia-official-admin-workspace"
+    cms-queries="@param:ulvia-official-log-service as serviceFilter @param:ulvia-official-log-event as eventPrefixFilter @param:ulvia-official-log-request as requestIdFilter @param:ulvia-official-log-from as fromFilter @param:ulvia-official-log-to as toFilter @param:ulvia-official-log-level as minLevelFilter"
+>
+    <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-observability }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-log-description }}</p>
+    <div cms-bloc="ulvia-official-stack" gap="lg" slot="content">
+        <div slot="items">
+            <label for="log-service"
+                >{{ cms.i18n.ulvia-official.ui-log-service
+                }}<input
+                    id="log-service"
+                    name="ulvia-official-log-service"
+                    cms-sync="@param:ulvia-official-log-service"
+                    value="{{ serviceFilter.data }}"
+                    maxlength="128"
+                    autocomplete="off"
+                ></label
+            ><label for="log-event"
+                >{{ cms.i18n.ulvia-official.ui-log-event
+                }}<input
+                    id="log-event"
+                    name="ulvia-official-log-event"
+                    cms-sync="@param:ulvia-official-log-event"
+                    value="{{ eventPrefixFilter.data }}"
+                    maxlength="128"
+                    autocomplete="off"
+                ></label
+            ><label for="log-request"
+                >{{ cms.i18n.ulvia-official.ui-log-request
+                }}<input
+                    id="log-request"
+                    name="ulvia-official-log-request"
+                    cms-sync="@param:ulvia-official-log-request"
+                    value="{{ requestIdFilter.data }}"
+                    maxlength="128"
+                    autocomplete="off"
+                ></label
+            ><label for="log-from"
+                >{{ cms.i18n.ulvia-official.ui-log-from
+                }}<input
+                    id="log-from"
+                    name="ulvia-official-log-from"
+                    cms-sync="@param:ulvia-official-log-from"
+                    value="{{ fromFilter.data }}"
+                    maxlength="32"
+                    autocomplete="off"
+                ></label
+            ><label for="log-to"
+                >{{ cms.i18n.ulvia-official.ui-log-to
+                }}<input
+                    id="log-to"
+                    name="ulvia-official-log-to"
+                    cms-sync="@param:ulvia-official-log-to"
+                    value="{{ toFilter.data }}"
+                    maxlength="32"
+                    autocomplete="off"
+                ></label
+            ><label for="log-level"
+                >{{ cms.i18n.ulvia-official.ui-log-minimum
+                }}<select id="log-level" name="ulvia-official-log-level" cms-sync="@param:ulvia-official-log-level">
+                    <option value=""></option>
+                    <option value="trace" selected="{{ minLevelFilter.data === 'trace' }}">{{ cms.i18n.ulvia-official.ui-log-level-trace }}</option>
+                    <option value="debug" selected="{{ minLevelFilter.data === 'debug' }}">{{ cms.i18n.ulvia-official.ui-log-level-debug }}</option>
+                    <option value="info" selected="{{ minLevelFilter.data === 'info' }}">{{ cms.i18n.ulvia-official.ui-log-level-info }}</option>
+                    <option value="warn" selected="{{ minLevelFilter.data === 'warn' }}">{{ cms.i18n.ulvia-official.ui-log-level-warn }}</option>
+                    <option value="error" selected="{{ minLevelFilter.data === 'error' }}">{{ cms.i18n.ulvia-official.ui-log-level-error }}</option>
+                    <option value="fatal" selected="{{ minLevelFilter.data === 'fatal' }}">{{ cms.i18n.ulvia-official.ui-log-level-fatal }}</option>
+                </select></label
+            >
+            <a
+                href="/admin/observability?ulvia-official-log-service={{ serviceFilter.data | urlencode }}&ulvia-official-log-event={{ eventPrefixFilter.data | urlencode }}&ulvia-official-log-request={{ requestIdFilter.data | urlencode }}&ulvia-official-log-from={{ fromFilter.data | urlencode }}&ulvia-official-log-to={{ toFilter.data | urlencode }}&ulvia-official-log-level={{ minLevelFilter.data | urlencode }}"
+                cms-bloc="ulvia-official-action"
+                tone="primary"
+                variant="filled"
+                ><span>{{ cms.i18n.ulvia-official.ui-log-search }}</span></a
+            >
+            <a href="/admin/observability">{{ cms.i18n.ulvia-official.ui-log-reset }}</a>
+        </div>
+        <section
+            slot="items"
+            cms-query="ulvia.cms.observability:logs.query as logs"
+            cms-query-input='{"service":{"from":"state","key":"@param:ulvia-official-log-service","optional":true},"eventPrefix":{"from":"state","key":"@param:ulvia-official-log-event","optional":true},"requestId":{"from":"state","key":"@param:ulvia-official-log-request","optional":true},"from":{"from":"state","key":"@param:ulvia-official-log-from","optional":true},"to":{"from":"state","key":"@param:ulvia-official-log-to","optional":true},"minLevel":{"from":"state","key":"@param:ulvia-official-log-level","optional":true},"limit":{"from":"literal","value":50},"cursor":{"from":"state","key":"@param:ulvia-official-log-cursor","optional":true}}'
+        >
+            <p role="status" cms-condition="logs.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-log-loading }}</p>
+            <div cms-match="logs.outcome.kind">
+                <span cms-case='"none"'></span>
+                <div cms-case='"error"' cms-match="logs.outcome.code">
+                    <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+                    <p role="alert" cms-case='"INVALID_CURSOR"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+                </div>
+                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+                <div cms-case='"success"'>
+                    <p>{{ logs.data.from }} {{ cms.i18n.ulvia-official.ui-copy }} {{ logs.data.to }}</p>
+                    <p cms-condition="logs.data.items.length === 0">{{ cms.i18n.ulvia-official.ui-log-empty }}</p>
+                    <div cms-bloc="ulvia-official-stack" gap="md">
+                        <article cms-repeat="logs.data.items as log" slot="items">
+                            <a href="/admin/observability/detail?ulvia-official-log-id={{ log.id | urlencode }}"><strong>{{ log.event }}</strong></a>
+                            <p>
+                                {{ log.time | dateLong }} {{ cms.i18n.ulvia-official.ui-copy-a137f17a }} {{ log.level }}
+                                {{ cms.i18n.ulvia-official.ui-copy-a137f17a }} {{ log.service }}
+                            </p>
+                            <p>{{ log.component }} {{ log.contractId }} {{ log.capabilityId }}</p>
+                            <code>{{ log.requestId }}</code>
+                        </article>
+                    </div>
+                    <a
+                        cms-condition="logs.data.nextCursor"
+                        href="/admin/observability?ulvia-official-log-service={{ serviceFilter.data | urlencode }}&ulvia-official-log-event={{ eventPrefixFilter.data | urlencode }}&ulvia-official-log-request={{ requestIdFilter.data | urlencode }}&ulvia-official-log-from={{ fromFilter.data | urlencode }}&ulvia-official-log-to={{ toFilter.data | urlencode }}&ulvia-official-log-level={{ minLevelFilter.data | urlencode }}&ulvia-official-log-cursor={{ logs.data.nextCursor | urlencode }}"
+                        >{{
+                            cms.i18n.ulvia-official.ui-log-next
+                        }}</a
+                    >
+                </div>
+            </div>
+        </section>
+        <section
+            slot="items"
+            cms-query="ulvia.cms.observability:logs.aggregate as counts"
+            cms-query-input='{"service":{"from":"state","key":"@param:ulvia-official-log-service","optional":true},"eventPrefix":{"from":"state","key":"@param:ulvia-official-log-event","optional":true},"requestId":{"from":"state","key":"@param:ulvia-official-log-request","optional":true},"from":{"from":"state","key":"@param:ulvia-official-log-from","optional":true},"to":{"from":"state","key":"@param:ulvia-official-log-to","optional":true},"minLevel":{"from":"state","key":"@param:ulvia-official-log-level","optional":true},"groupBy":{"from":"literal","value":"level"}}'
+        >
+            <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-log-counts }}</h2>
+            <div cms-match="counts.outcome.kind">
+                <span cms-case='"none"'></span>
+                <div cms-case='"error"' cms-match="counts.outcome.code">
+                    <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+                    <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+                </div>
+                <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+                <div cms-case='"success"'><p cms-repeat="counts.data.groups as count">{{ count.key }} {{ count.count }}</p></div>
+            </div>
+        </section>
+    </div>
+</div>

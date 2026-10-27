@@ -1,0 +1,14 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.provider.connections",
+    "name": "Provider connections",
+    "description": "Authenticated CMS-to-Provider pairing for one Provider account.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "activity",
+        "categories": ["administration", "observability"]
+    }
+}

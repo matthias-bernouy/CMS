@@ -1,0 +1,20 @@
+{
+    "ui-provider-connect": "Connect a Provider",
+    "ui-provider-catalogue": "Available Providers",
+    "ui-provider-import": "Import release",
+    "ui-provider-preview": "Review connection",
+    "ui-provider-approve": "Approve connection",
+    "ui-provider-account": "Provider account",
+    "ui-provider-token": "Provider credential",
+    "ui-provider-id": "Provider ID",
+    "ui-provider-version": "Manifest version",
+    "ui-provider-endpoint": "Provider URL",
+    "ui-provider-access": "Provider permissions",
+    "ui-provider-pair": "Pair or rotate connection",
+    "ui-provider-paired": "Connection paired",
+    "ui-provider-unpaired": "Connection not paired",
+    "ui-provider-pair-help": "Pairing configures the return connection. Capability access follows the requires of the approved Provider manifest.",
+    "ui-provider-connect-help": "Choose a release, import it, then verify and approve the remote Provider account.",
+    "ui-provider-requests": "Requested capability access",
+    "ui-provider-none": "No outgoing capability access requested."
+}

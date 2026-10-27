@@ -1,0 +1,66 @@
+{
+    "id": "gateway.provider.resolve",
+    "description": "gateway provider resolve",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "natural",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "token": {
+                "type": "string",
+                "maxLength": 4096,
+                "sensitive": true
+            }
+        },
+        "required": ["token"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "installationId": {
+                "type": "string",
+                "maxLength": 128,
+                "nullable": true
+            }
+        },
+        "required": ["installationId"]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/gateway/providers/resolve",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "FORBIDDEN": 403,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        }
+    ]
+}

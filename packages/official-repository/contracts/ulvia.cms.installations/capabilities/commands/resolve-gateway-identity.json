@@ -1,35 +1,65 @@
 {
     "id": "gateway.identity.resolve",
-    "description": "Resolve or create the stable provider-scoped alias for one CMS subject.",
+    "description": "Kernel control connection only. Resolve or create the stable provider-scoped alias for one CMS subject.",
     "access": "admin",
-    "behavior": { "effect": "command", "idempotency": "natural", "execution": "sync" },
+    "behavior": {
+        "effect": "command",
+        "idempotency": "natural",
+        "execution": "sync"
+    },
     "input": {
         "type": "object",
         "properties": {
-            "providerId": { "type": "string", "minLength": 1, "maxLength": 160 },
-            "subjectId": { "type": "string", "minLength": 1, "maxLength": 256 }
+            "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            },
+            "subjectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+            }
         },
         "required": ["providerId", "subjectId"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "providerSubjectId": { "type": "string", "minLength": 1, "maxLength": 256 }
+            "providerSubjectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+            }
         },
         "required": ["providerSubjectId"]
     },
-    "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        }
+    ],
     "bindings": [
         {
             "id": "http",
             "transport": "http",
             "method": "POST",
             "path": "/gateway/identity",
-            "input": { "body": true },
+            "input": {
+                "body": true
+            },
             "response": {
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],
-                "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503,
+                    "FORBIDDEN": 403
+                }
             }
         }
     ]

@@ -1,0 +1,6 @@
+{
+    "page.provider-connect.name": "Connect a Provider",
+    "page.provider-connect.description": "Choose a release, import it, then verify and approve the remote Provider account.",
+    "page.provider-access.name": "Provider permissions",
+    "page.provider-access.description": "Pairing configures the return connection; outbound access follows the approved manifest requirements."
+}

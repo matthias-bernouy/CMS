@@ -1,0 +1,146 @@
+[
+    {
+        "id": "ui-observability",
+        "label": "text.ui-observability.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-description",
+        "label": "text.ui-log-description.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-service",
+        "label": "text.ui-log-service.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-event",
+        "label": "text.ui-log-event.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-request",
+        "label": "text.ui-log-request.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-from",
+        "label": "text.ui-log-from.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-to",
+        "label": "text.ui-log-to.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-minimum",
+        "label": "text.ui-log-minimum.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-search",
+        "label": "text.ui-log-search.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-empty",
+        "label": "text.ui-log-empty.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-unavailable",
+        "label": "text.ui-log-unavailable.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-next",
+        "label": "text.ui-log-next.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-detail",
+        "label": "text.ui-log-detail.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-back",
+        "label": "text.ui-log-back.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-loading",
+        "label": "text.ui-log-loading.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-attributes",
+        "label": "text.ui-log-attributes.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-counts",
+        "label": "text.ui-log-counts.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-reset",
+        "label": "text.ui-log-reset.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-level-trace",
+        "label": "text.ui-log-level-trace.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-level-debug",
+        "label": "text.ui-log-level-debug.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-level-info",
+        "label": "text.ui-log-level-info.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-level-warn",
+        "label": "text.ui-log-level-warn.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-level-error",
+        "label": "text.ui-log-level-error.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-log-level-fatal",
+        "label": "text.ui-log-level-fatal.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    }
+]

@@ -32,5 +32,9 @@
     "page.settings.description": "Configure the site identity, availability and languages.",
     "page.settings.name": "Settings",
     "page.contract-upgrade.name": "Contract upgrade",
-    "page.contract-upgrade.description": "Review exact contract selections and site capability grants."
+    "page.contract-upgrade.description": "Review exact contract selections and site capability grants.",
+    "page.observability.name": "Observability",
+    "page.observability.description": "Search the diagnostic journal of this instance.",
+    "page.log-detail.name": "Log details",
+    "page.log-detail.description": "Search the diagnostic journal of this instance."
 }

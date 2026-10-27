@@ -1,0 +1,14 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.observability",
+    "name": "CMS Observability",
+    "description": "Collect and search bounded diagnostic journals for one authenticated CMS instance.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "activity",
+        "categories": ["administration", "observability"]
+    }
+}

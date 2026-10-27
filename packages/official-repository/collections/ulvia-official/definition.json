@@ -232,7 +232,20 @@
             "stat-two-value",
             "title"
         ],
-        "pages": ["access", "collections", "overview", "page-details", "page-editor", "pages", "providers", "settings"],
+        "pages": [
+            "access",
+            "collections",
+            "overview",
+            "page-details",
+            "page-editor",
+            "pages",
+            "providers",
+            "settings",
+            "observability",
+            "log-detail",
+            "provider-connect",
+            "provider-access"
+        ],
         "assets": "*"
     },
     "states": [
@@ -246,7 +259,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -254,9 +271,30 @@
                 "required": ["lastSuccess"]
             }
         },
-        { "id": "auth-token", "scope": "param", "schema": { "type": "string", "maxLength": 4096 } },
-        { "id": "browser-risk", "scope": "param", "schema": { "type": "string", "maxLength": 80 } },
-        { "id": "collection", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
+        {
+            "id": "auth-token",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 4096
+            }
+        },
+        {
+            "id": "browser-risk",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 80
+            }
+        },
+        {
+            "id": "collection",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
         {
             "id": "collection-catalogue-mutation",
             "scope": "page",
@@ -267,7 +305,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -285,7 +327,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -303,7 +349,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -321,7 +371,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -329,7 +383,14 @@
                 "required": ["lastSuccess"]
             }
         },
-        { "id": "digest", "scope": "param", "schema": { "type": "string", "maxLength": 80 } },
+        {
+            "id": "digest",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 80
+            }
+        },
         {
             "id": "files-mutation",
             "scope": "page",
@@ -340,7 +401,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -348,8 +413,22 @@
                 "required": ["lastSuccess"]
             }
         },
-        { "id": "group", "scope": "param", "schema": { "type": "string", "maxLength": 128 } },
-        { "id": "locale", "scope": "param", "schema": { "type": "string", "maxLength": 64 } },
+        {
+            "id": "group",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "locale",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 64
+            }
+        },
         {
             "id": "page-detail-mutation",
             "scope": "page",
@@ -360,7 +439,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -368,8 +451,22 @@
                 "required": ["lastSuccess"]
             }
         },
-        { "id": "page-id", "scope": "param", "schema": { "type": "string", "maxLength": 128 } },
-        { "id": "pages-cursor", "scope": "param", "schema": { "type": "string", "maxLength": 256 } },
+        {
+            "id": "page-id",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "pages-cursor",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 256
+            }
+        },
         {
             "id": "pages-mutation",
             "scope": "page",
@@ -380,7 +477,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -388,11 +489,22 @@
                 "required": ["lastSuccess"]
             }
         },
-        { "id": "pages-query", "scope": "param", "schema": { "type": "string", "maxLength": 120 } },
+        {
+            "id": "pages-query",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 120
+            }
+        },
         {
             "id": "pages-visibility",
             "scope": "param",
-            "schema": { "type": "string", "maxLength": 9, "enum": ["all", "published", "draft"] }
+            "schema": {
+                "type": "string",
+                "maxLength": 9,
+                "enum": ["all", "published", "draft"]
+            }
         },
         {
             "id": "providers-mutation",
@@ -404,7 +516,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -412,9 +528,30 @@
                 "required": ["lastSuccess"]
             }
         },
-        { "id": "publisher", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
-        { "id": "repository", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
-        { "id": "search", "scope": "param", "schema": { "type": "string", "maxLength": 512 } },
+        {
+            "id": "publisher",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "repository",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "search",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 512
+            }
+        },
         {
             "id": "settings-mutation",
             "scope": "page",
@@ -425,7 +562,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -443,7 +584,11 @@
                         "type": "object",
                         "nullable": true,
                         "properties": {
-                            "requestId": { "type": "string", "format": "uuid", "maxLength": 36 }
+                            "requestId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "maxLength": 36
+                            }
                         },
                         "required": ["requestId"]
                     }
@@ -451,11 +596,46 @@
                 "required": ["lastSuccess"]
             }
         },
-        { "id": "theme-mode", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
-        { "id": "theme-profile", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
-        { "id": "theme-search", "scope": "param", "schema": { "type": "string", "maxLength": 512 } },
-        { "id": "theme-token", "scope": "param", "schema": { "type": "string", "maxLength": 96 } },
-        { "id": "version", "scope": "param", "schema": { "type": "string", "maxLength": 128 } },
+        {
+            "id": "theme-mode",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "theme-profile",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "theme-search",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 512
+            }
+        },
+        {
+            "id": "theme-token",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 96
+            }
+        },
+        {
+            "id": "version",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
         {
             "id": "contract",
             "scope": "param",
@@ -478,6 +658,201 @@
             "schema": {
                 "type": "string",
                 "maxLength": 8192
+            }
+        },
+        {
+            "id": "log-service",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "log-event",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "log-request",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        {
+            "id": "log-from",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 32
+            }
+        },
+        {
+            "id": "log-to",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 32
+            }
+        },
+        {
+            "id": "log-level",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 5
+            }
+        },
+        {
+            "id": "log-cursor",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 1600
+            }
+        },
+        {
+            "id": "log-id",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 36
+            }
+        },
+        {
+            "id": "provider-preview",
+            "scope": "page",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "lastSuccess": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "data": {
+                                "type": "object",
+                                "properties": {
+                                    "ticket": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "operation": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "providerId": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "providerName": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "accountId": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "accountLabel": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "endpoint": {
+                                        "type": "string",
+                                        "maxLength": 2048
+                                    },
+                                    "manifestVersion": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "manifestDigest": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "check": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "contracts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "contractId": {
+                                                    "type": "string",
+                                                    "maxLength": 128
+                                                },
+                                                "version": {
+                                                    "type": "string",
+                                                    "maxLength": 128
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "maxLength": 128
+                                                }
+                                            },
+                                            "required": ["contractId", "version", "status"]
+                                        },
+                                        "maxItems": 256
+                                    },
+                                    "requests": {
+                                        "type": "array",
+                                        "maxItems": 10000,
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "contractId": {
+                                                    "type": "string",
+                                                    "maxLength": 128
+                                                },
+                                                "capabilityId": {
+                                                    "type": "string",
+                                                    "maxLength": 128
+                                                },
+                                                "versionRange": {
+                                                    "type": "string",
+                                                    "maxLength": 512
+                                                },
+                                                "optional": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": ["contractId", "capabilityId", "versionRange", "optional"]
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "ticket",
+                                    "operation",
+                                    "providerId",
+                                    "providerName",
+                                    "accountId",
+                                    "accountLabel",
+                                    "endpoint",
+                                    "manifestVersion",
+                                    "manifestDigest",
+                                    "check",
+                                    "contracts",
+                                    "requests"
+                                ]
+                            }
+                        },
+                        "required": ["data"]
+                    }
+                },
+                "required": ["lastSuccess"]
+            }
+        },
+        {
+            "id": "provider-access-id",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 128
             }
         }
     ]

@@ -1,0 +1,90 @@
+{
+    "id": "list-available-providers",
+    "description": "list available providers",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "repositoryId": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "publisherId": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "id": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "version": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "digest": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "name": {
+                            "type": "string",
+                            "maxLength": 256
+                        }
+                    },
+                    "required": ["repositoryId", "publisherId", "id", "version", "digest", "name"]
+                },
+                "maxItems": 1024
+            }
+        },
+        "required": ["items"]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "GET",
+            "path": "/providers/catalogue",
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "FORBIDDEN": 403,
+                    "REVISION_CONFLICT": 409,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        }
+    ]
+}

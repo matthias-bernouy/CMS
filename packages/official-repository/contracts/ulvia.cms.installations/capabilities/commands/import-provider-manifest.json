@@ -1,0 +1,93 @@
+{
+    "id": "import-provider-manifest",
+    "description": "import provider manifest",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "natural",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "repositoryId": {
+                "type": "string",
+                "maxLength": 256
+            },
+            "publisherId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "id": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "version": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "digest": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        "required": ["repositoryId", "publisherId", "id", "version", "digest"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "version": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "digest": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        "required": ["id", "version", "digest"]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/providers/import",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "FORBIDDEN": 403,
+                    "REVISION_CONFLICT": 409,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        }
+    ]
+}

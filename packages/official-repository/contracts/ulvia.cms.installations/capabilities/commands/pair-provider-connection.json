@@ -1,0 +1,80 @@
+{
+    "id": "pair-provider-connection",
+    "description": "Pair or rotate one approved Provider connection. Outgoing capabilities are derived from its approved manifest requirements.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "natural",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "installationId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "rotate": {
+                "type": "boolean"
+            }
+        },
+        "required": ["installationId", "expectedRevision"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "installationId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "paired": {
+                "type": "boolean"
+            }
+        },
+        "required": ["installationId", "paired"]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/providers/pair",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "FORBIDDEN": 403,
+                    "REVISION_CONFLICT": 409,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        }
+    ]
+}

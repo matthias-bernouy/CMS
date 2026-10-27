@@ -1,0 +1,36 @@
+<div cms-bloc="ulvia-official-admin-workspace">
+    <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-log-detail }}</h1>
+    <a slot="breadcrumb" href="/admin/observability">{{ cms.i18n.ulvia-official.ui-log-back }}</a>
+    <section
+        slot="content"
+        cms-query="ulvia.cms.observability:logs.get as entry"
+        cms-query-input='{"id":{"from":"state","key":"@param:ulvia-official-log-id"}}'
+    >
+        <p role="status" cms-condition="entry.activity === 'fetching'">{{ cms.i18n.ulvia-official.ui-log-loading }}</p>
+        <div cms-match="entry.outcome.kind">
+            <span cms-case='"none"'></span>
+            <div cms-case='"error"' cms-match="entry.outcome.code">
+                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+                <p role="alert" cms-case='"NOT_FOUND"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+            </div>
+            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-log-unavailable }}</p>
+            <article cms-case='"success"'>
+                <h2 cms-bloc="ulvia-official-heading">{{ entry.data.event }}</h2>
+                <p>
+                    {{ entry.data.time | dateLong }} {{ cms.i18n.ulvia-official.ui-copy-a137f17a }} {{ entry.data.level }}
+                    {{ cms.i18n.ulvia-official.ui-copy-a137f17a }} {{ entry.data.service }}
+                </p>
+                <p>{{ entry.data.component }} {{ entry.data.contractId }} {{ entry.data.capabilityId }}</p>
+                <code>{{ entry.data.requestId }}</code>
+                <div cms-condition="entry.data.error">
+                    <strong>{{ entry.data.error.name }}</strong>
+                    <p>{{ entry.data.error.message }}</p>
+                    <pre>{{ entry.data.error.stack }}</pre>
+                </div>
+                <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-log-attributes }}</h3>
+                <pre>{{ entry.data.attributes | json }}</pre>
+            </article>
+        </div>
+    </section>
+</div>

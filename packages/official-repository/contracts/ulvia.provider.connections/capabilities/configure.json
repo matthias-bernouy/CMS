@@ -1,0 +1,86 @@
+{
+    "id": "connections.configure",
+    "description": "Pair an authenticated Provider account with one CMS connection. Connection identity is supplied by verified invocation claims.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "natural",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "connectionId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "cmsUrl": {
+                "type": "string",
+                "maxLength": 2048
+            },
+            "token": {
+                "type": "string",
+                "maxLength": 4096,
+                "sensitive": true
+            },
+            "generation": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            }
+        },
+        "required": ["connectionId", "cmsUrl", "token", "generation"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "connectionId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "configured": {
+                "type": "boolean"
+            }
+        },
+        "required": ["connectionId", "configured"]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/provider/connections",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "FORBIDDEN": 403,
+                    "CORE_UNAVAILABLE": 503,
+                    "REVISION_CONFLICT": 409
+                }
+            }
+        }
+    ]
+}

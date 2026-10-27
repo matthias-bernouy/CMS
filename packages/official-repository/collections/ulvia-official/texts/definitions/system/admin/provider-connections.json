@@ -1,0 +1,110 @@
+[
+    {
+        "id": "ui-provider-connect",
+        "label": "text.ui-provider-connect.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-catalogue",
+        "label": "text.ui-provider-catalogue.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-import",
+        "label": "text.ui-provider-import.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-preview",
+        "label": "text.ui-provider-preview.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-approve",
+        "label": "text.ui-provider-approve.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-account",
+        "label": "text.ui-provider-account.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-token",
+        "label": "text.ui-provider-token.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-id",
+        "label": "text.ui-provider-id.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-version",
+        "label": "text.ui-provider-version.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-endpoint",
+        "label": "text.ui-provider-endpoint.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-access",
+        "label": "text.ui-provider-access.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-pair",
+        "label": "text.ui-provider-pair.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-paired",
+        "label": "text.ui-provider-paired.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-unpaired",
+        "label": "text.ui-provider-unpaired.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-pair-help",
+        "label": "text.ui-provider-pair-help.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-connect-help",
+        "label": "text.ui-provider-connect-help.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-requests",
+        "label": "text.ui-provider-requests.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-none",
+        "label": "text.ui-provider-none.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    }
+]

@@ -1,32 +1,100 @@
 {
     "id": "gateway.invocation.issue",
-    "description": "Issue one short-lived provider invocation token for the current selected route.",
+    "description": "Kernel control connection only. Issue one short-lived provider invocation token for the current selected route.",
     "access": "admin",
-    "behavior": { "effect": "command", "idempotency": "natural", "execution": "sync" },
+    "behavior": {
+        "effect": "command",
+        "idempotency": "natural",
+        "execution": "sync"
+    },
     "input": {
         "type": "object",
         "properties": {
-            "requestId": { "type": "string", "minLength": 36, "maxLength": 36 },
-            "installationId": { "type": "string", "minLength": 1, "maxLength": 160 },
-            "contractId": { "type": "string", "minLength": 1, "maxLength": 160 },
-            "contractVersion": { "type": "string", "minLength": 5, "maxLength": 64 },
-            "capabilityId": { "type": "string", "minLength": 1, "maxLength": 160 },
-            "subjectId": { "type": "string", "minLength": 1, "maxLength": 256, "nullable": true }
+            "requestId": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36
+            },
+            "installationId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            },
+            "contractId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            },
+            "contractVersion": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 64
+            },
+            "capabilityId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            },
+            "subjectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "nullable": true
+            },
+            "systemServiceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "sourceInstallationId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "bodyBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 67108864
+            }
         },
         "required": ["requestId", "installationId", "contractId", "contractVersion", "capabilityId"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "token": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 4096 },
-            "instanceId": { "type": "string", "minLength": 1, "maxLength": 160 }
+            "token": {
+                "type": "string",
+                "sensitive": true,
+                "minLength": 20,
+                "maxLength": 4096
+            },
+            "instanceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            }
         },
         "required": ["token", "instanceId"]
     },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        },
+        {
+            "code": "RATE_LIMITED",
+            "retryable": true
+        }
     ],
     "bindings": [
         {
@@ -34,11 +102,19 @@
             "transport": "http",
             "method": "POST",
             "path": "/gateway/invocations",
-            "input": { "body": true },
+            "input": {
+                "body": true
+            },
             "response": {
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],
-                "errorStatuses": { "INVALID_INPUT": 422, "NOT_FOUND": 404, "CORE_UNAVAILABLE": 503 }
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503,
+                    "FORBIDDEN": 403,
+                    "RATE_LIMITED": 429
+                }
             }
         }
     ]

@@ -1,0 +1,110 @@
+<div cms-bloc="ulvia-official-admin-workspace">
+    <h1 cms-bloc="ulvia-official-heading" slot="title">{{ cms.i18n.ulvia-official.ui-provider-access }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-provider-pair-help }}</p>
+    <section
+        slot="content"
+        cms-query="ulvia.cms.installations:get-provider-access as access"
+        cms-query-input='{"installationId":{"from":"state","key":"@param:ulvia-official-provider-access-id"}}'
+    >
+        <div cms-match="access.outcome.kind">
+            <span cms-case='"none"'></span><span cms-case='"success"'></span>
+            <div cms-case='"error"' cms-match="access.outcome.code">
+                <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                <p role="alert" cms-case='"FORBIDDEN"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+            </div>
+            <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+        </div>
+        <div cms-condition="access.outcome.kind === 'success'">
+            <h2 cms-bloc="ulvia-official-heading">{{ access.data.providerId }}</h2>
+            <p cms-condition="access.data.paired">{{ cms.i18n.ulvia-official.ui-provider-paired }}</p>
+            <p cms-condition="!access.data.paired">{{ cms.i18n.ulvia-official.ui-provider-unpaired }}</p>
+            <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-provider-requests }}</h3>
+            <p cms-condition="access.data.requests.length === 0">{{ cms.i18n.ulvia-official.ui-provider-none }}</p>
+            <p cms-repeat="access.data.requests as request">{{ request.contractId }} {{ request.capabilityId }} {{ request.versionRange }}</p>
+            <form cms-mutation="ulvia.cms.installations:pair-provider-connection as pairing" cms-mutation-redirect="/admin/providers">
+                <input type="hidden" name="installationId" value="{{ access.data.installationId }}">
+                <input type="hidden" name="expectedRevision" value="{{ access.data.revision }}" cms-form-value-type="number">
+                <input type="hidden" name="rotate" value="true" cms-form-value-type="boolean">
+                <button cms-bloc="ulvia-official-action" type="submit" tone="primary" variant="filled">
+                    <span>{{ cms.i18n.ulvia-official.ui-provider-pair }}</span>
+                </button>
+                <div cms-match="pairing.outcome.kind">
+                    <span cms-case='"none"'></span><span cms-case='"success"'></span>
+                    <div cms-case='"error"' cms-match="pairing.outcome.code">
+                        <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        <p role="alert" cms-case='"FORBIDDEN"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                    </div>
+                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                </div>
+            </form>
+            <form
+                cms-mutation="ulvia.cms.installations:preview-provider-connection as preview"
+                cms-sync="@page:ulvia-official-provider-preview"
+                cms-sync-select="lastSuccess.data"
+            >
+                <input type="hidden" name="installationId" value="{{ access.data.installationId }}">
+                <input type="hidden" name="revision" value="{{ access.data.revision }}" cms-form-value-type="number">
+                <label
+                    >{{ cms.i18n.ulvia-official.ui-provider-id
+                    }}<input name="providerId" value="{{ access.data.providerId }}" type="text" required maxlength="128"></label
+                >
+                <label
+                    >{{ cms.i18n.ulvia-official.ui-provider-version
+                    }}<input name="version" value="{{ access.data.manifestVersion }}" type="text" required maxlength="128"></label
+                >
+                <label
+                    >{{ cms.i18n.ulvia-official.ui-provider-endpoint
+                    }}<input name="endpoint" value="{{ access.data.endpoint }}" type="url" required maxlength="2048"></label
+                >
+                <label>{{ cms.i18n.ulvia-official.ui-provider-token }}<input name="token" type="password" required autocomplete="off" maxlength="4096"></label>
+                <button cms-bloc="ulvia-official-action" type="submit" tone="primary" variant="filled">
+                    <span>{{ cms.i18n.ulvia-official.ui-provider-preview }}</span>
+                </button>
+                <div cms-match="preview.outcome.kind">
+                    <span cms-case='"none"'></span><span cms-case='"success"'></span>
+                    <div cms-case='"error"' cms-match="preview.outcome.code">
+                        <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        <p role="alert" cms-case='"FORBIDDEN"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                    </div>
+                    <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                </div>
+            </form>
+            <section cms-queries="@page:ulvia-official-provider-preview as review" cms-condition="review.data.lastSuccess.data.ticket">
+                <h2 cms-bloc="ulvia-official-heading">{{ review.data.lastSuccess.data.providerName }}</h2>
+                <p>
+                    {{ cms.i18n.ulvia-official.ui-provider-account }} {{ review.data.lastSuccess.data.accountLabel }}
+                    {{ review.data.lastSuccess.data.accountId }}
+                </p>
+                <p>{{ review.data.lastSuccess.data.endpoint }}</p>
+                <code>{{ review.data.lastSuccess.data.manifestDigest }}</code>
+                <p cms-repeat="review.data.lastSuccess.data.contracts as contract">{{ contract.contractId }} {{ contract.version }} {{ contract.status }}</p>
+                <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-provider-requests }}</h3>
+                <p cms-repeat="review.data.lastSuccess.data.requests as request">
+                    {{ request.contractId }} {{ request.capabilityId }} {{ request.versionRange }}
+                </p>
+                <form cms-mutation="ulvia.cms.installations:approve-provider-connection as approval" cms-mutation-redirect="/admin/providers">
+                    <input type="hidden" name="ticket" value="{{ review.data.lastSuccess.data.ticket }}">
+                    <button cms-bloc="ulvia-official-action" type="submit" tone="primary" variant="filled">
+                        <span>{{ cms.i18n.ulvia-official.ui-provider-approve }}</span>
+                    </button>
+                    <div cms-match="approval.outcome.kind">
+                        <span cms-case='"none"'></span><span cms-case='"success"'></span>
+                        <div cms-case='"error"' cms-match="approval.outcome.code">
+                            <p role="alert" cms-case='"INVALID_INPUT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"FORBIDDEN"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"REVISION_CONFLICT"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                            <p role="alert" cms-case='"CORE_UNAVAILABLE"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                        </div>
+                        <p role="alert" cms-case='"failure"'>{{ cms.i18n.ulvia-official.ui-request-failed }}</p>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </section>
+</div>

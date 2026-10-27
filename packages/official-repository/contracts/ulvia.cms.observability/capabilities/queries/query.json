@@ -1,0 +1,209 @@
+{
+    "id": "logs.query",
+    "description": "Search retained logs on the server. The default time window is the previous 24 hours; cursors are scoped to the same filters and instance.",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "from": {
+                "type": "string",
+                "maxLength": 32
+            },
+            "to": {
+                "type": "string",
+                "maxLength": 32
+            },
+            "levels": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "maxLength": 5,
+                    "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
+                },
+                "maxItems": 6
+            },
+            "service": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "component": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "event": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "eventPrefix": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "requestId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "invocationId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "contractId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "capabilityId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200
+            },
+            "cursor": {
+                "type": "string",
+                "maxLength": 1600
+            },
+            "minLevel": {
+                "type": "string",
+                "maxLength": 5
+            },
+            "timeField": {
+                "type": "string",
+                "maxLength": 10,
+                "enum": ["time", "receivedAt"]
+            }
+        },
+        "required": []
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "maxLength": 36,
+                            "format": "uuid"
+                        },
+                        "time": {
+                            "type": "string",
+                            "maxLength": 32,
+                            "format": "date-time"
+                        },
+                        "level": {
+                            "type": "string",
+                            "maxLength": 5,
+                            "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
+                        },
+                        "event": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "component": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "requestId": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "invocationId": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "contractId": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "capabilityId": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "durationMs": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 86400000
+                        },
+                        "instanceId": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "service": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "receivedAt": {
+                            "type": "string",
+                            "maxLength": 32,
+                            "format": "date-time"
+                        },
+                        "sourceEntryId": {
+                            "type": "string",
+                            "maxLength": 36,
+                            "format": "uuid"
+                        }
+                    },
+                    "required": ["id", "time", "level", "event", "instanceId", "service", "receivedAt"]
+                },
+                "maxItems": 200
+            },
+            "nextCursor": {
+                "type": "string",
+                "maxLength": 1600,
+                "nullable": true
+            },
+            "from": {
+                "type": "string",
+                "maxLength": 32,
+                "format": "date-time"
+            },
+            "to": {
+                "type": "string",
+                "maxLength": 32,
+                "format": "date-time"
+            }
+        },
+        "required": ["items", "nextCursor", "from", "to"]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        },
+        {
+            "code": "INVALID_CURSOR",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/observability/logs/query",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "CORE_UNAVAILABLE": 503,
+                    "INVALID_CURSOR": 422
+                }
+            }
+        }
+    ]
+}
