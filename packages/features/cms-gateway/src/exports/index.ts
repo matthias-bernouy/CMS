@@ -10,7 +10,7 @@ export {
     CatalogueGatewayRouteResolver,
     type CatalogueGatewayRouteResolverOptions,
 } from "cms-gateway/invocation/core/CatalogueGatewayRouteResolver";
-export { GatewayError, type GatewayErrorCode } from "cms-gateway/invocation/core/GatewayError";
+export { GatewayError, GatewayDispatchRejected, type GatewayErrorCode } from "cms-gateway/invocation/core/GatewayError";
 export type {
     GatewayActor,
     GatewayAccessProbe,

@@ -31,6 +31,8 @@ export interface GatewayHttpExchange extends PreparedHttpInvocation {
               readonly contractVersion: string;
               readonly capabilityId: string;
               readonly subjectId?: string;
+              readonly systemServiceId?: string;
+              readonly sourceInstallationId?: string;
           };
     readonly idempotencyKey?: string;
     readonly actorCredential?: GatewayTransportRequest["actorCredential"];
@@ -47,8 +49,6 @@ export interface HttpGatewayTransportOptions {
     readonly network: GatewayHttpNetwork;
     readonly maxResponseBytes?: number;
     readonly maxBinaryResponseBytes?: number;
-    /** Kept as an alias for firstByteTimeoutMs. */
-    readonly timeoutMs?: number;
     readonly firstByteTimeoutMs?: number;
     readonly inactivityTimeoutMs?: number;
 }
@@ -67,10 +67,7 @@ export class HttpGatewayTransport implements GatewayTransport {
             options.maxBinaryResponseBytes ?? 10 * 1024 * 1024 * 1024,
             "maxBinaryResponseBytes",
         );
-        this.#timeoutMs = positiveBound(
-            options.firstByteTimeoutMs ?? options.timeoutMs ?? 15_000,
-            "firstByteTimeoutMs",
-        );
+        this.#timeoutMs = positiveBound(options.firstByteTimeoutMs ?? 15_000, "firstByteTimeoutMs");
         this.#inactivityTimeoutMs = positiveBound(options.inactivityTimeoutMs ?? 15_000, "inactivityTimeoutMs");
     }
 
@@ -100,6 +97,8 @@ export class HttpGatewayTransport implements GatewayTransport {
                 contractVersion: request.release.version,
                 capabilityId: request.capability.id,
                 ...(request.subjectId ? { subjectId: request.subjectId } : {}),
+                ...(request.systemServiceId ? { systemServiceId: request.systemServiceId } : {}),
+                ...(request.sourceInstallationId ? { sourceInstallationId: request.sourceInstallationId } : {}),
             },
             ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
             ...(request.actorCredential ? { actorCredential: request.actorCredential } : {}),

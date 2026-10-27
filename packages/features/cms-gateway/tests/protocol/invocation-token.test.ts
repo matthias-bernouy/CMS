@@ -39,3 +39,14 @@ test("provider invocation tokens reject tampering, expiry and unexpected claims"
     expect(() => signProviderInvocationToken(SECRET, { ...claims, instanceId: "bad instance" })).toThrow("claims");
     expect(() => signProviderInvocationToken(SECRET, { ...claims, contractVersion: "latest" })).toThrow("claims");
 });
+
+test("signed Provider provenance and connection cannot coexist with user or system identity", () => {
+    const { subjectId: _, ...base } = claims;
+    const provider = { ...base, sourceInstallationId: "source:a", connectionId: "target:b" };
+    expect(verifyProviderInvocationToken(signProviderInvocationToken(SECRET, provider), SECRET, NOW)).toEqual(provider);
+    expect(() => signProviderInvocationToken(SECRET, { ...provider, subjectId: "user" })).toThrow("claims");
+    expect(() => signProviderInvocationToken(SECRET, { ...provider, systemServiceId: "cms-kernel" })).toThrow("claims");
+    expect(() => signProviderInvocationToken(SECRET, { ...provider, connectionId: "bad connection" })).toThrow(
+        "claims",
+    );
+});

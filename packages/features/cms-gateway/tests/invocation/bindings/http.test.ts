@@ -82,3 +82,40 @@ test("HTTP response validation rejects wire status and content-type errors insid
         await expect(transport.send(f.sent[0]!)).rejects.toMatchObject({ code: "invalid_provider_response" });
     }
 });
+
+test("logical HTTP execution requires a contract resolver and never dispatches without one", async () => {
+    let calls = 0;
+    const handler = createCapabilityQueryHandler({
+        siteId: context.siteId,
+        basePath: "",
+        resolveActor: async () => context.actor,
+        resolveCapability: async () => ({ access: "public", effect: "query", outputType: "object" }),
+        invoker: {
+            invoke: async () => {
+                calls++;
+                return { kind: "success", requestId: "test", output: {} };
+            },
+        } as never,
+    });
+    const response = await handler(new Request("https://cms.test/.cms/query/catalog/item.list"));
+    expect(response.status).toBe(503);
+    expect(calls).toBe(0);
+});
+
+test("the explicit first-byte timeout aborts a Provider that never returns headers", async () => {
+    const f = await scope([http()]);
+    await f.gateway.invoke(invocation);
+    let dispatched = 0;
+    const transport = new HttpGatewayTransport({
+        firstByteTimeoutMs: 5,
+        network: {
+            exchange: (request) =>
+                new Promise((_resolve, reject) => {
+                    dispatched++;
+                    request.signal.addEventListener("abort", () => reject(request.signal.reason), { once: true });
+                }),
+        },
+    });
+    await expect(transport.send(f.sent[0]!)).rejects.toThrow("first byte timed out");
+    expect(dispatched).toBe(1);
+});

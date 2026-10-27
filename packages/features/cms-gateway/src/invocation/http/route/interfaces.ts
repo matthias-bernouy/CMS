@@ -15,9 +15,7 @@ export interface GatewayHttpRoute {
     readonly pathValues: Readonly<Record<string, string>>;
 }
 export interface GatewayHttpInvoker extends GatewayInvoker {
-    resolveContract?(value: { siteId: string; contractId: string }): Promise<AdmittedContractRelease>;
-    /** Compatibility for host-supplied HTTP resolvers; never required by the domain Gateway. */
-    resolveHttp?(value: GatewayHttpRouteRequest): Promise<GatewayHttpRoute>;
+    resolveContract(value: { siteId: string; contractId: string }): Promise<AdmittedContractRelease>;
 }
 export interface GatewayHttpTransportRequest extends GatewayTransportRequest {
     readonly binding: CompiledHttpBinding;

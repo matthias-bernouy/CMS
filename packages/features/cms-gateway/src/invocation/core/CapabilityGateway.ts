@@ -11,7 +11,7 @@ import type {
     GatewayRouteResolver,
     GatewayTransport,
 } from "cms-gateway/invocation/interfaces/Invocation";
-import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
+import { GatewayError, GatewayDispatchRejected } from "cms-gateway/invocation/core/GatewayError";
 import { resolveRoute } from "cms-gateway/invocation/core/resolveRoute";
 import { snapshotInvocation } from "cms-gateway/invocation/core/snapshotInvocation";
 import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
@@ -104,6 +104,10 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 input,
                 ...(invocation.binaryBody ? { binaryBody: invocation.binaryBody } : {}),
                 ...(subjectId ? { subjectId } : {}),
+                ...(invocation.actor.kind === "system" ? { systemServiceId: invocation.actor.serviceId } : {}),
+                ...(invocation.actor.kind === "provider"
+                    ? { sourceInstallationId: invocation.actor.installationId }
+                    : {}),
                 ...(invocation.idempotencyKey ? { idempotencyKey: invocation.idempotencyKey } : {}),
                 ...(invocation.actorCredential ? { actorCredential: invocation.actorCredential } : {}),
             });
@@ -127,6 +131,24 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 );
             }
         } catch (error) {
+            if (error instanceof GatewayDispatchRejected) {
+                if (isCommand) {
+                    await this.#auditCommand(
+                        commandAuditEvent(
+                            invocation,
+                            route,
+                            requestId,
+                            this.#now(),
+                            "rejected",
+                            error.code === "rate_limited" ? 429 : 403,
+                            error.code,
+                        ),
+                        requestId,
+                        false,
+                    );
+                }
+                throw error;
+            }
             if (isCommand) {
                 await this.#auditOutcomeUnknown(invocation, route, requestId);
                 throw new GatewayError(
@@ -231,7 +253,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (verifyCurrent && !(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or installation changed during access check");
         }
-        return { route, instanceId, release: route.release.admission.release, capability };
+        return { route, instanceId, release: capabilityRelease, capability };
     }
 
     async #providerSubjectId(

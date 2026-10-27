@@ -40,7 +40,7 @@ interface GatewayBinaryBody {
 
 export interface GatewayRoute {
     readonly selection: ContractSelection;
-    /** Concrete selected release used as the Provider invocation target. */
+    /** Concrete selected release that pins the approved Provider implementation. */
     readonly release: CatalogueContractRelease;
     /** Exact lineage release that owns the contract requested from the Gateway. */
     readonly requestedRelease: CatalogueContractRelease;
@@ -79,6 +79,8 @@ export interface GatewayTransportRequest {
     readonly binaryBody?: GatewayBinaryBody;
     /** Provider-scoped opaque user identity, included only when the capability requires one. */
     readonly subjectId?: string;
+    readonly systemServiceId?: string;
+    readonly sourceInstallationId?: string;
     readonly idempotencyKey?: string;
     readonly actorCredential?: GatewayActorCredential;
 }

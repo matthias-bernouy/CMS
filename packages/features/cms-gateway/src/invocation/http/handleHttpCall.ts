@@ -314,6 +314,7 @@ function retryableGatewayFailure(code: string): boolean {
         "media_busy",
         "media_unavailable",
         "not_ready",
+        "rate_limited",
         "stale_route",
         "transport_failure",
     ].includes(code);
@@ -328,6 +329,8 @@ function errorStatus(error: GatewayError, actor: GatewayActor): number {
         case "not_selected":
         case "invalid_route":
             return 404;
+        case "rate_limited":
+            return 429;
         case "not_authorized":
             return actor.kind === "anonymous" ? 401 : 403;
         case "unsupported_behavior":

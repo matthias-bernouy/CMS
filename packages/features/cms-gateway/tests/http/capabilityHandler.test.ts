@@ -1,3 +1,4 @@
+import { handlerContract } from "./handlerContract.fixture";
 import { expect, test } from "bun:test";
 import { GatewayError, type GatewayInvocation } from "@bernouy/cms-gateway";
 import {
@@ -66,28 +67,7 @@ test("serves a public binary capability without a Page referer", async () => {
         basePath: "",
         siteId: "site-a",
         invoker: {
-            resolveHttp: async () =>
-                ({
-                    capability: {
-                        id: "files.read",
-                        access: "public",
-                        behavior: { effect: "query", execution: "sync" },
-                        input: {
-                            type: "object",
-                            properties: { fileId: { type: "string", maxLength: 128 } },
-                            required: ["fileId"],
-                        },
-                        output: { type: "binary", maxBytes: 1024 },
-                    },
-                    binding: {
-                        method: "GET",
-                        path: "/files/{fileId}",
-                        pathParameters: [{ property: "fileId", wireName: "fileId", encoding: "uri-component" }],
-                        query: [],
-                        headers: [],
-                    },
-                    pathValues: { fileId: "photo-1" },
-                }) as never,
+            resolveContract: handlerContract,
             invoke: async (invocation) => {
                 calls.push(invocation);
                 return {
@@ -276,27 +256,7 @@ test("logical keyed mutations require and forward their automatic idempotency ke
 
 function invoker(calls: GatewayInvocation[]) {
     return {
-        resolveHttp: async () =>
-            ({
-                capability: {
-                    id: "item.list",
-                    behavior: { effect: "command", execution: "sync", idempotency: "natural" },
-                    input: {
-                        type: "object",
-                        properties: { term: { type: "string", maxLength: 50 } },
-                        required: [],
-                    },
-                },
-                binding: {
-                    method: "POST",
-                    path: "/v1/items",
-                    pathParameters: [],
-                    query: [],
-                    headers: [],
-                    body: { kind: "json", properties: ["term"], contentTypes: ["application/json"] },
-                },
-                pathValues: {},
-            }) as never,
+        resolveContract: handlerContract,
         invoke: async (invocation: GatewayInvocation) => {
             calls.push(invocation);
             return { kind: "success" as const, status: 200, requestId: "request-1", output: { items: ["one"] } };

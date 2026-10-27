@@ -11,7 +11,10 @@ All public capability traffic uses the binding-derived route:
 /.cms/call/{contractId}{binding.path}
 ```
 
-The same admitted binding builds the provider request. JSON and binary bodies
+The same admitted binding builds the provider request. A parent contract call
+uses that exact parent release on the wire; the concrete selected specialization
+remains the authority for installation readiness and site grants. HTTP hosts
+supply a required `resolveContract`; there is no separate host-defined route resolver. JSON and binary bodies
 are transported without domain-specific interpretation. Binary responses are
 streamed with backpressure, cancellation, transfer limits, first-byte and
 inactivity timeouts. Safe provider headers include content type and length,
@@ -26,11 +29,12 @@ Provider credentials remain opaque. `CapabilityGateway` passes only a secret
 reference to the server-side network adapter, which resolves it immediately
 before the request and derives a short-lived signed grant for the observed
 provider instance, exact contract release and capability. Provider-to-provider calls require an enabled installation, an
-exact declared dependency and a separate effective capability grant. The
+exact dependency in the approved source manifest, the instance-wide selection
+restrictions, and bounded call/byte budgets. No separate editable source grant list exists. The
 selection graph rejects cycles and dependency paths containing more than eight
-contracts before activation. CMS site, installation and actor-role metadata stay
-inside the gateway; live calls carry the request ID and only the bounded signed
-claims needed by the provider.
+contracts before activation. CMS site and user-role metadata stay inside the gateway. Signed machine calls
+include opaque source and destination connection identifiers so a receiving
+Provider can choose the correct account-bound return connection.
 
 The gateway has no file, image, video, MIME, namespace, visibility, signature,
 variant or image-processing model. Those concepts belong to providers such as
@@ -51,3 +55,10 @@ pins are not authorities. `./access` exposes optional durable grant adapters,
 Synchronous commands are durably audited. A failure after dispatch produces
 `outcome_unknown` with the request ID so callers can reconcile before retrying.
 Sensitive capability fields are not included in command audit events.
+
+
+`./provider` exposes adapter-light machine client interfaces and errors.
+`./provider/node` exposes `GatewayProviderClient` and `ProviderConnections`.
+The Node client uses the canonical CMS binding route, validates the selected
+contract output and never forwards a user credential. Receiving runtimes inject
+an encrypted account-bound connection store. See [Provider connections](../../../docs/providers/connections.md).

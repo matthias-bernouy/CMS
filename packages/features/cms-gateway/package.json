@@ -18,7 +18,11 @@
         "./identity": "./src/exports/identity/index.ts",
         "./identity/mongo": "./src/exports/identity/mongo.ts",
         "./identity/request-scope": "./src/exports/identity/request-scope.ts",
-        "./protocol": "./src/exports/protocol/index.ts"
+        "./protocol": "./src/exports/protocol/index.ts",
+        "./access/providers": "./src/exports/access/providers.ts",
+        "./access/providers/mongo": "./src/exports/access/provider-mongo.ts",
+        "./provider": "./src/exports/http/provider.ts",
+        "./provider/node": "./src/exports/http/provider-client.ts"
     },
     "dependencies": {
         "@bernouy/cms-content": "workspace:*",

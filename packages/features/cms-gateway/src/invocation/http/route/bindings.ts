@@ -13,12 +13,6 @@ export async function resolveGatewayHttpRoute(
     invoker: GatewayHttpInvoker,
     value: GatewayHttpRouteRequest,
 ): Promise<GatewayHttpRoute> {
-    if (!invoker.resolveContract) {
-        if (invoker.resolveHttp) {
-            return invoker.resolveHttp(value);
-        }
-        throw new GatewayError("invalid_route", "HTTP contract resolver is unavailable");
-    }
     const contract = await invoker.resolveContract(value);
     for (const candidate of contract.bindings) {
         const pathValues = matchPathTemplate(candidate.binding.path, value.path);
@@ -76,9 +70,6 @@ export async function logicalHttpBinding(
     invoker: GatewayHttpInvoker,
     value: { siteId: string; contractId: string; capabilityId: string },
 ) {
-    if (!invoker.resolveContract) {
-        return {};
-    }
     const contract = await invoker.resolveContract(value);
     const capability = contract.release.capabilities.find((item) => item.id === value.capabilityId);
     const binding = capability && capabilityBindings(capability).find((item) => item.transport === "http");

@@ -1,3 +1,4 @@
+import { currentRequestId } from "@bernouy/http-runner/observability";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import {
@@ -106,6 +107,13 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
                   contractVersion: request.authentication.contractVersion,
                   capabilityId: request.authentication.capabilityId,
                   ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
+                  ...(request.authentication.systemServiceId
+                      ? { systemServiceId: request.authentication.systemServiceId }
+                      : {}),
+                  ...(request.authentication.sourceInstallationId
+                      ? { sourceInstallationId: request.authentication.sourceInstallationId }
+                      : {}),
+                  ...(request.installationId ? { connectionId: request.installationId } : {}),
                   issuedAt: nowSeconds,
                   expiresAt: nowSeconds + 30,
               });
@@ -129,6 +137,7 @@ function trustedHeaders(request: GatewayHttpExchange, authorization: string): Re
         accept: request.accept ?? "application/json",
         authorization: `Bearer ${authorization}`,
         "x-ulvia-request-id": request.requestId,
+        ...(currentRequestId() ? { "x-request-id": currentRequestId()! } : {}),
         ...(request.idempotencyKey ? { "idempotency-key": request.idempotencyKey } : {}),
         ...(request.actorCredential
             ? { [ACTOR_CREDENTIAL_HEADER]: encodeActorCredential(request.actorCredential) }

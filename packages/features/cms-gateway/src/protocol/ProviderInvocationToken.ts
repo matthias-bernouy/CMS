@@ -19,6 +19,9 @@ export type ProviderInvocationClaims = Readonly<{
     contractVersion: string;
     capabilityId: string;
     subjectId?: string;
+    systemServiceId?: string;
+    sourceInstallationId?: string;
+    connectionId?: string;
     issuedAt: number;
     expiresAt: number;
 }>;
@@ -44,10 +47,13 @@ export function signProviderInvocationToken(secret: string, claims: ProviderInvo
         "requestId",
         "version",
     ];
-    assertExactObject(
-        claims as unknown as Record<string, unknown>,
-        claims.subjectId ? [...claimKeys, "subjectId"] : claimKeys,
-    );
+    assertExactObject(claims as unknown as Record<string, unknown>, [
+        ...claimKeys,
+        ...(claims.subjectId ? ["subjectId"] : []),
+        ...(claims.systemServiceId ? ["systemServiceId"] : []),
+        ...(claims.sourceInstallationId ? ["sourceInstallationId"] : []),
+        ...(claims.connectionId ? ["connectionId"] : []),
+    ]);
     assertClaims(claims);
     const header: ProviderInvocationHeader = { version: TOKEN_VERSION, keyId: providerInvocationKeyId(secret) };
     const encodedHeader = encodeJson(header);
@@ -118,7 +124,13 @@ function parseClaims(value: string): ProviderInvocationClaims {
         "requestId",
         "version",
     ];
-    assertExactObject(parsed, Object.hasOwn(parsed, "subjectId") ? [...keys, "subjectId"] : keys);
+    assertExactObject(parsed, [
+        ...keys,
+        ...(Object.hasOwn(parsed, "subjectId") ? ["subjectId"] : []),
+        ...(Object.hasOwn(parsed, "systemServiceId") ? ["systemServiceId"] : []),
+        ...(Object.hasOwn(parsed, "sourceInstallationId") ? ["sourceInstallationId"] : []),
+        ...(Object.hasOwn(parsed, "connectionId") ? ["connectionId"] : []),
+    ]);
     const claims = parsed as Record<string, unknown>;
     assertClaims(claims);
     return claims as ProviderInvocationClaims;
@@ -138,6 +150,17 @@ function assertClaims(value: Readonly<Record<string, unknown>>): asserts value i
         typeof value.capabilityId !== "string" ||
         !IDENTIFIER.test(value.capabilityId) ||
         (value.subjectId !== undefined && (typeof value.subjectId !== "string" || !SUBJECT_ID.test(value.subjectId))) ||
+        (value.systemServiceId !== undefined &&
+            (typeof value.systemServiceId !== "string" ||
+                !IDENTIFIER.test(value.systemServiceId) ||
+                value.subjectId !== undefined)) ||
+        (value.sourceInstallationId !== undefined &&
+            (typeof value.sourceInstallationId !== "string" ||
+                !IDENTIFIER.test(value.sourceInstallationId) ||
+                value.subjectId !== undefined ||
+                value.systemServiceId !== undefined)) ||
+        (value.connectionId !== undefined &&
+            (typeof value.connectionId !== "string" || !IDENTIFIER.test(value.connectionId))) ||
         !Number.isSafeInteger(value.issuedAt) ||
         !Number.isSafeInteger(value.expiresAt) ||
         Number(value.issuedAt) < 0 ||
