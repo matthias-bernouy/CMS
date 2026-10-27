@@ -6,6 +6,7 @@ export function providerInvocationContext(
     request: Request,
     claims: ProviderInvocationClaims,
     scope: { readonly siteId: string; readonly providerId: string },
+    controlAuthority = false,
 ): ProviderCapabilityInvocationContext {
     const requestId = requiredHeader(request, "x-ulvia-request-id", /^[0-9a-f-]{36}$/u);
     if (requestId !== claims.requestId) {
@@ -24,8 +25,12 @@ export function providerInvocationContext(
         requestId,
         contractVersion: claims.contractVersion,
         siteId: scope.siteId,
+        ...(claims.connectionId ? { connectionId: claims.connectionId } : {}),
         providerId: scope.providerId,
         ...(claims.subjectId ? { subjectId: claims.subjectId } : {}),
+        ...(claims.systemServiceId ? { systemServiceId: claims.systemServiceId } : {}),
+        ...(claims.sourceInstallationId ? { sourceInstallationId: claims.sourceInstallationId } : {}),
+        ...(controlAuthority ? { controlAuthority: true as const } : {}),
         ...(idempotencyKey ? { idempotencyKey } : {}),
         ...(actorCredential ? { actorCredential } : {}),
     };

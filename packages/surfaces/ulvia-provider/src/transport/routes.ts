@@ -13,8 +13,14 @@ export type ProviderRoute = {
 };
 
 export function compileProviderRoutes(releases: readonly ResolvedContract[]): readonly ProviderRoute[] {
-    if (releases.length === 0 || releases.some(({ release }) => !release.contractId.startsWith("ulvia.cms."))) {
-        throw new TypeError("Ulvia Provider only accepts ulvia.cms.* contract releases.");
+    if (
+        releases.length === 0 ||
+        releases.some(
+            ({ release }) =>
+                !release.contractId.startsWith("ulvia.cms.") && release.contractId !== "ulvia.provider.connections",
+        )
+    ) {
+        throw new TypeError("Ulvia Provider only accepts CMS and Provider connection contract releases.");
     }
     const routes = releases.flatMap(({ release, capabilities }) =>
         capabilities.flatMap(({ definition: capability }) => {

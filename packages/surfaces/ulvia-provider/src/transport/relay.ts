@@ -3,7 +3,7 @@ import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contract
 import type { HttpBoundCapability as CapabilityDefinition } from "./routes";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { RequestBodyTooLargeError } from "@bernouy/http-runner";
-import type { Logger } from "@bernouy/logging";
+import { NOOP_LOGGER, type Logger } from "@bernouy/logging";
 import {
     ProviderCapabilityDispatchError,
     ProviderCapabilityResponse,
@@ -22,8 +22,9 @@ export function createProviderContractRelay(
     scope: { readonly siteId: string; readonly providerId: string },
     logger: Logger,
     authorize: (claims: ProviderInvocationClaims) => Promise<boolean> = async () => true,
-): (request: Request, claims: ProviderInvocationClaims) => Promise<Response | null> {
-    return async (request, claims) => {
+): (request: Request, claims: ProviderInvocationClaims, controlAuthority?: boolean) => Promise<Response | null> {
+    return async (request, claims, controlAuthority = false) => {
+        const invocationLogger = claims.contractId === "ulvia.cms.observability" ? NOOP_LOGGER : logger;
         const url = new URL(request.url);
         const selected = routes
             .filter(
@@ -45,12 +46,12 @@ export function createProviderContractRelay(
             input = decoded.input;
             validateProviderInput(capability, input, Boolean(decoded.binaryBody));
             context = {
-                ...providerInvocationContext(request, claims, scope),
+                ...providerInvocationContext(request, claims, scope, controlAuthority),
                 ...(decoded.binaryBody ? { binaryBody: decoded.binaryBody } : {}),
             };
             validateIdempotencyContext(capability, context);
         } catch (cause) {
-            logger.warn(
+            invocationLogger.warn(
                 "provider.capability.input_rejected",
                 {
                     contractId,
@@ -70,12 +71,18 @@ export function createProviderContractRelay(
             }
             const dispatchStartedAt = performance.now();
             const dispatched = await dispatcher.invoke(contractId, capability.id, input, context);
-            reportDispatch(logger, contractId, capability.id, performance.now() - dispatchStartedAt);
+            reportDispatch(
+                invocationLogger,
+                contractId,
+                capability.id,
+                performance.now() - dispatchStartedAt,
+                claims.requestId,
+            );
             const output = dispatched instanceof ProviderCapabilityResponse ? dispatched.output : dispatched;
             const responseEffect =
                 dispatched instanceof ProviderCapabilityResponse ? dispatched.responseEffect : undefined;
             if (capability.responseEffects?.length) {
-                logger.debug("provider.capability.response_effect", {
+                invocationLogger.debug("provider.capability.response_effect", {
                     contractId,
                     capabilityId: capability.id,
                     effect: responseEffect?.type ?? "none",
@@ -89,7 +96,7 @@ export function createProviderContractRelay(
                     throw new TypeError("Binary capabilities cannot return response effects.");
                 }
                 const response = binaryResponse(request.method, capability, output);
-                logger.debug("provider.capability.binary_response", {
+                invocationLogger.debug("provider.capability.binary_response", {
                     contractId,
                     capabilityId: capability.id,
                     status: response.status,
@@ -108,7 +115,7 @@ export function createProviderContractRelay(
             if (cause instanceof ProviderCapabilityDispatchError) {
                 const status = capability.binding.response.errorStatuses[cause.code];
                 if (status === cause.status) {
-                    logger.warn("provider.capability.rejected", {
+                    invocationLogger.warn("provider.capability.rejected", {
                         contractId,
                         capabilityId: capability.id,
                         errorCode: cause.code,
@@ -126,7 +133,11 @@ export function createProviderContractRelay(
                     );
                 }
             }
-            logger.error("provider.capability.failed", { contractId, capabilityId: capability.id, status: 503 }, cause);
+            invocationLogger.error(
+                "provider.capability.failed",
+                { contractId, capabilityId: capability.id, status: 503 },
+                cause,
+            );
             if (request.method === "HEAD") {
                 return headError(503, "CORE_UNAVAILABLE", context.requestId);
             }
@@ -135,8 +146,14 @@ export function createProviderContractRelay(
     };
 }
 
-function reportDispatch(logger: Logger, contractId: string, capabilityId: string, durationMs: number): void {
-    const attributes = { contractId, capabilityId, durationMs: Math.round(durationMs * 100) / 100 };
+function reportDispatch(
+    logger: Logger,
+    contractId: string,
+    capabilityId: string,
+    durationMs: number,
+    invocationId: string,
+): void {
+    const attributes = { contractId, capabilityId, invocationId, durationMs: Math.round(durationMs * 100) / 100 };
     if (durationMs >= 50) {
         logger.info("provider.capability.completed", attributes);
         return;

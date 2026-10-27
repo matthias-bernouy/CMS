@@ -6,7 +6,8 @@
     "type": "module",
     "exports": {
         ".": "./src/index.ts",
-        "./capabilities": "./src/capabilities/index.ts"
+        "./capabilities": "./src/capabilities/index.ts",
+        "./sdk/node": "./src/client/index.ts"
     },
     "architecture": {
         "layer": "surfaces"
@@ -22,7 +23,8 @@
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-smtp-emailer": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/logging": "workspace:*"
+        "@bernouy/logging": "workspace:*",
+        "@bernouy/cms-observability": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

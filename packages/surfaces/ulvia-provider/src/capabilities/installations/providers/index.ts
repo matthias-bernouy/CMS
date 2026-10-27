@@ -1,4 +1,10 @@
-import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
+import { registerProviderAdministration } from "./administration";
+import { registerProviderAuthorityCapabilities } from "./authority";
+import {
+    ProviderCapabilityDispatchError,
+    type ProviderCapabilityRegistry,
+    type ProviderCapabilityHandler,
+} from "../../../dispatch/registry";
 import type { UlviaProviderGateway, UlviaProviderManagement } from "../../../ports";
 import type { GatewayCommandAuditEvent } from "@bernouy/cms-gateway/audit";
 
@@ -7,6 +13,15 @@ export function registerProviderInstallationCapabilities(
     gateway: UlviaProviderGateway | undefined,
     management?: UlviaProviderManagement,
 ): void {
+    const registerControl = (id: string, handler: ProviderCapabilityHandler) =>
+        dispatcher.register("ulvia.cms.installations", id, async (input, context) => {
+            if (!context.controlAuthority) {
+                throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
+            }
+            return handler(input, context);
+        });
+    registerProviderAuthorityCapabilities(dispatcher, gateway);
+    registerProviderAdministration(dispatcher, management);
     dispatcher.register("ulvia.cms.installations", "list-provider-installations", async () => {
         const active = requiredGateway(gateway);
         const [installed, selected] = await Promise.all([
@@ -58,7 +73,7 @@ export function registerProviderInstallationCapabilities(
             }),
         ),
     );
-    dispatcher.register("ulvia.cms.installations", "gateway.route.get", async (input) => {
+    registerControl("gateway.route.get", async (input) => {
         const active = requiredGateway(gateway);
         const route = await active.routes.resolve(active.siteId, requiredText(input.contractId));
         if (!route) {
@@ -66,13 +81,13 @@ export function registerProviderInstallationCapabilities(
         }
         return { route: JSON.stringify(route) };
     });
-    dispatcher.register("ulvia.cms.installations", "gateway.identity.resolve", async (input) => ({
+    registerControl("gateway.identity.resolve", async (input) => ({
         providerSubjectId: await requiredGateway(gateway).identities.getOrCreate(
             { providerId: requiredText(input.providerId) },
             requiredText(input.subjectId),
         ),
     }));
-    dispatcher.register("ulvia.cms.installations", "gateway.audit.append", async (input) => {
+    registerControl("gateway.audit.append", async (input) => {
         const event = auditEvent(input.event);
         try {
             await requiredGateway(gateway).commandAudit.append(event);
@@ -83,8 +98,8 @@ export function registerProviderInstallationCapabilities(
         }
         return { accepted: true };
     });
-    dispatcher.register("ulvia.cms.installations", "gateway.invocation.issue", async (input) =>
-        providerCommand(() =>
+    registerControl("gateway.invocation.issue", async (input) => {
+        return providerCommand(() =>
             requiredGateway(gateway).invocations.issue({
                 requestId: requiredText(input.requestId),
                 installationId: requiredText(input.installationId),
@@ -92,9 +107,16 @@ export function registerProviderInstallationCapabilities(
                 contractVersion: requiredText(input.contractVersion),
                 capabilityId: requiredText(input.capabilityId),
                 ...(input.subjectId === undefined ? {} : { subjectId: requiredText(input.subjectId) }),
+                ...(input.sourceInstallationId === undefined
+                    ? {}
+                    : { sourceInstallationId: requiredText(input.sourceInstallationId) }),
+                ...(input.bodyBytes === undefined ? {} : { bodyBytes: Number(input.bodyBytes) }),
+                ...(input.systemServiceId === undefined
+                    ? {}
+                    : { systemServiceId: requiredText(input.systemServiceId) }),
             }),
-        ),
-    );
+        );
+    });
 }
 
 function auditEvent(value: unknown): GatewayCommandAuditEvent {
@@ -222,6 +244,12 @@ async function providerCommand<T>(operation: () => Promise<T>): Promise<T> {
         }
         const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
         const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
+        if (status === 403) {
+            throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
+        }
+        if (status === 429) {
+            throw new ProviderCapabilityDispatchError("RATE_LIMITED", 429);
+        }
         if (status === 404 || code === "installation_not_found" || code === "route_not_found") {
             throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
         }

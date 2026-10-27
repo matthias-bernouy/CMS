@@ -5,6 +5,7 @@ import type {
     UlviaProviderGateway,
     UlviaProviderManagement,
 } from "../ports";
+import { registerObservabilityCapabilities } from "./observability";
 import { registerAccessCapabilities } from "./access";
 import { registerContentCapabilities } from "./content";
 import { registerFileCapabilities } from "./files";
@@ -30,6 +31,9 @@ export function registerOfficialProviderCapabilities(
     if (enabledContractIds?.has("ulvia.cms.repository")) {
         registerCollectionAuthoringCapabilities(dispatcher, dependencies.collectionAuthoring);
     }
+    if (dependencies.observability && enabledContractIds?.has("ulvia.cms.observability")) {
+        registerObservabilityCapabilities(dispatcher, dependencies.observability);
+    }
     registerContentCapabilities(dispatcher, dependencies);
     registerInstallationCapabilities(
         dispatcher,
@@ -53,6 +57,7 @@ export function registerOfficialProviderCapabilities(
 
 export {
     registerAccessCapabilities,
+    registerObservabilityCapabilities,
     registerContentCapabilities,
     registerSmtpEmailerCapabilities,
     registerFileCapabilities,

@@ -8,6 +8,10 @@ export interface ProviderCapabilityInvocationContext {
     readonly siteId: string;
     readonly providerId: string;
     readonly subjectId?: string;
+    readonly systemServiceId?: string;
+    readonly sourceInstallationId?: string;
+    readonly connectionId?: string;
+    readonly controlAuthority?: true;
     readonly idempotencyKey?: string;
     readonly actorCredential?: GatewayActorCredential;
     readonly binaryBody?: {

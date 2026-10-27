@@ -1,3 +1,4 @@
+export type { ProviderAdministration } from "./ports/providers";
 export {
     UlviaProvider,
     type UlviaProviderInstanceLease,

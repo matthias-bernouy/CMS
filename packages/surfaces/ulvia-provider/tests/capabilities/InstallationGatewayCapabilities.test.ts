@@ -7,6 +7,7 @@ import {
 import { registerProviderInstallationCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 const context: ProviderCapabilityInvocationContext = {
+    controlAuthority: true,
     requestId: "00000000-0000-4000-8000-000000000001",
     contractVersion: "1.0.0",
     siteId: "site-a",

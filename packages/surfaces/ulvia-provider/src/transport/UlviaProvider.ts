@@ -11,6 +11,7 @@ export type UlviaProviderInstanceRuntime = Readonly<{
     siteId: string;
     report: ProviderRuntimeReport;
     dispatcher: ProviderCapabilityRegistry;
+    logger?: Logger;
     authorizeInvocation?: (claims: ProviderInvocationClaims) => Promise<boolean>;
 }>;
 
@@ -22,6 +23,7 @@ export type UlviaProviderInstanceLease = Readonly<{
 export type UlviaProviderOptions = Readonly<{
     contracts: readonly ResolvedContract[];
     logger: Logger;
+    authenticateReportToken?(token: string): Promise<UlviaProviderInstanceLease | null>;
     authenticateControlToken(token: string): Promise<UlviaProviderInstanceLease | null>;
     authenticateInvocationToken(
         token: string,
@@ -35,7 +37,9 @@ export class UlviaProvider {
         const relays = new WeakMap<ProviderCapabilityRegistry, ReturnType<typeof createProviderContractRelay>>();
         runner.get("/ulvia/report", async (request) => {
             const token = bearerToken(request);
-            const lease = token ? await options.authenticateControlToken(token) : null;
+            const lease = token
+                ? await (options.authenticateReportToken ?? options.authenticateControlToken)(token)
+                : null;
             if (!lease) {
                 return unauthorized();
             }
@@ -75,12 +79,12 @@ export class UlviaProvider {
                                 siteId: runtime.siteId,
                                 providerId: runtime.report.providerId,
                             },
-                            options.logger,
+                            runtime.logger ?? options.logger,
                             runtime.authorizeInvocation,
                         );
                         relays.set(runtime.dispatcher, relay);
                     }
-                    return (await relay(request, claims)) ?? new Response(null, { status: 404 });
+                    return (await relay(request, claims, Boolean(controlLease))) ?? new Response(null, { status: 404 });
                 } finally {
                     lease.release();
                 }

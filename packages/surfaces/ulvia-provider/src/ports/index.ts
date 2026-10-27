@@ -31,6 +31,7 @@ import type { Emailer } from "@bernouy/cms-emailer";
 import type { SmtpEmailerAdministration } from "@bernouy/cms-smtp-emailer";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { Logger } from "@bernouy/logging";
+import type { CmsObservability } from "@bernouy/cms-observability";
 
 export interface CmsContentDependencies {
     readonly repo: ContentRepository;
@@ -70,6 +71,7 @@ export type UlviaProviderDependencies = CmsContentDependencies &
     CmsAccessDependencies & {
         readonly emailer?: Emailer & SmtpEmailerAdministration;
         readonly secrets?: CmsSecrets;
+        readonly observability?: CmsObservability;
     };
 
 type UlviaProviderAdministratorState = Readonly<{
@@ -95,6 +97,7 @@ export interface UlviaProviderGateway {
     readonly identities: ProviderIdentityService;
     readonly routes: GatewayRouteResolver;
     readonly commandAudit: GatewayCommandAuditStore;
+    readonly providers?: import("@bernouy/cms-gateway/access/providers").ProviderAccess;
     readonly invocations: {
         issue(input: {
             requestId: string;
@@ -103,11 +106,15 @@ export interface UlviaProviderGateway {
             contractVersion: string;
             capabilityId: string;
             subjectId?: string;
+            systemServiceId?: string;
+            sourceInstallationId?: string;
+            bodyBytes?: number;
         }): Promise<{ token: string; instanceId: string }>;
     };
 }
 
 export interface UlviaProviderManagement {
+    readonly administration?: import("./providers").ProviderAdministration;
     replaceSelections(input: {
         expectedRevision: number;
         selections: readonly {

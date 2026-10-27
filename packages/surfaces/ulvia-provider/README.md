@@ -9,6 +9,7 @@ admitted contract releases.
 - `@bernouy/ulvia-provider` exposes the surface, dispatch registry, operation executor,
   and injected dependency contracts.
 - `/capabilities` exposes registration helpers for official capability adapters.
+- `/sdk/node` exposes the connection capability registrar and `createConnectedProviderLogger`; the runtime injects the client and storage.
 
 The surface maps transport to injected feature operations, including the
 official Access capabilities. Login and logout may return a typed semantic
