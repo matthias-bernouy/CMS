@@ -25,7 +25,8 @@
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
-        "mongodb": "^7.6.0"
+        "mongodb": "^7.6.0",
+        "@bernouy/cms-observability": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

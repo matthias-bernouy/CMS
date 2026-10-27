@@ -8,7 +8,7 @@ import type {
     ProviderInstanceTransitionExecution,
 } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
-import type { InstanceComposition } from "./ProviderInstanceHost";
+import type { InstanceComposition } from "./composition/ProviderInstanceHost";
 import { loadOfficialManifest } from "./profiles/artifacts";
 import { initializeOfficialAdministrator, installOfficialCollection } from "./instanceInitialization";
 

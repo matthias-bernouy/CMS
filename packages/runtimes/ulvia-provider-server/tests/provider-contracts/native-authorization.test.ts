@@ -4,7 +4,7 @@ import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/in
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 
 const digest = `sha256:${"a".repeat(64)}`;
-function fixture(onInstallationRead: () => void = () => {}) {
+function fixture(onInstallationRead: () => void = () => {}, concreteContract = "ulvia.cms.content") {
     let revision = 1;
     const report: ProviderRuntimeReport = {
         protocol: "ulvia-provider/v1",
@@ -15,7 +15,7 @@ function fixture(onInstallationRead: () => void = () => {}) {
         manifest: { version: "0.1.0", digest: digest as `sha256:${string}` },
         implementations: [
             {
-                contractId: "ulvia.cms.content",
+                contractId: concreteContract,
                 version: "1.0.0",
                 digest: digest as `sha256:${string}`,
                 status: "ready",
@@ -24,7 +24,7 @@ function fixture(onInstallationRead: () => void = () => {}) {
     };
     const selection = {
         siteId: "site",
-        contractId: "ulvia.cms.content",
+        contractId: concreteContract,
         version: "1.0.0",
         digest,
         installationId: "native",
@@ -46,10 +46,16 @@ function fixture(onInstallationRead: () => void = () => {}) {
                       };
             },
         } as never,
+        {
+            resolve: async () => ({
+                selection,
+                requestedRelease: { admission: { release: { contractId: "ulvia.cms.content", version: "1.0.0" } } },
+            }),
+        } as never,
     );
     const claims = {
         instanceId: report.instanceId,
-        contractId: selection.contractId,
+        contractId: "ulvia.cms.content",
         contractVersion: selection.version,
         capabilityId: "site.get",
     } as ProviderInvocationClaims;
@@ -91,5 +97,33 @@ test("a route change during installation lookup rejects the stale authorization 
     let changeRevision = () => {};
     const f = fixture(() => changeRevision());
     changeRevision = f.bumpRevision;
+    expect(await f.authorize(f.claims)).toBe(false);
+});
+
+test("a base contract call retains the selected specialization's native authority", async () => {
+    const f = fixture(undefined, "ulvia.cms.content.specialized");
+    expect(await f.authorize(f.claims)).toBe(true);
+    f.grants.denied.push({ contractId: f.selection.contractId, capabilityId: f.claims.capabilityId });
+    expect(await f.authorize(f.claims)).toBe(false);
+});
+
+test("an unrelated concurrent upgrade retries authorization against a stable fresh snapshot", async () => {
+    let mutate = () => {};
+    const f = fixture(() => mutate());
+    mutate = () => {
+        f.bumpRevision();
+        mutate = () => {};
+    };
+    expect(await f.authorize(f.claims)).toBe(true);
+});
+
+test("a retry never restores authority after the destination changes during authorization", async () => {
+    let mutate = () => {};
+    const f = fixture(() => mutate());
+    mutate = () => {
+        f.selection.installationId = "external";
+        f.bumpRevision();
+        mutate = () => {};
+    };
     expect(await f.authorize(f.claims)).toBe(false);
 });

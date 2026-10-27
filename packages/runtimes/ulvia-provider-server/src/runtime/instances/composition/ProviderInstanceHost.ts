@@ -1,6 +1,10 @@
-import { createProviderRetention } from "../stores/collections/retention";
-import { instanceMongoUrl } from "../stores/storageRoots";
-import { createNativeInvocationAuthorizer } from "../gateway/nativeAuthorization";
+import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
+import { registerProviderConnectionCapabilities } from "@bernouy/ulvia-provider/sdk/node";
+import { readRemoteProviderReport } from "../../gateway/providers/readReport";
+import { providerAdministration } from "../../gateway/providers/administration";
+import { createProviderRetention } from "../../stores/collections/retention";
+import { instanceMongoUrl } from "../../stores/storageRoots";
+import { createNativeInvocationAuthorizer } from "../../gateway/nativeAuthorization";
 import { join } from "node:path";
 import { mkdir } from "node:fs/promises";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
@@ -20,22 +24,22 @@ import {
     type ProviderInstanceRecord,
     type UlviaProviderInstanceRuntime,
 } from "@bernouy/ulvia-provider";
-import type { ProviderRuntimeEnv } from "../../runtimeEnv";
-import type { EncryptedInstanceCredentials } from "../authentication/EncryptedInstanceCredentials";
-import { createProviderGateway } from "../gateway/createProviderGateway";
-import { createProtectedProviderManagement } from "../gateway/protectedManagement";
-import { MongoProviderOperationStore } from "../provider-operations/MongoProviderOperationStore";
-import { RecoverySupervisor } from "../recovery/RecoverySupervisor";
-import { createProviderStores, type ProviderStores } from "../stores/providerStores";
-import { CmsFileWorkspace } from "../stores/CmsFileWorkspace";
-import { createInstanceProvisioningTarget } from "./instanceProvisioning";
-import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "./InstanceResourcePool";
-import { OfficialProviderObservation } from "./OfficialProviderObservation";
+import type { ProviderRuntimeEnv } from "../../../runtimeEnv";
+import type { EncryptedInstanceCredentials } from "../../authentication/EncryptedInstanceCredentials";
+import { createProviderGateway } from "../../gateway/createProviderGateway";
+import { createProtectedProviderManagement } from "../../gateway/protectedManagement";
+import { MongoProviderOperationStore } from "../../provider-operations/MongoProviderOperationStore";
+import { RecoverySupervisor } from "../../recovery/RecoverySupervisor";
+import { createProviderStores, type ProviderStores } from "../../stores/providerStores";
+import { CmsFileWorkspace } from "../../stores/CmsFileWorkspace";
+import { createInstanceProvisioningTarget } from "../instanceProvisioning";
+import { InstanceResourcePool, type ResourceLease, type ResourceLifetime } from "../InstanceResourcePool";
 import type { Logger } from "@bernouy/logging";
-import { correlatedRepositoryFetch } from "../gateway/repositoryFetch";
-import { createInstanceAuth } from "../authentication/createInstanceAuth";
+import { correlatedRepositoryFetch } from "../../gateway/repositoryFetch";
+import { createInstanceDiagnostics, connectInstanceDiagnostics } from "./diagnostics";
+import { createInstanceAuth } from "../../authentication/createInstanceAuth";
 
-import { createCollectionAuthoring } from "../stores/repository/composition";
+import { createCollectionAuthoring } from "../../stores/repository/composition";
 import { McpAuthorization } from "@bernouy/cms-auth/oauth";
 
 const SITE_ID = "default";
@@ -89,7 +93,12 @@ export class ProviderInstanceHost {
         const lease = await this.open(instance);
         const openMs = performance.now() - startedAt;
         const readyStartedAt = performance.now();
-        await lease.resource.ensureProviderReady();
+        try {
+            await lease.resource.ensureProviderReady();
+        } catch (error) {
+            lease.release();
+            throw error;
+        }
         const readyMs = performance.now() - readyStartedAt;
         this.reportRuntimeTiming(instance.id, openMs, readyMs);
         return {
@@ -159,9 +168,12 @@ export class ProviderInstanceHost {
         }
         const filesDirectory = join(this.env.CMS_FILES_DIR, instance.storageKey);
         await mkdir(filesDirectory, { recursive: true, mode: 0o700 });
+        const diagnostics = createInstanceDiagnostics(instance.id, this.logger.child({ instanceId: instance.id }));
+        const instanceLogger = diagnostics.logger;
         const storesStartedAt = performance.now();
         const stores = await createProviderStores(
             {
+                instanceId: instance.id,
                 CMS_SESSION_SECRET: credentials.sessionSecret,
                 CMS_KEK: {
                     activeKeyId: "instance",
@@ -172,24 +184,33 @@ export class ProviderInstanceHost {
                 CMS_FILES_DIR: filesDirectory,
                 KERNEL_PUBLIC_URL: instance.kernelUrl,
             },
-            this.logger.child({ instanceId: instance.id }),
+            instanceLogger,
         );
         const storesMs = performance.now() - storesStartedAt;
         let operationRecovery: RecoverySupervisor | undefined;
         try {
-            const gateway = await createProviderGateway(stores, SITE_ID);
+            const profile = this.requiredProfile(instance.profile.id, instance.profile.version);
+            const readReport = async (endpoint: string, token: string) =>
+                endpoint === this.env.ULVIA_PROVIDER_PUBLIC_URL && token === credentials.invocationSecret
+                    ? providerReport(instance, profile)
+                    : readRemoteProviderReport(endpoint, token);
+            const gateway = await createProviderGateway(stores, SITE_ID, {
+                readReport,
+                reportFailure: (installationId, error) =>
+                    instanceLogger.warn("provider.observation.refresh.failed", { installationId }, error),
+            });
             const managementForProfile = (profile: OfficialInstanceProfile) =>
                 new ProviderManagement(gateway, stores.contractSecrets.installations, {
                     retention: createProviderRetention(gateway, stores.upgradeStorage, profile, instance.id),
                     sources: [this.#providerSource],
-                    readReport: async () => providerReport(instance, profile),
+                    drafts: stores.connectionDrafts,
+                    readReport: async (endpoint, token) =>
+                        endpoint === this.env.ULVIA_PROVIDER_PUBLIC_URL && token === credentials.invocationSecret
+                            ? providerReport(instance, profile)
+                            : readRemoteProviderReport(endpoint, token),
                 });
-            const profile = this.requiredProfile(instance.profile.id, instance.profile.version);
             const report = providerReport(instance, profile);
             const management = managementForProfile(profile);
-            const observation = new OfficialProviderObservation(management, instance.id, profile, Date.now, (error) =>
-                this.logger.error("provider.observation.refresh.failed", { instanceId: instance.id }, error),
-            );
             const providerOperations = new MongoProviderOperationStore(stores.db);
             await providerOperations.init();
             const operations = new ProviderOperationExecutor(providerOperations, undefined, {
@@ -197,13 +218,14 @@ export class ProviderInstanceHost {
                 onFailure: (observation, error) => {
                     const attributes = { instanceId: instance.id, ...observation };
                     if (observation.kind === "handler-unavailable" || observation.kind === "handler-rejected") {
-                        this.logger.warn("provider.operation.failed", attributes);
+                        instanceLogger.warn("provider.operation.failed", attributes);
                     } else {
-                        this.logger.error("provider.operation.failed", attributes, error);
+                        instanceLogger.error("provider.operation.failed", attributes, error);
                     }
                 },
             });
             const dispatcher = new DefaultProviderCapabilityDispatcher();
+            registerProviderConnectionCapabilities(dispatcher, new ProviderConnections(stores.providerConnections));
             const authentication = await createInstanceAuth(stores, instance.kernelUrl);
             const fileWorkspace = new CmsFileWorkspace(
                 stores.providerFiles,
@@ -227,7 +249,7 @@ export class ProviderInstanceHost {
                     secrets: stores.cmsSecrets,
                     resolvePageRoute: (path: string) => stores.pageRoutes.resolve(gateway.siteId, path),
                     sitemapStore: stores.sitemapStore,
-                    logger: this.logger.child({ instanceId: instance.id, component: "content-delivery" }),
+                    logger: instanceLogger.child({ component: "content-delivery" }),
                     mcpAuthorization: new McpAuthorization(
                         stores.oauthStore,
                         {
@@ -245,7 +267,10 @@ export class ProviderInstanceHost {
                 },
                 gateway,
                 operations,
-                createProtectedProviderManagement(management, instance, profile),
+                {
+                    ...createProtectedProviderManagement(management, instance, profile),
+                    administration: providerAdministration(stores, gateway, management, instance.kernelUrl),
+                },
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
                 fileWorkspace,
@@ -255,10 +280,12 @@ export class ProviderInstanceHost {
                 (limit) => operations.recover(limit),
                 undefined,
                 undefined,
-                (error) => this.logger.error("provider.operation.recovery.failed", { instanceId: instance.id }, error),
+                (error) =>
+                    instanceLogger.error("provider.operation.recovery.failed", { instanceId: instance.id }, error),
             );
             await operationRecovery.start(false);
             const activeRecovery = operationRecovery;
+            connectInstanceDiagnostics(diagnostics, stores, gateway, instance.id);
             const composition = {
                 stores,
                 gateway,
@@ -266,14 +293,18 @@ export class ProviderInstanceHost {
                 managementForProfile,
                 administrators: gateway.administrators,
                 operations,
-                ensureProviderReady: () => observation.ensureFresh(),
+                ensureProviderReady: async () => {
+                    await gateway.routes.warm(SITE_ID, "ulvia.cms.installations");
+                },
                 close: async () => {
                     await activeRecovery.stop();
                     await operations.stop();
+                    await diagnostics.collector.close();
                     await stores.close();
                 },
                 runtime: {
                     siteId: SITE_ID,
+                    logger: instanceLogger,
                     report,
                     dispatcher,
                     authorizeInvocation: createNativeInvocationAuthorizer(
@@ -281,10 +312,11 @@ export class ProviderInstanceHost {
                         report,
                         stores.selections,
                         stores.installations,
+                        gateway.routes,
                     ),
                 },
             };
-            this.logger.info("provider.instance.composition.created", {
+            instanceLogger.info("provider.instance.composition.created", {
                 instanceId: instance.id,
                 bootstrapReadMs: roundDuration(bootstrapReadMs),
                 storesMs: roundDuration(storesMs),
@@ -294,6 +326,7 @@ export class ProviderInstanceHost {
             return composition;
         } catch (error) {
             await operationRecovery?.stop();
+            await diagnostics.collector.close();
             await stores.close();
             throw error;
         }

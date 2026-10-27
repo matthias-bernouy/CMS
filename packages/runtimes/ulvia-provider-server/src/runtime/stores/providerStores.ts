@@ -25,6 +25,8 @@ import { createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { ValidatingSecretStore } from "@bernouy/secret-store";
 import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
 import { MongoClient } from "mongodb";
+import { CmsObservability } from "@bernouy/cms-observability";
+import { MongoJournalStore } from "@bernouy/cms-observability/mongo";
 import type { RuntimeKekConfig } from "../../runtimeEnvKek";
 import { CMS_REPOSITORY_FENCED_MUTATIONS, COLLECTION_STORE_FENCED_MUTATIONS } from "./collections/siteWritePolicy";
 import { createEnvelopeSecretCrypto } from "./envelopeCrypto";
@@ -44,12 +46,15 @@ import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from
 import type { Logger } from "@bernouy/logging";
 import { CmsSecrets } from "@bernouy/cms-secrets";
 import { MongoCmsSecretMetadataStore } from "@bernouy/cms-secrets/mongo";
+import { EncryptedProviderConnections } from "../gateway/providers/EncryptedProviderConnections";
+import { EncryptedConnectionDrafts } from "../gateway/providers/EncryptedConnectionDrafts";
 import { createContractSecretStores } from "./contractSecretStores";
 import { ConfiguredSmtpEmailer } from "@bernouy/cms-smtp-emailer/nodemailer";
 
 const SCOPE_ID = "default";
 
 export type ProviderStoreConfig = Readonly<{
+    instanceId: string;
     MONGO_URL: string;
     CMS_KEK: RuntimeKekConfig;
     CMS_FILES_DIR: string;
@@ -61,6 +66,13 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     const mongo = new MongoClient(env.MONGO_URL);
     await mongo.connect();
     const db = mongo.db();
+    const journal = new MongoJournalStore(db);
+    await journal.init();
+    const observability = new CmsObservability({
+        store: journal,
+        instanceId: env.instanceId,
+        cursorKey: env.CMS_SESSION_SECRET,
+    });
     const releases = new MongoReleaseCatalogue(db);
     const manifests = new MongoProviderManifestCatalogue(db, releases);
     const upgradeStorage = new MongoSiteUpgradeStorage(db);
@@ -80,6 +92,8 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         await mongo.close();
         throw error;
     });
+    const connectionDrafts = new EncryptedConnectionDrafts(db, secretCrypto, `provider-connections:${env.instanceId}`);
+    await connectionDrafts.init();
     const fieldCrypto = await createFieldCrypto(SCOPE_ID, secretCrypto, db);
 
     const innerRepo = new MongoContentRepository(db);
@@ -190,6 +204,13 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     await identities.init();
 
     return {
+        observability,
+        connectionDrafts,
+        providerConnections: new EncryptedProviderConnections(
+            db,
+            secretCrypto,
+            `provider-return-connections:${env.instanceId}`,
+        ),
         runtimeSessionSecret: env.CMS_SESSION_SECRET,
         collections,
         pageRoutes,

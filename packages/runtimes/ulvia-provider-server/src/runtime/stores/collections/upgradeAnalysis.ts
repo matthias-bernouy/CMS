@@ -12,6 +12,10 @@ import { type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalog
 
 /** Explicit Kernel/Provider consumers; catalogue-only demonstrations add no execution grant. */
 const INTERNAL = [
+    ["ulvia.cms.observability", "logs.append"],
+    ["ulvia.cms.observability", "logs.query"],
+    ["ulvia.cms.observability", "logs.get"],
+    ["ulvia.cms.observability", "logs.aggregate"],
     ["ulvia.cms.content", "delivery.read"],
     ["ulvia.cms.content", "delivery.robots"],
     ["ulvia.cms.content", "delivery.sitemap"],

@@ -112,3 +112,22 @@ function credentialStore(credential: InstanceCredential): InstanceCredentialStor
         disable: async () => undefined,
     };
 }
+
+test("the report credential never becomes control authority or a signed invocation", async () => {
+    const authenticator = new ProviderInstanceAuthenticator(
+        registry(readyInstance()),
+        credentialStore(instanceCredential()),
+        encryptedCredentials(),
+    );
+    expect((await authenticator.authenticateReportToken(INVOCATION_SECRET))?.id).toBe(INSTANCE_ID);
+    expect(await authenticator.authenticateControlToken(INVOCATION_SECRET)).toBeNull();
+    expect(await authenticator.authenticateInvocationToken(INVOCATION_SECRET)).toBeNull();
+    expect(await authenticator.authenticateReportToken("wrong".repeat(16))).toBeNull();
+    const disabled = { ...instanceCredential(), enabled: false };
+    const denied = new ProviderInstanceAuthenticator(
+        registry(readyInstance()),
+        credentialStore(disabled),
+        encryptedCredentials(),
+    );
+    expect(await denied.authenticateReportToken(INVOCATION_SECRET)).toBeNull();
+});

@@ -4,23 +4,60 @@
         "outDir": "dist",
         "rootDir": "./src"
     },
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts"
+    ],
     "references": [
-        { "path": "../../foundation/logging" },
-        { "path": "../../foundation/blob-store" },
-        { "path": "../../foundation/envelope-crypto" },
-        { "path": "../../foundation/image-processing" },
-        { "path": "../../foundation/secret-store" },
-        { "path": "../../foundation/http-runner" },
-        { "path": "../../foundation/rate-limiter" },
-        { "path": "../../features/cms-auth" },
-        { "path": "../../features/cms-content" },
-        { "path": "../../features/cms-emailer" },
-        { "path": "../../features/cms-files" },
-        { "path": "../../features/cms-gateway" },
-        { "path": "../../features/cms-repository" },
-        { "path": "../../features/cms-secrets" },
-        { "path": "../../features/cms-smtp-emailer" },
-        { "path": "../../surfaces/ulvia-provider" }
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../foundation/blob-store"
+        },
+        {
+            "path": "../../foundation/envelope-crypto"
+        },
+        {
+            "path": "../../foundation/image-processing"
+        },
+        {
+            "path": "../../foundation/secret-store"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/rate-limiter"
+        },
+        {
+            "path": "../../features/cms-auth"
+        },
+        {
+            "path": "../../features/cms-content"
+        },
+        {
+            "path": "../../features/cms-emailer"
+        },
+        {
+            "path": "../../features/cms-files"
+        },
+        {
+            "path": "../../features/cms-gateway"
+        },
+        {
+            "path": "../../features/cms-repository"
+        },
+        {
+            "path": "../../features/cms-secrets"
+        },
+        {
+            "path": "../../features/cms-smtp-emailer"
+        },
+        {
+            "path": "../../surfaces/ulvia-provider"
+        },
+        {
+            "path": "../../features/cms-observability"
+        }
     ]
 }

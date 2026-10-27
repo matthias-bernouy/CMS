@@ -13,7 +13,7 @@ import { EncryptedInstanceCredentials } from "./runtime/authentication/Encrypted
 import { MongoInstanceCredentialStore } from "./runtime/authentication/MongoInstanceCredentialStore";
 import { ProviderInstanceAuthenticator } from "./runtime/authentication/ProviderInstanceAuthenticator";
 import { createEnvelopeSecretCrypto } from "./runtime/stores/envelopeCrypto";
-import { ProviderInstanceHost } from "./runtime/instances/ProviderInstanceHost";
+import { ProviderInstanceHost } from "./runtime/instances/composition/ProviderInstanceHost";
 import { RecoverySupervisor } from "./runtime/recovery/RecoverySupervisor";
 import { MongoProviderInstanceRegistry } from "./runtime/instances/MongoProviderInstanceRegistry";
 import { MongoInstanceTransitionStore } from "./runtime/instances/MongoInstanceTransitionStore";

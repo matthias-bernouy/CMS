@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import {
+    providerInvocationKeyId,
     readProviderInvocationKeyId,
     verifyProviderInvocationToken,
     type ProviderInvocationClaims,
@@ -30,6 +31,22 @@ export class ProviderInstanceAuthenticator {
             return null;
         }
         return this.readReadyInstance(credential.instanceId);
+    }
+
+    async authenticateReportToken(token: string): Promise<ProviderInstanceRecord | null> {
+        const control = await this.authenticateControlToken(token);
+        if (control) {
+            return control;
+        }
+        try {
+            const credential = await this.credentials.getByInvocationKeyId(providerInvocationKeyId(token));
+            const expected = credential && (await this.readEnabledInvocationSecret(credential));
+            return credential && expected && equalSecrets(token, expected)
+                ? this.readReadyInstance(credential.instanceId)
+                : null;
+        } catch {
+            return null;
+        }
     }
 
     async authenticateInvocationToken(token: string): Promise<AuthenticatedInvocation | null> {

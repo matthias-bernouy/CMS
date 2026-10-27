@@ -34,6 +34,9 @@ export function createProtectedProviderManagement(
             ) {
                 throw policyError("control_selection_protected");
             }
+            if (!input.selections.some(({ contractId }) => contractId === "ulvia.cms.observability")) {
+                throw policyError("observability_selection_protected");
+            }
             return management.replaceSelections(input);
         },
         setStatus: async (input) => {

@@ -6,7 +6,7 @@ import type {
     ProviderInstanceAdministrator,
     ProviderInstanceTransitionExecution,
 } from "@bernouy/ulvia-provider";
-import type { InstanceComposition } from "./ProviderInstanceHost";
+import type { InstanceComposition } from "./composition/ProviderInstanceHost";
 
 const SITE_ID = "default";
 

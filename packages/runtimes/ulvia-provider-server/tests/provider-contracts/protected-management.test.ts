@@ -37,11 +37,18 @@ test("the control installation stays pinned while ordinary contract selections r
         selections: [
             { ...control, installationId: systemInstallation.id },
             { ...content, installationId: "provider:alternative" },
+            { ...content, contractId: "ulvia.cms.observability", installationId: "provider:alternative" },
         ],
     };
 
     await expect(protectedManagement.replaceSelections(input)).resolves.toEqual({ revision: 2, selected: [] });
     expect(replacements).toEqual([input]);
+    await expect(
+        protectedManagement.replaceSelections({
+            ...input,
+            selections: input.selections.filter(({ contractId }) => contractId !== "ulvia.cms.observability"),
+        }),
+    ).rejects.toMatchObject({ code: "observability_selection_protected" });
 });
 
 test("the control installation cannot remove or redirect its own selection", async () => {

@@ -3,7 +3,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import { ProviderOperatorApi, UlviaProvider, type ProviderInstanceLifecycle } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
 import type { ProviderInstanceAuthenticator } from "../authentication/ProviderInstanceAuthenticator";
-import type { ProviderInstanceHost } from "../instances/ProviderInstanceHost";
+import type { ProviderInstanceHost } from "../instances/composition/ProviderInstanceHost";
 import type { Logger } from "@bernouy/logging";
 
 export type UlviaProviderServerHandle = Readonly<{
@@ -25,6 +25,10 @@ export function mountUlviaProvider(options: {
     new UlviaProvider(runner, {
         contracts,
         logger,
+        authenticateReportToken: async (token) => {
+            const instance = await authenticator.authenticateReportToken(token);
+            return instance ? host.runtime(instance) : null;
+        },
         authenticateControlToken: async (token) => {
             const startedAt = performance.now();
             const instance = await authenticator.authenticateControlToken(token);
