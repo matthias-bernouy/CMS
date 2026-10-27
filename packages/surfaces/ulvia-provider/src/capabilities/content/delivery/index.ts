@@ -28,6 +28,17 @@ export function registerContentDeliveryCapabilities(
             if (error instanceof Error && "status" in error && error.status === 413) {
                 throw new ProviderCapabilityDispatchError("RESPONSE_TOO_LARGE", 413);
             }
+            const validation: string[] = [];
+            let cause: unknown = error;
+            while (cause instanceof Error && validation.length < 8) {
+                validation.push(cause.message);
+                cause = cause.cause;
+            }
+            dependencies.logger?.error(
+                "content.delivery.validation.failed",
+                { operation, validation: validation.join(" / ") },
+                error,
+            );
             throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
         }
     });

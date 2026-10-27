@@ -50,6 +50,24 @@ test("unrelated contributed Pages do not increase the serialized Page render sna
     expect(corpus.calls()).toEqual(baseline.calls());
 });
 
+test("large contribution revisions remain bounded and still invalidate Page render caches", async () => {
+    const fixture = renderingFixture();
+    const original = fixture.repository.getContentContributions!.bind(fixture.repository);
+    let revision = "large-contribution-".repeat(1000);
+    fixture.repository.getContentContributions = async () => ({ ...(await original()), revision });
+    const reader = createContentReader(fixture.repository);
+    const first = await reader.getPageRenderInputs!("/");
+    expect(first.artifactRevision).toHaveLength(71);
+    expect(first.renderingRevision).toHaveLength(71);
+    expect(await reader.getPageRenderRevision!("/")).toBe(first.artifactRevision);
+    expect(await reader.getRenderingRevision!()).toBe(first.renderingRevision);
+    revision += "changed";
+    const second = await reader.getPageRenderInputs!("/");
+    expect(second.artifactRevision).not.toBe(first.artifactRevision);
+    expect(second.renderingRevision).not.toBe(first.renderingRevision);
+    expect(await reader.getPageRenderRevision!("/")).toBe(second.artifactRevision);
+});
+
 function renderingFixture(unrelatedPageCount = 0): {
     repository: ContentRepository;
     calls(): Record<string, number>;

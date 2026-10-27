@@ -34,14 +34,14 @@ export function installPageRenderInputReaders(
                 loaders.getRenderingSettings(),
                 loaders.getRenderableBlocs(),
             ]);
-        const renderingRevision = JSON.stringify([
+        const renderingRevision = await revisionDigest([
             loadedContributions?.revision ?? 0,
             systemRevision,
             siteBlocsRevision,
         ]);
         return {
             route,
-            artifactRevision: pageRenderRevision(route, renderingRevision),
+            artifactRevision: await pageRenderRevision(route, renderingRevision),
             renderingRevision,
             settings,
             contentTexts: [...(loadedContributions?.texts ?? [])],
@@ -56,14 +56,14 @@ async function readRenderingRevision(repository: ContentRepository): Promise<str
         repository.getSystemRevision?.() ?? 0,
         repository.getSiteBlocsRevision?.() ?? "[]",
     ]);
-    return JSON.stringify([contentRevision, systemRevision, siteBlocsRevision]);
+    return revisionDigest([contentRevision, systemRevision, siteBlocsRevision]);
 }
 
 function pageRenderRevision(
     route: Awaited<ReturnType<ContentReader["resolveRenderableRoute"]>>,
     renderingRevision: number | string,
-): string {
-    return JSON.stringify([renderingRevision, renderableRouteIdentity(route)]);
+): Promise<string> {
+    return revisionDigest([renderingRevision, renderableRouteIdentity(route)]);
 }
 
 function renderableRouteIdentity(route: Awaited<ReturnType<ContentReader["resolveRenderableRoute"]>>): unknown {
@@ -79,4 +79,10 @@ function renderableRouteIdentity(route: Awaited<ReturnType<ContentReader["resolv
         path: route.page.page.path,
         visible: route.page.page.visible,
     };
+}
+
+async function revisionDigest(parts: unknown): Promise<string> {
+    const bytes = new TextEncoder().encode(JSON.stringify(parts));
+    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+    return `sha256:${Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
