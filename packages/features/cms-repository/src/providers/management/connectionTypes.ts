@@ -22,6 +22,7 @@ export type ProviderConnectionPreview = {
     manifestVersion: string;
     manifestDigest: string;
     contracts: { contractId: string; version: string; status: string }[];
+    requests: { contractId: string; capabilityId: string; versionRange: string; optional: boolean }[];
     check: string;
 };
 
@@ -41,6 +42,7 @@ export type PendingProviderConnection = {
 };
 
 export type ProviderConnectionDependencies = {
+    drafts?: import("./connectionDrafts").ProviderConnectionDraftStore;
     lifecycle?: ProviderConnectionLifecycle;
     readReport: ProviderReportReader;
     createId?: () => string;

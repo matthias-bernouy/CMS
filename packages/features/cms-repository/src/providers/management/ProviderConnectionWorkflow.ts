@@ -1,3 +1,4 @@
+import { memoryConnectionDrafts, type ProviderConnectionDraftStore } from "./connectionDrafts";
 import { randomUUID } from "node:crypto";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import type { ProviderInstallationPreparation } from "cms-repository/providers/installations/interfaces/ProviderInstallationPreparation";
@@ -8,7 +9,6 @@ import {
     type ProviderConnectionLifecycle,
     type ProviderConnectionPreview,
     type ProviderConnectionPreviewInput,
-    type PendingProviderConnection,
 } from "./connectionTypes";
 import { previewResult, requiredSecretKey, validatePreviewInput } from "./connectionSupport";
 
@@ -16,7 +16,7 @@ const PREVIEW_LIFETIME_MS = 5 * 60_000;
 
 /** Keeps provider probes, approval tickets and credential rotation outside the HTTP surface. */
 export class ProviderConnectionWorkflow {
-    private readonly pending = new Map<string, PendingProviderConnection>();
+    private readonly pending: ProviderConnectionDraftStore;
     private readonly lifecycle: ProviderConnectionLifecycle;
     private readonly reportReader;
     private readonly createId;
@@ -33,6 +33,7 @@ export class ProviderConnectionWorkflow {
         this.reportReader = dependencies.readReport;
         this.createId = dependencies.createId ?? randomUUID;
         this.now = dependencies.now ?? Date.now;
+        this.pending = dependencies.drafts ?? memoryConnectionDrafts(this.now);
     }
 
     async preview(input: ProviderConnectionPreviewInput, actorId: string): Promise<ProviderConnectionPreview> {
@@ -85,9 +86,8 @@ export class ProviderConnectionWorkflow {
                 report,
             );
         }
-        this.clearExpired();
         const ticket = this.createId();
-        this.pending.set(ticket, {
+        await this.pending.set(ticket, {
             preparation,
             token: input.token,
             actorId,
@@ -101,39 +101,87 @@ export class ProviderConnectionWorkflow {
             input.endpoint,
             published.admission.digest,
             report,
+            manifest.implementations.flatMap((implementation) =>
+                implementation.requires.map((request) => ({ ...request, optional: request.optional ?? false })),
+            ),
         );
     }
 
     async approve(ticket: string, actorId: string) {
-        const pending = this.pending.get(ticket);
-        if (!pending || pending.actorId !== actorId || this.now() - pending.createdAt > PREVIEW_LIFETIME_MS) {
-            this.pending.delete(ticket);
-            throw new Error("Installation preview has expired");
+        const pending = await this.pending.get(ticket);
+        if (pending && pending.actorId !== actorId) {
+            throw Object.assign(new Error("Provider preview belongs to another administrator"), { status: 403 });
         }
-        this.pending.delete(ticket);
+        if (!pending || this.now() - pending.createdAt > PREVIEW_LIFETIME_MS) {
+            await this.pending.delete(ticket);
+            throw new TypeError("Installation preview has expired");
+        }
         const tokenKey = requiredSecretKey(pending.preparation.candidate.providerTokenRef);
-        await this.secrets.set(tokenKey, pending.token);
-        let installed;
-        try {
-            installed =
+        const candidate = pending.preparation.candidate;
+        let installed = await this.gateway.installations.get({
+            siteId: this.gateway.siteId,
+            installationId: candidate.id,
+        });
+        if (installed?.installation.status === "revoked") {
+            throw Object.assign(new Error("Provider installation was revoked"), { status: 409 });
+        }
+        if (
+            installed?.installation.providerTokenRef === candidate.providerTokenRef &&
+            (installed.installation.approval.manifestDigest !== candidate.manifestDigest ||
+                installed.installation.endpoint !== candidate.endpoint)
+        ) {
+            throw new Error("Provider installation changed after preview");
+        }
+        let approvalReport = installed?.observation?.report;
+        if (!approvalReport || !installed || installed.installation.providerTokenRef !== candidate.providerTokenRef) {
+            approvalReport = await this.reportReader(candidate.endpoint, pending.token);
+            const pinned = pending.preparation.observation.report;
+            if (
+                approvalReport.instanceId !== pinned.instanceId ||
+                approvalReport.providerId !== pinned.providerId ||
+                approvalReport.account.id !== pinned.account.id ||
+                approvalReport.manifest.digest !== pinned.manifest.digest
+            ) {
+                throw new Error("Provider changed after connection preview");
+            }
+        }
+        if (!installed || installed.installation.providerTokenRef !== candidate.providerTokenRef) {
+            const preparation =
                 pending.preparation.operation === "modify"
-                    ? await this.lifecycle.modify(pending.preparation, actorId)
-                    : await this.lifecycle.approve(pending.preparation, actorId);
-        } catch (error) {
-            await this.secrets.delete(tokenKey);
-            throw error;
+                    ? await this.lifecycle.prepareModification(
+                          { siteId: this.gateway.siteId, installationId: candidate.id },
+                          pending.preparation.expectedRevision!,
+                          {
+                              endpoint: candidate.endpoint,
+                              manifestVersion: candidate.manifestVersion,
+                              manifestDigest: candidate.manifestDigest,
+                              providerTokenRef: candidate.providerTokenRef,
+                          },
+                          approvalReport,
+                      )
+                    : await this.lifecycle.prepare(candidate, approvalReport);
+            await this.secrets.set(tokenKey, pending.token);
+            installed =
+                preparation.operation === "modify"
+                    ? await this.lifecycle.modify(preparation, actorId)
+                    : await this.lifecycle.approve(preparation, actorId);
+        }
+        if (installed.installation.status !== "enabled") {
+            throw new Error("Provider installation is not enabled");
         }
         if (pending.previousTokenKey && pending.previousTokenKey !== tokenKey) {
             await this.secrets.delete(pending.previousTokenKey).catch(() => undefined);
         }
-        let observed = false;
+        let observed = Boolean(installed.observation);
         try {
-            await this.lifecycle.observe(
-                { siteId: this.gateway.siteId, installationId: installed.installation.id },
-                installed.revision,
-                pending.preparation.observation.report,
-            );
-            observed = true;
+            if (!observed) {
+                await this.lifecycle.observe(
+                    { siteId: this.gateway.siteId, installationId: installed.installation.id },
+                    installed.revision,
+                    approvalReport,
+                );
+                observed = true;
+            }
         } catch {
             // The approved connection stays valid and Health exposes the missing observation.
         }
@@ -143,14 +191,6 @@ export class ProviderConnectionWorkflow {
             operation: pending.preparation.operation === "modify" ? "reconnect" : "connect",
             observed,
         };
-    }
-
-    private clearExpired(): void {
-        for (const [ticket, pending] of this.pending) {
-            if (this.now() - pending.createdAt > PREVIEW_LIFETIME_MS) {
-                this.pending.delete(ticket);
-            }
-        }
     }
 }
 

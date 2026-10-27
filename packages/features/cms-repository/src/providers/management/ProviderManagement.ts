@@ -1,3 +1,4 @@
+import { verifyStoredProviderManifestJson } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
 import type { ProviderReleaseRetention } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import { importProviderManifest } from "cms-repository/providers/sources/importProviderManifest";
@@ -12,6 +13,7 @@ import {
 import type { ProviderManagementGateway } from "./types";
 
 export type ProviderManagementOptions = Readonly<{
+    drafts?: import("./connectionDrafts").ProviderConnectionDraftStore;
     sources?: readonly ProviderRepositorySource[];
     retention?: ProviderReleaseRetention;
     readReport: ProviderReportReader;
@@ -32,6 +34,7 @@ export class ProviderManagement {
         this.readReport = options.readReport;
         this.connections = new ProviderConnectionWorkflow(gateway, secrets, {
             readReport: options.readReport,
+            drafts: options.drafts,
             lifecycle: new ProviderInstallationLifecycle(
                 gateway.installations,
                 gateway.manifests,
@@ -51,6 +54,50 @@ export class ProviderManagement {
 
     async importManifest(manifest: string | Uint8Array): Promise<unknown> {
         return importProviderManifest(manifest, this.sources, this.gateway.releases, this.gateway.manifests);
+    }
+
+    async catalogue() {
+        const entries = (await Promise.all(this.sources.map((source) => source.list("provider-manifest")))).flat();
+        if (entries.length > 1024) {
+            throw new Error("Provider catalogue is too large");
+        }
+        return entries;
+    }
+
+    async importReference(input: {
+        repositoryId: string;
+        publisherId: string;
+        id: string;
+        version: string;
+        digest: string;
+    }) {
+        const source = this.sources.find((item) => item.id === input.repositoryId);
+        const listed =
+            source &&
+            (await source.list("provider-manifest")).find(
+                (item) =>
+                    item.publisherId === input.publisherId &&
+                    item.id === input.id &&
+                    item.version === input.version &&
+                    item.digest === input.digest,
+            );
+        if (!source || !listed) {
+            throw new TypeError("Provider release is not in the configured catalogue");
+        }
+        const bytes = await source.get(listed);
+        const verified = await verifyStoredProviderManifestJson(bytes, input.digest);
+        if (
+            verified.manifest.providerId !== input.id ||
+            verified.manifest.version !== input.version ||
+            verified.manifest.provenance.publisherId !== input.publisherId
+        ) {
+            throw new TypeError("Provider release coordinate mismatch");
+        }
+        const result = (await this.importManifest(bytes)) as { digest: string };
+        if (result.digest !== input.digest) {
+            throw new TypeError("Provider release digest mismatch");
+        }
+        return result;
     }
 
     async list() {

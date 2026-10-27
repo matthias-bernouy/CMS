@@ -26,6 +26,7 @@ export function previewResult(
     endpoint: string,
     manifestDigest: string,
     report: ProviderRuntimeReport,
+    requests: ProviderConnectionPreview["requests"],
 ): ProviderConnectionPreview {
     return {
         ticket,
@@ -38,6 +39,7 @@ export function previewResult(
         manifestVersion: report.manifest.version,
         manifestDigest,
         contracts: report.implementations.map(({ contractId, version, status }) => ({ contractId, version, status })),
+        requests,
         check: "Manifest and runtime report validated.",
     };
 }

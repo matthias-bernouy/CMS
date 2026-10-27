@@ -1,3 +1,5 @@
+export type { ProviderConnectionDraftStore } from "cms-repository/providers/management/connectionDrafts";
+export type { PendingProviderConnection } from "cms-repository/providers/management/connectionTypes";
 export {
     ProviderConnectionWorkflow,
     type ProviderConnectionPreview,

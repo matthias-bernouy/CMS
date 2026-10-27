@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test, spyOn } from "bun:test";
 import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import { InMemoryProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import { InMemorySecretStore } from "@bernouy/secret-store";
@@ -44,6 +44,7 @@ test("provider management renews an approved installation observation with its s
     expect(probes).toEqual([
         { endpoint: "https://provider.example.com", token },
         { endpoint: "https://provider.example.com", token },
+        { endpoint: "https://provider.example.com", token },
     ]);
 });
 
@@ -86,4 +87,49 @@ test("provider management keeps selected installations enabled until their contr
         action: "disable",
     });
     expect(disabled.status).toBe("disabled");
+});
+
+test("catalogue imports reject substituted coordinates or bytes before publishing anything", async () => {
+    const world = await providerWorld();
+    const installed = new InMemoryProviderInstallationStore(world.manifests, () => new Date().toISOString());
+    const publish = spyOn(world.manifests, "publish");
+    try {
+        for (const digest of [world.previous.digest, `sha256:${"0".repeat(64)}`]) {
+            const reference = {
+                repositoryId: "trusted",
+                publisherId: "ulvia.official",
+                id: "unexpected.provider",
+                version: world.previous.manifest.version,
+                digest,
+            };
+            const management = new ProviderManagement(
+                {
+                    siteId,
+                    releases: world.releases,
+                    manifests: world.manifests,
+                    installations: installed,
+                    selections: {} as never,
+                },
+                new InMemorySecretStore(),
+                {
+                    readReport: async () => report(world.previous),
+                    sources: [
+                        {
+                            id: "trusted",
+                            list: async () => [
+                                { ...reference, name: "Unexpected", kind: "provider-manifest" as const },
+                            ],
+                            get: async () => new TextEncoder().encode(JSON.stringify(world.previous.manifest)),
+                        },
+                    ],
+                },
+            );
+            await expect(management.importReference(reference)).rejects.toThrow(
+                digest === world.previous.digest ? "coordinate mismatch" : "digest mismatch",
+            );
+        }
+        expect(publish).not.toHaveBeenCalled();
+    } finally {
+        publish.mockRestore();
+    }
 });
