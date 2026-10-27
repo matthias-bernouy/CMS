@@ -5,6 +5,10 @@ confirmed defects and deliberately deferred work. None of the completion
 criteria below describe an implemented guarantee. See the [audit](AUDIT.md)
 for evidence and priorities.
 
+The intentionally incompatible redesign of contracts, Provider authority,
+collection examples, Content delivery, SSR and the public Edge is tracked in
+the [Platform V2 architecture plan](TODO/platform_v2.md).
+
 ## Delivery And Verification
 
 **Status:** static checks, build and ordinary tests pass locally; complete CI
