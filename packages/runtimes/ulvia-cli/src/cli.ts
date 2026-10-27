@@ -60,9 +60,6 @@ Environment:
   ULVIA_PROVIDER_PORT       Initial Provider management port
   ULVIA_REPOSITORY_URL      Default remote repository URL
   ULVIA_CONFIG_DIR          Absolute client configuration directory override
-  ULVIA_LOG_LEVEL           Runtime log threshold (trace through fatal)
-  ULVIA_LOG_CONSOLE_LEVEL   Local terminal threshold (trace through fatal)
-  ULVIA_LOG_FORMAT          Runtime terminal format (pretty or json)
 `;
 
 export type CliOptions = Readonly<{

@@ -36,7 +36,6 @@ export function localServicesEnvironment(
         ULVIA_MONGO_DIR: paths.mongo,
         ULVIA_FILES_DIR: paths.cmsFiles,
         ULVIA_REPOSITORY_DIR: paths.repository,
-        ULVIA_LOGS_DIR: paths.serviceLogs,
         ULVIA_PROXY_CERTIFICATES_DIR: paths.proxy.certificates,
         ULVIA_PROXY_VHOST_DIR: paths.proxy.virtualHosts,
         ULVIA_PROXY_CHALLENGE_DIR: paths.proxy.challenge,
@@ -52,7 +51,7 @@ export function localServicesEnvironment(
 }
 
 export function localKernelEnvironment(
-    instance: LocalInstancePaths,
+    _instance: LocalInstancePaths,
     config: LocalInstanceConfig,
     connection: LocalInstanceConnection,
     services: LocalServicesState,
@@ -66,7 +65,6 @@ export function localKernelEnvironment(
         ULVIA_INSTANCE_HOSTNAME: config.hostname,
         ULVIA_INSTANCE_URL: instancePublicUrl(config.hostname, services.installation),
         ULVIA_INSTANCE_TLS: services.installation.tls.mode,
-        ULVIA_LOGS_DIR: instance.logs,
         CMS_INSTALLATIONS_PROVIDER_TOKEN: connection.token,
     };
 }

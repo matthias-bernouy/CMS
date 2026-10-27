@@ -36,6 +36,10 @@ export async function checkProviderImageRetention(project: ComposeProject): Prom
     );
 }
 
+export async function composeLogs(project: ComposeProject, args: readonly string[]): Promise<void> {
+    await compose(project, ["logs", "--no-color", "--tail", "200", ...args], true);
+}
+
 export async function composeStop(project: ComposeProject): Promise<void> {
     await compose(project, ["stop"], true);
 }

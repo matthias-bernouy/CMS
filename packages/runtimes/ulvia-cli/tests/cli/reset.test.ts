@@ -52,7 +52,7 @@ describe("Ulvia local data lifecycle", () => {
         const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: root });
         try {
             await ensureUlviaPaths(paths);
-            await mkdir(join(paths.instances, "preview", "logs"), { recursive: true });
+            await mkdir(join(paths.instances, "preview"), { recursive: true });
 
             await resetLocalData(paths);
 

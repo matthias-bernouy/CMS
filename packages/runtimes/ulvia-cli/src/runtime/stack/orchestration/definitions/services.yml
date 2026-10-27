@@ -60,7 +60,6 @@ services:
             REPOSITORY_HOST: 0.0.0.0
             REPOSITORY_PORT: "3000"
             REPOSITORY_PUBLIC_URL: http://127.0.0.1:${ULVIA_REPOSITORY_PORT}
-            ULVIA_LOG_FILE: /var/log/ulvia/repository.ndjson
             ULVIA_REPOSITORY_DIR: /var/lib/ulvia-repository
             ULVIA_REPOSITORY_SEED_DIR: /opt/ulvia-repository-seed
         stop_grace_period: 30s
@@ -68,9 +67,6 @@ services:
             - type: bind
               source: ${ULVIA_REPOSITORY_DIR}
               target: /var/lib/ulvia-repository
-            - type: bind
-              source: ${ULVIA_LOGS_DIR}
-              target: /var/log/ulvia
         ports:
             - "127.0.0.1:${ULVIA_REPOSITORY_PORT}:3000"
         networks:
@@ -130,7 +126,6 @@ services:
             CMS_SESSION_SECRET: ${ULVIA_PROVIDER_SESSION_SECRET}
             CMS_KEK_HEX: ${ULVIA_PROVIDER_KEK_HEX}
             MONGO_URL: mongodb://${ULVIA_MONGO_PROVIDER_USERNAME}:${ULVIA_MONGO_PROVIDER_PASSWORD}@mongo:27017/ulvia_provider_control?authSource=admin&retryWrites=false
-            ULVIA_LOG_FILE: /var/log/ulvia/provider.ndjson
             ULVIA_PROVIDER_HOST: 0.0.0.0
             ULVIA_PROVIDER_PORT: "5103"
             ULVIA_PROVIDER_PUBLIC_URL: http://ulvia-provider:5103
@@ -139,9 +134,6 @@ services:
             - type: bind
               source: ${ULVIA_FILES_DIR}
               target: /var/lib/cms/files
-            - type: bind
-              source: ${ULVIA_LOGS_DIR}
-              target: /var/log/ulvia
         ports:
             - "127.0.0.1:${ULVIA_PROVIDER_PORT}:5103"
         networks:

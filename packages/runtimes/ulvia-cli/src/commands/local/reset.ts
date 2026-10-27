@@ -41,7 +41,7 @@ async function assertRecognizedData(paths: UlviaPaths): Promise<void> {
     const serviceSchema = await readSchema(join(paths.services, "runtime.json"));
     const installation = await loadInstallationConfig(paths);
     if (serviceSchema === null && installation === null) {
-        await assertEmptySkeleton(paths.services, new Set(["cms-files", "domains", "logs", "mongo", "proxy"]));
+        await assertEmptySkeleton(paths.services, new Set(["cms-files", "domains", "mongo", "proxy"]));
     } else if (serviceSchema !== "ulvia.services.v2" && serviceSchema !== "ulvia.local-services.v1") {
         throw new Error(`Refusing to reset unrecognized Ulvia data (shared services) at ${paths.data}`);
     }
@@ -49,7 +49,7 @@ async function assertRecognizedData(paths: UlviaPaths): Promise<void> {
         const root = join(paths.instances, name);
         const schema = await readSchema(join(root, "runtime.json"));
         if (schema === null) {
-            await assertEmptySkeleton(root, new Set(["logs"]));
+            await assertEmptySkeleton(root, new Set());
         } else if (schema !== "ulvia.local-instance-runtime.v1") {
             throw new Error(`Refusing to reset unrecognized Ulvia instance data at ${root}`);
         }

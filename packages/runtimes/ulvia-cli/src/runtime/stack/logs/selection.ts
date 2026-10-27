@@ -3,15 +3,13 @@ import { isValidRequestId } from "@bernouy/http-runner/observability";
 
 const DEV_LOG_SERVICES = ["kernel", "provider", "repository"] as const;
 const STABLE_IDENTIFIER = /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/u;
-const INSTANCE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
-export type LocalLogService = (typeof DEV_LOG_SERVICES)[number];
+type LocalLogService = (typeof DEV_LOG_SERVICES)[number];
 
 export type LogSelection = Readonly<{
     services: readonly LocalLogService[];
     level: LogLevel;
     requestId?: string;
     event?: string;
-    instanceId?: string;
     follow: boolean;
     format: "pretty" | "json";
     stack: boolean;
@@ -32,7 +30,6 @@ export function parseSelection(args: readonly string[], usage = "ulvia logs"): L
     let level: LogLevel = "trace";
     let requestId: string | undefined;
     let event: string | undefined;
-    let instanceId: string | undefined;
     let follow = false;
     let format: LogSelection["format"] = "pretty";
     let stack = false;
@@ -72,27 +69,9 @@ export function parseSelection(args: readonly string[], usage = "ulvia logs"): L
             }
             continue;
         }
-        if (flag === "--instance-id") {
-            instanceId = values.shift()?.trim();
-            if (!instanceId || !INSTANCE_ID.test(instanceId)) {
-                fail("--instance-id requires a canonical UUID", usage);
-            }
-            continue;
-        }
         fail(`Unknown logs option: ${flag}`, usage);
     }
-    return { services, level, requestId, event, instanceId, follow, format, stack };
-}
-
-export function matches(record: LogRecord, selection: LogSelection): boolean {
-    if (LOG_LEVELS.indexOf(record.level) < LOG_LEVELS.indexOf(selection.level)) {
-        return false;
-    }
-    return (
-        (!selection.requestId || record.attributes?.requestId === selection.requestId) &&
-        (!selection.event || record.event === selection.event) &&
-        (!selection.instanceId || record.attributes?.instanceId === selection.instanceId)
-    );
+    return { services, level, requestId, event, follow, format, stack };
 }
 
 export function formatRecord(record: LogRecord, selection: LogSelection): string {

@@ -13,8 +13,12 @@
         "src/**/*.ts"
     ],
     "references": [
-        { "path": "../../foundation/logging" },
-        { "path": "../../foundation/http-runner" },
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
         {
             "path": "../../foundation/binary-media"
         },
@@ -29,6 +33,12 @@
         },
         {
             "path": "../../features/cms-content"
+        },
+        {
+            "path": "../../features/cms-observability"
+        },
+        {
+            "path": "../../features/cms-gateway"
         }
     ]
 }

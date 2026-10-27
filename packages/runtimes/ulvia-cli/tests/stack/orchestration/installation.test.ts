@@ -89,7 +89,6 @@ test("ACME challenge roots stay readable by Nginx workers across CLI invocations
             paths.services,
             paths.mongo,
             paths.cmsFiles,
-            paths.serviceLogs,
             paths.instances,
             paths.proxy.certificates,
             paths.proxy.virtualHosts,

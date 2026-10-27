@@ -70,6 +70,12 @@ smoke(
 
             report("initial browser journey");
             await runKernelSmoke(page, credentials, KERNEL_URL);
+            const journal: string[] = [];
+            await runCli(["instance", "logs", "default", "kernel", "--event", "kernel.started", "--json"], {
+                environment,
+                log: (line) => journal.push(line),
+            });
+            expect(journal.some((line) => JSON.parse(line).event === "kernel.started")).toBe(true);
             report("second instance isolation");
             await verifySecondInstanceIsolation(data, credentials, KERNEL_URL, `http://127.0.0.1:${PORTS.provider}`);
 
@@ -111,7 +117,11 @@ smoke(
             await runCli(["instance", "stop", "default"], { environment, log: () => undefined });
             await runCli(["services", "stop"], { environment, log: () => undefined });
         } catch (error) {
-            await runCli(["services", "logs", "provider", "--level", "error"], {
+            await runCli(["services", "logs", "provider"], {
+                environment,
+                log: (message) => (output += `${message}\n`),
+            }).catch(() => undefined);
+            await runCli(["instance", "logs", "default", "provider", "--level", "error", "--json", "--stack"], {
                 environment,
                 log: (message) => (output += `${message}\n`),
             }).catch(() => undefined);
@@ -177,11 +187,16 @@ async function writeFailureArtifacts(
     const page = browser?.contexts()[0]?.pages()[0];
     if (page) {
         await Promise.all([
-            page.screenshot({ path: join(directory, "failure.png"), fullPage: true }).catch(() => undefined),
             page
-                .content()
-                .then((html) => writeFile(join(directory, "failure.html"), html, "utf8"))
+                .screenshot({ path: join(directory, "failure.png"), fullPage: true, timeout: 5_000 })
                 .catch(() => undefined),
+            Promise.race([
+                page
+                    .content()
+                    .then((html) => writeFile(join(directory, "failure.html"), html, "utf8"))
+                    .catch(() => undefined),
+                Bun.sleep(5_000),
+            ]),
         ]);
     }
 }

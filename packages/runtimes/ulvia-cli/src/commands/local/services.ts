@@ -1,9 +1,9 @@
 import type { UlviaPaths } from "../../runtime/paths";
-import { showLocalLogs } from "../../runtime/stack/logs";
 import type { InstallationConfig } from "../../runtime/stack/installation";
 import type { ComposeServiceState } from "../../runtime/stack/orchestration/compose";
 import {
     describeLocalServices,
+    showServiceDiagnostics,
     startLocalServices,
     stopLocalServices,
 } from "../../runtime/stack/orchestration/services";
@@ -53,7 +53,7 @@ export async function servicesCommand(
         return;
     }
     if (action === "logs") {
-        await showLocalLogs(rest, { logs: paths.serviceLogs }, log, "ulvia services logs");
+        await showServiceDiagnostics(paths, rest);
         return;
     }
     throw new Error("Usage: ulvia services <start | stop | status | logs>");

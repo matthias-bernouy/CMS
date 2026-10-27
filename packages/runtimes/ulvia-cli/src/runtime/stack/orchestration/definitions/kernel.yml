@@ -12,13 +12,8 @@ services:
             KERNEL_PUBLIC_URL: ${ULVIA_INSTANCE_URL}
             CMS_INSTALLATIONS_PROVIDER_URL: http://ulvia-provider:5103
             CMS_INSTALLATIONS_PROVIDER_TOKEN: ${CMS_INSTALLATIONS_PROVIDER_TOKEN}
-            ULVIA_LOG_FILE: /var/log/ulvia/kernel.ndjson
             VIRTUAL_HOST: ${ULVIA_INSTANCE_HOSTNAME}
             VIRTUAL_PORT: "3000"
-        volumes:
-            - type: bind
-              source: ${ULVIA_LOGS_DIR}
-              target: /var/log/ulvia
         networks:
             - instances
         read_only: true

@@ -13,6 +13,8 @@ export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalo
         "ulvia.cms.installations",
         "ulvia.cms.content",
         "ulvia.cms.files",
+        "ulvia.cms.observability",
+        "ulvia.provider.connections",
     ]) {
         const directory = resolve(import.meta.dir, `../../../official-repository/contracts/${contractId}`);
         await catalogue.publish(await admitContractReleaseJson(await compileContractSource(directory)));

@@ -17,6 +17,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
         "ulvia.cms.installations",
         "ulvia.cms.content",
         "ulvia.cms.files",
+        "ulvia.cms.observability",
     ].map((id) => resolve(import.meta.dir, `../../../../../official-repository/contracts/${id}`));
     const definition = (await Bun.file(join(source, "definition.json")).json()) as {
         version: string;

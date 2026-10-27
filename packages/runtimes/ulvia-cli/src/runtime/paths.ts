@@ -8,7 +8,6 @@ export type UlviaPaths = Readonly<{
     services: string;
     mongo: string;
     cmsFiles: string;
-    serviceLogs: string;
     proxy: Readonly<{
         certificates: string;
         virtualHosts: string;
@@ -20,7 +19,6 @@ export type UlviaPaths = Readonly<{
 
 export type LocalInstancePaths = Readonly<{
     root: string;
-    logs: string;
 }>;
 
 export function resolveUlviaPaths(
@@ -36,7 +34,6 @@ export function resolveUlviaPaths(
         services,
         mongo: join(services, "mongo"),
         cmsFiles: join(services, "cms-files"),
-        serviceLogs: join(services, "logs"),
         proxy: {
             certificates: join(services, "proxy", "certificates"),
             virtualHosts: join(services, "proxy", "virtual-hosts"),
@@ -50,7 +47,7 @@ export function resolveUlviaPaths(
 export function resolveLocalInstancePaths(paths: UlviaPaths, name: string): LocalInstancePaths {
     assertLocalInstanceName(name);
     const root = join(paths.instances, name);
-    return Object.freeze({ root, logs: join(root, "logs") });
+    return Object.freeze({ root });
 }
 
 export function assertLocalInstanceName(name: string): void {
@@ -74,7 +71,6 @@ export async function ensureUlviaPaths(paths: UlviaPaths): Promise<void> {
         ensureDirectory(paths.services),
         ensureDirectory(paths.mongo),
         ensureDirectory(paths.cmsFiles),
-        ensureDirectory(paths.serviceLogs),
         ensureDirectory(paths.proxy.certificates),
         ensureDirectory(paths.proxy.virtualHosts),
         // Nginx workers serve public HTTP-01 tokens through this dedicated bind mount.
@@ -85,7 +81,7 @@ export async function ensureUlviaPaths(paths: UlviaPaths): Promise<void> {
 }
 
 export async function ensureLocalInstancePaths(paths: LocalInstancePaths): Promise<void> {
-    await Promise.all([ensureDirectory(paths.root), ensureDirectory(paths.logs)]);
+    await ensureDirectory(paths.root);
 }
 
 export async function assertLocalInstancePaths(paths: LocalInstancePaths): Promise<void> {

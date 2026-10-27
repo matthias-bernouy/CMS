@@ -5,6 +5,7 @@ import { defaultStackVersion } from "../version";
 import {
     checkProviderImageRetention,
     composeDown,
+    composeLogs,
     composeStop,
     composeUp,
     inspectComposeServices,
@@ -153,4 +154,16 @@ async function serviceCredentials(paths: UlviaPaths) {
 
 function serviceName(component: Exclude<OfficialImageComponent, "kernel">): string {
     return component === "provider" ? "Provider" : "Repository";
+}
+
+export async function showServiceDiagnostics(paths: UlviaPaths, args: readonly string[]): Promise<void> {
+    const state = await loadLocalServicesState(paths);
+    if (!state) {
+        throw new Error("Shared services are not initialized");
+    }
+    const allowed = new Set(["provider", "repository", "mongo", "proxy", "--follow"]);
+    if (args.some((value) => !allowed.has(value))) {
+        throw new Error("Usage: ulvia services logs [provider | repository | mongo | proxy] [--follow]");
+    }
+    await composeLogs(serviceProject(paths, state, await serviceCredentials(paths)), args);
 }

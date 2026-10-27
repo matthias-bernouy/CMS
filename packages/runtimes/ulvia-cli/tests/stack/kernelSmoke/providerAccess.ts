@@ -58,8 +58,9 @@ export async function mutateProviders(page: Page): Promise<void> {
     );
     await apply.waitFor();
     await submitSiteUpgrade(page, apply, "apply-contract-upgrade");
-    await page.waitForURL(/\/admin\/providers$/u);
+    await page.waitForURL(/\/admin\/providers$/u, { waitUntil: "domcontentloaded" });
     await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#provider-installations").waitFor();
     const installation = page.locator("#provider-installations [role=listitem]").first();
     for (const action of ["disable", "revoke"]) {
         const button = installation

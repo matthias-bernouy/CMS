@@ -8,7 +8,8 @@ import {
     resolveLocalInstancePaths,
     type UlviaPaths,
 } from "../../runtime/paths";
-import { showLocalLogs } from "../../runtime/stack/logs";
+import { showInstanceLogs } from "../../runtime/stack/logs";
+import { OperatorObservabilityClient } from "../../runtime/stack/logs/OperatorObservabilityClient";
 import type { InstallationConfig } from "../../runtime/stack/installation";
 import { releaseInstanceDomain } from "../../runtime/stack/domains";
 import { instancePublicUrl } from "../../runtime/stack/ports";
@@ -37,7 +38,17 @@ export async function runExistingInstanceCommand(
     const instancePaths = resolveLocalInstancePaths(paths, name);
     await assertLocalInstancePaths(instancePaths);
     if (action === "logs") {
-        await showLocalLogs(rest, instancePaths, log, `ulvia instance logs ${name}`);
+        const connection = await loadLocalInstanceConnection(instancePaths.root);
+        const state = await loadLocalServicesState(paths);
+        if (!connection || !state) {
+            throw new Error("Local instance and services must be initialized");
+        }
+        const client = new OperatorObservabilityClient(
+            `http://127.0.0.1:${state.installation.ports.provider}`,
+            connection.token,
+            connection.instanceId,
+        );
+        await showInstanceLogs(rest, client, log);
         return;
     }
     if (action === "delete") {

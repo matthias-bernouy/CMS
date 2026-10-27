@@ -1,3 +1,4 @@
+import { inspectObservability } from "./administration/observability";
 import type { Page } from "playwright";
 import {
     inspectDiagnostics,
@@ -5,7 +6,7 @@ import {
     inspectResponsiveAdministration,
     mutateSettings,
     verifyAdministrationAfterRestart,
-} from "./administration";
+} from "./administration/views";
 import { exerciseCollectionUpgrades } from "./collectionUpgrades";
 import { mutateFiles, verifyFilesAfterRestart } from "./files";
 import { deleteSmokePage, verifyPublishedPage } from "./pageLifecycle";
@@ -28,6 +29,7 @@ export async function runKernelSmoke(
     await stage("provider routing", () => mutateProviders(page));
     await stage("access", () => mutateAccess(page, credentials.adminEmail));
     await stage("diagnostics", () => inspectDiagnostics(page));
+    await stage("observability", () => inspectObservability(page, kernelOrigin));
 }
 
 export async function verifyKernelStateAfterRestart(
