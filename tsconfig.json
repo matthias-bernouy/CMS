@@ -66,6 +66,9 @@
         },
         {
             "path": "packages/runtimes/official-repository-server"
+        },
+        {
+            "path": "packages/features/cms-observability"
         }
     ]
 }

@@ -35,7 +35,7 @@
     },
     "packages/features/cms-auth": {
       "name": "@bernouy/cms-auth",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/cms-emailer": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
@@ -48,7 +48,7 @@
     },
     "packages/features/cms-content": {
       "name": "@bernouy/cms-content",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -67,14 +67,14 @@
     },
     "packages/features/cms-emailer": {
       "name": "@bernouy/cms-emailer",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
     "packages/features/cms-files": {
       "name": "@bernouy/cms-files",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
@@ -88,7 +88,7 @@
     },
     "packages/features/cms-gateway": {
       "name": "@bernouy/cms-gateway",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
@@ -99,9 +99,20 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/features/cms-observability": {
+      "name": "@bernouy/cms-observability",
+      "version": "1.0.0",
+      "dependencies": {
+        "@bernouy/logging": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.6.0",
+        "typescript": "^7.0.2",
+      },
+    },
     "packages/features/cms-repository": {
       "name": "@bernouy/cms-repository",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
@@ -124,7 +135,7 @@
     },
     "packages/features/cms-secrets": {
       "name": "@bernouy/cms-secrets",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/secret-store": "workspace:*",
       },
@@ -135,7 +146,7 @@
     },
     "packages/features/cms-smtp-emailer": {
       "name": "@bernouy/cms-smtp-emailer",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/cms-emailer": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
@@ -147,21 +158,21 @@
     },
     "packages/foundation/binary-media": {
       "name": "@bernouy/binary-media",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
     "packages/foundation/blob-store": {
       "name": "@bernouy/blob-store",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
     "packages/foundation/envelope-crypto": {
       "name": "@bernouy/envelope-crypto",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^7.0.2",
@@ -169,7 +180,7 @@
     },
     "packages/foundation/http-runner": {
       "name": "@bernouy/http-runner",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/logging": "workspace:*",
       },
@@ -179,7 +190,7 @@
     },
     "packages/foundation/image-processing": {
       "name": "@bernouy/image-processing",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "peerDependencies": {
         "sharp": "^0.35.5",
         "typescript": "^7.0.2",
@@ -187,14 +198,14 @@
     },
     "packages/foundation/logging": {
       "name": "@bernouy/logging",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
     "packages/foundation/rate-limiter": {
       "name": "@bernouy/rate-limiter",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^7.0.2",
@@ -202,7 +213,7 @@
     },
     "packages/foundation/secret-store": {
       "name": "@bernouy/secret-store",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/envelope-crypto": "workspace:*",
       },
@@ -213,7 +224,7 @@
     },
     "packages/runtimes/cms-kernel-server": {
       "name": "@bernouy/cms-kernel-server",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
@@ -230,7 +241,7 @@
     },
     "packages/runtimes/official-repository-server": {
       "name": "@bernouy/official-repository-server",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
@@ -240,7 +251,7 @@
     },
     "packages/runtimes/ulvia-cli": {
       "name": "@bernouy/ulvia-cli",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
@@ -255,7 +266,7 @@
     },
     "packages/runtimes/ulvia-provider-server": {
       "name": "@bernouy/ulvia-provider-server",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
@@ -280,7 +291,7 @@
     },
     "packages/surfaces/cms-kernel": {
       "name": "@bernouy/cms-kernel",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
@@ -300,7 +311,7 @@
     },
     "packages/surfaces/ulvia-provider": {
       "name": "@bernouy/ulvia-provider",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
@@ -337,6 +348,8 @@
     "@bernouy/cms-kernel": ["@bernouy/cms-kernel@workspace:packages/surfaces/cms-kernel"],
 
     "@bernouy/cms-kernel-server": ["@bernouy/cms-kernel-server@workspace:packages/runtimes/cms-kernel-server"],
+
+    "@bernouy/cms-observability": ["@bernouy/cms-observability@workspace:packages/features/cms-observability"],
 
     "@bernouy/cms-repository": ["@bernouy/cms-repository@workspace:packages/features/cms-repository"],
 
