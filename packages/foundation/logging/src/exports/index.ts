@@ -14,3 +14,5 @@ export {
     type LogLevel,
     type LogRecord,
 } from "logging/interfaces/Logger";
+
+export { sanitizeAttributes, sanitizeError } from "logging/core/sanitize";

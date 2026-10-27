@@ -7,11 +7,10 @@ redaction.
 
 - `@bernouy/logging` exposes logger contracts, levels, child loggers, the
   sanitizer and an in-memory implementation.
-- `/node` exposes configured stdout/stderr and optional local rotating-file
-  sinks for composition roots.
+- `/node` exposes structured stdout/stderr sinks for composition roots.
 - `/testing` exposes explicit no-op and test helpers.
 
-Runtimes choose service names, levels, formats, destinations and retention.
+Runtimes choose service names, levels and formats. Infrastructure owns stdout/stderr retention.
 Request correlation is supplied by `@bernouy/http-runner/observability`; this
 package does not read environment variables or create a global logger. Every
 structured attribute passes through the shared sanitizer.

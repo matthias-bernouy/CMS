@@ -1,157 +1,83 @@
 import { expect, spyOn, test } from "bun:test";
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createConfiguredNodeLogger, createNodeLogger, isLogFormat, parseLogFormat } from "@bernouy/logging/node";
+import { createNodeLogger, createNodeLogSink } from "@bernouy/logging/node";
 
-test("the Node logger writes private bounded NDJSON journals", async () => {
-    const root = await mkdtemp(join(tmpdir(), "logging-node-"));
-    const file = join(root, "service.ndjson");
-    try {
-        const logger = createNodeLogger({
-            service: "test-service",
-            file,
-            mirror: false,
-            maxFileBytes: 150,
-            retainedFiles: 2,
-        });
-        logger.info("first.event", { value: "a".repeat(100) });
-        logger.info("second.event", { value: "b".repeat(100) });
-
-        expect((await stat(file)).mode & 0o777).toBe(0o600);
-        expect(await readFile(`${file}.1`, "utf8")).toContain("first.event");
-        expect(await readFile(file, "utf8")).toContain("second.event");
-    } finally {
-        await rm(root, { recursive: true, force: true });
-    }
-});
-
-test("log format parsing honors explicit values and safe fallbacks", () => {
-    expect(isLogFormat("json")).toBe(true);
-    expect(isLogFormat("unknown")).toBe(false);
-    expect(parseLogFormat("json", "pretty")).toBe("json");
-    expect(parseLogFormat("pretty", "json")).toBe("pretty");
-    expect(parseLogFormat("unknown", "json")).toBe("json");
-});
-
-test("text logger configuration applies fallbacks and reports only setting names", () => {
+test("operator diagnostics route structured redacted records to stdout and stderr", () => {
     const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
+    const stderr = spyOn(process.stderr, "write").mockImplementation(() => true);
     try {
-        const logger = createConfiguredNodeLogger({
-            service: "configured-service",
-            configuration: { level: "private-level", format: "private-format" },
-            defaults: { level: "debug", consoleLevel: "info", format: "pretty" },
-            settingNames: { level: "LOG_LEVEL", format: "LOG_FORMAT" },
-        });
+        const logger = createNodeLogger({ service: "operator", level: "info" });
         logger.debug("hidden.detail");
-        logger.info("visible.summary");
-
-        const output = stdout.mock.calls.map((call) => String(call[0])).join("\n");
-        expect(output.match(/logging\.configuration\.invalid/gu)).toHaveLength(2);
-        expect(output).toContain("LOG_LEVEL");
-        expect(output).toContain("LOG_FORMAT");
-        expect(output).toContain("visible.summary");
-        expect(output).not.toContain("hidden.detail");
-        expect(output).not.toContain("private-level");
-        expect(output).not.toContain("private-format");
-    } finally {
-        stdout.mockRestore();
-    }
-});
-
-test("file and terminal destinations use independent thresholds", async () => {
-    const root = await mkdtemp(join(tmpdir(), "logging-node-thresholds-"));
-    const file = join(root, "service.ndjson");
-    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
-    try {
-        const logger = createNodeLogger({
-            service: "test-service",
-            level: "debug",
-            file,
-            fileLevel: "debug",
-            mirrorLevel: "info",
-            format: "json",
-        });
-        logger.debug("debug.detail");
-        logger.info("visible.summary");
-
-        const journal = await readFile(file, "utf8");
-        expect(journal).toContain("debug.detail");
-        expect(journal).toContain("visible.summary");
-        expect(stdout).toHaveBeenCalledTimes(1);
-        expect(String(stdout.mock.calls[0]?.[0])).toContain("visible.summary");
-    } finally {
-        stdout.mockRestore();
-        await rm(root, { recursive: true, force: true });
-    }
-});
-
-test("records rejected by every destination are disabled before serialization", () => {
-    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
-    try {
-        const logger = createNodeLogger({
-            service: "test-service",
-            mirrorLevel: "info",
-            format: "json",
-        });
-
+        logger.info("service.ready", { token: "private-value", count: 2 });
+        logger.warn("service.warning");
+        logger.error("service.failed", {}, new Error("safe failure"));
         expect(logger.isEnabled("debug")).toBe(false);
-        logger.debug("discarded.detail", { circular: globalThis });
-        expect(stdout).not.toHaveBeenCalled();
-    } finally {
-        stdout.mockRestore();
-    }
-});
-
-test("the Node logger rejects unbounded file-retention settings", () => {
-    expect(() => createNodeLogger({ service: "test", maxFileBytes: 0 })).toThrow("positive safe integer");
-    expect(() => createNodeLogger({ service: "test", retainedFiles: 0 })).toThrow("positive safe integer");
-});
-
-test("a failed file destination does not suppress the mirrored record", async () => {
-    const root = await mkdtemp(join(tmpdir(), "logging-node-failure-"));
-    const file = join(root, "service.ndjson");
-    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
-    const stderr = spyOn(process.stderr, "write").mockImplementation(() => true);
-    try {
-        const logger = createNodeLogger({ service: "test-service", file, format: "json" });
-        await rm(file);
-        await mkdir(file);
-
-        expect(() => logger.info("application.continues", { safe: true })).not.toThrow();
-        expect(stdout).toHaveBeenCalledTimes(1);
-        expect(String(stdout.mock.calls[0]?.[0])).toContain('"event":"application.continues"');
+        expect(stdout).toHaveBeenCalledTimes(2);
         expect(stderr).toHaveBeenCalledTimes(1);
-        expect(String(stderr.mock.calls[0]?.[0])).toContain('"event":"logging.file.failed"');
-    } finally {
-        stdout.mockRestore();
-        stderr.mockRestore();
-        await rm(root, { recursive: true, force: true });
-    }
-});
-
-test("an unavailable file destination does not prevent logger creation", async () => {
-    const root = await mkdtemp(join(tmpdir(), "logging-node-unavailable-"));
-    const blocker = join(root, "not-a-directory");
-    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
-    const stderr = spyOn(process.stderr, "write").mockImplementation(() => true);
-    try {
-        await writeFile(blocker, "occupied");
-
-        const logger = createNodeLogger({
-            service: "test-service",
-            file: join(blocker, "service.ndjson"),
-            format: "json",
+        const records = stdout.mock.calls.map((call) => JSON.parse(String(call[0])));
+        expect(records[0]).toMatchObject({ service: "operator", event: "service.ready", attributes: { count: 2 } });
+        expect(JSON.stringify(records)).not.toContain("private-value");
+        expect(JSON.parse(String(stderr.mock.calls[0]![0]))).toMatchObject({
+            event: "service.failed",
+            error: { name: "Error" },
         });
-        expect(() => logger.info("application.started")).not.toThrow();
-
-        expect(stderr).toHaveBeenCalledTimes(1);
-        expect(String(stderr.mock.calls[0]?.[0])).toContain('"event":"logging.file.failed"');
-        expect(stdout).toHaveBeenCalledTimes(1);
-        expect(String(stdout.mock.calls[0]?.[0])).toContain('"event":"application.started"');
     } finally {
         stdout.mockRestore();
         stderr.mockRestore();
-        await rm(root, { recursive: true, force: true });
+    }
+});
+
+test("collector fallback sinks honor their threshold without a second logger", () => {
+    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
+    const stderr = spyOn(process.stderr, "write").mockImplementation(() => true);
+    try {
+        const sink = createNodeLogSink({ service: "operator", level: "warn" });
+        const record = {
+            time: new Date().toISOString(),
+            service: "collector",
+            event: "delivery.failed",
+            level: "info" as const,
+        };
+        sink(record);
+        sink({ ...record, level: "warn" });
+        sink({ ...record, level: "fatal" });
+        expect(stdout).toHaveBeenCalledTimes(1);
+        expect(stderr).toHaveBeenCalledTimes(1);
+    } finally {
+        stdout.mockRestore();
+        stderr.mockRestore();
+    }
+});
+
+test("pretty operator output escapes injected lines while preserving diagnostic stacks", () => {
+    const stderr = spyOn(process.stderr, "write").mockImplementation(() => true);
+    try {
+        const logger = createNodeLogger({ service: "operator", format: "pretty", includeErrorStack: true });
+        const error = new Error("message\nspoofed entry");
+        error.stack = "Error: safe\n    at operation\u001b[31m";
+        logger.error("service.failed", { count: 2 }, error);
+        const output = String(stderr.mock.calls[0]![0]);
+        expect(output).toContain("operator service.failed");
+        expect(output).not.toContain("message\nspoofed entry");
+        expect(output).toContain("\n    at operation");
+        expect(output).not.toContain("\u001b");
+    } finally {
+        stderr.mockRestore();
+    }
+});
+
+test("closed operator streams cannot fail an application operation", () => {
+    const stdout = spyOn(process.stdout, "write").mockImplementation(() => {
+        throw new Error("closed stdout");
+    });
+    const stderr = spyOn(process.stderr, "write").mockImplementation(() => {
+        throw new Error("closed stderr");
+    });
+    try {
+        const logger = createNodeLogger({ service: "operator" });
+        expect(() => logger.info("service.ready")).not.toThrow();
+        expect(() => logger.error("service.failed")).not.toThrow();
+    } finally {
+        stdout.mockRestore();
+        stderr.mockRestore();
     }
 });
