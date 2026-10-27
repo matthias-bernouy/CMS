@@ -110,7 +110,7 @@ export function mountKernelRoutes(kernel: KernelCms) {
                 resolveActor: (request) => resolveRequestActor(kernel, request),
             });
         runner.group(CMS_CAPABILITY_CALL_ROUTE, (callRunner) => {
-            for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const) {
+            for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT", "QUERY"] as const) {
                 callRunner.setDefaultEndpoint(method, async (request) =>
                     applySessionEffect(await capabilityHandler(request), kernel.sessionCookie),
                 );

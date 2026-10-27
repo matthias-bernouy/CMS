@@ -4,10 +4,11 @@ import { createKernelGateway } from "./runtime/gateway/createKernelGateway";
 import { fetchInstallationsProviderReport } from "./runtime/gateway/fetchProviderReport";
 import { InstallationsProviderTransport } from "./runtime/gateway/InstallationsProviderTransport";
 import { readRuntimeEnv } from "./runtimeEnv";
-import { createKernelLogger } from "./runtime/logger";
+import { createKernelDiagnostics, connectKernelDiagnostics } from "./runtime/diagnostics";
 import { GatewayContentClient } from "./runtime/content/GatewayContentClient";
 
-const logger = createKernelLogger(process.env);
+const diagnostics = createKernelDiagnostics(process.env);
+const { logger } = diagnostics;
 try {
     await startKernel();
 } catch (error) {
@@ -23,6 +24,7 @@ async function startKernel(): Promise<void> {
     );
     await fetchInstallationsProviderReport(transport);
     const gateway = createKernelGateway(new ControlProviderClient(transport, logger));
+    await connectKernelDiagnostics(diagnostics, gateway);
     const content = new GatewayContentClient(gateway.invoker, logger);
     const kernel = await mountProductionKernel({ env, content, gateway, logger });
 
@@ -34,6 +36,7 @@ async function startKernel(): Promise<void> {
         stopping = true;
         logger.info("kernel.stopping", { signal });
         await kernel.stop();
+        await diagnostics.collector.close();
     };
     const handleSignal = (signal: string): void => {
         void shutdown(signal).catch((error) => {

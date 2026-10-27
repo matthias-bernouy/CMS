@@ -1,3 +1,4 @@
+import { handlerContract } from "../../../../features/cms-gateway/tests/http/handlerContract.fixture";
 import { expect, test } from "bun:test";
 import { createContentReader, InMemoryContentRepository } from "@bernouy/cms-content";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
@@ -38,38 +39,33 @@ test("Kernel mounts every gateway binding method and supplies trusted actor stat
     expect(calls[0]).toMatchObject({
         siteId: "site-a",
         contractId: "catalog",
-        capabilityId: "item.list",
+        capabilityId: "item.create",
         actor: { kind: "provider", installationId: "install-caller" },
         input: { term: "one" },
     });
-    for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"]) {
+    const query = await runner.defaultHandler(
+        "QUERY",
+        "/.cms/call",
+    )(
+        new Request("http://site/.cms/call/catalog/v1/items", {
+            method: "QUERY",
+            headers: { authorization: "Bearer provider-token", "content-type": "application/json" },
+            body: '{"term":"two"}',
+        }),
+    );
+    expect(query.status).toBe(200);
+    expect(calls[1]).toMatchObject({
+        actor: { kind: "provider", installationId: "install-caller" },
+        input: { term: "two" },
+    });
+    for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT", "QUERY"]) {
         expect(() => runner.defaultHandler(method, "/.cms/call")).not.toThrow();
     }
 });
 
 function invoker(calls: GatewayInvocation[]) {
     return {
-        resolveHttp: async () =>
-            ({
-                capability: {
-                    id: "item.list",
-                    behavior: { effect: "command", execution: "sync", idempotency: "natural" },
-                    input: {
-                        type: "object",
-                        properties: { term: { type: "string", maxLength: 50 } },
-                        required: [],
-                    },
-                },
-                binding: {
-                    method: "POST",
-                    path: "/v1/items",
-                    pathParameters: [],
-                    query: [],
-                    headers: [],
-                    body: { kind: "json", properties: ["term"], contentTypes: ["application/json"] },
-                },
-                pathValues: {},
-            }) as never,
+        resolveContract: handlerContract,
         invoke: async (invocation: GatewayInvocation) => {
             calls.push(invocation);
             return { kind: "success" as const, status: 200, requestId: "request-1", output: { items: ["one"] } };

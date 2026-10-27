@@ -1,7 +1,8 @@
+import type { CapabilityHttpHandlerConfig } from "@bernouy/cms-gateway/http/handlers";
 import type { ContentReader, RenderablePage } from "@bernouy/cms-content/rendering";
 import type { SiteUpgradeStorage } from "@bernouy/cms-repository/upgrades";
 import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
-import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
+import type { GatewayActor } from "@bernouy/cms-gateway";
 import type { PageCapabilityAccessPort } from "@bernouy/cms-gateway/analysis";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
@@ -24,7 +25,7 @@ export type KernelCmsConfig = {
     enforcePageCsp?: boolean;
     capabilityGateway?: {
         readonly siteId: string;
-        readonly invoker: GatewayInvoker;
+        readonly invoker: CapabilityHttpHandlerConfig["invoker"];
         readonly authenticateProvider?: (token: string) => Promise<string | null>;
         readonly resolveCapability?: (
             contractId: string,

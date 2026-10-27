@@ -1,3 +1,4 @@
+import type { GatewayHttpInvoker } from "@bernouy/cms-gateway/http";
 import {
     createContentReader,
     CMS_CACHE_KEYS,
@@ -7,7 +8,7 @@ import {
     type TSystem,
 } from "@bernouy/cms-content";
 import type { BlobStore } from "@bernouy/blob-store";
-import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
+import type { GatewayActor } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { createSitemapService } from "@bernouy/cms-content/seo";
 import { executeIndexingCapability } from "cms-kernel/http/pages/resolvePageIndexing";
@@ -34,7 +35,7 @@ export function publicPage(id: string, path: string, content = `<p>${id}</p>`): 
 
 type HarnessOptions = Readonly<{
     storedPages?: readonly TPage[];
-    gateway?: GatewayInvoker;
+    gateway?: Pick<GatewayHttpInvoker, "invoke">;
     sitemapStore?: BlobStore;
     siteHost?: string;
     repository?: ContentReader | ContentRepository;
@@ -110,13 +111,11 @@ export function mountPublicPages(options: HarnessOptions = {}) {
           };
     const invoker = options.gateway
         ? ({
-              resolveHttp: async ({ path }: { path: string }) => ({
-                  capability: { id: path.split("/").filter(Boolean).at(-1) ?? "unknown" },
-                  binding: {},
-                  pathValues: {},
-              }),
+              resolveContract: async () => {
+                  throw new Error("Page rendering must not resolve HTTP invocation bindings");
+              },
               ...options.gateway,
-          } as GatewayInvoker)
+          } as GatewayHttpInvoker)
         : undefined;
     const pageCapabilities =
         options.pageCapabilities ??

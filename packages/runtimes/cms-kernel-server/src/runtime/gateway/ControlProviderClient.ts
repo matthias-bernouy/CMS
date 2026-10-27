@@ -53,6 +53,9 @@ export class ControlProviderClient {
         contractVersion: string;
         capabilityId: string;
         subjectId?: string;
+        systemServiceId?: string;
+        sourceInstallationId?: string;
+        bodyBytes?: number;
     }): Promise<IssuedProviderInvocation> {
         const response = requiredResponse(
             await this.invoke("gateway.invocation.issue", "POST", "/gateway/invocations", input),
@@ -61,6 +64,26 @@ export class ControlProviderClient {
             token: requiredText(response, "token"),
             instanceId: requiredText(response, "instanceId"),
         };
+    }
+
+    async authenticateProvider(token: string): Promise<string | null> {
+        const response = requiredResponse(
+            await this.invoke("gateway.provider.resolve", "POST", "/gateway/providers/resolve", { token }),
+        );
+        return response.installationId === null ? null : requiredText(response, "installationId");
+    }
+
+    async authorizeProvider(input: {
+        sourceInstallationId: string;
+        targetInstallationId: string;
+        contractId: string;
+        capabilityId: string;
+        version: string;
+    }): Promise<boolean> {
+        const response = requiredResponse(
+            await this.invoke("gateway.provider.authorize", "QUERY", "/gateway/providers/authorize", input),
+        );
+        return response.allowed === true;
     }
 
     private async invoke(
@@ -123,7 +146,10 @@ function controlTimingName(capabilityId: string): string {
 }
 
 class ControlProviderError extends Error {
-    constructor(capabilityId: string, status: number) {
+    constructor(
+        capabilityId: string,
+        readonly status: number,
+    ) {
         super(`Installations Provider rejected ${capabilityId} (${status})`);
         this.name = "ControlProviderError";
     }

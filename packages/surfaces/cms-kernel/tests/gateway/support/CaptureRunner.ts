@@ -44,7 +44,7 @@ export class CaptureRunner implements Runner {
     }
 
     setDefaultEndpoint(
-        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS",
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "QUERY",
         handler: RouteHandler,
     ): void {
         this.defaults.set(`${method} ${this.basePath}`, handler);

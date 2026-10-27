@@ -59,6 +59,7 @@ export async function mountProductionKernel(
         capabilityGateway: {
             siteId: "default",
             invoker: gateway.invoker,
+            authenticateProvider: gateway.authenticateProvider,
             resolveCapability: gateway.resolveCapability,
             onMutationSuccess,
         },

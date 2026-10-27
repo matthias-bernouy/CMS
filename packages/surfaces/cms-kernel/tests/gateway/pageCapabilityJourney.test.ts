@@ -1,3 +1,5 @@
+import type { GatewayHttpInvoker } from "@bernouy/cms-gateway/http";
+import { queryContract } from "./support/queryContract";
 import { expect, test } from "bun:test";
 import {
     createContentReader,
@@ -5,7 +7,7 @@ import {
     InMemoryContentRepository,
     ValidatingContentRepository,
 } from "@bernouy/cms-content";
-import type { GatewayInvocation, GatewayInvoker } from "@bernouy/cms-gateway";
+import type { GatewayInvocation } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { InMemoryCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
@@ -83,33 +85,16 @@ test("a published Page is analyzed statically and invokes its public capability 
             contractId: "shop",
             capabilityId: "list-products",
             input: { category: "shoes" },
+            bindingId: "http",
+            bindingTransport: "http",
             actor: { kind: "anonymous" },
         },
     ]);
 });
 
-function catalogueInvoker(invocations: GatewayInvocation[]): GatewayInvoker {
+function catalogueInvoker(invocations: GatewayInvocation[]): GatewayHttpInvoker {
     return {
-        resolveHttp: async () =>
-            ({
-                capability: {
-                    id: "list-products",
-                    input: {
-                        type: "object",
-                        properties: { category: { type: "string", maxLength: 50 } },
-                        required: [],
-                    },
-                },
-                binding: {
-                    method: "POST",
-                    path: "/products",
-                    pathParameters: [],
-                    query: [],
-                    headers: [],
-                    body: { kind: "json", properties: ["category"], contentTypes: ["application/json"] },
-                },
-                pathValues: {},
-            }) as never,
+        resolveContract: queryContract,
         invoke: async (invocation) => {
             invocations.push(invocation);
             return {

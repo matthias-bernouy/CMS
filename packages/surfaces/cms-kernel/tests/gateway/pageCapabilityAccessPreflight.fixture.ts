@@ -1,3 +1,4 @@
+import type { GatewayHttpInvoker } from "@bernouy/cms-gateway/http";
 import KernelCms from "cms-kernel/KernelCms";
 import {
     createContentReader,
@@ -6,7 +7,7 @@ import {
     type TPage,
     type TSystem,
 } from "@bernouy/cms-content";
-import type { GatewayActor, GatewayInvoker } from "@bernouy/cms-gateway";
+import type { GatewayActor } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 import { NOOP_LOGGER } from "@bernouy/logging";
@@ -147,12 +148,10 @@ export async function mountPage(options: {
     return { handler: runner.defaultHandler("GET", "/") };
 }
 
-const shopInvoker: GatewayInvoker = {
-    resolveHttp: async ({ path }) => ({
-        capability: { id: path.split("/").filter(Boolean).at(-1) ?? "unknown" },
-        binding: {},
-        pathValues: {},
-    }),
+const shopInvoker: GatewayHttpInvoker = {
+    resolveContract: async () => {
+        throw new Error("Page rendering must not resolve HTTP invocation bindings");
+    },
     invoke: async () => ({ kind: "success", status: 200, requestId: "test", output: {} }),
 };
 

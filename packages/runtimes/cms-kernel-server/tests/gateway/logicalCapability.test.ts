@@ -18,7 +18,7 @@ test("logical capability resolution preserves command idempotency", async () => 
 
 function routeSnapshot() {
     const digest = `sha256:${"a".repeat(64)}`;
-    return {
+    const snapshot = {
         selection: {
             siteId: "default",
             contractId: "ulvia.cms.installations",
@@ -69,4 +69,20 @@ function routeSnapshot() {
             },
         },
     };
+    snapshot.requestedRelease = snapshot.release;
+    return snapshot;
 }
+
+test("logical capability metadata uses the requested parent release rather than its selected child", async () => {
+    const snapshot = routeSnapshot();
+    snapshot.requestedRelease = snapshot.release;
+    snapshot.release = { admission: { release: { version: "2.0.0", capabilities: [] } } };
+    const gateway = createKernelGateway({
+        getGatewayRoute: async () => JSON.stringify(snapshot),
+    } as ControlProviderClient);
+    expect(await gateway.resolveCapability("ulvia.cms.installations", "apply-collection-upgrade")).toMatchObject({
+        version: "1.0.0",
+        effect: "command",
+        idempotency: "keyed",
+    });
+});

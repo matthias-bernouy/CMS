@@ -17,7 +17,8 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-kernel": "workspace:*"
+        "@bernouy/cms-kernel": "workspace:*",
+        "@bernouy/cms-observability": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

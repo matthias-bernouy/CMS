@@ -1,9 +1,10 @@
 import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
-import { CapabilityGateway, type GatewayActor } from "@bernouy/cms-gateway";
+import { CapabilityGateway, GatewayDispatchRejected, type GatewayActor } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
 import { HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { actorCredentialFromRequest } from "@bernouy/cms-gateway/protocol";
+import { kernelSystemMayInvoke } from "./kernelSystemAccess";
 import type { ControlProviderClient } from "./ControlProviderClient";
 import {
     ControlGatewayAuditStore,
@@ -22,7 +23,16 @@ export function createKernelGateway(control: ControlProviderClient) {
         // every short-lived invocation token. That broker is the dispatch
         // fence; the cached route is only a transport plan.
         transportFencesRoute: true,
-        authorize: async () => true,
+        authorize: async (actor, capability, route) =>
+            actor.kind === "provider"
+                ? control.authorizeProvider({
+                      sourceInstallationId: actor.installationId,
+                      targetInstallationId: route.installation.installation.id,
+                      contractId: route.requestedRelease.admission.release.contractId,
+                      capabilityId: capability.id,
+                      version: route.requestedRelease.admission.release.version,
+                  })
+                : kernelSystemMayInvoke(actor, route.requestedRelease.admission.release.contractId, capability.id),
         transport: new HttpGatewayTransport({
             network: new NodeGatewayHttpNetwork({
                 allowPrivateAddresses: true,
@@ -36,8 +46,8 @@ export function createKernelGateway(control: ControlProviderClient) {
         const route = await logicalRoutes.resolve("default", contractId);
         return route
             ? {
-                  version: route!.release.admission.release.version,
-                  capabilities: route.release.admission.release.capabilities.map((capability) => ({
+                  version: route.requestedRelease.admission.release.version,
+                  capabilities: route.requestedRelease.admission.release.capabilities.map((capability) => ({
                       id: capability.id,
                       access: capability.access,
                       effect: capability.behavior.effect,
@@ -93,6 +103,7 @@ export function createKernelGateway(control: ControlProviderClient) {
             return [...contracts.values()];
         },
         invoker: gateway,
+        authenticateProvider: (token: string) => control.authenticateProvider(token),
         resolveCapability,
         pageCapabilities: new PageCapabilityAnalyzer({ resolveCapability, resolveContract }),
         resolveActor: (request: Request) => resolveActor(gateway, request),
@@ -115,10 +126,31 @@ async function brokerAuthorization(
             contractId: request.authentication.contractId,
             contractVersion: request.authentication.contractVersion,
             capabilityId: request.authentication.capabilityId,
+            ...(request.authentication.sourceInstallationId
+                ? {
+                      sourceInstallationId: request.authentication.sourceInstallationId,
+                      bodyBytes:
+                          request.contentLength ??
+                          (typeof request.body === "string"
+                              ? Buffer.byteLength(request.body)
+                              : request.body
+                                ? 64 * 1024 * 1024 + 1
+                                : 0),
+                  }
+                : {}),
             ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
+            ...(request.authentication.systemServiceId &&
+            request.authentication.contractId === "ulvia.cms.observability" &&
+            request.authentication.capabilityId === "logs.append"
+                ? { systemServiceId: request.authentication.systemServiceId }
+                : {}),
         });
     } catch (error) {
         routes.invalidate("default", request.authentication.contractId);
+        const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
+        if (status === 403 || status === 429) {
+            throw new GatewayDispatchRejected(status === 429 ? "rate_limited" : "not_authorized");
+        }
         throw error;
     }
     if (issued.instanceId !== request.authentication.instanceId) {

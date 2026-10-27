@@ -1,18 +1,39 @@
 {
     "extends": "../../../tsconfig.base.json",
     "compilerOptions": {
-        "outDir":  "dist",
+        "outDir": "dist",
         "rootDir": "./src"
     },
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts"
+    ],
     "references": [
-        { "path": "../../foundation/http-runner" },
-        { "path": "../../foundation/logging" },
-        { "path": "../../features/cms-auth" },
-        { "path": "../../features/cms-content" },
-        { "path": "../../features/cms-repository" },
-        { "path": "../../features/cms-gateway" },
-        { "path": "../../surfaces/cms-kernel" },
-        { "path": "../../surfaces/ulvia-provider" }
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/logging"
+        },
+        {
+            "path": "../../features/cms-auth"
+        },
+        {
+            "path": "../../features/cms-content"
+        },
+        {
+            "path": "../../features/cms-repository"
+        },
+        {
+            "path": "../../features/cms-gateway"
+        },
+        {
+            "path": "../../surfaces/cms-kernel"
+        },
+        {
+            "path": "../../surfaces/ulvia-provider"
+        },
+        {
+            "path": "../../features/cms-observability"
+        }
     ]
 }

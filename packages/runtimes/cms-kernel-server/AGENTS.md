@@ -30,3 +30,5 @@ Production runtime composition root.
 - Resolve request actors and public capability calls through the local Gateway.
   Do not add private Gateway operations to the Provider instance API.
 - Never mount or start the Ulvia Provider surface from this package.
+
+- Require the selected `ulvia.cms.observability` read/ingestion surface at startup. Collect asynchronously with a bounded memory queue; never add a persistent Kernel journal. Machine ingestion authority is distinct from user identity.
