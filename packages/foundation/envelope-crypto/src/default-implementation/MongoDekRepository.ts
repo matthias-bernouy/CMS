@@ -11,8 +11,7 @@ import type { DekRepository, DekRecord } from "envelope-crypto/interfaces/DekRep
 export type CmsDekDocument = {
     _id: string;
     wrapped: string;
-    /** Missing only on legacy rows created before KEK versioning. */
-    keyId?: string;
+    keyId: string;
     createdAt: Date;
     rotatedAt: Date | null;
 };
@@ -62,7 +61,7 @@ export class MongoDekRepository implements DekRepository {
         return {
             scopeId: doc._id,
             wrapped: doc.wrapped,
-            keyId: doc.keyId ?? "legacy",
+            keyId: requiredKeyId(doc.keyId),
             createdAt: doc.createdAt,
             rotatedAt: doc.rotatedAt,
         };
@@ -77,7 +76,7 @@ export class MongoDekRepository implements DekRepository {
             {
                 $setOnInsert: {
                     wrapped: record.wrapped,
-                    keyId: record.keyId,
+                    keyId: requiredKeyId(record.keyId),
                     createdAt: record.createdAt,
                     rotatedAt: record.rotatedAt,
                 },
@@ -90,7 +89,7 @@ export class MongoDekRepository implements DekRepository {
         return {
             scopeId: winner._id,
             wrapped: winner.wrapped,
-            keyId: winner.keyId ?? "legacy",
+            keyId: requiredKeyId(winner.keyId),
             createdAt: winner.createdAt,
             rotatedAt: winner.rotatedAt,
         };
@@ -110,7 +109,7 @@ export class MongoDekRepository implements DekRepository {
         const items = documents.slice(0, limit).map((document) => ({
             scopeId: document._id,
             wrapped: document.wrapped,
-            keyId: document.keyId ?? "legacy",
+            keyId: requiredKeyId(document.keyId),
             createdAt: document.createdAt,
             rotatedAt: document.rotatedAt,
         }));
@@ -123,13 +122,9 @@ export class MongoDekRepository implements DekRepository {
         replacement: { wrapped: string; keyId: string; rotatedAt: Date },
     ): Promise<boolean> {
         await this._ready();
-        const keyFilter =
-            expected.keyId === "legacy"
-                ? { $or: [{ keyId: "legacy" }, { keyId: { $exists: false } }] }
-                : { keyId: expected.keyId };
         const result = await this._collection.updateOne(
-            { _id: scopeId, wrapped: expected.wrapped, ...keyFilter } as never,
-            { $set: replacement },
+            { _id: scopeId, wrapped: expected.wrapped, keyId: requiredKeyId(expected.keyId) },
+            { $set: { ...replacement, keyId: requiredKeyId(replacement.keyId) } },
         );
         return result.modifiedCount === 1;
     }
@@ -138,4 +133,11 @@ export class MongoDekRepository implements DekRepository {
         await this._ready();
         await this._collection.deleteOne({ _id: scopeId });
     }
+}
+
+function requiredKeyId(value: unknown): string {
+    if (typeof value !== "string" || value.length === 0) {
+        throw new TypeError("Persisted DEK requires an explicit nonempty keyId");
+    }
+    return value;
 }
