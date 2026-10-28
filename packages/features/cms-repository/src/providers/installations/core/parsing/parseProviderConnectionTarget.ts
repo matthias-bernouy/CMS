@@ -1,5 +1,5 @@
 import type { ProviderConnectionTarget } from "cms-repository/providers/installations/interfaces/ProviderConnection";
-import { rejectUnknownKeys } from "cms-repository/providers/manifests/core/values";
+import { rejectUnknownKeys } from "cms-repository/providers/manifests/core/protocol/values";
 import { DEFAULT_PROVIDER_INSTALLATION_LIMITS, type ProviderInstallationLimits } from "../limits";
 import { parseInstallationDocument, parseInstallationJson } from "./documents";
 import { parseEndpoint, parseSecretRef } from "./fields";

@@ -8,7 +8,7 @@ import {
     expectString,
     rejectUnknownKeys,
     unique,
-} from "cms-repository/providers/manifests/core/values";
+} from "cms-repository/providers/manifests/core/protocol/values";
 import { parseSemVer } from "cms-repository/providers/manifests/core/versioning/versionRange";
 import type { ProviderRuntimeImplementation, ProviderRuntimeReport } from "../../interfaces/ProviderRuntimeReport";
 import { ProviderInstallationValidationError } from "../errors";

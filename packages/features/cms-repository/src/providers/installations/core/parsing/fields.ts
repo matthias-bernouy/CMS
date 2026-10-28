@@ -1,6 +1,6 @@
 import { isReleaseDigest } from "cms-repository/exports/contracts/index";
-import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/errors";
-import { expectString } from "cms-repository/providers/manifests/core/values";
+import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
+import { expectString } from "cms-repository/providers/manifests/core/protocol/values";
 import { parseEndpointPolicy } from "cms-repository/providers/manifests/core/parsing/parseEndpoint";
 import { ProviderInstallationValidationError } from "../errors";
 

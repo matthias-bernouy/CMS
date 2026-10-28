@@ -40,6 +40,19 @@ export interface ProviderContractImplementation {
     readonly digest: ReleaseDigest;
     readonly requires: readonly ProviderCapabilityRequirement[];
     readonly version: string;
+    readonly delegation?: ProviderDelegationPolicy;
+}
+
+export interface ProviderDelegationPolicy {
+    readonly sources: readonly string[];
+    readonly allow: readonly ProviderDelegationSelector[];
+}
+
+export interface ProviderDelegationSelector {
+    readonly contractId: string;
+    readonly capabilityId: string;
+    readonly effect: "query" | "command" | "*";
+    readonly sensitive?: boolean;
 }
 
 export interface ProviderDataPolicy {
@@ -68,6 +81,7 @@ export interface ProviderManifest {
     readonly provenance: ProviderManifestProvenance;
     readonly providerId: string;
     readonly recovery?: ProviderRecoveryPolicy;
+    readonly requires: readonly ProviderCapabilityRequirement[];
     readonly schemaDialect: "ulvia-schema/v1";
     readonly version: string;
 }

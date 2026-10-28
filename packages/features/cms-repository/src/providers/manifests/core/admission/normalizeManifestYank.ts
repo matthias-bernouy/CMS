@@ -1,7 +1,7 @@
 import { assertIJson } from "cms-repository/exports/contracts/protocol";
-import { translateContractError } from "../contractErrors";
-import { ProviderManifestValidationError } from "../errors";
-import { expectRecord, expectString, rejectUnknownKeys } from "../values";
+import { translateContractError } from "../protocol/contractErrors";
+import { ProviderManifestValidationError } from "../protocol/errors";
+import { expectRecord, expectString, rejectUnknownKeys } from "../protocol/values";
 import type { ProviderManifestYank } from "../../interfaces/ProviderManifestCatalogue";
 
 export function normalizeManifestYank(yank: ProviderManifestYank): ProviderManifestYank {

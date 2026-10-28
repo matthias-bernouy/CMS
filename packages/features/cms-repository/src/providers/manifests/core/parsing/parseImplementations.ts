@@ -1,16 +1,10 @@
 import { isReleaseDigest, type ReleaseDigest } from "cms-repository/exports/contracts/index";
-import { ProviderManifestValidationError } from "../errors";
-import {
-    expectArray,
-    expectBoolean,
-    expectRecord,
-    expectString,
-    compareOrdinal,
-    rejectUnknownKeys,
-    unique,
-} from "../values";
-import type { ProviderCapabilityRequirement, ProviderContractImplementation } from "../../interfaces/ProviderManifest";
-import { parseSemVer, parseVersionRange } from "../versioning/versionRange";
+import { ProviderManifestValidationError } from "../protocol/errors";
+import { expectArray, expectRecord, expectString, compareOrdinal, rejectUnknownKeys, unique } from "../protocol/values";
+import type { ProviderContractImplementation } from "../../interfaces/ProviderManifest";
+import { parseSemVer } from "../versioning/versionRange";
+import { parseRequirements } from "./parseRequirements";
+import { parseDelegation } from "../delegation/parseDelegation";
 import { parseIdentifier } from "./identifiers";
 
 export function parseImplementations(
@@ -41,14 +35,10 @@ function parseImplementation(
     maximumRequirements: number,
 ): ProviderContractImplementation {
     const record = expectRecord(value, path);
-    rejectUnknownKeys(record, ["contractId", "version", "digest", "requires"], path);
-    const requirements = expectArray(record.requires, `${path}.requires`, maximumRequirements).map(
-        (requirement, index) => parseRequirement(requirement, `${path}.requires[${index}]`),
-    );
-    unique(
-        requirements.map((requirement) => `${requirement.contractId}\u0000${requirement.capabilityId}`),
-        `${path}.requires`,
-    );
+    rejectUnknownKeys(record, ["contractId", "version", "digest", "requires", "delegation"], path);
+    const requirements = parseRequirements(record.requires, `${path}.requires`, maximumRequirements);
+    const delegation =
+        record.delegation === undefined ? undefined : parseDelegation(record.delegation, `${path}.delegation`);
     const digest = expectString(record.digest, `${path}.digest`, 71);
     if (!isReleaseDigest(digest)) {
         throw new ProviderManifestValidationError(
@@ -61,22 +51,7 @@ function parseImplementation(
         contractId: parseIdentifier(record.contractId, `${path}.contractId`, 96),
         version: parseSemVer(record.version, `${path}.version`),
         digest: digest as ReleaseDigest,
-        requires: requirements.sort((left, right) =>
-            compareOrdinal(
-                `${left.contractId}\u0000${left.capabilityId}`,
-                `${right.contractId}\u0000${right.capabilityId}`,
-            ),
-        ),
-    };
-}
-
-function parseRequirement(value: unknown, path: string): ProviderCapabilityRequirement {
-    const record = expectRecord(value, path);
-    rejectUnknownKeys(record, ["contractId", "versionRange", "capabilityId", "optional"], path);
-    return {
-        contractId: parseIdentifier(record.contractId, `${path}.contractId`, 96),
-        versionRange: parseVersionRange(record.versionRange, `${path}.versionRange`),
-        capabilityId: parseIdentifier(record.capabilityId, `${path}.capabilityId`, 128),
-        optional: expectBoolean(record.optional, `${path}.optional`),
+        requires: requirements,
+        ...(delegation ? { delegation } : {}),
     };
 }

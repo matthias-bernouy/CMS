@@ -2,7 +2,11 @@ import type {
     ProviderGatewayRegistrationRequest,
     ProviderGatewayRegistrationResponse,
 } from "cms-repository/providers/installations/interfaces/ProviderConnection";
-import { expectString, rejectUnknownKeys, type UnknownRecord } from "cms-repository/providers/manifests/core/values";
+import {
+    expectString,
+    rejectUnknownKeys,
+    type UnknownRecord,
+} from "cms-repository/providers/manifests/core/protocol/values";
 import { parseIdentifier } from "cms-repository/providers/manifests/core/parsing/identifiers";
 import { ProviderInstallationValidationError } from "../errors";
 import { DEFAULT_PROVIDER_INSTALLATION_LIMITS, type ProviderInstallationLimits } from "../limits";

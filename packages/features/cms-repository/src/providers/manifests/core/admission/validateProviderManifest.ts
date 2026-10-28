@@ -1,8 +1,9 @@
 import { resolveContractLineage, type ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { ProviderManifestValidationError } from "../errors";
+import { ProviderManifestValidationError } from "../protocol/errors";
 import type { ProviderManifest } from "../../interfaces/ProviderManifest";
 import { assertAcyclicRequirements } from "./implementationGraph";
-import { assertContractRequirements, resolveRequirement } from "./requirements";
+import { validateDelegationSources } from "../delegation/validateDelegationSources";
+import { resolveRequirement } from "./requirements";
 
 export async function validateProviderManifestReferences(
     manifest: ProviderManifest,
@@ -27,7 +28,7 @@ export async function validateProviderManifestReferences(
                 );
             }
             const lineage = await resolveContractLineage(catalogue, release.admission.release);
-            assertContractRequirements(implementation, lineage, path);
+            validateDelegationSources(implementation, lineage, path);
             await Promise.all(
                 implementation.requires.map((requirement, requirementIndex) =>
                     resolveRequirement(requirement, catalogue, `${path}.requires[${requirementIndex}]`),
@@ -35,6 +36,11 @@ export async function validateProviderManifestReferences(
             );
             return lineage;
         }),
+    );
+    await Promise.all(
+        manifest.requires.map((requirement, index) =>
+            resolveRequirement(requirement, catalogue, `$.requires[${index}]`),
+        ),
     );
     assertDisjointImplementations(lineages);
     assertAcyclicRequirements(manifest, lineages);

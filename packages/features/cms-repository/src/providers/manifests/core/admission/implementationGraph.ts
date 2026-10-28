@@ -1,6 +1,6 @@
 import type { ContractRelease } from "cms-repository/exports/contracts/index";
 import type { ProviderManifest } from "../../interfaces/ProviderManifest";
-import { ProviderManifestValidationError } from "../errors";
+import { ProviderManifestValidationError } from "../protocol/errors";
 import { satisfiesVersionRange } from "../versioning/versionRange";
 
 /** Distinct served releases are distinct nodes, including when they share a contract ID. */

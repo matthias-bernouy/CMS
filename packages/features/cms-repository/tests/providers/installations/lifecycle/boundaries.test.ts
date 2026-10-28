@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { admitProviderManifest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { DEFAULT_PROVIDER_MANIFEST_LIMITS } from "cms-repository/providers/manifests/core/limits";
+import { DEFAULT_PROVIDER_MANIFEST_LIMITS } from "cms-repository/providers/manifests/core/protocol/limits";
 import { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import { InMemoryProviderInstallationStore } from "cms-repository/providers/installations/default-implementation/memory/InMemoryProviderInstallationStore";

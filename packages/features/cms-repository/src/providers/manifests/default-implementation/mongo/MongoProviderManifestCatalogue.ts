@@ -6,14 +6,14 @@ import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
 import type { AdmittedProviderManifest, ProviderManifestDigest } from "../../core/admission/admitProviderManifest";
 import { validateProviderManifestReferences } from "../../core/admission/validateProviderManifest";
 import { verifyProviderManifestAdmission } from "../../core/admission/verifyProviderManifestAdmission";
-import { ProviderManifestValidationError } from "../../core/errors";
+import { ProviderManifestValidationError } from "../../core/protocol/errors";
 import {
     DEFAULT_PROVIDER_MANIFEST_LIMITS,
     normalizeProviderManifestLimits,
     type ProviderManifestLimits,
-} from "../../core/limits";
+} from "../../core/protocol/limits";
 import { normalizeManifestYank } from "../../core/admission/normalizeManifestYank";
-import { compareOrdinal } from "../../core/values";
+import { compareOrdinal } from "../../core/protocol/values";
 import type {
     CatalogueProviderManifest,
     ProviderManifestCatalogue,

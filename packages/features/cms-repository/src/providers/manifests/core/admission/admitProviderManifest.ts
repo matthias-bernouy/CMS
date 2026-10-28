@@ -1,6 +1,6 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { isSha256Digest } from "@bernouy/binary-media";
-import { DEFAULT_PROVIDER_MANIFEST_LIMITS, type ProviderManifestLimits } from "../limits";
+import { DEFAULT_PROVIDER_MANIFEST_LIMITS, type ProviderManifestLimits } from "../protocol/limits";
 import type { ProviderManifest } from "../../interfaces/ProviderManifest";
 import { parseProviderManifest, parseProviderManifestJson } from "../parsing/parseProviderManifest";
 import { validateProviderManifestReferences } from "./validateProviderManifest";

@@ -1,7 +1,7 @@
 import { ReleaseValidationError } from "cms-repository/exports/contracts/index";
 import { canonicalIJsonBytes, deepFreeze, parseStrictJson } from "cms-repository/exports/contracts/protocol";
-import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/errors";
-import { expectRecord, type UnknownRecord } from "cms-repository/providers/manifests/core/values";
+import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
+import { expectRecord, type UnknownRecord } from "cms-repository/providers/manifests/core/protocol/values";
 import { ProviderInstallationValidationError, type ProviderInstallationValidationCode } from "../errors";
 import type { ProviderInstallationLimits } from "../limits";
 

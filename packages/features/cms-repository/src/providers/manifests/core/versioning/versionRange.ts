@@ -2,8 +2,8 @@ import {
     parseVersionRange as parseContractVersionRange,
     satisfiesVersionRange as satisfiesContractVersionRange,
 } from "cms-repository/exports/contracts/compatibility";
-import { translateContractError } from "../contractErrors";
-import { ProviderManifestValidationError } from "../errors";
+import { translateContractError } from "../protocol/contractErrors";
+import { ProviderManifestValidationError } from "../protocol/errors";
 
 declare const versionRangeBrand: unique symbol;
 export type VersionRange = string & { readonly [versionRangeBrand]: true };

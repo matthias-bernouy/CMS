@@ -1,14 +1,15 @@
 import { assertIJson, canonicalizeIJson, deepFreeze, parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { isVersionRangeSubset } from "cms-repository/exports/contracts/compatibility";
-import { translateContractError } from "../contractErrors";
-import { ProviderManifestValidationError } from "../errors";
-import { DEFAULT_PROVIDER_MANIFEST_LIMITS, type ProviderManifestLimits } from "../limits";
-import { expectRecord, expectString, rejectUnknownKeys } from "../values";
+import { translateContractError } from "../protocol/contractErrors";
+import { ProviderManifestValidationError } from "../protocol/errors";
+import { DEFAULT_PROVIDER_MANIFEST_LIMITS, type ProviderManifestLimits } from "../protocol/limits";
+import { expectRecord, expectString, rejectUnknownKeys } from "../protocol/values";
 import type { ProviderManifest } from "../../interfaces/ProviderManifest";
 import { parseVersionRange, parseSemVer, type VersionRange } from "../versioning/versionRange";
 import { parseConfiguration } from "./parseConfiguration";
 import { parseEndpointPolicy } from "./parseEndpoint";
 import { parseIdentifier } from "./identifiers";
+import { parseRequirements } from "./parseRequirements";
 import { parseImplementations } from "./parseImplementations";
 import {
     parseCredentialSlots,
@@ -46,6 +47,7 @@ export function parseProviderManifest(
             "configuration",
             "credentialSlots",
             "implementations",
+            "requires",
             "dataPolicy",
             "recovery",
         ],
@@ -70,6 +72,7 @@ export function parseProviderManifest(
         endpoint: parseEndpointPolicy(record.endpoint, "$.endpoint", limits.maxAllowedOrigins),
         configuration: parseConfiguration(record.configuration, "$.configuration"),
         credentialSlots: parseCredentialSlots(record.credentialSlots, "$.credentialSlots", limits.maxCredentialSlots),
+        requires: parseRequirements(record.requires, "$.requires", limits.maxRequirementsPerImplementation),
         implementations: parseImplementations(
             record.implementations,
             "$.implementations",

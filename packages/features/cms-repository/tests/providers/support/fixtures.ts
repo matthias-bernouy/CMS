@@ -13,8 +13,9 @@ export function contractDocument(contractId: string, capabilityId: string, versi
         capabilities: [
             {
                 id: capabilityId,
+
                 access: "admin",
-                behavior: { effect: "command", idempotency: "keyed", execution: "sync" },
+                behavior: { sensitive: false, effect: "command", idempotency: "keyed", execution: "sync" },
                 input: {
                     type: "object",
                     properties: { value: { type: "string", maxLength: 128 } },
@@ -54,6 +55,7 @@ export function manifestDocument(
     overrides: Record<string, unknown> = {},
 ): Record<string, unknown> {
     return {
+        requires: [],
         kind: "provider-manifest",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",

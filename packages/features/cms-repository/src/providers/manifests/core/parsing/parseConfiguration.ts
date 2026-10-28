@@ -1,7 +1,7 @@
 import { ReleaseValidationError } from "cms-repository/exports/contracts/index";
 import { parseUlviaSchema, type UlviaObjectSchema, type UlviaSchema } from "cms-repository/exports/contracts/schema";
-import { translateContractError } from "../contractErrors";
-import { ProviderManifestValidationError } from "../errors";
+import { translateContractError } from "../protocol/contractErrors";
+import { ProviderManifestValidationError } from "../protocol/errors";
 
 export function parseConfiguration(value: unknown, path: string): UlviaObjectSchema {
     let schema: UlviaSchema;

@@ -1,5 +1,5 @@
-import { ProviderManifestValidationError } from "../errors";
-import { expectArray, expectRecord, expectString, rejectUnknownKeys, unique } from "../values";
+import { ProviderManifestValidationError } from "../protocol/errors";
+import { expectArray, expectRecord, expectString, rejectUnknownKeys, unique } from "../protocol/values";
 import type { ProviderEndpointPolicy } from "../../interfaces/ProviderManifest";
 
 export function parseEndpointPolicy(value: unknown, path: string, maximum: number): ProviderEndpointPolicy {

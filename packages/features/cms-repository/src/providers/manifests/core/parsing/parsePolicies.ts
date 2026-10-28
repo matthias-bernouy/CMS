@@ -1,4 +1,4 @@
-import { ProviderManifestValidationError } from "../errors";
+import { ProviderManifestValidationError } from "../protocol/errors";
 import {
     compareOrdinal,
     expectArray,
@@ -7,7 +7,7 @@ import {
     expectString,
     rejectUnknownKeys,
     unique,
-} from "../values";
+} from "../protocol/values";
 import type {
     ProviderCredentialSlot,
     ProviderCredentialSecretType,

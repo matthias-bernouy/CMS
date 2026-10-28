@@ -10,12 +10,14 @@ export {
 export {
     ProviderManifestValidationError,
     type ProviderManifestValidationCode,
-} from "cms-repository/providers/manifests/core/errors";
+} from "cms-repository/providers/manifests/core/protocol/errors";
 export {
     DEFAULT_PROVIDER_MANIFEST_LIMITS,
     type ProviderManifestLimits,
-} from "cms-repository/providers/manifests/core/limits";
+} from "cms-repository/providers/manifests/core/protocol/limits";
 export type {
+    ProviderDelegationPolicy,
+    ProviderDelegationSelector,
     ProviderCapabilityRequirement,
     ProviderContractImplementation,
     ProviderCredentialSecretType,
@@ -42,3 +44,5 @@ export type {
     ProviderManifestYank,
 } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 export { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";
+
+export { delegationAllows } from "cms-repository/providers/manifests/core/delegation/delegationAllows";

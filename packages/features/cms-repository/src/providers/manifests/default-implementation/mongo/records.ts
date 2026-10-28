@@ -2,8 +2,8 @@ import type { Collection } from "mongodb";
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import type { AdmittedProviderManifest, ProviderManifestDigest } from "../../core/admission/admitProviderManifest";
 import { verifyProviderManifestAdmission } from "../../core/admission/verifyProviderManifestAdmission";
-import { ProviderManifestValidationError } from "../../core/errors";
-import type { ProviderManifestLimits } from "../../core/limits";
+import { ProviderManifestValidationError } from "../../core/protocol/errors";
+import type { ProviderManifestLimits } from "../../core/protocol/limits";
 import type { CatalogueProviderManifest, ProviderManifestYank } from "../../interfaces/ProviderManifestCatalogue";
 
 export interface ManifestVersionEntry {

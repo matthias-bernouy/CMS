@@ -2,7 +2,7 @@ import type {
     ProviderManifestChange,
     ProviderManifestChangeCategory,
 } from "cms-repository/providers/manifests/interfaces/ProviderManifestComparison";
-import { compareOrdinal } from "../values";
+import { compareOrdinal } from "../protocol/values";
 
 type RecordValue = Record<string, unknown>;
 

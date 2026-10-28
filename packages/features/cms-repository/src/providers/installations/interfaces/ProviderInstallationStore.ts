@@ -1,5 +1,5 @@
 import type { ProviderManifestDigest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import type { ProviderManifestLimits } from "cms-repository/providers/manifests/core/limits";
+import type { ProviderManifestLimits } from "cms-repository/providers/manifests/core/protocol/limits";
 import type { ProviderInstallationLimits } from "../core/limits";
 import type { ProviderInstallation, ProviderInstallationStatus } from "./ProviderInstallation";
 import type { ProviderRuntimeObservation } from "./ProviderRuntimeReport";

@@ -10,7 +10,9 @@ describe("provider catalogue integrity and bounds", () => {
             { manifest: { ...admission.manifest, name: "Tampered" } },
             { digest: `sha256:${"0".repeat(64)}` },
             { canonicalJson: `${admission.canonicalJson}\n` },
-            { kind: "provider-manifest" },
+            {
+                kind: "provider-manifest",
+            },
             { additional: true },
         ]) {
             await expect(catalogue.publish({ ...admission, ...change } as AdmittedProviderManifest)).rejects.toThrow();

@@ -1,13 +1,13 @@
 import { assertIJson } from "cms-repository/exports/contracts/protocol";
-import { translateContractError } from "../contractErrors";
-import { ProviderManifestValidationError } from "../errors";
+import { translateContractError } from "../protocol/contractErrors";
+import { ProviderManifestValidationError } from "../protocol/errors";
 import {
     DEFAULT_PROVIDER_MANIFEST_LIMITS,
     normalizeProviderManifestLimits,
     type ProviderManifestLimits,
-} from "../limits";
+} from "../protocol/limits";
 import { parseProviderManifest } from "../parsing/parseProviderManifest";
-import { expectRecord, expectString, rejectUnknownKeys } from "../values";
+import { expectRecord, expectString, rejectUnknownKeys } from "../protocol/values";
 import type { AdmittedProviderManifest } from "./admitProviderManifest";
 import { sealProviderManifest } from "./sealProviderManifest";
 

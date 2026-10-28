@@ -1,7 +1,7 @@
 import { checkProviderRetention } from "./retention";
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
-import { rejectUnknownKeys } from "cms-repository/providers/manifests/core/values";
+import { rejectUnknownKeys } from "cms-repository/providers/manifests/core/protocol/values";
 import type {
     ProviderInstallationChanges,
     ProviderInstallationPreparation,

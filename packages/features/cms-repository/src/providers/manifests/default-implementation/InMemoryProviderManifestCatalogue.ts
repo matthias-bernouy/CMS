@@ -8,14 +8,14 @@ import type {
 import { verifyStoredProviderManifestJson } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
 import { validateProviderManifestReferences } from "cms-repository/providers/manifests/core/admission/validateProviderManifest";
 import { verifyProviderManifestAdmission } from "cms-repository/providers/manifests/core/admission/verifyProviderManifestAdmission";
-import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/errors";
+import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
 import { normalizeManifestYank } from "cms-repository/providers/manifests/core/admission/normalizeManifestYank";
 import {
     DEFAULT_PROVIDER_MANIFEST_LIMITS,
     normalizeProviderManifestLimits,
     type ProviderManifestLimits,
-} from "cms-repository/providers/manifests/core/limits";
-import { compareOrdinal } from "cms-repository/providers/manifests/core/values";
+} from "cms-repository/providers/manifests/core/protocol/limits";
+import { compareOrdinal } from "cms-repository/providers/manifests/core/protocol/values";
 import type {
     CatalogueProviderManifest,
     ProviderManifestCatalogue,

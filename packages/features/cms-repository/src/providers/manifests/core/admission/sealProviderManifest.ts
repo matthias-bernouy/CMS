@@ -1,8 +1,8 @@
 import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
 import type { ProviderManifest } from "cms-repository/providers/manifests/interfaces/ProviderManifest";
-import { translateContractError } from "../contractErrors";
-import { ProviderManifestValidationError } from "../errors";
-import type { ProviderManifestLimits } from "../limits";
+import { translateContractError } from "../protocol/contractErrors";
+import { ProviderManifestValidationError } from "../protocol/errors";
+import type { ProviderManifestLimits } from "../protocol/limits";
 import type { AdmittedProviderManifest, ProviderManifestDigest } from "./admitProviderManifest";
 
 const encoder = new TextEncoder();

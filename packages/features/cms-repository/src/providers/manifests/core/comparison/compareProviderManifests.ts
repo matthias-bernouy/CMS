@@ -10,8 +10,8 @@ import {
     DEFAULT_PROVIDER_MANIFEST_LIMITS,
     normalizeProviderManifestLimits,
     type ProviderManifestLimits,
-} from "../limits";
-import { compareOrdinal } from "../values";
+} from "../protocol/limits";
+import { compareOrdinal } from "../protocol/values";
 import { compareKeyedValues, compareValues } from "./changes";
 
 /** Reverify artifact structure and integrity; comparison does not re-resolve historical contract references. */
@@ -44,6 +44,7 @@ export async function compareProviderManifests(
         compare(left.links?.[key], right.links?.[key], `$.links.${key}`, "metadata");
     }
     compare(left.buildVersionRange, right.buildVersionRange, "$.buildVersionRange", "build_range");
+    compare(left.requires, right.requires, "$.requires", "requirement");
     compare(left.configuration, right.configuration, "$.configuration", "configuration");
     compare(left.recovery, right.recovery, "$.recovery", "recovery_policy");
     compare(
@@ -86,6 +87,12 @@ export async function compareProviderManifests(
         "implementation",
         changes,
         (previousImplementation, nextImplementation, path) => {
+            compare(
+                previousImplementation.delegation,
+                nextImplementation.delegation,
+                `${path}.delegation`,
+                "delegation",
+            );
             compare(previousImplementation.digest, nextImplementation.digest, `${path}.digest`, "implementation");
             compareKeyedValues(
                 previousImplementation.requires,

@@ -4,8 +4,8 @@ import {
     DEFAULT_PROVIDER_MANIFEST_LIMITS,
     normalizeProviderManifestLimits,
     type ProviderManifestLimits,
-} from "cms-repository/providers/manifests/core/limits";
-import { expectString, rejectUnknownKeys } from "cms-repository/providers/manifests/core/values";
+} from "cms-repository/providers/manifests/core/protocol/limits";
+import { expectString, rejectUnknownKeys } from "cms-repository/providers/manifests/core/protocol/values";
 import type {
     ProviderInstallationApprovalCommand,
     ProviderInstallationClock,

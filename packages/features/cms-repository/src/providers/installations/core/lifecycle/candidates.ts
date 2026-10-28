@@ -1,6 +1,6 @@
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import type { AdmittedProviderManifest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
-import { rejectUnknownKeys } from "cms-repository/providers/manifests/core/values";
+import { rejectUnknownKeys } from "cms-repository/providers/manifests/core/protocol/values";
 import type { ProviderInstallation } from "../../interfaces/ProviderInstallation";
 import type { ProviderInstallationCandidate } from "../../interfaces/ProviderInstallationStore";
 import type { ProviderInstallationLimits } from "../limits";

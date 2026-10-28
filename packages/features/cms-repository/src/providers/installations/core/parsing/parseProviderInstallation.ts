@@ -5,7 +5,7 @@ import type {
 import type { ProviderManifestDigest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
 import { parseIdentifier, parseDateTime } from "cms-repository/providers/manifests/core/parsing/identifiers";
 import { parseSemVer } from "cms-repository/providers/manifests/core/versioning/versionRange";
-import { expectRecord, expectString, rejectUnknownKeys } from "cms-repository/providers/manifests/core/values";
+import { expectRecord, expectString, rejectUnknownKeys } from "cms-repository/providers/manifests/core/protocol/values";
 import { ProviderInstallationValidationError } from "../errors";
 import { DEFAULT_PROVIDER_INSTALLATION_LIMITS, type ProviderInstallationLimits } from "../limits";
 import { parseInstallationDocument, parseInstallationJson } from "./documents";
