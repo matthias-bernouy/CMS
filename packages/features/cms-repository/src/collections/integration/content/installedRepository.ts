@@ -15,6 +15,7 @@ import {
     validateBlocWrite,
 } from "@bernouy/cms-content";
 import { createInstalledSnapshotReader } from "./installedSnapshot";
+import { createCollectionThemeComposer } from "./themeCache";
 import { composeCollectionThemes } from "./theme";
 import { projectCollectionTextSource } from "./texts";
 
@@ -186,10 +187,18 @@ export function withInstalledCollections(
         return resource ? structuredClone(resource) : repository.getBlocRecord(tag);
     };
     const releases = async () => (await installedState()).collections.map((item) => item.release);
+    const composeTheme = createCollectionThemeComposer();
     const overrides: Partial<ContentRepository> = {
         getSystem: async () => {
-            const system = await repository.getSystem();
-            return { ...system, theme: composeCollectionThemes(system.theme, await releases()) };
+            const [system, installed] = await Promise.all([repository.getSystem(), installedState()]);
+            return {
+                ...system,
+                theme: composeTheme(
+                    system.theme,
+                    installed.revision,
+                    installed.collections.map(({ release }) => release),
+                ),
+            };
         },
         updateSystem: async (patch, expectedRevision) =>
             repository.updateSystem(
@@ -210,7 +219,11 @@ export function withInstalledCollections(
                 repository.getBlocsList({ includeHidden: true }),
                 installedState(),
             ]);
-            const resources = installed.records.map((record) => structuredClone(record.artifact!));
+            const resources = installed.records.map(({ artifact }) => ({
+                id: artifact!.id,
+                markupHTML: artifact!.markupHTML,
+                uses: artifact!.uses,
+            }));
             const uses = await createBlocUsageResolver([...local, ...resources], {
                 getBlocViewJS: async (tag) => {
                     const record = installed.byTag.get(tag);

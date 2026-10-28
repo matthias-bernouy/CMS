@@ -11,45 +11,53 @@ export async function resolvePublishedRoute(
     path: string,
     repository: PublishedRouteRepository,
 ): Promise<PublishedRouteResolution | null> {
+    return (await readPublishedRoute(path, repository)).route;
+}
+
+/** Return the final checked settings with the route so rendering need not read them a third time. */
+export async function readPublishedRoute(
+    path: string,
+    repository: PublishedRouteRepository,
+): Promise<{ route: PublishedRouteResolution | null; system: TSystem }> {
     const before = await repository.getSystem();
     if (before.pageRoutesUpdating) {
-        return { kind: "updating" };
+        return { route: { kind: "updating" }, system: before };
     }
     const route = await repository.getPageRoute(path);
     if (!route) {
         const after = await repository.getSystem();
         if (after.pageRoutesUpdating || languageConfigurationChanged(before, after)) {
-            return { kind: "updating" };
+            return { route: { kind: "updating" }, system: after };
         }
-        return null;
+        return { route: null, system: after };
     }
     if (route.state === "gone") {
-        return { kind: "gone", language: route.language };
+        return { route: { kind: "gone", language: route.language }, system: before };
     }
     const page = await repository.getPageById(route.pageId);
     const finalRoute = await repository.getPageRoute(path);
     const system = await repository.getSystem();
     if (system.pageRoutesUpdating || languageConfigurationChanged(before, system)) {
-        return { kind: "updating" };
+        return { route: { kind: "updating" }, system };
     }
     if (
         finalRoute?.state !== route.state ||
         finalRoute?.pageId !== route.pageId ||
         finalRoute?.language !== route.language
     ) {
-        return { kind: "updating" };
+        return { route: { kind: "updating" }, system };
     }
     if (page?.visible !== true) {
-        return { kind: "unavailable" };
+        return { route: { kind: "unavailable" }, system };
     }
     const target = resolvePageRouteTarget(route, page, system);
     if (!target) {
-        return { kind: "unavailable" };
+        return { route: { kind: "unavailable" }, system };
     }
     if (route.state === "redirect" || target.path !== path) {
-        return { kind: "redirect", path: target.path };
+        return { route: { kind: "redirect", path: target.path }, system };
     }
-    return { kind: "current", page: structuredClone({ ...page, path }), language: target.language };
+    return { route: { kind: "current", page: structuredClone({ ...page, path }), language: target.language }, system };
 }
 
 /** Resolve a native Content route while preserving its language and redirect semantics. */

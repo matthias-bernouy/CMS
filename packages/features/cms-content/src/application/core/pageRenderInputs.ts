@@ -4,7 +4,10 @@ import type { ContentTextSource } from "cms-content/pages/core/rendering/content
 import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
 
 type RenderInputLoaders = {
-    getRenderingSettings(): Promise<RenderingSettings>;
+    routeWithSettings(path: string): Promise<{
+        route: Awaited<ReturnType<ContentReader["resolveRenderableRoute"]>>;
+        settings: RenderingSettings;
+    }>;
     getContentTexts(): Promise<ContentTextSource[]>;
     getRenderableBlocs(): Promise<RenderableBloc[]>;
 };
@@ -25,25 +28,23 @@ export function installPageRenderInputReaders(
     };
     reader.getPageRenderInputs = async (path): Promise<PageRenderInputs> => {
         const contributions = repository.getTextContributions?.() ?? Promise.resolve(undefined);
-        const [route, loadedContributions, systemRevision, siteBlocsRevision, settings, renderableBlocs] =
-            await Promise.all([
-                reader.resolveRenderableRoute(path),
-                contributions,
-                repository.getSystemRevision?.() ?? 0,
-                repository.getSiteBlocsRevision?.() ?? "[]",
-                loaders.getRenderingSettings(),
-                loaders.getRenderableBlocs(),
-            ]);
+        const [resolved, loadedContributions, systemRevision, siteBlocsRevision, renderableBlocs] = await Promise.all([
+            loaders.routeWithSettings(path),
+            contributions,
+            repository.getSystemRevision?.() ?? 0,
+            repository.getSiteBlocsRevision?.() ?? "[]",
+            loaders.getRenderableBlocs(),
+        ]);
         const renderingRevision = await revisionDigest([
             loadedContributions?.revision ?? 0,
             systemRevision,
             siteBlocsRevision,
         ]);
         return {
-            route,
-            artifactRevision: await pageRenderRevision(route, renderingRevision),
+            route: resolved.route,
+            artifactRevision: await pageRenderRevision(resolved.route, renderingRevision),
             renderingRevision,
-            settings,
+            settings: resolved.settings,
             contentTexts: [...(loadedContributions?.texts ?? [])],
             renderableBlocs,
         };

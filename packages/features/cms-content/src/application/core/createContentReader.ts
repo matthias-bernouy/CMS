@@ -1,8 +1,17 @@
-import { resolvePublishedRoute, resolvePageRouteTarget } from "cms-content/pages/core/queries/resolvePublishedRoute";
+import {
+    readPublishedRoute,
+    resolvePublishedRoute,
+    resolvePageRouteTarget,
+} from "cms-content/pages/core/queries/resolvePublishedRoute";
 import { projectRenderingSettings } from "cms-content/settings/core/renderingSettings";
 import { projectPublishedPage } from "cms-content/pages/core/queries/publishedPage";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
-import type { ContentReader, RenderableBloc, RenderablePage } from "cms-content/application/interfaces/ContentReader";
+import type {
+    ContentReader,
+    RenderableBloc,
+    RenderablePage,
+    PublishedRouteResolution,
+} from "cms-content/application/interfaces/ContentReader";
 import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import { validatePageReference } from "cms-content/pages/core/routing/values";
 import { installPageRenderInputReaders } from "cms-content/application/core/pageRenderInputs";
@@ -40,6 +49,17 @@ export function createContentReader(repository: ContentRepository): ContentReade
             ...(bloc.styleCollectionId ? { styleCollectionId: bloc.styleCollectionId } : {}),
             hasBehavior: bloc.hasBehavior,
         }));
+    const renderableRoute = async (route: PublishedRouteResolution | null) => {
+        if (route?.kind !== "current") {
+            return route;
+        }
+        const page = projectPublishedPage(route.page);
+        return page ? { ...route, page: await sitePage(page) } : { kind: "unavailable" as const };
+    };
+    const routeWithSettings = async (path: string) => {
+        const { route, system } = await readPublishedRoute(path, repository);
+        return { route: await renderableRoute(route), settings: projectRenderingSettings(system) };
+    };
     const reader: ContentReader = {
         getContentRevision: async () => (await repository.getTextContributions?.())?.revision ?? 0,
         getContentTexts,
@@ -72,14 +92,7 @@ export function createContentReader(repository: ContentRepository): ContentReade
                 }),
             );
         },
-        resolveRenderableRoute: async (path) => {
-            const route = await resolvePublishedRoute(path, repository);
-            if (route?.kind !== "current") {
-                return route;
-            }
-            const page = projectPublishedPage(route.page);
-            return page ? { ...route, page: await sitePage(page) } : { kind: "unavailable" };
-        },
+        resolveRenderableRoute: async (path) => renderableRoute(await resolvePublishedRoute(path, repository)),
         getPublishedPage: async (path) => projectPublishedPage(await repository.getPublishedPage(path)),
         getPublishedPageById: async (id) => projectPublishedPage(await repository.getPublishedPageById(id)),
         getPublishedPages: async () => (await getRenderablePages()).map(({ page }) => page),
@@ -96,6 +109,6 @@ export function createContentReader(repository: ContentRepository): ContentReade
         getBlocViewsJS: (tags) => repository.getBlocViewsJS(tags),
         getRenderingSettings,
     };
-    installPageRenderInputReaders(reader, repository, { getRenderingSettings, getContentTexts, getRenderableBlocs });
+    installPageRenderInputReaders(reader, repository, { routeWithSettings, getContentTexts, getRenderableBlocs });
     return reader;
 }
