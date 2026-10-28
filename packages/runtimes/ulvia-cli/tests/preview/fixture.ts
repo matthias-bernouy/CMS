@@ -18,7 +18,13 @@ export async function writeExampleSource(root: string): Promise<string> {
             name: "Sample",
             description: "An action example.",
             category: "Actions",
+            examples: "Examples",
         }),
+        "texts/definitions/examples.json": JSON.stringify([
+            { id: "example-contact", label: "name", category: "examples", group: "examples" },
+        ]),
+        "texts/locales/en/examples.json": JSON.stringify({ "example-contact": "Contact us" }),
+        "texts/locales/fr/examples.json": JSON.stringify({ "example-contact": "Contactez-nous" }),
         "blocs/sample-action/definition.json": JSON.stringify({
             id: "sample-action",
             kind: "component",
@@ -43,7 +49,8 @@ export async function writeExampleSource(root: string): Promise<string> {
                 { id: "mobile", frame: { width: 320, height: 160 } },
             ],
         }),
-        "examples/contact/document.html": '<button cms-bloc="sample-action" type="button">Contact us</button>',
+        "examples/contact/document.html":
+            '<button cms-bloc="sample-action" type="button">{{ cms.i18n.sample.example-contact }}</button>',
     };
     for (const [path, value] of Object.entries(files)) {
         const target = join(directory, path);

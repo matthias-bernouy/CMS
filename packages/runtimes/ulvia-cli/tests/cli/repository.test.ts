@@ -84,7 +84,8 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(themeEntries.find((entry) => entry.id === "font-family-secondary")).toMatchObject({
             defaults: { light: expect.stringContaining('"ulvia-official-source-serif-4"') },
         });
-        expect(release.pages?.some((page) => page.id === "catalog" || page.id === "resources")).toBe(false);
+        expect(Object.hasOwn(release, "pages")).toBe(false);
+        expect(release.examples?.some((example) => example.id === "login")).toBe(true);
         const action = release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
         expect(action?.kind).toBe("component");
         if (action?.kind === "component") {
@@ -316,7 +317,7 @@ test("collection source assets keep their verified bytes through the repository 
         await writeFile(join(pageRoot, "definition.json"), JSON.stringify({ id: "overview" }));
         await writeFile(join(pageRoot, "page.html"), "<p>{{ page.title }}</p>");
         await writeFile(join(pageRoot, "unexpected.txt"), "not part of the Page source contract");
-        await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("must contain exactly");
+        await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("Collection pages are unsupported");
     } finally {
         await rm(root, { recursive: true, force: true });
     }

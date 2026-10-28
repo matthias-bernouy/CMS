@@ -18,7 +18,7 @@ import { captureCollectionExamples } from "./capture";
 declare const __ULVIA_PREVIEW_RUNTIMES__: CollectionExampleRuntimes | undefined;
 
 const HELP =
-    "Usage: ulvia preview <collection-directory> --output <new-directory> [--dependency <collection-directory>] [--no-screenshots] [--serve]";
+    "Usage: ulvia preview <collection-directory> --output <new-directory> [--dependency <collection-directory>] [--locale <locale>] [--theme-mode <light|dark>] [--no-screenshots] [--serve]";
 
 export async function previewCommand(
     args: readonly string[],
@@ -33,6 +33,8 @@ export async function previewCommand(
     const directory = args[0];
     const dependencies: string[] = [];
     let output: string | undefined;
+    let locale: string | undefined;
+    let themeMode: "light" | "dark" | undefined;
     let screenshots = true;
     let serve = false;
     for (let i = 1; i < args.length; i++) {
@@ -40,6 +42,14 @@ export async function previewCommand(
             serve = true;
         } else if (args[i] === "--no-screenshots") {
             screenshots = false;
+        } else if (args[i] === "--locale" && args[i + 1] && !args[i + 1]!.startsWith("-") && locale === undefined) {
+            locale = args[++i];
+        } else if (args[i] === "--theme-mode" && args[i + 1] && themeMode === undefined) {
+            const value = args[++i];
+            if (value !== "light" && value !== "dark") {
+                throw new Error(HELP);
+            }
+            themeMode = value;
         } else if (["--output", "--dependency"].includes(args[i]!) && args[i + 1] && !args[i + 1]!.startsWith("-")) {
             const value = resolve(cwd, args[++i]!);
             if (args[i - 1] === "--dependency") {
@@ -73,6 +83,7 @@ export async function previewCommand(
         artifact,
         admittedDependencies,
         typeof __ULVIA_PREVIEW_RUNTIMES__ === "undefined" ? undefined : __ULVIA_PREVIEW_RUNTIMES__,
+        { locale, themeMode },
     );
     if (exported.frames.length === 0) {
         throw new Error("This collection has no published examples");

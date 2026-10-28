@@ -46,7 +46,7 @@ test("recursive release prepares the official contracts, provider and collection
         const collections = await new LocalCollectionRepository(join(f.data, "repository")).list();
         expect(collections).toHaveLength(1);
         expect(collections[0]!.assets).toHaveLength(54);
-        expect(collections[0]!.release.examples).toHaveLength(77);
+        expect(collections[0]!.release.examples).toHaveLength(105);
         expect(f.output[11]).toStartWith("+ provider ulvia.official/ulvia.official@");
         expect(f.output[12]).toStartWith("+ collection ulvia.official/ulvia-official@");
         expect(f.output.at(-1)).toBe("Prepared 13 local releases.");

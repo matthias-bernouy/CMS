@@ -136,12 +136,14 @@ async function mutateCollections(page: Page): Promise<void> {
     await installedCollectionLink(page, "smoke-kit").click({ noWaitAfter: true });
     await page.getByRole("heading", { name: "Smoke Kit", exact: true }).waitFor({ timeout: 60_000 });
     await page.locator('a[href="#collection-blocks"]').click();
-    await page.waitForURL(/#collection-blocks$/u);
+    await page.waitForURL(/#collection-blocks$/u, { waitUntil: "domcontentloaded" });
     await page.getByText("smoke-kit-card", { exact: true }).waitFor();
     await page.getByRole("link", { name: /^(Explore collections|Explorer les Collections)$/u }).click();
     await exerciseCollectionUpgrades(page);
     await installedCollectionLink(page, "ulvia-official").click({ noWaitAfter: true });
     await page.getByRole("heading", { name: "Ulvia Official", exact: true }).waitFor({ timeout: 60_000 });
+    await page.locator('a[href="#collection-examples"]').click();
+    await page.locator("#collection-examples article").first().waitFor();
     await page.locator('a[href="#collection-theme"]').click();
     await page.locator("#collection-theme-search").waitFor();
     await page
@@ -167,7 +169,7 @@ async function mutateCollections(page: Page): Promise<void> {
         throw new Error(`Theme reset flow failed (${resetResponse.status()}).`);
     }
     await page.locator('a[href="#collection-texts"]').click();
-    await page.waitForURL(/#collection-texts$/u);
+    await page.waitForURL(/#collection-texts$/u, { waitUntil: "domcontentloaded" });
     const textForm = page.locator('form[cms-mutation^="ulvia.cms.content:localization.text.save "]').first();
     await textForm.waitFor();
     const textValue = textForm.locator('textarea[name="value"]');

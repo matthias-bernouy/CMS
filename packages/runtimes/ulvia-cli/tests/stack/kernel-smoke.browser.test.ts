@@ -129,6 +129,7 @@ smoke(
             await writeFailureArtifacts(output, browser);
             throw new Error(
                 `${error instanceof Error ? error.message : String(error)}\n\nBrowser errors:\n${browserErrors.join("\n") || "(none)"}\n\nRuntime output:\n${output}`,
+                { cause: error },
             );
         } finally {
             await browser?.close();

@@ -16,7 +16,12 @@ test.skipIf(process.env.ULVIA_RUN_EXAMPLE_BROWSER !== "1")(
         try {
             const source = await writeExampleSource(root);
             const output = join(root, "preview");
-            await previewCommand([source, "--output", output], root, join(root, "repository"), () => {});
+            await previewCommand(
+                [source, "--output", output, "--locale", "fr", "--theme-mode", "dark"],
+                root,
+                join(root, "repository"),
+                () => {},
+            );
             for (const [id, width, height] of [
                 ["desktop", 640, 240],
                 ["mobile", 320, 160],
@@ -26,18 +31,23 @@ test.skipIf(process.env.ULVIA_RUN_EXAMPLE_BROWSER !== "1")(
                 expect(bytes.getUint32(20)).toBe(height);
             }
             expect((await Bun.file(join(output, "manifest.json")).json()).captures).toHaveLength(2);
-            const rendered = await renderCollectionExamples(await prepareCollectionRelease(source));
+            const rendered = await renderCollectionExamples(await prepareCollectionRelease(source), [], undefined, {
+                locale: "fr",
+                themeMode: "dark",
+            });
             const server = serveExampleFiles(new Map([...rendered.files, ...exampleExplorer(rendered.frames)]));
             const browser = await chromium.launch({ headless: true });
             try {
                 const page = await browser.newPage();
                 await page.goto(server.url.href);
                 const frame = page.frameLocator("#frame");
-                const button = frame.getByRole("button", { name: "Contact us" });
+                const button = frame.getByRole("button", { name: "Contactez-nous" });
                 await button.click();
+                expect(await frame.locator("html").getAttribute("lang")).toBe("fr");
+                expect(await frame.locator("html").getAttribute("data-theme-mode")).toBe("dark");
                 expect(await button.getAttribute("aria-pressed")).toBe("true");
                 await page.selectOption("#example", "1");
-                await frame.getByRole("button", { name: "Contact us" }).waitFor();
+                await frame.getByRole("button", { name: "Contactez-nous" }).waitFor();
                 expect(await frame.locator("html").evaluate(() => window.innerWidth)).toBe(320);
                 expect(
                     await frame.locator("html").evaluate(() => {
