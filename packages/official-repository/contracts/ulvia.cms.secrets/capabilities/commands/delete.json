@@ -2,27 +2,65 @@
     "id": "secrets.delete",
     "description": "Delete one secret from a credential-owned namespace.",
     "access": "admin",
-    "behavior": { "effect": "command", "idempotency": "natural", "execution": "sync" },
+    "behavior": {
+        "effect": "command",
+        "idempotency": "natural",
+        "execution": "sync",
+        "sensitive": true
+    },
     "input": {
         "type": "object",
         "properties": {
-            "namespaceId": { "type": "string", "minLength": 1, "maxLength": 128 },
-            "namespaceKey": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 512 },
-            "secretId": { "type": "string", "minLength": 1, "maxLength": 160 },
-            "expectedVersion": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+            "namespaceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "sensitive": true,
+                "minLength": 20,
+                "maxLength": 512
+            },
+            "secretId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            },
+            "expectedVersion": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            }
         },
         "required": ["namespaceId", "namespaceKey", "secretId", "expectedVersion"]
     },
     "output": {
         "type": "object",
-        "properties": { "deleted": { "type": "boolean" } },
+        "properties": {
+            "deleted": {
+                "type": "boolean"
+            }
+        },
         "required": ["deleted"]
     },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_AUTHORIZED", "retryable": false },
-        { "code": "VERSION_CONFLICT", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "VERSION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
     ],
     "bindings": [
         {
@@ -31,9 +69,16 @@
             "method": "DELETE",
             "path": "/namespaces/{namespaceId}/secrets/{secretId}",
             "input": {
-                "path": { "namespaceId": "namespaceId", "secretId": "secretId" },
-                "query": { "expectedVersion": "expectedVersion" },
-                "body": { "properties": ["namespaceKey"] }
+                "path": {
+                    "namespaceId": "namespaceId",
+                    "secretId": "secretId"
+                },
+                "query": {
+                    "expectedVersion": "expectedVersion"
+                },
+                "body": {
+                    "properties": ["namespaceKey"]
+                }
             },
             "response": {
                 "successStatuses": [200],

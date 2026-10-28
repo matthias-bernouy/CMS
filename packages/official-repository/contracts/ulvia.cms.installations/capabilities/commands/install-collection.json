@@ -4,7 +4,8 @@
     "behavior": {
         "effect": "command",
         "idempotency": "none",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",

@@ -3,7 +3,8 @@
     "access": "admin",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -107,7 +108,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "installations_list_operations",
-                "description": "List this instance\u2019s asynchronous operations, including site upgrade progress."
+                "description": "List this instance’s asynchronous operations, including site upgrade progress."
             }
         }
     ]

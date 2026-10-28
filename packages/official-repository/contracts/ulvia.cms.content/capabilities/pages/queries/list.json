@@ -4,7 +4,8 @@
     "access": "admin",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -94,7 +95,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "content_pages_list",
-                "description": "Find this site\u2019s Pages by text or visibility. Follow the returned cursor and read a Page before changing it."
+                "description": "Find this site’s Pages by text or visibility. Follow the returned cursor and read a Page before changing it."
             }
         }
     ]

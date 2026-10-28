@@ -4,7 +4,8 @@
     "description": "Read the state of one site contract release switch.",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",

@@ -2,7 +2,8 @@
     "access": "admin",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "id": "files.get",
     "description": "Get the latest generation metadata for a file.",

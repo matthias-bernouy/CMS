@@ -2,30 +2,68 @@
     "id": "smtp.configuration.get",
     "description": "Read SMTP email delivery configuration without returning credentials.",
     "access": "admin",
-    "behavior": { "effect": "query", "execution": "sync" },
-    "input": { "type": "object", "properties": {}, "required": [] },
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
     "output": {
         "type": "object",
         "properties": {
-            "enabled": { "type": "boolean" },
-            "fromEmail": { "type": "string", "maxLength": 320 },
-            "fromName": { "type": "string", "maxLength": 160 },
-            "replyTo": { "type": "string", "maxLength": 320 },
+            "enabled": {
+                "type": "boolean"
+            },
+            "fromEmail": {
+                "type": "string",
+                "maxLength": 320
+            },
+            "fromName": {
+                "type": "string",
+                "maxLength": 160
+            },
+            "replyTo": {
+                "type": "string",
+                "maxLength": 320
+            },
             "smtp": {
                 "type": "object",
                 "properties": {
-                    "host": { "type": "string", "maxLength": 253 },
-                    "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
-                    "secure": { "type": "boolean" },
-                    "username": { "type": "string", "maxLength": 320 },
-                    "passwordConfigured": { "type": "boolean" }
+                    "host": {
+                        "type": "string",
+                        "maxLength": 253
+                    },
+                    "port": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 65535
+                    },
+                    "secure": {
+                        "type": "boolean"
+                    },
+                    "username": {
+                        "type": "string",
+                        "maxLength": 320
+                    },
+                    "passwordConfigured": {
+                        "type": "boolean"
+                    }
                 },
                 "required": ["host", "port", "secure", "username", "passwordConfigured"]
             }
         },
         "required": ["enabled", "fromEmail", "fromName", "replyTo", "smtp"]
     },
-    "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
     "bindings": [
         {
             "id": "http",
@@ -35,7 +73,9 @@
             "response": {
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],
-                "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503
+                }
             }
         }
     ]

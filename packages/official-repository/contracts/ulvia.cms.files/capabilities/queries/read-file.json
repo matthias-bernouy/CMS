@@ -2,7 +2,8 @@
     "access": "public",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": false
     },
     "id": "files.read",
     "description": "Stream one immutable public or signed private file generation.",

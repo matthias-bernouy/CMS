@@ -3,7 +3,8 @@
     "behavior": {
         "effect": "command",
         "execution": "sync",
-        "idempotency": "none"
+        "idempotency": "none",
+        "sensitive": true
     },
     "id": "namespace.keys.rotate",
     "description": "Replace and revoke one namespace credential.",

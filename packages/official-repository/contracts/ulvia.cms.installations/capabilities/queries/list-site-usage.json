@@ -4,7 +4,8 @@
     "description": "Read a bounded site usage inventory with catalogue and runtime scopes, resource locations and capability consumers. The cursor pins an exact inventory digest and becomes invalid after any analysed revision changes.",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",

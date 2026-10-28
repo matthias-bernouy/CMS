@@ -88,6 +88,16 @@
                 <p cms-repeat="review.data.lastSuccess.data.requests as request">
                     {{ request.contractId }} {{ request.capabilityId }} {{ request.versionRange }}
                 </p>
+                <h3 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-provider-delegated-authority }}</h3>
+                <div cms-repeat="review.data.lastSuccess.data.delegation.policies as policy">
+                    <p>{{ policy.implementationContractId }} · {{ policy.sources | json }} · {{ policy.allow | json }}</p>
+                </div>
+                <div cms-repeat="review.data.lastSuccess.data.delegation.matches as grant">
+                    <p>
+                        {{ grant.sourceContractId }} · {{ grant.sourceCapabilityId }} → {{ grant.targetContractId }} {{ grant.targetVersion }} ·
+                        {{ grant.targetCapabilityId }}
+                    </p>
+                </div>
                 <form cms-mutation="ulvia.cms.installations:approve-provider-connection as approval" cms-mutation-redirect="/admin/providers">
                     <input type="hidden" name="ticket" value="{{ review.data.lastSuccess.data.ticket }}">
                     <button cms-bloc="ulvia-official-action" type="submit" tone="primary" variant="filled">

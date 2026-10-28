@@ -3,7 +3,8 @@
     "behavior": {
         "effect": "command",
         "execution": "sync",
-        "idempotency": "none"
+        "idempotency": "none",
+        "sensitive": true
     },
     "id": "files.delete",
     "description": "Delete every generation of one file.",

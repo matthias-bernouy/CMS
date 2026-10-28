@@ -1,0 +1,77 @@
+{
+    "id": "gateway.delegation.close",
+    "description": "Control authority only: close a bounded invocation delegation.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "sensitive": true,
+        "idempotency": "none"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "context": {
+                "type": "object",
+                "properties": {
+                    "siteId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    },
+                    "ticket": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "sensitive": true
+                    },
+                    "requestId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    }
+                },
+                "required": ["siteId", "ticket", "requestId"]
+            }
+        },
+        "required": ["context"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "accepted": {
+                "type": "boolean"
+            }
+        },
+        "required": ["accepted"]
+    },
+    "errors": [
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        },
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/gateway/delegations/close",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "FORBIDDEN": 403,
+                    "INVALID_INPUT": 422
+                }
+            }
+        }
+    ]
+}

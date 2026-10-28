@@ -3,7 +3,8 @@
     "behavior": {
         "effect": "command",
         "execution": "sync",
-        "idempotency": "none"
+        "idempotency": "none",
+        "sensitive": true
     },
     "id": "upload.complete",
     "description": "Finalize an uploaded blob into an immutable generation.",

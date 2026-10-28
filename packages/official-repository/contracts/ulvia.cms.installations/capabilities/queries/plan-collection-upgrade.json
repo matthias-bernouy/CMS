@@ -4,7 +4,8 @@
     "description": "Analyse exact collection targets and current site usage without rewriting any content. Incomplete or blocked plans cannot be applied.",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",

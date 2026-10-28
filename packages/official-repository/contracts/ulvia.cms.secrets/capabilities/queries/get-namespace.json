@@ -2,26 +2,56 @@
     "id": "namespace.get",
     "description": "Read one secret namespace with a management credential.",
     "access": "admin",
-    "behavior": { "effect": "query", "execution": "sync" },
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": true
+    },
     "input": {
         "type": "object",
         "properties": {
-            "namespaceId": { "type": "string", "minLength": 1, "maxLength": 128 },
-            "namespaceKey": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 512 }
+            "namespaceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "sensitive": true,
+                "minLength": 20,
+                "maxLength": 512
+            }
         },
         "required": ["namespaceId", "namespaceKey"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "id": { "type": "string", "maxLength": 128 },
-            "name": { "type": "string", "maxLength": 160 },
-            "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+            "id": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "name": {
+                "type": "string",
+                "maxLength": 160
+            },
+            "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            },
             "createdBy": {
                 "type": "object",
                 "properties": {
-                    "kind": { "type": "string", "maxLength": 13, "enum": ["administrator", "provider", "system"] },
-                    "id": { "type": "string", "maxLength": 256 }
+                    "kind": {
+                        "type": "string",
+                        "maxLength": 13,
+                        "enum": ["administrator", "provider", "system"]
+                    },
+                    "id": {
+                        "type": "string",
+                        "maxLength": 256
+                    }
                 },
                 "required": ["kind", "id"]
             }
@@ -29,10 +59,22 @@
         "required": ["id", "name", "createdAt", "createdBy"]
     },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_AUTHORIZED", "retryable": false },
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
     ],
     "bindings": [
         {
@@ -40,7 +82,9 @@
             "transport": "http",
             "method": "QUERY",
             "path": "/namespace.get",
-            "input": { "body": true },
+            "input": {
+                "body": true
+            },
             "response": {
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],

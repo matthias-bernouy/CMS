@@ -16,5 +16,8 @@
     "text.ui-provider-pair-help.label": "L’appairage configure le retour vers le CMS ; les accès suivent les dépendances du manifeste approuvé.",
     "text.ui-provider-connect-help.label": "Choisissez une release, importez-la, puis vérifiez et approuvez le compte du Provider distant.",
     "text.ui-provider-requests.label": "Accès demandés aux capabilities",
-    "text.ui-provider-none.label": "Aucun accès sortant demandé."
+    "text.ui-provider-none.label": "Aucun accès sortant demandé.",
+    "text.ui-provider-machine-authority.label": "Accès machine aux capabilities",
+    "text.ui-provider-delegated-authority.label": "Accès délégué aux capabilities",
+    "text.ui-provider-added-authority.label": "Nouvelles autorisations déléguées à approuver"
 }

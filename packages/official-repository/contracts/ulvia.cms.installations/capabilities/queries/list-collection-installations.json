@@ -3,7 +3,8 @@
     "access": "admin",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -116,7 +117,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "installations_list_collection_installations",
-                "description": "Read this site\u2019s installed collection versions and current installation revision before installing or upgrading."
+                "description": "Read this site’s installed collection versions and current installation revision before installing or upgrading."
             }
         }
     ]

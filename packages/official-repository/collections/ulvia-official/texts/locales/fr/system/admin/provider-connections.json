@@ -16,5 +16,8 @@
     "ui-provider-pair-help": "L’appairage configure le retour vers le CMS. Les accès suivent les requires du manifeste approuvé.",
     "ui-provider-connect-help": "Choisissez une release, importez-la, puis vérifiez et approuvez le compte du Provider distant.",
     "ui-provider-requests": "Accès demandés aux capabilities",
-    "ui-provider-none": "Aucun accès sortant demandé."
+    "ui-provider-none": "Aucun accès sortant demandé.",
+    "ui-provider-machine-authority": "Accès machine aux capabilities",
+    "ui-provider-delegated-authority": "Accès délégué aux capabilities",
+    "ui-provider-added-authority": "Nouvelles autorisations déléguées à approuver"
 }

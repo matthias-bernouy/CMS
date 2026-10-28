@@ -5,7 +5,8 @@
     "behavior": {
         "effect": "command",
         "idempotency": "none",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -117,7 +118,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "content_pages_update_seo",
-                "description": "Update a Page\u2019s title or description for one language using its current expectedRevision."
+                "description": "Update a Page’s title or description for one language using its current expectedRevision."
             }
         }
     ]

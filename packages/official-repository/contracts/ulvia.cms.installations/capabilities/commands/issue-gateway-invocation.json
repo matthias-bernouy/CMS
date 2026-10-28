@@ -5,7 +5,8 @@
     "behavior": {
         "effect": "command",
         "idempotency": "natural",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -53,6 +54,33 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 67108864
+            },
+            "delegation": {
+                "type": "object",
+                "properties": {
+                    "ticket": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 43,
+                        "sensitive": true
+                    },
+                    "expiresAt": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                },
+                "required": ["ticket", "expiresAt"]
+            },
+            "delegatedTicket": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 43,
+                "sensitive": true
+            },
+            "sourceCredentialFingerprint": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64
             }
         },
         "required": ["requestId", "installationId", "contractId", "contractVersion", "capabilityId"]

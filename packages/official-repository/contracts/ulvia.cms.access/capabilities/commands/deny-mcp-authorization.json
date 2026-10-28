@@ -5,7 +5,8 @@
     "behavior": {
         "effect": "command",
         "execution": "sync",
-        "idempotency": "none"
+        "idempotency": "none",
+        "sensitive": true
     },
     "input": {
         "type": "object",

@@ -4,7 +4,8 @@
     "access": "admin",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -68,7 +69,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "content_localization_get",
-                "description": "Read the site\u2019s language configuration and current revision."
+                "description": "Read the site’s language configuration and current revision."
             }
         }
     ]

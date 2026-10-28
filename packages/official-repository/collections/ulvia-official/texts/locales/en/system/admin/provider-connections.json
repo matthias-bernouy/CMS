@@ -16,5 +16,8 @@
     "ui-provider-pair-help": "Pairing configures the return connection. Capability access follows the requires of the approved Provider manifest.",
     "ui-provider-connect-help": "Choose a release, import it, then verify and approve the remote Provider account.",
     "ui-provider-requests": "Requested capability access",
-    "ui-provider-none": "No outgoing capability access requested."
+    "ui-provider-none": "No outgoing capability access requested.",
+    "ui-provider-machine-authority": "Machine capability access",
+    "ui-provider-delegated-authority": "Delegated capability access",
+    "ui-provider-added-authority": "New delegated permissions to approve"
 }

@@ -35,6 +35,22 @@
                 </div>
                 <p>{{ cms.i18n.ulvia-official.ui-grants-allow-selected }}</p>
                 <div cms-repeat="plan.data.grants.denied as denied"><p>{{ denied.contractId }} {{ denied.capabilityId }}</p></div>
+                <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-provider-machine-authority }}</h2>
+                <div cms-repeat="plan.data.authority.machine as grant">
+                    <p>{{ grant.installationId }} → {{ grant.target.contractId }} {{ grant.target.version }} · {{ grant.target.capabilityId }}</p>
+                </div>
+                <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-provider-delegated-authority }}</h2>
+                <div cms-repeat="plan.data.authority.delegated as grant">
+                    <p>
+                        {{ grant.source.contractId }} · {{ grant.source.capabilityId }} → {{ grant.target.contractId }} {{ grant.target.version }} ·
+                        {{ grant.target.capabilityId }}
+                    </p>
+                    <p>{{ grant.target.effect }} · {{ grant.target.sensitive }} · {{ grant.target.access }}</p>
+                </div>
+                <h2 cms-bloc="ulvia-official-heading">{{ cms.i18n.ulvia-official.ui-provider-added-authority }}</h2>
+                <div cms-repeat="plan.data.authorityAdded as grant">
+                    <p>{{ grant.source.contractId }} · {{ grant.source.capabilityId }} → {{ grant.target.contractId }} · {{ grant.target.capabilityId }}</p>
+                </div>
                 <form
                     cms-condition="plan.data.status === 'applicable'"
                     cms-mutation="ulvia.cms.installations:apply-contract-upgrade as mutation"

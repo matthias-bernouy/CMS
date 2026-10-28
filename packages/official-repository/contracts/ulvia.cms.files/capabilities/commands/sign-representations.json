@@ -3,7 +3,8 @@
     "behavior": {
         "effect": "command",
         "execution": "sync",
-        "idempotency": "none"
+        "idempotency": "none",
+        "sensitive": true
     },
     "id": "representations.sign",
     "description": "Mint temporary private URLs for available image representations.",

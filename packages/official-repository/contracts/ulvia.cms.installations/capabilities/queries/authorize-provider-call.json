@@ -4,7 +4,8 @@
     "access": "admin",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -28,9 +29,21 @@
             "version": {
                 "type": "string",
                 "maxLength": 128
+            },
+            "sourceCredentialFingerprint": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64
             }
         },
-        "required": ["sourceInstallationId", "targetInstallationId", "contractId", "capabilityId", "version"]
+        "required": [
+            "sourceInstallationId",
+            "targetInstallationId",
+            "contractId",
+            "capabilityId",
+            "version",
+            "sourceCredentialFingerprint"
+        ]
     },
     "output": {
         "type": "object",

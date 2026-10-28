@@ -5,7 +5,8 @@
     "behavior": {
         "effect": "command",
         "execution": "sync",
-        "idempotency": "none"
+        "idempotency": "none",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -58,7 +59,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "files_workspace_files_delete",
-                "description": "Delete a file from this instance\u2019s managed storage. Verify the fileId before calling."
+                "description": "Delete a file from this instance’s managed storage. Verify the fileId before calling."
             }
         }
     ]

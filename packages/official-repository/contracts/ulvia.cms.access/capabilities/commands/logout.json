@@ -2,14 +2,32 @@
     "id": "logout",
     "description": "Clear the current CMS session.",
     "access": "public",
-    "behavior": { "effect": "command", "idempotency": "natural", "execution": "sync" },
-    "input": { "type": "object", "properties": {}, "required": [] },
+    "behavior": {
+        "effect": "command",
+        "idempotency": "natural",
+        "execution": "sync",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
     "output": {
         "type": "object",
-        "properties": { "cleared": { "type": "boolean" } },
+        "properties": {
+            "cleared": {
+                "type": "boolean"
+            }
+        },
         "required": ["cleared"]
     },
-    "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
     "responseEffects": ["session"],
     "bindings": [
         {
@@ -20,7 +38,9 @@
             "response": {
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],
-                "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503
+                }
             }
         }
     ]

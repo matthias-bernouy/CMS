@@ -2,22 +2,54 @@
     "id": "namespace.keys.revoke",
     "description": "Revoke one secret namespace credential.",
     "access": "admin",
-    "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync",
+        "sensitive": true
+    },
     "input": {
         "type": "object",
         "properties": {
-            "namespaceId": { "type": "string", "minLength": 1, "maxLength": 128 },
-            "namespaceKey": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 512 },
-            "keyId": { "type": "string", "minLength": 1, "maxLength": 128 }
+            "namespaceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "sensitive": true,
+                "minLength": 20,
+                "maxLength": 512
+            },
+            "keyId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            }
         },
         "required": ["namespaceId", "namespaceKey", "keyId"]
     },
-    "output": { "type": "null" },
+    "output": {
+        "type": "null"
+    },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_AUTHORIZED", "retryable": false },
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
     ],
     "bindings": [
         {
@@ -26,8 +58,13 @@
             "method": "DELETE",
             "path": "/namespaces/{namespaceId}/keys/{keyId}",
             "input": {
-                "path": { "namespaceId": "namespaceId", "keyId": "keyId" },
-                "body": { "properties": ["namespaceKey"] }
+                "path": {
+                    "namespaceId": "namespaceId",
+                    "keyId": "keyId"
+                },
+                "body": {
+                    "properties": ["namespaceKey"]
+                }
             },
             "response": {
                 "successStatuses": [204],

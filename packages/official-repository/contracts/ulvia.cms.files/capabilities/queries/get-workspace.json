@@ -4,7 +4,8 @@
     "access": "admin",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -230,7 +231,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "files_workspace_get",
-                "description": "List files in this CMS instance\u2019s managed storage. Use offset and limit for pagination. Read ulvia://cms/site-files for uploads."
+                "description": "List files in this CMS instance’s managed storage. Use offset and limit for pagination. Read ulvia://cms/site-files for uploads."
             }
         }
     ]

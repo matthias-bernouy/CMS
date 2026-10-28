@@ -2,13 +2,30 @@
     "id": "secrets.list",
     "description": "List bounded secret metadata from one namespace without values.",
     "access": "admin",
-    "behavior": { "effect": "query", "execution": "sync" },
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": true
+    },
     "input": {
         "type": "object",
         "properties": {
-            "namespaceId": { "type": "string", "minLength": 1, "maxLength": 128 },
-            "namespaceKey": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 512 },
-            "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+            "namespaceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "sensitive": true,
+                "minLength": 20,
+                "maxLength": 512
+            },
+            "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+            }
         },
         "required": ["namespaceId", "namespaceKey"]
     },
@@ -21,12 +38,34 @@
                 "items": {
                     "type": "object",
                     "properties": {
-                        "namespaceId": { "type": "string", "maxLength": 128 },
-                        "secretId": { "type": "string", "maxLength": 160 },
-                        "name": { "type": "string", "maxLength": 96 },
-                        "version": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
-                        "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
-                        "rotatedAt": { "type": "string", "format": "date-time", "maxLength": 40, "nullable": true }
+                        "namespaceId": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "secretId": {
+                            "type": "string",
+                            "maxLength": 160
+                        },
+                        "name": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "version": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                        },
+                        "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "maxLength": 40
+                        },
+                        "rotatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "maxLength": 40,
+                            "nullable": true
+                        }
                     },
                     "required": ["namespaceId", "secretId", "name", "version", "createdAt", "rotatedAt"]
                 }
@@ -35,10 +74,22 @@
         "required": ["items"]
     },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_AUTHORIZED", "retryable": false },
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
     ],
     "bindings": [
         {
@@ -46,7 +97,9 @@
             "transport": "http",
             "method": "QUERY",
             "path": "/secrets.list",
-            "input": { "body": true },
+            "input": {
+                "body": true
+            },
             "response": {
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],

@@ -4,7 +4,8 @@
     "description": "Read the status of one exact release-switch intent.",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",

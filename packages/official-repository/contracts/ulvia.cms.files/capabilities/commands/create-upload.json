@@ -3,7 +3,8 @@
     "behavior": {
         "effect": "command",
         "execution": "sync",
-        "idempotency": "none"
+        "idempotency": "none",
+        "sensitive": true
     },
     "id": "upload.create",
     "description": "Create a bounded upload session, optionally targeting an existing stable file identity.",

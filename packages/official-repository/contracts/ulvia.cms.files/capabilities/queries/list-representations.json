@@ -2,7 +2,8 @@
     "access": "public",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": false
     },
     "id": "representations.list",
     "description": "List available image representations.",

@@ -106,5 +106,23 @@
         "label": "text.ui-provider-none.label",
         "category": "text.category.admin",
         "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-machine-authority",
+        "label": "text.ui-provider-machine-authority.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-delegated-authority",
+        "label": "text.ui-provider-delegated-authority.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
+    },
+    {
+        "id": "ui-provider-added-authority",
+        "label": "text.ui-provider-added-authority.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.diagnostics"
     }
 ]

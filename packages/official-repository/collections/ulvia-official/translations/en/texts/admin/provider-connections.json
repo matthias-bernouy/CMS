@@ -16,5 +16,8 @@
     "text.ui-provider-pair-help.label": "Pairing configures the return connection; outbound access follows the approved manifest requirements.",
     "text.ui-provider-connect-help.label": "Choose a release, import it, then verify and approve the remote Provider account.",
     "text.ui-provider-requests.label": "Requested capability access",
-    "text.ui-provider-none.label": "No outgoing capability access requested."
+    "text.ui-provider-none.label": "No outgoing capability access requested.",
+    "text.ui-provider-machine-authority.label": "Machine capability access",
+    "text.ui-provider-delegated-authority.label": "Delegated capability access",
+    "text.ui-provider-added-authority.label": "New delegated permissions to approve"
 }

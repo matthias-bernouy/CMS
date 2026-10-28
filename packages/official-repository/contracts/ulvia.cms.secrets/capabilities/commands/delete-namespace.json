@@ -2,21 +2,49 @@
     "id": "namespace.delete",
     "description": "Delete a secret namespace and all encrypted values it owns.",
     "access": "admin",
-    "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync",
+        "sensitive": true
+    },
     "input": {
         "type": "object",
         "properties": {
-            "namespaceId": { "type": "string", "minLength": 1, "maxLength": 128 },
-            "namespaceKey": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 512 }
+            "namespaceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "sensitive": true,
+                "minLength": 20,
+                "maxLength": 512
+            }
         },
         "required": ["namespaceId", "namespaceKey"]
     },
-    "output": { "type": "null" },
+    "output": {
+        "type": "null"
+    },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_AUTHORIZED", "retryable": false },
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
     ],
     "bindings": [
         {
@@ -24,7 +52,14 @@
             "transport": "http",
             "method": "DELETE",
             "path": "/namespaces/{namespaceId}",
-            "input": { "path": { "namespaceId": "namespaceId" }, "body": { "properties": ["namespaceKey"] } },
+            "input": {
+                "path": {
+                    "namespaceId": "namespaceId"
+                },
+                "body": {
+                    "properties": ["namespaceKey"]
+                }
+            },
             "response": {
                 "successStatuses": [204],
                 "contentTypes": [],

@@ -5,7 +5,8 @@
     "behavior": {
         "effect": "command",
         "idempotency": "none",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -121,7 +122,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "content_pages_update_route",
-                "description": "Change a Page\u2019s route for one language using its current expectedRevision."
+                "description": "Change a Page’s route for one language using its current expectedRevision."
             }
         }
     ]

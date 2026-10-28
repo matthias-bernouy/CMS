@@ -2,7 +2,8 @@
     "access": "public",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": false
     },
     "id": "representations.read",
     "description": "Stream one immutable image representation.",

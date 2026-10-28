@@ -4,7 +4,8 @@
     "description": "Read the active site release-switch intent and its maintenance fence.",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",

@@ -2,36 +2,99 @@
     "id": "secrets.rotate",
     "description": "Replace one secret value while preserving its namespace identity.",
     "access": "admin",
-    "behavior": { "effect": "command", "idempotency": "keyed", "execution": "sync" },
+    "behavior": {
+        "effect": "command",
+        "idempotency": "keyed",
+        "execution": "sync",
+        "sensitive": true
+    },
     "input": {
         "type": "object",
         "properties": {
-            "namespaceId": { "type": "string", "minLength": 1, "maxLength": 128 },
-            "namespaceKey": { "type": "string", "sensitive": true, "minLength": 20, "maxLength": 512 },
-            "secretId": { "type": "string", "minLength": 1, "maxLength": 160 },
-            "value": { "type": "string", "sensitive": true, "minLength": 1, "maxLength": 16384 },
-            "expectedVersion": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+            "namespaceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "sensitive": true,
+                "minLength": 20,
+                "maxLength": 512
+            },
+            "secretId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            },
+            "value": {
+                "type": "string",
+                "sensitive": true,
+                "minLength": 1,
+                "maxLength": 16384
+            },
+            "expectedVersion": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            }
         },
         "required": ["namespaceId", "namespaceKey", "secretId", "value", "expectedVersion"]
     },
     "output": {
         "type": "object",
         "properties": {
-            "namespaceId": { "type": "string", "maxLength": 128 },
-            "secretId": { "type": "string", "maxLength": 160 },
-            "name": { "type": "string", "maxLength": 96 },
-            "version": { "type": "integer", "minimum": 2, "maximum": 9007199254740991 },
-            "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
-            "rotatedAt": { "type": "string", "format": "date-time", "maxLength": 40 }
+            "namespaceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "secretId": {
+                "type": "string",
+                "maxLength": 160
+            },
+            "name": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "version": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 9007199254740991
+            },
+            "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            },
+            "rotatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            }
         },
         "required": ["namespaceId", "secretId", "name", "version", "createdAt", "rotatedAt"]
     },
     "errors": [
-        { "code": "INVALID_INPUT", "retryable": false },
-        { "code": "NOT_AUTHORIZED", "retryable": false },
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "VERSION_CONFLICT", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "VERSION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
     ],
     "bindings": [
         {
@@ -40,8 +103,13 @@
             "method": "POST",
             "path": "/namespaces/{namespaceId}/secrets/{secretId}/rotate",
             "input": {
-                "path": { "namespaceId": "namespaceId", "secretId": "secretId" },
-                "body": { "properties": ["namespaceKey", "value", "expectedVersion"] }
+                "path": {
+                    "namespaceId": "namespaceId",
+                    "secretId": "secretId"
+                },
+                "body": {
+                    "properties": ["namespaceKey", "value", "expectedVersion"]
+                }
             },
             "response": {
                 "successStatuses": [200],

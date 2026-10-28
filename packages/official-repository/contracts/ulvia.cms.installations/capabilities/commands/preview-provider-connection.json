@@ -5,7 +5,8 @@
     "behavior": {
         "effect": "command",
         "idempotency": "natural",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -128,6 +129,144 @@
                     },
                     "required": ["contractId", "capabilityId", "versionRange", "optional"]
                 }
+            },
+            "authorityDigest": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            },
+            "delegation": {
+                "type": "object",
+                "properties": {
+                    "policies": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "implementationContractId": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                },
+                                "sources": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 128
+                                    },
+                                    "maxItems": 1024
+                                },
+                                "allow": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "contractId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 128
+                                            },
+                                            "capabilityId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 128
+                                            },
+                                            "effect": {
+                                                "type": "string",
+                                                "enum": ["query", "command", "*"],
+                                                "maxLength": 7
+                                            },
+                                            "sensitive": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "required": ["contractId", "capabilityId", "effect"]
+                                    },
+                                    "maxItems": 1024
+                                }
+                            },
+                            "required": ["implementationContractId", "sources", "allow"]
+                        },
+                        "maxItems": 1024
+                    },
+                    "matches": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "sourceContractId": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                },
+                                "sourceVersion": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                },
+                                "sourceDigest": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                },
+                                "sourceCapabilityId": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                },
+                                "targetContractId": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                },
+                                "targetVersion": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                },
+                                "targetDigest": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                },
+                                "targetCapabilityId": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                },
+                                "effect": {
+                                    "type": "string",
+                                    "enum": ["query", "command"],
+                                    "maxLength": 7
+                                },
+                                "sensitive": {
+                                    "type": "boolean"
+                                },
+                                "access": {
+                                    "type": "string",
+                                    "enum": ["public", "authenticated", "admin"],
+                                    "maxLength": 13
+                                }
+                            },
+                            "required": [
+                                "sourceContractId",
+                                "sourceVersion",
+                                "sourceDigest",
+                                "sourceCapabilityId",
+                                "targetContractId",
+                                "targetVersion",
+                                "targetDigest",
+                                "targetCapabilityId",
+                                "effect",
+                                "sensitive",
+                                "access"
+                            ]
+                        },
+                        "maxItems": 1024
+                    }
+                },
+                "required": ["policies", "matches"]
             }
         },
         "required": [
@@ -142,7 +281,9 @@
             "manifestDigest",
             "check",
             "contracts",
-            "requests"
+            "requests",
+            "authorityDigest",
+            "delegation"
         ]
     },
     "errors": [

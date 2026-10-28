@@ -4,7 +4,8 @@
     "access": "admin",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": true
     },
     "input": {
         "type": "object",
@@ -59,7 +60,7 @@
             "transport": "mcp",
             "tool": {
                 "name": "content_site_get",
-                "description": "Read this instance\u2019s site settings and current revision before updating them."
+                "description": "Read this instance’s site settings and current revision before updating them."
             }
         }
     ]
