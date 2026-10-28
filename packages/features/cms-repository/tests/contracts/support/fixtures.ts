@@ -33,8 +33,9 @@ export function capabilityDocument(overrides: Record<string, unknown> = {}): Rec
     return {
         id: "email.message.send",
         description: "Send a transactional message.",
+
         access: "admin",
-        behavior: { effect: "command", idempotency: "keyed", execution: "sync" },
+        behavior: { sensitive: false, effect: "command", idempotency: "keyed", execution: "sync" },
         input: objectSchema(
             {
                 recipient: { type: "string", format: "email", maxLength: 320 },

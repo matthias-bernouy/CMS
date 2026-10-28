@@ -87,15 +87,6 @@ export function parseContractRelease(
         ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
     };
     validateResponseEffectAuthority(release);
-    for (const [index, capability] of capabilities.entries()) {
-        if (capability.requires?.some((requirement) => requirement.contractId === release.contractId)) {
-            throw new ReleaseValidationError(
-                "invalid_contract",
-                "cross-contract requirements cannot reference the declaring contract",
-                `$.capabilities[${index}].requires`,
-            );
-        }
-    }
     if (canonicalIJsonBytes(release, limits.maxJsonDepth).byteLength > limits.maxDocumentBytes) {
         throw new ReleaseValidationError(
             "body_limit_exceeded",

@@ -25,7 +25,6 @@ import { validateMcpSchemas } from "./bindings/schemas";
 import { parseCapabilityBindings } from "./bindings";
 import { parseCapabilityDeprecation } from "./parseDeprecation";
 import { parseMocks } from "./parseMocks";
-import { parseCapabilityRequirements } from "./parseCapabilityRequirements";
 
 const ACCESS_LEVELS = new Set<CapabilityAccess>(["admin", "authenticated", "public"]);
 const EFFECTS = new Set(["command", "query"] as const);
@@ -55,7 +54,6 @@ export function parseCapability(
             "errors",
             "bindings",
             "mocks",
-            "requires",
             "responseEffects",
         ],
         path,
@@ -95,9 +93,6 @@ export function parseCapability(
         errors,
         ...bindings,
         ...(responseEffects ? { responseEffects } : {}),
-        ...(record.requires === undefined
-            ? {}
-            : { requires: parseCapabilityRequirements(record.requires, `${path}.requires`, limits) }),
         ...(record.mocks === undefined
             ? {}
             : {
@@ -139,7 +134,8 @@ function parseResponseEffects(value: unknown, path: string): readonly Capability
 
 function parseBehavior(value: unknown, path: string): CapabilityBehavior {
     const record = expectRecord(value, path, "invalid_contract");
-    rejectUnknownKeys(record, ["effect", "idempotency", "execution"], path, "invalid_contract");
+    rejectUnknownKeys(record, ["effect", "idempotency", "execution", "sensitive"], path, "invalid_contract");
+    const sensitive = expectBoolean(record.sensitive, `${path}.sensitive`, "invalid_contract");
     const effect = enumValue(record.effect, `${path}.effect`, EFFECTS);
     const execution = enumValue(record.execution, `${path}.execution`, EXECUTIONS);
     if (effect === "query") {
@@ -150,9 +146,14 @@ function parseBehavior(value: unknown, path: string): CapabilityBehavior {
                 `${path}.idempotency`,
             );
         }
-        return { effect, execution };
+        return { effect, execution, sensitive };
     }
-    return { effect, execution, idempotency: enumValue(record.idempotency, `${path}.idempotency`, IDEMPOTENCY) };
+    return {
+        effect,
+        execution,
+        sensitive,
+        idempotency: enumValue(record.idempotency, `${path}.idempotency`, IDEMPOTENCY),
+    };
 }
 
 function parseErrors(

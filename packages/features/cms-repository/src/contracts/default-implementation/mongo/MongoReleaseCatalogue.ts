@@ -4,7 +4,6 @@ import type { AdmittedContractRelease } from "../../core/admission/admitContract
 import type { ReleaseDigest } from "../../core/admission/digest";
 import { verifyAdmission } from "../../core/admission/verifyAdmission";
 import { verifyEvolution } from "../../core/catalogue/verifyEvolution";
-import { verifyRequirements } from "../../core/catalogue/verifyRequirements";
 import { compareSemVer } from "../../core/compatibility/semver";
 import { verifySpecialization } from "../../core/compatibility/lineage/verifySpecialization";
 import { ReleaseValidationError } from "../../core/protocol/errors";
@@ -110,7 +109,6 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
                 throw new ReleaseValidationError("invalid_contract", "contract has too many published releases");
             }
             const catalogue = await this.list();
-            verifyRequirements(admission.release, catalogue);
             verifySpecialization(admission.release, catalogue);
             verifyEvolution(
                 admission.release,

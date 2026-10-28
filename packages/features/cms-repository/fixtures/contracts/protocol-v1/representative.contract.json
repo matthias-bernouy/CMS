@@ -13,7 +13,8 @@
             "access": "public",
             "behavior": {
                 "effect": "query",
-                "execution": "sync"
+                "execution": "sync",
+                "sensitive": false
             },
             "input": {
                 "type": "object",
@@ -71,28 +72,31 @@
                     "retryable": false
                 }
             ],
-            "bindings": [{ "id": "http",
-                "transport": "http",
-                "method": "GET",
-                "path": "/v1/catalog/items",
-                "input": {
-                    "query": {
-                        "cursor": "cursor",
-                        "limit": "limit"
-                    }
-                },
-                "response": {
-                    "successStatuses": [
-                        200
-                    ],
-                    "contentTypes": [
-                        "application/json"
-                    ],
-                    "errorStatuses": {
-                        "CURSOR_EXPIRED": 410
+            "bindings": [
+                {
+                    "id": "http",
+                    "transport": "http",
+                    "method": "GET",
+                    "path": "/v1/catalog/items",
+                    "input": {
+                        "query": {
+                            "cursor": "cursor",
+                            "limit": "limit"
+                        }
+                    },
+                    "response": {
+                        "successStatuses": [
+                            200
+                        ],
+                        "contentTypes": [
+                            "application/json"
+                        ],
+                        "errorStatuses": {
+                            "CURSOR_EXPIRED": 410
+                        }
                     }
                 }
-             }]
+            ]
         },
         {
             "id": "form.submission.create",
@@ -100,7 +104,8 @@
             "behavior": {
                 "effect": "command",
                 "idempotency": "keyed",
-                "execution": "sync"
+                "execution": "sync",
+                "sensitive": false
             },
             "input": {
                 "type": "object",
@@ -150,25 +155,28 @@
                     "retryable": false
                 }
             ],
-            "bindings": [{ "id": "http",
-                "transport": "http",
-                "method": "POST",
-                "path": "/v1/forms/submissions",
-                "input": {
-                    "body": true
-                },
-                "response": {
-                    "successStatuses": [
-                        201
-                    ],
-                    "contentTypes": [
-                        "application/json"
-                    ],
-                    "errorStatuses": {
-                        "INVALID_SUBMISSION": 422
+            "bindings": [
+                {
+                    "id": "http",
+                    "transport": "http",
+                    "method": "POST",
+                    "path": "/v1/forms/submissions",
+                    "input": {
+                        "body": true
+                    },
+                    "response": {
+                        "successStatuses": [
+                            201
+                        ],
+                        "contentTypes": [
+                            "application/json"
+                        ],
+                        "errorStatuses": {
+                            "INVALID_SUBMISSION": 422
+                        }
                     }
                 }
-             }]
+            ]
         },
         {
             "id": "file.asset.upload",
@@ -176,7 +184,8 @@
             "behavior": {
                 "effect": "command",
                 "idempotency": "keyed",
-                "execution": "sync"
+                "execution": "sync",
+                "sensitive": true
             },
             "input": {
                 "type": "object",
@@ -209,34 +218,38 @@
                     "retryable": false
                 }
             ],
-            "bindings": [{ "id": "http",
-                "transport": "http",
-                "method": "POST",
-                "path": "/v1/files",
-                "input": {
-                    "body": {
-                        "binaryProperty": "asset"
-                    }
-                },
-                "response": {
-                    "successStatuses": [
-                        201
-                    ],
-                    "contentTypes": [
-                        "application/json"
-                    ],
-                    "errorStatuses": {
-                        "FILE_TOO_LARGE": 413
+            "bindings": [
+                {
+                    "id": "http",
+                    "transport": "http",
+                    "method": "POST",
+                    "path": "/v1/files",
+                    "input": {
+                        "body": {
+                            "binaryProperty": "asset"
+                        }
+                    },
+                    "response": {
+                        "successStatuses": [
+                            201
+                        ],
+                        "contentTypes": [
+                            "application/json"
+                        ],
+                        "errorStatuses": {
+                            "FILE_TOO_LARGE": 413
+                        }
                     }
                 }
-             }]
+            ]
         },
         {
             "id": "file.asset.download",
             "access": "authenticated",
             "behavior": {
                 "effect": "query",
-                "execution": "sync"
+                "execution": "sync",
+                "sensitive": true
             },
             "input": {
                 "type": "object",
@@ -261,28 +274,31 @@
                     "retryable": false
                 }
             ],
-            "bindings": [{ "id": "http",
-                "transport": "http",
-                "method": "GET",
-                "path": "/v1/files/{fileId}",
-                "input": {
-                    "path": {
-                        "fileId": "fileId"
-                    }
-                },
-                "response": {
-                    "successStatuses": [
-                        200
-                    ],
-                    "contentTypes": [
-                        "application/pdf",
-                        "image/png"
-                    ],
-                    "errorStatuses": {
-                        "FILE_NOT_FOUND": 404
+            "bindings": [
+                {
+                    "id": "http",
+                    "transport": "http",
+                    "method": "GET",
+                    "path": "/v1/files/{fileId}",
+                    "input": {
+                        "path": {
+                            "fileId": "fileId"
+                        }
+                    },
+                    "response": {
+                        "successStatuses": [
+                            200
+                        ],
+                        "contentTypes": [
+                            "application/pdf",
+                            "image/png"
+                        ],
+                        "errorStatuses": {
+                            "FILE_NOT_FOUND": 404
+                        }
                     }
                 }
-             }]
+            ]
         },
         {
             "id": "report.export",
@@ -290,7 +306,8 @@
             "behavior": {
                 "effect": "command",
                 "idempotency": "keyed",
-                "execution": "operation"
+                "execution": "operation",
+                "sensitive": true
             },
             "input": {
                 "type": "object",
@@ -317,32 +334,36 @@
                     "retryable": true
                 }
             ],
-            "bindings": [{ "id": "http",
-                "transport": "http",
-                "method": "POST",
-                "path": "/v1/reports",
-                "input": {
-                    "body": true
-                },
-                "response": {
-                    "successStatuses": [
-                        202
-                    ],
-                    "contentTypes": [
-                        "application/json"
-                    ],
-                    "errorStatuses": {
-                        "EXPORT_FAILED": 500
+            "bindings": [
+                {
+                    "id": "http",
+                    "transport": "http",
+                    "method": "POST",
+                    "path": "/v1/reports",
+                    "input": {
+                        "body": true
+                    },
+                    "response": {
+                        "successStatuses": [
+                            202
+                        ],
+                        "contentTypes": [
+                            "application/json"
+                        ],
+                        "errorStatuses": {
+                            "EXPORT_FAILED": 500
+                        }
                     }
                 }
-             }]
+            ]
         },
         {
             "id": "catalog.item.changes",
             "access": "admin",
             "behavior": {
                 "effect": "query",
-                "execution": "sync"
+                "execution": "sync",
+                "sensitive": true
             },
             "input": {
                 "type": "object",
@@ -412,34 +433,38 @@
                     "retryable": false
                 }
             ],
-            "bindings": [{ "id": "http",
-                "transport": "http",
-                "method": "GET",
-                "path": "/v1/catalog/changes",
-                "input": {
-                    "query": {
-                        "cursor": "cursor"
-                    }
-                },
-                "response": {
-                    "successStatuses": [
-                        200
-                    ],
-                    "contentTypes": [
-                        "application/json"
-                    ],
-                    "errorStatuses": {
-                        "CURSOR_EXPIRED": 410
+            "bindings": [
+                {
+                    "id": "http",
+                    "transport": "http",
+                    "method": "GET",
+                    "path": "/v1/catalog/changes",
+                    "input": {
+                        "query": {
+                            "cursor": "cursor"
+                        }
+                    },
+                    "response": {
+                        "successStatuses": [
+                            200
+                        ],
+                        "contentTypes": [
+                            "application/json"
+                        ],
+                        "errorStatuses": {
+                            "CURSOR_EXPIRED": 410
+                        }
                     }
                 }
-             }]
+            ]
         },
         {
             "id": "catalog.item.snapshot",
             "access": "admin",
             "behavior": {
                 "effect": "query",
-                "execution": "sync"
+                "execution": "sync",
+                "sensitive": true
             },
             "input": {
                 "type": "object",
@@ -489,26 +514,29 @@
                 ]
             },
             "errors": [],
-            "bindings": [{ "id": "http",
-                "transport": "http",
-                "method": "GET",
-                "path": "/v1/catalog/snapshot",
-                "input": {
-                    "query": {
-                        "cursor": "cursor",
-                        "limit": "limit"
+            "bindings": [
+                {
+                    "id": "http",
+                    "transport": "http",
+                    "method": "GET",
+                    "path": "/v1/catalog/snapshot",
+                    "input": {
+                        "query": {
+                            "cursor": "cursor",
+                            "limit": "limit"
+                        }
+                    },
+                    "response": {
+                        "successStatuses": [
+                            200
+                        ],
+                        "contentTypes": [
+                            "application/json"
+                        ],
+                        "errorStatuses": {}
                     }
-                },
-                "response": {
-                    "successStatuses": [
-                        200
-                    ],
-                    "contentTypes": [
-                        "application/json"
-                    ],
-                    "errorStatuses": {}
                 }
-             }]
+            ]
         }
     ]
 }

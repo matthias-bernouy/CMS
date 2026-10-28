@@ -22,7 +22,12 @@ export async function allLocalCoordinates(root: string): Promise<readonly Remote
     for (const record of await (await new LocalProviderReleases(files, contracts, yanks).catalogue()).list()) {
         if (!record.yank) {
             const { provenance, providerId: id, version } = record.admission.manifest;
-            coordinates.push({ kind: "provider-manifest", publisherId: provenance.publisherId, id, version });
+            coordinates.push({
+                kind: "provider-manifest",
+                publisherId: provenance.publisherId,
+                id,
+                version,
+            });
         }
     }
     for (const { release } of orderCollections(await new LocalCollectionRepository(root).listMetadata())) {

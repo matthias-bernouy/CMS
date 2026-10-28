@@ -1,3 +1,5 @@
+import type { AdmittedContractRelease } from "../../admission/admitContractRelease";
+import type { ResolvedContract } from "../../../interfaces/ResolvedContract";
 import type { CapabilityDefinition, ContractRelease } from "cms-repository/contracts/interfaces/ContractRelease";
 import type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 import { ReleaseValidationError } from "cms-repository/contracts/core/protocol/errors";
@@ -48,8 +50,8 @@ export function effectiveLineageCapabilities(lineage: readonly ContractRelease[]
 /** Preserve published bytes and ownership while resolving the effective execution surface. */
 export async function resolveContract(
     catalogue: ReleaseCatalogue,
-    admission: import("../../admission/admitContractRelease").AdmittedContractRelease,
-): Promise<import("../../../interfaces/ResolvedContract").ResolvedContract> {
+    admission: AdmittedContractRelease,
+): Promise<ResolvedContract> {
     const releases = await resolveContractLineage(catalogue, admission.release);
     const lineage = releases.map((release, index) =>
         Object.freeze({

@@ -11,7 +11,7 @@ describe("HTTP operation response compilation", () => {
     test("distinguishes the operation handle from the final result", () => {
         const compiled = compileHttpBinding(
             capability({
-                behavior: { effect: "command", idempotency: "keyed", execution: "operation" },
+                behavior: { sensitive: false, effect: "command", idempotency: "keyed", execution: "operation" },
                 output: binaryResult,
                 bindings: [
                     {
@@ -39,7 +39,7 @@ describe("HTTP operation response compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "command", idempotency: "keyed", execution: "operation" },
+                    behavior: { sensitive: false, effect: "command", idempotency: "keyed", execution: "operation" },
                     bindings: [
                         {
                             id: "http",
@@ -59,7 +59,7 @@ describe("HTTP operation response compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "command", idempotency: "keyed", execution: "operation" },
+                    behavior: { sensitive: false, effect: "command", idempotency: "keyed", execution: "operation" },
                     output: { ...binaryResult, nullable: true },
                     bindings: [
                         {
@@ -80,7 +80,7 @@ describe("HTTP operation response compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "command", idempotency: "keyed", execution: "operation" },
+                    behavior: { sensitive: false, effect: "command", idempotency: "keyed", execution: "operation" },
                     output: objectSchema({ report: binaryResult }, ["report"]),
                     bindings: [
                         {

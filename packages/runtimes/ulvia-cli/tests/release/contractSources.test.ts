@@ -99,8 +99,9 @@ async function createContract(root: string, paths: readonly string[]): Promise<v
 function capability(id: string) {
     return {
         id,
+
         access: "public",
-        behavior: { effect: "query", execution: "sync" },
+        behavior: { sensitive: false, effect: "query", execution: "sync" },
         input: { type: "object", properties: {}, required: [] },
         output: {
             type: "object",

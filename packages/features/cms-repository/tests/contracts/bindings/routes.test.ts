@@ -8,7 +8,7 @@ describe("HTTP route binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "query", execution: "sync" },
+                    behavior: { sensitive: false, effect: "query", execution: "sync" },
                     input: objectSchema({ id: stringSchema(64) }, ["id"]),
                     bindings: [
                         {
@@ -29,7 +29,7 @@ describe("HTTP route binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "query", execution: "sync" },
+                    behavior: { sensitive: false, effect: "query", execution: "sync" },
                     input: objectSchema({ id: { type: "string", maxLength: 64, nullable: true } }),
                     bindings: [
                         {
@@ -49,7 +49,7 @@ describe("HTTP route binding compilation", () => {
     test("rejects static and parameterized routes that can match the same request", () => {
         const first = capabilityDocument({
             id: "email.message.get",
-            behavior: { effect: "query", execution: "sync" },
+            behavior: { sensitive: false, effect: "query", execution: "sync" },
             input: objectSchema({ id: stringSchema(64) }, ["id"]),
             bindings: [
                 {
@@ -64,7 +64,7 @@ describe("HTTP route binding compilation", () => {
         });
         const second = capabilityDocument({
             id: "email.message.current",
-            behavior: { effect: "query", execution: "sync" },
+            behavior: { sensitive: false, effect: "query", execution: "sync" },
             input: objectSchema({}),
             bindings: [
                 {

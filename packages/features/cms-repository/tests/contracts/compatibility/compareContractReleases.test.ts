@@ -8,7 +8,7 @@ describe("contract release compatibility", () => {
         const previous = parseContractRelease(contractDocument({ version: "1.0.0" }));
         const added = capabilityDocument({
             id: "email.message.get",
-            behavior: { effect: "query", execution: "sync" },
+            behavior: { sensitive: false, effect: "query", execution: "sync" },
             input: objectSchema({ id: stringSchema(64) }, ["id"]),
             bindings: [
                 {
@@ -63,7 +63,9 @@ describe("contract release compatibility", () => {
             contractDocument({
                 version: "1.0.1",
                 capabilities: [
-                    capabilityDocument({ behavior: { effect: "command", execution: "sync", idempotency: "none" } }),
+                    capabilityDocument({
+                        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "none" },
+                    }),
                 ],
             }),
         );
@@ -158,7 +160,7 @@ describe("contract release compatibility", () => {
     test("requires a major release when a capability response effect changes", () => {
         const command = capabilityDocument({
             access: "public",
-            behavior: { effect: "command", idempotency: "natural", execution: "sync" },
+            behavior: { sensitive: false, effect: "command", idempotency: "natural", execution: "sync" },
         });
         const previous = parseContractRelease(
             contractDocument({ contractId: "ulvia.cms.access", version: "1.0.0", capabilities: [command] }),

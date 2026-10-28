@@ -1,15 +1,22 @@
 import { expect, test } from "bun:test";
-import { mkdir, symlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { batchFixture } from "./fixtures";
 
-test("missing dependencies and dependency cycles fail before writing the local cache", async () => {
+test("missing or cyclic exact parent pins fail before writing the local cache", async () => {
     for (const cyclic of [false, true]) {
         const f = await batchFixture();
         try {
-            await f.contract("batch.first", { dependency: "batch.second" });
+            const pinParent = async (id: string, parent: string) => {
+                const directory = await f.contract(id);
+                const file = join(directory, "definition.json");
+                const definition = JSON.parse(await readFile(file, "utf8"));
+                definition.extends = { contractId: parent, version: "1.0.0", digest: "sha256:" + "0".repeat(64) };
+                await writeFile(file, JSON.stringify(definition));
+            };
+            await pinParent("batch.first", "batch.second");
             if (cyclic) {
-                await f.contract("batch.second", { dependency: "batch.first" });
+                await pinParent("batch.second", "batch.first");
             }
             await expect(f.run(["release", f.source, "--recursive"])).rejects.toThrow();
             expect(await f.files.list("contracts")).toEqual([]);
@@ -28,7 +35,11 @@ test("an invalid provider prevents otherwise valid contracts from being written"
         await mkdir(provider);
         await writeFile(
             join(provider, "definition.json"),
-            JSON.stringify({ kind: "provider-manifest", providerId: "batch.provider", version: "1.0.0" }),
+            JSON.stringify({
+                kind: "provider-manifest",
+                providerId: "batch.provider",
+                version: "1.0.0",
+            }),
         );
         await expect(f.run(["release", f.source, "--recursive"])).rejects.toThrow();
         expect(await f.files.list("contracts")).toEqual([]);

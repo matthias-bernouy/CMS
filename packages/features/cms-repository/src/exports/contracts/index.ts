@@ -22,7 +22,6 @@ export type {
     CapabilityAccess,
     CapabilityBehavior,
     CapabilityDefinition,
-    CapabilityRequirement,
     CapabilityErrorDefinition,
     CapabilityExecution,
     CapabilityResponseEffect,

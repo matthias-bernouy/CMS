@@ -5,12 +5,11 @@ import { ReleaseValidationError } from "../protocol/errors";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
 import type { CatalogueContractRelease, ReleaseCatalogue } from "../../interfaces/ReleaseCatalogue";
 import { verifyEvolution } from "./verifyEvolution";
-import { verifyRequirements } from "./verifyRequirements";
 import { verifySpecialization } from "../compatibility/lineage/verifySpecialization";
 
 const PLANNED_AT = "1970-01-01T00:00:00.000Z";
 
-/** Validates a complete publication set and returns an order that satisfies inter-release requirements. */
+/** Validates a complete publication set and returns an order that satisfies inheritance and version ordering. */
 export async function planContractPublications(
     catalogue: ReleaseCatalogue,
     admissions: readonly AdmittedContractRelease[],
@@ -52,14 +51,10 @@ export async function planContractPublications(
         verifySpecialization(admission.release, [...published, ...staged]);
         planned.push(Object.freeze({ admission, publishedAt: PLANNED_AT }));
     }
-    const complete = [...published, ...planned];
-    for (const record of planned) {
-        verifyRequirements(record.admission.release, complete);
-    }
-    return orderByRequirements(planned, published);
+    return orderByInheritance(planned, published);
 }
 
-function orderByRequirements(
+function orderByInheritance(
     planned: readonly CatalogueContractRelease[],
     published: readonly CatalogueContractRelease[],
 ): readonly AdmittedContractRelease[] {
@@ -79,17 +74,13 @@ function orderByRequirements(
                     return false;
                 }
                 verifySpecialization(record.admission.release, available);
-                verifyRequirements(record.admission.release, available);
                 return true;
             } catch {
                 return false;
             }
         });
         if (index === -1) {
-            throw new ReleaseValidationError(
-                "invalid_contract",
-                "staged contract dependency cycle (requirements or inheritance)",
-            );
+            throw new ReleaseValidationError("invalid_contract", "staged contract inheritance cycle");
         }
         const [record] = pending.splice(index, 1);
         available.push(record!);

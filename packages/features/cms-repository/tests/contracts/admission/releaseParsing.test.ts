@@ -110,7 +110,7 @@ describe("contract release parsing", () => {
     test("reserves session effects to public synchronous Access commands", () => {
         const sessionCommand = capabilityDocument({
             access: "public",
-            behavior: { effect: "command", idempotency: "natural", execution: "sync" },
+            behavior: { sensitive: false, effect: "command", idempotency: "natural", execution: "sync" },
             responseEffects: ["session"],
         });
         expect(() =>
@@ -140,7 +140,7 @@ describe("contract release parsing", () => {
     test("admits neutral synchronous binary queries", () => {
         const binaryCapability = capabilityDocument({
             id: "asset.read",
-            behavior: { effect: "query", execution: "sync" },
+            behavior: { sensitive: false, effect: "query", execution: "sync" },
             input: objectSchema({ fileId: stringSchema(64) }, ["fileId"]),
             output: { type: "binary", maxBytes: 1024 },
             bindings: [

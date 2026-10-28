@@ -6,7 +6,6 @@ import type { UlviaSchema } from "../../interfaces/UlviaSchema";
 import type { VersionBump } from "./semver";
 import { firstSchemaSubsetViolation } from "./schemaAcceptance";
 import { firstProjectedOutputViolation } from "./schema/projectedOutput";
-import { compareRequirements } from "./ranges/requirements";
 
 export interface CapabilityChange {
     readonly code: "binding_changed" | "capability_changed" | "schema_changed";
@@ -34,7 +33,6 @@ export function compareCapability(
     ) {
         changes.push(major("capability_changed", `${path}.responseEffects`, "capability response effects changed"));
     }
-    changes.push(...compareRequirements(previous.requires ?? [], next.requires ?? [], `${path}.requires`));
     const inputChange = compareSchema(previous.input, next.input, `${path}.input`, "input", maxJsonDepth);
     if (inputChange) {
         changes.push(inputChange);

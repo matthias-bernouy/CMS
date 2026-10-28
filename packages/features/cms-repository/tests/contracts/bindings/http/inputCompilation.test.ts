@@ -171,7 +171,7 @@ describe("HTTP input binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "query", execution: "sync" },
+                    behavior: { sensitive: false, effect: "query", execution: "sync" },
                     input: objectSchema({ secret: sensitive }, ["secret"]),
                     bindings: [
                         {
@@ -189,7 +189,7 @@ describe("HTTP input binding compilation", () => {
 
         const access = compileHttpBinding(
             capability({
-                behavior: { effect: "query", execution: "sync" },
+                behavior: { sensitive: false, effect: "query", execution: "sync" },
                 input: objectSchema({ access: sensitive }, []),
                 bindings: [
                     {
@@ -210,7 +210,7 @@ describe("HTTP input binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "query", execution: "sync" },
+                    behavior: { sensitive: false, effect: "query", execution: "sync" },
                     bindings: [
                         {
                             id: "http",

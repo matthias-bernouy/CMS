@@ -11,11 +11,13 @@ export type CapabilityResponseEffect = "session";
  * Commands must state whether replay is naturally safe, deduplicated by an
  * invocation key, or has no guarantee and must not be retried automatically.
  * Execution is independent: an operation returns a handle before its result.
+ * Sensitivity is independent of access/effect and filters delegated authority.
  */
 export type CapabilityBehavior =
-    | { readonly effect: "query"; readonly execution: CapabilityExecution }
+    | { readonly effect: "query"; readonly execution: CapabilityExecution; readonly sensitive: boolean }
     | {
           readonly effect: "command";
+          readonly sensitive: boolean;
           readonly execution: CapabilityExecution;
           readonly idempotency: "keyed" | "natural" | "none";
       };
@@ -66,14 +68,6 @@ export interface ContractParentReference {
     readonly digest: ReleaseDigest;
 }
 
-/** A mandatory, provider-neutral capability needed to fulfill this capability. */
-export interface CapabilityRequirement {
-    readonly contractId: string;
-    readonly capabilityId: string;
-    /** Accepted dependency versions. */
-    readonly versionRange: string;
-}
-
 interface CapabilityCommon {
     readonly id: string;
     readonly description?: string;
@@ -84,7 +78,6 @@ interface CapabilityCommon {
     readonly errors: readonly CapabilityErrorDefinition[];
     /** Trusted HTTP-boundary effects a successful response may request. */
     readonly responseEffects?: readonly CapabilityResponseEffect[];
-    readonly requires?: readonly CapabilityRequirement[];
     readonly mocks?: readonly CapabilityMockDefinition[];
     readonly deprecation?: CapabilityDeprecation;
 }

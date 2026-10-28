@@ -4,11 +4,11 @@ import { join, resolve } from "node:path";
 import { LocalCollectionRepository, LocalRepositoryYanks } from "@bernouy/cms-repository/repository/filesystem";
 import { pushFixture } from "./fixtures";
 
-test("push all orders dependent contracts and omits locally yanked releases", async () => {
+test("push all orders inherited contracts and omits locally yanked releases", async () => {
     const f = await pushFixture();
     try {
-        await f.contract("a.consumer", { dependency: "z.provider" });
         await f.contract("z.provider");
+        await f.contract("a.consumer", { parent: "z.provider" });
         await f.contract("hidden.example");
         await f.run(["release", f.source, "--recursive"]);
         await new LocalRepositoryYanks(join(f.data, "repository")).set(

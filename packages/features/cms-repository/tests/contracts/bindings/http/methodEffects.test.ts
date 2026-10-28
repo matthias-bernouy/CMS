@@ -9,7 +9,7 @@ describe("HTTP method and capability effect", () => {
                 expect(() =>
                     compileHttpBinding(
                         capability({
-                            behavior: { effect: "command", execution: "sync", idempotency },
+                            behavior: { sensitive: false, effect: "command", execution: "sync", idempotency },
                             input: objectSchema({}),
                             output: { type: "null" },
                             bindings: [
@@ -35,7 +35,7 @@ describe("HTTP method and capability effect", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "query", execution: "sync" },
+                    behavior: { sensitive: false, effect: "query", execution: "sync" },
                 }),
             ),
         ).toThrow("query capabilities must use GET or QUERY");
@@ -45,7 +45,7 @@ describe("HTTP method and capability effect", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "query", execution: "sync" },
+                    behavior: { sensitive: false, effect: "query", execution: "sync" },
                     input: objectSchema({}),
                     bindings: [
                         {
@@ -62,7 +62,7 @@ describe("HTTP method and capability effect", () => {
         expect(
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "query", execution: "sync" },
+                    behavior: { sensitive: false, effect: "query", execution: "sync" },
                     input: objectSchema({ id: { type: "string", maxLength: 20 } }, ["id"]),
                     bindings: [
                         {
@@ -83,7 +83,7 @@ describe("HTTP method and capability effect", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
-                    behavior: { effect: "query", execution: "sync" },
+                    behavior: { sensitive: false, effect: "query", execution: "sync" },
                     input: objectSchema({}),
                     output: { type: "null" },
                     bindings: [
@@ -103,7 +103,7 @@ describe("HTTP method and capability effect", () => {
     test("allows an empty string path value with an unambiguous encoding", () => {
         const compiled = compileHttpBinding(
             capability({
-                behavior: { effect: "query", execution: "sync" },
+                behavior: { sensitive: false, effect: "query", execution: "sync" },
                 input: objectSchema({ id: { type: "string", maxLength: 20 } }, ["id"]),
                 bindings: [
                     {

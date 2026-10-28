@@ -9,7 +9,3 @@ export function isVersionSetSubset(source: VersionSet, target: VersionSet): bool
         )
     );
 }
-
-export function isVersionSetEmpty(set: VersionSet): boolean {
-    return set.stable.length === 0 && [...set.prereleases.values()].every((intervals) => intervals.length === 0);
-}

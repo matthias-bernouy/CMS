@@ -34,6 +34,7 @@ test("a legal contract/provider coordinate collision requires an explicit kind",
         await writeFile(
             join(provider, "definition.json"),
             JSON.stringify({
+                requires: [],
                 kind: "provider-manifest",
                 protocol: "ulvia-provider/v1",
                 schemaDialect: "ulvia-schema/v1",

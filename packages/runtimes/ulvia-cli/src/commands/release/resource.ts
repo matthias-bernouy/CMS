@@ -33,7 +33,10 @@ export async function prepareResource(directory: string, contracts: ReleaseCatal
     if (definition.kind === "provider-manifest") {
         const admission = await admitProviderManifestJson(source, contracts);
         assertFolder(directory, admission.manifest.providerId);
-        return { kind: "provider-manifest", admission };
+        return {
+            kind: "provider-manifest",
+            admission,
+        };
     }
     if (definition.kind === "collection") {
         return { kind: "collection", admission: await prepareCollectionRelease(directory, contracts) };

@@ -13,7 +13,6 @@ import type {
 import { verifyAdmission } from "cms-repository/contracts/core/admission/verifyAdmission";
 import { verifyStoredContractReleaseJson } from "cms-repository/contracts/core/admission/admitContractRelease";
 import { normalizeReleaseDeprecation, normalizeReleaseYank } from "./normalizeReleaseMetadata";
-import { verifyRequirements } from "cms-repository/contracts/core/catalogue/verifyRequirements";
 import { verifyEvolution } from "cms-repository/contracts/core/catalogue/verifyEvolution";
 import { verifySpecialization } from "cms-repository/contracts/core/compatibility/lineage/verifySpecialization";
 
@@ -59,7 +58,6 @@ export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
             throw new ReleaseValidationError("invalid_contract", "release digest is already assigned", "$.digest");
         }
         this.#assertPublisher(contractId, verified.release.publisherId);
-        verifyRequirements(verified.release, [...this.#byKey.values()]);
         verifySpecialization(verified.release, [...this.#byKey.values()]);
         verifyEvolution(verified.release, [...this.#byKey.values()], this.#limits);
         const record = freezeRecord(verified, publishedAt);

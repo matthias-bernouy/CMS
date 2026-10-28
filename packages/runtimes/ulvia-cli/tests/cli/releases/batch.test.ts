@@ -8,8 +8,8 @@ import { batchFixture } from "./fixtures";
 test("recursive release orders dependencies independently of directory names and remains idempotent", async () => {
     const f = await batchFixture();
     try {
-        await f.contract("a.consumer", { dependency: "z.provider" });
         await f.contract("z.provider");
+        await f.contract("a.consumer", { parent: "z.provider" });
         await f.run(["release", f.source, "--recursive"]);
         expect(f.output[0]).toStartWith("+ contract batch/z.provider@1.0.0");
         expect(f.output[1]).toStartWith("+ contract batch/a.consumer@1.0.0");
