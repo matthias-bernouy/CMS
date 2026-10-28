@@ -4,7 +4,7 @@ import { loadLocalInstanceConfig } from "../../runtime/instanceConfig";
 import { loadLocalInstanceConnection } from "../../runtime/instanceConnection";
 import { ensureUlviaPaths, type UlviaPaths } from "../../runtime/paths";
 import { loadInstallationConfig } from "../../runtime/stack/installation";
-import { destroyLocalKernel, listLocalInstanceNames } from "../../runtime/stack/orchestration/instances";
+import { destroyLocalEdge, listLocalInstanceNames } from "../../runtime/stack/orchestration/instances";
 import { destroyLocalServices } from "../../runtime/stack/orchestration/services";
 
 export async function resetLocalInstallation(paths: UlviaPaths, log: (message: string) => void): Promise<void> {
@@ -19,7 +19,7 @@ export async function resetLocalInstallation(paths: UlviaPaths, log: (message: s
             throw new Error(`Refusing to reset incomplete Ulvia instance data at ${root}`);
         }
         if (config && connection) {
-            await destroyLocalKernel(paths, name);
+            await destroyLocalEdge(paths, name);
         }
     }
     await destroyLocalServices(paths);

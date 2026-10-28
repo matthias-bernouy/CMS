@@ -15,15 +15,15 @@ import {
 } from "../../../src/runtime/stack/orchestration/images";
 import {
     saveLocalServicesState,
-    saveLocalKernelState,
-    localKernelProjectName,
+    saveLocalEdgeState,
+    localEdgeProjectName,
 } from "../../../src/runtime/stack/orchestration/state";
 
 /** Seed only verified image pins; all credentials, databases and CMS data start empty. */
 export async function prepareSmokeRuntimeImages(environment: Record<string, string | undefined>) {
     const root = resolve(import.meta.dir, "../../../../../..");
     const prebuilt = environment.ULVIA_SMOKE_IMAGE_VERSION?.trim();
-    const version = prebuilt || "0.1.0-kernel-smoke";
+    const version = prebuilt || "0.1.0-edge-smoke";
     assertImageVersion(version);
     if (!prebuilt) {
         await runCommand([process.execPath, "run", "infra/images/build.ts", "build", "--version", version, "all"], {
@@ -36,10 +36,10 @@ export async function prepareSmokeRuntimeImages(environment: Record<string, stri
         const metadata = await runCommand(["docker", "image", "inspect", reference]);
         return parseOfficialImageInspection(metadata.stdout, component, version);
     };
-    const [provider, repository, kernel] = await Promise.all([
+    const [provider, repository, edge] = await Promise.all([
         inspect("provider"),
         inspect("repository"),
-        inspect("kernel"),
+        inspect("edge"),
     ]);
     const paths = resolveUlviaPaths(environment);
     await ensureUlviaPaths(paths);
@@ -47,6 +47,6 @@ export async function prepareSmokeRuntimeImages(environment: Record<string, stri
     await saveLocalServicesState(paths, installation, { provider, repository });
     const instance = resolveLocalInstancePaths(paths, "default");
     await ensureLocalInstancePaths(instance);
-    await saveLocalKernelState(instance, localKernelProjectName(paths, "default"), "localhost", kernel);
+    await saveLocalEdgeState(instance, localEdgeProjectName(paths, "default"), "localhost", edge);
     return version;
 }

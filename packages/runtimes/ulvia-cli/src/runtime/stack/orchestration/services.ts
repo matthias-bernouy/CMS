@@ -63,7 +63,7 @@ export function assertStartVersion(state: LocalServicesState | null, requestedVe
 
 export async function upgradeLocalService(
     paths: UlviaPaths,
-    component: Exclude<OfficialImageComponent, "kernel">,
+    component: Exclude<OfficialImageComponent, "edge">,
     version: string,
     log: (message: string) => void,
 ): Promise<void> {
@@ -152,7 +152,7 @@ async function serviceCredentials(paths: UlviaPaths) {
     };
 }
 
-function serviceName(component: Exclude<OfficialImageComponent, "kernel">): string {
+function serviceName(component: Exclude<OfficialImageComponent, "edge">): string {
     return component === "provider" ? "Provider" : "Repository";
 }
 

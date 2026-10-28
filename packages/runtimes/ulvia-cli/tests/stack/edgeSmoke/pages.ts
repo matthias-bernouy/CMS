@@ -2,8 +2,8 @@ import type { Page } from "playwright";
 import { cyclePublicationState, mutateRoute, mutateSeo, verifyPageDetailTabs } from "./pageLifecycle";
 import { submitPageMutation, waitForRevisionChange } from "./pageMutations";
 
-export async function mutatePages(page: Page, kernelOrigin: string): Promise<void> {
-    await page.goto(`${kernelOrigin}/admin/pages`);
+export async function mutatePages(page: Page, edgeOrigin: string): Promise<void> {
+    await page.goto(`${edgeOrigin}/admin/pages`);
     await page.locator("#pages-list").waitFor();
     const createDialog = page.locator("#create-page-dialog");
     if (await createDialog.evaluate((dialog: HTMLDialogElement) => dialog.open)) {
@@ -69,8 +69,8 @@ export async function mutatePages(page: Page, kernelOrigin: string): Promise<voi
     if (!publishResponse.ok()) {
         throw new Error(`Page publication failed (${publishResponse.status()}).`);
     }
-    await cyclePublicationState(page, kernelOrigin, detailUrl);
-    await page.goto(`${kernelOrigin}/admin/pages`);
+    await cyclePublicationState(page, edgeOrigin, detailUrl);
+    await page.goto(`${edgeOrigin}/admin/pages`);
     await page.locator("#pages-list").waitFor();
 }
 

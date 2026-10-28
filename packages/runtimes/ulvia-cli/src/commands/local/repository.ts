@@ -16,7 +16,7 @@ const HELP = `Usage:
 One default Repository deployment, with independent persistent data and image pins.
 Login verifies and saves the Repository identity; writes are signed locally.
 TLS can use an external reverse proxy or a dedicated ACME proxy on ports 80/443.
-No Provider, Kernel or database is started. Upgrades require a published version.`;
+No Provider, Edge or database is started. Upgrades require a published version.`;
 
 export async function standaloneRepositoryCommand(
     args: readonly string[],

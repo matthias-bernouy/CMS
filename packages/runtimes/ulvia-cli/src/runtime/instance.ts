@@ -5,7 +5,8 @@ export async function provisionLocalInstance(
     providerUrl: string,
     operatorToken: string,
     config: LocalInstanceConfig,
-    kernelUrl: string,
+    cmsUrl: string,
+    gatewayUrl: string,
 ): Promise<Omit<LocalInstanceConnection, "schema">> {
     const response = await fetch(`${providerUrl}/ulvia/operator/instances`, {
         method: "POST",
@@ -16,7 +17,8 @@ export async function provisionLocalInstance(
         },
         body: JSON.stringify({
             label: config.label,
-            kernelUrl,
+            cmsUrl,
+            gatewayUrl,
             administrator: { email: config.adminEmail, password: config.adminPassword },
         }),
     });

@@ -29,10 +29,10 @@ export async function inspectLightDomIsolation(page: Page): Promise<void> {
     }
 }
 
-export async function inspectResponsiveAdministration(page: Page, kernelOrigin: string): Promise<void> {
+export async function inspectResponsiveAdministration(page: Page, edgeOrigin: string): Promise<void> {
     await page.setViewportSize({ width: 390, height: 844 });
     try {
-        await page.goto(`${kernelOrigin}/admin/collections`);
+        await page.goto(`${edgeOrigin}/admin/collections`);
         const shell = page.locator('[cms-bloc="ulvia-official-app-shell"]');
         const navigation = shell.locator("#workspace-navigation");
         const navigationToggle = shell.locator('[data-mobile-toggle="navigation"]');
@@ -59,7 +59,7 @@ export async function inspectResponsiveAdministration(page: Page, kernelOrigin: 
         if (overflow > 1) {
             throw new Error(`Compact administration overflows horizontally by ${overflow}px.`);
         }
-        await page.goto(`${kernelOrigin}/admin/files`);
+        await page.goto(`${edgeOrigin}/admin/files`);
         const upload = page.getByRole("button", { name: /^(Upload a file|Téléverser un fichier)$/u });
         await upload.click();
         const dialog = page.locator("#upload-file-dialog");

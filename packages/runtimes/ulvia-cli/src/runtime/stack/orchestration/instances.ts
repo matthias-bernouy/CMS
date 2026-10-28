@@ -12,46 +12,46 @@ import {
 } from "../../paths";
 import { instancePublicUrl } from "../ports";
 import { composeDown, composeStop, composeUp, inspectComposeServices, type ComposeProject } from "./compose";
-import { localKernelEnvironment } from "./environment";
+import { localEdgeEnvironment } from "./environment";
 import { ensureOfficialImage, pullOfficialImage, type OfficialImage } from "./images";
 import { requireRunningLocalProvider } from "./services";
-import { loadLocalKernelState, loadLocalServicesState, localKernelProjectName, saveLocalKernelState } from "./state";
+import { loadLocalEdgeState, loadLocalServicesState, localEdgeProjectName, saveLocalEdgeState } from "./state";
 import type { LocalServicesState } from "./state";
 
-export async function startLocalKernel(paths: UlviaPaths, name: string, log: (message: string) => void): Promise<void> {
+export async function startLocalEdge(paths: UlviaPaths, name: string, log: (message: string) => void): Promise<void> {
     const runtime = await requireInstance(paths, name);
     const services = await requireServices(paths);
     await requireRunningLocalProvider(paths);
-    const installed = await loadLocalKernelState(runtime.paths);
-    const image = installed?.image ?? (await pullOfficialImage("kernel", services.images.provider.version, log));
+    const installed = await loadLocalEdgeState(runtime.paths);
+    const image = installed?.image ?? (await pullOfficialImage("edge", services.images.provider.version, log));
     await ensureOfficialImage(image);
-    const projectName = installed?.projectName ?? localKernelProjectName(paths, name);
-    await composeUp(kernelProject(runtime.paths, runtime.config, runtime.connection, services, projectName, image));
-    await saveLocalKernelState(runtime.paths, projectName, runtime.config.hostname, image);
+    const projectName = installed?.projectName ?? localEdgeProjectName(paths, name);
+    await composeUp(edgeProject(runtime.paths, runtime.config, runtime.connection, services, projectName, image));
+    await saveLocalEdgeState(runtime.paths, projectName, runtime.config.hostname, image);
     const publicUrl = instancePublicUrl(runtime.config.hostname, services.installation);
     await waitForProxyRoute(runtime.config.hostname, services.installation);
     log(`Instance ${name} is ready at ${publicUrl}.`);
 }
 
-export async function stopLocalKernel(paths: UlviaPaths, name: string): Promise<void> {
+export async function stopLocalEdge(paths: UlviaPaths, name: string): Promise<void> {
     await composeStop(await projectForExistingInstance(paths, name));
 }
 
-export async function destroyLocalKernel(paths: UlviaPaths, name: string): Promise<void> {
+export async function destroyLocalEdge(paths: UlviaPaths, name: string): Promise<void> {
     await composeDown(await projectForExistingInstance(paths, name));
 }
 
-export async function describeLocalKernel(paths: UlviaPaths, name: string) {
+export async function describeLocalEdge(paths: UlviaPaths, name: string) {
     const runtime = await requireInstance(paths, name);
-    const state = await loadLocalKernelState(runtime.paths);
+    const state = await loadLocalEdgeState(runtime.paths);
     const services = await requireServices(paths);
-    const projectName = state?.projectName ?? localKernelProjectName(paths, name);
+    const projectName = state?.projectName ?? localEdgeProjectName(paths, name);
     return {
         config: runtime.config,
         state,
         services: state
             ? await inspectComposeServices(
-                  kernelProject(runtime.paths, runtime.config, runtime.connection, services, projectName, state.image),
+                  edgeProject(runtime.paths, runtime.config, runtime.connection, services, projectName, state.image),
               )
             : [],
         url: instancePublicUrl(runtime.config.hostname, services.installation),
@@ -69,23 +69,23 @@ export async function listLocalInstanceNames(paths: UlviaPaths): Promise<string[
 async function projectForExistingInstance(paths: UlviaPaths, name: string): Promise<ComposeProject> {
     const runtime = await requireInstance(paths, name);
     const services = await requireServices(paths);
-    const state = await loadLocalKernelState(runtime.paths);
+    const state = await loadLocalEdgeState(runtime.paths);
     if (!state) {
         throw new Error(`Local instance ${name} has not been started`);
     }
-    return kernelProject(runtime.paths, runtime.config, runtime.connection, services, state.projectName, state.image);
+    return edgeProject(runtime.paths, runtime.config, runtime.connection, services, state.projectName, state.image);
 }
 
-export function localKernelComposeProject(
+export function localEdgeComposeProject(
     runtime: Awaited<ReturnType<typeof requireInstance>>,
     services: LocalServicesState,
     projectName: string,
     image: OfficialImage,
 ): ComposeProject {
-    return kernelProject(runtime.paths, runtime.config, runtime.connection, services, projectName, image);
+    return edgeProject(runtime.paths, runtime.config, runtime.connection, services, projectName, image);
 }
 
-function kernelProject(
+function edgeProject(
     paths: LocalInstancePaths,
     config: LocalInstanceConfig,
     connection: LocalInstanceConnection,
@@ -94,10 +94,10 @@ function kernelProject(
     image: OfficialImage,
 ): ComposeProject {
     return {
-        definition: "kernel",
-        overlays: services.installation.tls.mode === "acme" ? ["kernel-tls"] : [],
+        definition: "edge",
+        overlays: services.installation.tls.mode === "acme" ? ["edge-tls"] : [],
         projectName,
-        environment: localKernelEnvironment(paths, config, connection, services, image),
+        environment: localEdgeEnvironment(paths, config, connection, services, image, projectName),
     };
 }
 

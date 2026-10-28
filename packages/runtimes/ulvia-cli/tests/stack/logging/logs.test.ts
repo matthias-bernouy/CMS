@@ -7,7 +7,7 @@ const item = {
     time: new Date().toISOString(),
     receivedAt: new Date().toISOString(),
     instanceId: "instance-a",
-    service: "cms-kernel",
+    service: "cms-edge",
     level: "error" as const,
     event: "page.render.failed",
 };
@@ -16,7 +16,7 @@ test("instance logs send service, level and correlation filters to the selected 
     const requests: unknown[] = [];
     const output: string[] = [];
     await showInstanceLogs(
-        ["kernel", "--level", "warn", "--event", item.event, "--json"],
+        ["edge", "--level", "warn", "--event", item.event, "--json"],
         {
             query: async (input) => {
                 requests.push(input);
@@ -29,7 +29,7 @@ test("instance logs send service, level and correlation filters to the selected 
         (line) => output.push(line),
     );
     expect(requests).toEqual([
-        { service: "cms-kernel", levels: ["warn", "error", "fatal"], event: item.event, limit: 200 },
+        { service: "cms-edge", levels: ["warn", "error", "fatal"], event: item.event, limit: 200 },
     ]);
     expect(JSON.parse(output[0]!).event).toBe(item.event);
 });
@@ -38,7 +38,7 @@ test("stack details are fetched only for the returned entry and cannot select an
     const ids: string[] = [];
     const output: string[] = [];
     await showInstanceLogs(
-        ["kernel", "--stack"],
+        ["edge", "--stack"],
         {
             query: async () => ({ items: [item] }),
             get: async (id) => {

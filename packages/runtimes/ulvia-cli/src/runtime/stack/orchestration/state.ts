@@ -6,7 +6,7 @@ import { loadInstallationConfig, parseInstallationConfig, type InstallationConfi
 import { isOfficialImage, type OfficialImage } from "./images";
 
 const SERVICES_SCHEMA = "ulvia.local-services-stack.v2" as const;
-const INSTANCE_SCHEMA = "ulvia.local-kernel-stack.v2" as const;
+const INSTANCE_SCHEMA = "ulvia.local-edge-stack.v2" as const;
 
 export type LocalServicesState = Readonly<{
     schema: typeof SERVICES_SCHEMA;
@@ -17,7 +17,7 @@ export type LocalServicesState = Readonly<{
     installation: InstallationConfig;
 }>;
 
-export type LocalKernelState = Readonly<{
+export type LocalEdgeState = Readonly<{
     schema: typeof INSTANCE_SCHEMA;
     projectName: string;
     image: OfficialImage;
@@ -33,7 +33,7 @@ export function localServicesIdentity(paths: UlviaPaths) {
     } as const;
 }
 
-export function localKernelProjectName(paths: UlviaPaths, name: string): string {
+export function localEdgeProjectName(paths: UlviaPaths, name: string): string {
     return `ulvia-${name}-${dataSuffix(paths)}`;
 }
 
@@ -83,7 +83,7 @@ export async function saveLocalServicesState(
     return state;
 }
 
-export async function loadLocalKernelState(instance: LocalInstancePaths): Promise<LocalKernelState | null> {
+export async function loadLocalEdgeState(instance: LocalInstancePaths): Promise<LocalEdgeState | null> {
     const value = await readState(join(instance.root, "stack.json"));
     if (value === null) {
         return null;
@@ -92,20 +92,20 @@ export async function loadLocalKernelState(instance: LocalInstancePaths): Promis
         value.schema !== INSTANCE_SCHEMA ||
         typeof value.projectName !== "string" ||
         typeof value.hostname !== "string" ||
-        !isOfficialImage(value.image, "kernel")
+        !isOfficialImage(value.image, "edge")
     ) {
-        throw new Error("Ulvia local Kernel state is invalid");
+        throw new Error("Ulvia local Edge state is invalid");
     }
-    return value as LocalKernelState;
+    return value as LocalEdgeState;
 }
 
-export async function saveLocalKernelState(
+export async function saveLocalEdgeState(
     instance: LocalInstancePaths,
     projectName: string,
     hostname: string,
     image: OfficialImage,
-): Promise<LocalKernelState> {
-    const state: LocalKernelState = {
+): Promise<LocalEdgeState> {
+    const state: LocalEdgeState = {
         schema: INSTANCE_SCHEMA,
         projectName,
         image,

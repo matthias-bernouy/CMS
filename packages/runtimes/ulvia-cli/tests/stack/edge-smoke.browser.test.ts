@@ -9,27 +9,27 @@ import { bootstrapOfficialRepository } from "../../src/commands/bootstrap";
 import { cleanupSmokeRuntime } from "./fixtures/runtimeCleanup";
 import { prepareSmokeRuntimeImages } from "./fixtures/runtimeImages";
 import { prepareSmokeCollectionRelease } from "./fixtures/collectionReleases";
-import { runKernelSmoke, verifyKernelStateAfterRestart } from "./kernelSmoke/flows";
-import { verifySecondInstanceIsolation } from "./kernelSmoke/providerAccess";
+import { runEdgeSmoke, verifyEdgeStateAfterRestart } from "./edgeSmoke/flows";
+import { verifySecondInstanceIsolation } from "./edgeSmoke/providerAccess";
 
-const smoke = process.env.ULVIA_RUN_KERNEL_SMOKE === "1" ? test : test.skip;
-const PORTS = { kernel: 15_100, repository: 15_102, provider: 15_103 } as const;
-const KERNEL_URL = `http://localhost:${PORTS.kernel}`;
+const smoke = process.env.ULVIA_RUN_EDGE_SMOKE === "1" ? test : test.skip;
+const PORTS = { edge: 15_100, repository: 15_102, provider: 15_103 } as const;
+const EDGE_URL = `http://localhost:${PORTS.edge}`;
 
 smoke(
-    "fresh local installation publishes a Page and preserves Kernel state",
+    "fresh local installation publishes a Page and preserves Edge state",
     async () => {
-        assertPortAvailable(PORTS.kernel, "shared proxy");
+        assertPortAvailable(PORTS.edge, "shared proxy");
         assertPortAvailable(PORTS.repository, "official Repository");
         assertPortAvailable(PORTS.provider, "official Provider");
-        const data = await mkdtemp(join(tmpdir(), "ulvia-kernel-smoke-"));
+        const data = await mkdtemp(join(tmpdir(), "ulvia-edge-smoke-"));
         const environment = {
             ...process.env,
             ULVIA_DATA_DIR: data,
             CMS_REPOSITORY_URL: "http://repository:3000",
             CMS_REPOSITORY_ALLOW_INSECURE_HTTP: "true",
             ULVIA_CONFIG_DIR: join(data, "client"),
-            ULVIA_HTTP_PORT: String(PORTS.kernel),
+            ULVIA_HTTP_PORT: String(PORTS.edge),
             ULVIA_REPOSITORY_PORT: String(PORTS.repository),
             ULVIA_PROVIDER_PORT: String(PORTS.provider),
         };
@@ -55,7 +55,7 @@ smoke(
                 environment,
                 log: (message) => (output += `${message}\n`),
             });
-            await waitForHttp(`${KERNEL_URL}/login`);
+            await waitForHttp(`${EDGE_URL}/login`);
             const credentials = JSON.parse(
                 await readFile(join(data, "instances", "default", "runtime.json"), "utf8"),
             ) as {
@@ -69,15 +69,15 @@ smoke(
             page.on("pageerror", (error) => browserErrors.push(error.stack ?? error.message));
 
             report("initial browser journey");
-            await runKernelSmoke(page, credentials, KERNEL_URL);
+            await runEdgeSmoke(page, credentials, EDGE_URL);
             const journal: string[] = [];
-            await runCli(["instance", "logs", "default", "kernel", "--event", "kernel.started", "--json"], {
+            await runCli(["instance", "logs", "default", "edge", "--event", "edge.started", "--json"], {
                 environment,
                 log: (line) => journal.push(line),
             });
-            expect(journal.some((line) => JSON.parse(line).event === "kernel.started")).toBe(true);
+            expect(journal.some((line) => JSON.parse(line).event === "edge.started")).toBe(true);
             report("second instance isolation");
-            await verifySecondInstanceIsolation(data, credentials, KERNEL_URL, `http://127.0.0.1:${PORTS.provider}`);
+            await verifySecondInstanceIsolation(data, credentials, EDGE_URL, `http://127.0.0.1:${PORTS.provider}`);
 
             expect(browserErrors).toEqual([]);
             await browser.close();
@@ -99,7 +99,7 @@ smoke(
             output += "\n--- persisted-state restart ---\n";
             report("persisted-state restart");
             await runCli(["start"], { environment, log: (message) => (output += `${message}\n`) });
-            await waitForHttp(`${KERNEL_URL}/login`);
+            await waitForHttp(`${EDGE_URL}/login`);
             browser = await chromium.launch({ headless: true });
             const restartedPage = await browser.newPage({ locale: "en-US", viewport: { width: 1440, height: 1000 } });
             restartedPage.setDefaultTimeout(15_000);
@@ -109,7 +109,7 @@ smoke(
             restartedPage.on("pageerror", (error) => restartErrors.push(error.stack ?? error.message));
 
             report("persisted browser journey");
-            await verifyKernelStateAfterRestart(restartedPage, credentials, KERNEL_URL);
+            await verifyEdgeStateAfterRestart(restartedPage, credentials, EDGE_URL);
             expect(restartErrors).toEqual([]);
             await browser.close();
             browser = undefined;
@@ -141,7 +141,7 @@ smoke(
 );
 
 function report(step: string): void {
-    console.info(`[kernel-smoke] ${step}`);
+    console.info(`[edge-smoke] ${step}`);
 }
 
 async function waitForHttp(url: string): Promise<void> {
@@ -156,7 +156,7 @@ async function waitForHttp(url: string): Promise<void> {
         }
         await Bun.sleep(250);
     }
-    throw new Error("Local Kernel did not become ready");
+    throw new Error("Local Edge did not become ready");
 }
 
 function assertPortAvailable(port: number, label: string): void {
@@ -171,7 +171,7 @@ function assertPortAvailable(port: number, label: string): void {
         const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
         if (code === "EADDRINUSE") {
             throw new Error(
-                `Kernel smoke cannot start because the ${label} port ${port} is already in use. Stop the existing local Ulvia installation and retry.`,
+                `Edge smoke cannot start because the ${label} port ${port} is already in use. Stop the existing local Ulvia installation and retry.`,
             );
         }
         throw error;
@@ -182,7 +182,7 @@ async function writeFailureArtifacts(
     output: string,
     browser: Awaited<ReturnType<typeof chromium.launch>> | undefined,
 ): Promise<void> {
-    const directory = resolve(process.env.ULVIA_SMOKE_ARTIFACTS_DIR ?? "artifacts/kernel-smoke");
+    const directory = resolve(process.env.ULVIA_SMOKE_ARTIFACTS_DIR ?? "artifacts/edge-smoke");
     await mkdir(directory, { recursive: true });
     await writeFile(join(directory, "runtime.log"), output, "utf8");
     const page = browser?.contexts()[0]?.pages()[0];

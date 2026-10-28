@@ -1,3 +1,4 @@
+import { localEdgeProjectName } from "../../runtime/stack/orchestration/state";
 import { readdir } from "node:fs/promises";
 import { provisionLocalInstance } from "../../runtime/instance";
 import { loadLocalInstanceConfig, loadOrCreateLocalInstanceConfig, validHostname } from "../../runtime/instanceConfig";
@@ -11,7 +12,7 @@ import {
 import type { InstallationConfig } from "../../runtime/stack/installation";
 import { releaseInstanceDomain, reserveInstanceDomain } from "../../runtime/stack/domains";
 import { instancePublicUrl, localInstanceHostname } from "../../runtime/stack/ports";
-import { providerOperatorAccess, startLocalKernel } from "../../runtime/stack/orchestration/instances";
+import { providerOperatorAccess, startLocalEdge } from "../../runtime/stack/orchestration/instances";
 import { assertProviderRunning, listInstances, runExistingInstanceCommand } from "./instanceOperations";
 
 export async function instanceCommand(
@@ -71,11 +72,12 @@ async function createNamedInstance(
             operator.token,
             config,
             instancePublicUrl(hostname, services.installation),
+            `http://${localEdgeProjectName(paths, name)}-edge:3000`,
         );
         await saveLocalInstanceConnection(instancePaths.root, connection);
         provisioned = true;
         log(`Provisioned Provider instance ${name}.`);
-        await startLocalKernel(paths, name, log);
+        await startLocalEdge(paths, name, log);
         log(`Credentials: ulvia instance credentials ${name}`);
     } catch (error) {
         if (reservationCreated && !provisioned) {

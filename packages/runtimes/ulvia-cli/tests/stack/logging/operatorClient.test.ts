@@ -55,7 +55,7 @@ test("local operator queries use the native loopback origin and never forward th
     });
     try {
         const client = new OperatorObservabilityClient(server.url.origin, "private-control-bearer", instanceId);
-        expect((await client.query({ service: "cms-kernel" })).items).toEqual([]);
+        expect((await client.query({ service: "cms-edge" })).items).toEqual([]);
         expect(requests).toEqual([
             { path: "/gateway/route", authorization: "Bearer private-control-bearer" },
             { path: "/gateway/invocations", authorization: "Bearer private-control-bearer" },

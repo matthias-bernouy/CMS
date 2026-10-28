@@ -25,7 +25,7 @@ Usage:
   ulvia instance <start | stop | status | credentials | logs> <name>
   ulvia instance list
   ulvia instance delete <name> --yes
-  ulvia upgrade <kernel | provider | repository> --version <version>
+  ulvia upgrade <edge | provider | repository> --version <version>
   ulvia reset --yes
   ulvia release <resource-directory> [--recursive]
   ulvia preview <collection-directory> --output <new-directory> [--dependency <directory>] [--no-screenshots] [--serve]
@@ -42,7 +42,7 @@ Commands:
   repository   Manage an independent Repository deployment
   identity     Manage persistent local signing identities
   namespace    Manage cryptographic Repository namespace ownership
-  instance     Create and manage independent Kernel instances
+  instance     Create and manage independent Edge instances
   upgrade      Pull and install one exact official Docker image version
   reset        Delete all instances, services data, and repository releases after --yes
   preview      Generate example frames, captures, and a local explorer

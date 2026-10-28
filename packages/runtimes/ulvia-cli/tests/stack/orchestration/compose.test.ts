@@ -6,14 +6,14 @@ import { localServicesEnvironment } from "../../../src/runtime/stack/orchestrati
 import { localServicesIdentity } from "../../../src/runtime/stack/orchestration/state";
 
 test("Compose status accepts the array and line-delimited Docker formats", () => {
-    const service = { Service: "kernel", State: "running", Health: "healthy" };
+    const service = { Service: "edge", State: "running", Health: "healthy" };
     expect(parseComposeServices(JSON.stringify([service]))).toEqual([
-        { service: "kernel", state: "running", health: "healthy" },
+        { service: "edge", state: "running", health: "healthy" },
     ]);
     expect(
         parseComposeServices(`${JSON.stringify(service)}\n${JSON.stringify({ ...service, Service: "provider" })}`),
     ).toEqual([
-        { service: "kernel", state: "running", health: "healthy" },
+        { service: "edge", state: "running", health: "healthy" },
         { service: "provider", state: "running", health: "healthy" },
     ]);
 });

@@ -1,21 +1,22 @@
 services:
-    kernel:
-        image: ${KERNEL_IMAGE}
+    edge:
+        image: ${EDGE_IMAGE}
         restart: unless-stopped
         init: true
         user: "${ULVIA_UID}:${ULVIA_GID}"
         environment:
             MODE: PROD
             NODE_ENV: production
-            KERNEL_HOST: 0.0.0.0
-            KERNEL_PORT: "3000"
-            KERNEL_PUBLIC_URL: ${ULVIA_INSTANCE_URL}
+            CMS_HOST: 0.0.0.0
+            CMS_PORT: "3000"
+            CMS_PUBLIC_URL: ${ULVIA_INSTANCE_URL}
             CMS_INSTALLATIONS_PROVIDER_URL: http://ulvia-provider:5103
             CMS_INSTALLATIONS_PROVIDER_TOKEN: ${CMS_INSTALLATIONS_PROVIDER_TOKEN}
             VIRTUAL_HOST: ${ULVIA_INSTANCE_HOSTNAME}
             VIRTUAL_PORT: "3000"
         networks:
-            - instances
+            instances:
+                aliases: ["${ULVIA_EDGE_NETWORK_ALIAS}"]
         read_only: true
         tmpfs:
             - /tmp:rw,nosuid,nodev,noexec,size=256m

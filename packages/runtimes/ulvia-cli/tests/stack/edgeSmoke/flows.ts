@@ -13,57 +13,55 @@ import { deleteSmokePage, verifyPublishedPage } from "./pageLifecycle";
 import { mutatePages } from "./pages";
 import { mutateAccess, mutateProviders } from "./providerAccess";
 
-export async function runKernelSmoke(
+export async function runEdgeSmoke(
     page: Page,
     credentials: { adminEmail: string; adminPassword: string },
-    kernelOrigin: string,
+    edgeOrigin: string,
 ): Promise<void> {
-    await stage("sign in", () => signIn(page, credentials, kernelOrigin));
-    await stage("admin routes", () => inspectAdminRoutes(page, kernelOrigin));
-    await stage("responsive administration", () => inspectResponsiveAdministration(page, kernelOrigin));
+    await stage("sign in", () => signIn(page, credentials, edgeOrigin));
+    await stage("admin routes", () => inspectAdminRoutes(page, edgeOrigin));
+    await stage("responsive administration", () => inspectResponsiveAdministration(page, edgeOrigin));
     await stage("Light DOM isolation", () => inspectLightDomIsolation(page));
-    await stage("Pages", () => mutatePages(page, kernelOrigin));
+    await stage("Pages", () => mutatePages(page, edgeOrigin));
     await stage("files", () => mutateFiles(page));
     await stage("collections and theme", () => mutateCollections(page));
     await stage("settings", () => mutateSettings(page));
     await stage("provider routing", () => mutateProviders(page));
     await stage("access", () => mutateAccess(page, credentials.adminEmail));
     await stage("diagnostics", () => inspectDiagnostics(page));
-    await stage("observability", () => inspectObservability(page, kernelOrigin));
+    await stage("observability", () => inspectObservability(page, edgeOrigin));
 }
 
-export async function verifyKernelStateAfterRestart(
+export async function verifyEdgeStateAfterRestart(
     page: Page,
     credentials: { adminEmail: string; adminPassword: string },
-    kernelOrigin: string,
+    edgeOrigin: string,
 ): Promise<void> {
-    await signIn(page, credentials, kernelOrigin);
+    await signIn(page, credentials, edgeOrigin);
     await page.getByText("Smoke Page", { exact: true }).waitFor();
     await stage("persisted files", () => verifyFilesAfterRestart(page));
     await stage("persisted collection", () => verifyCollectionAfterRestart(page));
     await stage("persisted administration", () => verifyAdministrationAfterRestart(page, credentials));
-    await verifyPublishedPage(page, kernelOrigin);
-    await stage("Page deletion", () => deleteSmokePage(page, kernelOrigin));
+    await verifyPublishedPage(page, edgeOrigin);
+    await stage("Page deletion", () => deleteSmokePage(page, edgeOrigin));
 }
 
 async function stage(name: string, operation: () => Promise<void>): Promise<void> {
-    console.info(`[kernel-smoke] ${name}`);
+    console.info(`[edge-smoke] ${name}`);
     try {
         await operation();
-        console.info(`[kernel-smoke] ${name}: done`);
+        console.info(`[edge-smoke] ${name}: done`);
     } catch (error) {
-        throw new Error(
-            `Kernel smoke failed during ${name}: ${error instanceof Error ? error.message : String(error)}`,
-        );
+        throw new Error(`Edge smoke failed during ${name}: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
 async function signIn(
     page: Page,
     credentials: { adminEmail: string; adminPassword: string },
-    kernelOrigin: string,
+    edgeOrigin: string,
 ): Promise<void> {
-    await page.goto(`${kernelOrigin}/login`);
+    await page.goto(`${edgeOrigin}/login`);
     await page.getByRole("heading", { name: /^(Welcome back|Bon retour)$/u }).waitFor();
     await page.getByLabel(/^(Email address|Adresse e-mail)$/u).fill(credentials.adminEmail);
     await page.getByLabel(/^(Password|Mot de passe)$/u).fill(credentials.adminPassword);
@@ -75,7 +73,7 @@ async function signIn(
     if (!response.ok()) {
         throw new Error(`login capability returned ${response.status()}`);
     }
-    const cookies = await page.context().cookies(kernelOrigin);
+    const cookies = await page.context().cookies(edgeOrigin);
     if (!cookies.some((cookie) => cookie.name === "cms-session")) {
         const headers = await response.allHeaders();
         const signals = ["set-cookie", "x-ulvia-session-effect"].filter((name) => Object.hasOwn(headers, name));
@@ -89,7 +87,7 @@ async function signIn(
     await page.getByRole("heading", { name: "Pages", exact: true }).waitFor();
 }
 
-async function inspectAdminRoutes(page: Page, kernelOrigin: string): Promise<void> {
+async function inspectAdminRoutes(page: Page, edgeOrigin: string): Promise<void> {
     for (const path of [
         "/admin",
         "/admin/pages",
@@ -100,9 +98,9 @@ async function inspectAdminRoutes(page: Page, kernelOrigin: string): Promise<voi
         "/admin/settings",
         "/admin/diagnostics",
     ]) {
-        console.info(`[kernel-smoke] admin route ${path}`);
-        const response = await page.goto(`${kernelOrigin}${path}`, { timeout: 15_000, waitUntil: "domcontentloaded" });
-        console.info(`[kernel-smoke] admin route ${path}: response`);
+        console.info(`[edge-smoke] admin route ${path}`);
+        const response = await page.goto(`${edgeOrigin}${path}`, { timeout: 15_000, waitUntil: "domcontentloaded" });
+        console.info(`[edge-smoke] admin route ${path}: response`);
         if (!response?.ok()) {
             throw new Error(`${path} returned ${response?.status() ?? "no response"}`);
         }
@@ -115,9 +113,9 @@ async function inspectAdminRoutes(page: Page, kernelOrigin: string): Promise<voi
         ) {
             throw new Error(`${path} rendered an internal server error`);
         }
-        console.info(`[kernel-smoke] admin route ${path}: done`);
+        console.info(`[edge-smoke] admin route ${path}: done`);
     }
-    await page.goto(`${kernelOrigin}/admin/pages`);
+    await page.goto(`${edgeOrigin}/admin/pages`);
     await page.locator("#pages-list").waitFor();
 }
 

@@ -8,6 +8,7 @@ COPY packages/ ./packages/
 
 RUN bun install --frozen-lockfile
 RUN bunx tsc --build packages/runtimes/ulvia-provider-server
+RUN cd packages/features/cms-content && bun run build:browser
 
 FROM build AS runtime-source
 RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules

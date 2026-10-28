@@ -35,21 +35,21 @@ composeTest("one Compose model renders loopback HTTP and public ACME exposure", 
     expect(tls.services.acme.environment.DEFAULT_EMAIL).toBe("ops@example.com");
 });
 
-composeTest("one isolated Kernel receives no shared persistence credentials", () => {
-    const config = render(["kernel.yml", "kernel-tls.yml"]);
-    expect(Object.keys(config.services)).toEqual(["kernel"]);
-    const kernel = config.services.kernel;
-    expect(kernel.environment).toMatchObject({
+composeTest("one isolated Edge receives no shared persistence credentials", () => {
+    const config = render(["edge.yml", "edge-tls.yml"]);
+    expect(Object.keys(config.services)).toEqual(["edge"]);
+    const edge = config.services.edge;
+    expect(edge.environment).toMatchObject({
         MODE: "PROD",
-        KERNEL_PUBLIC_URL: "https://example.com",
+        CMS_PUBLIC_URL: "https://example.com",
         CMS_INSTALLATIONS_PROVIDER_URL: "http://ulvia-provider:5103",
         ACME_HOST: "example.com",
     });
     for (const secret of ["MONGO_URL", "CMS_SESSION_SECRET", "CMS_KEK_HEX", "ULVIA_PROVIDER_OPERATOR_TOKEN"]) {
-        expect(kernel.environment[secret]).toBeUndefined();
+        expect(edge.environment[secret]).toBeUndefined();
     }
-    expect(kernel.read_only).toBe(true);
-    expect(kernel.cap_drop).toEqual(["ALL"]);
+    expect(edge.read_only).toBe(true);
+    expect(edge.cap_drop).toEqual(["ALL"]);
 });
 
 composeTest("standalone Repository uses owner publication and exposes only its TLS proxy publicly", () => {
@@ -105,7 +105,7 @@ function composeEnvironment(): Record<string, string> {
     return {
         PROVIDER_IMAGE: "ulvia-provider:test",
         OFFICIAL_REPOSITORY_IMAGE: "ulvia-official-repository:test",
-        KERNEL_IMAGE: "ulvia-kernel:test",
+        EDGE_IMAGE: "ulvia-edge:test",
         ULVIA_BIND_ADDRESS: "127.0.0.1",
         ULVIA_HTTP_PORT: "15100",
         ULVIA_HTTPS_PORT: "15443",

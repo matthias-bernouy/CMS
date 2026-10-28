@@ -14,12 +14,12 @@ import type { InstallationConfig } from "../../runtime/stack/installation";
 import { releaseInstanceDomain } from "../../runtime/stack/domains";
 import { instancePublicUrl } from "../../runtime/stack/ports";
 import {
-    describeLocalKernel,
-    destroyLocalKernel,
+    describeLocalEdge,
+    destroyLocalEdge,
     listLocalInstanceNames,
     providerOperatorAccess,
-    startLocalKernel,
-    stopLocalKernel,
+    startLocalEdge,
+    stopLocalEdge,
 } from "../../runtime/stack/orchestration/instances";
 import { requireRunningLocalProvider } from "../../runtime/stack/orchestration/services";
 import { loadLocalServicesState } from "../../runtime/stack/orchestration/state";
@@ -95,9 +95,9 @@ async function runLifecycleAction(
     log: (message: string) => void,
 ): Promise<void> {
     if (action === "start") {
-        await startLocalKernel(paths, name, log);
+        await startLocalEdge(paths, name, log);
     } else if (action === "stop") {
-        await stopLocalKernel(paths, name);
+        await stopLocalEdge(paths, name);
         log(`Instance ${name} stopped.`);
     } else if (action === "status") {
         await printInstanceStatus(paths, name, log);
@@ -107,10 +107,10 @@ async function runLifecycleAction(
 }
 
 async function printInstanceStatus(paths: UlviaPaths, name: string, log: (message: string) => void): Promise<void> {
-    const described = await describeLocalKernel(paths, name);
-    const kernel = described.services.find(({ service }) => service === "kernel");
-    const running = kernel?.state === "running" && (!kernel.health || kernel.health === "healthy");
-    log(`Instance ${name}: ${running ? "running" : (kernel?.state ?? "stopped")}`);
+    const described = await describeLocalEdge(paths, name);
+    const edge = described.services.find(({ service }) => service === "edge");
+    const running = edge?.state === "running" && (!edge.health || edge.health === "healthy");
+    log(`Instance ${name}: ${running ? "running" : (edge?.state ?? "stopped")}`);
     log(`Version: ${described.state?.image.version ?? "not started"}`);
     log(`URL: ${described.url}`);
 }
@@ -133,7 +133,7 @@ async function deleteInstance(paths: UlviaPaths, name: string, log: (message: st
         throw new Error(`Unknown local instance: ${name}`);
     }
     const services = await assertProviderRunning(paths);
-    await destroyLocalKernel(paths, name);
+    await destroyLocalEdge(paths, name);
     const operator = await providerOperatorAccess(paths, services);
     await disableLocalInstance(operator.url, operator.token, connection.instanceId);
     const config = await loadLocalInstanceConfig(instancePaths.root);
@@ -141,5 +141,5 @@ async function deleteInstance(paths: UlviaPaths, name: string, log: (message: st
         await releaseInstanceDomain(paths, name, config.hostname);
     }
     await rm(instancePaths.root, { recursive: true, force: true });
-    log(`Removed local Kernel ${name} and disabled its Provider instance. Provider data was retained.`);
+    log(`Removed local Edge ${name} and disabled its Provider instance. Provider data was retained.`);
 }

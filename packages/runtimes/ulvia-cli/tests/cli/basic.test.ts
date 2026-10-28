@@ -26,7 +26,7 @@ describe("Ulvia CLI", () => {
         expect(output.join("\n")).toContain("ulvia services");
         expect(output.join("\n")).toContain("ulvia configure network");
         expect(output.join("\n")).toContain("ulvia instance create");
-        expect(output.join("\n")).toContain("ulvia upgrade <kernel | provider | repository>");
+        expect(output.join("\n")).toContain("ulvia upgrade <edge | provider | repository>");
         expect(output.join("\n")).not.toContain("ulvia dev");
         expect(output.join("\n")).toContain("ulvia reset --yes");
         expect(output.join("\n")).toContain("ulvia instance delete");
@@ -36,13 +36,13 @@ describe("Ulvia CLI", () => {
         const root = await mkdtemp(join(tmpdir(), "ulvia-upgrade-arguments-"));
         try {
             await expect(
-                runCli(["upgrade", "kernel", "--version", "latest"], {
+                runCli(["upgrade", "edge", "--version", "latest"], {
                     environment: { ULVIA_DATA_DIR: root },
                     log: () => undefined,
                 }),
             ).rejects.toThrow(/Invalid Ulvia image version/);
             await expect(
-                runCli(["upgrade", "kernel", "1.2.3"], {
+                runCli(["upgrade", "edge", "1.2.3"], {
                     environment: { ULVIA_DATA_DIR: root },
                     log: () => undefined,
                 }),
@@ -108,8 +108,8 @@ describe("Ulvia CLI", () => {
     });
 
     test("distinguishes a stopped local stack from a degraded running stack", () => {
-        expect(aggregateStatus([{ service: "kernel", state: "exited", health: "" }])).toBe("stopped");
-        expect(aggregateStatus([{ service: "kernel", state: "running", health: "unhealthy" }])).toBe("degraded");
+        expect(aggregateStatus([{ service: "edge", state: "exited", health: "" }])).toBe("stopped");
+        expect(aggregateStatus([{ service: "edge", state: "running", health: "unhealthy" }])).toBe("degraded");
     });
 
     test("does not print technical tokens with local administrator credentials", async () => {

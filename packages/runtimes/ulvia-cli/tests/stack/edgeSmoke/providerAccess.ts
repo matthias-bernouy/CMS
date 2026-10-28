@@ -7,7 +7,7 @@ import type { Page } from "playwright";
 export async function verifySecondInstanceIsolation(
     dataRoot: string,
     credentials: { adminPassword: string },
-    kernelUrl: string,
+    cmsUrl: string,
     providerUrl: string,
 ): Promise<void> {
     const [operatorToken, primary] = await Promise.all([
@@ -21,11 +21,11 @@ export async function verifySecondInstanceIsolation(
         headers: {
             authorization: `Bearer ${operatorToken}`,
             "content-type": "application/json",
-            "idempotency-key": "kernel-smoke-second",
+            "idempotency-key": "edge-smoke-second",
         },
         body: JSON.stringify({
             label: "Second isolated instance",
-            kernelUrl,
+            cmsUrl,
             administrator: { email: "second@ulvia.local", password: credentials.adminPassword },
         }),
     });

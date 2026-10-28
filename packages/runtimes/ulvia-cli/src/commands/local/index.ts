@@ -1,6 +1,6 @@
 import type { UlviaPaths } from "../../runtime/paths";
 import { loadOrCreateInstallationConfig } from "../../runtime/stack/installation";
-import { listLocalInstanceNames, startLocalKernel } from "../../runtime/stack/orchestration/instances";
+import { listLocalInstanceNames, startLocalEdge } from "../../runtime/stack/orchestration/instances";
 import { startLocalServices } from "../../runtime/stack/orchestration/services";
 import { configureCommand } from "./configure";
 import { instanceCommand } from "./instances";
@@ -60,7 +60,7 @@ selects Provider and Repository images when shared services are uninitialized.`)
         const failures: string[] = [];
         for (const name of instances) {
             try {
-                await startLocalKernel(paths, name, log);
+                await startLocalEdge(paths, name, log);
             } catch (error) {
                 failures.push(name);
                 log(`Instance ${name} failed to start: ${error instanceof Error ? error.message : String(error)}`);

@@ -20,7 +20,7 @@ for (const offset of [-3_600_000, 60_000]) {
             attributes: {},
         });
         const known = entry(clock.toISOString());
-        await journal.append({ entries: [known] }, "cms-kernel");
+        await journal.append({ entries: [known] }, "cms-edge");
         clock = new Date("2026-10-26T12:00:00.001Z");
         const input: LogQuery = { timeField: "receivedAt", limit: 200 };
         const client = { query: (query: LogQuery) => journal.query(query), get: (id: string) => journal.get({ id }) };
@@ -29,13 +29,10 @@ for (const offset of [-3_600_000, 60_000]) {
         const seen = new Set(initial.map(({ id }) => id));
         clock = new Date("2026-10-26T12:00:01.000Z");
         const skewed = entry(new Date(clock.getTime() + offset).toISOString());
-        await journal.append({ entries: [skewed] }, "cms-kernel");
+        await journal.append({ entries: [skewed] }, "cms-edge");
         clock = new Date("2026-10-26T12:00:02.000Z");
         for (let batch = 0; batch < 4; batch += 1) {
-            await journal.append(
-                { entries: Array.from({ length: 50 }, () => entry(clock.toISOString())) },
-                "cms-kernel",
-            );
+            await journal.append({ entries: Array.from({ length: 50 }, () => entry(clock.toISOString())) }, "cms-edge");
         }
         clock = new Date("2026-10-26T12:00:03.000Z");
         const updates = await readJournalUpdates(client, input, seen, false);
@@ -58,7 +55,7 @@ test("the follow command explicitly selects server reception time", async () => 
     const requests: LogQuery[] = [];
     await expect(
         showInstanceLogs(
-            ["kernel", "--follow"],
+            ["edge", "--follow"],
             {
                 query: async (input) => {
                     requests.push(input);
@@ -71,5 +68,5 @@ test("the follow command explicitly selects server reception time", async () => 
             () => undefined,
         ),
     ).rejects.toBe(stop);
-    expect(requests).toMatchObject([{ timeField: "receivedAt", service: "cms-kernel" }]);
+    expect(requests).toMatchObject([{ timeField: "receivedAt", service: "cms-edge" }]);
 });

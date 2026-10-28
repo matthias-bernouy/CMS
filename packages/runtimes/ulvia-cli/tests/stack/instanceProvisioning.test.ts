@@ -36,7 +36,7 @@ test("local provisioning sends administrator input only to the protected operato
         expect(captured?.headers.get("idempotency-key")).toBe("ulvia-cli-preview");
         const body = await captured?.json();
         expect(body.administrator.email).toBe("dev@ulvia.local");
-        expect(body.kernelUrl).toBe("http://preview.localhost:5100");
+        expect(body.cmsUrl).toBe("http://preview.localhost:5100");
     } finally {
         globalThis.fetch = originalFetch;
     }

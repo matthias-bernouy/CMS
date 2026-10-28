@@ -50,15 +50,17 @@ export function localServicesEnvironment(
     };
 }
 
-export function localKernelEnvironment(
+export function localEdgeEnvironment(
     _instance: LocalInstancePaths,
     config: LocalInstanceConfig,
     connection: LocalInstanceConnection,
     services: LocalServicesState,
     image: OfficialImage,
+    projectName: string,
 ): Record<string, string> {
     return {
-        KERNEL_IMAGE: pinnedOfficialImageReference(image),
+        ULVIA_EDGE_NETWORK_ALIAS: `${projectName}-edge`,
+        EDGE_IMAGE: pinnedOfficialImageReference(image),
         ULVIA_UID: String(process.getuid?.() ?? 1000),
         ULVIA_GID: String(process.getgid?.() ?? 1000),
         ULVIA_INSTANCE_NETWORK: services.instanceNetwork,

@@ -11,22 +11,22 @@ test("official image metadata resolves a mutable tag to an immutable digest", ()
     const image = parseOfficialImageInspection(
         JSON.stringify([
             {
-                RepoDigests: [`cyaxis/ulvia-kernel@${digest}`],
+                RepoDigests: [`cyaxis/ulvia-edge@${digest}`],
                 Config: {
                     Labels: {
-                        "io.ulvia.component": "kernel",
+                        "io.ulvia.component": "edge",
                         "io.ulvia.stack-api": "1",
                         "org.opencontainers.image.version": "0.0.1-beta",
                     },
                 },
             },
         ]),
-        "kernel",
+        "edge",
         "0.0.1-beta",
     );
 
-    expect(officialImageReference(image.component, image.version)).toBe("docker.io/cyaxis/ulvia-kernel:0.0.1-beta");
-    expect(pinnedOfficialImageReference(image)).toBe(`docker.io/cyaxis/ulvia-kernel@${digest}`);
+    expect(officialImageReference(image.component, image.version)).toBe("docker.io/cyaxis/ulvia-edge:0.0.1-beta");
+    expect(pinnedOfficialImageReference(image)).toBe(`docker.io/cyaxis/ulvia-edge@${digest}`);
     expect(image.digest).toBe(digest);
 });
 
@@ -39,8 +39,8 @@ test("official image metadata rejects component, API, version, and digest mismat
         "org.opencontainers.image.version": "1.2.3",
     };
 
-    expect(() => parseOfficialImageInspection(metadata(validLabels), "kernel", "1.2.3")).toThrow(
-        /not the official Ulvia kernel/,
+    expect(() => parseOfficialImageInspection(metadata(validLabels), "edge", "1.2.3")).toThrow(
+        /not the official Ulvia edge/,
     );
     expect(() =>
         parseOfficialImageInspection(metadata({ ...validLabels, "io.ulvia.stack-api": "2" }), "provider", "1.2.3"),

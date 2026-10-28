@@ -18,7 +18,7 @@ export async function showInstanceLogs(
     }
     const service =
         selection.services.length === 1
-            ? { kernel: "cms-kernel", provider: "ulvia-provider", repository: "official-repository" }[
+            ? { edge: "cms-edge", provider: "ulvia-provider", repository: "official-repository" }[
                   selection.services[0]!
               ]
             : undefined;

@@ -1,7 +1,7 @@
 import { LOG_LEVELS, type LogLevel, type LogRecord } from "@bernouy/logging";
 import { isValidRequestId } from "@bernouy/http-runner/observability";
 
-const DEV_LOG_SERVICES = ["kernel", "provider", "repository"] as const;
+const DEV_LOG_SERVICES = ["edge", "provider", "repository"] as const;
 const STABLE_IDENTIFIER = /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/u;
 type LocalLogService = (typeof DEV_LOG_SERVICES)[number];
 
@@ -99,5 +99,5 @@ function escapeControls(value: string): string {
 }
 
 function fail(message: string, usage: string): never {
-    throw new Error(`${message}\nUsage: ${usage} [all | kernel | provider | repository] [options]`);
+    throw new Error(`${message}\nUsage: ${usage} [all | edge | provider | repository] [options]`);
 }

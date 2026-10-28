@@ -37,8 +37,8 @@ export async function mutateSeo(page: Page): Promise<void> {
     await submitRevisionMutation(page, form, "update-seo");
 }
 
-export async function cyclePublicationState(page: Page, kernelOrigin: string, detailUrl: string): Promise<void> {
-    await verifyPublishedPage(page, kernelOrigin);
+export async function cyclePublicationState(page: Page, edgeOrigin: string, detailUrl: string): Promise<void> {
+    await verifyPublishedPage(page, edgeOrigin);
     await page.goto(detailUrl);
     await page.locator("#page-general").waitFor();
     await page.locator('a[href="#page-publication"]').click();
@@ -47,7 +47,7 @@ export async function cyclePublicationState(page: Page, kernelOrigin: string, de
     if (!draftResponse.ok()) {
         throw new Error(`Page return-to-draft failed (${draftResponse.status()}).`);
     }
-    const anonymousDraftResponse = await fetch(`${kernelOrigin}/smoke-page`, { redirect: "manual" });
+    const anonymousDraftResponse = await fetch(`${edgeOrigin}/smoke-page`, { redirect: "manual" });
     if (anonymousDraftResponse.ok) {
         throw new Error("Draft Page remained anonymously available");
     }
@@ -58,11 +58,11 @@ export async function cyclePublicationState(page: Page, kernelOrigin: string, de
     if (!republishResponse.ok()) {
         throw new Error(`Page republication failed (${republishResponse.status()}).`);
     }
-    await verifyPublishedPage(page, kernelOrigin);
+    await verifyPublishedPage(page, edgeOrigin);
 }
 
-export async function deleteSmokePage(page: Page, kernelOrigin: string): Promise<void> {
-    await page.goto(`${kernelOrigin}/admin/pages`);
+export async function deleteSmokePage(page: Page, edgeOrigin: string): Promise<void> {
+    await page.goto(`${edgeOrigin}/admin/pages`);
     const detailLink = page
         .locator('#pages-list a[href^="/admin/pages/detail?ulvia-official-page-id="]')
         .filter({ hasText: "Smoke Page" });
@@ -81,19 +81,19 @@ export async function deleteSmokePage(page: Page, kernelOrigin: string): Promise
         throw new Error(`Page deletion failed (${response.status()}).`);
     }
     await page.waitForURL(/\/admin\/pages$/u);
-    const deletedPage = await page.goto(`${kernelOrigin}/smoke-page`);
+    const deletedPage = await page.goto(`${edgeOrigin}/smoke-page`);
     if (deletedPage?.ok()) {
         throw new Error("Deleted Page remained publicly available");
     }
 }
 
-export async function verifyPublishedPage(page: Page, kernelOrigin: string): Promise<void> {
+export async function verifyPublishedPage(page: Page, edgeOrigin: string): Promise<void> {
     const deadline = Date.now() + 15_000;
     let status = 0;
     let responseBody = "";
     let responseHeaders: Record<string, string> = {};
     while (Date.now() < deadline) {
-        const response = await page.goto(`${kernelOrigin}/smoke-page`);
+        const response = await page.goto(`${edgeOrigin}/smoke-page`);
         status = response?.status() ?? 0;
         responseHeaders = response?.headers() ?? {};
         responseBody = (await response?.text().catch(() => "")) ?? "";

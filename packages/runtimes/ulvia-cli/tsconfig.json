@@ -23,7 +23,7 @@
             "path": "../../foundation/binary-media"
         },
         {
-            "path": "../cms-kernel-server"
+            "path": "../cms-edge-server"
         },
         {
             "path": "../ulvia-provider-server"

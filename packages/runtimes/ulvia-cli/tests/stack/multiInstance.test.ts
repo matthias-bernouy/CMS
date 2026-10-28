@@ -14,12 +14,12 @@ import {
 import { defaultInstallationConfig } from "../../src/runtime/stack/installation";
 import { releaseInstanceDomain, reserveInstanceDomain } from "../../src/runtime/stack/domains";
 import { instancePublicUrl, localInstanceHostname } from "../../src/runtime/stack/ports";
-import { localKernelEnvironment } from "../../src/runtime/stack/orchestration/environment";
+import { localEdgeEnvironment } from "../../src/runtime/stack/orchestration/environment";
 import type { OfficialImageComponent } from "../../src/runtime/stack/orchestration/images";
 import {
-    loadLocalKernelState,
-    localKernelProjectName,
-    saveLocalKernelState,
+    loadLocalEdgeState,
+    localEdgeProjectName,
+    saveLocalEdgeState,
     saveLocalServicesState,
 } from "../../src/runtime/stack/orchestration/state";
 
@@ -49,18 +49,26 @@ test("named instances keep independent identities, credentials, state, and hostn
             instanceId: "instance:00000000-0000-4000-8000-000000000001",
             token: "a".repeat(43),
         });
-        const projectName = localKernelProjectName(paths, "preview");
-        const kernelImage = image("kernel");
-        await saveLocalKernelState(previewInstance, projectName, previewConfig.hostname, kernelImage);
+        const projectName = localEdgeProjectName(paths, "preview");
+        const edgeImage = image("edge");
+        await saveLocalEdgeState(previewInstance, projectName, previewConfig.hostname, edgeImage);
 
         expect(defaultConfig.adminPassword).not.toBe(previewConfig.adminPassword);
         expect(instancePublicUrl(defaultConfig.hostname, services.installation)).toBe("http://localhost:5100");
         expect(instancePublicUrl(previewConfig.hostname, services.installation)).toBe("http://preview.localhost:5100");
-        expect(localKernelProjectName(paths, "default")).not.toBe(projectName);
-        expect((await loadLocalKernelState(previewInstance))?.projectName).toBe(projectName);
+        expect(localEdgeProjectName(paths, "default")).not.toBe(projectName);
+        expect((await loadLocalEdgeState(previewInstance))?.projectName).toBe(projectName);
 
-        const environment = localKernelEnvironment(previewInstance, previewConfig, connection, services, kernelImage);
+        const environment = localEdgeEnvironment(
+            previewInstance,
+            previewConfig,
+            connection,
+            services,
+            edgeImage,
+            projectName,
+        );
         expect(environment.CMS_INSTALLATIONS_PROVIDER_TOKEN).toBe("a".repeat(43));
+        expect(environment.ULVIA_EDGE_NETWORK_ALIAS).toBe(`${projectName}-edge`);
         expect(environment.ULVIA_INSTANCE_HOSTNAME).toBe("preview.localhost");
         expect(environment.ULVIA_MONGO_PASSWORD).toBeUndefined();
         expect(environment.ULVIA_PROVIDER_OPERATOR_TOKEN).toBeUndefined();
