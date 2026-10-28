@@ -1,0 +1,113 @@
+{
+    "id": "delivery.resolve-path",
+    "description": "Resolve a bounded public path as a streamed resource using verified actor context. Handles pages, system resources and installed collection assets.",
+    "access": "public",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+            },
+            "method": {
+                "type": "string",
+                "enum": ["GET", "HEAD"],
+                "maxLength": 4
+            },
+            "query": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "value": {
+                            "type": "string",
+                            "maxLength": 4096
+                        }
+                    },
+                    "required": ["name", "value"]
+                }
+            },
+            "accept": {
+                "type": "string",
+                "maxLength": 1024
+            },
+            "acceptLanguage": {
+                "type": "string",
+                "maxLength": 1024
+            },
+            "ifNoneMatch": {
+                "type": "string",
+                "maxLength": 1024
+            },
+            "range": {
+                "type": "object",
+                "properties": {
+                    "start": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "end": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                },
+                "required": []
+            },
+            "ifRange": {
+                "type": "string",
+                "maxLength": 1024
+            }
+        },
+        "required": ["path", "method", "query"]
+    },
+    "output": {
+        "type": "binary",
+        "maxBytes": 10737418240,
+        "resource": true
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/delivery/resolve-path",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/octet-stream"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "FORBIDDEN": 403,
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        }
+    ]
+}

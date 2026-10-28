@@ -1,6 +1,6 @@
 {
     "id": "gateway.identity.resolve",
-    "description": "Kernel control connection only. Resolve or create the stable provider-scoped alias for one CMS subject.",
+    "description": "Edge control connection only. Resolve or create the stable provider-scoped alias for one CMS subject.",
     "access": "admin",
     "behavior": {
         "effect": "command",

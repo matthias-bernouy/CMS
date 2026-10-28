@@ -1,0 +1,85 @@
+{
+    "id": "capabilities.describe",
+    "description": "Read the selected public capability access metadata for one contract, without Provider origins, credentials or business data.",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync",
+        "sensitive": false
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "contractId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+            }
+        },
+        "required": ["contractId"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "found": {
+                "type": "boolean"
+            },
+            "version": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "capabilities": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "access": {
+                            "type": "string",
+                            "enum": ["public", "authenticated", "admin"],
+                            "maxLength": 13
+                        },
+                        "effect": {
+                            "type": "string",
+                            "enum": ["query", "command"],
+                            "maxLength": 7
+                        },
+                        "sensitive": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": ["id", "access", "effect", "sensitive"]
+                }
+            }
+        },
+        "required": ["found", "version", "capabilities"]
+    },
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "QUERY",
+            "path": "/capabilities/describe",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "CORE_UNAVAILABLE": 503
+                }
+            }
+        }
+    ]
+}

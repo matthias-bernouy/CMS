@@ -1,6 +1,6 @@
 {
     "id": "gateway.route.get",
-    "description": "Kernel control connection only. Return the complete selected Gateway route snapshot for one contract.",
+    "description": "Edge control connection only. Return the complete selected Gateway route snapshot for one contract.",
     "access": "admin",
     "behavior": {
         "effect": "query",

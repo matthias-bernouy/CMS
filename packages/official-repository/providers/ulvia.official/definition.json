@@ -44,7 +44,7 @@
         {
             "contractId": "ulvia.cms.installations",
             "version": "1.0.0",
-            "digest": "sha256:2fd2ab6c4e65fca2bf95fc75ef7270ce91edc047831ac3beee746dbeb5f59f24",
+            "digest": "sha256:4f2526f8db9a93b942db94a09cd0a0666c4b243bc496f770bf287ba4a8152608",
             "requires": [
                 {
                     "contractId": "ulvia.cms.secrets",
@@ -81,8 +81,26 @@
         {
             "contractId": "ulvia.cms.content",
             "version": "1.0.0",
-            "digest": "sha256:bc79d3e27ac9647868123551f2205f353bc79c4d70999c8dcc0424f041a5da97",
-            "requires": []
+            "digest": "sha256:1da3221d78be88b7f96242e610eb65cb2257ad0edebdaf3786accc80c745ab6b",
+            "requires": [
+                {
+                    "contractId": "ulvia.cms.installations",
+                    "capabilityId": "capabilities.describe",
+                    "versionRange": "^1.0.0",
+                    "optional": false
+                }
+            ],
+            "delegation": {
+                "sources": ["delivery.resolve-path"],
+                "allow": [
+                    {
+                        "contractId": "*",
+                        "capabilityId": "*",
+                        "effect": "query",
+                        "sensitive": false
+                    }
+                ]
+            }
         },
         {
             "contractId": "ulvia.cms.emailer.smtp",
@@ -161,7 +179,7 @@
         {
             "contractId": "ulvia.cms.observability",
             "version": "1.0.0",
-            "digest": "sha256:9158a4878e635ded569f87a2ccdfd132dd2e29b7da6910eb19bdd667687304a2",
+            "digest": "sha256:2cb491b040262a9993e52733ab58437779b529471b4df461bae036863943c498",
             "requires": []
         },
         {

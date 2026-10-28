@@ -48,7 +48,7 @@
     "text.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable.label": "The Page may have been removed, or the provider is currently unavailable.",
     "text.ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again.label": "The provider could not read the Page catalogue. Check the selected provider and try again.",
     "text.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying.label": "The revision changed or the Page is invalid. Reload before retrying.",
-    "text.ui-the-same-page-document-is-used-throughout-the-kernel-the-isolated-preview-never-ex-d971177f.label": "The same Page document is used throughout the Kernel. The isolated preview never executes document scripts.",
+    "text.ui-the-same-page-document-is-used-throughout-the-edge-the-isolated-preview-never-ex-d971177f.label": "The same Page document is used throughout the Edge. The isolated preview never executes document scripts.",
     "text.ui-title.label": "Title",
     "text.ui-update-the-shared-page-document-through-revision-checked-provider-capabilities.label": "Update the shared Page document through revision-checked provider capabilities.",
     "text.ui-use-a-path-such-as-about-reserved-cms-paths-are-rejected.label": "Use a path such as /about. Reserved CMS paths are rejected.",

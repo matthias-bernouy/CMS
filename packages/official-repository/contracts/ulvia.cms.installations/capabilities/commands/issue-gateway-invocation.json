@@ -1,6 +1,6 @@
 {
     "id": "gateway.invocation.issue",
-    "description": "Kernel control connection only. Issue one short-lived provider invocation token for the current selected route.",
+    "description": "Edge control connection only. Issue one short-lived provider invocation token for the current selected route.",
     "access": "admin",
     "behavior": {
         "effect": "command",
@@ -81,6 +81,32 @@
                 "type": "string",
                 "minLength": 64,
                 "maxLength": 64
+            },
+            "trace": {
+                "type": "object",
+                "properties": {
+                    "traceId": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36
+                    },
+                    "spanId": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36
+                    },
+                    "parentSpanId": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36
+                    }
+                },
+                "required": ["traceId", "spanId"]
+            },
+            "actorKind": {
+                "type": "string",
+                "enum": ["anonymous", "user", "administrator"],
+                "maxLength": 13
             }
         },
         "required": ["requestId", "installationId", "contractId", "contractVersion", "capabilityId"]

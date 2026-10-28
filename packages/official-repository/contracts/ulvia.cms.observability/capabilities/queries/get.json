@@ -109,6 +109,14 @@
                 "type": "string",
                 "maxLength": 36,
                 "format": "uuid"
+            },
+            "traceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "parentInvocationId": {
+                "type": "string",
+                "maxLength": 128
             }
         },
         "required": ["id", "time", "level", "event", "instanceId", "service", "receivedAt", "attributes"]

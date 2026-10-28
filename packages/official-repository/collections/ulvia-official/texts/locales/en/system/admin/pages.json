@@ -48,7 +48,7 @@
     "ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable": "The Page may have been removed, or the provider is currently unavailable.",
     "ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again": "The provider could not read the Page catalogue. Check the selected provider and try again.",
     "ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying": "The revision changed or the Page is invalid. Reload before retrying.",
-    "ui-the-same-page-document-is-used-throughout-the-kernel-the-isolated-preview-never-ex-d971177f": "The same Page document is used throughout the Kernel. The isolated preview never executes document scripts.",
+    "ui-the-same-page-document-is-used-throughout-the-edge-the-isolated-preview-never-ex-d971177f": "The same Page document is used throughout the Edge. The isolated preview never executes document scripts.",
     "ui-title": "Title",
     "ui-update-the-shared-page-document-through-revision-checked-provider-capabilities": "Update the shared Page document through revision-checked provider capabilities.",
     "ui-use-a-path-such-as-about-reserved-cms-paths-are-rejected": "Use a path such as /about. Reserved CMS paths are rejected.",

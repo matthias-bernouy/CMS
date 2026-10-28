@@ -48,7 +48,7 @@
     "ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable": "La Page a peut-être été supprimée ou le provider est actuellement indisponible.",
     "ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again": "Le provider n’a pas pu lire le catalogue de Pages. Vérifiez le provider sélectionné et réessayez.",
     "ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying": "La révision a changé ou la Page est invalide. Rechargez-la avant de réessayer.",
-    "ui-the-same-page-document-is-used-throughout-the-kernel-the-isolated-preview-never-ex-d971177f": "Le même document de Page est utilisé dans tout le Kernel. L’aperçu isolé n’exécute jamais les scripts du document.",
+    "ui-the-same-page-document-is-used-throughout-the-edge-the-isolated-preview-never-ex-d971177f": "Le même document de Page est utilisé dans tout le Edge. L’aperçu isolé n’exécute jamais les scripts du document.",
     "ui-title": "Titre",
     "ui-update-the-shared-page-document-through-revision-checked-provider-capabilities": "Mettez à jour le document de Page partagé avec les capacités du provider qui vérifient la révision.",
     "ui-use-a-path-such-as-about-reserved-cms-paths-are-rejected": "Utilisez un chemin comme /about. Les chemins réservés au CMS sont refusés.",

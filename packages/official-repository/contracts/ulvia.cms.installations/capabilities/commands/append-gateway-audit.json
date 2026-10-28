@@ -1,6 +1,6 @@
 {
     "id": "gateway.audit.append",
-    "description": "Kernel control connection only. Persist one immutable Gateway command audit event.",
+    "description": "Edge control connection only. Persist one immutable Gateway command audit event.",
     "access": "admin",
     "behavior": {
         "effect": "command",
