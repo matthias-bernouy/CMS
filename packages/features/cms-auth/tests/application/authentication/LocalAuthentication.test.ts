@@ -89,7 +89,7 @@ describe("LocalAuthentication", () => {
         expect(await auth.resolveCredential(undefined)).toBeNull();
     });
 
-    test("rejects session TTLs that the Kernel cookie policy cannot honor", () => {
+    test("rejects session TTLs that the Edge cookie policy cannot honor", () => {
         const create = (sessionTtlSeconds: number) => {
             const users = new InMemoryUsersRepository();
             return new LocalAuthentication({

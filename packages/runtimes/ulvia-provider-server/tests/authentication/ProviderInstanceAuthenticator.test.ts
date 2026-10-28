@@ -57,7 +57,7 @@ function readyInstance(): ProviderInstanceRecord {
         idempotencyKey: "create-alpha",
         idempotencyFingerprint: "fingerprint",
         storageKey: "alpha",
-        kernelUrl: "http://127.0.0.1:5100",
+        cmsUrl: "http://127.0.0.1:5100",
         label: "Alpha",
         status: "ready",
         profile: { id: "ulvia.official", version: "1.0.0" },

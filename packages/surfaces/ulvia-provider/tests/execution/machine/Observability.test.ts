@@ -57,19 +57,18 @@ test("HTTP ingestion requires a signed machine identity and cannot choose anothe
     const server = serveForTest(runner);
     try {
         const item = entry();
-        const request = (body: unknown, identity = headers(instanceId, "logs.append", "cms-kernel")) =>
+        const request = (body: unknown, identity = headers(instanceId, "logs.append", "cms-edge")) =>
             server.request("POST", "/observability/logs/append", { headers: identity, body: JSON.stringify(body) });
         expect(
             (
                 await request(
                     { entries: [item] },
-                    { ...headers(instanceId, "logs.append"), "x-ulvia-system-service-id": "cms-kernel" },
+                    { ...headers(instanceId, "logs.append"), "x-ulvia-system-service-id": "cms-edge" },
                 )
             ).status,
         ).toBe(403);
         expect(
-            (await request({ entries: [item] }, headers("instance:observability-b", "logs.append", "cms-kernel")))
-                .status,
+            (await request({ entries: [item] }, headers("instance:observability-b", "logs.append", "cms-edge"))).status,
         ).toBe(401);
         expect((await request({ entries: [item], instanceId: "instance:observability-b" })).status).toBe(400);
         expect(await (await request({ entries: [item] })).json()).toEqual({ accepted: 1, stored: 1, duplicates: 0 });
@@ -80,7 +79,7 @@ test("HTTP ingestion requires a signed machine identity and cannot choose anothe
         });
         const result = (await response.json()) as { items: { id: string; instanceId: string; service: string }[] };
         expect(response.status).toBe(200);
-        expect(result.items[0]).toMatchObject({ id: item.id, instanceId, service: "cms-kernel" });
+        expect(result.items[0]).toMatchObject({ id: item.id, instanceId, service: "cms-edge" });
         expect(result.items[0]).not.toHaveProperty("attributes");
         expect(JSON.stringify(await journal.get({ id: item.id }))).not.toContain("never-store-me");
         const detail = await server.request("QUERY", "/observability/logs/get", {
@@ -117,7 +116,7 @@ test("user invocations cannot use Installations to forge a machine identity", as
         contractId,
         contractVersion: "1.0.0",
         capabilityId: "logs.append",
-        systemServiceId: "cms-kernel",
+        systemServiceId: "cms-edge",
     };
     const context = {
         requestId: crypto.randomUUID(),

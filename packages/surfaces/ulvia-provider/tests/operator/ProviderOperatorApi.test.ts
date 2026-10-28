@@ -42,7 +42,8 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
             headers: { ...authorization, "content-type": "application/json", "idempotency-key": "create-one" },
             body: JSON.stringify({
                 label: "One",
-                kernelUrl: "http://127.0.0.1:5100",
+                cmsUrl: "http://127.0.0.1:5100",
+                gatewayUrl: "http://edge.internal:3000",
                 administrator: { email: "admin@example.test", password: "long-enough-password" },
             }),
         });
@@ -84,7 +85,8 @@ test("an idempotency key can only replay the exact instance request", async () =
     );
     const input = {
         label: "One",
-        kernelUrl: "http://127.0.0.1:5100",
+        cmsUrl: "http://127.0.0.1:5100",
+        gatewayUrl: "http://edge.internal:3000",
         administrator: { email: "admin@example.test", password: "long-enough-password" },
     };
 
@@ -123,7 +125,8 @@ function readyInstance(): ProviderInstanceRecord {
         idempotencyKey: "create-one",
         idempotencyFingerprint: "fingerprint",
         storageKey: "one",
-        kernelUrl: "http://127.0.0.1:5100",
+        cmsUrl: "http://127.0.0.1:5100",
+        gatewayUrl: "http://edge.internal:3000",
         label: "One",
         status: "ready",
         profile: { id: "ulvia.official", version: "1.0.0" },

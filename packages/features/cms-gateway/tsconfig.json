@@ -4,14 +4,23 @@
         "outDir": "dist",
         "rootDir": "./src",
         "paths": {
-            "cms-gateway/*": ["./src/*"]
+            "cms-gateway/*": [
+                "./src/*"
+            ]
         }
     },
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts"
+    ],
     "references": [
-        { "path": "../cms-content" },
-        { "path": "../cms-repository" },
-        { "path": "../../foundation/http-runner" },
-        { "path": "../../foundation/image-processing" }
+        {
+            "path": "../cms-repository"
+        },
+        {
+            "path": "../../foundation/http-runner"
+        },
+        {
+            "path": "../../foundation/image-processing"
+        }
     ]
 }

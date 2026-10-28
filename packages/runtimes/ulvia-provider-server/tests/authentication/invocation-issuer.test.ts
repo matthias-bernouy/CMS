@@ -52,10 +52,10 @@ test("the broker signs only the current ready destination and verified Provider 
         });
     }
     await expect(f.issue({ ...f.input, subjectId: "user" })).rejects.toThrow("impersonate");
-    await expect(f.issue({ ...f.input, systemServiceId: "cms-kernel" })).rejects.toThrow("impersonate");
+    await expect(f.issue({ ...f.input, systemServiceId: "cms-edge" })).rejects.toThrow("impersonate");
 });
 
-test("a cached Kernel route cannot get a new token after destination disablement, unreadiness or expiry", async () => {
+test("a cached Edge route cannot get a new token after destination disablement, unreadiness or expiry", async () => {
     for (const change of ["disabled", "not-ready", "stale"] as const) {
         const f = await fixture();
         if (change === "disabled") {
@@ -133,16 +133,8 @@ test("delegated signing derives the alias from the live actor and never falls ba
     await expect(issue({ ...input, sourceCredentialFingerprint: undefined })).rejects.toMatchObject({ status: 403 });
 });
 
-test("Kernel system delivery remains limited to its existing public Content projection operations", async () => {
-    const f = await fixture({ contractId: "ulvia.cms.content", capabilityId: "delivery.read" });
+test("Edge system cannot invoke user-scoped Content resolution", async () => {
+    const f = await fixture({ contractId: "ulvia.cms.content", capabilityId: "delivery.resolve-path" });
     const { sourceInstallationId: _, sourceCredentialFingerprint: _proof, ...root } = f.input;
-    const issued = await f.issue({ ...root, systemServiceId: "cms-kernel" });
-    expect(verifyProviderInvocationToken(issued.token, f.secret)).toMatchObject({
-        contractId: "ulvia.cms.content",
-        capabilityId: "delivery.read",
-        systemServiceId: "cms-kernel",
-    });
-    await expect(
-        f.issue({ ...root, capabilityId: "delete-page", systemServiceId: "cms-kernel" }),
-    ).rejects.toMatchObject({ status: 403 });
+    await expect(f.issue({ ...root, systemServiceId: "cms-edge" })).rejects.toMatchObject({ status: 403 });
 });

@@ -54,7 +54,7 @@ export type ProviderStoreConfig = Readonly<{
     CMS_KEK: RuntimeKekConfig;
     CMS_FILES_DIR: string;
     CMS_SESSION_SECRET: string;
-    KERNEL_PUBLIC_URL: string;
+    CMS_PUBLIC_URL: string;
 }>;
 
 export async function createProviderStores(env: ProviderStoreConfig, logger: Logger) {
@@ -130,7 +130,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         store: providerFilesStore,
         blobs: providerBlobs,
         signingKey,
-        publicBaseUrl: env.KERNEL_PUBLIC_URL,
+        publicBaseUrl: env.CMS_PUBLIC_URL,
         derivatives: new CmsImageDerivatives({
             store: providerFilesStore,
             blobs: providerBlobs,
@@ -176,6 +176,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     await identities.init();
 
     return {
+        logger,
         observability,
         connectionDrafts,
         providerConnections: new EncryptedProviderConnections(

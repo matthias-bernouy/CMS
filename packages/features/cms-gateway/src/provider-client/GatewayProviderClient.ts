@@ -1,3 +1,4 @@
+import { currentTraceContext } from "@bernouy/logging/tracing";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import { HttpGatewayTransport } from "cms-gateway/invocation/http/transport/HttpGatewayTransport";
 import { NodeGatewayHttpNetwork } from "cms-gateway/invocation/node-http/NodeGatewayHttpNetwork";
@@ -83,6 +84,7 @@ export class GatewayProviderClient {
             throw new TypeError("Keyed Provider commands require an idempotency key");
         }
         const response = await this.transport.send({
+            ...(currentTraceContext() ? { trace: currentTraceContext() } : {}),
             ...(options.binaryBody ? { binaryBody: options.binaryBody } : {}),
             ...(options.bindingId ? { bindingId: options.bindingId } : {}),
             ...(options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}),

@@ -20,8 +20,8 @@ export function queryRequest(element: Element): QueryRequest {
         throw new TypeError("Synchronized-state queries do not use HTTP transport.");
     }
 
-    if (binding.contractId.startsWith("kernel.")) {
-        throw new TypeError("Kernel-owned queries are not part of the binding protocol.");
+    if (binding.contractId.startsWith("edge.")) {
+        throw new TypeError("Edge-owned queries are not part of the binding protocol.");
     }
 
     const input = element.getAttribute(QUERY_INPUT_ATTR);

@@ -1,179 +1,74 @@
-import { deliveryOperation, parseDeliveryInput, encodeDeliveryOutput } from "@bernouy/cms-content/delivery";
-import { createContentReader, type ContentReader, type RenderablePage } from "@bernouy/cms-content/rendering";
-import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
+import { parseResolvePathRequest } from "@bernouy/cms-content/public-delivery";
+import { parseResourceMetadata } from "@bernouy/cms-gateway/protocol";
+import {
+    ProviderCapabilityDispatchError,
+    type ProviderBinaryResult,
+    type ProviderCapabilityRegistry,
+} from "../../../dispatch/registry";
 import type { CmsContentDependencies } from "../../../ports";
-import { blocViews, pageRenderRevision, projectPageRenderInputs } from "./renderInputs";
-import { registerContentResourceCapabilities } from "./resources";
 
 export function registerContentDeliveryCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     dependencies: CmsContentDependencies,
 ): void {
-    const content = createContentReader(dependencies.repo);
-    dispatcher.register("ulvia.cms.content", "delivery.read", async (request) => {
-        let operation: ReturnType<typeof deliveryOperation>;
-        let input: Readonly<Record<string, unknown>>;
-        try {
-            operation = deliveryOperation(request.operation);
-            input = parseDeliveryInput(operation, parseInput(request.inputJson));
-        } catch {
-            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-        }
-        const value = await executeDeliveryRead(operation, input, content, dependencies);
-        try {
-            return encodeDeliveryOutput(operation, value);
-        } catch (error) {
-            if (error instanceof Error && "status" in error && error.status === 413) {
-                throw new ProviderCapabilityDispatchError("RESPONSE_TOO_LARGE", 413);
+    dispatcher.register(
+        "ulvia.cms.content",
+        "delivery.resolve-path",
+        async (input, context): Promise<ProviderBinaryResult> => {
+            if (!context.actorKind || (context.actorKind !== "anonymous" && !context.subjectId)) {
+                throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
             }
-            const validation: string[] = [];
-            let cause: unknown = error;
-            while (cause instanceof Error && validation.length < 8) {
-                validation.push(cause.message);
-                cause = cause.cause;
+            let request: ReturnType<typeof parseResolvePathRequest>;
+            try {
+                request = parseResolvePathRequest(input);
+            } catch {
+                throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
             }
-            dependencies.logger?.error(
-                "content.delivery.validation.failed",
-                { operation, validation: validation.join(" / ") },
-                error,
-            );
-            throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
-        }
-    });
-    registerContentResourceCapabilities(dispatcher, dependencies, content);
-}
-
-async function executeDeliveryRead(
-    operation: string,
-    input: Readonly<Record<string, unknown>>,
-    content: ContentReader,
-    dependencies: CmsContentDependencies,
-): Promise<unknown> {
-    switch (operation) {
-        case "content.texts":
-            return projectContentTexts(content);
-        case "content.revision":
-            return (await content.getContentRevision?.()) ?? 0;
-        case "content.rendering-revision":
-            return (await content.getRenderingRevision?.()) ?? (await content.getContentRevision?.()) ?? 0;
-        case "content.editorial-route":
-            return resolveEditorialRoute(requiredText(input.path), dependencies.repo);
-        case "content.renderable-page":
-            return content.getRenderablePage(requiredText(input.path));
-        case "content.renderable-pages":
-            return content.getRenderablePages();
-        case "content.resolve-page-reference":
-            return content.resolvePageReference(input.reference as never);
-        case "content.resolve-page-paths":
-            return content.resolvePagePaths(requiredTextArray(input.paths));
-        case "content.resolve-renderable-route":
-            return content.resolveRenderableRoute(requiredText(input.path));
-        case "content.published-page":
-            return content.getPublishedPage(requiredText(input.path));
-        case "content.published-page-by-id":
-            return content.getPublishedPageById(requiredText(input.id));
-        case "content.published-pages":
-            return content.getPublishedPages();
-        case "content.resolve-published-route":
-            return content.resolvePublishedRoute(requiredText(input.path));
-        case "content.renderable-blocs":
-            return content.getRenderableBlocs();
-        case "content.bloc-view-js":
-            return content.getBlocViewJS(requiredText(input.tag));
-        case "content.rendering-settings":
-            return content.getRenderingSettings();
-        case "content.page-render-inputs":
-            return projectPageRenderInputs(requiredText(input.path), content, dependencies.collections);
-        case "content.page-render-revision":
-            return pageRenderRevision(requiredText(input.path), content);
-        case "content.bloc-views":
-            return blocViews(requiredTextArray(input.tags), content);
-        case "assets.metadata":
-            return dependencies.collections.getInstalledAssetMetadata(
-                "default",
-                requiredText(input.collectionId),
-                requiredText(input.assetId),
-            );
-        case "assets.metadata-batch":
-            return dependencies.collections.getInstalledAssetMetadataBatch("default", input.references as never);
-        default:
-            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-    }
-}
-
-async function resolveEditorialRoute(
-    path: string,
-    repo: CmsContentDependencies["repo"],
-): Promise<{ page: RenderablePage; language: string } | null> {
-    const route = await repo.getPageRoute(path);
-    if (route?.state !== "current") {
-        return null;
-    }
-    const page = await repo.getPageById(route.pageId);
-    if (!page) {
-        return null;
-    }
-    const finalRoute = await repo.getPageRoute(path);
-    if (
-        finalRoute?.state !== "current" ||
-        finalRoute.pageId !== route.pageId ||
-        finalRoute.language !== route.language
-    ) {
-        return null;
-    }
-    return {
-        page: {
-            reference: { kind: "site", pageId: page.id },
-            page: structuredClone({ ...page, path }),
-            source: { kind: "site", pageId: page.id, revision: page.revision },
-            requirements: [...((await repo.getPageRequirements?.(page)) ?? [])],
+            if (!dependencies.publicDelivery) {
+                throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+            }
+            const response = await dependencies
+                .publicDelivery(context)
+                .resolvePath(
+                    request,
+                    { kind: context.actorKind, ...(context.subjectId ? { subjectId: context.subjectId } : {}) },
+                    dependencies.contentQuery
+                        ? (contractId, capabilityId, value) =>
+                              dependencies.contentQuery!(context, contractId, capabilityId, value)
+                        : undefined,
+                );
+            const permitted = new Set([
+                "content-type",
+                "content-length",
+                "content-language",
+                "content-range",
+                "accept-ranges",
+                "content-disposition",
+                "etag",
+                "last-modified",
+                "location",
+                "cache-control",
+                "retry-after",
+                "x-robots-tag",
+            ]);
+            const resource = parseResourceMetadata({
+                status: response.status,
+                headers: Object.fromEntries([...response.headers].filter(([name]) => permitted.has(name))),
+            });
+            const empty = !response.body;
+            return {
+                kind: "binary",
+                stream:
+                    response.body ??
+                    new ReadableStream({
+                        start(controller) {
+                            controller.close();
+                        },
+                    }),
+                contentType: "application/octet-stream",
+                ...(empty ? { contentLength: 0 } : {}),
+                resource,
+            };
         },
-        language: route.language,
-    };
-}
-
-async function projectContentTexts(content: ContentReader) {
-    const settings = await content.getRenderingSettings();
-    const defaultLocale = settings.site.language || "en";
-    const locales = [...new Set([defaultLocale, ...(settings.site.activeLanguages ?? [])])];
-    const sources = (await content.getContentTexts?.()) ?? [];
-    return {
-        defaultLocale,
-        sources: sources.map((source) => ({
-            namespace: source.namespace,
-            catalogues: Object.fromEntries(locales.map((locale) => [locale, source.resolve(locale)])),
-        })),
-    };
-}
-
-function parseInput(value: unknown): Readonly<Record<string, unknown>> {
-    if (value === undefined) {
-        return {};
-    }
-    if (typeof value !== "string") {
-        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-    }
-    try {
-        const parsed: unknown = JSON.parse(value);
-        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-            throw new TypeError("Delivery input must be an object");
-        }
-        return parsed as Readonly<Record<string, unknown>>;
-    } catch {
-        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-    }
-}
-
-function requiredText(value: unknown): string {
-    if (typeof value !== "string" || !value || value.length > 8192) {
-        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-    }
-    return value;
-}
-
-function requiredTextArray(value: unknown): string[] {
-    if (!Array.isArray(value) || value.length > 256) {
-        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-    }
-    return value.map(requiredText);
+    );
 }

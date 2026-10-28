@@ -6,10 +6,10 @@ import { loadBlocRuntimeEntry } from "@bernouy/cms-content/runtime-assets";
 describe("serveBlocRuntime", () => {
     test("serves the Bloc runtime with a stable hashed URL", async () => {
         const cache = new InMemoryCache();
-        const current = await serveBlocRuntime(new Request("http://localhost/.cms/assets/bloc-runtime.js"), cache);
+        const current = await serveBlocRuntime(new Request("http://localhost/_content/assets/bloc-runtime.js"), cache);
         const entry = await loadBlocRuntimeEntry();
         const immutable = await serveBlocRuntime(
-            new Request(`http://localhost/.cms/assets/bloc-runtime.js?v=${entry.hash}`),
+            new Request(`http://localhost/_content/assets/bloc-runtime.js?v=${entry.hash}`),
             cache,
         );
 
@@ -22,7 +22,7 @@ describe("serveBlocRuntime", () => {
         expect(typeof (window as any).cmsRuntime.registerBloc).toBe("function");
 
         const unknown = await serveBlocRuntime(
-            new Request("http://localhost/.cms/assets/bloc-runtime.js?v=unknown"),
+            new Request("http://localhost/_content/assets/bloc-runtime.js?v=unknown"),
             cache,
         );
         expect(unknown.status).toBe(404);

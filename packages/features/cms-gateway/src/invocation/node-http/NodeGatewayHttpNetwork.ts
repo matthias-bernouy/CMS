@@ -1,3 +1,4 @@
+import { TRACE_CONTEXT_HEADER } from "@bernouy/logging";
 import {
     DELEGATION_HEADER,
     PROVIDER_AUTHORITY_HEADER,
@@ -125,6 +126,7 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
                 ? token
                 : signProviderInvocationToken(token, {
                       version: 1,
+                      ...(request.authentication.trace ? { trace: request.authentication.trace } : {}),
                       requestId: request.requestId,
                       instanceId: request.authentication.instanceId,
                       contractId: request.authentication.contractId,
@@ -140,6 +142,7 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
                             }
                           : {}),
                       ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
+                      ...(request.authentication.actorKind ? { actorKind: request.authentication.actorKind } : {}),
                       ...(request.authentication.systemServiceId
                           ? { systemServiceId: request.authentication.systemServiceId }
                           : {}),
@@ -173,6 +176,9 @@ function trustedHeaders(request: GatewayHttpExchange, authorization: GatewayHttp
         ...(authorization.providerAuthority ? { [PROVIDER_AUTHORITY_HEADER]: authorization.providerAuthority } : {}),
         ...(authorization.delegationTicket ? { [DELEGATION_HEADER]: authorization.delegationTicket } : {}),
         "x-ulvia-request-id": request.requestId,
+        ...(request.authentication.kind === "capability" && request.authentication.trace
+            ? { [TRACE_CONTEXT_HEADER]: JSON.stringify(request.authentication.trace) }
+            : {}),
         ...(currentRequestId() ? { "x-request-id": currentRequestId()! } : {}),
         ...(request.idempotencyKey ? { "idempotency-key": request.idempotencyKey } : {}),
         ...(request.actorCredential

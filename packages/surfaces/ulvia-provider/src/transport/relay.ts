@@ -1,3 +1,5 @@
+import { runWithTraceContext } from "@bernouy/logging/tracing";
+import { RESOURCE_HEADER, parseResourceMetadata } from "@bernouy/cms-gateway/protocol";
 import type { GatewayResponseEffect } from "@bernouy/cms-gateway/protocol";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
@@ -24,7 +26,11 @@ export function createProviderContractRelay(
     logger: Logger,
     authorize: (claims: ProviderInvocationClaims) => Promise<boolean> = async () => true,
 ): (request: Request, claims: ProviderInvocationClaims, controlAuthority?: boolean) => Promise<Response | null> {
-    return async (request, claims, controlAuthority = false) => {
+    const relay = async (
+        request: Request,
+        claims: ProviderInvocationClaims,
+        controlAuthority = false,
+    ): Promise<Response | null> => {
         const invocationLogger = claims.contractId === "ulvia.cms.observability" ? NOOP_LOGGER : logger;
         const url = new URL(request.url);
         const selected = routes
@@ -145,6 +151,10 @@ export function createProviderContractRelay(
             return Response.json({ error: { code: "CORE_UNAVAILABLE" } }, { status: 503 });
         }
     };
+    return (request, claims, controlAuthority) =>
+        claims.trace
+            ? runWithTraceContext(claims.trace, () => relay(request, claims, controlAuthority))
+            : relay(request, claims, controlAuthority);
 }
 
 function reportDispatch(
@@ -223,6 +233,9 @@ function binaryResponse(method: string, capability: CapabilityDefinition, output
         status,
         headers: {
             ...safeBinaryHeaders(output.headers),
+            ...(capability.output.type === "binary" && capability.output.resource
+                ? { [RESOURCE_HEADER]: JSON.stringify(parseResourceMetadata(output.resource)) }
+                : {}),
             "content-type": output.contentType,
             ...(output.contentLength === undefined ? {} : { "content-length": String(output.contentLength) }),
         },

@@ -1,9 +1,14 @@
+import type { ResourceMetadata } from "@bernouy/cms-gateway/protocol";
+import { runWithTraceContext } from "@bernouy/logging/tracing";
+import type { TraceContext } from "@bernouy/logging";
 import type { DelegationContext } from "@bernouy/cms-gateway/access/delegation";
 import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
 import type { GatewayActorCredential, GatewayResponseEffect } from "@bernouy/cms-gateway/protocol";
 
 /** Verified invocation metadata. Site and provider identity are injected by the runtime. */
 export interface ProviderCapabilityInvocationContext {
+    readonly trace?: TraceContext;
+    readonly actorKind?: "anonymous" | "user" | "administrator";
     readonly delegation?: DelegationContext;
     readonly rootRequestId?: string;
     readonly requestId: string;
@@ -39,6 +44,7 @@ export function capabilityResponse(
 }
 
 export interface ProviderBinaryResult {
+    readonly resource?: ResourceMetadata;
     readonly kind: "binary";
     readonly stream: ReadableStream<Uint8Array>;
     readonly contentType: string;
@@ -123,7 +129,9 @@ export class DefaultProviderCapabilityDispatcher implements ProviderCapabilityRe
         if (!handler) {
             throw new ProviderCapabilityDispatchError("CAPABILITY_NOT_FOUND", 404);
         }
-        return handler(input, context);
+        return context.trace
+            ? runWithTraceContext(context.trace, () => handler(input, context))
+            : handler(input, context);
     }
 }
 

@@ -18,9 +18,5 @@ export function projectRenderingSettings(system: TSystem): RenderingSettings {
             login: site.login,
         },
         theme: system.theme,
-        security: {
-            connectExtras: system.security.connectExtras,
-            mediaExtras: system.security.mediaExtras,
-        },
     });
 }

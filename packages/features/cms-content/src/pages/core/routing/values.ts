@@ -3,7 +3,7 @@ import type { PageRoute } from "cms-content/pages/interfaces/pages";
 import { isValidPathFormat } from "cms-content/application/core/validation/predicates";
 
 const sitePageId = /^[0-9A-Za-z][0-9A-Za-z._:-]{0,199}$/u;
-const RESERVED_PAGE_PATH_PREFIXES = ["/.cms", "/api", "/assets", "/auth"] as const;
+const RESERVED_PAGE_PATH_PREFIXES = ["/.cms", "/_content", "/api", "/assets", "/auth"] as const;
 
 export function validatePageReference(page: PageReference): PageReference {
     if (
@@ -19,7 +19,7 @@ export function validatePageReference(page: PageReference): PageReference {
 }
 
 export function isValidRegisteredPagePath(value: string): boolean {
-    return isValidPathFormat(value) && !isReservedPagePath(value);
+    return isValidPathFormat(value) && !["/healthz", "/readyz"].includes(value) && !isReservedPagePath(value);
 }
 function isReservedPagePath(path: string): boolean {
     return RESERVED_PAGE_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));

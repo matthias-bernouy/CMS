@@ -16,3 +16,10 @@ export type {
     GatewayHttpTransportRequest,
 } from "cms-gateway/invocation/http/route/interfaces";
 export { invocationAuthority } from "cms-gateway/invocation/http/transport/invocationAuthority";
+
+export {
+    RESOURCE_HEADER,
+    parseResourceMetadata,
+    decodeResourceMetadata,
+    type ResourceMetadata,
+} from "cms-gateway/invocation/resource/metadata";

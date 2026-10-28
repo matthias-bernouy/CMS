@@ -1,7 +1,7 @@
 import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
 import { publishedPageSnapshot, serializePublishedPageSnapshot } from "cms-content/pages/core/lifecycle/publication";
 
-export const PUBLISHED_PAGE_SNAPSHOT_ROUTE = "/.cms/content/published-page-snapshot";
+export const PUBLISHED_PAGE_SNAPSHOT_ROUTE = "/_content/published-page-snapshot";
 export const PUBLISHED_PAGE_SNAPSHOT_SCHEMA = "cms-published-page-snapshot-v1";
 
 export function publishedPageSnapshotUrl(deliveryBaseUrl: string, pageId: string): string {

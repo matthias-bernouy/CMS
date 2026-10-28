@@ -1,3 +1,5 @@
+import { ProviderPairing } from "../../gateway/providers/connections/ProviderPairing";
+import { createPublicDelivery } from "../../content/publicDelivery";
 import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
 import { registerProviderConnectionCapabilities } from "@bernouy/ulvia-provider/sdk/node";
 import { readRemoteProviderReport } from "../../gateway/providers/readReport";
@@ -57,6 +59,7 @@ export type InstanceComposition = Readonly<{
     administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
     operations: ProviderOperationExecutor;
     ensureProviderReady(): Promise<void>;
+    pairOfficialProvider(): Promise<void>;
     close(): Promise<void>;
 }>;
 
@@ -182,7 +185,7 @@ export class ProviderInstanceHost {
                 },
                 MONGO_URL: instanceMongoUrl(this.env.MONGO_URL, instance.storageKey),
                 CMS_FILES_DIR: filesDirectory,
-                KERNEL_PUBLIC_URL: instance.kernelUrl,
+                CMS_PUBLIC_URL: instance.cmsUrl,
             },
             instanceLogger,
         );
@@ -225,12 +228,19 @@ export class ProviderInstanceHost {
                 },
             });
             const dispatcher = new DefaultProviderCapabilityDispatcher();
-            registerProviderConnectionCapabilities(dispatcher, new ProviderConnections(stores.providerConnections));
-            const authentication = await createInstanceAuth(stores, instance.kernelUrl);
+            const providerConnections = new ProviderConnections(stores.providerConnections);
+            registerProviderConnectionCapabilities(dispatcher, providerConnections);
+            const officialPairing = new ProviderPairing(stores, gateway, instance.gatewayUrl, {
+                endpoint: this.env.ULVIA_PROVIDER_PUBLIC_URL,
+                instanceId: instance.id,
+                providerId: profile.manifest.providerId,
+                connections: providerConnections,
+            });
+            const authentication = await createInstanceAuth(stores, instance.cmsUrl);
             const fileWorkspace = new CmsFileWorkspace(
                 stores.providerFiles,
                 stores.contractSecrets.files,
-                instance.kernelUrl,
+                instance.cmsUrl,
             );
             const collectionAuthoring = createCollectionAuthoring(
                 stores,
@@ -244,6 +254,7 @@ export class ProviderInstanceHost {
                 dispatcher,
                 {
                     ...stores,
+                    ...createPublicDelivery(stores, gateway, instance.cmsUrl),
                     collectionAuthoring,
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
@@ -256,7 +267,7 @@ export class ProviderInstanceHost {
                                 Boolean(await stores.users.getBySub(sub)) &&
                                 (await gateway.administrators.get(sub)).enabled,
                         },
-                        new URL("/.cms/mcp", instance.kernelUrl).href,
+                        new URL("/.cms/mcp", instance.cmsUrl).href,
                         new TextEncoder().encode(stores.runtimeSessionSecret),
                         Date.now,
                         stores.oauthPublicLimiter,
@@ -268,7 +279,7 @@ export class ProviderInstanceHost {
                 operations,
                 {
                     ...createProtectedProviderManagement(management, instance, profile),
-                    administration: providerAdministration(stores, gateway, management, instance.kernelUrl),
+                    administration: providerAdministration(stores, gateway, management, instance.gatewayUrl),
                 },
                 new CollectionSources(stores.collections, [this.#collectionSource]),
                 stores.providerFiles,
@@ -292,6 +303,23 @@ export class ProviderInstanceHost {
                 managementForProfile,
                 administrators: gateway.administrators,
                 operations,
+                pairOfficialProvider: async () => {
+                    const state = await management.list();
+                    const official = state.installations.find(
+                        (item) => item.providerId === profile.manifest.providerId && item.accountId === instance.id,
+                    );
+                    if (!official) {
+                        throw new Error("Official Provider installation is unavailable for pairing");
+                    }
+                    const current = await stores.installations.get({ siteId: SITE_ID, installationId: official.id });
+                    if (!current) {
+                        throw new Error("Official Provider installation disappeared before pairing");
+                    }
+                    await officialPairing.configure(
+                        { installationId: official.id, expectedRevision: current.revision },
+                        "system:provider-provisioner",
+                    );
+                },
                 ensureProviderReady: async () => {
                     await gateway.routes.warm(SITE_ID, "ulvia.cms.installations");
                 },

@@ -50,15 +50,15 @@ test("resolves collection asset expressions inside immutable Bloc CSS bundles", 
     const css = new TextDecoder().decode(entry!.raw);
 
     expect(assets.blocStyleUrls[0]).toContain(`r=${revision}`);
-    expect(css).toContain("/.cms/collections/design-system/assets/mark.svg?v=");
+    expect(css).toContain("/_content/collections/design-system/assets/mark.svg?v=");
     expect(css).toContain("background-image");
     expect(css).not.toContain("cms.asset.design-system.mark.svg");
 });
 
 function runtimeWith(content: ContentReader, collectionAssets: Parameters<typeof resolveInstalledCollectionAssets>[1]) {
     const cache = new InMemoryCache();
-    cache.set(blocRuntimeCacheKey("/.cms/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
-    cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
+    cache.set(blocRuntimeCacheKey("/_content/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
+    cache.set(CMS_CACHE_KEYS.js("/_content/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     return { basePath: "", cmsPathPrefix: "/.cms", cache, content, collectionAssets };
 }
 

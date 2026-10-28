@@ -1,6 +1,6 @@
 /**
  * DOM-based HTML hardening. Operates on an ALREADY-PARSED element tree, so it is
- * agnostic to the DOM implementation (linkedom in the Kernel, happy-dom/browser in
+ * agnostic to the DOM implementation (linkedom in the Edge, happy-dom/browser in
  * the admin) and — crucially — works at the same trust boundary the browser does:
  * a real parser resolves attribute boundaries and decodes entities BEFORE we
  * inspect anything. That sidesteps every class of string/regex bypass:

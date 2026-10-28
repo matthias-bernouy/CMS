@@ -10,8 +10,8 @@ const MAX_TAGS_LENGTH = 16_384;
 
 /**
  * Serve ONE bundle = the concatenated viewJS of several blocs, for the
- * signature-grouped kernel path. URL shape:
- * `/.cms/blocset?tags=<a,b,c>&r=<collection-revision>&v=<hash>`.
+ * signature-grouped edge path. URL shape:
+ * `/_content/blocset?tags=<a,b,c>&r=<collection-revision>&v=<hash>`.
  *
  * The tag set is canonicalised (deduped + sorted) in both the cache key
  * (including the installed-collection revision) and the generator, so any page referencing the same

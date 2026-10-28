@@ -1,3 +1,4 @@
+import { readTraceContext, TRACE_CONTEXT_HEADER } from "@bernouy/logging";
 import { providerCredentialFingerprint } from "cms-gateway/access/providers/credentials";
 import {
     DELEGATION_HEADER,
@@ -39,6 +40,7 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
                         request.headers.get("authorization")!.slice(7),
                     ),
                 },
+                trace: readTraceContext(request.headers.get(TRACE_CONTEXT_HEADER)),
                 ...(ticket ? { delegationTicket: ticket } : {}),
                 prefix: routePrefix(config.basePath),
                 onFailure: config.onFailure,
@@ -52,7 +54,10 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
             if (identifiers.contractId === "ulvia.cms.access" && identifiers.route.capability.id === "resolve-actor") {
                 actorCredential = actorCredentialFromRequest(request);
             }
-            if (identifiers.route.capability.access !== "public") {
+            if (
+                identifiers.route.capability.access !== "public" ||
+                (identifiers.route.capability.output.type === "binary" && identifiers.route.capability.output.resource)
+            ) {
                 actor = await config.resolveActor(request);
             }
         } catch (error) {

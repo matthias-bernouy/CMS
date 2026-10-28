@@ -1,3 +1,4 @@
+import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
 import { ContractUpgradeService } from "@bernouy/cms-repository/providers/selections";
 import { capabilityGranted } from "@bernouy/cms-repository/providers/selections";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
@@ -62,6 +63,7 @@ export async function createProviderGateway(
         invoker: () => invoker,
     });
     invoker = new CapabilityGateway({
+        ...gatewayObservability(stores.logger),
         delegations,
         transportFencesRoute: true,
         routes,
@@ -98,6 +100,26 @@ export async function createProviderGateway(
         resolveSecret,
         delegations,
         identities,
+        async (subjectId) => {
+            const result = await invoker.invoke({
+                siteId,
+                contractId: "ulvia.cms.access",
+                capabilityId: "inspect-actor",
+                input: { subjectId },
+                actor: { kind: "system", serviceId: "cms-gateway" },
+            });
+            if (result.kind !== "success" || !result.output || typeof result.output !== "object") {
+                return null;
+            }
+            const actor = result.output as Record<string, unknown>;
+            return actor.state === "authenticated" &&
+                actor.subjectId === subjectId &&
+                typeof actor.administrator === "boolean"
+                ? actor.administrator
+                    ? "administrator"
+                    : "user"
+                : null;
+        },
     );
 
     const contractUpgrades = new ContractUpgradeService(

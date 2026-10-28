@@ -116,7 +116,7 @@ function operationVariable(
     if (!binding) {
         return null;
     }
-    if ("sync" in binding || binding.contractId.startsWith("kernel.")) {
+    if ("sync" in binding || binding.contractId.startsWith("edge.")) {
         return { name: binding.name, variable: { kind: "unknown" } };
     }
     const capability = capabilities.get(targetKey(binding.contractId, binding.capabilityId));

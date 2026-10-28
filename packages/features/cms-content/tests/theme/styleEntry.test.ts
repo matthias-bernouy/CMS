@@ -69,13 +69,13 @@ describe("Theme style entry", () => {
             expect(input).toContain("{{ cms.asset.atlas.fonts/interface.woff2 }}");
             return input.replace(
                 "{{ cms.asset.atlas.fonts/interface.woff2 }}",
-                "/.cms/collections/atlas/assets/fonts%2Finterface.woff2?v=sha256-test",
+                "/_content/collections/atlas/assets/fonts%2Finterface.woff2?v=sha256-test",
             );
         });
         const css = new TextDecoder().decode(entry.raw);
 
         expect(css).toContain(
-            'src: url("/.cms/collections/atlas/assets/fonts%2Finterface.woff2?v=sha256-test") format("woff2");',
+            'src: url("/_content/collections/atlas/assets/fonts%2Finterface.woff2?v=sha256-test") format("woff2");',
         );
         expect(css).not.toContain("cms.asset");
     });

@@ -1,3 +1,4 @@
+import { isTraceContext, type TraceContext } from "@bernouy/logging";
 import type { DelegationContext } from "cms-gateway/access/delegation/interfaces";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { isCanonicalSemVer } from "@bernouy/cms-repository/contracts/compatibility";
@@ -13,6 +14,8 @@ const REQUEST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 const SUBJECT_ID = /^[\x20-\x7e]{1,256}$/u;
 
 export interface ProviderInvocationIssue {
+    readonly trace?: TraceContext;
+    readonly actorKind?: "anonymous" | "user" | "administrator";
     readonly requestId: string;
     readonly installationId: string;
     readonly contractId: string;
@@ -28,6 +31,8 @@ export interface ProviderInvocationIssue {
 }
 
 export type ProviderInvocationClaims = Readonly<{
+    trace?: TraceContext;
+    actorKind?: "anonymous" | "user" | "administrator";
     version: 1;
     requestId: string;
     instanceId: string;
@@ -68,6 +73,8 @@ export function signProviderInvocationToken(secret: string, claims: ProviderInvo
     ];
     assertExactObject(claims as unknown as Record<string, unknown>, [
         ...claimKeys,
+        ...(claims.trace ? ["trace"] : []),
+        ...(claims.actorKind ? ["actorKind"] : []),
         ...(claims.subjectId ? ["subjectId"] : []),
         ...(claims.systemServiceId ? ["systemServiceId"] : []),
         ...(claims.sourceInstallationId ? ["sourceInstallationId"] : []),
@@ -147,6 +154,8 @@ function parseClaims(value: string): ProviderInvocationClaims {
     ];
     assertExactObject(parsed, [
         ...keys,
+        ...(Object.hasOwn(parsed, "trace") ? ["trace"] : []),
+        ...(Object.hasOwn(parsed, "actorKind") ? ["actorKind"] : []),
         ...(Object.hasOwn(parsed, "subjectId") ? ["subjectId"] : []),
         ...(Object.hasOwn(parsed, "systemServiceId") ? ["systemServiceId"] : []),
         ...(Object.hasOwn(parsed, "sourceInstallationId") ? ["sourceInstallationId"] : []),
@@ -161,6 +170,12 @@ function parseClaims(value: string): ProviderInvocationClaims {
 
 function assertClaims(value: Readonly<Record<string, unknown>>): asserts value is ProviderInvocationClaims {
     if (
+        (value.actorKind !== undefined &&
+            (!["anonymous", "user", "administrator"].includes(String(value.actorKind)) ||
+                (value.actorKind === "anonymous") !== (value.subjectId === undefined) ||
+                value.systemServiceId !== undefined ||
+                (value.sourceInstallationId !== undefined && value.rootRequestId === undefined))) ||
+        (value.trace !== undefined && (!isTraceContext(value.trace) || value.trace.spanId !== value.requestId)) ||
         value.version !== TOKEN_VERSION ||
         typeof value.requestId !== "string" ||
         !REQUEST_ID.test(value.requestId) ||

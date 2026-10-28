@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import type { IncomingMessage } from "node:http";
 import { Readable } from "node:stream";
-import { encodeSessionEffect, SESSION_EFFECT_HEADER } from "@bernouy/cms-gateway/protocol";
+import { RESOURCE_HEADER, encodeSessionEffect, SESSION_EFFECT_HEADER } from "@bernouy/cms-gateway/protocol";
 import { toResponse } from "cms-gateway/invocation/node-http/nodeHttpRequest";
 
 test("node response bridge pauses the source until the web body is consumed", async () => {
@@ -41,4 +41,21 @@ test("node response bridge preserves only the trusted semantic session effect", 
     expect(response.headers.has("set-cookie")).toBeFalse();
     expect(response.headers.has("x-untrusted-provider-header")).toBeFalse();
     expect(await response.json()).toEqual({});
+});
+
+test("node response bridge preserves native resource metadata without accepting security headers", async () => {
+    const metadata = JSON.stringify({ status: 302, headers: { location: "/login" } });
+    const incoming = Readable.from([]);
+    Object.assign(incoming, {
+        statusCode: 200,
+        headers: {
+            [RESOURCE_HEADER]: metadata,
+            "content-type": "application/octet-stream",
+            "content-security-policy": "unsafe",
+        },
+    });
+    const response = toResponse(incoming as IncomingMessage, "GET");
+    expect(response.headers.get(RESOURCE_HEADER)).toBe(metadata);
+    expect(response.headers.has("content-security-policy")).toBe(false);
+    expect(await response.text()).toBe("");
 });

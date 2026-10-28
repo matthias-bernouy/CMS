@@ -1,3 +1,5 @@
+import type { ResourceMetadata } from "../resource/metadata";
+import type { TraceContext } from "@bernouy/logging";
 import type { DelegationContext } from "cms-gateway/access/delegation/interfaces";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
@@ -14,6 +16,7 @@ export type GatewayActor =
     | { readonly kind: "system"; readonly serviceId: string };
 
 export interface GatewayInvocation {
+    readonly trace?: TraceContext;
     readonly siteId: string;
     readonly contractId: string;
     readonly capabilityId: string;
@@ -68,6 +71,8 @@ export interface GatewayRouteResolver {
 }
 
 export interface GatewayTransportRequest {
+    readonly actorKind?: "anonymous" | "user" | "administrator";
+    readonly trace?: TraceContext;
     readonly delegation?: DelegationContext;
     readonly delegated?: {
         readonly ticket: string;
@@ -97,6 +102,7 @@ export interface GatewayTransportRequest {
 }
 
 export interface GatewayTransportResponse {
+    readonly resource?: ResourceMetadata;
     readonly status?: number;
     readonly contentType?: string;
     readonly responseHeaders?: Readonly<Record<string, string>>;
@@ -123,6 +129,7 @@ export type GatewayResult =
     | (GatewayResultBase & { readonly kind: "success"; readonly output?: unknown })
     | (GatewayResultBase & {
           readonly kind: "binary";
+          readonly resource?: ResourceMetadata;
           readonly stream: ReadableStream<Uint8Array>;
           readonly contentType: string;
           readonly contentLength?: number;

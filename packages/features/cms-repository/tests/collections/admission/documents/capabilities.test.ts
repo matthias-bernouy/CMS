@@ -34,7 +34,7 @@ test("example documents admit typed capability forms owned by a composition", ()
     }
 });
 
-test("example documents use declared Access capabilities instead of Kernel-owned authentication", () => {
+test("example documents use declared Access capabilities instead of Edge-owned authentication", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const authentication = {
         description: "bloc.page.label",
@@ -69,8 +69,8 @@ test("example documents use declared Access capabilities instead of Kernel-owned
     ).not.toThrow();
 
     for (const markup of [
-        authentication.markup.replace("ulvia.cms.access:login-password", "kernel.auth:login"),
-        authentication.markup.replace("ulvia.cms.access:login-password", "kernel.auth:secrets"),
+        authentication.markup.replace("ulvia.cms.access:login-password", "edge.auth:login"),
+        authentication.markup.replace("ulvia.cms.access:login-password", "edge.auth:secrets"),
     ]) {
         expect(() =>
             parseCollectionRelease(
@@ -84,7 +84,7 @@ test("example documents use declared Access capabilities instead of Kernel-owned
     }
 });
 
-test("Pages reject removed kernel file transports", () => {
+test("Pages reject removed edge file transports", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const html = `<section>
         <form cms-source="/.cms/call/ulvia.cms.files/uploads" cms-source-method="POST" cms-source-trigger="submit">

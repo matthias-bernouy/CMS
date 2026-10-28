@@ -115,7 +115,7 @@ export function extractMutations(document: Document): readonly ContentMutation[]
     const bindings = Array.from(document.querySelectorAll("form[cms-mutation]"), (element) =>
         parseMutation(element.getAttribute("cms-mutation") ?? ""),
     ).filter((mutation): mutation is NonNullable<typeof mutation> => mutation !== null);
-    return bindings.filter((mutation) => !mutation.contractId.startsWith("kernel."));
+    return bindings.filter((mutation) => !mutation.contractId.startsWith("edge."));
 }
 
 function validateNativeMarkup(

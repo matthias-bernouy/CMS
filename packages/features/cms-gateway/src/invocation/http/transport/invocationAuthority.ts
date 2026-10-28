@@ -9,11 +9,13 @@ export function invocationAuthority(request: GatewayHttpExchange): ProviderInvoc
     const authority = request.authentication;
     return {
         requestId: request.requestId,
+        ...(authority.trace ? { trace: authority.trace } : {}),
         installationId: request.installationId,
         contractId: authority.contractId,
         contractVersion: authority.contractVersion,
         capabilityId: authority.capabilityId,
         ...(authority.subjectId ? { subjectId: authority.subjectId } : {}),
+        ...(authority.actorKind ? { actorKind: authority.actorKind } : {}),
         ...(authority.systemServiceId ? { systemServiceId: authority.systemServiceId } : {}),
         ...(authority.sourceInstallationId
             ? {

@@ -90,9 +90,13 @@ async function parseCreateInput(request: Request): Promise<CreateProviderInstanc
     const input = value as Record<string, unknown>;
     const administrator = input.administrator;
     if (
-        Object.keys(input).sort().join(",") !== "administrator,kernelUrl,label" ||
+        Object.keys(input)
+            .filter((key) => key !== "gatewayUrl")
+            .sort()
+            .join(",") !== "administrator,cmsUrl,label" ||
         typeof input.label !== "string" ||
-        typeof input.kernelUrl !== "string" ||
+        typeof input.cmsUrl !== "string" ||
+        (input.gatewayUrl !== undefined && typeof input.gatewayUrl !== "string") ||
         !administrator ||
         typeof administrator !== "object" ||
         Array.isArray(administrator)
@@ -109,7 +113,8 @@ async function parseCreateInput(request: Request): Promise<CreateProviderInstanc
     }
     return {
         label: input.label,
-        kernelUrl: input.kernelUrl,
+        cmsUrl: input.cmsUrl,
+        ...(typeof input.gatewayUrl === "string" ? { gatewayUrl: input.gatewayUrl } : {}),
         administrator: { email: admin.email, password: admin.password },
     };
 }

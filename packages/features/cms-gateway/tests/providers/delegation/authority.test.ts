@@ -64,7 +64,7 @@ test("original actor revisions and access levels remain authoritative", async ()
     f.state.actor = { kind: "user", subjectId: "user-a", authorizationRevision: 8 };
     await expect(f.authority.check(f.child(ticket.ticket))).rejects.toThrow();
     await expect(
-        f.authority.issue({ ...f.root(), actor: { kind: "system", serviceId: "cms-kernel" } as never }),
+        f.authority.issue({ ...f.root(), actor: { kind: "system", serviceId: "cms-edge" } as never }),
     ).rejects.toThrow();
     await expect(f.authority.issue({ ...f.root(), actor: { kind: "user", subjectId: "user-a" } })).rejects.toThrow();
 });

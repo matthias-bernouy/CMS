@@ -12,7 +12,8 @@ export type ProviderInstanceRecord = Readonly<{
     idempotencyKey: string;
     idempotencyFingerprint: string;
     storageKey: string;
-    kernelUrl: string;
+    cmsUrl: string;
+    gatewayUrl: string;
     label: string;
     status: ProviderInstanceStatus;
     profile: ProviderInstanceProfile;

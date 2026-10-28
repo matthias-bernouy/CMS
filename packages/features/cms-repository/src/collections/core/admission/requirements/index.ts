@@ -155,7 +155,7 @@ function bindingTargets(markups: readonly string[]): readonly BindingTarget[] {
         document.body.innerHTML = html;
         for (const element of Array.from(document.querySelectorAll("[cms-query]"))) {
             const query = parseQuery(element.getAttribute("cms-query") ?? "");
-            if (query && "contractId" in query && !query.contractId.startsWith("kernel.")) {
+            if (query && "contractId" in query && !query.contractId.startsWith("edge.")) {
                 const target = {
                     contractId: query.contractId,
                     capabilityId: query.capabilityId,
@@ -166,7 +166,7 @@ function bindingTargets(markups: readonly string[]): readonly BindingTarget[] {
         }
         for (const element of Array.from(document.querySelectorAll("form[cms-mutation]"))) {
             const mutation = parseMutation(element.getAttribute("cms-mutation") ?? "");
-            if (mutation && !mutation.contractId.startsWith("kernel.")) {
+            if (mutation && !mutation.contractId.startsWith("edge.")) {
                 const target = {
                     contractId: mutation.contractId,
                     capabilityId: mutation.capabilityId,

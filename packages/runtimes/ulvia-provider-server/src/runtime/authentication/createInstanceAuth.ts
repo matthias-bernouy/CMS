@@ -1,7 +1,7 @@
 import { createPublicAuthActions, LocalAuthentication, SignedCookieCodec, SubjectResolver } from "@bernouy/cms-auth";
 import type { ProviderStores } from "../stores/providerStores";
 
-export async function createInstanceAuth(stores: ProviderStores, kernelUrl: string) {
+export async function createInstanceAuth(stores: ProviderStores, cmsUrl: string) {
     const auth = new LocalAuthentication({
         providerId: "local",
         credentials: stores.credentials,
@@ -18,7 +18,7 @@ export async function createInstanceAuth(stores: ProviderStores, kernelUrl: stri
         siteName: "Ulvia CMS",
         authEmailCooldownSeconds: 300,
     };
-    const origin = kernelUrl.replace(/\/$/u, "");
+    const origin = cmsUrl.replace(/\/$/u, "");
     return {
         auth,
         accountLifecycle: createPublicAuthActions({

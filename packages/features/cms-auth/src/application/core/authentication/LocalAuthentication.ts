@@ -33,7 +33,7 @@ export type LocalAuthConfig = {
 
 /**
  * Local credential proof, signed session issuance and opaque credential
- * resolution. HTTP and cookie response policy belong to the Kernel boundary.
+ * resolution. HTTP and cookie response policy belong to the Edge boundary.
  */
 export class LocalAuthentication implements LocalAuthenticationActions {
     private readonly sessions: SessionTokenService;

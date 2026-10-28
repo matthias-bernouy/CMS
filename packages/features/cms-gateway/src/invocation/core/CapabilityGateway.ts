@@ -1,3 +1,6 @@
+import { InvocationTracker } from "../observability/InvocationTracker";
+import type { InvocationObserver, GatewayTracing } from "../observability/interfaces";
+import { isTraceContext } from "@bernouy/logging";
 import { DELEGATION_LIMITS } from "cms-gateway/access/delegation/limits";
 import { delegationStream } from "./delegationStream";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
@@ -26,6 +29,8 @@ import type {
 import type { GatewayDelegationAuthority, DelegationTarget } from "cms-gateway/access/delegation/interfaces";
 
 export interface CapabilityGatewayOptions {
+    readonly observer?: InvocationObserver;
+    readonly tracing?: GatewayTracing;
     readonly delegations?: GatewayDelegationAuthority;
     readonly routes: GatewayRouteResolver;
     readonly transport: GatewayTransport;
@@ -76,6 +81,26 @@ export class CapabilityGateway implements GatewayAccessProbe {
     }
 
     async invoke(value: GatewayInvocation): Promise<GatewayResult> {
+        const requestId = crypto.randomUUID();
+        const parent = isTraceContext(value?.trace) ? value.trace : this.#options.tracing?.current();
+        const trace = {
+            traceId: parent?.traceId ?? requestId,
+            spanId: requestId,
+            ...(parent ? { parentSpanId: parent.spanId } : {}),
+        };
+        const tracker = new InvocationTracker(this.#options.observer, trace, value);
+        const operation = async () => {
+            try {
+                return tracker.result(await this.#invoke(value, requestId, tracker), value.metadataOnly);
+            } catch (error) {
+                tracker.failed(error);
+                throw error;
+            }
+        };
+        return this.#options.tracing ? this.#options.tracing.run(trace, operation) : operation();
+    }
+
+    async #invoke(value: GatewayInvocation, requestId: string, tracker: InvocationTracker): Promise<GatewayResult> {
         let invocation = snapshotInvocation(value);
         const started = Date.now();
         let delegated: DelegationTarget | undefined;
@@ -96,14 +121,17 @@ export class CapabilityGateway implements GatewayAccessProbe {
             invocation = { ...invocation, actor: checked.actor };
             rootRequestId = checked.rootRequestId;
         }
-        const { route, instanceId, release, capability } = await this.#authorizedRoute(invocation, false);
+        const { route, instanceId, release, capability } = await this.#authorizedRoute(invocation, false, tracker);
         assertActorCredentialTarget(invocation, capability);
         const input = snapshotInput(invocation.input, capability);
+        tracker.update({
+            requestBytes:
+                invocation.binaryBody?.contentLength ?? new TextEncoder().encode(JSON.stringify(input)).byteLength,
+        });
         const subjectId = await this.#providerSubjectId(invocation.actor, capability, route);
         if (!this.#options.transportFencesRoute && !(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "installation changed while resolving actor identity");
         }
-        const requestId = crypto.randomUUID();
         const isCommand = capability.behavior.effect === "command";
         // Cached policy only avoids unnecessary control calls; issuance revalidates live authority.
         const delegationSource = route.manifest.admission.manifest.implementations.some(
@@ -165,7 +193,13 @@ export class CapabilityGateway implements GatewayAccessProbe {
                     deadline: started + DELEGATION_LIMITS.rootDeadlineMs,
                 });
             }
+            tracker.enter("dispatch");
             const response = await this.#options.transport.send({
+                trace: this.#options.tracing?.current() ?? {
+                    traceId: invocation.trace?.traceId ?? requestId,
+                    spanId: requestId,
+                    ...(invocation.trace ? { parentSpanId: invocation.trace.spanId } : {}),
+                },
                 requestId,
                 ...(delegation ? { delegation } : {}),
                 ...(delegated
@@ -191,6 +225,13 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 input,
                 ...(invocation.binaryBody ? { binaryBody: invocation.binaryBody } : {}),
                 ...(subjectId ? { subjectId } : {}),
+                ...(capability.output.type === "binary" &&
+                capability.output.resource &&
+                (invocation.actor.kind === "anonymous" ||
+                    invocation.actor.kind === "user" ||
+                    invocation.actor.kind === "administrator")
+                    ? { actorKind: invocation.actor.kind }
+                    : {}),
                 ...(invocation.actor.kind === "system" ? { systemServiceId: invocation.actor.serviceId } : {}),
                 ...(invocation.actor.kind === "provider"
                     ? {
@@ -204,6 +245,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
             if (!this.#options.transportFencesRoute && !(await this.#options.routes.isCurrent(route))) {
                 throw new GatewayError("stale_route", "selection or installation changed during invocation");
             }
+            tracker.enter("validation");
             result = validateResponse(capability, response, requestId);
             if (isCommand) {
                 await this.#auditCommand(
@@ -300,7 +342,12 @@ export class CapabilityGateway implements GatewayAccessProbe {
         }
     }
 
-    async #authorizedRoute(value: Omit<GatewayInvocation, "input">, verifyCurrent = true): Promise<AuthorizedRoute> {
+    async #authorizedRoute(
+        value: Omit<GatewayInvocation, "input">,
+        verifyCurrent = true,
+        tracker?: InvocationTracker,
+    ): Promise<AuthorizedRoute> {
+        tracker?.enter("resolution");
         const route = await this.#options.routes.resolve(value.siteId, value.contractId);
         if (!route) {
             throw new GatewayError("not_selected", "site has no selected release for this contract");
@@ -333,6 +380,8 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (value.bindingTransport && !value.bindingId) {
             throw new GatewayError("invalid_route", "binding transport requires a binding ID");
         }
+        tracker?.update({ installationId: route.selection.installationId, version: capabilityRelease.version });
+        tracker?.enter("authorization");
         checkBinaryBody(value.binaryBody, capability);
         if (value.metadataOnly && capability.output.type !== "binary") {
             throw new GatewayError("invalid_input", "metadata representation requires a binary output");
@@ -360,7 +409,9 @@ export class CapabilityGateway implements GatewayAccessProbe {
         route: GatewayRoute,
     ): Promise<string | undefined> {
         if (
-            (capability.access !== "authenticated" && capability.access !== "admin") ||
+            (capability.access !== "authenticated" &&
+                capability.access !== "admin" &&
+                !(capability.output.type === "binary" && capability.output.resource)) ||
             (actor.kind !== "user" && actor.kind !== "administrator")
         ) {
             return undefined;

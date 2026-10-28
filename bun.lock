@@ -10,7 +10,7 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-kernel": "workspace:*",
+        "@bernouy/cms-edge": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -222,15 +222,15 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/runtimes/cms-kernel-server": {
-      "name": "@bernouy/cms-kernel-server",
+    "packages/runtimes/cms-edge-server": {
+      "name": "@bernouy/cms-edge-server",
       "version": "1.0.0",
       "dependencies": {
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-kernel": "workspace:*",
+        "@bernouy/cms-edge": "workspace:*",
         "@bernouy/cms-observability": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -293,8 +293,8 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/surfaces/cms-kernel": {
-      "name": "@bernouy/cms-kernel",
+    "packages/surfaces/cms-edge": {
+      "name": "@bernouy/cms-edge",
       "version": "1.0.0",
       "dependencies": {
         "@bernouy/blob-store": "workspace:*",
@@ -350,9 +350,9 @@
 
     "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/features/cms-gateway"],
 
-    "@bernouy/cms-kernel": ["@bernouy/cms-kernel@workspace:packages/surfaces/cms-kernel"],
+    "@bernouy/cms-edge": ["@bernouy/cms-edge@workspace:packages/surfaces/cms-edge"],
 
-    "@bernouy/cms-kernel-server": ["@bernouy/cms-kernel-server@workspace:packages/runtimes/cms-kernel-server"],
+    "@bernouy/cms-edge-server": ["@bernouy/cms-edge-server@workspace:packages/runtimes/cms-edge-server"],
 
     "@bernouy/cms-observability": ["@bernouy/cms-observability@workspace:packages/features/cms-observability"],
 

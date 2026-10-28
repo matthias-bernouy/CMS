@@ -119,8 +119,8 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
         return "CMS mutations are reserved for form submissions";
     }
     const mutationBinding = mutation === undefined ? null : parseMutation(mutation);
-    if (mutationBinding?.contractId.startsWith("kernel.")) {
-        return "CMS mutations cannot target Kernel-owned capabilities";
+    if (mutationBinding?.contractId.startsWith("edge.")) {
+        return "CMS mutations cannot target Edge-owned capabilities";
     }
     if (query !== undefined) {
         const binding = parseQuery(query);
@@ -143,8 +143,8 @@ export function nativeBindingElementIssue(tag: string, attributes: Readonly<Reco
         ) {
             return "synchronized-state queries cannot declare remote query controls";
         }
-        if (binding && "contractId" in binding && binding.contractId.startsWith("kernel.")) {
-            return "CMS queries cannot target Kernel-owned capabilities";
+        if (binding && "contractId" in binding && binding.contractId.startsWith("edge.")) {
+            return "CMS queries cannot target Edge-owned capabilities";
         }
     }
     if (queries !== undefined && query === undefined && sync !== undefined) {

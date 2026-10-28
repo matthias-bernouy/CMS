@@ -1,7 +1,7 @@
 import { mkdir, lstat } from "node:fs/promises";
 import { join } from "node:path";
 
-/** The kernel releases flock after a crash, independently of timestamps and reused container PIDs. */
+/** The operating system kernel releases flock after a crash, independently of timestamps and reused container PIDs. */
 export async function acquireRepositoryOwnership(root: string) {
     await mkdir(root, { recursive: true, mode: 0o700 });
     const metadata = await lstat(root);

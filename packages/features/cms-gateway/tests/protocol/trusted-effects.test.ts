@@ -35,7 +35,7 @@ describe("trusted capability metadata", () => {
     });
 
     test("gives an explicit Bearer credential precedence over the session cookie", () => {
-        const request = new Request("https://kernel.test/admin", {
+        const request = new Request("https://edge.test/admin", {
             headers: {
                 authorization: "Bearer personal-access-token",
                 cookie: "cms-session=session-token; unrelated=value",
@@ -45,7 +45,7 @@ describe("trusted capability metadata", () => {
         expect(actorCredentialFromRequest(request)).toEqual({ kind: "bearer", token: "personal-access-token" });
         expect(
             actorCredentialFromRequest(
-                new Request("https://kernel.test/admin", { headers: { cookie: "cms-session=session-token" } }),
+                new Request("https://edge.test/admin", { headers: { cookie: "cms-session=session-token" } }),
             ),
         ).toEqual({ kind: "session", token: "session-token" });
     });

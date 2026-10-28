@@ -6,6 +6,11 @@ await buildContentBrowserAssets();
 // Keep Bun's network and form primitives: happy-dom's replacements do not
 // behave like the runtime APIs exercised by serialization and fetch tests.
 const nativeGlobals = {
+    ReadableStream: globalThis.ReadableStream,
+    WritableStream: globalThis.WritableStream,
+    TransformStream: globalThis.TransformStream,
+    CompressionStream: globalThis.CompressionStream,
+    DecompressionStream: globalThis.DecompressionStream,
     Response: globalThis.Response,
     Request: globalThis.Request,
     Headers: globalThis.Headers,

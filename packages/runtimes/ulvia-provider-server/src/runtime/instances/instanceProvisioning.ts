@@ -33,7 +33,12 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
             execution.throwIfLeaseLost();
         },
         connectProvider: (profile, execution) => connectProvider(options, profile, execution),
-        selectContracts: (profile, execution) => selectContracts(options.composition, profile, execution),
+        selectContracts: async (profile, execution) => {
+            await selectContracts(options.composition, profile, execution);
+            execution.throwIfLeaseLost();
+            await options.composition.pairOfficialProvider();
+            execution.throwIfLeaseLost();
+        },
         installCollection: (profile, execution) =>
             installOfficialCollection(options.composition, options.collectionSource, profile, execution),
         initializeAdministrator: (administrator, execution) =>

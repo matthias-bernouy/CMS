@@ -1,4 +1,4 @@
-/** Stable same-origin gateway transports exposed by the site Kernel. */
+/** Stable same-origin gateway transports exposed by the site Edge. */
 export const CMS_CAPABILITY_CALL_ROUTE = "/.cms/call";
 export const CMS_CAPABILITY_MUTATION_ROUTE = "/.cms/mutation";
 export const CMS_CAPABILITY_QUERY_ROUTE = "/.cms/query";

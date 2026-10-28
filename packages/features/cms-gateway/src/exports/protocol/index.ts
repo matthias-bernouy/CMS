@@ -20,3 +20,10 @@ export {
 } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export type { ProviderInvocationIssue } from "cms-gateway/protocol/ProviderInvocationToken";
+
+export {
+    RESOURCE_HEADER,
+    parseResourceMetadata,
+    decodeResourceMetadata,
+    type ResourceMetadata,
+} from "cms-gateway/invocation/resource/metadata";

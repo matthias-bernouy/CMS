@@ -45,7 +45,7 @@ test("signed Provider provenance and connection cannot coexist with user or syst
     const provider = { ...base, sourceInstallationId: "source:a", connectionId: "target:b" };
     expect(verifyProviderInvocationToken(signProviderInvocationToken(SECRET, provider), SECRET, NOW)).toEqual(provider);
     expect(() => signProviderInvocationToken(SECRET, { ...provider, subjectId: "user" })).toThrow("claims");
-    expect(() => signProviderInvocationToken(SECRET, { ...provider, systemServiceId: "cms-kernel" })).toThrow("claims");
+    expect(() => signProviderInvocationToken(SECRET, { ...provider, systemServiceId: "cms-edge" })).toThrow("claims");
     expect(() => signProviderInvocationToken(SECRET, { ...provider, connectionId: "bad connection" })).toThrow(
         "claims",
     );

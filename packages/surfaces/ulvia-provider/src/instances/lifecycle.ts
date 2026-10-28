@@ -26,7 +26,8 @@ export type ProviderInstanceAccessCredentials = Readonly<{
 
 export type CreateProviderInstance = Readonly<{
     label: string;
-    kernelUrl: string;
+    cmsUrl: string;
+    gatewayUrl?: string;
     administrator: ProviderInstanceAdministrator;
 }>;
 
@@ -55,7 +56,8 @@ export class ProviderInstanceLifecycle {
                 idempotencyKey,
                 idempotencyFingerprint,
                 storageKey: `instance-${uuid}`,
-                kernelUrl: input.kernelUrl,
+                cmsUrl: new URL(input.cmsUrl).origin,
+                gatewayUrl: new URL(input.gatewayUrl ?? input.cmsUrl).origin,
                 label: input.label.trim(),
                 status: "provisioning",
                 profile: {
@@ -104,7 +106,8 @@ function fingerprintCreateInput(input: CreateProviderInstance, secret: string): 
         .update(
             JSON.stringify({
                 label: input.label.trim(),
-                kernelUrl: new URL(input.kernelUrl).toString(),
+                cmsUrl: new URL(input.cmsUrl).toString(),
+                gatewayUrl: new URL(input.gatewayUrl ?? input.cmsUrl).toString(),
                 administrator: input.administrator,
             }),
         )
@@ -127,19 +130,24 @@ function validateCreateInput(idempotencyKey: string, input: CreateProviderInstan
     if (!label || label.length > 80 || /[\x00-\x1f\x7f]/u.test(label)) {
         throw new TypeError("Instance label is invalid");
     }
-    let kernelUrl: URL;
-    try {
-        kernelUrl = new URL(input.kernelUrl);
-    } catch {
-        throw new TypeError("Kernel URL is invalid");
-    }
-    if (
-        !/^https?:$/u.test(kernelUrl.protocol) ||
-        kernelUrl.username ||
-        kernelUrl.password ||
-        kernelUrl.pathname !== "/"
-    ) {
-        throw new TypeError("Kernel URL is invalid");
+    for (const value of [input.cmsUrl, input.gatewayUrl ?? input.cmsUrl]) {
+        let url: URL;
+        try {
+            url = new URL(value);
+        } catch {
+            throw new TypeError("Edge URL is invalid");
+        }
+        if (
+            value.length > 2048 ||
+            !/^https?:$/u.test(url.protocol) ||
+            url.username ||
+            url.password ||
+            url.pathname !== "/" ||
+            url.search ||
+            url.hash
+        ) {
+            throw new TypeError("Edge URL is invalid");
+        }
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(input.administrator.email) || input.administrator.email.length > 254) {
         throw new TypeError("Administrator email is invalid");

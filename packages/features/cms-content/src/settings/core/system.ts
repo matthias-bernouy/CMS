@@ -19,7 +19,6 @@ export function defaultSystem(): TSystem {
             login: null,
         },
         theme: defaultThemeSettings(),
-        security: { connectExtras: [], mediaExtras: [] },
     };
 }
 

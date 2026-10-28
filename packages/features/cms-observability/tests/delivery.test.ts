@@ -1,3 +1,6 @@
+import { CapabilityGateway } from "@bernouy/cms-gateway";
+import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
+import { gatewayRoute, NOW } from "../../cms-gateway/tests/fixtures";
 import { CmsObservability, assertLogAcknowledgement } from "@bernouy/cms-observability";
 import { expect, test } from "bun:test";
 import { NOOP_LOGGER } from "@bernouy/logging";
@@ -79,13 +82,13 @@ test("redaction expansion remains readable and idempotent after the producer tru
         instanceId: "instance-a",
         cursorKey: "x".repeat(32),
     });
-    const diagnostics = createObservabilityLogger({ service: "cms-kernel", fallback: () => undefined });
+    const diagnostics = createObservabilityLogger({ service: "cms-edge", fallback: () => undefined });
     let id = "";
     diagnostics.collector.connect(async (entries) => {
         id = entries[0]!.id;
         expect(entries[0]!.attributes.note).toHaveLength(1024);
-        expect(await journal.append({ entries }, "cms-kernel")).toEqual({ accepted: 1, stored: 1, duplicates: 0 });
-        expect(await journal.append({ entries }, "cms-kernel")).toEqual({ accepted: 1, stored: 0, duplicates: 1 });
+        expect(await journal.append({ entries }, "cms-edge")).toEqual({ accepted: 1, stored: 1, duplicates: 0 });
+        expect(await journal.append({ entries }, "cms-edge")).toEqual({ accepted: 1, stored: 0, duplicates: 1 });
     });
     try {
         diagnostics.logger.info("delivery.test", { note: "x".repeat(1016) + " token=a" });
@@ -115,4 +118,38 @@ test("Mongo reception-time windows match the pagination order and preserve tenan
     expect(filter.receivedAt).toEqual({ $gte: "2026-10-26T12:00:00.000Z", $lt: "2026-10-26T12:01:00.000Z" });
     expect(filter.instanceId).toBe("instance-a");
     expect(filter.expiresAt).toEqual({ $gt: new Date("2026-10-26T12:01:00.000Z") });
+});
+
+test("Gateway invocation observations cannot recursively collect their own journal delivery", async () => {
+    const diagnostics = createObservabilityLogger({ service: "cms-edge", fallback: () => undefined });
+    const route = await gatewayRoute();
+    const gateway = new CapabilityGateway({
+        ...gatewayObservability(diagnostics.logger),
+        now: () => NOW,
+        routes: { resolve: async () => route, isCurrent: async () => true },
+        authorize: async () => true,
+        transport: { send: async () => ({ output: { items: [] } }) },
+    });
+    let deliveries = 0;
+    const invoke = () =>
+        gateway.invoke({
+            siteId: "site-a",
+            contractId: "catalog",
+            capabilityId: "item.list",
+            input: {},
+            actor: { kind: "anonymous" },
+        });
+    diagnostics.collector.connect(async () => {
+        deliveries += 1;
+        await invoke();
+    });
+    try {
+        await invoke();
+        await diagnostics.collector.flush();
+        await diagnostics.collector.flush();
+        expect(deliveries).toBe(1);
+        expect(diagnostics.collector.stats().queued).toBe(0);
+    } finally {
+        await diagnostics.collector.close();
+    }
 });

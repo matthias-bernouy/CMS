@@ -47,7 +47,7 @@ export function collectCmsMutationBindings(html: string): CmsMutationBindingRefe
     const bindings: CmsMutationBindingReference[] = [];
     for (const element of Array.from(document.querySelectorAll(`form[${CMS_BINDING_ATTRIBUTES.mutation}]`))) {
         const mutation = parseMutation(element.getAttribute(CMS_BINDING_ATTRIBUTES.mutation) ?? "");
-        if (!mutation || mutation.contractId.startsWith("kernel.")) {
+        if (!mutation || mutation.contractId.startsWith("edge.")) {
             continue;
         }
         const input = parseQueryInput(element.getAttribute(CMS_BINDING_ATTRIBUTES.mutationInput));

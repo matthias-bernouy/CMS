@@ -2,7 +2,7 @@ import { collectionAssetRepresentationVersion } from "cms-repository/collections
 import { replaceCollectionAssetExpressions } from "cms-repository/collections/core/texts/expressions";
 import type { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
 
-export const COLLECTION_ASSETS_ROUTE = "/.cms/collections";
+export const COLLECTION_ASSETS_ROUTE = "/_content/collections";
 
 export type InstalledCollectionAssetSource = {
     siteId: string;

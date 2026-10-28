@@ -47,8 +47,8 @@ function repositoryWith(options: {
 
 async function resolveAssets(content: ContentReader, tags: string[]) {
     const cache = new InMemoryCache();
-    cache.set(blocRuntimeCacheKey("/.cms/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
-    cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
+    cache.set(blocRuntimeCacheKey("/_content/assets/bloc-runtime.js"), compress("bloc-runtime", "text/javascript"));
+    cache.set(CMS_CACHE_KEYS.js("/_content/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(
         CMS_CACHE_KEYS.style(
             await digestContentRevision(
@@ -61,7 +61,7 @@ async function resolveAssets(content: ContentReader, tags: string[]) {
         {
             content,
             cache,
-            cmsPathPrefix: "/.cms",
+            cmsPathPrefix: "/_content",
             resolveContributedAssets: async (input) => input,
         },
         tags,
@@ -75,7 +75,7 @@ describe("resolvePageAssets", () => {
 
         const assets = await resolveAssets(content, []);
 
-        expect(assets.styleUrl).toMatch(/\/\.cms\/style\?r=sha256:[0-9a-f]{64}&v=[0-9a-f]{10}$/u);
+        expect(assets.styleUrl).toMatch(/\/_content\/style\?r=sha256:[0-9a-f]{64}&v=[0-9a-f]{10}$/u);
     });
 
     test("changes the global stylesheet URL when rendering settings change alone", async () => {
@@ -163,7 +163,7 @@ describe("resolvePageAssets", () => {
         expect(assets.blocUrls).toEqual([]);
         expect(assets.scriptUrls).toEqual([]);
         expect(assets.blocStyleUrls).toHaveLength(1);
-        expect(assets.blocStyleUrls[0]).toContain("/.cms/blocstyles?collection=collection&tags=collection-card");
+        expect(assets.blocStyleUrls[0]).toContain("/_content/blocstyles?collection=collection&tags=collection-card");
         const entry = await resolveAssets(
             repositoryWith({
                 pageContent: '<section cms-bloc="collection-panel"></section>',

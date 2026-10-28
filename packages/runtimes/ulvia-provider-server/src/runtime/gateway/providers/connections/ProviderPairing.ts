@@ -1,3 +1,4 @@
+import type { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
 import { readRemoteProviderReport } from "../readReport";
 import {
     preparePairing,
@@ -18,6 +19,12 @@ export class ProviderPairing {
         private readonly stores: ProviderStores,
         private readonly gateway: Awaited<ReturnType<typeof createProviderGateway>>,
         private readonly cmsUrl: string,
+        private readonly local?: {
+            readonly endpoint: string;
+            readonly instanceId: string;
+            readonly providerId: string;
+            readonly connections: Pick<ProviderConnections, "configure">;
+        },
     ) {}
     async configure(input: PairingInput, actorId: string, operationId?: string) {
         const { stores, gateway } = this;
@@ -85,21 +92,30 @@ export class ProviderPairing {
                 allowPrivateAddresses: true,
             });
             const transport = new HttpGatewayTransport({ network });
-            const result = await transport.send({
-                requestId: crypto.randomUUID(),
-                instanceId: source.observation.report.instanceId,
-                installationId: source.installation.id,
-                endpoint: source.installation.endpoint,
-                providerTokenRef: source.installation.providerTokenRef,
-                release: release.admission.release,
-                capability,
-                input: {
-                    connectionId: source.installation.id,
-                    cmsUrl: this.cmsUrl,
-                    token,
-                    generation: intent.expectedRevision,
-                },
-            });
+            const connection = {
+                connectionId: source.installation.id,
+                cmsUrl: this.cmsUrl,
+                token,
+                generation: intent.expectedRevision,
+            };
+            const isLocal =
+                this.local &&
+                source.installation.endpoint === this.local.endpoint &&
+                source.installation.providerId === this.local.providerId &&
+                source.installation.accountId === this.local.instanceId &&
+                source.observation.report.instanceId === this.local.instanceId;
+            const result = isLocal
+                ? { output: await this.local!.connections.configure(connection), errorCode: undefined }
+                : await transport.send({
+                      requestId: crypto.randomUUID(),
+                      instanceId: source.observation.report.instanceId,
+                      installationId: source.installation.id,
+                      endpoint: source.installation.endpoint,
+                      providerTokenRef: source.installation.providerTokenRef,
+                      release: release.admission.release,
+                      capability,
+                      input: connection,
+                  });
             if (
                 result.errorCode ||
                 (result.output as { configured?: boolean })?.configured !== true ||

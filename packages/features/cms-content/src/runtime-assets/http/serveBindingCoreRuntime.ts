@@ -6,7 +6,7 @@ import { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
  * Serves the prebuilt `cms-binding-core` system-bloc runtime at
  * `<cmsPathPrefix>/assets/cms-binding-core.js`. The cache key is derived from
  * the request URL so it stays aligned with
- * whatever prefix the kernel is booted with — `resolveAssets` computes the
+ * whatever prefix the edge is booted with — `resolveAssets` computes the
  * same key when pre-warming the hash.
  */
 export async function serveBindingCoreRuntime(req: Request, cache: Cache) {

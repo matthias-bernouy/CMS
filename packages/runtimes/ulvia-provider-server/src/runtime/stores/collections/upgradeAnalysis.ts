@@ -10,16 +10,14 @@ import type {
 } from "@bernouy/cms-repository/providers/selections";
 import { type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 
-/** Explicit Kernel/Provider consumers; catalogue-only demonstrations add no execution grant. */
+/** Explicit Edge/Provider consumers; catalogue-only demonstrations add no execution grant. */
 const INTERNAL = [
     ["ulvia.cms.observability", "logs.append"],
     ["ulvia.cms.observability", "logs.query"],
     ["ulvia.cms.observability", "logs.get"],
     ["ulvia.cms.observability", "logs.aggregate"],
-    ["ulvia.cms.content", "delivery.read"],
-    ["ulvia.cms.content", "delivery.robots"],
-    ["ulvia.cms.content", "delivery.sitemap"],
-    ["ulvia.cms.content", "delivery.collection-asset"],
+    ["ulvia.cms.content", "delivery.resolve-path"],
+    ["ulvia.cms.installations", "capabilities.describe"],
     ["ulvia.cms.access", "resolve-actor"],
     ["ulvia.cms.installations", "list-provider-installations"],
     ["ulvia.cms.installations", "gateway.route.get"],
@@ -35,10 +33,10 @@ export function createCollectionUpgradeAnalysis(
     dependencies: ContractSelectionDependencySource,
 ): CollectionUpgradeAnalysis {
     return {
-        requiredConsumers: ["kernel-provider"],
+        requiredConsumers: ["edge-provider"],
         contributors: [
             {
-                id: "kernel-provider",
+                id: "edge-provider",
                 snapshot: async () => {
                     const selected = await selections.get(siteId);
                     return {
@@ -54,7 +52,7 @@ export function createCollectionUpgradeAnalysis(
                                 capabilityId,
                                 versionRange: "^1.0.0",
                                 scope: "runtime",
-                                location: `internal:kernel-provider/${contractId}/${capabilityId}`,
+                                location: `internal:edge-provider/${contractId}/${capabilityId}`,
                             }),
                         ),
                     };

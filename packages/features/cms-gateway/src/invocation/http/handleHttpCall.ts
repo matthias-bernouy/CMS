@@ -1,3 +1,4 @@
+import { RESOURCE_HEADER } from "../resource/metadata";
 import type { GatewayHttpRoute } from "./route/interfaces";
 import type { GatewayHttpInvoker } from "./route/interfaces";
 import { resolveGatewayHttpRoute } from "./route/bindings";
@@ -9,6 +10,7 @@ import { readGatewayHttpInput } from "cms-gateway/invocation/http/readHttpInput"
 import { encodeSessionEffect, SESSION_EFFECT_HEADER } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export interface GatewayHttpCallOptions {
+    readonly trace?: GatewayInvocation["trace"];
     readonly invoker: GatewayHttpInvoker;
     readonly siteId: string;
     readonly actor: GatewayActor;
@@ -40,6 +42,7 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
         const idempotencyKey = requestIdempotencyKey(request, route);
         const result = await options.invoker.invoke({
             siteId: options.siteId,
+            ...(options.trace ? { trace: options.trace } : {}),
             contractId: target.contractId,
             capabilityId: route.capability.id,
             actor: options.actor,
@@ -259,6 +262,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
             status: result.status ?? 200,
             headers: {
                 "content-type": result.contentType,
+                ...(result.resource ? { [RESOURCE_HEADER]: JSON.stringify(result.resource) } : {}),
                 "x-content-type-options": "nosniff",
                 "x-ulvia-request-id": result.requestId,
                 ...(result.contentLength === undefined ? {} : { "content-length": String(result.contentLength) }),

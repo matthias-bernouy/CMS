@@ -17,6 +17,7 @@ export function createInvocationIssuer(
     resolveSecret: (reference: string) => Promise<string | null | undefined>,
     delegations?: DelegationDispatchAuthority,
     identities?: ProviderIdentityService,
+    inspectActor?: (subjectId: string) => Promise<"user" | "administrator" | null>,
 ) {
     return async (input: ProviderInvocationIssue) => {
         assertInvocationScope(input);
@@ -103,12 +104,35 @@ export function createInvocationIssuer(
                 throw Object.assign(new Error("Delegated subject does not match Access state"), { status: 403 });
             }
         }
+        const capability = release.capabilities.find(({ id }) => id === input.capabilityId)!;
+        let actorKind: "anonymous" | "user" | "administrator" | undefined;
+        let resourceSubject: string | null | undefined;
+        if (capability.output.type === "binary" && capability.output.resource) {
+            if (input.systemServiceId || (input.sourceInstallationId && !input.delegatedTicket)) {
+                throw Object.assign(new Error("Resource delivery requires an end-user actor"), { status: 403 });
+            }
+            if (subjectId) {
+                const cmsSubject = await identities?.resolve(
+                    { providerId: route.installation.installation.providerId },
+                    subjectId,
+                );
+                resourceSubject = cmsSubject;
+                actorKind = cmsSubject ? ((await inspectActor?.(cmsSubject)) ?? undefined) : undefined;
+                if (!actorKind) {
+                    throw Object.assign(new Error("Resource actor is unavailable"), { status: 403 });
+                }
+            } else {
+                actorKind = "anonymous";
+            }
+            if (input.actorKind !== actorKind) {
+                throw Object.assign(new Error("Resource actor changed before dispatch"), { status: 403 });
+            }
+        } else if (input.actorKind) {
+            throw Object.assign(new Error("Actor context requires a resource output"), { status: 403 });
+        }
         const secret = await resolveSecret(route.installation.installation.providerTokenRef);
         if (!secret) {
             throw new Error("Provider invocation credential is unavailable");
-        }
-        if (!(await routes.isCurrent(route))) {
-            throw Object.assign(new Error("Invocation authorization changed"), { code: "stale_route", status: 409 });
         }
         if (input.sourceInstallationId) {
             const target = {
@@ -127,17 +151,25 @@ export function createInvocationIssuer(
                 });
             }
         }
+        if (resourceSubject && (await inspectActor?.(resourceSubject)) !== actorKind) {
+            throw Object.assign(new Error("Resource actor changed at dispatch fence"), { status: 403 });
+        }
+        if (!(await routes.isCurrent(route))) {
+            throw Object.assign(new Error("Invocation authorization changed"), { code: "stale_route", status: 409 });
+        }
         const issuedAt = Math.floor(Date.now() / 1_000);
         return {
             instanceId,
             token: signProviderInvocationToken(secret, {
                 version: 1,
+                ...(input.trace ? { trace: input.trace } : {}),
                 requestId: input.requestId,
                 instanceId,
                 contractId: input.contractId,
                 contractVersion: input.contractVersion,
                 capabilityId: input.capabilityId,
                 ...(subjectId ? { subjectId } : {}),
+                ...(actorKind ? { actorKind } : {}),
                 ...(rootRequestId ? { rootRequestId } : {}),
                 ...(input.delegation
                     ? { delegationTicket: input.delegation.ticket, delegationExpiresAt: input.delegation.expiresAt }

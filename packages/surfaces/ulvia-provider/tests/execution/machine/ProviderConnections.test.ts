@@ -30,7 +30,7 @@ test("only verified connection authority can configure its own return channel", 
         { connectionId: "other" },
         { connectionId: "connection-a", sourceInstallationId: "caller" },
         { connectionId: "connection-a", subjectId: "user" },
-        { connectionId: "connection-a", systemServiceId: "cms-kernel" },
+        { connectionId: "connection-a", systemServiceId: "cms-edge" },
     ]) {
         await expect(
             dispatcher.invoke("ulvia.provider.connections", "connections.configure", input, {
@@ -75,7 +75,7 @@ test("Provider actors cannot approve installations or look up other Providers' c
             },
         } as never,
     );
-    for (const authority of [{}, { sourceInstallationId: "caller" }, { systemServiceId: "cms-kernel" }]) {
+    for (const authority of [{}, { sourceInstallationId: "caller" }, { systemServiceId: "cms-edge" }]) {
         await expect(
             dispatcher.invoke(
                 "ulvia.cms.installations",

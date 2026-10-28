@@ -16,6 +16,7 @@ export async function gatewayRoute(
         access?: string;
         behavior?: Record<string, unknown>;
         binary?: boolean;
+        resource?: boolean;
         binaryInput?: boolean;
         rawRange?: boolean;
         mcp?: boolean;
@@ -66,7 +67,7 @@ export async function gatewayRoute(
                         }
                       : { type: "object", properties: { term: { type: "string", maxLength: 50 } }, required: [] },
                 output: overrides.binary
-                    ? { type: "binary", maxBytes: 8 }
+                    ? { type: "binary", maxBytes: 8, ...(overrides.resource ? { resource: true } : {}) }
                     : overrides.binaryInput
                       ? { type: "null" }
                       : {

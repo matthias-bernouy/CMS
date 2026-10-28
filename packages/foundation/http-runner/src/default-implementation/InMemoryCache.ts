@@ -1,7 +1,7 @@
 import type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
 
 /**
- * In-process cache backed by a `Map`. Used by the Kernel for the Admin
+ * In-process cache backed by a `Map`. Used by the Edge for the Admin
  * surface (compressed editor bundle, admin HTML, etc.).
  *
  * In `MODE=DEV`, reads always miss and writes are no-ops so any edit to

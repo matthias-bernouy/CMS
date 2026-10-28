@@ -87,7 +87,7 @@ describe("typed binding analysis", () => {
         );
     });
 
-    test("rejects unresolved capability schemas without a Kernel-specific escape hatch", () => {
+    test("rejects unresolved capability schemas without a Edge-specific escape hatch", () => {
         const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
         document.body.innerHTML = `<section cms-query="ulvia.cms.access:resolve-actor as methods">
             <p cms-repeat="methods.data as method">{{ method.displayName }}</p>

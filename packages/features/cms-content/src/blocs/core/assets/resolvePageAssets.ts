@@ -41,7 +41,7 @@ export type AssetsManifest = {
 };
 
 /**
- * Loads prebuilt browser runtimes, warms the Kernel cache and produces hashed
+ * Loads prebuilt browser runtimes, warms the Edge cache and produces hashed
  * URLs under `<cmsPathPrefix>/`; the build pipeline uploads its own entries.
  *
  * Bloc behavior ships as one content-addressed bundle for the exact behavior

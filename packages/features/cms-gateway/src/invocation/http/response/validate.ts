@@ -1,3 +1,4 @@
+import { parseResourceMetadata } from "../../resource/metadata";
 import type { GatewayHttpTransportResponse } from "../route/interfaces";
 import { projectSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { parseContentRange } from "@bernouy/http-runner";
@@ -54,6 +55,7 @@ export function validateHttpResponse(
             checkBinaryRange(response);
             return Object.freeze({
                 kind: "binary",
+                ...(capability.output.resource ? { resource: parseResourceMetadata(response.resource) } : {}),
                 requestId,
                 status: response.status,
                 stream,

@@ -22,7 +22,7 @@ const instance: ProviderInstanceRecord = {
     idempotencyKey: "one",
     idempotencyFingerprint: digest,
     storageKey: "one",
-    kernelUrl: "http://127.0.0.1:5100",
+    cmsUrl: "http://127.0.0.1:5100",
     label: "One",
     status: "disabled",
     profile: { id: profile.id, version: profile.version },

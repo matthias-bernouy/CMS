@@ -51,7 +51,7 @@ export function sendCompressed(
     if (req.headers.get("if-none-match") === etag) {
         return new Response(null, {
             status: 304,
-            headers: { "Vary": "Accept-Encoding", ETag: etag, ...common },
+            headers: { "Content-Type": entry.contentType, "Vary": "Accept-Encoding", ETag: etag, ...common },
         });
     }
 

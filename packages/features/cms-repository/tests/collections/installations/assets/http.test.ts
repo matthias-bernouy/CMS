@@ -61,9 +61,9 @@ test("serves installed collection assets publicly through immutable digest URLs"
     expect(version).not.toBe(
         await collectionAssetRepresentationVersion({ ...asset, mediaType: "application/octet-stream" }),
     );
-    expect(rendered).toContain(`/site/.cms/collections/design-system/assets/mark.svg?v=${version}`);
+    expect(rendered).toContain(`/site/_content/collections/design-system/assets/mark.svg?v=${version}`);
 
-    const url = `https://example.test/site/.cms/collections/design-system/assets/mark.svg?v=${version}`;
+    const url = `https://example.test/site/_content/collections/design-system/assets/mark.svg?v=${version}`;
     const get = (request: Request) => serveInstalledCollectionAsset(request, source, "/site");
     const response = await get(new Request(url));
     expect(response.status).toBe(200);

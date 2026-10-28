@@ -26,7 +26,7 @@ test("serves only requested immutable CSS fragments from their owning collection
     const css = '@scope ([cms-bloc="fixture-card"]) { :scope { color: red; } }';
     const version = compress(css, "text/css").hash;
     const request = new Request(
-        `http://localhost/.cms/blocstyles?collection=fixture&tags=fixture-card&r=${revision}&v=${version}`,
+        `http://localhost/_content/blocstyles?collection=fixture&tags=fixture-card&r=${revision}&v=${version}`,
     );
     const response = await serveBlocStyles(request, {
         content,
@@ -44,12 +44,12 @@ test("rejects invalid or cross-collection CSS bundle requests", async () => {
         cache: new InMemoryCache(),
         resolveContributedAssets: async (source: string) => source,
     };
-    expect((await serveBlocStyles(new Request("http://localhost/.cms/blocstyles"), options)).status).toBe(400);
+    expect((await serveBlocStyles(new Request("http://localhost/_content/blocstyles"), options)).status).toBe(400);
     expect(
         (
             await serveBlocStyles(
                 new Request(
-                    `http://localhost/.cms/blocstyles?collection=fixture&tags=admin-panel&r=${revision}&v=0000000000`,
+                    `http://localhost/_content/blocstyles?collection=fixture&tags=admin-panel&r=${revision}&v=0000000000`,
                 ),
                 options,
             )
@@ -59,7 +59,7 @@ test("rejects invalid or cross-collection CSS bundle requests", async () => {
         (
             await serveBlocStyles(
                 new Request(
-                    `http://localhost/.cms/blocstyles?collection=fixture&tags=fixture-card,fixture-card&r=${revision}&v=0000000000`,
+                    `http://localhost/_content/blocstyles?collection=fixture&tags=fixture-card,fixture-card&r=${revision}&v=0000000000`,
                 ),
                 options,
             )

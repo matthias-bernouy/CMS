@@ -21,13 +21,13 @@ const OFFICIAL_INSTANCE_PROFILE: OfficialInstanceProfile = Object.freeze({
     }),
 });
 
-test("the Provider owns every persistent instance service while remaining independent from Kernel", async () => {
+test("the Provider owns every persistent instance service while remaining independent from Edge", async () => {
     const [entrypoint, stores] = await Promise.all([
         Bun.file(new URL("../src/index.ts", import.meta.url)).text(),
         Bun.file(new URL("../src/runtime/stores/providerStores.ts", import.meta.url)).text(),
     ]);
 
-    expect(entrypoint).not.toContain("cms-kernel-server");
+    expect(entrypoint).not.toContain("cms-edge-server");
     expect(entrypoint).not.toContain("cms-instance-runtime");
     expect(entrypoint).toContain("instanceHost.recoverOperations");
     expect(stores).toContain("MongoAuthTokenStore");
@@ -157,3 +157,33 @@ function installation(observedAt: string | null) {
 function execution() {
     return { signal: new AbortController().signal, throwIfLeaseLost: () => undefined };
 }
+
+test("fresh provisioning pairs the official return connection after selecting contracts", async () => {
+    const steps: string[] = [];
+    const selected = OFFICIAL_INSTANCE_PROFILE.contracts.map((contract) => ({
+        ...contract,
+        installationId: "installation:official",
+    }));
+    const target = createInstanceProvisioningTarget({
+        instance: { id: "instance:official" } as ProviderInstanceRecord,
+        composition: {
+            management: {
+                list: async () => {
+                    steps.push("selections");
+                    return { installations: [installation(new Date().toISOString())], selected };
+                },
+            },
+            runtime: { report: { instanceId: "instance:official" } },
+            gateway: { siteId: "default", selections: { get: async () => ({ revision: 1 }) } },
+            pairOfficialProvider: async () => {
+                steps.push("paired");
+            },
+        } as unknown as InstanceComposition,
+        env: {} as ProviderRuntimeEnv,
+        credentials: {} as never,
+        providerSource: {} as never,
+        collectionSource: {} as never,
+    });
+    await target.selectContracts(OFFICIAL_INSTANCE_PROFILE, execution());
+    expect(steps).toEqual(["selections", "paired"]);
+});

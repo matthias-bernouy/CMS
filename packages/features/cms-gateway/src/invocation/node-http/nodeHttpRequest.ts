@@ -1,3 +1,4 @@
+import { RESOURCE_HEADER } from "cms-gateway/invocation/resource/metadata";
 import { request as httpRequest, type IncomingMessage, type RequestOptions } from "node:http";
 import { request as httpsRequest } from "node:https";
 import type { ResolvedAddress } from "cms-gateway/invocation/node-http/addressPolicy";
@@ -80,6 +81,7 @@ export function toResponse(incoming: IncomingMessage, method: string): Response 
         "x-ulvia-error-code",
         "x-ulvia-request-id",
         SESSION_EFFECT_HEADER,
+        RESOURCE_HEADER,
         "retry-after",
         "etag",
         "content-disposition",

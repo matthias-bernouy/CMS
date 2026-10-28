@@ -1,3 +1,4 @@
+import { RESOURCE_HEADER, decodeResourceMetadata } from "../../resource/metadata";
 import { httpTransportRequest } from "../route/bindings";
 import { validateHttpResponse } from "../response/validate";
 import type { GatewayHttpTransportRequest, GatewayHttpTransportResponse } from "../route/interfaces";
@@ -26,11 +27,13 @@ export interface GatewayHttpExchange extends PreparedHttpInvocation {
         | { readonly kind: "provider-control" }
         | {
               readonly kind: "capability";
+              readonly trace?: GatewayTransportRequest["trace"];
               readonly instanceId: string;
               readonly contractId: string;
               readonly contractVersion: string;
               readonly capabilityId: string;
               readonly subjectId?: string;
+              readonly actorKind?: GatewayTransportRequest["actorKind"];
               readonly systemServiceId?: string;
               readonly sourceInstallationId?: string;
               readonly sourceCredentialFingerprint?: string;
@@ -78,7 +81,12 @@ export class HttpGatewayTransport implements GatewayTransport {
     async send(value: GatewayTransportRequest): Promise<GatewayTransportResponse> {
         const request = httpTransportRequest(value);
         const response = await this.exchange(request);
-        return validateHttpResponse(request.capability, request.binding, response, request.requestId);
+        try {
+            return validateHttpResponse(request.capability, request.binding, response, request.requestId);
+        } catch (error) {
+            await response.stream?.cancel().catch(() => undefined);
+            throw error;
+        }
     }
 
     private async exchange(request: GatewayHttpTransportRequest): Promise<GatewayHttpTransportResponse> {
@@ -96,6 +104,7 @@ export class HttpGatewayTransport implements GatewayTransport {
             providerTokenRef: request.providerTokenRef,
             authentication: {
                 kind: "capability",
+                ...(request.trace ? { trace: request.trace } : {}),
                 instanceId: request.instanceId,
                 contractId: request.release.contractId,
                 contractVersion: request.release.version,
@@ -103,6 +112,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                 ...(request.delegation ? { delegation: request.delegation } : {}),
                 ...(request.rootRequestId ? { rootRequestId: request.rootRequestId } : {}),
                 ...(request.subjectId ? { subjectId: request.subjectId } : {}),
+                ...(request.actorKind ? { actorKind: request.actorKind } : {}),
                 ...(request.systemServiceId ? { systemServiceId: request.systemServiceId } : {}),
                 ...(request.sourceInstallationId
                     ? {
@@ -147,6 +157,13 @@ export class HttpGatewayTransport implements GatewayTransport {
                 request.capability.output.type === "binary" &&
                 request.binding.response.successStatuses.includes(response.status);
             if (isBinarySuccess) {
+                const resource =
+                    request.capability.output.type === "binary" && request.capability.output.resource
+                        ? decodeResourceMetadata(response.headers.get(RESOURCE_HEADER))
+                        : undefined;
+                if (request.capability.output.type === "binary" && request.capability.output.resource && !resource) {
+                    throw new TypeError("Missing resource metadata");
+                }
                 const contentLength = parseContentLength(response.headers.get("content-length"), maximum);
                 const prefetched =
                     request.binding.method === "HEAD"
@@ -155,6 +172,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                 clearTimeout(firstByteTimeout);
                 return {
                     status: response.status,
+                    ...(resource ? { resource } : {}),
                     contentType,
                     stream: boundedStream(prefetched, maximum, abort, this.#inactivityTimeoutMs),
                     ...(contentLength === undefined ? {} : { contentLength }),
@@ -204,6 +222,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                 ...(Object.hasOwn(fields, "output") ? { output: fields.output } : {}),
             };
         } catch {
+            await response.body?.cancel().catch(() => undefined);
             clearTimeout(firstByteTimeout);
             if (signal.aborted) {
                 throw signal.reason;

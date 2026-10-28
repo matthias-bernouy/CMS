@@ -1,3 +1,4 @@
+import { parseResourceMetadata } from "../resource/metadata";
 import { projectSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
@@ -70,6 +71,7 @@ export function validateResponse(
                 ...metadata,
                 ...effects,
                 kind: "binary",
+                ...(capability.output.resource ? { resource: parseResourceMetadata(response.resource) } : {}),
                 stream: boundedBinary(stream, capability.output.maxBytes),
                 contentType: response.contentType.split(";", 1)[0]!.trim().toLowerCase(),
                 ...(response.contentLength === undefined ? {} : { contentLength: response.contentLength }),

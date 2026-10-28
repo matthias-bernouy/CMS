@@ -72,10 +72,10 @@ test("unknown internal consumers make the analysis incomplete", async () => {
     const f = await fixture();
     const plan = await prepareCollectionUpgrade(f.repo, f.collections, "site", [{ digest: f.next.digest }], {
         ...analysis,
-        requiredConsumers: ["kernel"],
+        requiredConsumers: ["edge"],
     });
     expect(plan.status).toBe("incomplete");
-    expect(plan.inventory.unknown).toContain("Missing authoritative consumer inventory: kernel");
+    expect(plan.inventory.unknown).toContain("Missing authoritative consumer inventory: edge");
 });
 
 test("explicit target configuration is validated only against the new schema", async () => {

@@ -4,7 +4,7 @@ import { createMemoryLogger } from "@bernouy/logging/testing";
 
 describe("structured diagnostics", () => {
     test("filters levels and preserves child context", () => {
-        const memory = createMemoryLogger({ service: "kernel", level: "info", now: () => new Date(0) });
+        const memory = createMemoryLogger({ service: "edge", level: "info", now: () => new Date(0) });
         const request = memory.logger.child({ requestId: "request-1" });
         request.debug("request.debug");
         request.info("request.completed", { status: 200 });
@@ -13,7 +13,7 @@ describe("structured diagnostics", () => {
             {
                 time: "1970-01-01T00:00:00.000Z",
                 level: "info",
-                service: "kernel",
+                service: "edge",
                 event: "request.completed",
                 attributes: { requestId: "request-1", status: 200 },
             },
@@ -23,7 +23,7 @@ describe("structured diagnostics", () => {
     test("reads authoritative dynamic context when each record is emitted", () => {
         let requestId: string | undefined;
         const memory = createMemoryLogger({
-            service: "kernel",
+            service: "edge",
             context: () => (requestId ? { requestId } : undefined),
         });
 
@@ -40,7 +40,7 @@ describe("structured diagnostics", () => {
 
     test("never lets a failing context provider break application logging", () => {
         const memory = createMemoryLogger({
-            service: "kernel",
+            service: "edge",
             context: () => {
                 throw new Error("context unavailable");
             },
@@ -52,7 +52,7 @@ describe("structured diagnostics", () => {
 
     test("never lets a failing destination break application behavior", () => {
         const logger = createLogger({
-            service: "kernel",
+            service: "edge",
             sink: () => {
                 throw new Error("disk unavailable");
             },
@@ -103,8 +103,8 @@ describe("structured diagnostics", () => {
     });
 
     test("rejects unstable service names without letting invalid events interrupt the application", () => {
-        expect(() => createMemoryLogger({ service: "CMS Kernel" })).toThrow();
-        const memory = createMemoryLogger({ service: "kernel" });
+        expect(() => createMemoryLogger({ service: "CMS Edge" })).toThrow();
+        const memory = createMemoryLogger({ service: "edge" });
         expect(() => memory.logger.info("A sentence with spaces", { safe: true })).not.toThrow();
         expect(memory.records[0]).toMatchObject({
             event: "logging.invalid-event",

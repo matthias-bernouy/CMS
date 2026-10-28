@@ -1,3 +1,5 @@
+import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
+import type { DeliveryActor, ContentDeliveryHost } from "@bernouy/cms-content/public-delivery";
 import type { GatewayDelegationAuthority } from "@bernouy/cms-gateway/access/delegation";
 import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
 import type { ProviderAccess } from "@bernouy/cms-gateway/access/providers";
@@ -37,6 +39,19 @@ import type { Logger } from "@bernouy/logging";
 import type { CmsObservability } from "@bernouy/cms-observability";
 
 export interface CmsContentDependencies {
+    readonly publicDelivery?: (context: ProviderCapabilityInvocationContext) => {
+        resolvePath(
+            input: unknown,
+            actor: DeliveryActor,
+            executeQuery?: ContentDeliveryHost["executeQuery"],
+        ): Promise<Response>;
+    };
+    readonly contentQuery?: (
+        context: ProviderCapabilityInvocationContext,
+        contractId: string,
+        capabilityId: string,
+        input: Readonly<Record<string, string | number>>,
+    ) => Promise<Response>;
     readonly repo: ContentRepository;
     readonly collections: CollectionStore;
     readonly sitemapStore?: BlobStore;

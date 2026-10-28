@@ -40,7 +40,7 @@ describe("content browser runtime assets", () => {
     });
 
     test("ships browser assets generated from the current entries", async () => {
-        const directory = await mkdtemp(join(tmpdir(), "cms-kernel-assets-"));
+        const directory = await mkdtemp(join(tmpdir(), "cms-edge-assets-"));
         try {
             await buildContentBrowserAssets(directory);
             const shippedEntries = {

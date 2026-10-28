@@ -23,6 +23,8 @@ export function providerInvocationContext(
     const actorCredential = decodeActorCredential(encodedCredential);
     return {
         requestId,
+        ...(claims.trace ? { trace: claims.trace } : {}),
+        ...(claims.actorKind ? { actorKind: claims.actorKind } : {}),
         ...(claims.delegationTicket
             ? { delegation: { ticket: claims.delegationTicket, expiresAt: claims.delegationExpiresAt! } }
             : {}),

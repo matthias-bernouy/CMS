@@ -40,13 +40,13 @@ function uniqueProviderTargets(
 ): readonly BindingCapabilityTarget[] {
     const targets = new Map<string, BindingCapabilityTarget>();
     for (const { contractId, capabilityId } of queries) {
-        if (contractId.startsWith("kernel.")) {
+        if (contractId.startsWith("edge.")) {
             continue;
         }
         targets.set(`${contractId}\0${capabilityId}`, { contractId, capabilityId, effect: "query" });
     }
     for (const { contractId, capabilityId } of mutations) {
-        if (!contractId.startsWith("kernel.")) {
+        if (!contractId.startsWith("edge.")) {
             targets.set(`${contractId}\0${capabilityId}`, { contractId, capabilityId, effect: "command" });
         }
     }

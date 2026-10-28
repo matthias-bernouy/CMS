@@ -61,24 +61,6 @@ export type TSystem = {
 
     /** Structured design tokens emitted as CSS custom properties. */
     theme: ThemeSettings;
-
-    /**
-     * Page-level Content-Security-Policy whitelist extras. Origins listed
-     * here are merged with the auto-derived data-provider origins in the
-     * meta CSP emitted by `delivery/core/html/renderPage`.
-     *
-     * Use these for resources blocs need to reach that aren't modeled as
-     * data providers — external measurement tools, error trackers, font CDNs,
-     * embed hosts, etc. Each entry is an origin (`scheme://host[:port]`),
-     * normalised on save. The DTO parser accepts a newline-separated
-     * textarea payload from the admin form.
-     */
-    security: {
-        /** Extra origins for `connect-src` (fetch / xhr / websocket). */
-        connectExtras: string[];
-        /** Extra origins for `media-src` (`<video>` / `<audio>`). */
-        mediaExtras: string[];
-    };
 };
 
 export type RenderingSiteSettings = Pick<
@@ -100,5 +82,4 @@ export type RenderingSiteSettings = Pick<
 export type RenderingSettings = {
     site: RenderingSiteSettings;
     theme: ThemeSettings;
-    security: TSystem["security"];
 };

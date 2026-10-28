@@ -44,7 +44,7 @@ describe("serveThemeStyle", () => {
             resolveContributedAssets: async (input: string) => input,
         };
 
-        expect((await serveThemeStyle(new Request("http://site/.cms/style"), options)).status).toBe(400);
+        expect((await serveThemeStyle(new Request("http://site/_content/style"), options)).status).toBe(400);
         expect((await serveThemeStyle(request(await digestContentRevision(1), "0000000000"), options)).status).toBe(
             404,
         );
@@ -72,5 +72,5 @@ describe("serveThemeStyle", () => {
 });
 
 function request(revision: string, version: string): Request {
-    return new Request(`http://site/.cms/style?r=${revision}&v=${version}`);
+    return new Request(`http://site/_content/style?r=${revision}&v=${version}`);
 }

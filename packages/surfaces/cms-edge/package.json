@@ -1,0 +1,28 @@
+{
+    "name": "@bernouy/cms-edge",
+    "version": "1.0.0",
+    "description": "Stateless CMS Edge HTTP surface for identity, capability protocols and streamed public resources.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/index.ts",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "scripts": {
+        "typecheck": "bun x tsc --noEmit",
+        "test": "bun test"
+    },
+    "dependencies": {
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/logging": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-repository": "workspace:*"
+    },
+    "devDependencies": {
+        "@types/bun": "1.4.2",
+        "typescript": "^7.0.2"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

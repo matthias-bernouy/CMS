@@ -36,6 +36,5 @@ function organizationSettings(): TSystem {
         },
         sameAs: ["https://social.example.com/example"],
     };
-    settings.security.connectExtras = ["https://private-api.example.com"];
     return settings;
 }

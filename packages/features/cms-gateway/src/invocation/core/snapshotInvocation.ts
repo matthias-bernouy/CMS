@@ -1,3 +1,4 @@
+import { isTraceContext } from "@bernouy/logging";
 import {
     canonicalIJsonBytes,
     MAX_CAPABILITY_JSON_BYTES,
@@ -12,6 +13,7 @@ import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 export const MAX_GATEWAY_JSON_BYTES = MAX_CAPABILITY_JSON_BYTES;
 const INVOCATION_FIELDS = new Set([
     "siteId",
+    "trace",
     "contractId",
     "capabilityId",
     "input",
@@ -55,6 +57,9 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     ) {
         throw new GatewayError("invalid_input", "binding or representation selection is invalid");
     }
+    if (value.trace !== undefined && !isTraceContext(value.trace)) {
+        throw new GatewayError("invalid_input", "Invalid trace context");
+    }
     const actor = snapshotActor(value.actor);
     if (
         value.delegationTicket !== undefined &&
@@ -72,6 +77,7 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
         const binaryBody = snapshotBinaryBody(value.binaryBody);
         return {
             siteId: value.siteId,
+            ...(value.trace ? { trace: { ...value.trace } } : {}),
             contractId: value.contractId,
             capabilityId: value.capabilityId,
             actor,

@@ -10,7 +10,6 @@
         "./access/mongo": "./src/exports/access/mongo.ts",
         "./audit": "./src/exports/audit/index.ts",
         "./audit/mongo": "./src/exports/audit/mongo.ts",
-        "./analysis": "./src/exports/analysis/index.ts",
         "./mcp": "./src/exports/protocol/mcp.ts",
         "./http": "./src/exports/http/index.ts",
         "./http/handlers": "./src/exports/http/handlers.ts",
@@ -24,12 +23,14 @@
         "./provider": "./src/exports/http/provider.ts",
         "./provider/node": "./src/exports/http/provider-client.ts",
         "./access/delegation": "./src/exports/access/delegation.ts",
-        "./access/delegation/mongo": "./src/exports/access/delegation-mongo.ts"
+        "./access/delegation/mongo": "./src/exports/access/delegation-mongo.ts",
+        "./observability": "./src/exports/observability/index.ts",
+        "./observability/node": "./src/exports/observability/node.ts"
     },
     "dependencies": {
-        "@bernouy/cms-content": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*"
+        "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/logging": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

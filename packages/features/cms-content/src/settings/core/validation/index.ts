@@ -22,6 +22,11 @@ type SettingsPatch = Omit<Partial<TSystem>, "site"> & {
 
 /** Validate and normalize the settings fields governed by domain rules. */
 export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
+    for (const name of Object.keys(patch)) {
+        if (!["initializationStep", "pageRoutesUpdating", "site", "theme"].includes(name)) {
+            throw new ContentValidationError(name, "unknown Content settings field");
+        }
+    }
     const normalized = { ...patch } as Partial<TSystem>;
 
     if (patch.site) {
@@ -64,17 +69,6 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
             }
         }
         normalized.site = site as TSystem["site"];
-    }
-
-    if (patch.security) {
-        const security = { ...patch.security };
-        if (security.connectExtras !== undefined) {
-            security.connectExtras = validateOrigins("connectExtras", security.connectExtras);
-        }
-        if (security.mediaExtras !== undefined) {
-            security.mediaExtras = validateOrigins("mediaExtras", security.mediaExtras);
-        }
-        normalized.security = security;
     }
 
     if (patch.theme) {
@@ -131,25 +125,4 @@ export function canonicalSiteBaseUrl(value: unknown): string | null {
     } catch {
         return null;
     }
-}
-
-function validateOrigins(field: string, origins: string[]): string[] {
-    const out = new Set<string>();
-    for (const raw of origins) {
-        const trimmed = raw.trim();
-        if (!trimmed) {
-            continue;
-        }
-        let origin: string;
-        try {
-            origin = new URL(trimmed).origin;
-        } catch {
-            throw new ContentValidationError(field, `invalid URL: "${trimmed}"`);
-        }
-        if (!origin || origin === "null") {
-            throw new ContentValidationError(field, `URL has no origin: "${trimmed}"`);
-        }
-        out.add(origin);
-    }
-    return [...out];
 }
