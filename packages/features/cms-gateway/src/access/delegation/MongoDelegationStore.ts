@@ -21,33 +21,66 @@ export class MongoDelegationStore implements DelegationStore {
         await this.rows.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
     }
     async create(record: DelegationRecord, now: number) {
-        await this.rows.updateOne(
+        const entry = {
+            requestId: record.source.requestId,
+            hash: record.hash,
+            expiresAt: record.expiresAt,
+            record,
+            calls: 0,
+            bytes: 0,
+        };
+        const live = {
+            $filter: { input: { $ifNull: ["$entries", []] }, as: "entry", cond: { $gt: ["$$entry.expiresAt", now] } },
+        };
+        const before = await this.rows.findOneAndUpdate(
             { _id: record.siteId },
-            { $setOnInsert: { entries: [], expiresAt: new Date(now + DELEGATION_LIMITS.lifetimeMs) } },
-            { upsert: true },
-        );
-        await this.rows.updateOne({ _id: record.siteId }, { $pull: { entries: { expiresAt: { $lte: now } } } });
-        const result = await this.rows.updateOne(
-            {
-                _id: record.siteId,
-                "entries.hash": { $ne: record.hash },
-                $expr: { $lt: [{ $size: "$entries" }, DELEGATION_LIMITS.activeTicketsPerSite] },
-            },
-            {
-                $push: {
-                    entries: {
-                        requestId: record.source.requestId,
-                        hash: record.hash,
-                        expiresAt: record.expiresAt,
-                        record,
-                        calls: 0,
-                        bytes: 0,
+            [
+                {
+                    $set: {
+                        entries: {
+                            $let: {
+                                vars: { live },
+                                in: {
+                                    $cond: [
+                                        {
+                                            $and: [
+                                                { $lt: [{ $size: "$$live" }, DELEGATION_LIMITS.activeTicketsPerSite] },
+                                                {
+                                                    $not: [
+                                                        {
+                                                            $in: [
+                                                                { $literal: record.hash },
+                                                                {
+                                                                    $map: {
+                                                                        input: "$$live",
+                                                                        as: "entry",
+                                                                        in: "$$entry.hash",
+                                                                    },
+                                                                },
+                                                            ],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                        { $concatArrays: ["$$live", { $literal: [entry] }] },
+                                        "$$live",
+                                    ],
+                                },
+                            },
+                        },
+                        expiresAt: { $max: ["$expiresAt", { $literal: new Date(record.expiresAt) }] },
                     },
                 },
-                $max: { expiresAt: new Date(record.expiresAt) },
-            },
+            ],
+            { upsert: true, returnDocument: "before", projection: { "entries.hash": 1, "entries.expiresAt": 1 } },
         );
-        return result.modifiedCount === 1;
+        // The atomic preimage determines exactly whether this operation appended a ticket.
+        const previous = before?.entries?.filter((item) => item.expiresAt > now) ?? [];
+        return (
+            previous.length < DELEGATION_LIMITS.activeTicketsPerSite &&
+            !previous.some(({ hash }) => hash === record.hash)
+        );
     }
     async get(siteId: string, hash: string, now: number) {
         const row = await this.rows.findOne(

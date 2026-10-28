@@ -12,7 +12,9 @@ export async function exerciseDelegationStore(providerName: string, stackId: str
         import { readProviderRuntimeEnv } from "/app/packages/runtimes/ulvia-provider-server/src/runtimeEnv";
         const name = ${JSON.stringify(database)};
         assert.match(name, /^ulvia_delegation_[a-z0-9_]+$/);
-        const client = new MongoClient(readProviderRuntimeEnv(process.env).MONGO_URL);
+        const client = new MongoClient(readProviderRuntimeEnv(process.env).MONGO_URL, { monitorCommands: true });
+        let writeCommands = 0;
+        client.on("commandStarted", event => { if (["update", "findandmodify", "insert"].includes(event.commandName.toLowerCase())) { writeCommands++; } });
         await client.connect();
         const db = client.db(name);
         try {
@@ -26,7 +28,9 @@ export async function exerciseDelegationStore(providerName: string, stackId: str
                 contractId: "example.source", version: "1.0.0", digest: "sha256:" + "a".repeat(64),
                 capabilityId: "render", actor: { kind: "anonymous" }, deadline: now + 30000,
             }, installationFingerprint: "installation", credentialFingerprint: "b".repeat(64), selectionFingerprint: "selection", actorFingerprint: "anonymous", expiresAt: now + 30000 };
+            const beforeCreate = writeCommands;
             assert.equal(await store.create(record, now), true);
+            assert.equal(writeCommands - beforeCreate, 1);
             assert.equal(await store.create(record, now), false);
             assert.equal(await store.get("site-b", hash, now), null);
             assert.equal(await store.get("site-a", hash, record.expiresAt), null);
@@ -45,6 +49,10 @@ export async function exerciseDelegationStore(providerName: string, stackId: str
             assert.equal(await store.consume("site-a", byteRecord.hash, now, 4 * 1024 * 1024), true);
             assert.equal(await store.consume("site-a", byteRecord.hash, now, 1), false);
             assert.equal(await store.consume("site-a", byteRecord.hash, now, -1), false);
+            const literal = { ...record, hash: "literal-ticket", actorFingerprint: "$entries" };
+            assert.equal(await store.create(literal, now), true);
+            assert.equal((await store.get("site-a", literal.hash, now)).actorFingerprint, "$entries");
+            await store.close("site-a", literal.hash, literal.source.requestId);
             const capacity = await Promise.all(Array.from({ length: 260 }, (_, index) => store.create({ ...record, hash: "capacity-" + index }, now)));
             assert.equal(capacity.filter(Boolean).length, 255);
             const other = { ...record, siteId: "site-b", hash: "capacity-0" };
@@ -56,6 +64,11 @@ export async function exerciseDelegationStore(providerName: string, stackId: str
             const saved = JSON.stringify(await db.collection("gateway_delegations").findOne({ _id: "site-a" }));
             assert.equal(saved.includes(rawTicket), false);
             assert.equal((await db.collection("gateway_delegations").indexes()).some((index) => index.expireAfterSeconds === 0), true);
+            const later = now + 30001;
+            const replacement = { ...record, hash: "replacement", expiresAt: later + 30000 };
+            assert.equal(await store.create(replacement, later), true);
+            assert.equal(await store.get("site-a", "capacity-0", later), null);
+            assert.equal((await db.collection("gateway_delegations").findOne({ _id: "site-a" })).entries.length, 1);
             console.log(JSON.stringify({ concurrentCalls: 32, activeTickets: 256, persistedRawTicket: false }));
         } finally { await db.dropDatabase(); await client.close(); }
     `;
