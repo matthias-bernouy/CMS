@@ -8,7 +8,8 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./node": "./src/exports/node.ts",
-        "./testing": "./src/exports/testing.ts"
+        "./testing": "./src/exports/testing.ts",
+        "./tracing": "./src/exports/tracing.ts"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

@@ -1,3 +1,4 @@
+import { currentTraceContext, runWithTraceContext, runWithoutTraceContext } from "@bernouy/logging/tracing";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { Middleware } from "http-runner/interfaces/Runner";
 
@@ -43,7 +44,19 @@ export function currentRequestId(): string | undefined {
 
 export function currentRequestLogAttributes(): Readonly<Record<string, string>> | undefined {
     const context = contexts.getStore();
-    return context ? { requestId: context.requestId } : undefined;
+    const trace = currentTraceContext();
+    return context
+        ? {
+              requestId: context.requestId,
+              ...(trace
+                  ? {
+                        traceId: trace.traceId,
+                        invocationId: trace.spanId,
+                        ...(trace.parentSpanId ? { parentInvocationId: trace.parentSpanId } : {}),
+                    }
+                  : {}),
+          }
+        : undefined;
 }
 
 /** Internal seam used by request-scoped diagnostics without leaking Request through the public context. */
@@ -62,12 +75,15 @@ export function currentRequestHeaders(headers?: HeadersInit): Headers {
 }
 
 export function runWithRequestContext<T>(request: Request, operation: () => T): T {
-    return contexts.run(Object.freeze({ requestId: requestId(request), request }), operation);
+    const id = requestId(request);
+    return runWithTraceContext({ traceId: id, spanId: id }, () =>
+        contexts.run(Object.freeze({ requestId: id, request }), operation),
+    );
 }
 
 /** Detach timers and other durable background work from the request that happened to create them. */
 export function runWithoutRequestContext<T>(operation: () => T): T {
-    return contexts.exit(operation);
+    return runWithoutTraceContext(() => contexts.exit(operation));
 }
 
 export function createRequestIdMiddleware(): Middleware {

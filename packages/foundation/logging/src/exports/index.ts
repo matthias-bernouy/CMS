@@ -16,3 +16,5 @@ export {
 } from "logging/interfaces/Logger";
 
 export { sanitizeAttributes, sanitizeError } from "logging/core/sanitize";
+
+export { isTraceContext, readTraceContext, TRACE_CONTEXT_HEADER, type TraceContext } from "logging/core/traceValues";
