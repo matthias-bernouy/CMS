@@ -1,3 +1,4 @@
+import { pinnedHttpAgent, pinnedHttpsAgent } from "./pinnedAgents";
 import { RESOURCE_HEADER } from "cms-gateway/invocation/resource/metadata";
 import { request as httpRequest, type IncomingMessage, type RequestOptions } from "node:http";
 import { request as httpsRequest } from "node:https";
@@ -26,7 +27,7 @@ export async function sendPinnedHttpRequest(value: PinnedHttpRequest): Promise<R
             method: value.method,
             headers: { ...value.headers, host: value.url.host },
             signal: value.signal,
-            agent: false,
+            agent: secure ? pinnedHttpsAgent : pinnedHttpAgent,
             ...(secure ? { servername: value.url.hostname.replace(/^\[|\]$/g, "") } : {}),
         };
         const request = (secure ? httpsRequest : httpRequest)(options, (incoming) => {
