@@ -1,3 +1,4 @@
+import type { DelegationContext } from "cms-gateway/access/delegation/interfaces";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { isCanonicalSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
@@ -11,6 +12,21 @@ const IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
 const REQUEST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u;
 const SUBJECT_ID = /^[\x20-\x7e]{1,256}$/u;
 
+export interface ProviderInvocationIssue {
+    readonly requestId: string;
+    readonly installationId: string;
+    readonly contractId: string;
+    readonly contractVersion: string;
+    readonly capabilityId: string;
+    readonly subjectId?: string;
+    readonly systemServiceId?: string;
+    readonly sourceInstallationId?: string;
+    readonly sourceCredentialFingerprint?: string;
+    readonly delegatedTicket?: string;
+    readonly delegation?: DelegationContext;
+    readonly bodyBytes?: number;
+}
+
 export type ProviderInvocationClaims = Readonly<{
     version: 1;
     requestId: string;
@@ -21,6 +37,9 @@ export type ProviderInvocationClaims = Readonly<{
     subjectId?: string;
     systemServiceId?: string;
     sourceInstallationId?: string;
+    rootRequestId?: string;
+    delegationTicket?: string;
+    delegationExpiresAt?: number;
     connectionId?: string;
     issuedAt: number;
     expiresAt: number;
@@ -52,6 +71,8 @@ export function signProviderInvocationToken(secret: string, claims: ProviderInvo
         ...(claims.subjectId ? ["subjectId"] : []),
         ...(claims.systemServiceId ? ["systemServiceId"] : []),
         ...(claims.sourceInstallationId ? ["sourceInstallationId"] : []),
+        ...(claims.rootRequestId ? ["rootRequestId"] : []),
+        ...(claims.delegationTicket ? ["delegationTicket", "delegationExpiresAt"] : []),
         ...(claims.connectionId ? ["connectionId"] : []),
     ]);
     assertClaims(claims);
@@ -129,6 +150,8 @@ function parseClaims(value: string): ProviderInvocationClaims {
         ...(Object.hasOwn(parsed, "subjectId") ? ["subjectId"] : []),
         ...(Object.hasOwn(parsed, "systemServiceId") ? ["systemServiceId"] : []),
         ...(Object.hasOwn(parsed, "sourceInstallationId") ? ["sourceInstallationId"] : []),
+        ...(Object.hasOwn(parsed, "rootRequestId") ? ["rootRequestId"] : []),
+        ...(Object.hasOwn(parsed, "delegationTicket") ? ["delegationTicket", "delegationExpiresAt"] : []),
         ...(Object.hasOwn(parsed, "connectionId") ? ["connectionId"] : []),
     ]);
     const claims = parsed as Record<string, unknown>;
@@ -157,8 +180,21 @@ function assertClaims(value: Readonly<Record<string, unknown>>): asserts value i
         (value.sourceInstallationId !== undefined &&
             (typeof value.sourceInstallationId !== "string" ||
                 !IDENTIFIER.test(value.sourceInstallationId) ||
-                value.subjectId !== undefined ||
+                (value.subjectId !== undefined && value.rootRequestId === undefined) ||
                 value.systemServiceId !== undefined)) ||
+        (value.rootRequestId !== undefined &&
+            (typeof value.rootRequestId !== "string" ||
+                !REQUEST_ID.test(value.rootRequestId) ||
+                value.sourceInstallationId === undefined ||
+                value.delegationTicket !== undefined)) ||
+        (value.delegationTicket !== undefined &&
+            (typeof value.delegationTicket !== "string" ||
+                !/^[A-Za-z0-9_-]{43}$/u.test(value.delegationTicket) ||
+                !Number.isSafeInteger(value.delegationExpiresAt) ||
+                Number(value.delegationExpiresAt) <= Number(value.issuedAt) * 1000 ||
+                Number(value.delegationExpiresAt) > Number(value.expiresAt) * 1000 ||
+                value.systemServiceId !== undefined ||
+                value.sourceInstallationId !== undefined)) ||
         (value.connectionId !== undefined &&
             (typeof value.connectionId !== "string" || !IDENTIFIER.test(value.connectionId))) ||
         !Number.isSafeInteger(value.issuedAt) ||

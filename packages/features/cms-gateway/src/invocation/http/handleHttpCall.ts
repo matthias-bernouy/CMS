@@ -14,6 +14,7 @@ export interface GatewayHttpCallOptions {
     readonly actor: GatewayActor;
     readonly prefix: string;
     readonly onFailure?: GatewayHttpFailureObserver;
+    readonly delegationTicket?: string;
     readonly actorCredential?: GatewayInvocation["actorCredential"];
 }
 
@@ -42,6 +43,7 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             contractId: target.contractId,
             capabilityId: route.capability.id,
             actor: options.actor,
+            ...(options.delegationTicket ? { delegationTicket: options.delegationTicket } : {}),
             ...(request.method === "HEAD" ? { metadataOnly: true } : {}),
             ...(route.bindingId ? { bindingId: route.bindingId, bindingTransport: "http" } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),

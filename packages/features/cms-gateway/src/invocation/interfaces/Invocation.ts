@@ -1,3 +1,4 @@
+import type { DelegationContext } from "cms-gateway/access/delegation/interfaces";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts/catalogue";
@@ -8,8 +9,8 @@ import type { ContractParentReference, ReleaseDigest } from "@bernouy/cms-reposi
 import type { GatewayActorCredential, GatewayResponseEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
 export type GatewayActor =
     | { readonly kind: "anonymous" }
-    | { readonly kind: "user" | "administrator"; readonly subjectId: string }
-    | { readonly kind: "provider"; readonly installationId: string }
+    | { readonly kind: "user" | "administrator"; readonly subjectId: string; readonly authorizationRevision?: number }
+    | { readonly kind: "provider"; readonly installationId: string; readonly credentialFingerprint: string }
     | { readonly kind: "system"; readonly serviceId: string };
 
 export interface GatewayInvocation {
@@ -30,6 +31,8 @@ export interface GatewayInvocation {
     readonly idempotencyKey?: string;
     /** Opaque browser credential accepted only by the Access actor resolver. */
     readonly actorCredential?: GatewayActorCredential;
+    /** Accepted only together with an authenticated source Provider actor. */
+    readonly delegationTicket?: string;
 }
 
 interface GatewayBinaryBody {
@@ -65,6 +68,13 @@ export interface GatewayRouteResolver {
 }
 
 export interface GatewayTransportRequest {
+    readonly delegation?: DelegationContext;
+    readonly delegated?: {
+        readonly ticket: string;
+        readonly sourceInstallationId: string;
+        readonly credentialFingerprint: string;
+    };
+    readonly rootRequestId?: string;
     readonly requestId: string;
     readonly instanceId: string;
     readonly installationId: string;
@@ -81,6 +91,7 @@ export interface GatewayTransportRequest {
     readonly subjectId?: string;
     readonly systemServiceId?: string;
     readonly sourceInstallationId?: string;
+    readonly sourceCredentialFingerprint?: string;
     readonly idempotencyKey?: string;
     readonly actorCredential?: GatewayActorCredential;
 }

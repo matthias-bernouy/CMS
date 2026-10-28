@@ -1,3 +1,4 @@
+import { providerCredentialFingerprint } from "@bernouy/cms-gateway/access/providers";
 import { expect, test } from "bun:test";
 import {
     ProviderAccess,
@@ -46,24 +47,37 @@ async function fixture() {
                 : null,
     } as ProviderInstallationStore;
     const manifests = { get: async () => manifest } as unknown as ProviderManifestCatalogue;
+    const current = {
+        plan: { selections: [{ ...route.selection, installationId: source.installation.id }] },
+        grants: { default: "allow-selected", denied: [] },
+    };
+    const selections = { get: async () => current };
+    const routes = {
+        resolve: async (site: string, contract: string) =>
+            site === "site-a" && contract === "catalog" ? { ...route, installation: destination } : null,
+        isCurrent: async () => true,
+    };
     const create = (siteId: string) =>
         new ProviderAccess({
             siteId,
             installations,
             manifests,
             store,
+            selections,
+            routes,
             resolveSecret: async (reference) => secrets.get(reference),
         });
     const access = create("site-a");
     const target = {
         sourceInstallationId: "source-a",
+        sourceCredentialFingerprint: providerCredentialFingerprint("a".repeat(64)),
         targetInstallationId: "install-a",
         contractId: "catalog",
         capabilityId: "item.list",
         version: "1.0.0",
     };
     await access.registerCredential("source-a", "${RETURN_TOKEN}", "a".repeat(64));
-    return { access, create, source, destination, manifest, target, secrets, credentials };
+    return { access, create, source, destination, manifest, target, secrets, credentials, current, route };
 }
 
 test("Provider credentials are indexed, scoped and revoked by the current installation", async () => {
@@ -122,6 +136,7 @@ test("credential handoff accepts the acknowledged new key before the active refe
 test("initial handoff authority expires and cannot survive configuration changes or revocation", async () => {
     const f = await fixture();
     delete f.source.installation.gatewayTokenRef;
+    f.target.sourceCredentialFingerprint = providerCredentialFingerprint("b".repeat(64));
     f.secrets.set("${NEXT}", "b".repeat(64));
     await f.access.beginCredential("source-a", "${NEXT}", "b".repeat(64), providerInstallationFingerprint(f.source));
     expect(await f.access.authenticate("b".repeat(64))).toBe("source-a");
@@ -138,4 +153,21 @@ test("initial handoff authority expires and cannot survive configuration changes
     expect(await f.access.authenticate("b".repeat(64))).toBeNull();
     f.source.installation.status = "revoked";
     expect(await f.access.authorize(f.target)).toBe(false);
+});
+
+test("unselected implementation requirements grant nothing while global requirements remain installation-wide", async () => {
+    const f = await fixture();
+    f.current.plan.selections = [];
+    expect(await f.access.authorize(f.target)).toBe(false);
+    f.manifest.admission.manifest.requires = [...f.manifest.admission.manifest.implementations[0]!.requires];
+    expect(await f.access.authorize(f.target)).toBe(true);
+    f.current.grants.denied.push({ contractId: "catalog", capabilityId: "item.list" });
+    expect(await f.access.authorize(f.target)).toBe(false);
+});
+test("rotation in place invalidates the proof of a previously authenticated pending request", async () => {
+    const f = await fixture();
+    expect(await f.access.authorize(f.target)).toBe(true);
+    f.secrets.set("${RETURN_TOKEN}", "b".repeat(64));
+    expect(await f.access.authorize(f.target)).toBe(false);
+    expect(await f.access.authorize({ ...f.target, sourceCredentialFingerprint: undefined }, true)).toBe(false);
 });

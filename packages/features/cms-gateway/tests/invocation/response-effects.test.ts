@@ -5,8 +5,9 @@ import { validateHttpResponse as validateResponse } from "cms-gateway/invocation
 
 const capability = {
     id: "login-password",
+
     access: "public",
-    behavior: { effect: "command", idempotency: "none", execution: "sync" },
+    behavior: { sensitive: false, effect: "command", idempotency: "none", execution: "sync" },
     input: { type: "object", properties: {}, required: [] },
     output: {
         type: "object",

@@ -109,7 +109,9 @@ test("a parent contract call is routed through its selected specialization", asy
 });
 
 test("fresh observation renewal does not make a completed command uncertain", async () => {
-    const fixture = await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "none" } });
+    const fixture = await gatewayRoute({
+        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "none" },
+    });
     let installation = fixture.installation;
     const routes = new CatalogueGatewayRouteResolver({
         selections: { get: async () => ({ plan: { selections: [fixture.selection] } }) } as never,
@@ -162,7 +164,9 @@ test("editor catalogue includes only callable selected query capabilities", asyn
         { contractId: "catalog", contractLabel: "Catalog", capabilityId: "item.list", providerId: "ulvia.example" },
     ]);
 
-    const command = await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "natural" } });
+    const command = await gatewayRoute({
+        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "natural" },
+    });
     const commandCatalogue = new SelectedGatewayCatalogue(
         { get: async () => ({ plan: { selections: [command.selection] } }) } as unknown as ConstructorParameters<
             typeof SelectedGatewayCatalogue
@@ -174,7 +178,7 @@ test("editor catalogue includes only callable selected query capabilities", asyn
 
     for (const excluded of [
         { access: "admin" },
-        { behavior: { effect: "command", execution: "sync", idempotency: "keyed" } },
+        { behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "keyed" } },
         { binary: true },
     ]) {
         const route = await gatewayRoute(excluded);

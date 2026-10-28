@@ -18,3 +18,5 @@ export {
     type GatewayResponseEffect,
     type GatewaySessionEffect,
 } from "cms-gateway/protocol/TrustedCapabilityEffects";
+
+export type { ProviderInvocationIssue } from "cms-gateway/protocol/ProviderInvocationToken";

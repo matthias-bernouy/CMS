@@ -15,3 +15,4 @@ export type {
     GatewayHttpRouteRequest,
     GatewayHttpTransportRequest,
 } from "cms-gateway/invocation/http/route/interfaces";
+export { invocationAuthority } from "cms-gateway/invocation/http/transport/invocationAuthority";

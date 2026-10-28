@@ -26,7 +26,7 @@ test("gateway call URLs use the admitted binding path", async () => {
 
 test("commands map JSON bodies through their admitted binding", async () => {
     const route = await gatewayRoute({
-        behavior: { effect: "command", execution: "sync", idempotency: "natural" },
+        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "natural" },
     });
     const exchanges: GatewayHttpExchange[] = [];
     const gateway = gatewayFor(route, async (request) => {
@@ -51,7 +51,7 @@ test("commands map JSON bodies through their admitted binding", async () => {
 
 test("keyed commands use the standard idempotency header", async () => {
     const route = await gatewayRoute({
-        behavior: { effect: "command", execution: "sync", idempotency: "keyed" },
+        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "keyed" },
     });
     const exchanges: GatewayHttpExchange[] = [];
     const gateway = gatewayFor(route, async (request) => {
@@ -76,7 +76,7 @@ test("keyed commands use the standard idempotency header", async () => {
 
 test("automatic idempotency candidates are ignored outside keyed commands", async () => {
     const route = await gatewayRoute({
-        behavior: { effect: "command", execution: "sync", idempotency: "natural" },
+        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "natural" },
     });
     const exchanges: GatewayHttpExchange[] = [];
     const gateway = gatewayFor(route, async (request) => {
@@ -101,7 +101,7 @@ test("automatic idempotency candidates are ignored outside keyed commands", asyn
 
 test("keyed commands promote browser idempotency candidates", async () => {
     const route = await gatewayRoute({
-        behavior: { effect: "command", execution: "sync", idempotency: "keyed" },
+        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "keyed" },
     });
     const exchanges: GatewayHttpExchange[] = [];
     const gateway = gatewayFor(route, async (request) => {

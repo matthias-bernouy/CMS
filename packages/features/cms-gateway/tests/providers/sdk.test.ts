@@ -46,7 +46,16 @@ test("the generic SDK calls canonical CMS bindings and forwards only signed mach
     const cms = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: handler });
     try {
         const client = new GatewayProviderClient({ cmsUrl: cms.url.origin, token, allowPrivateAddresses: true });
-        expect((await client.invoke(route.release.admission.release, "item.list", { term: "test" })).output).toEqual({
+        expect(
+            (
+                await client.invoke(
+                    route.release.admission.release,
+                    "item.list",
+                    { term: "test" },
+                    { authority: "provider" },
+                )
+            ).output,
+        ).toEqual({
             items: ["from-provider"],
         });
         expect(received).toEqual([
@@ -93,7 +102,7 @@ test("connections reload rotated credentials and SDK auth failures are permanent
     try {
         await connections.configure({ connectionId: "connection-a", cmsUrl: server.url.origin, token, generation: 1 });
         const client = connections.client("connection-a", true);
-        await expect(client.invoke(release, "item.list", {})).rejects.toMatchObject({
+        await expect(client.invoke(release, "item.list", {}, { authority: "provider" })).rejects.toMatchObject({
             code: "FORBIDDEN",
             retryable: false,
             status: 403,
@@ -105,7 +114,9 @@ test("connections reload rotated credentials and SDK auth failures are permanent
             token: rotated,
             generation: 2,
         });
-        await expect(client.invoke(release, "item.list", {})).rejects.toBeInstanceOf(ProviderClientError);
+        await expect(client.invoke(release, "item.list", {}, { authority: "provider" })).rejects.toBeInstanceOf(
+            ProviderClientError,
+        );
         expect(credentials).toEqual([`Bearer ${token}`, `Bearer ${rotated}`]);
         expect(await connections.get("connection-b")).toBeNull();
         await expect(
@@ -122,7 +133,9 @@ test("connections reload rotated credentials and SDK auth failures are permanent
 });
 
 test("a pre-dispatch quota rejection remains retryable instead of becoming an unknown command outcome", async () => {
-    const route = await gatewayRoute({ behavior: { effect: "command", idempotency: "natural", execution: "sync" } });
+    const route = await gatewayRoute({
+        behavior: { sensitive: false, effect: "command", idempotency: "natural", execution: "sync" },
+    });
     const stages: string[] = [];
     const invoker = new CapabilityGateway({
         routes: { resolve: async () => route, isCurrent: async () => true },
@@ -167,7 +180,7 @@ test("SDK preserves permanent Gateway failures instead of retrying them as malfo
     try {
         const client = new GatewayProviderClient({ cmsUrl: server.url.origin, token, allowPrivateAddresses: true });
         await expect(
-            client.invoke((await gatewayRoute()).release.admission.release, "item.list", {}),
+            client.invoke((await gatewayRoute()).release.admission.release, "item.list", {}, { authority: "provider" }),
         ).rejects.toMatchObject({ code: "invalid_input", retryable: false, status: 400 });
     } finally {
         server.stop(true);

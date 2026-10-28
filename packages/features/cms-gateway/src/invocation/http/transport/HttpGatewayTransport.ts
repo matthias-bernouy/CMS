@@ -33,7 +33,11 @@ export interface GatewayHttpExchange extends PreparedHttpInvocation {
               readonly subjectId?: string;
               readonly systemServiceId?: string;
               readonly sourceInstallationId?: string;
+              readonly sourceCredentialFingerprint?: string;
+              readonly rootRequestId?: string;
+              readonly delegation?: GatewayTransportRequest["delegation"];
           };
+    readonly delegated?: GatewayTransportRequest["delegated"];
     readonly idempotencyKey?: string;
     readonly actorCredential?: GatewayTransportRequest["actorCredential"];
     readonly signal: AbortSignal;
@@ -96,10 +100,18 @@ export class HttpGatewayTransport implements GatewayTransport {
                 contractId: request.release.contractId,
                 contractVersion: request.release.version,
                 capabilityId: request.capability.id,
+                ...(request.delegation ? { delegation: request.delegation } : {}),
+                ...(request.rootRequestId ? { rootRequestId: request.rootRequestId } : {}),
                 ...(request.subjectId ? { subjectId: request.subjectId } : {}),
                 ...(request.systemServiceId ? { systemServiceId: request.systemServiceId } : {}),
-                ...(request.sourceInstallationId ? { sourceInstallationId: request.sourceInstallationId } : {}),
+                ...(request.sourceInstallationId
+                    ? {
+                          sourceInstallationId: request.sourceInstallationId,
+                          sourceCredentialFingerprint: request.sourceCredentialFingerprint,
+                      }
+                    : {}),
             },
+            ...(request.delegated ? { delegated: request.delegated } : {}),
             ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
             ...(request.actorCredential ? { actorCredential: request.actorCredential } : {}),
             accept:

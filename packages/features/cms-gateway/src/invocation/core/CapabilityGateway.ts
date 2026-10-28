@@ -1,3 +1,4 @@
+import { delegationStream } from "./delegationStream";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import { capabilityBindings } from "@bernouy/cms-repository/contracts/bindings";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
@@ -21,7 +22,10 @@ import type {
     GatewayCommandAuditStore,
 } from "cms-gateway/audit/interfaces/GatewayAudit";
 
+import type { GatewayDelegationAuthority, DelegationTarget } from "cms-gateway/access/delegation/interfaces";
+
 export interface CapabilityGatewayOptions {
+    readonly delegations?: GatewayDelegationAuthority;
     readonly routes: GatewayRouteResolver;
     readonly transport: GatewayTransport;
     /** Required host grant check, including view restrictions and site membership. */
@@ -71,7 +75,26 @@ export class CapabilityGateway implements GatewayAccessProbe {
     }
 
     async invoke(value: GatewayInvocation): Promise<GatewayResult> {
-        const invocation = snapshotInvocation(value);
+        let invocation = snapshotInvocation(value);
+        const started = Date.now();
+        let delegated: DelegationTarget | undefined;
+        let rootRequestId: string | undefined;
+        if (invocation.delegationTicket) {
+            if (invocation.actor.kind !== "provider" || !this.#options.delegations) {
+                throw new GatewayError("not_authorized", "delegation authority is unavailable");
+            }
+            delegated = {
+                siteId: invocation.siteId,
+                ticket: invocation.delegationTicket,
+                sourceInstallationId: invocation.actor.installationId,
+                sourceCredentialFingerprint: invocation.actor.credentialFingerprint,
+                contractId: invocation.contractId,
+                capabilityId: invocation.capabilityId,
+            };
+            const checked = await this.#options.delegations.check(delegated);
+            invocation = { ...invocation, actor: checked.actor };
+            rootRequestId = checked.rootRequestId;
+        }
         const { route, instanceId, release, capability } = await this.#authorizedRoute(invocation, false);
         assertActorCredentialTarget(invocation, capability);
         const input = snapshotInput(invocation.input, capability);
@@ -81,6 +104,14 @@ export class CapabilityGateway implements GatewayAccessProbe {
         }
         const requestId = crypto.randomUUID();
         const isCommand = capability.behavior.effect === "command";
+        // Cached policy only avoids unnecessary control calls; issuance revalidates live authority.
+        const delegationSource = route.manifest.admission.manifest.implementations.some(
+            (implementation) =>
+                implementation.contractId === route.selection.contractId &&
+                implementation.version === route.selection.version &&
+                implementation.digest === route.selection.digest &&
+                implementation.delegation?.sources.some((source) => source === "*" || source === capability.id),
+        );
         if (isCommand) {
             await this.#auditCommand(
                 commandAuditEvent(invocation, route, requestId, this.#now(), "started"),
@@ -89,9 +120,63 @@ export class CapabilityGateway implements GatewayAccessProbe {
             );
         }
         let result: GatewayResult;
+        let delegation: Awaited<ReturnType<GatewayDelegationAuthority["issue"]>> = null;
+        let streamed = false;
+        const closeDelegation = async () => {
+            if (delegation) {
+                try {
+                    await this.#options.delegations!.close({
+                        siteId: invocation.siteId,
+                        ticket: delegation.ticket,
+                        requestId,
+                    });
+                } catch {
+                    /* Expiry remains the fallback if the authority becomes unavailable. */
+                }
+            }
+        };
         try {
+            if (delegated) {
+                await this.#options.delegations!.check(
+                    delegated,
+                    !this.#options.transportFencesRoute,
+                    invocation.binaryBody
+                        ? (invocation.binaryBody.contentLength ?? 4 * 1024 * 1024 + 1)
+                        : new TextEncoder().encode(JSON.stringify(input)).length,
+                );
+            } else if (
+                this.#options.delegations &&
+                delegationSource &&
+                (invocation.actor.kind === "anonymous" ||
+                    invocation.actor.kind === "user" ||
+                    invocation.actor.kind === "administrator")
+            ) {
+                delegation = await this.#options.delegations.issue({
+                    siteId: invocation.siteId,
+                    requestId,
+                    installationId: route.selection.installationId,
+                    contractId: invocation.contractId,
+                    version: release.version,
+                    digest: route.selection.digest,
+                    capabilityId: capability.id,
+                    actor: invocation.actor,
+                    deadline: started + 15_000,
+                });
+            }
             const response = await this.#options.transport.send({
                 requestId,
+                ...(delegation ? { delegation } : {}),
+                ...(delegated
+                    ? {
+                          delegated: {
+                              ticket: delegated.ticket,
+                              sourceInstallationId: delegated.sourceInstallationId,
+                              credentialFingerprint: delegated.sourceCredentialFingerprint,
+                          },
+                          sourceInstallationId: delegated.sourceInstallationId,
+                          rootRequestId,
+                      }
+                    : {}),
                 instanceId,
                 installationId: route.installation.installation.id,
                 endpoint: route.installation.installation.endpoint,
@@ -106,7 +191,10 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 ...(subjectId ? { subjectId } : {}),
                 ...(invocation.actor.kind === "system" ? { systemServiceId: invocation.actor.serviceId } : {}),
                 ...(invocation.actor.kind === "provider"
-                    ? { sourceInstallationId: invocation.actor.installationId }
+                    ? {
+                          sourceInstallationId: invocation.actor.installationId,
+                          sourceCredentialFingerprint: invocation.actor.credentialFingerprint,
+                      }
                     : {}),
                 ...(invocation.idempotencyKey ? { idempotencyKey: invocation.idempotencyKey } : {}),
                 ...(invocation.actorCredential ? { actorCredential: invocation.actorCredential } : {}),
@@ -129,6 +217,10 @@ export class CapabilityGateway implements GatewayAccessProbe {
                     requestId,
                     true,
                 );
+            }
+            if (delegation && result.kind === "binary" && !invocation.metadataOnly) {
+                result = { ...result, stream: delegationStream(result.stream, closeDelegation) };
+                streamed = true;
             }
         } catch (error) {
             if (error instanceof GatewayDispatchRejected) {
@@ -161,6 +253,10 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 throw error;
             }
             throw new GatewayError("transport_failure", "provider transport failed");
+        } finally {
+            if (!streamed) {
+                await closeDelegation();
+            }
         }
         return result;
     }

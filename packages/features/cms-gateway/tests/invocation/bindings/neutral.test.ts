@@ -18,7 +18,9 @@ test("domain invocation validates successful and declared-error outcomes without
 });
 
 test("MCP-only commands retain audit and unknown-outcome semantics", async () => {
-    const f = await scope([mcp], { behavior: { effect: "command", execution: "sync", idempotency: "natural" } });
+    const f = await scope([mcp], {
+        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "natural" },
+    });
     await f.gateway.invoke(invocation);
     expect(f.audit.list().map(({ stage }) => stage)).toEqual(["started", "completed"]);
     f.respond({ output: { items: [42] } });

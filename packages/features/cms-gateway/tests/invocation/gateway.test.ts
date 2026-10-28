@@ -276,7 +276,9 @@ describe("capability gateway", () => {
     test("executes synchronous commands without a keyed retry contract", async () => {
         for (const idempotency of ["natural", "none"] as const) {
             const scope = harness(
-                await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency } }),
+                await gatewayRoute({
+                    behavior: { sensitive: false, effect: "command", execution: "sync", idempotency },
+                }),
             );
             await expect(scope.gateway.invoke(invocation())).resolves.toMatchObject({
                 kind: "success",
@@ -291,7 +293,7 @@ describe("capability gateway", () => {
 
     test("fails closed before dispatch when command audit is unavailable", async () => {
         const route = await gatewayRoute({
-            behavior: { effect: "command", execution: "sync", idempotency: "natural" },
+            behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "natural" },
         });
         let sent = 0;
         const gateway = new CapabilityGateway({
@@ -311,7 +313,9 @@ describe("capability gateway", () => {
     });
 
     test("marks a dispatched command outcome unknown when its route changes or response fails", async () => {
-        const route = await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "none" } });
+        const route = await gatewayRoute({
+            behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "none" },
+        });
         let current = true;
         let sent = 0;
         const gateway = new CapabilityGateway({
@@ -368,7 +372,9 @@ describe("capability gateway", () => {
         scope.setResponse({ status: 200, contentType: "application/json", output: { items: [42] } });
         await expect(scope.gateway.invoke(invocation())).rejects.toMatchObject({ code: "invalid_provider_response" });
         const command = harness(
-            await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "keyed" } }),
+            await gatewayRoute({
+                behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "keyed" },
+            }),
         );
         await expect(command.gateway.invoke(invocation())).rejects.toMatchObject({ code: "invalid_input" });
         expect(command.sent).toHaveLength(0);
@@ -376,7 +382,9 @@ describe("capability gateway", () => {
 
     test("forwards keyed operations and validates their protocol handle", async () => {
         const scope = harness(
-            await gatewayRoute({ behavior: { effect: "command", execution: "operation", idempotency: "keyed" } }),
+            await gatewayRoute({
+                behavior: { sensitive: false, effect: "command", execution: "operation", idempotency: "keyed" },
+            }),
         );
         scope.setResponse({
             status: 202,
@@ -435,7 +443,11 @@ describe("capability gateway", () => {
 
     test("authorizes provider calls without forwarding gateway authority context", async () => {
         const scope = harness(await gatewayRoute());
-        const actor = { kind: "provider" as const, installationId: "caller-installation" };
+        const actor = {
+            kind: "provider" as const,
+            installationId: "caller-installation",
+            credentialFingerprint: "f".repeat(64),
+        };
         await scope.gateway.invoke(invocation(actor));
         expect(scope.sent).toHaveLength(1);
         expect(scope.sent[0]).not.toHaveProperty("invocationOrigin");

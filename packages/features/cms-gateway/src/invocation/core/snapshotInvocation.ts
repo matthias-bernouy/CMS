@@ -5,6 +5,7 @@ import {
     parseStrictJson,
 } from "@bernouy/cms-repository/contracts/protocol";
 import type { GatewayActor, GatewayInvocation } from "cms-gateway/invocation/interfaces/Invocation";
+import { validDelegationTicket } from "cms-gateway/access/delegation/wire";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 
 /** Bounded JSON envelope budget, including escaping and metadata around a 1 MiB contract string. */
@@ -21,6 +22,7 @@ const INVOCATION_FIELDS = new Set([
     "actor",
     "idempotencyKey",
     "actorCredential",
+    "delegationTicket",
 ]);
 
 /** Snapshot caller input before the first asynchronous route or grant lookup. */
@@ -54,6 +56,12 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
         throw new GatewayError("invalid_input", "binding or representation selection is invalid");
     }
     const actor = snapshotActor(value.actor);
+    if (
+        value.delegationTicket !== undefined &&
+        (actor.kind !== "provider" || !validDelegationTicket(value.delegationTicket))
+    ) {
+        throw new GatewayError("not_authorized", "delegation requires an authenticated source Provider");
+    }
     const idempotencyKey = snapshotIdempotencyKey(value.idempotencyKey);
     const actorCredential = snapshotActorCredential(value.actorCredential);
     try {
@@ -67,6 +75,7 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             contractId: value.contractId,
             capabilityId: value.capabilityId,
             actor,
+            ...(value.delegationTicket ? { delegationTicket: value.delegationTicket } : {}),
             ...(value.bindingId ? { bindingId: value.bindingId } : {}),
             ...(value.bindingTransport ? { bindingTransport: value.bindingTransport } : {}),
             ...(value.metadataOnly ? { metadataOnly: true } : {}),
@@ -142,13 +151,35 @@ function snapshotActor(actor: GatewayActor): GatewayActor {
             return { kind: "anonymous" };
         case "user":
         case "administrator":
-            requireActorFields(actor, ["kind", "subjectId"]);
+            requireActorFields(actor, ["kind", "subjectId", "authorizationRevision"]);
             requireId(actor.subjectId);
-            return { kind: actor.kind, subjectId: actor.subjectId };
+            if (
+                actor.authorizationRevision !== undefined &&
+                (!Number.isSafeInteger(actor.authorizationRevision) || actor.authorizationRevision < 0)
+            ) {
+                throw new GatewayError("not_authorized", "invalid actor revision");
+            }
+            return {
+                kind: actor.kind,
+                subjectId: actor.subjectId,
+                ...(actor.authorizationRevision === undefined
+                    ? {}
+                    : { authorizationRevision: actor.authorizationRevision }),
+            };
         case "provider":
-            requireActorFields(actor, ["kind", "installationId"]);
+            requireActorFields(actor, ["kind", "installationId", "credentialFingerprint"]);
             requireId(actor.installationId);
-            return { kind: "provider", installationId: actor.installationId };
+            if (
+                typeof actor.credentialFingerprint !== "string" ||
+                !/^[a-f0-9]{64}$/.test(actor.credentialFingerprint)
+            ) {
+                throw new GatewayError("not_authorized", "Provider credential proof is missing");
+            }
+            return {
+                kind: "provider",
+                installationId: actor.installationId,
+                credentialFingerprint: actor.credentialFingerprint,
+            };
         case "system":
             requireActorFields(actor, ["kind", "serviceId"]);
             requireId(actor.serviceId);

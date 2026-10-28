@@ -1,7 +1,8 @@
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import { HttpGatewayTransport } from "cms-gateway/invocation/http/transport/HttpGatewayTransport";
 import { NodeGatewayHttpNetwork } from "cms-gateway/invocation/node-http/NodeGatewayHttpNetwork";
-import type { GatewayTransportRequest } from "cms-gateway/invocation/interfaces/Invocation";
+import { validDelegationTicket } from "cms-gateway/access/delegation/wire";
+import type { ProviderInvocationOptions } from "./interfaces";
 
 import { gatewayFailure } from "./gatewayFailure";
 import { ProviderClientError } from "./interfaces";
@@ -24,7 +25,11 @@ export class GatewayProviderClient {
         }
         this.origin = url.origin;
         const network = new NodeGatewayHttpNetwork({
-            authorize: async () => options.token,
+            authorize: async (request) => ({
+                token: options.token,
+                providerAuthority: request.delegated ? "delegated" : "provider",
+                ...(request.delegated ? { delegationTicket: request.delegated.ticket } : {}),
+            }),
             allowPrivateAddresses: options.allowPrivateAddresses,
         });
         this.transport = new HttpGatewayTransport({
@@ -53,12 +58,19 @@ export class GatewayProviderClient {
             },
         });
     }
-    async invoke(
-        release: ContractRelease,
-        capabilityId: string,
-        input: unknown,
-        options: Pick<GatewayTransportRequest, "idempotencyKey" | "binaryBody" | "bindingId"> = {},
-    ) {
+    async invoke(release: ContractRelease, capabilityId: string, input: unknown, options: ProviderInvocationOptions) {
+        if (!options || (options.authority !== "provider" && options.authority !== "delegated")) {
+            throw new TypeError("Provider invocations require an explicit authority");
+        }
+        if (
+            options.authority === "delegated" &&
+            (!options.delegation ||
+                !validDelegationTicket(options.delegation.ticket) ||
+                !Number.isSafeInteger(options.delegation.expiresAt) ||
+                options.delegation.expiresAt <= Date.now())
+        ) {
+            throw new TypeError("Delegation context is missing or expired");
+        }
         const capability = release.capabilities.find((item) => item.id === capabilityId);
         if (!capability) {
             throw new TypeError("Capability does not belong to the supplied contract");
@@ -71,7 +83,18 @@ export class GatewayProviderClient {
             throw new TypeError("Keyed Provider commands require an idempotency key");
         }
         const response = await this.transport.send({
-            ...options,
+            ...(options.binaryBody ? { binaryBody: options.binaryBody } : {}),
+            ...(options.bindingId ? { bindingId: options.bindingId } : {}),
+            ...(options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}),
+            ...(options.authority === "delegated"
+                ? {
+                      delegated: {
+                          ticket: options.delegation.ticket,
+                          sourceInstallationId: "connection",
+                          credentialFingerprint: "connection",
+                      },
+                  }
+                : {}),
             requestId: crypto.randomUUID(),
             instanceId: "cms",
             installationId: "connection",

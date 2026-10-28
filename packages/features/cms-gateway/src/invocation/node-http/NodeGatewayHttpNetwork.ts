@@ -1,3 +1,9 @@
+import {
+    DELEGATION_HEADER,
+    PROVIDER_AUTHORITY_HEADER,
+    validDelegationTicket,
+    type ProviderWireAuthority,
+} from "cms-gateway/access/delegation/wire";
 import { currentRequestId } from "@bernouy/http-runner/observability";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
@@ -18,11 +24,17 @@ import {
 import { sendPinnedHttpRequest, type PinnedHttpRequest } from "cms-gateway/invocation/node-http/nodeHttpRequest";
 import { ACTOR_CREDENTIAL_HEADER, encodeActorCredential } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
+export type GatewayHttpAuthorization = Readonly<{
+    token: string;
+    delegationTicket?: string;
+    providerAuthority?: ProviderWireAuthority;
+}>;
+
 export interface NodeGatewayHttpNetworkOptions {
     /** Resolves a host-owned credential reference without exposing its value to the gateway core. */
     readonly resolveToken?: (reference: string) => Promise<string>;
     /** Delegates creation of the exact outbound Bearer without exposing a durable Provider credential. */
-    readonly authorize?: (request: GatewayHttpExchange) => Promise<string>;
+    readonly authorize?: (request: GatewayHttpExchange) => Promise<GatewayHttpAuthorization>;
     /** Opt-in for a runtime whose selected Providers live on its controlled private network. */
     readonly allowPrivateAddresses?: boolean;
     readonly resolveAddresses?: (hostname: string) => Promise<readonly ResolvedAddress[]>;
@@ -79,13 +91,24 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
         });
     }
 
-    async #authorization(request: GatewayHttpExchange): Promise<string> {
+    async #authorization(request: GatewayHttpExchange): Promise<GatewayHttpAuthorization> {
         if (this.#options.authorize) {
             if (request.authentication.kind !== "capability") {
                 throw new TypeError("brokered Provider authorization is restricted to capability invocations");
             }
             const authorization = await this.#options.authorize(request);
-            if (!authorization || authorization.length > 4096 || /[\x00-\x20\x7f]/.test(authorization)) {
+            if (
+                !authorization ||
+                typeof authorization.token !== "string" ||
+                !authorization.token ||
+                authorization.token.length > 4096 ||
+                /[\x00-\x20\x7f]/.test(authorization.token) ||
+                (authorization.providerAuthority !== undefined &&
+                    authorization.providerAuthority !== "provider" &&
+                    authorization.providerAuthority !== "delegated") ||
+                (authorization.providerAuthority === "delegated") !== (authorization.delegationTicket !== undefined) ||
+                (authorization.delegationTicket !== undefined && !validDelegationTicket(authorization.delegationTicket))
+            ) {
                 throw new TypeError("provider authorization is unavailable");
             }
             return authorization;
@@ -97,26 +120,37 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
             throw new TypeError("provider credential is unavailable");
         }
         const nowSeconds = Math.floor(Date.now() / 1_000);
-        return request.authentication.kind === "provider-control"
-            ? token
-            : signProviderInvocationToken(token, {
-                  version: 1,
-                  requestId: request.requestId,
-                  instanceId: request.authentication.instanceId,
-                  contractId: request.authentication.contractId,
-                  contractVersion: request.authentication.contractVersion,
-                  capabilityId: request.authentication.capabilityId,
-                  ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
-                  ...(request.authentication.systemServiceId
-                      ? { systemServiceId: request.authentication.systemServiceId }
-                      : {}),
-                  ...(request.authentication.sourceInstallationId
-                      ? { sourceInstallationId: request.authentication.sourceInstallationId }
-                      : {}),
-                  ...(request.installationId ? { connectionId: request.installationId } : {}),
-                  issuedAt: nowSeconds,
-                  expiresAt: nowSeconds + 30,
-              });
+        const authorization =
+            request.authentication.kind === "provider-control"
+                ? token
+                : signProviderInvocationToken(token, {
+                      version: 1,
+                      requestId: request.requestId,
+                      instanceId: request.authentication.instanceId,
+                      contractId: request.authentication.contractId,
+                      contractVersion: request.authentication.contractVersion,
+                      capabilityId: request.authentication.capabilityId,
+                      ...(request.authentication.rootRequestId
+                          ? { rootRequestId: request.authentication.rootRequestId }
+                          : {}),
+                      ...(request.authentication.delegation
+                          ? {
+                                delegationTicket: request.authentication.delegation.ticket,
+                                delegationExpiresAt: request.authentication.delegation.expiresAt,
+                            }
+                          : {}),
+                      ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
+                      ...(request.authentication.systemServiceId
+                          ? { systemServiceId: request.authentication.systemServiceId }
+                          : {}),
+                      ...(request.authentication.sourceInstallationId
+                          ? { sourceInstallationId: request.authentication.sourceInstallationId }
+                          : {}),
+                      ...(request.installationId ? { connectionId: request.installationId } : {}),
+                      issuedAt: nowSeconds,
+                      expiresAt: nowSeconds + 30,
+                  });
+        return { token: authorization };
     }
 }
 
@@ -131,11 +165,13 @@ async function defaultResolveAddresses(hostname: string): Promise<readonly Resol
     return resolved.filter((entry): entry is ResolvedAddress => entry.family === 4 || entry.family === 6);
 }
 
-function trustedHeaders(request: GatewayHttpExchange, authorization: string): Record<string, string> {
+function trustedHeaders(request: GatewayHttpExchange, authorization: GatewayHttpAuthorization): Record<string, string> {
     return {
         ...request.headers,
         accept: request.accept ?? "application/json",
-        authorization: `Bearer ${authorization}`,
+        authorization: `Bearer ${authorization.token}`,
+        ...(authorization.providerAuthority ? { [PROVIDER_AUTHORITY_HEADER]: authorization.providerAuthority } : {}),
+        ...(authorization.delegationTicket ? { [DELEGATION_HEADER]: authorization.delegationTicket } : {}),
         "x-ulvia-request-id": request.requestId,
         ...(currentRequestId() ? { "x-request-id": currentRequestId()! } : {}),
         ...(request.idempotencyKey ? { "idempotency-key": request.idempotencyKey } : {}),

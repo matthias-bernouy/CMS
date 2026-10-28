@@ -1,3 +1,9 @@
+import { providerCredentialFingerprint } from "cms-gateway/access/providers/credentials";
+import {
+    DELEGATION_HEADER,
+    PROVIDER_AUTHORITY_HEADER,
+    validDelegationTicket,
+} from "cms-gateway/access/delegation/wire";
 import { resolveGatewayHttpRoute } from "../route/bindings";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayActor } from "cms-gateway/invocation/interfaces/Invocation";
@@ -9,12 +15,31 @@ import type { CapabilityHttpHandlerConfig } from "./config";
 /** Create the complete provider/browser capability HTTP adapter. */
 export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig) {
     return async (request: Request): Promise<Response> => {
+        const authority = request.headers.get(PROVIDER_AUTHORITY_HEADER);
+        const ticket = request.headers.get(DELEGATION_HEADER);
+        if (
+            (authority !== null && authority !== "provider" && authority !== "delegated") ||
+            (ticket !== null && authority !== "delegated") ||
+            (authority === "delegated" && !validDelegationTicket(ticket))
+        ) {
+            return gatewayFailureResponse("not_authorized", 403);
+        }
         const installationId = await providerInstallation(config, request);
+        if (authority !== null && !installationId) {
+            return gatewayFailureResponse("not_authorized", 403);
+        }
         if (installationId) {
             return handleGatewayHttpCall(request, {
                 siteId: config.siteId,
                 invoker: config.invoker,
-                actor: { kind: "provider", installationId },
+                actor: {
+                    kind: "provider",
+                    installationId,
+                    credentialFingerprint: providerCredentialFingerprint(
+                        request.headers.get("authorization")!.slice(7),
+                    ),
+                },
+                ...(ticket ? { delegationTicket: ticket } : {}),
                 prefix: routePrefix(config.basePath),
                 onFailure: config.onFailure,
             });

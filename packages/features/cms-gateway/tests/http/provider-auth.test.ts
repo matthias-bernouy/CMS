@@ -126,7 +126,7 @@ test("node transport can delegate exact capability authorization to a remote bro
         resolveAddresses: async () => [{ address: "127.0.0.1", family: 4 }],
         authorize: async (request) => {
             authorized.push(request.installationId ?? "");
-            return "short-lived-provider-invocation";
+            return { token: "short-lived-provider-invocation" };
         },
         sendPinned: async (request) => {
             authorizations.push(request.headers.authorization!);

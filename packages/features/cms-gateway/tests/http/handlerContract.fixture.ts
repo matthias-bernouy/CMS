@@ -3,8 +3,11 @@ import { gatewayRoute } from "../fixtures";
 
 export async function handlerContract() {
     const query = (await gatewayRoute()).requestedRelease.admission.release;
-    const command = (await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "natural" } }))
-        .requestedRelease.admission.release;
+    const command = (
+        await gatewayRoute({
+            behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "natural" },
+        })
+    ).requestedRelease.admission.release;
     const binary = (await gatewayRoute({ binary: true })).requestedRelease.admission.release;
     const list = query.capabilities[0]!;
     const create = command.capabilities[0]!;

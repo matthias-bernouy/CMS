@@ -1,3 +1,4 @@
+import { providerCredentialFingerprint } from "@bernouy/cms-gateway/access/providers";
 import { handlerContract } from "./handlerContract.fixture";
 import { expect, test } from "bun:test";
 import { GatewayError, type GatewayInvocation } from "@bernouy/cms-gateway";
@@ -29,7 +30,11 @@ test("authenticates provider machine calls independently from users", async () =
 
     expect(response.status).toBe(200);
     expect(calls[0]).toMatchObject({
-        actor: { kind: "provider", installationId: "install-caller" },
+        actor: {
+            kind: "provider",
+            installationId: "install-caller",
+            credentialFingerprint: providerCredentialFingerprint("provider-secret-token"),
+        },
     });
 });
 
@@ -263,3 +268,35 @@ function invoker(calls: GatewayInvocation[]) {
         },
     };
 }
+
+test("explicit Provider authority never forwards a rejected return credential to user authentication", async () => {
+    let userResolutions = 0;
+    const calls: GatewayInvocation[] = [];
+    const handler = createCapabilityHttpHandler({
+        siteId: "site-a",
+        basePath: "",
+        invoker: invoker(calls),
+        authenticateProvider: async () => null,
+        resolveActor: async () => {
+            userResolutions++;
+            return { kind: "administrator", subjectId: "user" };
+        },
+    });
+    for (const authority of ["provider", "delegated", "unsupported"]) {
+        const result = await handler(
+            new Request("http://site/.cms/call/catalog/v1/items", {
+                method: "POST",
+                headers: {
+                    authorization: "Bearer expired-provider-key",
+                    "content-type": "application/json",
+                    "x-ulvia-provider-authority": authority,
+                    ...(authority === "delegated" ? { "x-ulvia-delegation": "t".repeat(43) } : {}),
+                },
+                body: "{}",
+            }),
+        );
+        expect(result.status).toBe(403);
+    }
+    expect(userResolutions).toBe(0);
+    expect(calls).toBeEmpty();
+});

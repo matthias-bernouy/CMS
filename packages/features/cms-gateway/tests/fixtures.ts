@@ -7,6 +7,12 @@ export const NOW = "2026-09-29T08:00:00.000Z";
 
 export async function gatewayRoute(
     overrides: {
+        endpoint?: string;
+        contractId?: string;
+        capabilityId?: string;
+        providerId?: string;
+        installationId?: string;
+        delegation?: Record<string, unknown>;
         access?: string;
         behavior?: Record<string, unknown>;
         binary?: boolean;
@@ -21,19 +27,20 @@ export async function gatewayRoute(
         kind: "contract",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
-        contractId: "catalog",
+        contractId: overrides.contractId ?? "catalog",
         name: "Catalog",
         version: "1.0.0",
         publisherId: "ulvia.official",
         capabilities: [
             {
-                id: "item.list",
+                id: overrides.capabilityId ?? "item.list",
+
                 access: overrides.access ?? "public",
                 behavior:
                     overrides.behavior ??
                     (overrides.binaryInput
-                        ? { effect: "command", execution: "sync", idempotency: "natural" }
-                        : { effect: "query", execution: "sync" }),
+                        ? { sensitive: false, effect: "command", execution: "sync", idempotency: "natural" }
+                        : { sensitive: false, effect: "query", execution: "sync" }),
                 input: overrides.binary
                     ? {
                           type: "object",
@@ -137,18 +144,27 @@ export async function gatewayRoute(
     const release = await releases.publish(contract);
     const admittedManifest = await admitProviderManifest(
         {
+            requires: [],
             kind: "provider-manifest",
             protocol: "ulvia-provider/v1",
             schemaDialect: "ulvia-schema/v1",
-            providerId: "ulvia.example",
+            providerId: overrides.providerId ?? "ulvia.example",
             name: "Example Provider",
             version: "1.0.0",
             provenance: { publisherId: "ulvia.official", publishedAt: NOW },
             buildVersionRange: ">=1.0.0 <2.0.0",
-            endpoint: { allowedOrigins: ["https://provider.example.com"] },
+            endpoint: { allowedOrigins: [overrides.endpoint ?? "https://provider.example.com"] },
             configuration: { type: "object", properties: {}, required: [] },
             credentialSlots: [],
-            implementations: [{ contractId: "catalog", version: "1.0.0", digest: contract.digest, requires: [] }],
+            implementations: [
+                {
+                    contractId: overrides.contractId ?? "catalog",
+                    version: "1.0.0",
+                    digest: contract.digest,
+                    requires: [],
+                    ...(overrides.delegation ? { delegation: overrides.delegation } : {}),
+                },
+            ],
             dataPolicy: { residency: ["eu"] },
         },
         releases,
@@ -156,10 +172,10 @@ export async function gatewayRoute(
     return {
         selection: {
             siteId: "site-a",
-            contractId: "catalog",
+            contractId: overrides.contractId ?? "catalog",
             version: "1.0.0",
             digest: contract.digest,
-            installationId: "install-a",
+            installationId: overrides.installationId ?? "install-a",
         },
         release,
         requestedRelease: release,
@@ -176,11 +192,11 @@ export async function gatewayRoute(
         installation: {
             revision: 2,
             installation: {
-                id: "install-a",
+                id: overrides.installationId ?? "install-a",
                 siteId: "site-a",
-                providerId: "ulvia.example",
+                providerId: overrides.providerId ?? "ulvia.example",
                 accountId: "account-a",
-                endpoint: "https://provider.example.com",
+                endpoint: overrides.endpoint ?? "https://provider.example.com",
                 status: "enabled",
                 approval: {
                     manifestVersion: "1.0.0",
@@ -197,13 +213,18 @@ export async function gatewayRoute(
                 observedAt: NOW,
                 report: {
                     protocol: "ulvia-provider/v1",
-                    providerId: "ulvia.example",
+                    providerId: overrides.providerId ?? "ulvia.example",
                     instanceId: "instance:account-a",
                     account: { id: "account-a", label: "Account A" },
                     buildVersion: "1.0.0",
                     manifest: { version: "1.0.0", digest: admittedManifest.digest },
                     implementations: [
-                        { contractId: "catalog", version: "1.0.0", digest: contract.digest, status: "ready" },
+                        {
+                            contractId: overrides.contractId ?? "catalog",
+                            version: "1.0.0",
+                            digest: contract.digest,
+                            status: "ready",
+                        },
                     ],
                 },
             },

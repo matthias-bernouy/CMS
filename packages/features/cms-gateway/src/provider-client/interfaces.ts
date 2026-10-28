@@ -1,12 +1,15 @@
+import type { DelegationContext } from "cms-gateway/access/delegation/interfaces";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { GatewayTransportRequest, GatewayTransportResponse } from "cms-gateway/invocation/interfaces/Invocation";
 
+export type ProviderInvocationOptions = Pick<GatewayTransportRequest, "idempotencyKey" | "binaryBody" | "bindingId"> &
+    ({ readonly authority: "provider" } | { readonly authority: "delegated"; readonly delegation: DelegationContext });
 export interface ProviderCapabilityClient {
     invoke(
         release: ContractRelease,
         capabilityId: string,
         input: unknown,
-        options?: Pick<GatewayTransportRequest, "idempotencyKey" | "binaryBody" | "bindingId">,
+        options: ProviderInvocationOptions,
     ): Promise<GatewayTransportResponse>;
 }
 export interface ProviderConnectionRegistry {

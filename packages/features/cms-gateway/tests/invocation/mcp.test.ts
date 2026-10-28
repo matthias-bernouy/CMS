@@ -62,7 +62,7 @@ test("MCP access hints never authorize a caller or accept a forged actor", async
 
 test("MCP preserves declared errors and requires explicit keyed command retry identity", async () => {
     const { binding, calls } = await fixture({
-        behavior: { effect: "command", execution: "sync", idempotency: "keyed" },
+        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "keyed" },
     });
     const name = capabilityToolName("catalog", "item.list");
     await expect(binding.call(name, { input: {} }, context)).rejects.toThrow();
