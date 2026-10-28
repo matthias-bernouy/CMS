@@ -1,3 +1,4 @@
+import type { ContractUpgradePlan } from "@bernouy/cms-repository/providers/selections";
 import { parseCapabilityGrants } from "@bernouy/cms-repository/providers/selections";
 import type { ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
@@ -37,8 +38,7 @@ export function registerContractUpgradeCapabilities(
                 source: plan.source.map(({ siteId: _, ...selection }) => selection),
                 usageDigest: plan.usageRevision,
                 grants: plan.grants,
-                authority: plan.authority,
-                authorityAdded: plan.authorityAdded,
+                ...authorityReview(plan),
             };
         }),
     );
@@ -104,4 +104,29 @@ async function singleTarget(input: Record<string, unknown>, siteId: string, gate
     const [target] = targets([input.selection], siteId);
     const current = (await gateway.selections.get(siteId))?.plan.selections ?? [];
     return [...current.filter(({ contractId }) => contractId !== target!.contractId), target!];
+}
+
+/** Human-readable labels belong to the HTTP projection, not persisted authority records. */
+function authorityReview(plan: Pick<ContractUpgradePlan, "authority" | "authorityAdded">) {
+    const label = (index: number) => {
+        const capability = plan.authority.capabilities[index];
+        if (!capability) {
+            throw new Error("Invalid authority capability reference");
+        }
+        return `${capability.selection.installationId} · ${capability.contractId}@${capability.version} · ${capability.capabilityId}`;
+    };
+    const pairs = (entries: ContractUpgradePlan["authorityAdded"]) =>
+        entries.map((entry) => ({
+            ...entry,
+            sourceLabel: label(entry.source),
+            targetLabel: label(entry.target),
+        }));
+    return {
+        authority: {
+            ...plan.authority,
+            machine: plan.authority.machine.map((entry) => ({ ...entry, targetLabel: label(entry.target) })),
+            delegated: pairs(plan.authority.delegated),
+        },
+        authorityAdded: pairs(plan.authorityAdded),
+    };
 }

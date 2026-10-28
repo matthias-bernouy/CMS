@@ -282,86 +282,16 @@
                                     "maxLength": 128
                                 },
                                 "target": {
-                                    "type": "object",
-                                    "properties": {
-                                        "selection": {
-                                            "type": "object",
-                                            "properties": {
-                                                "siteId": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "contractId": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "version": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "digest": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "installationId": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                }
-                                            },
-                                            "required": ["siteId", "contractId", "version", "digest", "installationId"]
-                                        },
-                                        "contractId": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "version": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "digest": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "capabilityId": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "effect": {
-                                            "type": "string",
-                                            "enum": ["query", "command"],
-                                            "maxLength": 7
-                                        },
-                                        "sensitive": {
-                                            "type": "boolean"
-                                        },
-                                        "access": {
-                                            "type": "string",
-                                            "enum": ["public", "authenticated", "admin"],
-                                            "maxLength": 13
-                                        }
-                                    },
-                                    "required": [
-                                        "selection",
-                                        "contractId",
-                                        "version",
-                                        "digest",
-                                        "capabilityId",
-                                        "effect",
-                                        "sensitive",
-                                        "access"
-                                    ]
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 3071
+                                },
+                                "targetLabel": {
+                                    "type": "string",
+                                    "maxLength": 512
                                 }
                             },
-                            "required": ["installationId", "target"]
+                            "required": ["installationId", "target", "targetLabel"]
                         },
                         "maxItems": 1024
                     },
@@ -371,256 +301,32 @@
                             "type": "object",
                             "properties": {
                                 "source": {
-                                    "type": "object",
-                                    "properties": {
-                                        "selection": {
-                                            "type": "object",
-                                            "properties": {
-                                                "siteId": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "contractId": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "version": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "digest": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "installationId": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                }
-                                            },
-                                            "required": ["siteId", "contractId", "version", "digest", "installationId"]
-                                        },
-                                        "contractId": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "version": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "digest": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "capabilityId": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "effect": {
-                                            "type": "string",
-                                            "enum": ["query", "command"],
-                                            "maxLength": 7
-                                        },
-                                        "sensitive": {
-                                            "type": "boolean"
-                                        },
-                                        "access": {
-                                            "type": "string",
-                                            "enum": ["public", "authenticated", "admin"],
-                                            "maxLength": 13
-                                        }
-                                    },
-                                    "required": [
-                                        "selection",
-                                        "contractId",
-                                        "version",
-                                        "digest",
-                                        "capabilityId",
-                                        "effect",
-                                        "sensitive",
-                                        "access"
-                                    ]
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 3071
                                 },
                                 "target": {
-                                    "type": "object",
-                                    "properties": {
-                                        "selection": {
-                                            "type": "object",
-                                            "properties": {
-                                                "siteId": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "contractId": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "version": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "digest": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                },
-                                                "installationId": {
-                                                    "type": "string",
-                                                    "minLength": 1,
-                                                    "maxLength": 128
-                                                }
-                                            },
-                                            "required": ["siteId", "contractId", "version", "digest", "installationId"]
-                                        },
-                                        "contractId": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "version": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "digest": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "capabilityId": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "effect": {
-                                            "type": "string",
-                                            "enum": ["query", "command"],
-                                            "maxLength": 7
-                                        },
-                                        "sensitive": {
-                                            "type": "boolean"
-                                        },
-                                        "access": {
-                                            "type": "string",
-                                            "enum": ["public", "authenticated", "admin"],
-                                            "maxLength": 13
-                                        }
-                                    },
-                                    "required": [
-                                        "selection",
-                                        "contractId",
-                                        "version",
-                                        "digest",
-                                        "capabilityId",
-                                        "effect",
-                                        "sensitive",
-                                        "access"
-                                    ]
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 3071
+                                },
+                                "sourceLabel": {
+                                    "type": "string",
+                                    "maxLength": 512
+                                },
+                                "targetLabel": {
+                                    "type": "string",
+                                    "maxLength": 512
                                 }
                             },
-                            "required": ["source", "target"]
+                            "required": ["source", "target", "sourceLabel", "targetLabel"]
                         },
                         "maxItems": 1024
-                    }
-                },
-                "required": ["providers", "machine", "delegated"]
-            },
-            "authorityAdded": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "source": {
-                            "type": "object",
-                            "properties": {
-                                "selection": {
-                                    "type": "object",
-                                    "properties": {
-                                        "siteId": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "contractId": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "version": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "digest": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        },
-                                        "installationId": {
-                                            "type": "string",
-                                            "minLength": 1,
-                                            "maxLength": 128
-                                        }
-                                    },
-                                    "required": ["siteId", "contractId", "version", "digest", "installationId"]
-                                },
-                                "contractId": {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 128
-                                },
-                                "version": {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 128
-                                },
-                                "digest": {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 128
-                                },
-                                "capabilityId": {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 128
-                                },
-                                "effect": {
-                                    "type": "string",
-                                    "enum": ["query", "command"],
-                                    "maxLength": 7
-                                },
-                                "sensitive": {
-                                    "type": "boolean"
-                                },
-                                "access": {
-                                    "type": "string",
-                                    "enum": ["public", "authenticated", "admin"],
-                                    "maxLength": 13
-                                }
-                            },
-                            "required": [
-                                "selection",
-                                "contractId",
-                                "version",
-                                "digest",
-                                "capabilityId",
-                                "effect",
-                                "sensitive",
-                                "access"
-                            ]
-                        },
-                        "target": {
+                    },
+                    "capabilities": {
+                        "type": "array",
+                        "maxItems": 3072,
+                        "items": {
                             "type": "object",
                             "properties": {
                                 "selection": {
@@ -699,8 +405,35 @@
                                 "access"
                             ]
                         }
+                    }
+                },
+                "required": ["providers", "capabilities", "machine", "delegated"]
+            },
+            "authorityAdded": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "source": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3071
+                        },
+                        "target": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3071
+                        },
+                        "sourceLabel": {
+                            "type": "string",
+                            "maxLength": 512
+                        },
+                        "targetLabel": {
+                            "type": "string",
+                            "maxLength": 512
+                        }
                     },
-                    "required": ["source", "target"]
+                    "required": ["source", "target", "sourceLabel", "targetLabel"]
                 },
                 "maxItems": 1024
             }
