@@ -7,10 +7,19 @@ type Document = { _id: string; revision: number; siteId: string };
 
 class Collection {
     readonly documents = new Map<string, Document>();
+    readonly projections: (Record<string, number> | undefined)[] = [];
 
-    async findOne(filter: { _id: string }): Promise<Document | null> {
+    async findOne(
+        filter: { _id: string },
+        options?: { projection?: Record<string, number> },
+    ): Promise<Document | null> {
+        this.projections.push(options?.projection);
         const value = this.documents.get(filter._id);
-        return value ? structuredClone(value) : null;
+        return value
+            ? options?.projection
+                ? ({ revision: value.revision } as Document)
+                : structuredClone(value)
+            : null;
     }
 
     async insertOne(value: Document): Promise<void> {
@@ -41,11 +50,13 @@ test("Mongo selections survive adapter recreation and reject stale revisions", a
     const recreated = new MongoContractSelectionStore(db, dependencies);
     expect(await recreated.get(siteId)).toEqual(stored);
     expect((await recreated.get(siteId))?.plan.selections).toEqual([payment]);
+    expect(collection.projections.at(-1)).toEqual({ revision: 1 });
     await expect(recreated.replace(siteId, [await graph.select("commerce")], 1)).rejects.toMatchObject({
         code: "missing_dependency",
     });
     const cleared = await first.replace(siteId, [], 1);
     expect(cleared.revision).toBe(2);
+    expect((await recreated.get(siteId))?.plan.selections).toEqual([]);
     await expect(recreated.replace(siteId, [], 1)).rejects.toMatchObject({ code: "revision_conflict" });
     expect(await first.get(siteId)).toEqual(cleared);
 });

@@ -16,6 +16,7 @@ type Document = {
 class Collection {
     readonly documents = new Map<string, Document>();
     readonly projections: Record<string, number>[] = [];
+    readonly pointProjections: (Record<string, number> | undefined)[] = [];
 
     async createIndex(): Promise<string> {
         return "siteId_1__id_1";
@@ -25,9 +26,16 @@ class Collection {
         this.documents.set(value._id, structuredClone(value));
     }
 
-    async findOne(filter: { _id: string; siteId: string }): Promise<Document | null> {
+    async findOne(
+        filter: { _id: string; siteId: string },
+        options?: { projection?: Record<string, number> },
+    ): Promise<Document | null> {
+        this.pointProjections.push(options?.projection);
         const value = this.documents.get(filter._id);
-        return value?.siteId === filter.siteId ? structuredClone(value) : null;
+        if (value?.siteId !== filter.siteId) {
+            return null;
+        }
+        return options?.projection ? ({ revision: value.revision } as Document) : structuredClone(value);
     }
 
     find(filter: { siteId: string }, options?: { projection?: Record<string, number> }) {
@@ -113,6 +121,8 @@ test("Mongo installation state survives adapter recreation and fences stale writ
     expect(collection.documents.get(fixture.scope.installationId)?.selectionDigest).toMatch(/^sha256:[0-9a-f]{64}$/);
     const recreated = new MongoProviderInstallationStore(db, fixture.catalogue, fixture.clock);
     expect((await recreated.get(fixture.scope))?.installation).toEqual(approved.installation);
+    expect((await recreated.get(fixture.scope))?.installation).toEqual(approved.installation);
+    expect(collection.pointProjections.at(-1)).toEqual({ revision: 1 });
     expect(await recreated.get({ ...fixture.scope, siteId: "another-site" })).toBeNull();
     const observed = await first.recordObservation(fixture.scope, 1, fixture.report);
     expect(observed.revision).toBe(2);
@@ -123,6 +133,7 @@ test("Mongo installation state survives adapter recreation and fences stale writ
     expect(collection.documents.get(fixture.scope.installationId)?.selectionDigest).toMatch(/^sha256:[0-9a-f]{64}$/);
     const disabled = await first.setStatus(fixture.scope, 2, "disabled");
     expect(disabled.revision).toBe(3);
+    expect((await recreated.get(fixture.scope))?.installation.status).toBe("disabled");
     expect(await first.revision(fixture.scope.siteId)).not.toBe(approvedRevision);
     expect(await first.selectionRevision(fixture.scope.siteId)).not.toBe(approvedSelectionRevision);
     await expect(recreated.setStatus(fixture.scope, 1, "revoked")).rejects.toMatchObject({

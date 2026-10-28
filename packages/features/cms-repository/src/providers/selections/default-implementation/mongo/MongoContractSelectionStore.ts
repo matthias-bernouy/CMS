@@ -1,3 +1,4 @@
+import { RevisionedRecordReader } from "cms-repository/providers/persistence/mongo/RevisionedRecordReader";
 import { parseCapabilityGrants } from "../../core/grants";
 import type { CapabilityGrantPolicy } from "../../interfaces/ContractSelectionStore";
 import type { Db } from "mongodb";
@@ -19,6 +20,7 @@ interface SelectionDocument extends StoredContractSelections {
 
 /** Persisted site selections with full-graph validation and revision CAS. */
 export class MongoContractSelectionStore implements ContractSelectionStore {
+    readonly #reads = new RevisionedRecordReader<StoredContractSelections>();
     readonly #collection;
     readonly #limits: Readonly<ContractSelectionLimits>;
 
@@ -33,8 +35,12 @@ export class MongoContractSelectionStore implements ContractSelectionStore {
 
     async get(siteId: string): Promise<StoredContractSelections | null> {
         const site = parseSelectionSiteId(siteId);
-        const document = await this.#collection.findOne({ _id: site });
-        return document ? readSelectionDocument(document, site, this.#limits) : null;
+        return this.#reads.get(
+            site,
+            (revisionOnly) =>
+                this.#collection.findOne({ _id: site }, revisionOnly ? { projection: { revision: 1 } } : {}),
+            (document) => readSelectionDocument(document, site, this.#limits),
+        );
     }
 
     async replace(

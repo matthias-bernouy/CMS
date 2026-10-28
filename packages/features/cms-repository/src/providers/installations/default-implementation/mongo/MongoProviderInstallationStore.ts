@@ -1,3 +1,4 @@
+import { RevisionedRecordReader } from "cms-repository/providers/persistence/mongo/RevisionedRecordReader";
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
@@ -29,6 +30,7 @@ import { mongoInstallationSelectionRevision } from "./selectionMetadata";
 
 /** Durable site-scoped installation state. Mongo's revision predicate fences concurrent writers. */
 export class MongoProviderInstallationStore implements ProviderInstallationStore {
+    readonly #reads = new RevisionedRecordReader<StoredProviderInstallation>();
     readonly #collection;
     readonly #options;
 
@@ -61,11 +63,15 @@ export class MongoProviderInstallationStore implements ProviderInstallationStore
     }
 
     async get(scope: ProviderInstallationScope): Promise<StoredProviderInstallation | null> {
-        const document = await this.#collection.findOne({
+        const filter = {
             _id: parseOpaqueId(scope.installationId, "$.installationId"),
             siteId: parseOpaqueId(scope.siteId, "$.siteId"),
-        });
-        return document ? readInstallationDocument(document, this.#options.limits) : null;
+        };
+        return this.#reads.get(
+            `${filter.siteId}\0${filter._id}`,
+            (revisionOnly) => this.#collection.findOne(filter, revisionOnly ? { projection: { revision: 1 } } : {}),
+            (document) => readInstallationDocument(document, this.#options.limits),
+        );
     }
 
     async list(siteId: string): Promise<readonly StoredProviderInstallation[]> {
