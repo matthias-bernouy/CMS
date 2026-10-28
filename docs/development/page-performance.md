@@ -48,6 +48,44 @@ different instance stores cannot share data. Failed reads are not retained.
 Final signing fences, native receiver checks and new operations read current
 state independently. Secret values never enter this context.
 
+Each instance-bound route resolver also retains bounded, verified immutable
+contract lineages and manifests by exact digest. Every operation still reads the
+current selection and installation; changing either pin loads the new artifact.
+Execution pins exclude mutable catalogue yank/deprecation status. Catalogue and
+`capabilities.describe` reads continue to observe that metadata directly. A yank
+withdraws discovery and does not revoke an approved installation.
+
+Collection theme composition is cached by the freshly read installation revision
+and exact current site theme inputs. The cache owns one bounded projection per
+repository and returns independent copies. Page, settings and installation reads
+remain live. Resource role inspection runs once at the final signing fence,
+after credential resolution; no actor decision is retained across invocations.
+
+Mongo selection and installation adapters retain bounded decoded records, gated
+by a fresh, instance-scoped revision read on every `get`. Store mutations use CAS
+and always increment the revision, including grants, credentials and observations.
+A changed revision reloads and validates the full record; missing records and
+failed revision reads cannot serve a cached decision. No TTL permits execution
+without consulting the database. The cache belongs to one adapter/database.
+
+Content rendering reuses the settings returned by its final route check rather
+than issuing a third settings read. The two ordered route/settings reads still
+detect path replacement and language migration. Docker also warms a basic Page,
+then unpublishes it and checks that anonymous delivery immediately hides it.
+
+Pinned HTTP connections use bounded keep-alive agents keyed by the dialled IP,
+port and explicit Host authority (plus TLS settings for HTTPS). Each exchange
+still resolves and validates DNS and obtains fresh invocation authority before
+using a socket. Connections retain no actor or credential decision; the current
+request supplies its own headers. DNS refusal never falls back to an idle socket.
+
+Delegation ticket creation initializes its bounded bucket, prunes expired entries
+and conditionally appends a ticket in one atomic Mongo update pipeline. Its
+preimage determines admission, so concurrent capacity checks and duplicate-ticket
+refusal keep their existing semantics. Authored record values are Mongo literals,
+not aggregation expressions. The Docker journey exercises concurrent capacity,
+child budgets, closure, expiration cleanup and literal preservation.
+
 Named secret resolution checks metadata-read and resolve permissions together,
 then reads one metadata record and one encrypted value. It verifies namespace
 and name before reading the value and performs no value or credential caching.
