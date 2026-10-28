@@ -119,14 +119,13 @@ export function createInvocationIssuer(
                     subjectId,
                 );
                 resourceSubject = cmsSubject;
-                actorKind = cmsSubject ? ((await inspectActor?.(cmsSubject)) ?? undefined) : undefined;
-                if (!actorKind) {
+                if (!cmsSubject) {
                     throw Object.assign(new Error("Resource actor is unavailable"), { status: 403 });
                 }
             } else {
                 actorKind = "anonymous";
             }
-            if (input.actorKind !== actorKind) {
+            if (!resourceSubject && input.actorKind !== actorKind) {
                 throw Object.assign(new Error("Resource actor changed before dispatch"), { status: 403 });
             }
         } else if (input.actorKind) {
@@ -153,8 +152,13 @@ export function createInvocationIssuer(
                 });
             }
         }
-        if (resourceSubject && (await inspectActor?.(resourceSubject)) !== actorKind) {
-            throw Object.assign(new Error("Resource actor changed at dispatch fence"), { status: 403 });
+        if (resourceSubject) {
+            // Inspect once at the final fence, after credentials and source authority were resolved.
+            // An earlier role lookup would be speculative and must be repeated here anyway.
+            actorKind = (await inspectActor?.(resourceSubject)) ?? undefined;
+            if (!actorKind || input.actorKind !== actorKind) {
+                throw Object.assign(new Error("Resource actor changed at dispatch fence"), { status: 403 });
+            }
         }
         const dispatchSelection = await selections.get(siteId);
         if (

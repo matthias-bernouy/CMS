@@ -7,6 +7,7 @@ async function fixture() {
     route.installation.observation!.observedAt = new Date().toISOString();
     let kind: "user" | "administrator" | null = "administrator";
     let beforeSecret = () => {};
+    let inspections = 0;
     const secret = "resource-secret-" + "s".repeat(32);
     const issue = createInvocationIssuer(
         "site-a",
@@ -22,7 +23,10 @@ async function fixture() {
             getOrCreate: async () => "provider-alias",
             resolve: async (_scope, alias) => (alias === "provider-alias" ? "cms-global-subject" : null),
         },
-        async () => kind,
+        async () => {
+            inspections++;
+            return kind;
+        },
     );
     const input = {
         requestId: crypto.randomUUID(),
@@ -33,6 +37,7 @@ async function fixture() {
     };
     return {
         issue,
+        inspections: () => inspections,
         secret,
         input,
         setKind: (value: typeof kind) => {
@@ -47,6 +52,7 @@ test("resource identity is a verified Provider alias and never a CMS subject", a
     const f = await fixture();
     const { token } = await f.issue({ ...f.input, subjectId: "provider-alias", actorKind: "administrator" });
     const claims = verifyProviderInvocationToken(token, f.secret);
+    expect(f.inspections()).toBe(1);
     expect(claims).toMatchObject({ subjectId: "provider-alias", actorKind: "administrator" });
     expect(JSON.stringify(claims)).not.toContain("cms-global-subject");
     await expect(
