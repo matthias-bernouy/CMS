@@ -247,7 +247,6 @@ export class ProviderInstanceHost {
                     collectionAuthoring,
                     emailer: stores.emailer,
                     secrets: stores.cmsSecrets,
-                    resolvePageRoute: (path: string) => stores.pageRoutes.resolve(gateway.siteId, path),
                     sitemapStore: stores.sitemapStore,
                     logger: instanceLogger.child({ component: "content-delivery" }),
                     mcpAuthorization: new McpAuthorization(

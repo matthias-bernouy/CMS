@@ -3,12 +3,12 @@ import type { OfficialInstanceProfile, ProviderInstanceRecord } from "@bernouy/u
 import type { ProviderRuntimeEnv } from "../src/runtimeEnv";
 import type { InstanceComposition } from "../src/runtime/instances/composition/ProviderInstanceHost";
 import { createInstanceProvisioningTarget } from "../src/runtime/instances/instanceProvisioning";
-import { installOfficialCollection } from "../src/runtime/instances/instanceInitialization";
 
 const OFFICIAL_INSTANCE_PROFILE: OfficialInstanceProfile = Object.freeze({
     id: "ulvia.official",
     version: "1.0.0",
     upgradeFromVersions: Object.freeze([]),
+    initialPages: [],
     manifest: Object.freeze({ providerId: "ulvia.official", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` }),
     contracts: Object.freeze([
         Object.freeze({ contractId: "ulvia.cms.content", version: "1.0.0", digest: `sha256:${"b".repeat(64)}` }),
@@ -111,41 +111,6 @@ test("official administrator provisioning writes the shared authority model", as
     expect(granted).toEqual({ sub: "local:administrator", enabled: true });
 });
 
-describe("official administration collection provisioning", () => {
-    test("selects the contributed login Page even when the exact release is already installed", async () => {
-        let selected: unknown;
-        const composition = collectionComposition(null, (patch) => {
-            selected = patch;
-        });
-
-        await installOfficialCollection(
-            composition,
-            collectionSource() as never,
-            OFFICIAL_INSTANCE_PROFILE,
-            execution(),
-        );
-
-        expect(selected).toEqual({ site: { login: officialLoginReference() } });
-    });
-
-    test("preserves an explicitly selected login Page", async () => {
-        const custom = { kind: "site", pageId: "custom-login" } as const;
-        let writes = 0;
-        const composition = collectionComposition(custom, () => {
-            writes += 1;
-        });
-
-        await installOfficialCollection(
-            composition,
-            collectionSource() as never,
-            OFFICIAL_INSTANCE_PROFILE,
-            execution(),
-        );
-
-        expect(writes).toBe(0);
-    });
-});
-
 function connectionTarget(management: Record<string, unknown>) {
     const instance = {
         id: "instance:official",
@@ -172,61 +137,6 @@ function connectionTarget(management: Record<string, unknown>) {
         providerSource: {} as never,
         collectionSource: {} as never,
     });
-}
-
-function collectionComposition(login: unknown, update: (patch: unknown) => void): InstanceComposition {
-    return {
-        stores: {
-            collections: {
-                importRelease: async () => ({
-                    digest: OFFICIAL_INSTANCE_PROFILE.collection.digest,
-                    release: { pages: [{ id: "login" }] },
-                }),
-                snapshot: async () => ({
-                    revision: 2,
-                    collections: [
-                        {
-                            collectionId: OFFICIAL_INSTANCE_PROFILE.collection.collectionId,
-                            digest: OFFICIAL_INSTANCE_PROFILE.collection.digest,
-                        },
-                    ],
-                }),
-            },
-            repo: {
-                getSystemRevision: async () => 4,
-                getSystem: async () => ({ site: { login } }),
-                updateSystem: async (patch: unknown) => {
-                    update(patch);
-                    return {};
-                },
-            },
-        },
-    } as unknown as InstanceComposition;
-}
-
-function collectionSource() {
-    const entry = {
-        ...OFFICIAL_INSTANCE_PROFILE.collection,
-        repositoryId: "official",
-        name: "Ulvia Official",
-        description: "Official collection",
-        blocCount: 1,
-        hasTheme: true,
-    };
-    return {
-        id: "official",
-        list: async () => [entry],
-        get: async () => ({ release: {}, assets: [] }),
-    };
-}
-
-function officialLoginReference() {
-    return {
-        kind: "contribution",
-        sourceId: OFFICIAL_INSTANCE_PROFILE.collection.publisherId,
-        contributionId: OFFICIAL_INSTANCE_PROFILE.collection.collectionId,
-        pageId: "login",
-    };
 }
 
 function installation(observedAt: string | null) {

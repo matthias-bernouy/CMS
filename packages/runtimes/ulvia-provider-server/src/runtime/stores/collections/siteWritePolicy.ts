@@ -20,7 +20,7 @@ export const CMS_REPOSITORY_FENCED_MUTATIONS = [
 ] as const satisfies readonly (keyof ContentRepository)[];
 
 const CMS_REPOSITORY_NON_MUTATIONS = [
-    "getContentContributions",
+    "getTextContributions",
     "getPageRequirements",
     "getSiteBlocGroups",
     "getBlocRecord",

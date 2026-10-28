@@ -1,3 +1,4 @@
+import { initialPages } from "./initialPages";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
 import {
@@ -128,6 +129,7 @@ async function loadOfficialProfile(
         );
     }
     const profile: OfficialInstanceProfile = Object.freeze({
+        initialPages,
         id: definition.id,
         version: definition.version,
         upgradeFromVersions: definition.upgradeFromVersions,

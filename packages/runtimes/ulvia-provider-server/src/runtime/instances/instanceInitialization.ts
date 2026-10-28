@@ -1,5 +1,5 @@
 import { createLocalUser } from "@bernouy/cms-auth/management";
-import { readSystemSnapshot, type PageReference } from "@bernouy/cms-content";
+import { seedOfficialPages } from "./profiles/seedPages";
 import type { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import type {
     OfficialInstanceProfile,
@@ -38,9 +38,6 @@ export async function installOfficialCollection(
     const snapshot = await composition.stores.collections.snapshot(SITE_ID);
     execution.throwIfLeaseLost();
     const installed = snapshot.collections.find(({ collectionId }) => collectionId === entry.collectionId);
-    if (!imported.release.pages?.some(({ id }) => id === "login")) {
-        throw new Error("Official administration collection does not provide its login Page");
-    }
     if (installed?.digest !== imported.digest) {
         if (installed) {
             const targets = [{ digest: imported.digest, repositoryId: source.id }];
@@ -51,23 +48,7 @@ export async function installOfficialCollection(
         }
         execution.throwIfLeaseLost();
     }
-    await initializeOfficialLoginPage(composition, entry.publisherId, entry.collectionId, execution);
-}
-
-async function initializeOfficialLoginPage(
-    composition: InstanceComposition,
-    sourceId: string,
-    contributionId: string,
-    execution: ProviderInstanceTransitionExecution,
-): Promise<void> {
-    const reference: PageReference = { kind: "contribution", sourceId, contributionId, pageId: "login" };
-    const { revision, system } = await readSystemSnapshot(composition.stores.repo);
-    execution.throwIfLeaseLost();
-    if (system.site.login !== null) {
-        return;
-    }
-    await composition.stores.repo.updateSystem({ site: { login: reference } as never }, revision);
-    execution.throwIfLeaseLost();
+    await seedOfficialPages(composition, profile, execution);
 }
 
 export async function initializeOfficialAdministrator(
