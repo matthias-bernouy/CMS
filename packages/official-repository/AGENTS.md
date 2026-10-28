@@ -27,7 +27,7 @@
   never make administration Pages display raw text IDs as their primary
   catalogue labels.
 - Keep user-facing copy out of fixed `markup.html` and
-  Page `page.html`. Visible text and accessible labels must be a business-data
+  example `document.html`. Visible text and accessible labels must be a business-data
   binding or an exact `cms.i18n.<collection>.<text>` reference; author reusable
   values in the recursive collection text trees.
 - Keep admitted collection exports explicit. Authored sources may use the CLI's
@@ -41,8 +41,12 @@
   bounded default slot with `kind: "native-element"`; there is no separate
   `content` contract. All structure is Light DOM; Shadow DOM is forbidden.
 
-- Author collection v1 initial instances under `examples/**/` with
+- Author collection v1 example documents under `examples/**/` with
   `definition.json` and `document.html`. Replace `default.html` with an explicit
   `defaultExample` reference. Use existing translations and content text IDs
   for reusable official example copy. Frame dimensions are authored data;
   generated captures stay outside immutable source releases.
+
+- Collections never declare Pages or reserve paths. Runtime profiles may copy examples into ordinary Content Pages once; site routes and Page SEO belong to Content.
+
+- Examples reuse collection text references. Do not author per-example `texts` overrides or preview `locale`/`themeMode`; only frame dimensions belong to preview definitions.

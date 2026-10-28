@@ -49,10 +49,9 @@ bindings, validation, and read models.
 - Effective Bloc grouping, Bloc asset manifests and generic Page asset
   resolution belong to the Bloc domain because they are derived from content,
   not from an HTTP surface.
-- `pages/` owns the site Page route registry and the single internal Page-link
-  model. Every Page route shares one site namespace.
-  External Page identities use generic contribution coordinates; this package
-  must not know collection, repository-source or provider contracts.
+- `pages/` owns site Page persistence, current/redirect/gone routes and the internal Page-link
+  model. Every Page route shares one site namespace. Pages have no contribution
+  provenance; this package must not know collection or repository contracts.
 - Each domain contains only its needed `interfaces/`, `core/`, `http/` or
   `default-implementation/` layers. Interfaces contain no executable helpers.
 - `application/` owns cross-domain contracts, reader composition, aggregate

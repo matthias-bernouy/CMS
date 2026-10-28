@@ -362,7 +362,7 @@ models and validation for CMS-owned installations and site selections.
 - Collection v1 owns explicit `examples` documents and fixed preview frames.
   Require translated Bloc descriptions and nonempty unique `categories`.
   Listed Blocs choose a single matching-root `defaultExample`; multi-root
-  examples remain demonstrations. Resolve only
-  editable demonstration copy for insertion and never persist example fixtures
-  as site text overrides. Preview rendering stays behind `/collections/build`;
+  examples remain demonstrations. Examples reuse ordinary collection texts;
+  insertion preserves those references. Locale and theme mode belong to rendering
+  options, never authored examples or preview frames. Preview rendering stays behind `/collections/build`;
   browser execution belongs to the CLI and never the Kernel or admission.

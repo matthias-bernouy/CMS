@@ -33,7 +33,7 @@ can instead receive explicit target values during a reviewed major upgrade.
 ## Inventories And Plans
 
 `collectionUsageInventory` lists imports, exports, theme references, Bloc
-contracts, contributed Pages and examples. `siteUsageInventory` adds stored
+contracts and examples. `siteUsageInventory` adds stored
 published/draft Pages, local Blocs, system settings, collection configuration,
 text overrides and explicitly registered internal consumers. References carry
 their location and a `catalogue` or `runtime` scope. Collection examples alone

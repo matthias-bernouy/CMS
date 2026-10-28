@@ -87,7 +87,7 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
 | `@bernouy/cms-repository/collections/build` | Bun-based collection Bloc source validation and browser runtime compilation for authoring tools |
 | `@bernouy/cms-repository/collections/installations` | Revisioned site installations, compatibility analysis, resource digests and atomic migration replacement/restoration |
-| `@bernouy/cms-repository/collections/content` | Projection of installed collection Pages, Blocs, routes and theme sources into Content |
+| `@bernouy/cms-repository/collections/content` | Projection of installed Blocs, text sources and themes into Content |
 | `@bernouy/cms-repository/collections/assets` | Verified collection asset projection and reads |
 | `@bernouy/cms-repository/collections/texts` | Collection text definition, locale and site-override composition |
 | `@bernouy/cms-repository/collections/sources` | Exact remote collection-release sources and dependency fetching |

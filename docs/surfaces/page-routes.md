@@ -98,34 +98,30 @@ Dynamic entity URLs add the separate [indexing projection](page-indexing.md).
 See [workspace architecture](../architecture/README.md) for publication and
 read/write facade boundaries.
 
-## Shared Page routes
+## One Content Page Lifecycle
 
-Editable site Pages and immutable collection Pages use one site-scoped Page
-route registry. A route is unique by `(siteId, path)`, so two sites may use the
-same path but two Pages in the same site cannot.
-Collection Pages contribute a default path and may retain a site override;
-editable Pages use their own current path. Current paths, collection defaults
-and historical paths are claims in that same namespace. Changing a path keeps
-the previous claim as an alias owned by the same Page; a direct request receives
-a permanent redirect to the current path. Claims are released only when their
-owner is removed. A path swap or reassignment is therefore rejected rather than
-silently changing the destination of existing native links.
+Every Page belongs to Content, including administration and authentication Pages
+copied from examples during provisioning. Collections install rendering resources
+and example documents; they never reserve site routes.
 
-Runtime startup reconciles both route sources as one desired graph from
-canonical Page and collection state. Reconciliation is idempotent after an
-interrupted partial write. The same combined reconciliation runs before and
-after production Page and collection mutations, under one per-site in-process
-coordinator.
+Content owns current, redirect and gone routes, localized paths, publication and
+optimistic revision checks. Native internal links are resolved against these
+routes at rendering time. An example may link to a future site route; collection
+admission does not own or validate a site's route catalogue.
 
-The Kernel mounts collection-owned and site-owned Pages through the same
-document renderer. Authored links remain native `<a href>` paths. Collection
-admission requires every static internal path to name a Page declared by the
-release or an exact imported Page default path. Rendering rewrites that claim
-to its current route, while historical claims remain valid aliases. Editable
-Page writes and runtime activation resolve every target. A Page or collection
-mutation that would orphan an existing reference is rejected.
+Copying or replacing a document does not change its Page path, locale routes, SEO
+or publication state. Use the ordinary Page operations to manage those fields.
+No collection source coordinate or route override is stored on a Page.
 
-Canonical Page/collection state and its derived route projection are still two
-durable writes. Current single-runtime recovery is deterministic, but a future
-multi-runtime deployment must add a shared lease or MongoDB transaction around
-this boundary rather than relying on the process-local coordinator.
+Content validates internal links when saving or publishing a Page. Draft targets
+and historical route aliases are valid; missing or gone targets are rejected.
+Deleting a referenced Page without an alternative returns `PAGE_REFERENCED`.
+A published alternative preserves the incoming routes as redirects. The Content
+validation facade serializes these checks with its Page writes; native adapter
+revision checks still govern persistence.
+
+Official provisioning first reserves ordinary draft Pages, then fills their
+example documents and metadata before publication. Incomplete receipts replay
+that initialization after interruption. Completed receipts never overwrite
+subsequent site edits. These technical Pages start with `indexing.enabled: false`,
+which excludes them from sitemaps and emits `noindex` metadata.

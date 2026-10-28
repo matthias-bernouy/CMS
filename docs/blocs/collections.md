@@ -1,7 +1,7 @@
 # Collections
 
 Collections are immutable, provider-neutral release artifacts. They contribute
-Blocs, Pages, texts, theme entries and assets to a site. The repository admits
+Blocs, examples, texts, theme entries and assets to a site. The repository admits
 and stores releases; installation projects their resources into Content.
 
 ## Authored Layout
@@ -18,8 +18,6 @@ collection/
 │   └── runtime/**/*.ts
 ├── examples/**/<example>/definition.json
 ├── examples/**/<example>/document.html
-├── pages/**/<page>/definition.json
-├── pages/**/<page>/page.html
 ├── texts/definitions/**/*.json
 ├── texts/locales/<locale>/**/*.json
 ├── translations/<locale>/**/*.json
@@ -35,7 +33,7 @@ grouping paths never become identities. Every Bloc uses `markup.html`;
 component or replaced as a server-expanded composition.
 `style.css` and `bloc.ts` are optional where the Bloc kind allows them.
 Listed Blocs require a translated description, nonempty `categories`, examples
-and one `defaultExample`. Examples carry their documents, text fixtures and
+and one `defaultExample`. Examples carry their documents, collection text references and
 fixed viewport preview dimensions. Captures are generated outside source releases. There
 are no `template.html`, `lightdom.html` or `shadowdom.html` sources.
 
@@ -83,8 +81,8 @@ documented in [Deferred Platform Work](../TODO.md).
 
 The CMS injects no default Page wrapper. Every non-empty Page root must be an
 active installed Bloc on a valid native root. Native elements can appear only
-where a Bloc contract owns them. The same grammar validates collection Pages,
-defaults, local Page writes, publication, installation, reviewed release switches.
+where a Bloc contract owns them. The same grammar validates examples,
+defaults, local Page writes, publication, installation and reviewed release switches.
 
 Host attributes are limited to declared settings, admitted native root
 attributes and platform binding/placement attributes. Native descendants use
@@ -96,7 +94,7 @@ texts.
 
 Settings are ordered typed items. They define insertion defaults, finite
 editor controls and the persisted host-attribute schema. A release may export
-exact Blocs, tokens, texts, assets and Pages. Dependencies import only resources
+exact Blocs, tokens, texts, assets and states. Dependencies import only resources
 exported by an exact publisher/collection version constraint. The CLI may
 expand authored `"*"` exports into explicit sorted IDs; imports never accept
 wildcards.
@@ -184,7 +182,7 @@ Incompatible resource contracts require new IDs; upgrades never rewrite Pages.
 ## Admission Limits
 
 The principal current limits are 8 MiB for the canonical collection document,
-512 Blocs, 1,024 assets, 4,096 texts, 256 Pages, 128 dependencies, 64 theme
+512 Blocs, 1,024 assets, 4,096 texts, 128 dependencies, 64 theme
 categories and 4,096 theme entries. One asset is limited to 10 MiB and the
 release asset total to 50 MiB. Slots, settings, requirements and examples have their own bounded counts.
 
@@ -196,3 +194,34 @@ See [Create A Collection Bloc](authoring.md) for the source contract and
 See [Reviewed Release Upgrades](../architecture/release-upgrades.md) for stable
 identities, inventories, explicit target configuration, grants, retention and
 interrupted-switch recovery. Upgrades do not transform site-owned Pages.
+
+## Copying Examples Into Pages
+
+Collections do not declare Pages, paths, localized SEO or publication state.
+An example is a generic document: one Bloc, a composition or a complete document.
+Its translated label and description describe the catalogue entry, not Page SEO.
+`previews[].frame` always defines a viewport; interactive capture actions are not supported.
+
+Administrators browse `ulvia.cms.content/examples.list` for one installed
+collection, with an explicit locale and bounded pagination. `examples.get`
+returns one generic document without a locale or theme parameter. Its normal
+collection text references remain intact. These are read operations, independent
+of Page creation. An editor may explicitly replace references with literal text
+when it wants Page-owned wording.
+
+An editor or AI may reuse this HTML, modify it, or author a document from scratch.
+`pages.create` takes optional `content` HTML; omitting it creates an empty draft.
+`pages.update` takes ordinary HTML and the current Page `expectedRevision`.
+There is no example source field or dedicated copy/import operation.
+
+Stored Pages contain HTML and ordinary resource references, with no example
+coordinate, origin or digest. Editing, replacing, upgrading a collection or
+removing an example never synchronizes the copy. Live Bloc, asset and text
+references still participate in the usual reviewed upgrade checks.
+
+The official profile copies its administration and system examples into ordinary
+published Content Pages during provisioning. Durable provisioning receipts prevent
+reseeding edited, renamed or deleted Pages; receipts are outside Page content.
+There is no collection Page reader, migration or second route registry. Old
+`pages` fields, Page imports/exports and `pages/` source directories are rejected.
+Use fresh instance storage for this incompatible development format change.

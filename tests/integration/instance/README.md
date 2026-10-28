@@ -2,7 +2,7 @@
 
 This suite exercises the real Kernel, Provider and Repository images with MongoDB
 and a Chromium client. It covers MCP OAuth consent, collection publication and
-installation, content and files, Provider approval and pairing, log isolation,
+installation, independent Page creation/replacement from examples, content and files, Provider approval and pairing, log isolation,
 key rotation, persistence and revocation.
 
 The directory contains test harnesses. Image builds remain in

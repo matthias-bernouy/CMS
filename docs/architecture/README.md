@@ -114,7 +114,7 @@ value store remains Foundation infrastructure behind `cms-secrets`.
 
 ## Surface And Runtime Composition
 
-The Kernel mounts every site or contributed Page and feature-owned HTTP handlers
+The Kernel mounts every Content Page and feature-owned HTTP handlers
 on one supplied `Runner`.
 SEO metadata, structured data, dynamic indexing and sitemap materialization are
 owned by `cms-content`. The selected Content implementation produces robots and

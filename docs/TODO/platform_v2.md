@@ -1,7 +1,8 @@
 # Platform V2 Architecture Plan
 
-Status: design TODO. Nothing in this document is an implemented guarantee unless
-the current source explicitly says otherwise. This plan intentionally rejects
+Status: the first Content-only Page phase is implemented. Collections expose generic
+examples; Page commands accept ordinary HTML and store no provenance. The Edge,
+SSR and delegation changes below remain design TODOs unless current source says otherwise. This plan intentionally rejects
 backward compatibility with existing artifact formats, profiles, instances and
 persistence.
 
@@ -314,26 +315,17 @@ editor.examples.list
 editor.examples.get
 ```
 
-Page creation may use an example as one possible initial document source:
+Page creation and update accept ordinary HTML. The editor or AI can read a
+generic example document, edit it and pass its HTML to `pages.create` or
+`pages.update`. An example is never required; an empty draft or an independently
+authored document uses the same operations.
 
-```ts
-type PageInitialContent =
-    | { kind: "empty" }
-    | { kind: "html"; html: string }
-    | { kind: "example"; collectionId: string; exampleId: string };
-```
+There is no `PageInitialContent` union, example reference in a Page write,
+special copy/import command or stored provenance. The implemented reads are
+`ulvia.cms.content/examples.list` and `examples.get`.
 
-`pages.create` resolves and materializes the source atomically, validates the
-result against installed resources, then stores an ordinary site-owned Page.
-Inserting an example into an existing Page remains an editor operation followed
-by `pages.update`.
-
-Examples never contain a Page path, title, visibility, indexing policy or system
-role. Those values come from the Page command or an instance profile seed.
-
-Store informational origin on a Page created from an example: collection ID,
-exact version and digest, and example ID. Origin is not live inheritance and
-never authorizes an automatic rewrite.
+Examples never contain Page paths, SEO titles, visibility, indexing policy or
+system roles. Those values come from ordinary Content commands or provisioning.
 
 ## 9. Remove Live Pages From Collections
 
@@ -363,12 +355,12 @@ After collection Pages disappear, remove contributed Page references if no
 other real producer remains. Keep only site-owned Page identities, routes,
 redirects and gone routes.
 
-Replace Page contribution provenance with optional template/example origin.
+Remove Page contribution provenance without adding template/example origin.
 Separate remaining text and theme contributions from the Page model. Rename or
 split `getContentContributions` once it no longer returns Pages.
 
-This avoids retaining a second live Page category merely to remember where a
-site-owned copy originated.
+The Page does not retain where its initial HTML came from. `getTextContributions`
+now returns only installed text sources and their revision.
 
 ## 11. Make Content The Public Path Resolver
 
@@ -496,31 +488,15 @@ to generic `examples/**`. They remain ordinary example documents with no route.
 
 The official profile owns explicit Page seeds:
 
-```json
-{
-    "contentSeeds": [
-        {
-            "path": "/admin",
-            "title": "Administration",
-            "initial": {
-                "kind": "example",
-                "collectionId": "ulvia-official",
-                "exampleId": "admin-overview"
-            }
-        },
-        {
-            "path": "/login",
-            "title": "Sign in",
-            "systemRole": "login",
-            "initial": {
-                "kind": "example",
-                "collectionId": "ulvia-official",
-                "exampleId": "login"
-            }
-        }
-    ]
-}
-```
+The implemented profile has `initialPages` entries with stable seed IDs,
+ordinary Page paths, translated initial titles/descriptions and an example ID
+from its exact pinned collection. This is provisioning configuration, not a
+source schema accepted by `pages.create`.
+
+Provisioning materializes the document and invokes the ordinary Content service.
+Pending receipts support crash recovery; completed receipts retain only the
+seed marker. The Page stores no link to its seed or example. Later profile and
+collection changes never reapply a completed seed.
 
 Provisioning order becomes:
 
@@ -580,7 +556,7 @@ verifiable between steps:
    selectors.
 7. Add opaque delegation tickets and their control-authority operations.
 8. Update the Provider client SDK.
-9. Add generic example discovery and Page initial-source resolution.
+9. Add generic example discovery; editors submit ordinary HTML to Content.
 10. Add the streamed Gateway resource result.
 11. Implement `Content.resolvePath()` and the V2 Content delivery contract.
 12. Move Page rendering and query-only SSR behind Content.
@@ -594,8 +570,8 @@ verifiable between steps:
 20. Delete V1 persistence, fixtures, docs and generated bootstrap output.
 21. Rebuild every official release, digest, manifest and profile.
 
-Do not delete collection Pages before Page creation from an example reference
-and profile seeding work. The external cut remains immediate, but this order
+Remove collection Pages together with ordinary HTML Page creation and profile
+seeding. The external cut remains immediate, but this order
 prevents a long unverifiable implementation branch.
 
 ## Validation Matrix
@@ -635,8 +611,8 @@ business request.
 ### Examples and Pages
 
 - Examples have no route and can remain single-Bloc or multi-root documents.
-- `pages.create` can start empty, from HTML or from an example reference.
-- The resulting Page is site-owned and retains only informational origin.
+- `pages.create` accepts empty or ordinary HTML content; examples are separate reads.
+- The resulting Page is site-owned and retains no origin.
 - Collection installation and removal never mutate Page routes.
 - Collection upgrades never rewrite Pages created from examples.
 - Removing a still-used Bloc remains blocked by usage analysis.
@@ -677,7 +653,7 @@ inspect the complete trace in Observability
 - Treat every example as a Page template: examples have broader uses and no Page
   identity.
 - Add `pages.import-example`: it incorrectly places examples inside the Page
-  domain. `pages.create` merely accepts an example as one initial source.
+  domain. Editors read a generic document and submit ordinary HTML to Content.
 - Keep separate public robots, sitemap, manifest, asset and Page capabilities:
   Edge would retain knowledge of Content's internal URL namespace.
 - Let Providers pass a subject ID: it makes them identity authorities.

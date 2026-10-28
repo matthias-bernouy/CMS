@@ -192,8 +192,8 @@ An empty Page is empty. Every non-empty Page root must carry `cms-bloc` and
 reference an active installed Bloc. Native children are admitted only through
 that Bloc's default or named-slot contract. Slot acceptance, cardinality,
 native attributes, accessibility, bindings, links and transitive Bloc
-references are checked for collection Pages, defaults, Page writes,
-publication and migrations.
+references are checked for examples, defaults, Page writes,
+publication and reviewed upgrades.
 
 `any-component` accepts retained Blocs, not compositions. Bounded native text
 uses `plain-text` or `native-content` with the `inline` or `prose` profile.

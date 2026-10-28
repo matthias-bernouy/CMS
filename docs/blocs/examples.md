@@ -49,14 +49,6 @@ Example `definition.json`:
     "id": "contact-action",
     "label": "example.contact.label",
     "description": "example.contact.description",
-    "texts": {
-        "my-collection": {
-            "action-label": {
-                "en": "Contact us",
-                "fr": "Contactez-nous"
-            }
-        }
-    },
     "previews": [
         {
             "id": "desktop",
@@ -64,9 +56,7 @@ Example `definition.json`:
         },
         {
             "id": "mobile",
-            "frame": { "width": 390, "height": 640 },
-            "locale": "fr",
-            "themeMode": "dark"
+            "frame": { "width": 390, "height": 640 }
         }
     ]
 }
@@ -83,8 +73,9 @@ The `document.html` uses the existing Page grammar:
 Settings live on their corresponding elements; omitted settings use their
 contract defaults. Editable example copy may also be literal Page content.
 Labels and descriptions always reference administration translations.
-Text fixtures may override only local or explicitly imported text IDs. They
-are not collection configuration or site-wide text writes.
+Examples reference ordinary local or explicitly imported collection texts.
+An optional “Examples” category organizes those texts without changing their
+behavior. Per-example `texts` overrides are unsupported.
 
 ## Single Bloc and assembled examples
 
@@ -97,18 +88,19 @@ one root annotated with that Bloc's ID. That root may contain any valid slot
 children. A multi-root example cannot be the default insertion for one Bloc.
 Examples do not introduce new reusable `kind: "composition"` definitions.
 
-The editor copies the default example's full root and settings. Editable
-translation markers are materialized into escaped Page-owned text using the
-collection's locale. Fixed implementation copy remains collection-owned.
-Demonstration overrides are never persisted into the site's text catalogue.
+The editor can reuse the default example's full root and settings. Shared text
+references stay in the HTML and resolve through the normal collection text
+renderer. An editor may explicitly replace a reference with literal wording
+when it wants Page-owned content. There is no automatic conversion based on
+a text category.
 Updating an example does not rewrite already inserted Page content.
 
 ## Previews and exploration
 
 Every example requires one to sixteen preview profiles. Each profile has a
 unique ID and mandatory integer `frame.width` and `frame.height` between 1 and
-4096 CSS pixels. Locale defaults to the collection locale; mode defaults to
-`light`. The viewport controls actual responsive layout. Captures use exactly
+4096 CSS pixels. Authored examples and preview definitions contain no `locale`
+or `themeMode`. The viewport controls actual responsive layout. Captures use exactly
 that viewport, not full-page expansion.
 
 Describe interaction behavior in the Bloc or example description. Captures
@@ -121,8 +113,14 @@ From the workspace:
 ```bash
 bun run build:browser
 bunx playwright@1.63.0 install chromium
-bun run ulvia -- preview /path/to/collection --output /path/to/new-output --serve
+bun run ulvia -- preview /path/to/collection --output /path/to/new-output --locale fr --theme-mode dark --serve
 ```
+
+Locale and theme mode are rendering options for the export, not collection
+source data. `--locale` defaults to the collection's reference locale and
+`--theme-mode` defaults to `light`. Export again with other options to explore
+the same immutable examples in another context. The rendered frame manifest
+records the effective locale and mode so each capture is reproducible.
 
 The output directory must not exist and must be separate from authored
 sources. Use `--dependency /path/to/other-collection` for each exact dependency
@@ -154,3 +152,8 @@ bun test packages/features/cms-repository/tests/collections/admission/examples
 ULVIA_RUN_EXAMPLE_BROWSER=1 bun test packages/runtimes/ulvia-cli/tests/preview
 bun run verify:full
 ```
+
+Admission checks server text placement with the same rules as rendering, without
+replacing the references. Text nodes and user-facing native attributes are
+supported; machine/settings attributes and inert text such as textarea content
+cannot contain server text references.

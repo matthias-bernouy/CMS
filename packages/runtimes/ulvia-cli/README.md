@@ -299,8 +299,8 @@ exact manifest claims. Provider behavior is covered by implementation-owned test
 
 ## Collection examples
 
-`ulvia preview <collection-directory> --output <new-directory> [--dependency <directory>] [--no-screenshots] [--serve]`
-exports v2 example frames, generated PNGs, an interactive local explorer and a
+`ulvia preview <collection-directory> --output <new-directory> [--dependency <directory>] [--locale <locale>] [--theme-mode <light|dark>] [--no-screenshots] [--serve]`
+exports collection example frames, generated PNGs, an interactive local explorer and a
 provenance manifest. Screenshots require the Playwright Chromium browser
 (`bunx playwright@1.63.0 install chromium`). Dependencies and required contracts are
 resolved explicitly from local sources/cache; preview never publishes. See
