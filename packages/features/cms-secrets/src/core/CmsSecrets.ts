@@ -98,6 +98,23 @@ export class CmsSecrets {
         return secret ? publicSecretMetadata(secret) : null;
     }
 
+    /** One credential check requires both permissions before reading metadata or a value. */
+    async resolveByName(namespaceId: string, namespaceKey: string, name: string) {
+        await this.namespaces.authorizeFor(namespaceId, namespaceKey, ["secrets.metadata.read", "secrets.resolve"]);
+        const secret = await this.metadata.findByName(namespaceId, name);
+        if (!secret) {
+            return null;
+        }
+        if (secret.namespaceId !== namespaceId || secret.name !== name) {
+            throw new CmsSecretNotFound("secret does not exist");
+        }
+        const value = await this.values.get(secret.storageKey);
+        if (value === null) {
+            throw new CmsSecretNotFound("secret value is unavailable");
+        }
+        return { namespaceId, secretId: secret.id, version: secret.version, value };
+    }
+
     async list(namespaceId: string, namespaceKey: string, limit: number): Promise<readonly PublicSecretMetadata[]> {
         await this.namespaces.authorizeFor(namespaceId, namespaceKey, "secrets.metadata.read");
         return (await this.metadata.list(namespaceId, limit)).map(publicSecretMetadata);

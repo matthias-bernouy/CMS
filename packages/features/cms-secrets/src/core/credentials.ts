@@ -23,14 +23,16 @@ export function credentialId(value: string, prefix: string): string {
 export async function authorizeNamespaceKey(
     value: string,
     key: SecretNamespaceKeyRecord | null,
-    permission: SecretNamespacePermission,
+    permission: SecretNamespacePermission | readonly SecretNamespacePermission[],
     now: Date,
 ): Promise<SecretNamespaceKeyRecord> {
+    const permissions = typeof permission === "string" ? [permission] : permission;
     if (
         !key ||
         key.revokedAt ||
         (key.expiresAt && key.expiresAt <= now) ||
-        !key.permissions.includes(permission) ||
+        permissions.length === 0 ||
+        permissions.some((permission) => !key.permissions.includes(permission)) ||
         !constantTimeEqual(await credentialVerifier(value), key.verifier)
     ) {
         throw new CmsSecretNotAuthorized();

@@ -88,7 +88,11 @@ export class SecretNamespaceAuthority {
         await this.store.putNamespaceKey({ ...target, revokedAt: this.now() });
     }
 
-    async authorizeFor(namespaceId: string, namespaceKey: string, permission: SecretNamespacePermission) {
+    async authorizeFor(
+        namespaceId: string,
+        namespaceKey: string,
+        permission: SecretNamespacePermission | readonly SecretNamespacePermission[],
+    ) {
         const key = await authorizeNamespaceKey(
             namespaceKey,
             await this.store.getNamespaceKey(credentialId(namespaceKey, "snk")),

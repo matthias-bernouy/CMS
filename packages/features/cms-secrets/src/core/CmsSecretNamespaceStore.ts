@@ -18,13 +18,10 @@ export class CmsSecretNamespaceStore implements SecretStore {
     ) {}
 
     async get(key: string): Promise<string | null> {
-        const metadata = await this.metadata(key);
-        if (!metadata) {
-            return null;
-        }
         return (
-            await this.secrets.resolve(this.credentials.namespaceId, this.credentials.namespaceKey, metadata.secretId)
-        ).value;
+            (await this.secrets.resolveByName(this.credentials.namespaceId, this.credentials.namespaceKey, key))
+                ?.value ?? null
+        );
     }
 
     async set(key: string, value: string): Promise<void> {
