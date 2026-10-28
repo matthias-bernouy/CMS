@@ -40,24 +40,23 @@ export async function manifestRecord(
             "published manifest artifact disagrees with catalogue",
         );
     }
-    return deepFreeze({
-        admission,
-        publishedAt: entry.publishedAt,
-        ...(entry.yank ? { yank: entry.yank } : {}),
-    });
+    return manifestRecordFromAdmission(admission, entry);
 }
 
 export async function recordsForHead(
     head: ManifestHead,
     artifacts: Collection<ManifestArtifact>,
     limits: Readonly<ProviderManifestLimits>,
+    read?: (entry: ManifestVersionEntry) => Promise<CatalogueProviderManifest>,
 ): Promise<readonly CatalogueProviderManifest[]> {
     if (!Number.isSafeInteger(head.revision) || head.revision < 1 || head.versions.length > 2048) {
         throw new ProviderManifestValidationError("invalid_manifest", "published manifest index is invalid");
     }
     return Promise.all(
         head.versions.map(async (entry) => {
-            const record = await manifestRecord(await artifacts.findOne({ _id: entry.digest }), entry, limits);
+            const record = await (read
+                ? read(entry)
+                : manifestRecord(await artifacts.findOne({ _id: entry.digest }), entry, limits));
             if (
                 record.admission.manifest.providerId !== head._id ||
                 record.admission.manifest.provenance.publisherId !== head.publisherId
@@ -70,4 +69,20 @@ export async function recordsForHead(
             return record;
         }),
     );
+}
+
+export function manifestRecordFromAdmission(
+    admission: AdmittedProviderManifest,
+    entry: ManifestVersionEntry,
+): CatalogueProviderManifest {
+    if (admission.digest !== entry.digest || admission.manifest.version !== entry.version) {
+        throw new ProviderManifestValidationError(
+            "invalid_manifest",
+            "Published index disagrees with verified artifact",
+        );
+    }
+    return Object.freeze({
+        admission,
+        ...deepFreeze({ publishedAt: entry.publishedAt, ...(entry.yank ? { yank: entry.yank } : {}) }),
+    });
 }

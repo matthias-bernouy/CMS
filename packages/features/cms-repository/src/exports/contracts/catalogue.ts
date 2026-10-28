@@ -15,3 +15,5 @@ export {
 } from "cms-repository/contracts/core/compatibility/lineage/resolveLineage";
 
 export type { ResolvedContract, ResolvedCapability } from "cms-repository/contracts/interfaces/ResolvedContract";
+
+export { VerifiedArtifactCache } from "cms-repository/contracts/core/catalogue/VerifiedArtifactCache";

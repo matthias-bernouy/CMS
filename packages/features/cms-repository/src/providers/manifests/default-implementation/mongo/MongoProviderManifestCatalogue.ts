@@ -1,6 +1,6 @@
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
-import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
+import { VerifiedArtifactCache, type ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
 import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
 import type { AdmittedProviderManifest, ProviderManifestDigest } from "../../core/admission/admitProviderManifest";
@@ -24,11 +24,13 @@ import {
     type ManifestHead,
     type ManifestVersionEntry,
     manifestRecord,
+    manifestRecordFromAdmission,
     recordsForHead,
 } from "./records";
 
 /** Immutable manifest artifacts become visible through a revisioned per-provider head. */
 export class MongoProviderManifestCatalogue implements ProviderManifestCatalogue {
+    readonly #verified = new VerifiedArtifactCache<AdmittedProviderManifest>();
     readonly #heads;
     readonly #artifacts;
     readonly #limits: Readonly<ProviderManifestLimits>;
@@ -56,12 +58,17 @@ export class MongoProviderManifestCatalogue implements ProviderManifestCatalogue
         if (!head || !entry) {
             return null;
         }
-        const record = await manifestRecord(await this.#artifacts.findOne({ _id: entry.digest }), entry, this.#limits);
+        const record = await this.readRecord(entry);
         this.assertIdentity(head, record);
         return record;
     }
 
     async findByDigest(digest: ProviderManifestDigest): Promise<CatalogueProviderManifest | null> {
+        const cached = this.#verified.peek(digest);
+        if (cached) {
+            const current = await this.get(cached.manifest.providerId, cached.manifest.version);
+            return current?.admission.digest === digest ? current : null;
+        }
         const artifact = await this.#artifacts.findOne({ _id: digest });
         if (!artifact) {
             return null;
@@ -76,7 +83,11 @@ export class MongoProviderManifestCatalogue implements ProviderManifestCatalogue
                 ? await this.#heads.find({}).toArray()
                 : await this.#heads.find({ _id: providerId }).toArray();
         const records = (
-            await Promise.all(heads.map((head) => recordsForHead(head, this.#artifacts, this.#limits)))
+            await Promise.all(
+                heads.map((head) =>
+                    recordsForHead(head, this.#artifacts, this.#limits, (entry) => this.readRecord(entry)),
+                ),
+            )
         ).flat();
         records.sort((left, right) => {
             const a = left.admission.manifest;
@@ -188,6 +199,16 @@ export class MongoProviderManifestCatalogue implements ProviderManifestCatalogue
                 return manifestRecord(await this.#artifacts.findOne({ _id: entry.digest }), changed, this.#limits);
             }
         }
+    }
+
+    private async readRecord(entry: ManifestVersionEntry) {
+        const admission = await this.#verified.get(
+            entry.digest,
+            async () =>
+                (await manifestRecord(await this.#artifacts.findOne({ _id: entry.digest }), entry, this.#limits))
+                    .admission,
+        );
+        return manifestRecordFromAdmission(admission, entry);
     }
 
     private async writeHead(before: ManifestHead | null, after: ManifestHead): Promise<boolean> {

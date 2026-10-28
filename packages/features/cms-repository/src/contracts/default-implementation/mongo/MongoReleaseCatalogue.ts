@@ -1,3 +1,4 @@
+import { VerifiedArtifactCache } from "cms-repository/contracts/core/catalogue/VerifiedArtifactCache";
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
 import type { AdmittedContractRelease } from "../../core/admission/admitContractRelease";
@@ -22,10 +23,12 @@ import {
     type ReleaseVersionEntry,
     recordsForHead,
     releaseRecord,
+    releaseRecordFromAdmission,
 } from "./records";
 
 /** Immutable digest artifacts become visible only through a revisioned per-contract head. */
 export class MongoReleaseCatalogue implements ReleaseCatalogue {
+    readonly #verified = new VerifiedArtifactCache<AdmittedContractRelease>();
     readonly #heads;
     readonly #artifacts;
     readonly #limits: Readonly<ReleaseLimits>;
@@ -52,12 +55,17 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
         if (!head || !entry) {
             return null;
         }
-        const record = await releaseRecord(await this.#artifacts.findOne({ _id: entry.digest }), entry, this.#limits);
+        const record = await this.readRecord(entry);
         this.assertIdentity(head, record);
         return record;
     }
 
     async findByDigest(digest: ReleaseDigest): Promise<CatalogueContractRelease | null> {
+        const cached = this.#verified.peek(digest);
+        if (cached) {
+            const current = await this.get(cached.release.contractId, cached.release.version);
+            return current?.admission.digest === digest ? current : null;
+        }
         const artifact = await this.#artifacts.findOne({ _id: digest });
         if (!artifact) {
             return null;
@@ -73,7 +81,11 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
                 ? await this.#heads.find({}).toArray()
                 : await this.#heads.find({ _id: contractId }).toArray();
         const records = (
-            await Promise.all(heads.map((head) => recordsForHead(head, this.#artifacts, this.#limits)))
+            await Promise.all(
+                heads.map((head) =>
+                    recordsForHead(head, this.#artifacts, this.#limits, (entry) => this.readRecord(entry)),
+                ),
+            )
         ).flat();
         records.sort((left, right) => compareSemVer(left.admission.release.version, right.admission.release.version));
         return Object.freeze(records);
@@ -112,7 +124,9 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
             verifySpecialization(admission.release, catalogue);
             verifyEvolution(
                 admission.release,
-                head ? await recordsForHead(head, this.#artifacts, this.#limits) : [],
+                head
+                    ? await recordsForHead(head, this.#artifacts, this.#limits, (entry) => this.readRecord(entry))
+                    : [],
                 this.#limits,
             );
             try {
@@ -188,6 +202,16 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
                 return releaseRecord(await this.#artifacts.findOne({ _id: entry.digest }), changed, this.#limits);
             }
         }
+    }
+
+    private async readRecord(entry: ReleaseVersionEntry) {
+        const admission = await this.#verified.get(
+            entry.digest,
+            async () =>
+                (await releaseRecord(await this.#artifacts.findOne({ _id: entry.digest }), entry, this.#limits))
+                    .admission,
+        );
+        return releaseRecordFromAdmission(admission, entry);
     }
 
     private async writeHead(before: ReleaseHead | null, after: ReleaseHead): Promise<boolean> {

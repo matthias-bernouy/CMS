@@ -43,25 +43,23 @@ export async function releaseRecord(
     if (admission.digest !== entry.digest || admission.release.version !== entry.version) {
         throw new ReleaseValidationError("invalid_contract", "published release artifact disagrees with catalogue");
     }
-    return deepFreeze({
-        admission,
-        publishedAt: entry.publishedAt,
-        ...(entry.deprecation ? { deprecation: entry.deprecation } : {}),
-        ...(entry.yank ? { yank: entry.yank } : {}),
-    });
+    return releaseRecordFromAdmission(admission, entry);
 }
 
 export async function recordsForHead(
     head: ReleaseHead,
     artifacts: Collection<ReleaseArtifact>,
     limits: Readonly<ReleaseLimits>,
+    read?: (entry: ReleaseVersionEntry) => Promise<CatalogueContractRelease>,
 ): Promise<readonly CatalogueContractRelease[]> {
     if (!Number.isSafeInteger(head.revision) || head.revision < 1 || head.versions.length > 2048) {
         throw new ReleaseValidationError("invalid_contract", "published release index is invalid");
     }
     return Promise.all(
         head.versions.map(async (entry) => {
-            const record = await releaseRecord(await artifacts.findOne({ _id: entry.digest }), entry, limits);
+            const record = await (read
+                ? read(entry)
+                : releaseRecord(await artifacts.findOne({ _id: entry.digest }), entry, limits));
             if (
                 record.admission.release.contractId !== head._id ||
                 record.admission.release.publisherId !== head.publisherId
@@ -71,4 +69,21 @@ export async function recordsForHead(
             return record;
         }),
     );
+}
+
+export function releaseRecordFromAdmission(
+    admission: AdmittedContractRelease,
+    entry: ReleaseVersionEntry,
+): CatalogueContractRelease {
+    if (admission.digest !== entry.digest || admission.release.version !== entry.version) {
+        throw new ReleaseValidationError("invalid_contract", "Published index disagrees with verified artifact");
+    }
+    return Object.freeze({
+        admission,
+        ...deepFreeze({
+            publishedAt: entry.publishedAt,
+            ...(entry.deprecation ? { deprecation: entry.deprecation } : {}),
+            ...(entry.yank ? { yank: entry.yank } : {}),
+        }),
+    });
 }
