@@ -30,7 +30,7 @@ integration(
                 "packages/runtimes/ulvia-provider-server/src/checkRetention.ts",
             ]);
             connection = await connectBrowser(f.kernelUrl, f.administrator);
-            expect(connection.tools).toHaveLength(58);
+            expect(connection.tools).toHaveLength(60);
             await exerciseProviders(f, connection.page);
             const namespace = f.id.replaceAll("-", "");
             const publicKey = await exerciseCollections(connection.call, namespace, f.providerName);

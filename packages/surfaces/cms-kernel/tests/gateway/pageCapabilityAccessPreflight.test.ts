@@ -62,15 +62,13 @@ describe("Kernel page capability access preflight", () => {
         expect(response.headers.get("location")).toBe("/sign-in?returnTo=%2Fproducts");
     });
 
-    test("uses a configured contributed login Page", async () => {
+    test("uses a configured site login Page", async () => {
         const { handler } = await mountPage({
             content: `<section cms-query="shop:my-products as products"></section>`,
             resolveActor: authSubject(null),
             systemPages: {
                 login: {
-                    kind: "contribution",
-                    sourceId: "ulvia.official",
-                    contributionId: "ulvia-official",
+                    kind: "site",
                     pageId: "login",
                 },
             },
@@ -98,6 +96,7 @@ describe("Kernel page capability access preflight", () => {
     test("requires authentication even when the capability is triggered on submit", async () => {
         const { handler } = await mountPage({
             content: `<form cms-mutation="shop:create-order as order"><button>Buy</button></form>`,
+            pagePath: "/checkout",
             resolveActor: authSubject(null),
         });
         const response = await handler(new Request("http://site/checkout"));

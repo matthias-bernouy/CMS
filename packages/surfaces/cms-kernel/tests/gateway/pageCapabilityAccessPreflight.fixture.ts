@@ -25,9 +25,7 @@ const system: TSystem = {
         forbidden: null,
         serverError: null,
         login: {
-            kind: "contribution",
-            sourceId: "ulvia.official",
-            contributionId: "ulvia-official",
+            kind: "site",
             pageId: "login",
         },
     },
@@ -129,7 +127,7 @@ export async function mountPage(options: {
         content: {
             ...content,
             resolvePageReference: async (reference) => {
-                if (reference.kind === "contribution" && reference.pageId === "login") {
+                if (reference.kind === "site" && reference.pageId === "login") {
                     return "/login";
                 }
                 return content.resolvePageReference(reference);
@@ -171,6 +169,7 @@ function pageRepository(
 ): ContentRepository {
     const page: TPage = {
         id: pageId,
+        revision: 1,
         path: pagePath,
         title: "Products",
         description: "",
@@ -183,8 +182,9 @@ function pageRepository(
         getPublishedPageById: async (id) =>
             id === page.id ? page : id === "sign-in" ? { ...page, path: "/sign-in" } : null,
         getPublishedPages: async () => [page],
-        resolvePublishedRoute: async () => null,
-        getPageRoute: async () => null,
+        getPageById: async (id) => (id === page.id ? page : null),
+        getPageRoute: async (path) =>
+            path === pagePath ? { path, state: "current", pageId, ownerPageId: pageId, language: "" } : null,
         getBlocsList: async () => [],
         getBlocViewJS: async () => null,
         getSystem: async () => ({ ...system, site: { ...system.site, visible: siteVisible, ...systemPages } }),

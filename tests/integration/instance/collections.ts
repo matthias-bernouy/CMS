@@ -47,7 +47,10 @@ function snapshot(namespace: string, macroMarker?: string) {
                 previews: [{ id: "desktop", frame: { width: 640, height: 240 } }],
             }),
         },
-        { path: "examples/panel/document.html", content: '<div cms-bloc="mcp-kit-panel"></div>' },
+        {
+            path: "examples/panel/document.html",
+            content: '<div cms-bloc="mcp-kit-panel"><p slot="body">Created through MCP</p></div>',
+        },
         { path: "blocs/mcp-kit-panel/markup.html", content: '<section><slot name="body"></slot></section>' },
     ];
     if (macroMarker) {
@@ -106,12 +109,34 @@ export async function exerciseCollections(call: Call, namespace: string, provide
 }
 
 export async function exerciseContent(call: Call, kernelUrl: string) {
+    const examples = await call("ulvia.cms.content", "examples.list", {
+        collectionId: "mcp-kit",
+        locale: "en",
+        limit: 1,
+    });
+    expect(examples.items[0]?.id).toBe("panel");
+    const example = await call("ulvia.cms.content", "examples.get", {
+        collectionId: "mcp-kit",
+        exampleId: "panel",
+    });
     const page = await call("ulvia.cms.content", "pages.create", {
+        content: example.document.html,
         path: "/mcp-regression",
         title: "MCP regression",
-        content: '<div cms-bloc="mcp-kit-panel"><p slot="body">Created through MCP</p></div>',
     });
-    await call("ulvia.cms.content", "pages.publish", { id: page.id, expectedRevision: page.revision, visible: true });
+    expect(page.content).toContain("Created through MCP");
+    const replaced = await call("ulvia.cms.content", "pages.update", {
+        id: page.id,
+        expectedRevision: page.revision,
+        content: example.document.html,
+    });
+    expect(replaced.id).toBe(page.id);
+    expect(replaced.path).toBe("/mcp-regression");
+    await call("ulvia.cms.content", "pages.publish", {
+        id: page.id,
+        expectedRevision: replaced.revision,
+        visible: true,
+    });
     const response = await fetch(`${kernelUrl}/mcp-regression`);
     expect(response.status).toBe(200);
     expect(await response.text()).toContain("Created through MCP");

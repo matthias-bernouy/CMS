@@ -103,19 +103,7 @@ async function authorizeAccess(
 }
 
 function samePageReference(left: RenderablePage["reference"], right: RenderablePage["reference"]): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-    if (left.kind === "site" && right.kind === "site") {
-        return left.pageId === right.pageId;
-    }
-    return (
-        left.kind === "contribution" &&
-        right.kind === "contribution" &&
-        left.sourceId === right.sourceId &&
-        left.contributionId === right.contributionId &&
-        left.pageId === right.pageId
-    );
+    return left.pageId === right.pageId;
 }
 
 function highestAccess(left: PageAccess, right: PageAccess): PageAccess {
