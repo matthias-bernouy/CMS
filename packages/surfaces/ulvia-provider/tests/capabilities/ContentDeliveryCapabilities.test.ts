@@ -19,7 +19,7 @@ test("Content delivery exposes bounded projections and public resources", async 
     const system = defaultSystem();
     registerContentCapabilities(dispatcher, {
         repo: {
-            getContentContributions: async () => ({ revision: 7, pages: [], texts: [] }),
+            getTextContributions: async () => ({ revision: 7, texts: [] }),
             getSystem: async () => ({
                 ...system,
                 site: {

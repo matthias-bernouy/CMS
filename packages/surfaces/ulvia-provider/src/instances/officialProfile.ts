@@ -6,6 +6,13 @@ export type OfficialInstanceProfile = Readonly<{
     upgradeFromVersions: readonly string[];
     manifest: Readonly<{ providerId: string; version: string; digest: string }>;
     contracts: readonly Readonly<{ contractId: string; version: string; digest: string }>[];
+    initialPages: readonly Readonly<{
+        id: string;
+        path: string;
+        title: string;
+        description: string;
+        exampleId: string;
+    }>[];
     collection: Readonly<{
         publisherId: string;
         collectionId: string;

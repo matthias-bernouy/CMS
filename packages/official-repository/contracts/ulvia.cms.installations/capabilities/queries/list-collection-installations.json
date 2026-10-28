@@ -49,7 +49,7 @@
                             "minimum": 0,
                             "maximum": 1024
                         },
-                        "pageCount": {
+                        "exampleCount": {
                             "type": "integer",
                             "minimum": 0,
                             "maximum": 1024
@@ -79,7 +79,7 @@
                         "version",
                         "digest",
                         "blocCount",
-                        "pageCount",
+                        "exampleCount",
                         "assetCount",
                         "textCount",
                         "themeTokenCount",

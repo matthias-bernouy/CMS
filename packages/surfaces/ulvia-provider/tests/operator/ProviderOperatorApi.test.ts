@@ -103,6 +103,7 @@ function profiles(): OfficialInstanceProfiles {
         {
             id: "ulvia.official",
             version: "1.0.0",
+            initialPages: [],
             upgradeFromVersions: [],
             manifest: { providerId: "ulvia.official", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` },
             contracts: [],

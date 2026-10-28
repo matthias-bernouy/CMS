@@ -9,9 +9,7 @@ export function registerContentDeliveryCapabilities(
     dispatcher: ProviderCapabilityRegistry,
     dependencies: CmsContentDependencies,
 ): void {
-    const content = createContentReader(dependencies.repo, {
-        ...(dependencies.resolvePageRoute ? { resolvePageRoute: dependencies.resolvePageRoute } : {}),
-    });
+    const content = createContentReader(dependencies.repo);
     dispatcher.register("ulvia.cms.content", "delivery.read", async (request) => {
         let operation: ReturnType<typeof deliveryOperation>;
         let input: Readonly<Record<string, unknown>>;

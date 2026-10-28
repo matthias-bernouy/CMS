@@ -43,5 +43,5 @@ test("official MCP V1 exposes only Repository, ordinary content, site files and 
             }
         }
     }
-    expect(tools).toBe(58);
+    expect(tools).toBe(60);
 });

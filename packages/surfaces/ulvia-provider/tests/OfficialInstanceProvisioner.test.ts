@@ -15,6 +15,7 @@ import {
 const OFFICIAL_INSTANCE_PROFILE = Object.freeze({
     id: "ulvia.official",
     version: "1.0.0",
+    initialPages: [],
     upgradeFromVersions: Object.freeze([] as string[]),
     manifest: Object.freeze({ providerId: "ulvia.official", version: "0.3.0", digest: `sha256:${"a".repeat(64)}` }),
     contracts: Object.freeze([

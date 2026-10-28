@@ -48,7 +48,7 @@ export function projectInstalled(
         digest: installation.digest,
         ...(installation.repositoryId ? { repositoryId: installation.repositoryId } : {}),
         blocCount: release.blocs.length,
-        pageCount: release.pages?.length ?? 0,
+        exampleCount: release.examples?.length ?? 0,
         assetCount: release.assets.length,
         textCount: release.texts?.length ?? 0,
         themeTokenCount:

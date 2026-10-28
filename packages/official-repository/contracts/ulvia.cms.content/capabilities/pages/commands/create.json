@@ -1,6 +1,6 @@
 {
     "id": "pages.create",
-    "description": "Create one Page.",
+    "description": "Create one Page draft with optional HTML content.",
     "access": "admin",
     "behavior": {
         "effect": "command",

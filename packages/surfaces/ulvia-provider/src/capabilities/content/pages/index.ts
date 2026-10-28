@@ -1,7 +1,9 @@
+import { listExamples, getExample } from "./examples";
 import {
     ContentValidationError,
     DuplicatePagePathError,
     PageRevisionConflictError,
+    PageReferencedError,
     CmsPageNotFoundError,
     createCmsPage,
     deleteCmsPage,
@@ -30,6 +32,12 @@ export function registerPageCapabilities(
             pageCommand(() => handler(input, context), invalidCode),
         );
     };
+    dispatcher.register("ulvia.cms.content", "examples.list", (input) =>
+        pageCommand(() => listExamples(dependencies, input as never), "INVALID_PAGE"),
+    );
+    dispatcher.register("ulvia.cms.content", "examples.get", (input) =>
+        pageCommand(() => getExample(dependencies, input as never), "INVALID_PAGE"),
+    );
     register("list", (input) => listCmsPages(dependencies.repo, input));
     register("get", (input) => getCmsPage(dependencies.repo, input as never));
     register("editor-catalogue", () => getCmsEditorCatalogue(dependencies.repo));
@@ -49,11 +57,17 @@ async function pageCommand(operation: () => Promise<unknown>, invalidCode: strin
         if (error instanceof CmsPageNotFoundError) {
             throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
         }
+        if (error instanceof PageReferencedError) {
+            throw new ProviderCapabilityDispatchError("PAGE_REFERENCED", 409);
+        }
         if (error instanceof PageRevisionConflictError) {
             throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
         }
         if (error instanceof DuplicatePagePathError) {
             throw new ProviderCapabilityDispatchError("PATH_CONFLICT", 409);
+        }
+        if (typeof error === "object" && error && "status" in error && error.status === 423) {
+            throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
         }
         if (error instanceof ContentValidationError || error instanceof TypeError) {
             throw new ProviderCapabilityDispatchError(invalidCode, 422);

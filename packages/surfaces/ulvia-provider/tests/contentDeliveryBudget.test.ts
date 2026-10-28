@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { defaultSystem, type ContentRepository, type RenderablePage, type TPage } from "@bernouy/cms-content";
+import { defaultSystem, type ContentRepository, type TPage } from "@bernouy/cms-content";
 import {
     DefaultProviderCapabilityDispatcher,
     ProviderCapabilityDispatchError,
@@ -16,7 +16,7 @@ test("Page render delivery keeps one fixed repository-read budget", async () => 
     expect(fixture.calls()).toEqual({
         getBlocsList: 1,
         getBlocViewsJS: 1,
-        getContentContributions: 1,
+        getTextContributions: 1,
         getPageById: 1,
         getPageRequirements: 1,
         getPageRoute: 2,
@@ -125,7 +125,7 @@ function deliveryFixture(
     const system = defaultSystem();
     system.site.language = "en";
     const unrelatedPages = Array.from({ length: options.unrelatedPageCount ?? 0 }, (_, index) =>
-        renderablePage(pageRecord(`unrelated-${index}`, `/unrelated-${index}`)),
+        pageRecord(`unrelated-${index}`, `/unrelated-${index}`),
     );
     const markup = options.assetExpression
         ? "{{ cms.asset.ulvia-official.media/portrait.webp }}"
@@ -146,9 +146,9 @@ function deliveryFixture(
             count("getSystemRevision");
             return 4;
         },
-        getContentContributions: async () => {
-            count("getContentContributions");
-            return { revision: 9, pages: unrelatedPages, texts: [] };
+        getTextContributions: async () => {
+            count("getTextContributions");
+            return { revision: 9, texts: [] };
         },
         getSiteBlocsRevision: async () => {
             count("getSiteBlocsRevision");
@@ -163,6 +163,10 @@ function deliveryFixture(
         getPageById: async (id: string) => {
             count("getPageById");
             return id === page.id ? structuredClone(page) : null;
+        },
+        getPublishedPages: async () => {
+            count("getPublishedPages");
+            return structuredClone([page, ...unrelatedPages]);
         },
         getPageRequirements: async () => {
             count("getPageRequirements");
@@ -218,15 +222,6 @@ function pageRecord(id: string, path: string): TPage {
         content: "<main></main>",
         visible: true,
         tags: [],
-    };
-}
-
-function renderablePage(page: TPage): RenderablePage {
-    return {
-        reference: { kind: "site", pageId: page.id },
-        page,
-        source: { kind: "site", pageId: page.id, revision: page.revision },
-        requirements: [],
     };
 }
 
