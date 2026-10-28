@@ -1,3 +1,4 @@
+import { previewProviderAuthority } from "cms-repository/providers/selections/core/authority/preview";
 import { memoryConnectionDrafts, type ProviderConnectionDraftStore } from "./connectionDrafts";
 import { randomUUID } from "node:crypto";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
@@ -86,9 +87,15 @@ export class ProviderConnectionWorkflow {
                 report,
             );
         }
+        const authority = await previewProviderAuthority(
+            manifest,
+            await this.gateway.selections.get(this.gateway.siteId),
+            this.gateway.releases,
+        );
         const ticket = this.createId();
         await this.pending.set(ticket, {
             preparation,
+            authorityDigest: authority.authorityDigest,
             token: input.token,
             actorId,
             createdAt: this.now(),
@@ -101,9 +108,8 @@ export class ProviderConnectionWorkflow {
             input.endpoint,
             published.admission.digest,
             report,
-            manifest.implementations.flatMap((implementation) =>
-                implementation.requires.map((request) => ({ ...request, optional: request.optional ?? false })),
-            ),
+            [...manifest.requires, ...manifest.implementations.flatMap((implementation) => implementation.requires)],
+            authority,
         );
     }
 
@@ -115,6 +121,26 @@ export class ProviderConnectionWorkflow {
         if (!pending || this.now() - pending.createdAt > PREVIEW_LIFETIME_MS) {
             await this.pending.delete(ticket);
             throw new TypeError("Installation preview has expired");
+        }
+        const reviewedManifest = await this.gateway.manifests.get(
+            pending.preparation.candidate.providerId,
+            pending.preparation.candidate.manifestVersion,
+        );
+        if (
+            !reviewedManifest ||
+            reviewedManifest.yank ||
+            reviewedManifest.admission.digest !== pending.preparation.candidate.manifestDigest ||
+            (
+                await previewProviderAuthority(
+                    reviewedManifest.admission.manifest,
+                    await this.gateway.selections.get(this.gateway.siteId),
+                    this.gateway.releases,
+                )
+            ).authorityDigest !== pending.authorityDigest
+        ) {
+            throw Object.assign(new Error("Provider authority changed after preview; review the connection again"), {
+                status: 409,
+            });
         }
         const tokenKey = requiredSecretKey(pending.preparation.candidate.providerTokenRef);
         const candidate = pending.preparation.candidate;

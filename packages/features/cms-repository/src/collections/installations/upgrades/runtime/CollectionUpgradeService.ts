@@ -1,3 +1,4 @@
+import type { CollectionRelease } from "../../../interfaces/CollectionRelease";
 import { runSiteUpgrade } from "cms-repository/site-upgrades/run";
 import { siteUsageInventory } from "../usage/inventory";
 import type { ContentRepository } from "@bernouy/cms-content";
@@ -31,7 +32,7 @@ export class CollectionUpgradeService {
         targets: readonly CollectionUpgradeTarget[],
         artifacts: readonly {
             digest: string;
-            release: import("../../../interfaces/CollectionRelease").CollectionRelease;
+            release: CollectionRelease;
         }[] = [],
     ): Promise<CollectionUpgradePlan> {
         return prepareCollectionUpgrade(

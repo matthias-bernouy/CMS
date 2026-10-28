@@ -27,6 +27,7 @@ export function previewResult(
     manifestDigest: string,
     report: ProviderRuntimeReport,
     requests: ProviderConnectionPreview["requests"],
+    authority: Pick<ProviderConnectionPreview, "authorityDigest" | "delegation">,
 ): ProviderConnectionPreview {
     return {
         ticket,
@@ -40,6 +41,7 @@ export function previewResult(
         manifestDigest,
         contracts: report.implementations.map(({ contractId, version, status }) => ({ contractId, version, status })),
         requests,
+        ...authority,
         check: "Manifest and runtime report validated.",
     };
 }

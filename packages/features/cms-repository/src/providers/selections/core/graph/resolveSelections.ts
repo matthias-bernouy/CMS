@@ -5,17 +5,22 @@ import { parseProviderInstallation } from "cms-repository/providers/installation
 import { validateProviderInstallation } from "cms-repository/providers/installations/core/validateProviderInstallation";
 import type { ProviderInstallationLimits } from "cms-repository/providers/installations/core/limits";
 import type { ProviderInstallation } from "cms-repository/providers/installations/interfaces/ProviderInstallation";
-import type { ProviderContractImplementation } from "cms-repository/providers/manifests/interfaces/ProviderManifest";
-import { expectArray } from "cms-repository/providers/manifests/core/values";
-import type { ContractSelection } from "../interfaces/ContractSelection";
-import type { ContractSelectionContext } from "../interfaces/ContractSelectionPlan";
-import { ContractSelectionValidationError } from "./errors";
-import type { ContractSelectionLimits } from "./limits";
+import type {
+    ProviderCapabilityRequirement,
+    ProviderContractImplementation,
+} from "cms-repository/providers/manifests/interfaces/ProviderManifest";
+import { expectArray } from "cms-repository/providers/manifests/core/protocol/values";
+import type { ContractSelection } from "../../interfaces/ContractSelection";
+import type { ContractSelectionContext } from "../../interfaces/ContractSelectionPlan";
+import { ContractSelectionValidationError } from "../errors";
+import type { ContractSelectionLimits } from "../limits";
 
 export interface ResolvedSelection {
     readonly selection: ContractSelection;
     readonly release: ContractRelease;
     readonly implementation: ProviderContractImplementation;
+    readonly manifestDigest: string;
+    readonly providerRequires: readonly ProviderCapabilityRequirement[];
     /** Concrete release first, followed by every exact parent. */
     readonly lineage: readonly ContractRelease[];
 }
@@ -130,6 +135,8 @@ export async function resolveSelections(
             selection,
             release,
             implementation,
+            manifestDigest: manifest.digest,
+            providerRequires: manifest.manifest.requires,
             lineage,
         });
     }

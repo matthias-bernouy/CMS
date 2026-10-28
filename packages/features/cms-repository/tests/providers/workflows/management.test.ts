@@ -15,7 +15,7 @@ test("provider management renews an approved installation observation with its s
             releases: world.releases,
             manifests: world.manifests,
             installations,
-            selections: {} as never,
+            selections: { get: async () => null } as never,
         },
         secrets,
         {
@@ -108,7 +108,7 @@ test("catalogue imports reject substituted coordinates or bytes before publishin
                     releases: world.releases,
                     manifests: world.manifests,
                     installations: installed,
-                    selections: {} as never,
+                    selections: { get: async () => null } as never,
                 },
                 new InMemorySecretStore(),
                 {

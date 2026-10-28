@@ -39,14 +39,13 @@ describe("full selection dependency graph", () => {
         ).rejects.toMatchObject({ code: "incompatible_dependency" });
     });
 
-    test("validates requirements of every capability in a selected release", async () => {
+    test("validates implementation requirements independently from capability definitions", async () => {
         const document = contractDocument("commerce", "checkout");
         const capabilities = document.capabilities as Record<string, unknown>[];
         capabilities.push({
             ...capabilities[0],
             id: "refund",
             bindings: [{ id: "http", ...(capabilities[0]!.bindings[0] as object), path: "/refund" }],
-            requires: [{ contractId: "payment", capabilityId: "pay", versionRange: "^1.0.0" }],
         });
         const releases = await releaseCatalogue(contractDocument("payment", "pay"), document);
         const manifests = new InMemoryProviderManifestCatalogue(releases);
@@ -136,9 +135,6 @@ describe("full selection dependency graph", () => {
         const smtp = await admitContractRelease(smtpDocument);
         await releases.publish(smtp);
         const commerceDocument = contractDocument("commerce", "checkout");
-        (commerceDocument.capabilities as Record<string, unknown>[])[0]!.requires = [
-            { contractId: "emailer", capabilityId: "send", versionRange: "^1.0.0" },
-        ];
         const commerce = await admitContractRelease(commerceDocument);
         await releases.publish(commerce);
         const manifests = new InMemoryProviderManifestCatalogue(releases);

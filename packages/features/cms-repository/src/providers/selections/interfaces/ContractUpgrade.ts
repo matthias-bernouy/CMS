@@ -1,3 +1,4 @@
+import type { SelectionAuthority } from "./SelectionAuthority";
 import type { ContractSelection } from "./ContractSelection";
 import type { CapabilityGrantPolicy } from "./ContractSelectionStore";
 
@@ -26,6 +27,8 @@ export type ContractUpgradePlan = Readonly<{
     dependencyRevision: string;
     served: Readonly<Record<string, string>>;
     planDigest: string;
+    authority: SelectionAuthority;
+    authorityAdded: SelectionAuthority["delegated"];
 }>;
 export type ContractUpgradeAnalysis = Readonly<{
     usage(siteId: string): Promise<CapabilityUsageEvidence>;

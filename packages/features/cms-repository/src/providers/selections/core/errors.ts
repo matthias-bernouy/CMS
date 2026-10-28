@@ -1,6 +1,6 @@
 import { ReleaseValidationError } from "cms-repository/exports/contracts/index";
 import { ProviderInstallationValidationError } from "cms-repository/providers/installations/core/errors";
-import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/errors";
+import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
 
 export type ContractSelectionValidationCode =
     | "invalid_selection"

@@ -3,8 +3,8 @@ import type { CapabilityGrantPolicy } from "../interfaces/ContractSelectionStore
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import { ContractSelectionValidationError } from "../core/errors";
 import { DEFAULT_CONTRACT_SELECTION_LIMITS, type ContractSelectionLimits, selectionLimits } from "../core/limits";
-import { parseContractSelections, parseSelectionSiteId } from "../core/parseContractSelections";
-import { planContractSelections } from "../core/planContractSelections";
+import { parseContractSelections, parseSelectionSiteId } from "../core/graph/parseContractSelections";
+import { planContractSelections } from "../core/graph/planContractSelections";
 import type {
     ContractSelectionDependencySource,
     ContractSelectionStore,

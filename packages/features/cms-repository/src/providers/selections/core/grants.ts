@@ -1,4 +1,4 @@
-import { compareOrdinal } from "cms-repository/providers/manifests/core/values";
+import { compareOrdinal } from "cms-repository/providers/manifests/core/protocol/values";
 import { assertIJson, deepFreeze } from "cms-repository/exports/contracts/protocol";
 import type { CapabilityGrantPolicy } from "../interfaces/ContractSelectionStore";
 

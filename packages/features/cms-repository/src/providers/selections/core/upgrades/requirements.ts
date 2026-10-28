@@ -122,12 +122,11 @@ export async function validateCapabilityUsage(
             continue;
         }
         expanded.add(key);
-        for (const requirement of capability.requires ?? []) {
-            pending.push({ ...requirement, location: `${reference.location}/requires/${capability.id}` });
-        }
         for (const dependency of dependencies.filter(
             (item) =>
-                item.source === "implementation" && item.fromContractId === node.selection.contractId && !item.optional,
+                !item.optional &&
+                ((item.source === "implementation" && item.fromContractId === node.selection.contractId) ||
+                    (item.source === "provider" && item.fromInstallationId === node.selection.installationId)),
         )) {
             pending.push({
                 contractId: dependency.contractId,

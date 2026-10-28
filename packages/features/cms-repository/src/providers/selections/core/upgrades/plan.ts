@@ -1,3 +1,5 @@
+import { grantedAuthority } from "../authority/grants";
+import type { SelectionAuthority } from "../../interfaces/SelectionAuthority";
 import type {
     ContractSelectionStore,
     ContractSelectionDependencySource,
@@ -9,9 +11,9 @@ import type {
     ContractUpgradePlan,
 } from "../../interfaces/ContractUpgrade";
 import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
-import { parseContractSelections } from "../parseContractSelections";
+import { parseContractSelections } from "../graph/parseContractSelections";
 import { parseCapabilityGrants } from "../grants";
-import { planContractSelections } from "../planContractSelections";
+import { planContractSelections } from "../graph/planContractSelections";
 import { validateCapabilityUsage } from "./requirements";
 
 export async function prepareContractUpgrade(
@@ -51,8 +53,10 @@ export async function prepareContractUpgrade(
             });
         }
     }
+    let authority: SelectionAuthority = { providers: [], machine: [], delegated: [] };
     try {
         const graph = await planContractSelections(siteId, selections, context);
+        authority = grantedAuthority(graph.authority, grants);
         issues.push(
             ...(await validateCapabilityUsage(usage, selections, source, grants, graph.dependencies, context.releases)),
         );
@@ -101,8 +105,15 @@ export async function prepareContractUpgrade(
             });
         }
     }
+    const priorAuthority = new Set(
+        (current ? grantedAuthority(current.plan.authority, current.grants).delegated : []).map((entry) =>
+            JSON.stringify(entry),
+        ),
+    );
     const result = {
         siteId,
+        authority,
+        authorityAdded: authority.delegated.filter((entry) => !priorAuthority.has(JSON.stringify(entry))),
         status: issues.some(({ code }) => code === "incomplete")
             ? ("incomplete" as const)
             : issues.length

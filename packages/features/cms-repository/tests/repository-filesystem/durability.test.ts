@@ -63,7 +63,11 @@ test("a crashed upload commit lease is recoverable and expired staging is pruned
     const root = await temporaryRoot();
     const uploads = new FilesystemRepositoryPublicationUploadStore(root);
     const receipt = await uploads.create(
-        { kind: "provider-manifest", canonicalJson: "{}", assets: [] },
+        {
+            kind: "provider-manifest",
+            canonicalJson: "{}",
+            assets: [],
+        },
         new Date(Date.now() + 60_000),
     );
     await staleLease(join(root, ".publication-uploads", receipt.uploadId, ".commit-lock"), 2_147_483_647);
@@ -76,7 +80,11 @@ test("a crashed upload commit lease is recoverable and expired staging is pruned
     expect(result.added).toBeTrue();
 
     const expired = await uploads.create(
-        { kind: "provider-manifest", canonicalJson: "{}", assets: [] },
+        {
+            kind: "provider-manifest",
+            canonicalJson: "{}",
+            assets: [],
+        },
         new Date(Date.now() - 1),
     );
     await uploads.recover();
@@ -87,7 +95,11 @@ test("expiry pruning cannot remove staging owned by an in-flight commit", async 
     const root = await temporaryRoot();
     const uploads = new FilesystemRepositoryPublicationUploadStore(root);
     const receipt = await uploads.create(
-        { kind: "provider-manifest", canonicalJson: "{}", assets: [] },
+        {
+            kind: "provider-manifest",
+            canonicalJson: "{}",
+            assets: [],
+        },
         new Date(Date.now() + 50),
     );
     let publishStarted!: () => void;
@@ -122,7 +134,11 @@ test("expiry pruning surfaces corrupt upload metadata instead of silently retain
     const root = await temporaryRoot();
     const uploads = new FilesystemRepositoryPublicationUploadStore(root);
     const receipt = await uploads.create(
-        { kind: "provider-manifest", canonicalJson: "{}", assets: [] },
+        {
+            kind: "provider-manifest",
+            canonicalJson: "{}",
+            assets: [],
+        },
         new Date(Date.now() - 1),
     );
     await writeFile(join(root, ".publication-uploads", receipt.uploadId, "upload.json"), "not-json");

@@ -15,8 +15,8 @@ export {
     parseContractSelections,
     parseContractSelectionsJson,
     parseSelectionSiteId,
-} from "cms-repository/providers/selections/core/parseContractSelections";
-export { planContractSelections } from "cms-repository/providers/selections/core/planContractSelections";
+} from "cms-repository/providers/selections/core/graph/parseContractSelections";
+export { planContractSelections } from "cms-repository/providers/selections/core/graph/planContractSelections";
 export {
     DEFAULT_CONTRACT_SELECTION_LIMITS,
     type ContractSelectionLimits,
@@ -37,3 +37,8 @@ export type {
     CapabilityUsageEvidence,
 } from "cms-repository/providers/selections/interfaces/ContractUpgrade";
 export { validateCapabilityUsage } from "cms-repository/providers/selections/core/upgrades/requirements";
+
+export type {
+    SelectionAuthority,
+    AuthorityCapability,
+} from "cms-repository/providers/selections/interfaces/SelectionAuthority";

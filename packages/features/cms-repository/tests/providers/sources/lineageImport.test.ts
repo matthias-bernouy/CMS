@@ -21,8 +21,6 @@ test("imports exact contract ancestors needed by provider requirements", async (
     };
     const child = await admitContractRelease(childDocument);
     const consumerDocument = contractDocument("identity.access", "access.login");
-    const capability = (consumerDocument.capabilities as Record<string, unknown>[])[0]!;
-    capability.requires = [{ contractId: "communication.email", capabilityId: "email.send", versionRange: "^1.0.0" }];
     const consumer = await admitContractRelease(consumerDocument);
     const sourceContracts = new InMemoryReleaseCatalogue();
     await publishContractSet(sourceContracts, [parent, child, consumer]);
@@ -38,6 +36,7 @@ test("imports exact contract ancestors needed by provider requirements", async (
     const artifacts = [parent, child, consumer].map((admission) => contractEntry(admission));
     const providerEntry: RepositoryArtifactEntry = {
         repositoryId: "local",
+
         kind: "provider-manifest",
         publisherId: provider.manifest.provenance.publisherId,
         id: provider.manifest.providerId,

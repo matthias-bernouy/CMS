@@ -7,11 +7,11 @@ import {
     expectArray,
     expectRecord,
     rejectUnknownKeys,
-} from "cms-repository/providers/manifests/core/values";
+} from "cms-repository/providers/manifests/core/protocol/values";
 import { parseSemVer } from "cms-repository/providers/manifests/core/versioning/versionRange";
-import type { ContractSelection } from "../interfaces/ContractSelection";
-import { ContractSelectionValidationError, translateSelectionError } from "./errors";
-import { DEFAULT_CONTRACT_SELECTION_LIMITS, type ContractSelectionLimits, selectionLimits } from "./limits";
+import type { ContractSelection } from "../../interfaces/ContractSelection";
+import { ContractSelectionValidationError, translateSelectionError } from "../errors";
+import { DEFAULT_CONTRACT_SELECTION_LIMITS, type ContractSelectionLimits, selectionLimits } from "../limits";
 
 export function parseContractSelections(
     value: unknown,

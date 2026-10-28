@@ -4,7 +4,7 @@ import type { ProviderInstallationStore } from "cms-repository/providers/install
 import { installationSelectionRevision } from "cms-repository/providers/installations/core/selectionRevision";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import { ContractSelectionValidationError } from "../core/errors";
-import { parseSelectionSiteId } from "../core/parseContractSelections";
+import { parseSelectionSiteId } from "../core/graph/parseContractSelections";
 import type {
     ContractSelectionDependencySnapshot,
     ContractSelectionDependencySource,

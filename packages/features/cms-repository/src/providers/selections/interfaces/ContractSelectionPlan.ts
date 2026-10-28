@@ -1,3 +1,4 @@
+import type { SelectionAuthority } from "./SelectionAuthority";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import type { ProviderInstallation } from "cms-repository/providers/installations/interfaces/ProviderInstallation";
 import type { ProviderInstallationLimits } from "cms-repository/providers/installations/core/limits";
@@ -13,9 +14,9 @@ export interface ContractSelectionContext {
 }
 
 export interface ContractSelectionDependency {
-    readonly source: "contract" | "implementation";
+    readonly source: "provider" | "implementation";
     readonly fromContractId: string;
-    readonly fromCapabilityId?: string;
+    readonly fromInstallationId?: string;
     readonly contractId: string;
     readonly capabilityId: string;
     readonly versionRange: string;
@@ -29,6 +30,7 @@ export interface ContractSelectionPlan {
     readonly siteId: string;
     readonly selections: readonly ContractSelection[];
     readonly dependencies: readonly ContractSelectionDependency[];
+    readonly authority: SelectionAuthority;
     readonly structurallyValid: true;
     readonly runtimeReadiness: "not-evaluated";
 }

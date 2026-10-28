@@ -26,7 +26,7 @@ test("collection query outputs are safe across every release accepted by their r
 function queryContract(version: string): Record<string, unknown> {
     const contract = contractDocument("catalog.items", "item.list", version);
     const capability = (contract.capabilities as Record<string, unknown>[])[0]!;
-    capability.behavior = { effect: "query", execution: "sync" };
+    capability.behavior = { sensitive: false, effect: "query", execution: "sync" };
     (capability.bindings[0] as Record<string, unknown>).method = "QUERY";
     return contract;
 }

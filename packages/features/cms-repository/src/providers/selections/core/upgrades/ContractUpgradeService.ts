@@ -1,4 +1,4 @@
-import { parseContractSelections } from "../parseContractSelections";
+import { parseContractSelections } from "../graph/parseContractSelections";
 import type {
     ContractSelectionStore,
     ContractSelectionDependencySource,

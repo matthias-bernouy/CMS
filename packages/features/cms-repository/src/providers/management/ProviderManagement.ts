@@ -1,3 +1,4 @@
+import type { ProviderConnectionDraftStore } from "./connectionDrafts";
 import { verifyStoredProviderManifestJson } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
 import type { ProviderReleaseRetention } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
@@ -13,7 +14,7 @@ import {
 import type { ProviderManagementGateway } from "./types";
 
 export type ProviderManagementOptions = Readonly<{
-    drafts?: import("./connectionDrafts").ProviderConnectionDraftStore;
+    drafts?: ProviderConnectionDraftStore;
     sources?: readonly ProviderRepositorySource[];
     retention?: ProviderReleaseRetention;
     readReport: ProviderReportReader;

@@ -109,6 +109,7 @@ describe("collection authored bundle admission", () => {
         const command = contractDocument("catalog.items", "item.list");
         const query = structuredClone(command);
         ((query.capabilities as Record<string, unknown>[])[0]!.behavior as Record<string, unknown>) = {
+            sensitive: false,
             effect: "query",
             execution: "sync",
         };
@@ -157,7 +158,7 @@ describe("collection authored bundle admission", () => {
     test("proves synchronized query projections against their declared state schemas", async () => {
         const query = contractDocument("catalog.items", "item.list");
         const capability = (query.capabilities as Record<string, unknown>[])[0]!;
-        capability.behavior = { effect: "query", execution: "sync" };
+        capability.behavior = { sensitive: false, effect: "query", execution: "sync" };
         (capability.bindings[0] as Record<string, unknown>).method = "QUERY";
         const source = collectionDocument();
         source.states = [

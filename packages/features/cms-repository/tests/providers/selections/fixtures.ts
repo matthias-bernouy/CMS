@@ -26,13 +26,7 @@ export async function installationFor(
 }
 
 export async function graphFixture(extraRequirements: Record<string, unknown>[] = []) {
-    const commerce = (version: string, versionRange: string) => {
-        const document = contractDocument("commerce", "checkout", version);
-        (document.capabilities as Record<string, unknown>[])[0]!.requires = [
-            { contractId: "payment", capabilityId: "pay", versionRange },
-        ];
-        return document;
-    };
+    const commerce = (version: string, _versionRange: string) => contractDocument("commerce", "checkout", version);
     const releases = await releaseCatalogue(
         contractDocument("payment", "pay"),
         contractDocument("payment", "pay", "2.0.0"),

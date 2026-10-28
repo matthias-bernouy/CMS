@@ -16,9 +16,6 @@ export const scope = { siteId, installationId };
 
 function commerceDocument(version: string, paymentRange: string) {
     const document = contractDocument("commerce", "checkout", version);
-    (document.capabilities as Record<string, unknown>[])[0]!.requires = [
-        { contractId: "payment", capabilityId: "create-link", versionRange: paymentRange },
-    ];
     return document;
 }
 

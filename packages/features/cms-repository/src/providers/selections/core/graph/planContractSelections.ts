@@ -1,9 +1,10 @@
+import { selectionAuthority } from "../authority/inventory";
 import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import { DEFAULT_PROVIDER_INSTALLATION_LIMITS } from "cms-repository/providers/installations/core/limits";
-import type { ContractSelectionContext, ContractSelectionPlan } from "../interfaces/ContractSelectionPlan";
+import type { ContractSelectionContext, ContractSelectionPlan } from "../../interfaces/ContractSelectionPlan";
 import { selectionDependencies, validateSelectionGraph } from "./dependencyGraph";
-import { ContractSelectionValidationError, translateSelectionError } from "./errors";
-import { DEFAULT_CONTRACT_SELECTION_LIMITS, type ContractSelectionLimits, selectionLimits } from "./limits";
+import { ContractSelectionValidationError, translateSelectionError } from "../errors";
+import { DEFAULT_CONTRACT_SELECTION_LIMITS, type ContractSelectionLimits, selectionLimits } from "../limits";
 import { parseContractSelections, parseSelectionSiteId } from "./parseContractSelections";
 import { resolveSelections, snapshotInstallations } from "./resolveSelections";
 
@@ -45,6 +46,7 @@ export async function planContractSelections(
             siteId: site,
             selections,
             dependencies,
+            authority: selectionAuthority(resolved),
             structurallyValid: true,
             runtimeReadiness: "not-evaluated",
         });

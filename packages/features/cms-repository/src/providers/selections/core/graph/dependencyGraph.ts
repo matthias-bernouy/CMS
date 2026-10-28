@@ -1,6 +1,6 @@
 import { satisfiesVersionRange } from "cms-repository/exports/contracts/compatibility";
-import type { ContractSelectionDependency } from "../interfaces/ContractSelectionPlan";
-import { ContractSelectionValidationError } from "./errors";
+import type { ContractSelectionDependency } from "../../interfaces/ContractSelectionPlan";
+import { ContractSelectionValidationError } from "../errors";
 import { findResolvedImplementation, type ResolvedSelection } from "./resolveSelections";
 
 const MAX_SELECTION_DEPENDENCY_DEPTH = 8;
@@ -19,20 +19,17 @@ export function selectionDependencies(
             present: findResolvedImplementation(resolved, dependency.contractId) !== null,
         });
     };
+    const installations = new Set<string>();
     for (const [contractId, node] of resolved) {
-        for (const release of node.lineage) {
-            for (const capability of release.capabilities) {
-                for (const requirement of capability.requires ?? []) {
-                    add({
-                        contractId: requirement.contractId,
-                        capabilityId: requirement.capabilityId,
-                        versionRange: requirement.versionRange,
-                        source: "contract",
-                        fromContractId: contractId,
-                        fromCapabilityId: capability.id,
-                        optional: false,
-                    });
-                }
+        if (!installations.has(node.selection.installationId)) {
+            installations.add(node.selection.installationId);
+            for (const requirement of node.providerRequires) {
+                add({
+                    ...requirement,
+                    source: "provider",
+                    fromContractId: contractId,
+                    fromInstallationId: node.selection.installationId,
+                });
             }
         }
         for (const requirement of node.implementation.requires) {
@@ -48,6 +45,21 @@ export function validateSelectionGraph(
 ): void {
     const edges = new Map<string, ContractSelectionDependency[]>();
     for (const dependency of dependencies) {
+        if (dependency.source === "provider") {
+            const target = findResolvedImplementation(resolved, dependency.contractId);
+            if (
+                (!target && !dependency.optional) ||
+                (target &&
+                    (!target.release.capabilities.some(({ id }) => id === dependency.capabilityId) ||
+                        !satisfiesVersionRange(target.release.version, dependency.versionRange)))
+            ) {
+                throw new ContractSelectionValidationError(
+                    target ? "incompatible_dependency" : "missing_dependency",
+                    "Provider global requirement is not satisfied",
+                );
+            }
+            continue;
+        }
         const list = edges.get(dependency.fromContractId) ?? [];
         list.push(dependency);
         edges.set(dependency.fromContractId, list);

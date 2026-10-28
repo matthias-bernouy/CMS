@@ -2,7 +2,7 @@ import type { AdmittedContractRelease } from "cms-repository/exports/contracts";
 import { planContractPublications, type ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import type { AdmittedProviderManifest } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
 import { validateProviderManifestReferences } from "cms-repository/providers/manifests/core/admission/validateProviderManifest";
-import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/errors";
+import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
 import type {
     CatalogueProviderManifest,
     ProviderManifestCatalogue,

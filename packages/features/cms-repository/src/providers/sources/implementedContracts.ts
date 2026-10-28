@@ -1,6 +1,6 @@
 import { admitContractReleaseJson, type AdmittedContractRelease } from "cms-repository/exports/contracts";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/errors";
+import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
 import type { ProviderManifest } from "cms-repository/providers/manifests/interfaces/ProviderManifest";
 import type { ProviderRepositorySource, RepositoryArtifactEntry, RepositoryArtifactReference } from "./interfaces";
 

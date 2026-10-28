@@ -15,7 +15,7 @@ describe("exact site selection planning", () => {
             const plan = await planContractSelections(siteId, input, context);
             expect(plan.selections).toEqual(input);
             expect(plan).toMatchObject({ structurallyValid: true, runtimeReadiness: "not-evaluated" });
-            expect(plan.dependencies.map((dependency) => dependency.source)).toEqual(["contract", "implementation"]);
+            expect(plan.dependencies.map((dependency) => dependency.source)).toEqual(["implementation"]);
             expect(Object.isFrozen(plan.dependencies[0])).toBe(true);
         }
     });
@@ -88,7 +88,9 @@ describe("exact site selection planning", () => {
     });
 
     test("snapshots input before async reads and bounds dependency/installation counts", async () => {
-        const { context, installation, select } = await graphFixture();
+        const { context, installation, select } = await graphFixture([
+            { contractId: "emailer", capabilityId: "send", versionRange: "^1.0.0", optional: true },
+        ]);
         const mutable = structuredClone(installation);
         const payment = { ...(await select("payment")) };
         const pending = planContractSelections(siteId, [payment], { ...context, installations: [mutable] });

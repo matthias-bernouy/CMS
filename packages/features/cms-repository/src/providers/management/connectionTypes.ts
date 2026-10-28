@@ -1,3 +1,5 @@
+import type { ProviderDelegationSelector } from "cms-repository/providers/manifests/interfaces/ProviderManifest";
+import type { ProviderConnectionDraftStore } from "./connectionDrafts";
 import type { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import type { ProviderInstallationPreparation } from "cms-repository/providers/installations/interfaces/ProviderInstallationPreparation";
 import type { ProviderRuntimeReport } from "cms-repository/providers/installations/interfaces/ProviderRuntimeReport";
@@ -23,6 +25,27 @@ export type ProviderConnectionPreview = {
     manifestDigest: string;
     contracts: { contractId: string; version: string; status: string }[];
     requests: { contractId: string; capabilityId: string; versionRange: string; optional: boolean }[];
+    authorityDigest: string;
+    delegation: {
+        policies: readonly {
+            implementationContractId: string;
+            sources: readonly string[];
+            allow: readonly ProviderDelegationSelector[];
+        }[];
+        matches: readonly {
+            sourceContractId: string;
+            sourceVersion: string;
+            sourceDigest: string;
+            sourceCapabilityId: string;
+            targetContractId: string;
+            targetVersion: string;
+            targetDigest: string;
+            targetCapabilityId: string;
+            effect: "query" | "command";
+            sensitive: boolean;
+            access: "public" | "authenticated" | "admin";
+        }[];
+    };
     check: string;
 };
 
@@ -34,6 +57,7 @@ export type ProviderConnectionLifecycle = Pick<
 >;
 
 export type PendingProviderConnection = {
+    authorityDigest: string;
     preparation: ProviderInstallationPreparation;
     token: string;
     actorId: string;
@@ -42,7 +66,7 @@ export type PendingProviderConnection = {
 };
 
 export type ProviderConnectionDependencies = {
-    drafts?: import("./connectionDrafts").ProviderConnectionDraftStore;
+    drafts?: ProviderConnectionDraftStore;
     lifecycle?: ProviderConnectionLifecycle;
     readReport: ProviderReportReader;
     createId?: () => string;

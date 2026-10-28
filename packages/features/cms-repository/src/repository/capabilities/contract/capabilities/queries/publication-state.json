@@ -4,7 +4,8 @@
     "description": "publication-state",
     "behavior": {
         "effect": "query",
-        "execution": "sync"
+        "execution": "sync",
+        "sensitive": false
     },
     "input": {
         "type": "object",

@@ -7,7 +7,7 @@ const source = resolve(import.meta.dir, "../../src/repository/capabilities/contr
 
 test("HTTP-only Repository source snapshots have an explicit new immutable release coordinate", async () => {
     const artifact = await admitRepositoryContract();
-    expect(artifact.digest).toBe("sha256:f99ca466f3d7a190361e475948a14367cdf582a797eecd0adb672b4cfc526c1d");
+    expect(artifact.digest).toBe("sha256:11d496694373cf6f9a8f985d46411c4a742a77e95b6dcaf23cd45f0b044d70d7");
     expect(artifact.release.capabilities).toHaveLength(16);
     expect(artifact.bindings).toHaveLength(16);
     expect(
