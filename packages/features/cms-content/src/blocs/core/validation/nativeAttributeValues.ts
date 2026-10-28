@@ -1,3 +1,5 @@
+import { replaceContentTextExpressions } from "cms-content/pages/core/rendering/contentTexts";
+import { isUserFacingTextAttribute } from "cms-content/pages/core/rendering/userFacingTextAttributes";
 import { isSafeNavigationalUrl, normalizeInternalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 import { interpolationExpressions } from "cms-content/blocs/core/markup/bindings/operation";
 import { parseBindingExpression } from "cms-content/blocs/core/markup/expression/parser";
@@ -52,6 +54,14 @@ const NEW_TAB_REL = new Set([
 export function nativeAttributeValueIssue(tag: string, attribute: string, value: string): string | null {
     const normalizedTag = tag.toLowerCase();
     const normalizedAttribute = attribute.toLowerCase();
+    if (isUserFacingTextAttribute(normalizedTag, normalizedAttribute)) {
+        try {
+            // Server text is resolved by the shared renderer; validate the remaining static attribute here.
+            value = replaceContentTextExpressions(value, () => "translated text");
+        } catch {
+            return `attribute "${attribute}" contains an invalid collection text reference`;
+        }
+    }
     const contributedAssetUrl =
         isContributedAssetSource(value) &&
         ((normalizedTag === "a" && normalizedAttribute === "href") ||

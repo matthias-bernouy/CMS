@@ -1,3 +1,4 @@
+import { validateContentTextPlacements } from "cms-content/pages/core/rendering/contentTextTraversal";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { extractRefs } from "cms-content/blocs/core/markup/contentRefs";
 import { managedNativeElementIssue } from "cms-content/blocs/core/markup/validation/managedNativeElements";
@@ -29,7 +30,7 @@ export type PageDocumentValidationResult = {
     readonly uses: readonly string[];
 };
 
-/** Canonical Page-document grammar shared by site-authored and contributed Pages. */
+/** Canonical document grammar shared by examples and site-owned Pages. */
 export function validatePageDocument(
     html: string,
     blocs: readonly PageDocumentBlocContract[],
@@ -43,6 +44,14 @@ export function validatePageDocument(
     const available = new Map([...visible, ...hidden]);
     const preflight = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>").document;
     preflight.body.innerHTML = html;
+    try {
+        validateContentTextPlacements(preflight.body);
+    } catch (error) {
+        throw new ContentValidationError(
+            "content",
+            error instanceof Error ? error.message : "invalid server text placement",
+        );
+    }
     validateHosts(preflight, available, new Map((options.unresolvedBlocs ?? []).map((bloc) => [bloc.id, bloc])), true);
     const normalized = validatePageContentMarkup(html);
     const unresolved = new Map((options.unresolvedBlocs ?? []).map((bloc) => [bloc.id, bloc]));
