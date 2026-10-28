@@ -72,11 +72,9 @@ describe("validateSettingsPatch — canonical site host", () => {
 });
 
 describe("validateSettingsPatch — system Page references", () => {
-    test("accepts stable contributed Page references", () => {
+    test("accepts stable site Page references", () => {
         const login = {
-            kind: "contribution" as const,
-            sourceId: "ulvia.official",
-            contributionId: "ulvia-official",
+            kind: "site" as const,
             pageId: "login",
         };
 

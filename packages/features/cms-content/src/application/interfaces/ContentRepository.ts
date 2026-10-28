@@ -6,16 +6,15 @@ import type {
     TBloc,
     TBlocWrite,
 } from "cms-content/blocs/interfaces/blocs";
-import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/interfaces/pages";
+import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { PageReference } from "cms-content/pages/interfaces/routing";
 import type { PageContentReference } from "cms-content/pages/core/queries/contentReferences";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import type { ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
-import type { PageCapabilityRequirement, RenderablePage } from "./ContentReader";
+import type { PageCapabilityRequirement } from "./ContentReader";
 
-export type ContentContributionSnapshot = {
+export type ContentTextSnapshot = {
     readonly revision: number | string;
-    readonly pages: readonly RenderablePage[];
     readonly texts: readonly ContentTextSource[];
 };
 
@@ -102,7 +101,7 @@ export type PageScan = {
 
 export interface ContentRepository {
     /** Runtime projections supplied by package/extension adapters. */
-    getContentContributions?(): Promise<ContentContributionSnapshot>;
+    getTextContributions?(): Promise<ContentTextSnapshot>;
     getPageRequirements?(page: TPage): Promise<readonly PageCapabilityRequirement[]>;
     getSiteBlocGroups(): Promise<SiteBlocGroup[]>;
     updateSiteBlocGroup(id: string, input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup>;
@@ -153,7 +152,7 @@ export interface ContentRepository {
     /** Editorial route record access. Public consumers use `resolvePublishedRoute`. */
     getPageRoute(path: string): Promise<PageRoute | null>;
     getPageRoutes?(paths: readonly string[]): Promise<PageRoute[]>;
-    insertPage(path: string, title: string, content?: string, options?: PageCreateOptions): Promise<void>;
+    insertPage(path: string, title: string, content?: string): Promise<void>;
     updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null>;
     deletePage(id: string, expectedRevision?: number): Promise<void>;
     setPagePaths?(

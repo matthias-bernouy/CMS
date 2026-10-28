@@ -87,7 +87,7 @@ describe("InMemoryContentRepository.getPagesMetadata — filter + sort", () => {
         let contentRevision = 3;
         let systemRevision = 5;
         const reader = createContentReader({
-            getContentContributions: async () => ({ revision: contentRevision, pages: [], texts: [] }),
+            getTextContributions: async () => ({ revision: contentRevision, texts: [] }),
             getSystemRevision: async () => systemRevision,
         } as never);
 

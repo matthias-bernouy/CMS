@@ -22,21 +22,11 @@ export type PageCapabilityRequirement = {
     readonly versionRange: string;
 };
 
-export type RenderablePageSource =
-    | {
-          readonly kind: "site";
-          readonly pageId: string;
-          readonly revision: number;
-      }
-    | {
-          readonly kind: "contribution";
-          readonly sourceId: string;
-          readonly contributionId: string;
-          readonly version: string;
-          readonly digest: string;
-          readonly pageId: string;
-          readonly defaultPath: string;
-      };
+export type RenderablePageSource = {
+    readonly kind: "site";
+    readonly pageId: string;
+    readonly revision: number;
+};
 
 export type RenderablePage = {
     readonly reference: PageReference;

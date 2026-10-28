@@ -22,6 +22,7 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
         updatePage: [],
     };
     const inner = {
+        getPageById: async () => null,
         insertPage: async (path: string, title: string, content?: string) => {
             calls.insertPage.push([path, title, content]);
         },

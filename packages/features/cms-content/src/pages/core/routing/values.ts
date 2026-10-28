@@ -1,95 +1,28 @@
-import type { PageReference, RegisteredPageRoute } from "cms-content/pages/interfaces/routing";
+import type { PageReference } from "cms-content/pages/interfaces/routing";
 import type { PageRoute } from "cms-content/pages/interfaces/pages";
-import { validatePagePath } from "cms-content/pages/core/validation/page";
 import { isValidPathFormat } from "cms-content/application/core/validation/predicates";
 
-const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const sitePageId = /^[0-9A-Za-z][0-9A-Za-z._:-]{0,199}$/u;
 const RESERVED_PAGE_PATH_PREFIXES = ["/.cms", "/api", "/assets", "/auth"] as const;
 
 export function validatePageReference(page: PageReference): PageReference {
-    if (page.kind === "site") {
-        if (!sitePageId.test(page.pageId)) {
-            throw new TypeError("A site Page reference must contain a valid Page ID.");
-        }
-        return { kind: "site", pageId: page.pageId };
+    if (
+        !page ||
+        page.kind !== "site" ||
+        typeof page.pageId !== "string" ||
+        !sitePageId.test(page.pageId) ||
+        Object.keys(page).some((key) => key !== "kind" && key !== "pageId")
+    ) {
+        throw new TypeError("Only valid site-owned Page references are supported");
     }
-    if (!identifier.test(page.sourceId) || !identifier.test(page.contributionId) || !identifier.test(page.pageId)) {
-        throw new TypeError("A contributed Page reference must contain valid qualified identifiers.");
-    }
-    return { ...page };
+    return { kind: "site", pageId: page.pageId };
 }
 
-export function pageReferenceKey(page: PageReference): string {
-    const value = validatePageReference(page);
-    return value.kind === "site"
-        ? JSON.stringify(["site", value.pageId])
-        : JSON.stringify(["contribution", value.sourceId, value.contributionId, value.pageId]);
-}
-
-export function pageScopeKey(siteId: string, page: PageReference): string {
-    return JSON.stringify([validateSiteId(siteId), pageReferenceKey(page)]);
-}
-
-export function scopedPageRouteKey(siteId: string, path: string): string {
-    return JSON.stringify([validateSiteId(siteId), validateRegisteredPagePath(path)]);
-}
-
-export function validateSiteId(siteId: string): string {
-    if (typeof siteId !== "string" || !siteId || siteId !== siteId.trim() || siteId.length > 128) {
-        throw new TypeError("A Page route site ID must be a nonempty bounded string.");
-    }
-    return siteId;
-}
-
-export function nextPageRoute(
-    route: RegisteredPageRoute,
-    change: { readonly defaultPath?: string; readonly overridePath?: string | null },
-): RegisteredPageRoute {
-    const defaultPath = validateRegisteredPagePath(change.defaultPath ?? route.defaultPath);
-    const overridePath =
-        change.overridePath === undefined ? (route.overridePath ?? undefined) : (change.overridePath ?? undefined);
-    if (overridePath !== undefined) {
-        validateRegisteredPagePath(overridePath);
-    }
-    const path = overridePath ?? defaultPath;
-    const aliases = [...new Set([...(route.aliases ?? []), route.defaultPath, route.path])]
-        .filter((candidate) => candidate !== defaultPath && candidate !== path)
-        .sort();
-    const { aliases: _aliases, overridePath: _overridePath, ...base } = route;
-    return {
-        ...base,
-        defaultPath,
-        ...(overridePath ? { overridePath } : {}),
-        path,
-        ...(aliases.length > 0 ? { aliases } : {}),
-        revision: route.revision + 1,
-    };
-}
-
-export function pageRouteClaims(route: Pick<RegisteredPageRoute, "defaultPath" | "path" | "aliases">): string[] {
-    return [...new Set([route.defaultPath, route.path, ...(route.aliases ?? [])])].sort();
-}
-
-export function validateRegisteredPagePath(value: string): string {
-    const path = validatePagePath(value);
-    if (isReservedPagePath(path)) {
-        throw new TypeError("Page path is reserved by the kernel.");
-    }
-    return path;
-}
-
-/** Non-throwing request-boundary check for paths that can exist in the Page route registry. */
 export function isValidRegisteredPagePath(value: string): boolean {
     return isValidPathFormat(value) && !isReservedPagePath(value);
 }
-
 function isReservedPagePath(path: string): boolean {
     return RESERVED_PAGE_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
-}
-
-export function clonePageRoute(route: RegisteredPageRoute): RegisteredPageRoute {
-    return structuredClone(route);
 }
 
 export function canUsePageRoute(route: Pick<PageRoute, "pageId" | "ownerPageId" | "state">, pageId: string): boolean {

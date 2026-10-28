@@ -1,3 +1,4 @@
+import { isValidRegisteredPagePath } from "cms-content/pages/core/routing/values";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError, DuplicatePagePathError } from "cms-content/application/core/validation/errors";
@@ -37,6 +38,9 @@ export function planPagePaths(paths: Record<string, string>, system: TSystem): P
             continue;
         }
         const path = publicPagePath(language, localPath, defaultLanguage);
+        if (!isValidRegisteredPagePath(path)) {
+            throw new ContentValidationError("paths", "public path is reserved by the CMS");
+        }
         if (used.has(path)) {
             throw new DuplicatePagePathError(path);
         }

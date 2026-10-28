@@ -1,6 +1,6 @@
-import type { PageContributionOrigin, PageCreateOptions, TPage } from "cms-content/pages/interfaces/pages";
+import type { TPage } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
-import { isValidPathFormat } from "cms-content/application/core/validation/predicates";
+import { isValidRegisteredPagePath } from "cms-content/pages/core/routing/values";
 import { validatePageIndexingConfiguration } from "cms-content/pages/core/validation/indexing";
 import { validatePageSeo } from "cms-content/pages/core/validation/seo";
 import {
@@ -11,10 +11,10 @@ import {
     validateId,
 } from "cms-content/application/core/validation/fields";
 
-/** Page path: `/seg/seg` shape (see `isValidPathFormat`). */
+/** Page path: `/seg/seg` shape (see `isValidRegisteredPagePath`). */
 export function validatePagePath(value: string): string {
-    if (!isValidPathFormat(value)) {
-        throw new ContentValidationError("path", "must start with '/' and contain only [a-zA-Z0-9-/]");
+    if (!isValidRegisteredPagePath(value)) {
+        throw new ContentValidationError("path", "must be a valid public path outside reserved CMS routes");
     }
     return value;
 }
@@ -24,37 +24,30 @@ export function validatePageTitle(value: string): string {
     return validateLabel("title", value, 70);
 }
 
-export function validatePageCreateOptions(options: PageCreateOptions | undefined): PageCreateOptions | undefined {
-    if (!options) {
-        return undefined;
-    }
-    return {
-        ...(options.origin ? { origin: validatePageOrigin(options.origin) } : {}),
-    };
-}
-
-function validatePageOrigin(origin: PageContributionOrigin): PageContributionOrigin {
-    const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
-    const version = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
-    if (
-        !identifier.test(origin.sourceId) ||
-        !identifier.test(origin.contributionId) ||
-        !identifier.test(origin.pageId) ||
-        !version.test(origin.version) ||
-        !/^sha256:[0-9a-f]{64}$/u.test(origin.digest) ||
-        Object.keys(origin).some((key) => !["sourceId", "contributionId", "pageId", "version", "digest"].includes(key))
-    ) {
-        throw new ContentValidationError("origin", "must identify one exact contributed Page");
-    }
-    return structuredClone(origin);
-}
-
 /**
  * Validate + normalize a page patch (the shape `updatePage` receives). Only
  * present fields are checked; each returned field is normalized (trimmed,
  * hardened, deduped). Throws `ContentValidationError` on the first offender.
  */
 export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
+    const allowed = new Set([
+        "id",
+        "revision",
+        "path",
+        "paths",
+        "content",
+        "title",
+        "description",
+        "seo",
+        "visible",
+        "tags",
+        "indexing",
+    ]);
+    for (const key of Object.keys(page)) {
+        if (!allowed.has(key)) {
+            throw new ContentValidationError(key, "unsupported Page property");
+        }
+    }
     const out: Partial<TPage> = { ...page };
     // Language paths are managed by setPagePaths so route reservations stay in sync.
     delete out.paths;
@@ -87,9 +80,6 @@ export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
     }
     if (page.indexing !== undefined) {
         out.indexing = validatePageIndexingConfiguration(page.indexing);
-    }
-    if (page.origin !== undefined) {
-        throw new ContentValidationError("origin", "cannot change after Page creation");
     }
     return out;
 }

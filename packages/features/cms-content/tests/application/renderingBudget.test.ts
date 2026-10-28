@@ -1,11 +1,5 @@
 import { expect, test } from "bun:test";
-import {
-    createContentReader,
-    defaultSystem,
-    type ContentRepository,
-    type RenderablePage,
-    type TPage,
-} from "@bernouy/cms-content";
+import { createContentReader, defaultSystem, type ContentRepository, type TPage } from "@bernouy/cms-content";
 
 test("a Page render snapshot has a fixed repository-read budget", async () => {
     const fixture = renderingFixture();
@@ -14,7 +8,7 @@ test("a Page render snapshot has a fixed repository-read budget", async () => {
     expect(inputs.route?.kind).toBe("current");
     expect(fixture.calls()).toEqual({
         getBlocsList: 1,
-        getContentContributions: 1,
+        getTextContributions: 1,
         getPageById: 1,
         getPageRequirements: 1,
         getPageRoute: 2,
@@ -29,7 +23,7 @@ test("a Page revision check avoids loading render payloads", async () => {
     await createContentReader(fixture.repository).getPageRenderRevision!("/");
 
     expect(fixture.calls()).toEqual({
-        getContentContributions: 1,
+        getTextContributions: 1,
         getPageById: 1,
         getPageRequirements: 1,
         getPageRoute: 2,
@@ -39,7 +33,7 @@ test("a Page revision check avoids loading render payloads", async () => {
     });
 });
 
-test("unrelated contributed Pages do not increase the serialized Page render snapshot", async () => {
+test("unrelated stored Pages do not increase the serialized Page render snapshot", async () => {
     const baseline = renderingFixture();
     const corpus = renderingFixture(200);
 
@@ -52,9 +46,9 @@ test("unrelated contributed Pages do not increase the serialized Page render sna
 
 test("large contribution revisions remain bounded and still invalidate Page render caches", async () => {
     const fixture = renderingFixture();
-    const original = fixture.repository.getContentContributions!.bind(fixture.repository);
+    const original = fixture.repository.getTextContributions!.bind(fixture.repository);
     let revision = "large-contribution-".repeat(1000);
-    fixture.repository.getContentContributions = async () => ({ ...(await original()), revision });
+    fixture.repository.getTextContributions = async () => ({ ...(await original()), revision });
     const reader = createContentReader(fixture.repository);
     const first = await reader.getPageRenderInputs!("/");
     expect(first.artifactRevision).toHaveLength(71);
@@ -78,7 +72,7 @@ function renderingFixture(unrelatedPageCount = 0): {
     const system = defaultSystem();
     system.site.language = "en";
     const unrelatedPages = Array.from({ length: unrelatedPageCount }, (_, index) =>
-        renderablePage(pageRecord(`unrelated-${index}`, `/unrelated-${index}`)),
+        pageRecord(`unrelated-${index}`, `/unrelated-${index}`),
     );
     const repository = {
         getSystem: async () => {
@@ -89,9 +83,9 @@ function renderingFixture(unrelatedPageCount = 0): {
             count("getSystemRevision");
             return 4;
         },
-        getContentContributions: async () => {
-            count("getContentContributions");
-            return { revision: 9, pages: unrelatedPages, texts: [] };
+        getTextContributions: async () => {
+            count("getTextContributions");
+            return { revision: 9, texts: [] };
         },
         getSiteBlocsRevision: async () => {
             count("getSiteBlocsRevision");
@@ -106,6 +100,10 @@ function renderingFixture(unrelatedPageCount = 0): {
         getPageById: async (id: string) => {
             count("getPageById");
             return id === page.id ? structuredClone(page) : null;
+        },
+        getPublishedPages: async () => {
+            count("getPublishedPages");
+            return structuredClone([page, ...unrelatedPages]);
         },
         getPageRequirements: async () => {
             count("getPageRequirements");
@@ -129,15 +127,6 @@ function pageRecord(id: string, path: string): TPage {
         content: "<main></main>",
         visible: true,
         tags: [],
-    };
-}
-
-function renderablePage(page: TPage): RenderablePage {
-    return {
-        reference: { kind: "site", pageId: page.id },
-        page,
-        source: { kind: "site", pageId: page.id, revision: page.revision },
-        requirements: [],
     };
 }
 

@@ -29,10 +29,8 @@ export {
     blocThumbnailFromSource,
 } from "cms-content/blocs/core/presentationImage";
 export type {
-    PageCreateOptions,
     PageIndexingConfiguration,
     PageRoute,
-    PageContributionOrigin,
     TPage,
     TPageRef,
 } from "cms-content/pages/interfaces/pages";
@@ -78,9 +76,6 @@ export type {
     PageRouteReader,
     SitePageReference,
     ResolvedPageLink,
-    PageRouteRegistration,
-    PageRouteRegistry,
-    RegisteredPageRoute,
 } from "cms-content/pages/interfaces/routing";
 export {
     assertPageContentLinks,
@@ -88,21 +83,8 @@ export {
     pageContentPaths,
     resolvePageLinkTarget,
 } from "cms-content/pages/core/routing/links";
-export { pageRouteClaims, validatePageReference } from "cms-content/pages/core/routing/values";
-export { PageRouteMutationCoordinator } from "cms-content/pages/core/routing/mutationCoordinator";
-export { synchronizePageRouteRegistrations } from "cms-content/pages/core/routing/synchronizeRoutes";
-export {
-    synchronizeSitePageRoutes,
-    validatePageLinks,
-    withSitePageRoutes,
-} from "cms-content/pages/core/routing/site";
-export {
-    PageRouteAlreadyRegisteredError,
-    PageRouteCollisionError,
-    PageRouteNotFoundError,
-    PageRouteRevisionConflictError,
-} from "cms-content/pages/core/routing/errors";
-export { InMemoryPageRouteRegistry } from "cms-content/pages/default-implementation/memory/InMemoryPageRouteRegistry";
+export { validatePageReference } from "cms-content/pages/core/routing/values";
+export { PageRouteNotFoundError, PageReferencedError } from "cms-content/pages/core/routing/errors";
 export { languagePrefix, localPagePath, publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
 export { pageSeoForLanguage } from "cms-content/pages/core/lifecycle/pageSeo";
 export type {
@@ -142,7 +124,7 @@ export { createContentReader } from "cms-content/application/core/createContentR
 export { resolvePublishedRoute } from "cms-content/pages/core/queries/resolvePublishedRoute";
 export type {
     ContentRepository,
-    ContentContributionSnapshot,
+    ContentTextSnapshot,
     BlocListItemResponse,
     BlocListOptions,
     PageLink,

@@ -1,3 +1,4 @@
+import type { TPage, PageRoute } from "cms-content/pages/interfaces/pages";
 import { publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { PublishedRouteResolution } from "cms-content/application/interfaces/ContentReader";
@@ -41,11 +42,30 @@ export async function resolvePublishedRoute(
     if (page?.visible !== true) {
         return { kind: "unavailable" };
     }
+    const target = resolvePageRouteTarget(route, page, system);
+    if (!target) {
+        return { kind: "unavailable" };
+    }
+    if (route.state === "redirect" || target.path !== path) {
+        return { kind: "redirect", path: target.path };
+    }
+    return { kind: "current", page: structuredClone({ ...page, path }), language: target.language };
+}
+
+/** Resolve a native Content route while preserving its language and redirect semantics. */
+export function resolvePageRouteTarget(
+    route: PageRoute,
+    page: TPage,
+    system: TSystem,
+): { path: string; language: string } | null {
+    if (route.state === "gone" || system.pageRoutesUpdating) {
+        return null;
+    }
     const requestedLanguage = route.language || system.site.language;
     const active =
         requestedLanguage === system.site.language || (system.site.activeLanguages ?? []).includes(requestedLanguage);
     if (!active && route.state === "current") {
-        return { kind: "unavailable" };
+        return null;
     }
     const language =
         route.state === "redirect" && (!active || (page.paths && !page.paths[requestedLanguage]))
@@ -54,12 +74,9 @@ export async function resolvePublishedRoute(
     const local = page.paths?.[language];
     const currentPath = local ? publicPagePath(language, local, system.site.language) : page.paths ? null : page.path;
     if (!currentPath) {
-        return { kind: "unavailable" };
+        return null;
     }
-    if (route.state === "redirect" || currentPath !== path) {
-        return { kind: "redirect", path: currentPath };
-    }
-    return { kind: "current", page: structuredClone({ ...page, path }), language };
+    return { path: currentPath, language };
 }
 
 function languageConfigurationChanged(before: TSystem, after: TSystem): boolean {

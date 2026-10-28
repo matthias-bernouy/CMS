@@ -24,7 +24,7 @@ export function installPageRenderInputReaders(
         return pageRenderRevision(route, renderingRevision);
     };
     reader.getPageRenderInputs = async (path): Promise<PageRenderInputs> => {
-        const contributions = repository.getContentContributions?.() ?? Promise.resolve(undefined);
+        const contributions = repository.getTextContributions?.() ?? Promise.resolve(undefined);
         const [route, loadedContributions, systemRevision, siteBlocsRevision, settings, renderableBlocs] =
             await Promise.all([
                 reader.resolveRenderableRoute(path),
@@ -52,7 +52,7 @@ export function installPageRenderInputReaders(
 
 async function readRenderingRevision(repository: ContentRepository): Promise<string> {
     const [contentRevision, systemRevision, siteBlocsRevision] = await Promise.all([
-        repository.getContentContributions?.().then((contributions) => contributions.revision) ?? 0,
+        repository.getTextContributions?.().then((contributions) => contributions.revision) ?? 0,
         repository.getSystemRevision?.() ?? 0,
         repository.getSiteBlocsRevision?.() ?? "[]",
     ]);

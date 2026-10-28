@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import type { PageLink, PageMeta, PagesQuery } from "cms-content/application/interfaces/ContentRepository";
-import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/interfaces/pages";
+import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { defaultSystem } from "cms-content/settings/core/system";
 import { filterAndSortPages } from "cms-content/pages/core/queries/pagesQuery";
@@ -102,7 +102,7 @@ export class InMemoryPageRepository extends InMemoryBlocRepository {
         return (await this.getAllPages()).filter(isPublishedPage).map((page) => structuredClone(page));
     }
 
-    async insertPage(path: string, title: string, content = "", options: PageCreateOptions = {}): Promise<void> {
+    async insertPage(path: string, title: string, content = ""): Promise<void> {
         this.assertPageRoutesReady();
         const language = this.system.site.language;
         const publicPath = publicPagePath(language, path, language);
@@ -112,7 +112,6 @@ export class InMemoryPageRepository extends InMemoryBlocRepository {
         const page: TPage = {
             id: randomUUIDv7(),
             revision: 1,
-            ...(options.origin ? { origin: structuredClone(options.origin) } : {}),
             path: publicPath,
             ...(language ? { paths: { [language]: path } } : {}),
             title,
@@ -150,8 +149,8 @@ export class InMemoryPageRepository extends InMemoryBlocRepository {
         if (expectedRevision !== undefined && current.revision !== expectedRevision) {
             throw new PageRevisionConflictError(expectedRevision, current.revision);
         }
-        if (page.origin !== undefined) {
-            throw new ContentValidationError("origin", "cannot change after Page creation");
+        if (Object.hasOwn(page, "origin")) {
+            throw new ContentValidationError("origin", "unsupported Page property");
         }
         if (page.path && page.path !== current.path) {
             const language = this.system.site.language;

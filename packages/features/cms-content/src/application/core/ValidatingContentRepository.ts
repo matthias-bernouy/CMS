@@ -1,3 +1,4 @@
+import { PageMutationValidation } from "cms-content/pages/core/routing/mutations";
 import type {
     ContentRepository,
     BlocListItemResponse,
@@ -14,17 +15,12 @@ import type {
     TBloc,
     TBlocWrite,
 } from "cms-content/blocs/interfaces/blocs";
-import type { PageCreateOptions, TPage } from "cms-content/pages/interfaces/pages";
+import type { TPage } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { validateSiteBlocGroupInput } from "cms-content/blocs/core/catalogue/siteBlocGroups";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
-import {
-    validatePageCreateOptions,
-    validatePagePath,
-    validatePageTitle,
-    validatePagePatch,
-} from "cms-content/pages/core/validation/page";
+import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/pages/core/validation/page";
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 import { validateSettingsPatch } from "cms-content/settings/core/validation";
 import { validateSiteBlocDefinition, validateSiteBlocSnapshot } from "cms-content/blocs/core/validation";
@@ -34,19 +30,22 @@ import type { ContentBindingValidationOptions } from "cms-content/application/co
  * Decorator that VALIDATES + NORMALIZES every authored-content write before
  * delegating to the wrapped repository — the single, unbypassable barrier so
  * the same rules apply whether the writer is the admin API, migration tooling,
- * or anything else. Reads (and non-content writes: blocs, settings, deletes) are
- * passed straight through.
+ * or anything else. Page link checks and mutations are serialized through this
+ * facade; persistence revisions remain authoritative.
  *
  * Compose it at the composition root around any real implementation:
  *   `new ValidatingContentRepository(new MongoContentRepository(db))`
  */
 export class ValidatingContentRepository implements ContentRepository {
+    private readonly pageMutations: PageMutationValidation;
     constructor(
         private readonly inner: ContentRepository,
         private readonly bindingValidation: ContentBindingValidationOptions = {},
-    ) {}
-    async getContentContributions() {
-        return (await this.inner.getContentContributions?.()) ?? { revision: 0, pages: [], texts: [] };
+    ) {
+        this.pageMutations = new PageMutationValidation(inner);
+    }
+    async getTextContributions() {
+        return (await this.inner.getTextContributions?.()) ?? { revision: 0, texts: [] };
     }
     async getPageRequirements(page: TPage) {
         return (await this.inner.getPageRequirements?.(page)) ?? [];
@@ -61,30 +60,37 @@ export class ValidatingContentRepository implements ContentRepository {
         return this.inner.updateSiteBlocGroup(id, validateSiteBlocGroupInput(input));
     }
     // ── Validated authored-content writes ─────────────────────────────────
-    async insertPage(path: string, title: string, content?: string, options?: PageCreateOptions): Promise<void> {
+    async insertPage(path: string, title: string, content?: string): Promise<void> {
         const validPath = validatePagePath(path);
         const validTitle = validatePageTitle(title);
-        const validOptions = validatePageCreateOptions(options);
-        if (content === undefined) {
-            return this.inner.insertPage(validPath, validTitle, undefined, validOptions);
-        }
-        const validContent = validatePagePatch({ content }).content!;
-        await assertContentRefsExist(this.inner, validContent, this.bindingValidation);
-        return this.inner.insertPage(validPath, validTitle, validContent, validOptions);
+        return this.pageMutations.run(async () => {
+            if (content === undefined) {
+                return this.inner.insertPage(validPath, validTitle, undefined);
+            }
+            const validContent = validatePagePatch({ content }).content!;
+            await assertContentRefsExist(this.inner, validContent, this.bindingValidation);
+            await this.pageMutations.content(validContent, [validPath]);
+            return this.inner.insertPage(validPath, validTitle, validContent);
+        });
     }
 
     async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null> {
         const valid = validatePagePatch(page);
-        const current =
-            valid.id && (valid.content !== undefined || valid.visible === true) && this.inner.getPageById
-                ? await this.inner.getPageById(valid.id)
-                : null;
-        if (valid.content !== undefined) {
-            await assertContentRefsExist(this.inner, valid.content, this.bindingValidation);
-        } else if (valid.visible === true && current) {
-            await assertContentRefsExist(this.inner, current.content, this.bindingValidation);
-        }
-        return this.inner.updatePage(valid, expectedRevision);
+        return this.pageMutations.run(async () => {
+            const current = valid.id ? await this.inner.getPageById(valid.id) : null;
+            if (valid.content !== undefined) {
+                await assertContentRefsExist(this.inner, valid.content, this.bindingValidation);
+            } else if (valid.visible === true && current) {
+                await assertContentRefsExist(this.inner, current.content, this.bindingValidation);
+            }
+            if (current || valid.content !== undefined) {
+                await this.pageMutations.content(valid.content ?? current!.content, [
+                    ...(current ? [current.path] : []),
+                    ...(valid.path ? [valid.path] : []),
+                ]);
+            }
+            return this.inner.updatePage(valid, expectedRevision);
+        });
     }
 
     // ── Pass-through: blocs (compiled + validated upstream) ────────────────
@@ -203,7 +209,10 @@ export class ValidatingContentRepository implements ContentRepository {
         return this.inner.getPageById(id);
     }
     deletePage(id: string, expectedRevision?: number) {
-        return this.inner.deletePage(id, expectedRevision);
+        return this.pageMutations.run(async () => {
+            await this.pageMutations.deletion(id);
+            return this.inner.deletePage(id, expectedRevision);
+        });
     }
     async setPagePaths(
         id: string,
@@ -215,15 +224,22 @@ export class ValidatingContentRepository implements ContentRepository {
         if (!this.inner.setPagePaths) {
             throw new Error("Page path management is not available.");
         }
-        const system = await this.inner.getSystem();
-        const plan = planPagePaths(paths, system);
-        return this.inner.setPagePaths(id, plan.paths, system, expectedPaths, expectedRevision);
+        return this.pageMutations.run(async () => {
+            const system = await this.inner.getSystem();
+            const plan = planPagePaths(paths, system);
+            return this.inner.setPagePaths!(id, plan.paths, system, expectedPaths, expectedRevision);
+        });
     }
     deletePageWithAlternative(id: string, alternativeId: string | null, expectedRevision?: number) {
         if (!this.inner.deletePageWithAlternative) {
             throw new Error("Page deletion with alternatives is not available.");
         }
-        return this.inner.deletePageWithAlternative(id, alternativeId, expectedRevision);
+        return this.pageMutations.run(async () => {
+            if (!alternativeId) {
+                await this.pageMutations.deletion(id);
+            }
+            return this.inner.deletePageWithAlternative!(id, alternativeId, expectedRevision);
+        });
     }
     getLinks(): Promise<PageLink[]> {
         return this.inner.getLinks();
@@ -247,6 +263,6 @@ export class ValidatingContentRepository implements ContentRepository {
         return this.inner.getSystemRevision();
     }
     updateSystem(system: Partial<TSystem>, expectedRevision?: number): Promise<TSystem> {
-        return this.inner.updateSystem(validateSettingsPatch(system), expectedRevision);
+        return this.pageMutations.run(() => this.inner.updateSystem(validateSettingsPatch(system), expectedRevision));
     }
 }

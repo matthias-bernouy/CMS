@@ -1,12 +1,7 @@
 import { validatePageIndexingConfiguration } from "cms-content/pages/core/validation/indexing";
 import { array, fields, integer, literal, nullable, optional, record, text, variant } from "./values";
 
-const contribution = { sourceId: text, contributionId: text, pageId: text };
-export const pageReference = variant("kind", {
-    site: fields({ kind: literal("site"), pageId: text }),
-    contribution: fields({ kind: literal("contribution"), ...contribution }),
-});
-const provenance = { ...contribution, version: text, digest: text };
+export const pageReference = fields({ kind: literal("site"), pageId: text });
 export const page = fields({
     id: text,
     revision: integer,
@@ -21,17 +16,13 @@ export const page = fields({
         }
     },
     tags: array(text),
-    origin: optional(fields(provenance)),
     seo: optional(record(fields({ title: optional(text), description: optional(text) }))),
     indexing: optional((value) => {
         validatePageIndexingConfiguration(value);
     }),
 });
 const requirement = fields({ contractId: text, capabilityId: text, versionRange: text });
-const source = variant("kind", {
-    site: fields({ kind: literal("site"), pageId: text, revision: integer }),
-    contribution: fields({ kind: literal("contribution"), ...provenance, defaultPath: text }),
-});
+const source = fields({ kind: literal("site"), pageId: text, revision: integer });
 export const renderablePage = fields({
     reference: pageReference,
     page,

@@ -1,12 +1,9 @@
+import { resolvePageRouteTarget } from "cms-content/pages/core/queries/resolvePublishedRoute";
+import type { TSystem } from "cms-content/settings/interfaces/settings";
+import { validatePageReference } from "./values";
 import { isSafeNavigationalUrl, normalizeInternalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 import { PageRouteNotFoundError } from "cms-content/pages/core/routing/errors";
-import type {
-    PageLinkTarget,
-    PageReference,
-    PageRouteReader,
-    ResolvedPageLink,
-    PageRouteRegistry,
-} from "cms-content/pages/interfaces/routing";
+import type { PageLinkTarget, PageRouteReader, ResolvedPageLink } from "cms-content/pages/interfaces/routing";
 import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import { parseHTML } from "linkedom";
 
@@ -30,31 +27,22 @@ export async function resolvePageLinkTarget(
     return { href: route.path, external: false };
 }
 
-export function createPageRouteReader(
-    routes: Pick<PageRouteRegistry, "get" | "resolve" | "resolveDefault">,
-    siteId: string,
-    siteRoutes?: {
-        getPageRoute(path: string): Promise<PageRoute | null>;
-        getPageById(id: string): Promise<TPage | null>;
-    },
-): PageRouteReader {
+export function createPageRouteReader(repository: {
+    getPageRoute(path: string): Promise<PageRoute | null>;
+    getPageById(id: string): Promise<TPage | null>;
+    getSystem(): Promise<TSystem>;
+}): PageRouteReader {
     return {
-        get: (reference: PageReference) => routes.get(siteId, reference),
-        resolvePath: async (path: string) => {
-            const siteRoute = await siteRoutes?.getPageRoute(path);
-            if (siteRoute?.state !== "gone") {
-                const page = siteRoute ? await siteRoutes?.getPageById(siteRoute.pageId) : null;
-                if (page) {
-                    return {
-                        page: { kind: "site", pageId: page.id },
-                        defaultPath: page.path,
-                        path: page.path,
-                        ...(path === page.path ? {} : { aliases: [path] }),
-                        revision: page.revision,
-                    };
-                }
-            }
-            return (await routes.resolve(siteId, path)) ?? (await routes.resolveDefault(siteId, path));
+        get: async (reference) => {
+            validatePageReference(reference);
+            const page = await repository.getPageById(reference.pageId);
+            return page ? { path: page.path } : null;
+        },
+        resolvePath: async (path) => {
+            const route = await repository.getPageRoute(path);
+            const page = route && route.state !== "gone" ? await repository.getPageById(route.pageId) : null;
+            const target = page && route ? resolvePageRouteTarget(route, page, await repository.getSystem()) : null;
+            return target ? { path: target.path } : null;
         },
     };
 }

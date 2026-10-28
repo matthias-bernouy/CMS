@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import type { PageLink } from "cms-content/application/interfaces/ContentRepository";
-import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/interfaces/pages";
+import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { pagePathsForSystem, planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
@@ -221,7 +221,7 @@ export class MongoPageRepository extends MongoBlocRepository {
         return documents.map((document) => fromPageDoc(document)!);
     }
 
-    async insertPage(path: string, title: string, content = "", options: PageCreateOptions = {}): Promise<void> {
+    async insertPage(path: string, title: string, content = ""): Promise<void> {
         return withPageRouteWrite(this.system, async (system) => {
             const language = system.site.language;
             const publicPath = publicPagePath(language, path, language);
@@ -242,7 +242,6 @@ export class MongoPageRepository extends MongoBlocRepository {
                 await this.pages.insertOne({
                     _id: id,
                     revision: 1,
-                    ...(options.origin ? { origin: structuredClone(options.origin) } : {}),
                     path: publicPath,
                     ...(language ? { paths: { [language]: path } } : {}),
                     title,
@@ -286,8 +285,8 @@ export class MongoPageRepository extends MongoBlocRepository {
             throw new PagePathUpdateConflictError();
         }
         const existing = fromPageDoc(stored)!;
-        if (rest.origin !== undefined) {
-            throw new ContentValidationError("origin", "cannot change after Page creation");
+        if (Object.hasOwn(rest, "origin")) {
+            throw new ContentValidationError("origin", "unsupported Page property");
         }
         if (expectedRevision !== undefined && existing.revision !== expectedRevision) {
             throw new PageRevisionConflictError(expectedRevision, existing.revision);
