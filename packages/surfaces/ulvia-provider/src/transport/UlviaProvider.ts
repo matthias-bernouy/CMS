@@ -12,7 +12,7 @@ export type UlviaProviderInstanceRuntime = Readonly<{
     report: ProviderRuntimeReport;
     dispatcher: ProviderCapabilityRegistry;
     logger?: Logger;
-    authorizeInvocation?: (claims: ProviderInvocationClaims) => Promise<boolean>;
+    authorizeInvocation?: (claims: ProviderInvocationClaims, controlAuthority?: boolean) => Promise<boolean>;
 }>;
 
 export type UlviaProviderInstanceLease = Readonly<{

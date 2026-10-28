@@ -1,3 +1,4 @@
+import { routeResponse } from "./routeResponse";
 import { runWithTraceContext } from "@bernouy/logging/tracing";
 import { RESOURCE_HEADER, parseResourceMetadata } from "@bernouy/cms-gateway/protocol";
 import type { GatewayResponseEffect } from "@bernouy/cms-gateway/protocol";
@@ -24,7 +25,7 @@ export function createProviderContractRelay(
     dispatcher: ProviderCapabilityDispatcher,
     scope: { readonly siteId: string; readonly providerId: string },
     logger: Logger,
-    authorize: (claims: ProviderInvocationClaims) => Promise<boolean> = async () => true,
+    authorize: (claims: ProviderInvocationClaims, controlAuthority?: boolean) => Promise<boolean> = async () => true,
 ): (request: Request, claims: ProviderInvocationClaims, controlAuthority?: boolean) => Promise<Response | null> {
     const relay = async (
         request: Request,
@@ -73,7 +74,7 @@ export function createProviderContractRelay(
             });
         }
         try {
-            if (!(await authorize(claims))) {
+            if (!(await authorize(claims, controlAuthority))) {
                 return new Response(null, { status: 403, headers: { "Cache-Control": "no-store" } });
             }
             const dispatchStartedAt = performance.now();
@@ -117,7 +118,10 @@ export function createProviderContractRelay(
             } else {
                 validateSchemaValue(capability.output, output);
             }
-            return successResponse(request.method, capability, output, responseEffect);
+            const response = successResponse(request.method, capability, output, responseEffect);
+            return controlAuthority && contractId === "ulvia.cms.installations" && capability.id === "gateway.route.get"
+                ? routeResponse(request, response)
+                : response;
         } catch (cause) {
             if (cause instanceof ProviderCapabilityDispatchError) {
                 const status = capability.binding.response.errorStatuses[cause.code];

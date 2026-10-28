@@ -48,3 +48,50 @@ test("public resolution forwards selected bounded fields and trusted actor only"
     expect(invalid.status).toBe(400);
     expect(calls).toHaveLength(1);
 });
+
+test("versioned public Content assets omit user authority while Pages, Files and ambiguous URLs remain private", async () => {
+    const calls: GatewayInvocation[] = [];
+    const handler = createPublicResourceHandler({
+        invoke: async (value) => {
+            calls.push(value);
+            return {
+                kind: "binary",
+                requestId: crypto.randomUUID(),
+                stream: new Response("bytes").body!,
+                contentType: "text/css",
+                resource: {
+                    status: 200,
+                    headers: { "content-type": "text/css", "cache-control": "public, max-age=31536000, immutable" },
+                },
+            };
+        },
+    });
+    const actor = { kind: "administrator", subjectId: "private" } as const;
+    const version = "v=0123456789&r=sha256:" + "a".repeat(64);
+    for (const path of [
+        "/_content/style?" + version,
+        "/_content/blocset?tags=cms-nav&" + version,
+        "/_content/blocstyles?collection=theme&tags=cms-nav&" + version,
+        "/_content/assets/bloc-runtime.js?v=0123456789",
+    ]) {
+        const response = await handler(
+            new Request("https://site.test" + path, { headers: { cookie: "private" } }),
+            actor,
+        );
+        expect(calls.at(-1)?.actor).toEqual({ kind: "anonymous" });
+        expect(response.headers.get("cache-control")).toContain("immutable");
+        await response.body?.cancel();
+    }
+    for (const path of [
+        "/admin/pages",
+        "/_content/style",
+        "/_content/style?" + version + "&v=0123456789",
+        "/_content/style?" + version + "&preview=1",
+        "/.cms/call/files/private?v=0123456789",
+    ]) {
+        const response = await handler(new Request("https://site.test" + path), actor);
+        expect(calls.at(-1)?.actor).toEqual(actor);
+        expect(response.headers.get("cache-control")).toBe("private, no-store");
+        await response.body?.cancel();
+    }
+});

@@ -1,4 +1,4 @@
-import { cachedResponseAsync, publicAssetCacheControl, type Cache } from "@bernouy/http-runner";
+import { getOrGenerateEntryAsync, sendCompressed, publicAssetCacheControl, type Cache } from "@bernouy/http-runner";
 import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
 import { generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 import { collectionBlocsetCacheKey } from "cms-content/blocs/core/assets/resolvePageAssets";
@@ -29,6 +29,10 @@ export async function serveBlocSet(
     const url = new URL(req.url);
     const tagsParam = url.searchParams.get("tags");
     const revision = url.searchParams.get("r");
+    const versions = url.searchParams.getAll("v");
+    if (versions.length > 1 || (versions.length === 1 && !/^[0-9a-f]{10}$/.test(versions[0]!))) {
+        return new Response(null, { status: 400, headers: { "cache-control": "no-store" } });
+    }
 
     if (!tagsParam || tagsParam.length > MAX_TAGS_LENGTH || !validRevision(revision)) {
         return new Response(null, { status: 400 });
@@ -42,19 +46,22 @@ export async function serveBlocSet(
         return new Response(null, { status: 400 });
     }
 
-    return cachedResponseAsync(
-        req,
-        collectionBlocsetCacheKey(tags, revision),
-        options.cache,
-        () =>
+    try {
+        const entry = await getOrGenerateEntryAsync(collectionBlocsetCacheKey(tags, revision), options.cache, () =>
             generateBlocSetEntry(tags, {
                 getBlocViewJS: async (tag) => {
                     const source = await options.content.getBlocViewJS(tag);
                     return source ? options.resolveContributedAssets(source) : null;
                 },
             }),
-        publicAssetCacheControl(req),
-    ).catch(() => new Response(null, { status: 500 }));
+        );
+        if (versions.length && entry.hash !== versions[0]) {
+            return new Response(null, { status: 404, headers: { "cache-control": "no-store" } });
+        }
+        return sendCompressed(req, entry, publicAssetCacheControl(req));
+    } catch {
+        return new Response(null, { status: 500, headers: { "cache-control": "no-store" } });
+    }
 }
 
 function validRevision(value: string | null): value is string {

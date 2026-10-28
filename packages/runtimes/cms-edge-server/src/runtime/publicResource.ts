@@ -1,8 +1,14 @@
+import { isPublicContentAsset } from "./publicContentAssets";
 import { GatewayError, type GatewayActor, type GatewayInvoker } from "@bernouy/cms-gateway";
 import { resourceHttpResponse, type ResourceResponsePolicy } from "@bernouy/cms-edge";
 
 export function createPublicResourceHandler(gateway: GatewayInvoker, policy: ResourceResponsePolicy = {}) {
     return async (request: Request, actor: GatewayActor): Promise<Response> => {
+        // These resources are already anonymously readable and contain no Page/user projection.
+        // Deliver them under anonymous authority so cookies cannot poison their cache policy.
+        if (isPublicContentAsset(request)) {
+            actor = { kind: "anonymous" };
+        }
         const url = new URL(request.url);
         const headers = request.headers;
         let range: ReturnType<typeof parseRange>;
