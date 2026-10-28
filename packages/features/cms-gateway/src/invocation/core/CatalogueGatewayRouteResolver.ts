@@ -1,3 +1,4 @@
+import { GatewayPinnedArtifacts } from "./dispatch/GatewayPinnedArtifacts";
 import { resolveSelectedRelease } from "./dispatch/resolveSelectedRelease";
 import type { GatewayAuthorityReads } from "./dispatch/GatewayAuthorityReads";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
@@ -19,10 +20,12 @@ export interface CatalogueGatewayRouteResolverOptions {
 export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
     readonly #options: CatalogueGatewayRouteResolverOptions;
     // Lookup hints belong to this instance-bound resolver, never to a global authority cache.
+    readonly #artifacts: GatewayPinnedArtifacts;
     readonly #selectionHints = new Map<string, string>();
 
     constructor(options: CatalogueGatewayRouteResolverOptions) {
         this.#options = options;
+        this.#artifacts = new GatewayPinnedArtifacts(options.releases, options.manifests);
     }
 
     resolve(siteId: string, contractId: string, reads?: GatewayAuthorityReads): Promise<GatewayRoute | null> {
@@ -36,7 +39,14 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
         contractId: string,
         reads?: GatewayAuthorityReads,
     ): Promise<GatewayRoute | null> {
-        const selected = await resolveSelectedRelease(this.#options, siteId, contractId, this.#selectionHints, reads);
+        const selected = await resolveSelectedRelease(
+            this.#options,
+            siteId,
+            contractId,
+            this.#selectionHints,
+            reads,
+            this.#artifacts,
+        );
         if (!selected) {
             return null;
         }
@@ -47,7 +57,7 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
         if (!installation) {
             throw new GatewayError("invalid_route", "selected provider installation is missing");
         }
-        const manifest = await this.#options.manifests.findByDigest(installation.installation.approval.manifestDigest);
+        const manifest = await this.#artifacts.manifest(installation.installation.approval.manifestDigest);
         if (!manifest) {
             throw new GatewayError("invalid_route", "approved manifest is missing");
         }

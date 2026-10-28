@@ -1,3 +1,4 @@
+import type { GatewayPinnedArtifacts } from "./GatewayPinnedArtifacts";
 import { resolveContract } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import type { CatalogueGatewayRouteResolverOptions } from "../CatalogueGatewayRouteResolver";
@@ -10,6 +11,7 @@ export async function resolveSelectedRelease(
     contractId: string,
     hints: Map<string, string>,
     reads?: GatewayAuthorityReads,
+    artifacts?: GatewayPinnedArtifacts,
 ) {
     const stored = await (reads ? reads.selection(options.selections, siteId) : options.selections.get(siteId));
     if (!stored) {
@@ -32,16 +34,20 @@ export async function resolveSelectedRelease(
         ? [preferred, ...stored.plan.selections.filter((selection) => selection !== preferred)]
         : stored.plan.selections;
     for (const selection of candidates) {
-        const release = await options.releases.get(selection.contractId, selection.version);
+        const pinned = await artifacts?.contract(selection);
+        const release = pinned?.release ?? (await options.releases.get(selection.contractId, selection.version));
         if (!release || release.admission.digest !== selection.digest) {
             throw new GatewayError("invalid_route", "selected release is missing or has a different digest");
         }
-        const lineage = (await resolveContract(options.releases, release.admission)).lineage;
+        const lineage = pinned?.lineage ?? (await resolveContract(options.releases, release.admission)).lineage;
         const requestedIndex = lineage.findIndex((candidate) => candidate.release.contractId === contractId);
         if (requestedIndex >= 0) {
             const requested = lineage[requestedIndex]!.release;
             const requestedRelease =
-                requestedIndex === 0 ? release : await options.releases.get(requested.contractId, requested.version);
+                requestedIndex === 0
+                    ? release
+                    : (pinned?.records[requestedIndex] ??
+                      (await options.releases.get(requested.contractId, requested.version)));
             const expectedDigest = requestedIndex === 0 ? selection.digest : lineage[requestedIndex]!.digest;
             if (!requestedRelease || requestedRelease.admission.digest !== expectedDigest) {
                 throw new GatewayError("invalid_route", "requested ancestor release is missing or changed");
