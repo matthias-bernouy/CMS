@@ -1,3 +1,4 @@
+import { activeProviderRequirements } from "@bernouy/cms-repository/providers/selections";
 import { satisfiesVersionRange } from "@bernouy/cms-repository/providers";
 import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import type { ProviderAdministration } from "@bernouy/ulvia-provider";
@@ -51,20 +52,11 @@ export function providerAdministration(
             }
             const current = await stores.selections.get(gateway.siteId);
             const requirements = new Map(
-                [
-                    ...manifest.admission.manifest.requires,
-                    ...manifest.admission.manifest.implementations
-                        .filter((item) =>
-                            current?.plan.selections.some(
-                                (selection) =>
-                                    selection.installationId === installationId &&
-                                    selection.contractId === item.contractId &&
-                                    selection.version === item.version &&
-                                    selection.digest === item.digest,
-                            ),
-                        )
-                        .flatMap((item) => item.requires),
-                ].map((item) => [
+                activeProviderRequirements(
+                    manifest.admission.manifest,
+                    current?.plan.selections ?? [],
+                    installationId,
+                ).map((item) => [
                     `${item.contractId}:${item.capabilityId}:${item.versionRange}:${item.optional}`,
                     item,
                 ]),

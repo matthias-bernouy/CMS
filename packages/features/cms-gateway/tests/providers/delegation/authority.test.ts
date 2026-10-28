@@ -116,9 +116,9 @@ test("reviewed delegation pins the exact requested lineage artifact", async () =
         ...f.state.current.plan,
         authority: {
             ...f.state.current.plan.authority,
-            delegated: f.state.current.plan.authority.delegated.map((entry) => ({
+            capabilities: f.state.current.plan.authority.capabilities.map((entry) => ({
                 ...entry,
-                target: { ...entry.target, digest: "sha256:" + "0".repeat(64) },
+                digest: "sha256:" + "0".repeat(64),
             })),
         },
     };

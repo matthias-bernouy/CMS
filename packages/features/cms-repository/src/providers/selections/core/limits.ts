@@ -27,3 +27,6 @@ export function selectionLimits(limits: Readonly<ContractSelectionLimits>): Read
     }
     return Object.freeze(result);
 }
+
+/** Maximum concrete grants retained for one reviewed authority inventory. */
+export const MAX_AUTHORITY_GRANTS = 1024;

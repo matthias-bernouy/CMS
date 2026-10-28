@@ -1,3 +1,5 @@
+import { fingerprint, selectionFingerprint } from "./ticket";
+import type { DelegationAuthorityOptions, DelegationRecord } from "./interfaces";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
 import type { SelectionAuthority, AuthorityCapability } from "@bernouy/cms-repository/providers/selections";
 import type { GatewayActor, GatewayRoute } from "cms-gateway/invocation/interfaces/Invocation";
@@ -44,13 +46,20 @@ export function reviewedDelegation(
                 entry.manifestDigest === source.manifest.admission.digest,
         ) &&
         authority.delegated.some(
-            (entry) => reviewedPin(entry.source, source, from) && reviewedPin(entry.target, destination, to),
+            (entry) =>
+                reviewedPin(authority.capabilities[entry.source], source, from) &&
+                reviewedPin(authority.capabilities[entry.target], destination, to),
         )
     );
 }
-function reviewedPin(entry: AuthorityCapability, route: GatewayRoute, capability: CapabilityDefinition): boolean {
+function reviewedPin(
+    entry: AuthorityCapability | undefined,
+    route: GatewayRoute,
+    capability: CapabilityDefinition,
+): boolean {
     const release = route.requestedRelease.admission;
     return (
+        entry !== undefined &&
         entry.selection.siteId === route.selection.siteId &&
         entry.selection.contractId === route.selection.contractId &&
         entry.selection.installationId === route.selection.installationId &&
@@ -64,4 +73,37 @@ function reviewedPin(entry: AuthorityCapability, route: GatewayRoute, capability
         entry.effect === capability.behavior.effect &&
         entry.access === capability.access
     );
+}
+
+/** Recheck mutable state immediately before signing without resolving immutable artifacts again. */
+export function delegationFence(
+    options: DelegationAuthorityOptions,
+    record: DelegationRecord,
+    source: GatewayRoute,
+    destination: GatewayRoute,
+) {
+    return async () => {
+        const now = (options.now ?? Date.now)();
+        const [current, actor, credential, sourceCurrent, targetCurrent, alive] = await Promise.all([
+            options.selections.get(record.siteId),
+            options.inspectActor(record.source.actor),
+            options.credentialFingerprint(source),
+            options.routes.isCurrent(source),
+            options.routes.isCurrent(destination),
+            options.store.get(record.siteId, record.hash, now),
+        ]);
+        if (
+            !alive ||
+            record.expiresAt <= (options.now ?? Date.now)() ||
+            !current ||
+            !actor ||
+            !sourceCurrent ||
+            !targetCurrent ||
+            selectionFingerprint(current) !== record.selectionFingerprint ||
+            fingerprint(actor) !== record.actorFingerprint ||
+            credential !== record.credentialFingerprint
+        ) {
+            return denied();
+        }
+    };
 }

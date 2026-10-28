@@ -37,6 +37,15 @@ export interface GatewayDelegationAuthority {
     >;
     close(input: { siteId: string; ticket: string; requestId: string }): Promise<void>;
 }
+/** Local dispatch proof; the closure stays inside the authority and is never serialized. */
+export interface DelegationAuthorization {
+    readonly actor: DelegationActor;
+    readonly rootRequestId: string;
+    assertCurrent(): Promise<void>;
+}
+export interface DelegationDispatchAuthority extends GatewayDelegationAuthority {
+    authorize(target: DelegationTarget, bytes: number): Promise<DelegationAuthorization>;
+}
 export type DelegationRecord = Readonly<{
     hash: string;
     siteId: string;

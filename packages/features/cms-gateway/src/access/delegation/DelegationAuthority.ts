@@ -1,6 +1,14 @@
+import { DELEGATION_LIMITS } from "cms-gateway/access/delegation/limits";
 import { validDelegationTicket } from "./wire";
-import { ticketHash, fingerprint } from "./ticket";
-import { implementation, isDelegationActor, actorMayInvoke, denied, reviewedDelegation } from "./validation";
+import { ticketHash, fingerprint, selectionFingerprint } from "./ticket";
+import {
+    implementation,
+    isDelegationActor,
+    actorMayInvoke,
+    denied,
+    reviewedDelegation,
+    delegationFence,
+} from "./validation";
 import { randomBytes } from "node:crypto";
 import { delegationAllows } from "@bernouy/cms-repository/providers";
 import { capabilityGranted } from "@bernouy/cms-repository/providers/selections";
@@ -58,7 +66,7 @@ export class DelegationAuthority implements GatewayDelegationAuthority {
             return denied();
         }
         const ticket = randomBytes(32).toString("base64url");
-        const expiresAt = Math.min(source.deadline, now + 30_000);
+        const expiresAt = Math.min(source.deadline, now + DELEGATION_LIMITS.lifetimeMs);
         const created = await this.options.store.create(
             {
                 hash: ticketHash(ticket),
@@ -66,7 +74,7 @@ export class DelegationAuthority implements GatewayDelegationAuthority {
                 source,
                 installationFingerprint: providerInstallationFingerprint(route.installation),
                 credentialFingerprint,
-                selectionFingerprint: fingerprint(current),
+                selectionFingerprint: selectionFingerprint(current),
                 actorFingerprint: fingerprint(actor),
                 expiresAt,
             },
@@ -79,13 +87,22 @@ export class DelegationAuthority implements GatewayDelegationAuthority {
     }
 
     async check(value: DelegationTarget, consume = false, bytes = 0) {
+        const { actor, rootRequestId } = await this.checkState(value, consume, bytes);
+        return { actor, rootRequestId };
+    }
+
+    authorize(value: DelegationTarget, bytes: number) {
+        return this.checkState(value, true, bytes);
+    }
+
+    private async checkState(value: DelegationTarget, consume: boolean, bytes: number) {
         const target = structuredClone(value);
         if (
             target.siteId !== this.options.siteId ||
             !validDelegationTicket(target.ticket) ||
             !Number.isSafeInteger(bytes) ||
             bytes < 0 ||
-            bytes > 4 * 1024 * 1024
+            bytes > DELEGATION_LIMITS.requestBytes
         ) {
             return denied();
         }
@@ -113,7 +130,7 @@ export class DelegationAuthority implements GatewayDelegationAuthority {
             destination.installation.installation.status !== "enabled" ||
             providerInstallationFingerprint(source.installation) !== record.installationFingerprint ||
             (await this.options.credentialFingerprint(source)) !== record.credentialFingerprint ||
-            fingerprint(current) !== record.selectionFingerprint ||
+            selectionFingerprint(current) !== record.selectionFingerprint ||
             fingerprint(actor) !== record.actorFingerprint ||
             source.selection.digest !== record.source.digest ||
             source.selection.installationId !== record.source.installationId
@@ -147,7 +164,11 @@ export class DelegationAuthority implements GatewayDelegationAuthority {
         if (!(await this.options.store.get(target.siteId, record.hash, this.now()))) {
             return denied();
         }
-        return { actor, rootRequestId: record.source.requestId };
+        return {
+            actor,
+            rootRequestId: record.source.requestId,
+            assertCurrent: delegationFence(this.options, record, source, destination),
+        };
     }
 
     async close(input: { siteId: string; ticket: string; requestId: string }) {

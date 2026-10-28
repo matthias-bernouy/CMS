@@ -1,6 +1,6 @@
 import { assertInvocationScope } from "./scope";
 import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
-import type { GatewayDelegationAuthority } from "@bernouy/cms-gateway/access/delegation";
+import type { DelegationDispatchAuthority, DelegationAuthorization } from "@bernouy/cms-gateway/access/delegation";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
 import { getProviderInstallationReadiness } from "@bernouy/cms-repository/providers/installations";
 import { capabilityGranted, type ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
@@ -15,7 +15,7 @@ export function createInvocationIssuer(
     selections: Pick<ContractSelectionStore, "get">,
     providers: Pick<ProviderAccess, "authorize" | "consumeBudget">,
     resolveSecret: (reference: string) => Promise<string | null | undefined>,
-    delegations?: GatewayDelegationAuthority,
+    delegations?: DelegationDispatchAuthority,
     identities?: ProviderIdentityService,
 ) {
     return async (input: ProviderInvocationIssue) => {
@@ -69,13 +69,14 @@ export function createInvocationIssuer(
         ) {
             throw Object.assign(new Error("Provider capability is not authorized"), { code: "forbidden", status: 403 });
         }
+        let delegatedAuthorization: DelegationAuthorization | undefined;
         let subjectId = input.subjectId;
         let rootRequestId: string | undefined;
         if (input.delegatedTicket) {
             if (!delegations || !identities) {
                 throw Object.assign(new Error("Delegation unavailable"), { status: 403 });
             }
-            const checked = await delegations.check(
+            const checked = await delegations.authorize(
                 {
                     siteId,
                     ticket: input.delegatedTicket,
@@ -84,12 +85,12 @@ export function createInvocationIssuer(
                     contractId: input.contractId,
                     capabilityId: input.capabilityId,
                 },
-                true,
                 input.bodyBytes ?? 0,
             );
             if (!(await providers.consumeBudget(input.sourceInstallationId!, input.bodyBytes ?? 0))) {
                 throw Object.assign(new Error("Delegated request exceeds Provider limits"), { status: 403 });
             }
+            delegatedAuthorization = checked;
             rootRequestId = checked.rootRequestId;
             subjectId =
                 checked.actor.kind === "anonymous"
@@ -119,14 +120,7 @@ export function createInvocationIssuer(
                 version: input.contractVersion,
             };
             if (input.delegatedTicket) {
-                await delegations!.check({
-                    siteId,
-                    ticket: input.delegatedTicket,
-                    sourceInstallationId: target.sourceInstallationId,
-                    sourceCredentialFingerprint: target.sourceCredentialFingerprint,
-                    contractId: input.contractId,
-                    capabilityId: input.capabilityId,
-                });
+                await delegatedAuthorization!.assertCurrent();
             } else if (!(await providers.authorize(target))) {
                 throw Object.assign(new Error("Provider credential or authority changed before dispatch"), {
                     status: 403,

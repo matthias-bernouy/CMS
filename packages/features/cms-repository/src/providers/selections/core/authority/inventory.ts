@@ -1,5 +1,6 @@
+import { MAX_AUTHORITY_GRANTS } from "../limits";
 import { compareOrdinal } from "cms-repository/providers/manifests/core/protocol/values";
-import { delegationAllows } from "cms-repository/providers/manifests/core/delegation/delegationAllows";
+import { authorityCapabilities, delegatedPairs } from "./capabilities";
 import type { ResolvedSelection } from "../graph/resolveSelections";
 import type { AuthorityCapability, SelectionAuthority } from "../../interfaces/SelectionAuthority";
 
@@ -8,23 +9,20 @@ export function selectionAuthority(resolved: ReadonlyMap<string, ResolvedSelecti
     const providers = new Map<string, string>();
     const machine: SelectionAuthority["machine"][number][] = [];
     const delegated: SelectionAuthority["delegated"][number][] = [];
+    const entries: AuthorityCapability[] = [];
+    const ids = new Map<string, number>();
+    const register = (entry: AuthorityCapability): number => {
+        const key = JSON.stringify(entry);
+        let index = ids.get(key);
+        if (index === undefined) {
+            index = entries.length;
+            ids.set(key, index);
+            entries.push(entry);
+        }
+        return index;
+    };
     const capabilities = [...resolved.values()].flatMap((node) =>
-        node.lineage.flatMap((release, index) =>
-            release.capabilities.map((capability) => ({
-                node,
-                capability,
-                entry: {
-                    selection: node.selection,
-                    contractId: release.contractId,
-                    version: release.version,
-                    digest: index === 0 ? node.selection.digest : node.lineage[index - 1]!.extends!.digest,
-                    capabilityId: capability.id,
-                    effect: capability.behavior.effect,
-                    sensitive: capability.behavior.sensitive,
-                    access: capability.access,
-                } satisfies AuthorityCapability,
-            })),
-        ),
+        authorityCapabilities(node.selection, node.lineage).map((candidate) => ({ ...candidate, node })),
     );
     for (const node of resolved.values()) {
         const first = !providers.has(node.selection.installationId);
@@ -42,40 +40,42 @@ export function selectionAuthority(resolved: ReadonlyMap<string, ResolvedSelecti
                     requirement.contractId === target.entry.contractId &&
                     requirement.capabilityId === target.entry.capabilityId
                 ) {
-                    if (machine.length >= 1024) {
+                    if (machine.length >= MAX_AUTHORITY_GRANTS) {
                         throw new TypeError("Machine authority expansion exceeds 1024 capability grants");
                     }
-                    machine.push({ installationId: node.selection.installationId, ...origin, target: target.entry });
+                    machine.push({
+                        installationId: node.selection.installationId,
+                        ...origin,
+                        target: register(target.entry),
+                    });
                 }
             }
         }
-        if (node.implementation.delegation) {
-            for (const source of capabilities.filter((item) => item.node === node)) {
-                for (const target of capabilities) {
-                    if (
-                        delegationAllows(
-                            node.implementation.delegation,
-                            source.capability,
-                            target.entry.contractId,
-                            target.capability,
-                        )
-                    ) {
-                        delegated.push({ source: source.entry, target: target.entry });
-                        if (delegated.length > 1024) {
-                            throw new TypeError("Delegation expansion exceeds 1024 capability pairs");
-                        }
-                    }
-                }
+        for (const pair of delegatedPairs(
+            node.implementation.delegation,
+            capabilities.filter((item) => item.node === node),
+            capabilities,
+        )) {
+            if (delegated.length >= MAX_AUTHORITY_GRANTS) {
+                throw new TypeError("Delegation expansion exceeds the capability pair limit");
             }
+            delegated.push({ source: register(pair.source), target: register(pair.target) });
         }
     }
+
     const stable = <T>(items: T[]): T[] =>
         items.sort((left, right) => compareOrdinal(JSON.stringify(left), JSON.stringify(right)));
     return {
         providers: [...providers]
             .map(([installationId, manifestDigest]) => ({ installationId, manifestDigest }))
             .sort((left, right) => compareOrdinal(left.installationId, right.installationId)),
+        capabilities: entries,
         machine: stable(machine),
         delegated: stable(delegated),
     };
+}
+
+/** Compare exact reviewed pins independently of their compact table positions. */
+export function delegationKey(authority: SelectionAuthority, pair: SelectionAuthority["delegated"][number]): string {
+    return JSON.stringify([authority.capabilities[pair.source], authority.capabilities[pair.target]]);
 }

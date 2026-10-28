@@ -113,7 +113,7 @@ test("a non-sensitive wildcard expansion changes reviewed authority and cannot b
     const plan = await service.plan(siteId, next);
     expect(plan.status).toBe("applicable");
     expect(plan.authorityAdded).toHaveLength(1);
-    expect(plan.authorityAdded[0]!.target).toMatchObject({
+    expect(plan.authority.capabilities[plan.authorityAdded[0]!.target]).toMatchObject({
         contractId: "catalog",
         version: "2.0.0",
         digest: targets[1]!.digest,

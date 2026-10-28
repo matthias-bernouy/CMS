@@ -1,8 +1,10 @@
+import { MAX_AUTHORITY_GRANTS } from "../limits";
 import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
 import { resolveContractLineage, type ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import type { ProviderManifest } from "cms-repository/providers/manifests/interfaces/ProviderManifest";
 import type { StoredContractSelections } from "../../interfaces/ContractSelectionStore";
-import { delegationAllows } from "cms-repository/providers/manifests/core/delegation/delegationAllows";
+import { authorityCapabilities, delegatedPairs } from "./capabilities";
+import type { ContractSelection } from "../../interfaces/ContractSelection";
 
 /** Preview candidate policies against current exact targets; absent targets never become requirements. */
 export async function previewProviderAuthority(
@@ -10,27 +12,15 @@ export async function previewProviderAuthority(
     current: StoredContractSelections | null,
     releases: ReleaseCatalogue,
 ) {
-    const load = async (contractId: string, version: string, digest: string) => {
+    const load = async (selection: ContractSelection) => {
+        const { contractId, version, digest } = selection;
         const record = await releases.get(contractId, version);
         if (!record || record.admission.digest !== digest) {
             throw new TypeError("Authority preview pin is unavailable");
         }
-        const lineage = await resolveContractLineage(releases, record.admission.release);
-        return lineage.flatMap((release, index) =>
-            release.capabilities.map((capability) => ({
-                release,
-                digest: index === 0 ? digest : lineage[index - 1]!.extends!.digest,
-                capability,
-            })),
-        );
+        return authorityCapabilities(selection, await resolveContractLineage(releases, record.admission.release));
     };
-    const targets = (
-        await Promise.all(
-            (current?.plan.selections ?? []).map((selection) =>
-                load(selection.contractId, selection.version, selection.digest),
-            ),
-        )
-    ).flat();
+    const targets = (await Promise.all((current?.plan.selections ?? []).map(load))).flat();
     const policies = manifest.implementations.flatMap((implementation) =>
         implementation.delegation
             ? [{ implementationContractId: implementation.contractId, ...implementation.delegation }]
@@ -50,36 +40,33 @@ export async function previewProviderAuthority(
         access: "public" | "authenticated" | "admin";
     }> = [];
     for (const implementation of manifest.implementations.filter((item) => item.delegation)) {
-        for (const source of await load(implementation.contractId, implementation.version, implementation.digest)) {
-            for (const target of targets) {
-                if (
-                    delegationAllows(
-                        implementation.delegation,
-                        source.capability,
-                        target.release.contractId,
-                        target.capability,
-                    )
-                ) {
-                    if (matches.length >= 1024) {
-                        throw new TypeError("Delegation preview exceeds 1024 capability pairs");
-                    }
-                    matches.push({
-                        sourceContractId: source.release.contractId,
-                        sourceVersion: source.release.version,
-                        sourceDigest: source.digest,
-                        sourceCapabilityId: source.capability.id,
-                        targetContractId: target.release.contractId,
-                        targetVersion: target.release.version,
-                        targetDigest: target.digest,
-                        targetCapabilityId: target.capability.id,
-                        effect: target.capability.behavior.effect,
-                        sensitive: target.capability.behavior.sensitive,
-                        access: target.capability.access,
-                    });
-                }
+        const sources = await load({
+            siteId: current?.siteId ?? "preview",
+            installationId: "preview",
+            contractId: implementation.contractId,
+            version: implementation.version,
+            digest: implementation.digest,
+        });
+        for (const { source, target } of delegatedPairs(implementation.delegation, sources, targets, current?.grants)) {
+            if (matches.length >= MAX_AUTHORITY_GRANTS) {
+                throw new TypeError("Delegation preview exceeds the capability pair limit");
             }
+            matches.push({
+                sourceContractId: source.contractId,
+                sourceVersion: source.version,
+                sourceDigest: source.digest,
+                sourceCapabilityId: source.capabilityId,
+                targetContractId: target.contractId,
+                targetVersion: target.version,
+                targetDigest: target.digest,
+                targetCapabilityId: target.capabilityId,
+                effect: target.effect,
+                sensitive: target.sensitive,
+                access: target.access,
+            });
         }
     }
+
     const delegation = { policies, matches };
     return {
         delegation,

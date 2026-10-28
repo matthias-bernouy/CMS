@@ -1,3 +1,4 @@
+import { activeProviderRequirements } from "@bernouy/cms-repository/providers/selections";
 import {
     currentProviderCredential,
     providerCredentialFingerprint,
@@ -92,20 +93,7 @@ export class ProviderAccess {
         }
         const approved = manifest?.admission.manifest;
         const requirements = approved
-            ? [
-                  ...approved.requires,
-                  ...approved.implementations
-                      .filter((implementation) =>
-                          current.plan.selections.some(
-                              (selection) =>
-                                  selection.installationId === target.sourceInstallationId &&
-                                  selection.contractId === implementation.contractId &&
-                                  selection.version === implementation.version &&
-                                  selection.digest === implementation.digest,
-                          ),
-                      )
-                      .flatMap((implementation) => implementation.requires),
-              ]
+            ? activeProviderRequirements(approved, current.plan.selections, target.sourceInstallationId)
             : [];
         const declared =
             manifest &&

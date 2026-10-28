@@ -1,3 +1,4 @@
+import { DELEGATION_LIMITS } from "cms-gateway/access/delegation/limits";
 import type { Collection, Db } from "mongodb";
 import type { DelegationRecord, DelegationStore } from "./interfaces";
 
@@ -22,12 +23,16 @@ export class MongoDelegationStore implements DelegationStore {
     async create(record: DelegationRecord, now: number) {
         await this.rows.updateOne(
             { _id: record.siteId },
-            { $setOnInsert: { entries: [], expiresAt: new Date(now + 30_000) } },
+            { $setOnInsert: { entries: [], expiresAt: new Date(now + DELEGATION_LIMITS.lifetimeMs) } },
             { upsert: true },
         );
         await this.rows.updateOne({ _id: record.siteId }, { $pull: { entries: { expiresAt: { $lte: now } } } });
         const result = await this.rows.updateOne(
-            { _id: record.siteId, "entries.hash": { $ne: record.hash }, $expr: { $lt: [{ $size: "$entries" }, 256] } },
+            {
+                _id: record.siteId,
+                "entries.hash": { $ne: record.hash },
+                $expr: { $lt: [{ $size: "$entries" }, DELEGATION_LIMITS.activeTicketsPerSite] },
+            },
             {
                 $push: {
                     entries: {
@@ -52,7 +57,7 @@ export class MongoDelegationStore implements DelegationStore {
         return row?.entries?.[0]?.record ?? null;
     }
     async consume(siteId: string, hash: string, now: number, bytes: number) {
-        if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > 4 * 1024 * 1024) {
+        if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > DELEGATION_LIMITS.requestBytes) {
             return false;
         }
         const result = await this.rows.updateOne(
@@ -62,8 +67,8 @@ export class MongoDelegationStore implements DelegationStore {
                     $elemMatch: {
                         hash,
                         expiresAt: { $gt: now },
-                        calls: { $lt: 32 },
-                        bytes: { $lte: 4 * 1024 * 1024 - bytes },
+                        calls: { $lt: DELEGATION_LIMITS.childCalls },
+                        bytes: { $lte: DELEGATION_LIMITS.requestBytes - bytes },
                     },
                 },
             },

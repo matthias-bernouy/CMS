@@ -106,9 +106,18 @@ test("delegated signing derives the alias from the live actor and never falls ba
         {
             issue: async () => null,
             close: async () => {},
-            check: async (_target, consume = false) => {
-                checks.push(consume);
-                return { actor: { kind: "user", subjectId: "global-user", authorizationRevision: 3 }, rootRequestId };
+            check: async () => {
+                throw new Error("Dispatch must use one authorization and a final fence");
+            },
+            authorize: async () => {
+                checks.push(true);
+                return {
+                    actor: { kind: "user", subjectId: "global-user", authorizationRevision: 3 },
+                    rootRequestId,
+                    assertCurrent: async () => {
+                        checks.push(false);
+                    },
+                };
             },
         },
         { getOrCreate: async () => "opaque-target-alias", resolve: async () => null },

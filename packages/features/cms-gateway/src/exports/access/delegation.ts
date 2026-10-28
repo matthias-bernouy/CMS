@@ -7,6 +7,8 @@ export {
 } from "cms-gateway/access/delegation/wire";
 export type {
     GatewayDelegationAuthority,
+    DelegationDispatchAuthority,
+    DelegationAuthorization,
     DelegationSource,
     DelegationTarget,
     DelegationActor,
@@ -14,3 +16,5 @@ export type {
     DelegationStore,
     DelegationRecord,
 } from "cms-gateway/access/delegation/interfaces";
+
+export { DELEGATION_LIMITS } from "cms-gateway/access/delegation/limits";

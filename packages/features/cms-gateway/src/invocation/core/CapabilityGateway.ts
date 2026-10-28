@@ -1,3 +1,4 @@
+import { DELEGATION_LIMITS } from "cms-gateway/access/delegation/limits";
 import { delegationStream } from "./delegationStream";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import { capabilityBindings } from "@bernouy/cms-repository/contracts/bindings";
@@ -136,15 +137,16 @@ export class CapabilityGateway implements GatewayAccessProbe {
             }
         };
         try {
-            if (delegated) {
+            if (delegated && !this.#options.transportFencesRoute) {
                 await this.#options.delegations!.check(
                     delegated,
-                    !this.#options.transportFencesRoute,
+                    true,
                     invocation.binaryBody
-                        ? (invocation.binaryBody.contentLength ?? 4 * 1024 * 1024 + 1)
+                        ? (invocation.binaryBody.contentLength ?? DELEGATION_LIMITS.requestBytes + 1)
                         : new TextEncoder().encode(JSON.stringify(input)).length,
                 );
             } else if (
+                !delegated &&
                 this.#options.delegations &&
                 delegationSource &&
                 (invocation.actor.kind === "anonymous" ||
@@ -160,7 +162,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                     digest: route.selection.digest,
                     capabilityId: capability.id,
                     actor: invocation.actor,
-                    deadline: started + 15_000,
+                    deadline: started + DELEGATION_LIMITS.rootDeadlineMs,
                 });
             }
             const response = await this.#options.transport.send({

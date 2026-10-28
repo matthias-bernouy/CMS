@@ -19,6 +19,7 @@ export async function delegationFixture(
         targetAccess?: string;
         sensitive?: boolean;
         policy?: Record<string, unknown>;
+        targetPolicy?: Record<string, unknown>;
     } = {},
 ) {
     const behavior = (effect = "query", sensitive = false) => ({
@@ -45,6 +46,7 @@ export async function delegationFixture(
         contractId: "destination",
         providerId: "destination.provider",
         installationId: "target-install",
+        delegation: options.targetPolicy,
         behavior: behavior(options.targetEffect, options.sensitive),
         access: options.targetAccess ?? "public",
     });

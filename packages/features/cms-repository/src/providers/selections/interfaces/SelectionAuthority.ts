@@ -12,6 +12,7 @@ export interface AuthorityCapability {
 }
 export interface SelectionAuthority {
     readonly providers: readonly { installationId: string; manifestDigest: string }[];
-    readonly machine: readonly { installationId: string; fromContractId?: string; target: AuthorityCapability }[];
-    readonly delegated: readonly { source: AuthorityCapability; target: AuthorityCapability }[];
+    readonly capabilities: readonly AuthorityCapability[];
+    readonly machine: readonly { installationId: string; fromContractId?: string; target: number }[];
+    readonly delegated: readonly { source: number; target: number }[];
 }

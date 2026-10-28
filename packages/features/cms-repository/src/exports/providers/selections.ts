@@ -42,3 +42,5 @@ export type {
     SelectionAuthority,
     AuthorityCapability,
 } from "cms-repository/providers/selections/interfaces/SelectionAuthority";
+
+export { activeProviderRequirements } from "cms-repository/providers/selections/core/authority/grants";

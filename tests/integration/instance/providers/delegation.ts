@@ -47,6 +47,12 @@ export async function exerciseDelegationStore(providerName: string, stackId: str
             assert.equal(await store.consume("site-a", byteRecord.hash, now, -1), false);
             const capacity = await Promise.all(Array.from({ length: 260 }, (_, index) => store.create({ ...record, hash: "capacity-" + index }, now)));
             assert.equal(capacity.filter(Boolean).length, 255);
+            const other = { ...record, siteId: "site-b", hash: "capacity-0" };
+            assert.equal(await store.create(other, now), true);
+            assert.equal((await store.get("site-b", "capacity-0", now)).siteId, "site-b");
+            await store.close("site-b", "capacity-0", other.source.requestId);
+            assert.equal(await store.get("site-b", "capacity-0", now), null);
+            assert.ok(await store.get("site-a", "capacity-0", now));
             const saved = JSON.stringify(await db.collection("gateway_delegations").findOne({ _id: "site-a" }));
             assert.equal(saved.includes(rawTicket), false);
             assert.equal((await db.collection("gateway_delegations").indexes()).some((index) => index.expireAfterSeconds === 0), true);

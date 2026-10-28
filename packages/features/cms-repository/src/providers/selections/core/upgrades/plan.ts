@@ -1,3 +1,4 @@
+import { delegationKey } from "../authority/inventory";
 import { grantedAuthority } from "../authority/grants";
 import type { SelectionAuthority } from "../../interfaces/SelectionAuthority";
 import type {
@@ -53,7 +54,7 @@ export async function prepareContractUpgrade(
             });
         }
     }
-    let authority: SelectionAuthority = { providers: [], machine: [], delegated: [] };
+    let authority: SelectionAuthority = { providers: [], capabilities: [], machine: [], delegated: [] };
     try {
         const graph = await planContractSelections(siteId, selections, context);
         authority = grantedAuthority(graph.authority, grants);
@@ -105,15 +106,12 @@ export async function prepareContractUpgrade(
             });
         }
     }
-    const priorAuthority = new Set(
-        (current ? grantedAuthority(current.plan.authority, current.grants).delegated : []).map((entry) =>
-            JSON.stringify(entry),
-        ),
-    );
+    const prior = current ? grantedAuthority(current.plan.authority, current.grants) : null;
+    const priorAuthority = new Set(prior?.delegated.map((entry) => delegationKey(prior, entry)) ?? []);
     const result = {
         siteId,
         authority,
-        authorityAdded: authority.delegated.filter((entry) => !priorAuthority.has(JSON.stringify(entry))),
+        authorityAdded: authority.delegated.filter((entry) => !priorAuthority.has(delegationKey(authority, entry))),
         status: issues.some(({ code }) => code === "incomplete")
             ? ("incomplete" as const)
             : issues.length
