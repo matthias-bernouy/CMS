@@ -44,7 +44,7 @@
         {
             "contractId": "ulvia.cms.installations",
             "version": "1.0.0",
-            "digest": "sha256:8310a6a2f0febdc6dd343315e918a3c08073bd256d8c5c72d43db3636869e923",
+            "digest": "sha256:e39c9d9c60154367931fdccd12745df27597267a76df182ee1917536f1513c69",
             "requires": [
                 {
                     "contractId": "ulvia.cms.secrets",
@@ -81,7 +81,7 @@
         {
             "contractId": "ulvia.cms.content",
             "version": "1.0.0",
-            "digest": "sha256:eb4ee6e4949b8b87d14d82080287495dc103fc369f6316b4677b8b8c708d72d6",
+            "digest": "sha256:d76604d2d77c962c9e46ead362b677ee2be56a469f4d47f7ca4e0f36acda50d8",
             "requires": [
                 {
                     "contractId": "ulvia.cms.observability",

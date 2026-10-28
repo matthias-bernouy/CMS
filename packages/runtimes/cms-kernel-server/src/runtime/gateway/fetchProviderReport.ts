@@ -7,7 +7,7 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 export const INSTALLATIONS_CONTRACT = {
     contractId: "ulvia.cms.installations",
     version: "1.0.0",
-    digest: "sha256:8310a6a2f0febdc6dd343315e918a3c08073bd256d8c5c72d43db3636869e923",
+    digest: "sha256:e39c9d9c60154367931fdccd12745df27597267a76df182ee1917536f1513c69",
 } as const;
 
 /** Validates the stable public Provider report before the Kernel accepts its control capabilities. */
