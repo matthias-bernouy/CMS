@@ -42,6 +42,29 @@ describe("workspace source policies", () => {
         ]);
     });
 
+    test("rejects inline import types throughout the repository while allowing runtime imports", async () => {
+        const root = await createWorkspace({
+            "packages/features/domain/package.json": manifest("@fixture/domain", {
+                exports: { ".": "./src/index.ts" },
+            }),
+            "packages/features/domain/src/index.ts": 'export type A = import("node:fs").Stats;\n',
+            "packages/features/domain/src/types.d.ts": 'type B = import("node:path");\n',
+            "quality/check.ts": 'type C = Pick<import("node:fs").Stats, "size">;\n',
+            "tests/types.test.ts": 'type D = typeof import("node:fs");\n',
+            "infra/build.ts": 'type E = import(\n "node:fs"\n).Stats;\n',
+            "build.ts":
+                'import type { Stats } from "node:fs";\nconst fs = await import("node:fs");\n// import("ignored").Comment\nconst example = `import("ignored").String`;\n',
+        });
+        const violations = ofKind(await checkWorkspaceArchitecture({ rootDir: root }), "inline-import-type");
+        expect(violations.map(({ file, line }) => ({ file, line }))).toEqual([
+            { file: "infra/build.ts", line: 1 },
+            { file: "packages/features/domain/src/index.ts", line: 1 },
+            { file: "packages/features/domain/src/types.d.ts", line: 1 },
+            { file: "quality/check.ts", line: 1 },
+            { file: "tests/types.test.ts", line: 1 },
+        ]);
+    });
+
     test("reports focused tests while allowing skips and DOM focus", async () => {
         const root = await createWorkspace({
             "packages/features/domain/package.json": manifest("@fixture/domain", {

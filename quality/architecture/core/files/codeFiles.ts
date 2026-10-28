@@ -7,10 +7,11 @@ export async function collectCodeFilesFromRoots(
     roots: readonly string[],
     repositoryRoot: string,
     ignoredPaths: readonly string[],
+    includeDeclarations = false,
 ): Promise<string[]> {
     const files = new Set<string>();
     for (const root of roots) {
-        for (const file of await collectCodeFiles(root, repositoryRoot, ignoredPaths)) {
+        for (const file of await collectCodeFiles(root, repositoryRoot, ignoredPaths, includeDeclarations)) {
             files.add(file);
         }
     }
@@ -21,6 +22,7 @@ export async function collectCodeFiles(
     root: string,
     repositoryRoot: string,
     ignoredPaths: readonly string[],
+    includeDeclarations = false,
 ): Promise<string[]> {
     const files: string[] = [];
 
@@ -47,7 +49,7 @@ export async function collectCodeFiles(
                 }
                 await visit(absolutePath);
             } else if (entry.isFile() && CODE_EXTENSIONS.has(extname(entry.name))) {
-                if (!entry.name.endsWith(".d.ts")) {
+                if (includeDeclarations || !/\.d\.[cm]?ts$/.test(entry.name)) {
                     files.push(absolutePath);
                 }
             }

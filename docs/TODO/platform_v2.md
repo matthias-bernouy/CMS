@@ -1,10 +1,13 @@
 # Platform V2 Architecture Plan
 
-Status: the first Content-only Page phase is implemented. Collections expose generic
-examples; Page commands accept ordinary HTML and store no provenance. The Edge,
-SSR and delegation changes below remain design TODOs unless current source says otherwise. This plan intentionally rejects
-backward compatibility with existing artifact formats, profiles, instances and
-persistence.
+Status: Content-only Pages and the first Provider-authority/delegation phase are
+implemented. Contracts reject capability `requires` and require
+`behavior.sensitive`; manifests have global and selection-aware implementation
+requirements, with static bounded delegation. See [Provider delegation](../providers/delegation.md)
+for the implemented protocol, exact review inventory and limits. The approved
+fresh baseline retains protocol v1, contract 1.0.0 and Provider 0.1.0 coordinates;
+no compatibility reader is added. The V2 identifiers, Edge rename, Gateway-wide
+invocation diagnostics and Content SSR relocation below remain design TODOs.
 
 ## Objective
 
@@ -125,7 +128,8 @@ on each implementation:
                 "sources": ["delivery.resolve-path"],
                 "allow": [
                     {
-                        "kind": "batch",
+                        "contractId": "*",
+                        "capabilityId": "*",
                         "effect": "query",
                         "sensitive": false
                     }
@@ -223,9 +227,9 @@ manifest policy. That policy can allow one exact target capability:
 
 ```json
 {
-    "kind": "capability",
     "contractId": "contract.c",
-    "capabilityId": "c.read"
+    "capabilityId": "c.read",
+    "effect": "query"
 }
 ```
 
@@ -233,18 +237,19 @@ It can instead match a bounded capability class:
 
 ```json
 {
-    "kind": "batch",
+    "contractId": "*",
+    "capabilityId": "*",
     "effect": "query",
     "sensitive": false
 }
 ```
 
-Every V2 capability must declare `sensitive: true` or `sensitive: false` in its
+Every V2 capability must declare `behavior.sensitive: true` or `behavior.sensitive: false` in its
 contract. The classification covers sensitive input, output, resource existence
 and meaningful side channels, including personal, financial, secret, security
 or private organization data. There is no implicit default.
 
-Batch selector semantics are:
+Wildcard selector semantics are:
 
 | Effect | Sensitivity filter | Matches |
 | --- | --- | --- |
@@ -257,12 +262,12 @@ Batch selector semantics are:
 
 Omitting the sensitivity filter is deliberately broad, not equivalent to
 `false`. Installation and selection review must display the concrete currently
-selected capabilities matched by every batch selector. Selecting or upgrading a
+selected capabilities matched by every wildcard selector. Selecting or upgrading a
 contract must require review when it expands that concrete set.
 
 Before a delegated downstream invocation, Edge verifies the ticket, current
 source installation, selected source implementation, allowed source capability,
-matching exact or batch selector, target sensitivity and effect, site grant,
+matching exact or wildcard selector, target sensitivity and effect, site grant,
 expiry, depth and the original actor's access to the target capability. The
 target receives its own Provider-scoped subject alias plus the source
 installation and trace. It never receives the global CMS subject.
@@ -447,7 +452,7 @@ official Provider adapts that port to the Provider Gateway client.
 Initially execute only declarative queries during SSR. Commands remain browser
 operations. The official Content implementation requests only non-sensitive
 query delegation for `delivery.resolve-path`. A different Content Provider may
-request all queries, including sensitive ones, but that broader batch selector
+request all queries, including sensitive ones, but that broader wildcard selector
 must be visible and explicitly approved. Downstream authenticated queries use
 the opaque delegation ticket. Content adds internal spans such as
 `route.resolve`, `page.render`, `sitemap.read` and `asset.stream` beneath the
@@ -552,7 +557,7 @@ verifiable between steps:
 3. Add global and implementation Provider requirements.
 4. Make Provider authorization selection-aware.
 5. Add Gateway traces and complete invocation observations.
-6. Add mandatory capability sensitivity and static exact/batch delegation
+6. Add mandatory capability sensitivity and static exact/wildcard delegation
    selectors.
 7. Add opaque delegation tickets and their control-authority operations.
 8. Update the Provider client SDK.
@@ -596,7 +601,7 @@ prevents a long unverifiable implementation branch.
 - `command` selectors never permit a query source to cause a command.
 - `*` with no sensitivity filter is treated and displayed as full delegated
   authority, not as a default.
-- A new selection or release that expands a batch selector requires review.
+- A new selection or release that expands a wildcard selector requires review.
 - Delegated access rechecks the target capability classification and site grant.
 - Non-administrators cannot reach administrator capabilities.
 - System identities and excessive delegation depth are rejected.

@@ -23,6 +23,15 @@ If a symbol must be consumed by another package, export it from the owning
 package's `src/exports/*.ts` file and declare the matching subpath in
 `package.json`.
 
+## Type Dependencies
+
+Declare type dependencies at the top of the file with `import type`. Inline
+import types, including `typeof import("module")`, are rejected by the
+`inline-import-type` architecture rule. It scans source, tests, tooling,
+infrastructure scripts and handwritten declarations and reports the file and
+line. Runtime dynamic imports remain supported. Comments and example strings
+are not treated as type imports. `check:all` and `verify` include this control.
+
 ## Local Package Aliases
 
 Inside a package, use the package-local path aliases already configured for

@@ -8,7 +8,7 @@ models and validation for CMS-owned installations and site selections.
 - `src/contracts/interfaces/` contains release, schema, binding and catalogue
   types. `src/contracts/core/` owns parsing, validation, binding compilation,
   admission, compatibility and protocol primitives. Its `catalogue/` directory
-  owns storage-independent evolution and requirement checks; catalogue
+  owns storage-independent evolution and inheritance checks; catalogue
   implementations delegate them. The in-memory catalogue lives in
   `src/contracts/default-implementation/memory/`; `mongo/` persists immutable
   artifacts and revisioned publication metadata.
@@ -107,19 +107,10 @@ models and validation for CMS-owned installations and site selections.
 - `ResolvedContract` is the execution view of one admitted release. Preserve its
   original release/digest and the declaring owner of every effective capability;
   never flatten inherited capabilities into a `ContractRelease`.
-- A capability may require external capabilities by contract ID, capability ID
-  and compatible SemVer range. Requirements are mandatory and provider-neutral.
-  `versionRange` defines accepted versions and must describe a nonempty set.
-  Publication needs a known release jointly satisfying one capability's
-  requirements to the same contract, including historical yanked releases.
-  Installability is a later selection decision,
-  not historical reference validity. Optional product features need an explicit
-  capability/profile model, not optional requirements leaving a capability unusable.
-- Adding or removing a mandatory requirement on an existing capability, or
-  dropping accepted dependency versions, requires a major. Compare accepted
-  version sets: equivalent sets are patches, strict expansions are minors, and
-  any lost version requires a major. A new capability with its own requirements
-  remains a minor addition.
+- Capabilities declare mandatory `behavior.sensitive` booleans alongside effect,
+  execution and command idempotency. Contracts reject `requires`; implementation
+  dependencies belong to Provider manifests. Sensitivity changes participate in
+  compatibility comparison and reviewed delegation expansion.
 - Object schemas are closed; dynamic string-keyed objects use `map`. String and
   map-key lengths use UTF-16 code units. The format profile follows
   `src/contracts/core/schema/formats.ts`, not a full JSON Schema dialect. Reject
@@ -178,9 +169,9 @@ models and validation for CMS-owned installations and site selections.
   `ReleaseCatalogue`. Resolve every capability requirement against at least one
   non-yanked compatible contract release.
 - Use the contracts facade's range engine for matching, canonical normalization
-  and inclusion. Each implemented capability's mandatory requirements must be
-  covered by non-optional manifest requirements without dropping any accepted
-  dependency alternative. Additional implementation-specific requirements are allowed.
+  and inclusion. Global and implementation requirements are Provider-owned;
+  contracts do not declare or constrain an implementation dependency strategy.
+  Delegation policies are independent and never create installation dependencies.
 - Reject duplicate implementations, duplicate requirements and cycles between
   matching implemented releases in one manifest. Graph edges respect version
   ranges and capability existence.

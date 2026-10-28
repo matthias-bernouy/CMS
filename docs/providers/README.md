@@ -78,7 +78,8 @@ Provider-to-provider calls authenticate the source installation with its Bearer
 credential. The host then checks that the source manifest declares the exact
 contract capability and compatible target version, that the instance selection
 restrictions permit it, and that its quota allows the call. Approving the source
-manifest accepts its `implementations[].requires`; no additional per-source
+manifest accepts its global `requires` and the requirements of implementations
+selected on that instance; no additional per-source
 permission list must be maintained. Cycles and paths longer
 than eight contracts are rejected when the site selection graph is validated;
 the signed source identifier is forwarded as opaque machine provenance.
@@ -221,3 +222,6 @@ The [repository audit](../AUDIT.md) and [open platform work](../TODO.md)
 track the remaining implementation and activation gates.
 
 See [Connecting Providers from the CMS](connections.md) for approval, return credentials and SDK usage.
+
+See [Provider delegation](delegation.md) for actor-bound calls, static selectors,
+reviewed wildcard expansion and explicit SDK authority.

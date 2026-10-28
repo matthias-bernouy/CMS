@@ -1,11 +1,15 @@
 # Connecting Providers from the CMS
 
 An installation belongs to one CMS instance and pins one approved manifest,
-remote account and endpoint. The manifest's `implementations[].requires` is the
-outbound capability allowlist. Contract requirements must be covered by the
-manifest. Optional requests can be absent from the site selection; when selected,
-their version and capability still have to match. Page and Bloc requirements do
-not elevate a user or a Provider.
+remote account and endpoint. Machine authority combines the manifest's global
+`requires` with `requires` of exact implementations currently selected for that
+installation, subject to site denials. Requirements no longer belong to contracts.
+Optional requirements may be absent; a selected target must satisfy the declared
+version and capability. Collection and Bloc requirements describe authored calls
+and never elevate an actor.
+
+[Bounded delegation](delegation.md) is a separate authority mode for calls made
+on behalf of the actor of one incoming invocation.
 
 ## Installation
 
@@ -69,6 +73,7 @@ credential from ordinary business input:
 ```ts
 const client = connections.client(context.connectionId);
 const result = await client.invoke(emailerRelease, "emailer.send", input, {
+    authority: "provider",
     idempotencyKey: stableBusinessOperationKey,
 });
 ```
@@ -83,8 +88,9 @@ require the runtime's explicit network-policy opt-in.
 The CMS resolves the return token to one active installation without trusting
 caller-supplied identity headers. It checks approved requirements, compatible
 selected version, destination readiness and instance-wide restrictions, then
-issues a short-lived signed call containing source provenance. User and system
-identities cannot be combined with Provider identity. Internal `gateway.*`
+issues a short-lived signed call containing source provenance. Machine calls contain no user identity. Delegated calls carry a target-scoped
+user alias, when authenticated, alongside verified source provenance. System
+identity cannot be delegated. Internal `gateway.*`
 capabilities additionally require the Kernel control connection; declaring one in
 a Provider manifest does not permit minting user invocations or forging audit events.
 
@@ -101,7 +107,9 @@ refusals use 401/403 and are permanent for the current credential.
 
 ## Logs from another Provider
 
-Declare `ulvia.cms.observability / logs.append` in an implementation's `requires`.
+Declare `ulvia.cms.observability / logs.append` in the manifest's global `requires`,
+usually with `optional: true`, so logging applies to the installation without
+repeating it on every implementation.
 The Producer need not implement the Observability contract itself. Inject an
 admitted Observability release and a connection client into:
 

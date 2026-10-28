@@ -63,6 +63,10 @@ storage and image transforms belong to Foundation. See the
   package (`cms-kernel/...`, `cms-content/...`, `http-runner/...`, and so on)
   over deep relative paths.
 - Do not import another package through `packages/.../src/...`.
+- Declare type dependencies with top-level `import type` statements. Inline
+  import types (`import("module").Type` and `typeof import("module")`) are
+  rejected by `check:architecture`, including tests and handwritten declarations.
+  Runtime dynamic imports remain allowed.
 - Network and persistence adapters are composition-root imports. Keep them out
   of production surface code and browser bundles. Tests may compose adapters;
   follow any stricter package-local instructions.

@@ -1,3 +1,4 @@
+import type { QueryOutcome } from "../runtime/query/queryState";
 export type FormSubmitMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export type SerializedFormValue =
@@ -22,7 +23,7 @@ export type FormSubmitResult = {
     body: unknown;
     message: string;
     form: HTMLFormElement;
-    outcome?: import("../runtime/query/queryState").QueryOutcome;
+    outcome?: QueryOutcome;
 };
 
 export type AdditionalFormFields = Record<string, SerializedFormValue>;

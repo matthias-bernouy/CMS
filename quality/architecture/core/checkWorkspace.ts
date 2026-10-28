@@ -6,6 +6,7 @@ import { checkBrowserEntrypoints } from "../rules/browserRules";
 import { collectCodeFilesFromRoots } from "./files/codeFiles";
 import { checkManifestLayerDependencies, checkWorkspaceCycles } from "../rules/dependencyRules";
 import { checkEnvironmentReads } from "../rules/environmentRule";
+import { checkInlineImportTypes } from "../rules/inlineImportTypeRule";
 import { checkFocusedTests } from "../rules/focusedTestRule";
 import {
     checkCrossPackageSourceImport,
@@ -89,7 +90,7 @@ export async function checkWorkspaceArchitecture(options: WorkspaceCheckOptions)
         violations,
         rootDir,
     );
-    await checkTests(rootDir, ignoredPaths, violations);
+    await checkRepositorySourcePolicies(rootDir, ignoredPaths, violations);
     return finalizeViolations(violations);
 }
 
@@ -110,15 +111,19 @@ function checkPackageImports(
     }
 }
 
-async function checkTests(
+async function checkRepositorySourcePolicies(
     rootDir: string,
     ignoredPaths: readonly string[],
     violations: ArchitectureViolation[],
 ): Promise<void> {
-    const files = await collectCodeFilesFromRoots([rootDir], rootDir, ignoredPaths);
-    for (const file of files.filter(isTestFile)) {
+    const files = await collectCodeFilesFromRoots([rootDir], rootDir, ignoredPaths, true);
+    for (const file of files) {
         const source = await readFile(file, "utf8");
-        checkFocusedTests(file, createSourceFile(file, source), violations, rootDir);
+        const sourceFile = createSourceFile(file, source);
+        checkInlineImportTypes(file, sourceFile, violations, rootDir);
+        if (isTestFile(file)) {
+            checkFocusedTests(file, sourceFile, violations, rootDir);
+        }
     }
 }
 

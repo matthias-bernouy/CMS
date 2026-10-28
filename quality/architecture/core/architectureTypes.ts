@@ -12,7 +12,8 @@ export type ArchitectureViolationKind =
     | "browser-runtime-adapter"
     | "browser-entry-missing"
     | "environment-read"
-    | "focused-test";
+    | "focused-test"
+    | "inline-import-type";
 
 export interface ArchitectureViolation {
     kind: ArchitectureViolationKind;
