@@ -1,17 +1,9 @@
 import { collectionFixture } from "../../admission/examples/buildFixture";
 import { expect, test } from "bun:test";
-import {
-    renderCollectionTexts,
-    synchronizeCollectionPageRoutes,
-    withInstalledCollections,
-} from "@bernouy/cms-repository/collections/content";
+import { renderCollectionTexts, withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import {
-    InMemoryContentRepository,
-    InMemoryPageRouteRegistry,
-    ValidatingContentRepository,
-} from "@bernouy/cms-content";
+import { InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
 import { createContentReader, expandCompositions, generateStyleEntry } from "@bernouy/cms-content/rendering";
 import { parseHTML } from "linkedom";
 import { compileBlocStyle } from "@bernouy/cms-repository/collections/build";
@@ -205,54 +197,6 @@ test("site Pages inherit capability requirements from installed Blocs", async ()
     ]);
 });
 
-test("installed Page aliases redirect to their effective collection route", async () => {
-    const store = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await store.importRelease(
-        collectionFixture({
-            ...release,
-            translations: {
-                en: {
-                    ...release.translations.en,
-                    "page.overview.name": "Overview",
-                },
-            },
-            pages: [
-                {
-                    id: "overview",
-
-                    defaultPath: "/admin",
-                    name: "page.overview.name",
-                    uses: ["test-welcome"],
-                    requires: [],
-                    document: { html: '<div cms-bloc="test-welcome"></div>' },
-                },
-            ],
-        }),
-    );
-    const snapshot = await store.install("site", artifact.digest, 0);
-    const routes = new InMemoryPageRouteRegistry();
-    await synchronizeCollectionPageRoutes(routes, "site", snapshot);
-    const reference = {
-        kind: "contribution" as const,
-        sourceId: "example",
-        contributionId: "test",
-        pageId: "overview",
-    };
-    const initial = (await routes.get("site", reference))!;
-    await routes.setOverride("site", reference, "/custom-admin", initial.revision);
-    const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site", routes);
-    const reader = createContentReader(repository, {
-        resolvePageRoute: (path) => routes.resolve("site", path),
-    });
-
-    expect(await reader.resolvePagePaths(["/admin"])).toEqual({ "/admin": "/custom-admin" });
-    expect(await reader.resolveRenderableRoute("/admin")).toEqual({ kind: "redirect", path: "/custom-admin" });
-    expect(await reader.resolveRenderableRoute("/custom-admin")).toMatchObject({
-        kind: "current",
-        page: { reference },
-    });
-});
-
 test("installed hidden blocs stay out of the authoring catalogue but remain available to rendering", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease(
@@ -437,6 +381,7 @@ test("installed polymorphic native components project their contract and keep wr
         "Button",
         '<div cms-bloc=\"test-action\" wrapper-label="Wrapper label"><button type="button">Save</button></div>',
     );
+    await repository.insertPage("/about", "About");
     await repository.insertPage(
         "/native-link",
         "Link",
@@ -508,7 +453,7 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
     const repository = withInstalledCollections(new InMemoryContentRepository(), store, "site");
     const record = (await repository.getBlocRecord("test-card"))!;
     expect(record.artifact?.markupHTML).toContain("cms.i18n.test.title");
-    expect(record.artifact?.initialDocument?.html).toContain('<h2 slot="title">Welcome</h2>');
+    expect(record.artifact?.initialDocument?.html).toContain('<h2 slot="title">{{ cms.i18n.test.title }}</h2>');
     expect(record.artifact?.settings?.map((item) => [item.id, item.default])).toEqual([
         ["tone", "quiet"],
         ["compact", false],

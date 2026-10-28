@@ -65,11 +65,6 @@ function collectReferences(release: CollectionRelease): Reference[] {
             controlReferences(references, setting.control, `${settingPath}.control`);
         }
     }
-    for (const [index, page] of (release.pages ?? []).entries()) {
-        const path = `$.pages[${index}]`;
-        references.push(reference(page.name, `${path}.name`, 128));
-        optional(references, page.description, `${path}.description`, 4096);
-    }
     for (const [i, example] of (release.examples ?? []).entries()) {
         references.push(reference(example.label, `$.examples[${i}].label`, 120));
         references.push(reference(example.description, `$.examples[${i}].description`, 4096));

@@ -1,26 +1,13 @@
 import type { CollectionCapabilityRequirement, CollectionRelease } from "../../interfaces/CollectionRelease";
-import type { CollectionPage } from "../../interfaces/CollectionPage";
 
-/** Resolve one installed Page's direct and transitive Bloc requirements. */
-export function collectionPageRequirements(
+export function documentRequirements(
     releases: readonly CollectionRelease[],
-    collectionId: string,
-    pageId: string,
-): readonly CollectionCapabilityRequirement[] {
-    const page = releases
-        .find((release) => release.collectionId === collectionId)
-        ?.pages?.find(({ id }) => id === pageId);
-    return page ? pageRequirements(releases, page) : [];
-}
-
-export function pageRequirements(
-    releases: readonly CollectionRelease[],
-    page: Pick<CollectionPage, "uses" | "requires">,
+    document: { readonly uses: readonly string[]; readonly requires: readonly CollectionCapabilityRequirement[] },
 ): readonly CollectionCapabilityRequirement[] {
     const blocs = new Map(releases.flatMap((release) => release.blocs.map((bloc) => [bloc.id, bloc] as const)));
-    const requirements = [...page.requires];
+    const requirements = [...document.requires];
     const seen = new Set<string>();
-    const pending = [...page.uses];
+    const pending = [...document.uses];
     while (pending.length) {
         const id = pending.pop()!;
         if (seen.has(id)) {

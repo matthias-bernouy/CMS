@@ -11,7 +11,6 @@ export interface CollectionLimits {
     readonly maxBlocs: number;
     readonly maxAssets: number;
     readonly maxTexts: number;
-    readonly maxPages: number;
     readonly maxStates: number;
     readonly maxDependencies: number;
     readonly maxThemeCategories: number;
@@ -33,7 +32,6 @@ export const DEFAULT_COLLECTION_LIMITS: Readonly<CollectionLimits> = Object.free
     maxBlocs: 512,
     maxAssets: 1_024,
     maxTexts: 4_096,
-    maxPages: 256,
     maxStates: 512,
     maxDependencies: 128,
     maxThemeCategories: 64,

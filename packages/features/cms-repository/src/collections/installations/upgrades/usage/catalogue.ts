@@ -12,7 +12,6 @@ export function collectionUsageInventory(releases: readonly CollectionRelease[])
             ["themeTokens", "theme-token"],
             ["texts", "text"],
             ["assets", "asset"],
-            ["pages", "page"],
             ["states", "state"],
         ] as const) {
             for (const id of release.exports?.[field] ?? []) {
@@ -52,7 +51,6 @@ export function collectionUsageInventory(releases: readonly CollectionRelease[])
                 ["themeTokens", "theme-token"],
                 ["texts", "text"],
                 ["assets", "asset"],
-                ["pages", "page"],
                 ["states", "state"],
             ] as const) {
                 for (const item of dependency.imports[field] ?? []) {
@@ -101,14 +99,15 @@ export function collectionUsageInventory(releases: readonly CollectionRelease[])
                 }
             }
         }
-        for (const page of release.pages ?? []) {
-            const location = `collection:${release.collectionId}/page:${page.id}`;
-            references.push(...documentReferences(page.document.html, location, "runtime", releases));
-            for (const requirement of page.requires) {
-                references.push({ ...requirement, type: "capability", location, scope: "runtime" });
-            }
-        }
         for (const example of release.examples ?? []) {
+            for (const requirement of example.requires) {
+                references.push({
+                    ...requirement,
+                    type: "capability",
+                    scope: "catalogue",
+                    location: `collection:${release.collectionId}/example:${example.id}/requires`,
+                });
+            }
             references.push(
                 ...documentReferences(
                     example.document.html,

@@ -38,20 +38,27 @@ export async function verifyCollectionRequirements(
         );
         validateBindings(release, blocMarkup(bloc), capabilities, `$.blocs.${bloc.id}.markup`);
     }
-    for (const page of release.pages ?? []) {
-        const used = page.uses.flatMap((id) => {
+    for (const example of release.examples ?? []) {
+        const used = [
+            ...new Set(
+                Array.from(
+                    parseHTML(`<body>${example.document.html}</body>`).document.querySelectorAll("[cms-bloc]"),
+                    (node) => node.getAttribute("cms-bloc")!,
+                ),
+            ),
+        ].flatMap((id) => {
             const bloc = blocs.get(id);
             return bloc ? usedBlocs(bloc, blocs) : [];
         });
-        const closure = [...page.requires, ...used.flatMap((item) => item.requires)];
+        const closure = [...example.requires, ...used.flatMap((item) => item.requires)];
         const capabilities = await verifyRequirements(
             closure,
-            bindingTargets([page.document.html, ...used.map(blocMarkup)]),
-            `$.pages.${page.id}.requires`,
-            "this page and its used blocs",
+            bindingTargets([example.document.html, ...used.map(blocMarkup)]),
+            `$.examples.${example.id}.requires`,
+            "this example and its used blocs",
             catalogue,
         );
-        validateBindings(release, page.document.html, capabilities, `$.pages.${page.id}.document.html`);
+        validateBindings(release, example.document.html, capabilities, `$.examples.${example.id}.document.html`);
     }
 }
 

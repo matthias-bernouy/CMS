@@ -38,7 +38,6 @@ export function collectionLifecycleResources(release: CollectionRelease): readon
         ["text", release.texts ?? []],
         ["asset", release.assets],
         ["state", release.states ?? []],
-        ["page", release.pages ?? []],
     ] as const) {
         for (const entry of entries) {
             resources.push({ kind, id: entry.id, ...(entry.deprecation ? { deprecation: entry.deprecation } : {}) });

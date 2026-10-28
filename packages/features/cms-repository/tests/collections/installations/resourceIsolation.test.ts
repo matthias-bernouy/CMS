@@ -89,36 +89,6 @@ test("installations and upgrades reject global Bloc and theme token collisions",
     await expect(reviewedUpgrade(store, "themes", themeCollision.digest, 2, "local")).rejects.toThrow("theme token");
 });
 
-test("installations reject collection Pages claiming the same global path", async () => {
-    const store = new CollectionStore(new MemoryCollectionStorage());
-    const withPage = (collectionId: string, pageId: string) => {
-        const source = release(collectionId, "1.0.0", `${collectionId}-card`);
-        return {
-            ...source,
-            translations: {
-                en: {
-                    ...source.translations.en,
-                    [`page.${pageId}.name`]: pageId,
-                },
-            },
-            pages: [
-                {
-                    id: pageId,
-                    defaultPath: "/admin/shared",
-                    name: `page.${pageId}.name`,
-                    document: { html: `<div cms-bloc=\"${collectionId}-card\"></div>` },
-                },
-            ],
-        };
-    };
-    const first = await store.importRelease(collectionFixture(withPage("first", "overview")));
-    const second = await store.importRelease(collectionFixture(withPage("second", "settings")));
-
-    await store.install("site", first.digest, 0);
-    await expect(store.install("site", second.digest, 1)).rejects.toThrow("Page default path");
-    expect((await store.snapshot("site")).revision).toBe(1);
-});
-
 test("installs only declared public resources from compatible collection dependencies", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const assetBytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
@@ -140,11 +110,12 @@ test("installs only declared public resources from compatible collection depende
                 values: { en: "Submit" },
             },
         ],
-        pages: [
+        examples: [
             {
                 id: "home",
-                defaultPath: "/",
-                name: "page.home.name",
+                label: "page.home.name",
+                description: "page.home.name",
+                previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
                 document: { html: '<div cms-bloc="ulvia-official-button"></div>' },
             },
         ],
@@ -161,7 +132,6 @@ test("installs only declared public resources from compatible collection depende
             themeTokens: ["primary"],
             texts: ["submit"],
             assets: ["empty.svg"],
-            pages: ["home"],
         },
     };
     const baseConsumer = release("shop", "1.0.0", "shop-hero");
@@ -184,7 +154,6 @@ test("installs only declared public resources from compatible collection depende
                     themeTokens: [{ id: "primary" }],
                     texts: [{ id: "submit" }],
                     assets: [{ id: "empty.svg" }],
-                    pages: [{ id: "home", defaultPath: "/" }],
                 },
             },
         ],
@@ -324,11 +293,12 @@ test("admits imported Blocs under the same Page grammar", async () => {
                 },
             },
         ],
-        pages: [
+        examples: [
             {
                 id: "home",
-                defaultPath: "/",
-                name: "page.home.name",
+                label: "page.home.name",
+                description: "page.home.name",
+                previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
                 document: { html: '<div cms-bloc="ulvia-official-admin-card"></div>' },
             },
         ],
@@ -373,11 +343,12 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
         version,
         translations: { en: { ...consumerBase.translations.en, "page.home.name": "Home" } },
         dependencies: [dependency],
-        pages: [
+        examples: [
             {
                 id: "home",
-                defaultPath: "/",
-                name: "page.home.name",
+                label: "page.home.name",
+                description: "page.home.name",
+                previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
                 document: { html },
             },
         ],

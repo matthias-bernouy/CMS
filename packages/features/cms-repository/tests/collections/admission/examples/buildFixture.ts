@@ -11,7 +11,12 @@ export function collectionFixture(source: any): any {
     );
     const definitions = original.map((bloc: any) => {
         const { exampleContent: _exampleContent, ...definition } = bloc;
-        if (definition.catalogue !== "hidden" && definition.defaultExample === undefined) {
+        if (
+            definition.catalogue !== "hidden" &&
+            (definition.defaultExample === undefined ||
+                (definition.defaultExample === definition.id + "-example" &&
+                    !examples.some((example) => example.id === definition.defaultExample)))
+        ) {
             const id = definition.id + "-example";
             definition.examples = [id];
             definition.defaultExample = id;

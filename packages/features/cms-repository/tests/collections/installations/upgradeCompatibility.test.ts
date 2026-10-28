@@ -121,40 +121,6 @@ test("collection admission rejects obsolete resource generation fields", async (
     await expect(store.importRelease(collectionFixture(source))).rejects.toThrow('unknown property "generation"');
 });
 
-test("upgrades preserve Page identities while allowing route changes", async () => {
-    const initialSource = release("1.0.0");
-    initialSource.translations["en-US"]!["page.overview.name"] = "Overview";
-    initialSource.pages = [
-        {
-            id: "overview",
-            defaultPath: "/admin",
-            name: "page.overview.name",
-            document: {
-                html: `<div cms-bloc=\"${(initialSource.blocs as Record<string, unknown>[])[0]!.id}\"></div>`,
-            },
-        },
-    ];
-    const store = new CollectionStore(new MemoryCollectionStorage());
-    const initial = await store.importRelease(collectionFixture(initialSource));
-    await store.install("site", initial.digest, 0, "local");
-
-    const changedPage = structuredClone(initialSource);
-    changedPage.version = "1.1.0";
-    changedPage.pages[0]!.defaultPath = "/";
-    const pageArtifact = await store.importRelease(collectionFixture(changedPage));
-    await expect(reviewedUpgrade(store, "site", pageArtifact.digest, 1, "local")).resolves.toMatchObject({
-        revision: 2,
-    });
-
-    const removedPage = structuredClone(changedPage);
-    removedPage.version = "1.2.0";
-    removedPage.pages = [];
-    const removedArtifact = await store.importRelease(collectionFixture(removedPage));
-    await expect(reviewedUpgrade(store, "site", removedArtifact.digest, 2, "local")).rejects.toThrow(
-        "major publication",
-    );
-});
-
 test("upgrades preserve managed native element choices", async () => {
     const managedRelease = (version: string, accepts: string[], root: string) => {
         const source = release(version);

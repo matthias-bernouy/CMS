@@ -82,11 +82,6 @@ export function inventoryFromSnapshot(
             }
         }
     };
-    for (const release of releases) {
-        for (const page of release.pages ?? []) {
-            walk(page.document.html, `collection:${release.collectionId}/page:${page.id}`);
-        }
-    }
     for (const page of snapshot.pages) {
         const location = `page:${page.id}:${page.path}/${page.visible ? "published" : "draft"}`;
         walk(page.content, location);
@@ -187,21 +182,6 @@ function collectValues(
     if (typeof value === "string") {
         references.push(...documentReferences(value, location, "runtime", releases));
     } else if (value && typeof value === "object") {
-        const page = value as Record<string, unknown>;
-        if (
-            page.kind === "contribution" &&
-            typeof page.contributionId === "string" &&
-            typeof page.pageId === "string"
-        ) {
-            references.push({
-                type: "resource",
-                collectionId: page.contributionId,
-                kind: "page",
-                id: page.pageId,
-                location,
-                scope: "runtime",
-            });
-        }
         for (const [key, child] of Object.entries(value)) {
             collectValues(child, `${location}/${key}`, releases, references);
         }

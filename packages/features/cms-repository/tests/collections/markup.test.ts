@@ -203,7 +203,7 @@ describe("collection markup admission", () => {
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow("unknown collection text missing");
     });
 
-    test("allows editable example copy while forbidding hardcoded authored Page copy", () => {
+    test("allows editable example copy and rejects removed collection Pages", () => {
         const source = collectionDocument({ "page.demo.name": "Demo" });
         (source.examples as any[])[0].document.html =
             '<div cms-bloc="atlas-panel"><p slot="body">Editable copy</p></div>';
@@ -218,6 +218,6 @@ describe("collection markup admission", () => {
                 },
             },
         ];
-        expect(() => parseCollectionRelease(collectionFixture(source))).toThrow("user-facing copy");
+        expect(() => parseCollectionRelease(collectionFixture(source))).toThrow('unknown property "pages"');
     });
 });

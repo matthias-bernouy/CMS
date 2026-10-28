@@ -1,11 +1,11 @@
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { loadCollectionExamples } from "../examples/source";
 import { loadCollectionBlocs } from "./blocSources";
 import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
-import { readSourceEntries, scanFileSourceTree } from "cms-repository/repository/authoring/sourceTree";
+import { readSourceEntries } from "cms-repository/repository/authoring/sourceTree";
 import { loadCollectionAssets } from "./assetSources";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
@@ -23,7 +23,12 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         throw new Error("Example sources require collection v1");
     }
     const texts = await loadCollectionTexts(join(collectionRoot, "texts"));
-    const pages = await loadPages(join(collectionRoot, "pages"));
+    if (
+        (await readSourceEntries(collectionRoot)).some((entry) => entry.name === "pages") ||
+        Object.hasOwn(definition, "pages")
+    ) {
+        throw new Error("Collection pages are unsupported; author generic examples instead");
+    }
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
     if ((await readSourceEntries(collectionRoot)).some((entry) => entry.name === "migrations")) {
         throw new Error("Collection migration sources are unsupported");
@@ -42,7 +47,6 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         themeTokens: themeTokenIds(theme),
         texts: ids(texts),
         assets: ids(assets.definitions),
-        pages: ids(pages),
     });
     const candidate = {
         ...definition,
@@ -52,7 +56,6 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         blocs,
         examples,
         ...(texts.length ? { texts } : {}),
-        ...(pages.length ? { pages } : {}),
         ...(theme === undefined ? {} : { theme }),
     };
     const artifact = await admitCollectionRelease(candidate, assets.bundle, { contracts });
@@ -74,36 +77,5 @@ function themeTokenIds(value: unknown): string[] {
         (value as { categories?: { entries?: Record<string, unknown>[] }[] } | undefined)?.categories ?? [];
     return categories.flatMap((category) =>
         ids((category.entries ?? []).filter((entry) => entry.type !== "font-face")),
-    );
-}
-
-async function loadPages(directory: string): Promise<unknown[]> {
-    const groups = new Map<string, Map<string, string>>();
-    for (const file of await scanFileSourceTree(directory)) {
-        const folder = dirname(file.relativePath);
-        if (folder === ".") {
-            throw new Error("Page source root may contain only page directories");
-        }
-        const files = groups.get(folder) ?? new Map<string, string>();
-        files.set(basename(file.relativePath), file.absolutePath);
-        groups.set(folder, files);
-    }
-    const seen = new Set<string>();
-    return Promise.all(
-        [...groups.entries()].map(async ([folder, files]) => {
-            if (files.size !== 2 || !files.has("definition.json") || !files.has("page.html")) {
-                throw new Error(`Page folder ${folder} must contain exactly definition.json and page.html`);
-            }
-            const id = basename(folder);
-            const definition = (await Bun.file(files.get("definition.json")!).json()) as Record<string, unknown>;
-            if (definition.id !== id || Object.hasOwn(definition, "document") || seen.has(id)) {
-                throw new Error(`Page folder ${folder} must have a unique matching id and keep its document separate`);
-            }
-            seen.add(id);
-            return {
-                ...definition,
-                document: { html: (await Bun.file(files.get("page.html")!).text()).trim() },
-            };
-        }),
     );
 }

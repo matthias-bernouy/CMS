@@ -122,7 +122,6 @@ describe("collection release parsing", () => {
             maxBlocs: 512,
             maxAssets: 1_024,
             maxTexts: 4_096,
-            maxPages: 256,
             maxStates: 512,
             maxDependencies: 128,
             maxThemeCategories: 64,
@@ -569,14 +568,6 @@ describe("collection release parsing", () => {
                 },
             ],
         };
-        source.pages = [
-            {
-                id: "overview",
-                defaultPath: "/admin",
-                name: "page.overview.name",
-                document: { html: '<div cms-bloc="atlas-panel"></div>' },
-            },
-        ];
         source.states = [
             {
                 id: "filters",
@@ -591,7 +582,7 @@ describe("collection release parsing", () => {
         source.exports = {
             blocs: ["atlas-panel"],
             themeTokens: ["accent"],
-            pages: ["overview"],
+
             states: ["filters"],
         };
         source.dependencies = [
@@ -602,7 +593,7 @@ describe("collection release parsing", () => {
                 imports: {
                     blocs: [{ id: "ulvia-official-button" }],
                     themeTokens: [{ id: "primary" }],
-                    pages: [{ id: "home", defaultPath: "/" }],
+
                     states: [{ id: "selection" }],
                 },
             },
@@ -619,7 +610,7 @@ describe("collection release parsing", () => {
         expect(parsed.exports).toEqual({
             blocs: ["atlas-panel"],
             themeTokens: ["accent"],
-            pages: ["overview"],
+
             states: ["filters"],
         });
         expect(parsed.states).toEqual([
@@ -641,7 +632,7 @@ describe("collection release parsing", () => {
             imports: {
                 blocs: [{ id: "ulvia-official-button" }],
                 themeTokens: [{ id: "primary" }],
-                pages: [{ id: "home", defaultPath: "/" }],
+
                 states: [{ id: "selection" }],
             },
         });

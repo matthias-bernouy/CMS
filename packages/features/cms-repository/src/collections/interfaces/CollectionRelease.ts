@@ -3,7 +3,7 @@ import type { CollectionText } from "./CollectionText";
 import type { CollectionTheme } from "./CollectionTheme";
 import type { CollectionBloc } from "./CollectionBloc";
 import type { CollectionAssetDefinition } from "./CollectionAssets";
-import type { CollectionPage, CollectionExample } from "./CollectionPage";
+import type { CollectionExample } from "./CollectionExample";
 import type { CollectionState } from "./CollectionState";
 
 /** Advisory lifecycle metadata. Dates never disable a resource implicitly. */
@@ -19,7 +19,7 @@ export interface CollectionConfiguration {
     readonly defaults: Readonly<Record<string, unknown>>;
 }
 
-export type CollectionResourceKind = "bloc" | "theme-token" | "configuration" | "text" | "asset" | "page" | "state";
+export type CollectionResourceKind = "bloc" | "theme-token" | "configuration" | "text" | "asset" | "state";
 
 export interface CollectionResourceDescriptor {
     readonly kind: CollectionResourceKind;
@@ -44,7 +44,6 @@ export interface CollectionResourceSelection {
     readonly texts?: readonly string[];
     /** Collection-local immutable asset IDs. References remain qualified by their owner collection. */
     readonly assets?: readonly string[];
-    readonly pages?: readonly string[];
     readonly states?: readonly string[];
 }
 
@@ -52,17 +51,11 @@ export interface CollectionResourceImport {
     readonly id: string;
 }
 
-interface CollectionPageImport extends CollectionResourceImport {
-    /** Authored route used by native links and verified against the selected dependency release. */
-    readonly defaultPath: string;
-}
-
 export interface CollectionResourceImportSelection {
     readonly blocs: readonly CollectionResourceImport[];
     readonly themeTokens: readonly CollectionResourceImport[];
     readonly texts?: readonly CollectionResourceImport[];
     readonly assets?: readonly CollectionResourceImport[];
-    readonly pages?: readonly CollectionPageImport[];
     readonly states?: readonly CollectionResourceImport[];
 }
 
@@ -102,6 +95,5 @@ export interface CollectionRelease {
     readonly assets: readonly CollectionAssetDefinition[];
     readonly states?: readonly CollectionState[];
     readonly blocs: readonly CollectionBloc[];
-    readonly pages?: readonly CollectionPage[];
     readonly examples?: readonly CollectionExample[];
 }

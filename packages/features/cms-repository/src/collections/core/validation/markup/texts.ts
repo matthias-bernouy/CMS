@@ -1,5 +1,4 @@
 import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
-import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { CollectionValidationError, invalid } from "../../errors";
 import { replaceCollectionTextExpressions } from "../../texts/expressions";
 import { isUserFacingTextAttribute } from "../../texts/userFacingAttributes";
@@ -75,7 +74,7 @@ export function validateCollectionTextReferences(
     collectionId: string,
     textIds: ReadonlySet<string>,
     importedTexts: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
-    pages: readonly CollectionPage[] = [],
+    documents: readonly { readonly id: string; readonly document: { readonly html: string } }[] = [],
     allowLiteralCopy = false,
 ): void {
     for (const bloc of blocs) {
@@ -96,12 +95,12 @@ export function validateCollectionTextReferences(
             }
         }
     }
-    for (const page of pages) {
-        const path = `$.pages[${page.id}].document.html`;
+    for (const example of documents) {
+        const path = `$.examples[${example.id}].document.html`;
         if (!allowLiteralCopy) {
-            validateNoHardcodedCopy(page.document.html, path);
+            validateNoHardcodedCopy(example.document.html, path);
         }
-        for (const node of nodes(markupTree(page.document.html))) {
+        for (const node of nodes(markupTree(example.document.html))) {
             if (node.type === "text") {
                 validateValue(node.data, collectionId, textIds, importedTexts, path);
             } else if (isElement(node)) {

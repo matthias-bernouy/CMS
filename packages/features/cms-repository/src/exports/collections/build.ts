@@ -25,5 +25,6 @@ export {
     renderCollectionExamples,
     type CollectionExampleExport,
     type CollectionExampleRuntimes,
+    type CollectionExampleRenderOptions,
     type CollectionExampleFrame,
 } from "cms-repository/collections/tooling/examples/render";

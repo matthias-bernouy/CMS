@@ -17,12 +17,10 @@ export type {
     CollectionStateScope,
 } from "cms-repository/collections/interfaces/CollectionState";
 export type {
-    CollectionPage,
     CollectionExample,
     CollectionExamplePreview,
-    CollectionPageDocument,
     PageDocument,
-} from "cms-repository/collections/interfaces/CollectionPage";
+} from "cms-repository/collections/interfaces/CollectionExample";
 export type {
     CollectionTheme,
     CollectionThemeCategory,
@@ -105,11 +103,7 @@ export {
     replaceCollectionAssetExpressions,
     rewriteCollectionAssetReferences,
 } from "cms-repository/collections/core/texts/expressions";
-export {
-    collectionPageRequirements,
-    pageRequirements,
-} from "cms-repository/collections/core/admission/pageRequirements";
-export { pageLinkSources } from "cms-repository/collections/core/parsing/pages/references";
+export { documentRequirements } from "cms-repository/collections/core/admission/documentRequirements";
 export { compileBlocStyle } from "cms-repository/collections/core/validation/blocStyleCompilation";
 export {
     pageBlocHostAttributesIssue,

@@ -1,5 +1,4 @@
 import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
-import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { replaceCollectionAssetExpressions } from "../../texts/expressions";
 import { CollectionValidationError, invalid } from "../../errors";
 import { parseHTML } from "linkedom";
@@ -12,7 +11,7 @@ export function validateCollectionAssetReferences(
     collectionId: string,
     assets: ReadonlyMap<string, CollectionAssetDefinition>,
     importedAssets: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
-    pages: readonly CollectionPage[] = [],
+    documents: readonly { readonly id: string; readonly document: { readonly html: string } }[] = [],
 ): void {
     for (const bloc of blocs) {
         const markupValues = [bloc.markup];
@@ -27,10 +26,10 @@ export function validateCollectionAssetReferences(
             validateValue(bloc.style, collectionId, assets, importedAssets, `$.blocs[${bloc.id}].style`);
         }
     }
-    for (const page of pages) {
-        const path = `$.pages[${page.id}].document.html`;
-        validateValue(page.document.html, collectionId, assets, importedAssets, path);
-        validateSvgAuthority(page.document.html, collectionId, assets, path);
+    for (const example of documents) {
+        const path = `$.examples[${example.id}].document.html`;
+        validateValue(example.document.html, collectionId, assets, importedAssets, path);
+        validateSvgAuthority(example.document.html, collectionId, assets, path);
     }
 }
 
@@ -41,9 +40,9 @@ export function validateInstalledCollectionSvgReferences(
 ): void {
     const documents = [
         ...release.blocs.flatMap((bloc) => [{ value: bloc.markup, path: `Collection Bloc ${bloc.id}.markup` }]),
-        ...([...(release.pages ?? []), ...(release.examples ?? [])].map((page) => ({
-            value: page.document.html,
-            path: `Collection Page ${release.collectionId}.${page.id}`,
+        ...((release.examples ?? []).map((example) => ({
+            value: example.document.html,
+            path: `Collection example ${release.collectionId}.${example.id}`,
         })) ?? []),
     ];
     for (const { value, path } of documents) {

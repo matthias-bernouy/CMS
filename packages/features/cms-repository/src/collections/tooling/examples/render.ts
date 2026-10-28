@@ -22,6 +22,8 @@ export type CollectionExampleFrame = {
     themeMode: "light" | "dark";
 };
 
+export type CollectionExampleRenderOptions = { locale?: string; themeMode?: "light" | "dark" };
+
 export type CollectionExampleRuntimes = { blocRuntime: string; bindingCore: string };
 
 export type CollectionExampleExport = {
@@ -34,7 +36,18 @@ export async function renderCollectionExamples(
     artifact: AdmittedCollectionRelease,
     dependencies: readonly AdmittedCollectionRelease[] = [],
     runtimes?: CollectionExampleRuntimes,
+    options: CollectionExampleRenderOptions = {},
 ): Promise<CollectionExampleExport> {
+    let locale: string;
+    try {
+        locale = Intl.getCanonicalLocales(options.locale ?? artifact.release.locale)[0]!;
+    } catch {
+        throw new TypeError("Invalid example rendering locale");
+    }
+    const themeMode = options.themeMode ?? "light";
+    if (!locale || (themeMode !== "light" && themeMode !== "dark")) {
+        throw new TypeError("Invalid example rendering context");
+    }
     const { releases, files, assets, byId, renderable, resolveAssets } = createExampleContext(artifact, dependencies);
     const runtimeAssets = runtimes ?? {
         blocRuntime: new TextDecoder().decode((await loadBlocRuntimeEntry()).raw),
@@ -48,7 +61,7 @@ export async function renderCollectionExamples(
             const { document } = parseHTML("<!doctype html><html><head></head><body></body></html>");
             const rendered = await renderPageDocument(
                 document.body,
-                collectionExampleDocument(artifact.release, example.id, preview.locale, releases),
+                collectionExampleDocument(artifact.release, example.id, releases),
                 {
                     repository: {
                         getRenderableBlocs: async () => renderable,
@@ -57,14 +70,9 @@ export async function renderCollectionExamples(
                             return bloc?.kind === "component" ? (bloc.runtime?.viewJS ?? null) : null;
                         },
                         getContentTexts: async () =>
-                            releases.map((collection) =>
-                                projectCollectionTextSource({
-                                    collection,
-                                    overrides: example.texts[collection.collectionId] ?? {},
-                                }),
-                            ),
+                            releases.map((collection) => projectCollectionTextSource({ collection })),
                     },
-                    language: preview.locale,
+                    language: locale,
                     resolveContributedAssets: resolveAssets,
                     resolveSvgSources: async (sources) =>
                         new Map(
@@ -83,10 +91,10 @@ export async function renderCollectionExamples(
                         ),
                 },
             );
-            document.documentElement.lang = preview.locale;
-            document.documentElement.setAttribute("data-theme-mode", preview.themeMode);
+            document.documentElement.lang = locale;
+            document.documentElement.setAttribute("data-theme-mode", themeMode);
             const sources = releases
-                .map((release) => collectionThemeSource(release, preview.locale))
+                .map((release) => collectionThemeSource(release, locale))
                 .filter((source) => source !== null);
             const theme = defaultThemeSettings();
             theme.sources = sources;
@@ -94,7 +102,7 @@ export async function renderCollectionExamples(
                 sources.flatMap((source) =>
                     source.categories.flatMap((category) =>
                         category.tokens.flatMap((token) => {
-                            const value = token.defaults?.[preview.themeMode] ?? token.defaults?.light;
+                            const value = token.defaults?.[themeMode] ?? token.defaults?.light;
                             return value === undefined ? [] : [[token.id, value]];
                         }),
                     ),
@@ -115,7 +123,7 @@ export async function renderCollectionExamples(
             for (const name of ["viewport", "color-scheme"]) {
                 const meta = document.createElement("meta");
                 meta.name = name;
-                meta.content = name === "viewport" ? "width=device-width, initial-scale=1" : preview.themeMode;
+                meta.content = name === "viewport" ? "width=device-width, initial-scale=1" : themeMode;
                 document.head.append(meta);
             }
             const link = document.createElement("link");
@@ -141,12 +149,12 @@ export async function renderCollectionExamples(
                 path: `${path}.html`,
                 exampleId: example.id,
                 previewId: preview.id,
-                label: resolveCollectionTranslation(artifact.release, example.label, preview.locale),
-                description: resolveCollectionTranslation(artifact.release, example.description, preview.locale),
+                label: resolveCollectionTranslation(artifact.release, example.label, locale),
+                description: resolveCollectionTranslation(artifact.release, example.description, locale),
                 width: preview.frame.width,
                 height: preview.frame.height,
-                locale: preview.locale,
-                themeMode: preview.themeMode,
+                locale: locale,
+                themeMode: themeMode,
             });
         }
     }

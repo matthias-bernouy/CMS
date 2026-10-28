@@ -5,15 +5,13 @@ import { validateCollectionStateBindings } from "../../core/validation/markup/st
 import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
-import { pageLinks, pageLinkSources } from "../../core/parsing/pages/references";
 import { validateExpandedPageDocument, validatePageDocument } from "@bernouy/cms-content/page-document";
-import { collectionPageDefinitions } from "../../core/parsing/pages/definitions";
+import { collectionDocumentDefinitions } from "../../core/parsing/documents/definitions";
 import { validateInstalledCollectionSvgReferences } from "../../core/validation/markup/assets";
 
 export function assertCollectionResourceIsolation(releases: readonly CollectionRelease[]): void {
     const blocTags = new Set<string>();
     const themeTokens = new Set<string>();
-    const pagePaths = new Set<string>();
     for (const release of releases) {
         for (const bloc of release.blocs) {
             assertUnique(blocTags, bloc.id, "Bloc tag");
@@ -23,62 +21,27 @@ export function assertCollectionResourceIsolation(releases: readonly CollectionR
         ) ?? []) {
             assertUnique(themeTokens, collectionThemeTokenId(release.collectionId, token.id), "theme token");
         }
-        for (const page of release.pages ?? []) {
-            assertUnique(pagePaths, page.defaultPath, "Page default path");
-        }
     }
     assertCollectionDependencies(releases);
-    validateInstalledPageDocuments(releases);
-    validateInstalledPageLinks(releases);
+    validateInstalledExampleDocuments(releases);
     validateMarkup(
         releases.flatMap((release) => release.blocs),
         DEFAULT_COLLECTION_LIMITS,
     );
 }
 
-function validateInstalledPageDocuments(releases: readonly CollectionRelease[]): void {
+function validateInstalledExampleDocuments(releases: readonly CollectionRelease[]): void {
     const blocs = releases.flatMap((release) => release.blocs);
-    const definitions = collectionPageDefinitions(blocs);
+    const definitions = collectionDocumentDefinitions(blocs);
     for (const release of releases) {
-        for (const page of [...(release.pages ?? []), ...(release.examples ?? [])]) {
-            const path = `Collection Page ${release.collectionId}.${page.id}`;
+        for (const example of release.examples ?? []) {
+            const path = `Collection example ${release.collectionId}.${example.id}`;
             try {
-                const html =
-                    "previews" in page
-                        ? collectionExampleDocument(release, page.id, release.locale, releases).html
-                        : page.document.html;
+                const html = collectionExampleDocument(release, example.id, releases).html;
                 const document = validatePageDocument(html, blocs);
                 validateExpandedPageDocument(document.html, definitions);
             } catch (error) {
-                reject(`${path} is invalid: ${error instanceof Error ? error.message : "invalid Page document"}`);
-            }
-        }
-    }
-}
-
-function validateInstalledPageLinks(releases: readonly CollectionRelease[]): void {
-    const pages = new Map(
-        releases.flatMap((release) =>
-            (release.pages ?? []).map((page) => [page.defaultPath, { release, page }] as const),
-        ),
-    );
-    for (const release of releases) {
-        for (const page of release.pages ?? []) {
-            const sources = [page.document.html, ...pageLinkSources(release, page.uses)];
-            for (const path of sources.flatMap(pageLinks)) {
-                const target = pages.get(path);
-                if (!target || target.release.collectionId === release.collectionId) {
-                    continue;
-                }
-                const dependency = release.dependencies?.find(
-                    ({ publisherId, collectionId }) =>
-                        publisherId === target.release.publisherId && collectionId === target.release.collectionId,
-                );
-                if (!dependency?.imports.pages?.some(({ id }) => id === target.page.id)) {
-                    reject(
-                        `Collection Page ${release.collectionId}.${page.id} links to Page ${target.release.collectionId}.${target.page.id} without importing it`,
-                    );
-                }
+                reject(`${path} is invalid: ${error instanceof Error ? error.message : "invalid example document"}`);
             }
         }
     }
@@ -116,7 +79,7 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
                 `Collection ${release.collectionId} requires ${dependency.publisherId}/${dependency.collectionId} ${dependency.versionRange}`,
             );
         }
-        for (const field of ["blocs", "themeTokens", "texts", "assets", "pages", "states"] as const) {
+        for (const field of ["blocs", "themeTokens", "texts", "assets", "states"] as const) {
             const exported = new Set(target.exports?.[field] ?? []);
             const available =
                 field === "themeTokens"
@@ -130,15 +93,6 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
                 if (!exported.has(imported.id) || !available.has(imported.id)) {
                     reject(
                         `Collection ${release.collectionId} imports unavailable ${field} ${dependency.collectionId}:${imported.id}`,
-                    );
-                }
-                if (
-                    field === "pages" &&
-                    "defaultPath" in imported &&
-                    target.pages?.find(({ id }) => id === imported.id)?.defaultPath !== imported.defaultPath
-                ) {
-                    reject(
-                        `Collection ${release.collectionId} imports unavailable Page route ${String(imported.defaultPath)}`,
                     );
                 }
             }

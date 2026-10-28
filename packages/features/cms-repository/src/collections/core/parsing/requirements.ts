@@ -11,7 +11,6 @@ import type { CollectionLimits } from "../limits";
 import { array, identifier, keys, ordinal, record, string, unique } from "../values";
 import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
 import { textIdentifier } from "../texts/validation";
-import { parseDefaultPath } from "./pages/document";
 import { parseAssetId } from "./assets";
 
 export function parseRequirements(
@@ -71,7 +70,6 @@ export function parseCollectionDependencies(
             imports.themeTokens.length === 0 &&
             (imports.texts?.length ?? 0) === 0 &&
             (imports.assets?.length ?? 0) === 0 &&
-            (imports.pages?.length ?? 0) === 0 &&
             (imports.states?.length ?? 0) === 0
         ) {
             invalid("must import at least one collection resource", `${path}.imports`);
@@ -97,7 +95,7 @@ function parseResourceImports(
     limits: Readonly<CollectionLimits>,
 ): CollectionResourceImportSelection {
     const source = record(value, path);
-    keys(source, ["blocs", "themeTokens", "texts", "assets", "pages", "states"], path);
+    keys(source, ["blocs", "themeTokens", "texts", "assets", "states"], path);
     return {
         blocs: importedResources(source.blocs, limits.maxBlocs, `${path}.blocs`, (entry, at) =>
             parseCollectionBlocTag(entry, collectionId, at),
@@ -118,30 +116,8 @@ function parseResourceImports(
         ),
         ...optionalImports(source.texts, limits.maxTexts, `${path}.texts`, (entry) => textIdentifier(entry)),
         ...optionalImports(source.assets, limits.maxAssets, `${path}.assets`, assetIdentifier),
-        ...(source.pages === undefined
-            ? {}
-            : {
-                  pages: importedPages(source.pages, limits.maxPages, `${path}.pages`),
-              }),
         ...optionalImports(source.states, limits.maxStates, `${path}.states`, (entry, at) => identifier(entry, at)),
     };
-}
-
-function importedPages(value: unknown, maximum: number, path: string) {
-    const pages = array(value, maximum, path).map((entry, index) => {
-        const at = `${path}[${index}]`;
-        const source = record(entry, at);
-        keys(source, ["id", "defaultPath"], at);
-        return {
-            id: identifier(source.id, `${at}.id`),
-            defaultPath: parseDefaultPath(source.defaultPath, `${at}.defaultPath`),
-        };
-    });
-    unique(
-        pages.flatMap(({ id, defaultPath }) => [id, `path:${defaultPath}`]),
-        path,
-    );
-    return pages.sort((left, right) => ordinal(left.id, right.id));
 }
 
 function optionalImports(
@@ -190,7 +166,6 @@ export function validateCollectionExports(
     themeTokenIds: ReadonlySet<string>,
     textIds: ReadonlySet<string>,
     assetIds: ReadonlySet<string>,
-    pageIds: ReadonlySet<string>,
     stateIds: ReadonlySet<string>,
 ): void {
     for (const bloc of exports.blocs) {
@@ -213,11 +188,6 @@ export function validateCollectionExports(
             invalid(`unknown exported asset ${asset}`, "$.exports.assets");
         }
     }
-    for (const page of exports.pages ?? []) {
-        if (!pageIds.has(page)) {
-            invalid(`unknown exported page ${page}`, "$.exports.pages");
-        }
-    }
     for (const state of exports.states ?? []) {
         if (!stateIds.has(state)) {
             invalid(`unknown exported state ${state}`, "$.exports.states");
@@ -232,7 +202,7 @@ function parseResourceSelection(
     limits: Readonly<CollectionLimits>,
 ): CollectionResourceSelection {
     const source = record(value, path);
-    keys(source, ["blocs", "themeTokens", "texts", "assets", "pages", "states"], path);
+    keys(source, ["blocs", "themeTokens", "texts", "assets", "states"], path);
     const blocs = array(source.blocs ?? [], limits.maxBlocs, `${path}.blocs`).map((entry, index) =>
         parseCollectionBlocTag(entry, collectionId, `${path}.blocs[${index}]`),
     );
@@ -257,9 +227,6 @@ function parseResourceSelection(
     const assets = array(source.assets ?? [], limits.maxAssets, `${path}.assets`).map((entry, index) =>
         assetIdentifier(entry, `${path}.assets[${index}]`),
     );
-    const pages = array(source.pages ?? [], limits.maxPages, `${path}.pages`).map((entry, index) =>
-        identifier(entry, `${path}.pages[${index}]`),
-    );
     const states = array(source.states ?? [], limits.maxStates, `${path}.states`).map((entry, index) =>
         identifier(entry, `${path}.states[${index}]`),
     );
@@ -267,14 +234,12 @@ function parseResourceSelection(
     unique(themeTokens, `${path}.themeTokens`);
     unique(texts, `${path}.texts`);
     unique(assets, `${path}.assets`);
-    unique(pages, `${path}.pages`);
     unique(states, `${path}.states`);
     return {
         blocs: blocs.sort(ordinal),
         themeTokens: themeTokens.sort(ordinal),
         ...(texts.length ? { texts: texts.sort(ordinal) } : {}),
         ...(assets.length ? { assets: assets.sort(ordinal) } : {}),
-        ...(pages.length ? { pages: pages.sort(ordinal) } : {}),
         ...(states.length ? { states: states.sort(ordinal) } : {}),
     };
 }

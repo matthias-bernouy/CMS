@@ -89,13 +89,6 @@ function requirementBreaks(previous: CollectionRelease, next: CollectionRelease)
             }
         }
     }
-    const nextPages = new Map((next.pages ?? []).map((page) => [page.id, page]));
-    for (const page of previous.pages ?? []) {
-        const replacement = nextPages.get(page.id);
-        if (replacement) {
-            compare(`page:${page.id}`, page.requires, replacement.requires);
-        }
-    }
     return breaks;
 }
 
@@ -104,7 +97,7 @@ function removedCollectionExports(
     next: CollectionResourceSelection | undefined,
 ): string[] {
     const removed: string[] = [];
-    for (const key of ["blocs", "themeTokens", "texts", "assets", "pages", "states"] as const) {
+    for (const key of ["blocs", "themeTokens", "texts", "assets", "states"] as const) {
         const available = new Set(next?.[key] ?? []);
         for (const id of previous?.[key] ?? []) {
             if (!available.has(id)) {

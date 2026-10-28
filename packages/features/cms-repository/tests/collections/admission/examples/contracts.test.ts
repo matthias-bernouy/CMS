@@ -16,11 +16,10 @@ describe("collection examples", () => {
         expect(release.examples![0]!.previews[0]).toEqual({
             id: "desktop",
             frame: { width: 640, height: 240 },
-            locale: "en-US",
-            themeMode: "light",
         });
         expect(parseCollectionReleaseJson(JSON.stringify(release))).toEqual(release);
-        expect(release.pages).toBeUndefined();
+        expect(Object.hasOwn(release, "pages")).toBe(false);
+        expect(release.examples![0]).not.toHaveProperty("texts");
     });
 
     test.each(["description", "categories", "defaultExample"])("requires %s for listed v1 blocs", (key) => {
@@ -80,24 +79,48 @@ describe("collection examples", () => {
         expect(() => parseCollectionRelease(release)).toThrow("unknown property");
     });
 
-    test("materializes escaped editable copy and settings without mutating collection text", () => {
+    test("preserves shared text references and applies settings without mutating collection text", () => {
         const release = parseCollectionRelease(exampleCollection());
         const before = JSON.stringify(release);
         const document = collectionExampleDocument(release, "atlas-panel-default");
         expect(document.html).toContain('tone="accent"');
-        expect(document.html).toContain("Example &lt;copy&gt;");
-        expect(document.html).not.toContain("cms.i18n");
+        expect(document.html).toContain("{{ cms.i18n.atlas.greeting }}");
+        expect(document.html).not.toContain("Hello");
         expect(JSON.stringify(release)).toBe(before);
-        expect(release.texts![0]!.values["en-US"]).toBe("Hello");
+        expect(release.texts![0]!.values["en-US"]).toBe("Hello <copy>");
     });
 
-    test("rejects unknown and undeclared text fixture namespaces", () => {
-        const release = exampleCollection();
-        release.examples[0].texts.other = { greeting: { en: "Leak" } };
-        expect(() => parseCollectionRelease(release)).toThrow();
-        delete release.examples[0].texts.other;
-        release.examples[0].texts.atlas.unknown = { en: "Unknown" };
-        expect(() => parseCollectionRelease(release)).toThrow();
+    test("rejects removed example fields without compatibility defaults", () => {
+        for (const key of ["texts", "locale", "themeMode"]) {
+            const source = exampleCollection();
+            source.examples[0][key] = key === "texts" ? {} : "en";
+            expect(() => parseCollectionRelease(source)).toThrow(`unknown property "${key}"`);
+        }
+        for (const key of ["locale", "themeMode"]) {
+            const source = exampleCollection();
+            source.examples[0].previews[0][key] = "light";
+            expect(() => parseCollectionRelease(source)).toThrow(`unknown property "${key}"`);
+        }
+    });
+
+    test("validates ordinary local and imported text references", () => {
+        const source = exampleCollection();
+        source.examples[0].document.html = source.examples[0].document.html.replace("atlas.greeting", "atlas.unknown");
+        expect(() => parseCollectionRelease(source)).toThrow("unknown collection text");
+        source.examples[0].document.html = source.examples[0].document.html.replace("atlas.unknown", "other.greeting");
+        expect(() => parseCollectionRelease(source)).toThrow();
+    });
+
+    test("text references introduced by native insertion defaults are also validated", () => {
+        const source = exampleCollection();
+        source.blocs[0].root = {
+            accepts: ["div"],
+            attributes: { "aria-label": { required: false } },
+            defaults: { "aria-label": "{{ cms.i18n.atlas.greeting }}" },
+        };
+        expect(() => parseCollectionRelease(source)).not.toThrow();
+        source.blocs[0].root.defaults["aria-label"] = "{{ cms.i18n.atlas.missing }}";
+        expect(() => parseCollectionRelease(source)).toThrow("unknown collection text");
     });
 
     test("round-trips canonical v1 bytes and hashes example changes", async () => {

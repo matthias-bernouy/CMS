@@ -9,7 +9,7 @@ export function exampleCollection(): any {
         "example.description": "A panel containing a greeting.",
     });
     release.protocol = "ulvia-collection/v1";
-    release.texts = [textDefinition("greeting", { "en-US": "Hello", en: "Hello" })];
+    release.texts = [textDefinition("greeting", { "en-US": "Hello <copy>", en: "Hello <copy>", fr: "Bonjour" })];
     for (const bloc of release.blocs) {
         bloc.catalogue = "listed";
         bloc.description = "bloc.description";
@@ -25,7 +25,6 @@ export function exampleCollection(): any {
         label: "example.label",
         description: "example.description",
         document: { html },
-        texts: { atlas: { greeting: { "en-US": "Example <copy>", fr: "Bonjour" } } },
         previews: [{ id: "desktop", frame: { width: 640, height: 240 } }],
     });
     const panel = '<div cms-bloc="atlas-panel" tone="accent"><p slot="body">{{ cms.i18n.atlas.greeting }}</p></div>';

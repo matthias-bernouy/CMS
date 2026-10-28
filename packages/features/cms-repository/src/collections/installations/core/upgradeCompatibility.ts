@@ -121,13 +121,6 @@ export function assertCompatibleCollectionUpgrade(previous: CollectionRelease, n
             reject(`Upgrade removes existing text ${id}`);
         }
     }
-    const nextPages = new Map((next.pages ?? []).map((page) => [page.id, page]));
-    for (const page of previous.pages ?? []) {
-        const replacement = nextPages.get(page.id);
-        if (!replacement) {
-            reject(`Upgrade removes or changes existing Page ${page.id}`);
-        }
-    }
     if (previous.configuration && !next.configuration) {
         reject("Upgrade removes the collection configuration contract");
     }
@@ -158,7 +151,7 @@ function assertAssetCompatibility(previous: CollectionRelease, next: CollectionR
 }
 
 export type CollectionBreakingResource = {
-    kind: "bloc" | "theme-token" | "configuration" | "text" | "asset" | "page" | "state";
+    kind: "bloc" | "theme-token" | "configuration" | "text" | "asset" | "state";
     id: string;
     reason: string;
 };
@@ -194,13 +187,6 @@ export function collectionUpgradeBreakingResources(
     for (const { id } of previous.texts ?? []) {
         if (!nextTexts.has(id)) {
             changes.push({ kind: "text", id, reason: `text ${id} was removed` });
-        }
-    }
-    const nextPages = new Map((next.pages ?? []).map((page) => [page.id, page]));
-    for (const page of previous.pages ?? []) {
-        const replacement = nextPages.get(page.id);
-        if (!replacement) {
-            changes.push({ kind: "page", id: page.id, reason: `Page ${page.id} was removed` });
         }
     }
     const nextAssets = new Map(next.assets.map((asset) => [asset.id, asset]));

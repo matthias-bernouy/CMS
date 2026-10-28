@@ -104,18 +104,6 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
         })),
     );
     resources.push(
-        ...(release.pages?.map((page) => ({
-            kind: "page" as const,
-            id: page.id,
-            contract: {
-                id: page.id,
-                uses: page.uses,
-                requires: page.requires,
-            },
-            implementation: { resource: page, translations: referencedTranslations(release, page) },
-        })) ?? []),
-    );
-    resources.push(
         ...(release.states?.map((state) => ({
             kind: "state" as const,
             id: state.id,
@@ -132,7 +120,7 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
 
 function projection(
     release: CollectionRelease,
-    kind: Extract<CollectionResourceKind, "text" | "page">,
+    kind: Extract<CollectionResourceKind, "text">,
     id: string,
     resource: { readonly deprecation?: unknown },
 ): ResourceProjection {

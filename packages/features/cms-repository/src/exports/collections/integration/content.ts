@@ -1,8 +1,3 @@
-export {
-    synchronizeCollectionPageRoutes,
-    synchronizePageRoutes,
-    withCollectionPageRoutes,
-} from "cms-repository/collections/integration/content/routes";
 export { withInstalledCollections } from "cms-repository/collections/integration/content/installedRepository";
 export {
     collectionThemeSource,

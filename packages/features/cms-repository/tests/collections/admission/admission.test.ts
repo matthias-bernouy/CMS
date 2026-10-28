@@ -88,11 +88,12 @@ describe("collection authored bundle admission", () => {
     test("rejects capability bindings placed on Page Bloc hosts", async () => {
         const contracts = await releaseCatalogue(contractDocument("catalog.items", "item.list"));
         const source = collectionDocument({ "page.catalog.name": "Catalog" });
-        source.pages = [
+        source.examples = [
             {
                 id: "catalog",
-                defaultPath: "/admin/catalog",
-                name: "page.catalog.name",
+                label: "page.catalog.name",
+                description: "page.catalog.name",
+                previews: [{ id: "desktop", frame: { width: 800, height: 600 } }],
                 requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
                 document: {
                     html: '<div cms-bloc=\"atlas-panel\" cms-mutation="catalog.items:item.list as catalog"></div>',
