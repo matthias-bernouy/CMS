@@ -4,6 +4,7 @@ import type { ProviderReportReader } from "@bernouy/cms-repository/providers/man
 
 /** Refresh approved remote observations on demand; reports never change approval or selection. */
 export class RefreshingProviderRoutes implements GatewayRouteResolver {
+    private readonly resolutions = new Map<string, Promise<GatewayRoute | null>>();
     private readonly flights = new Map<string, Promise<void>>();
     private readonly next = new Map<string, number>();
     private readonly warmups = new Map<string, { nextAt: number; pending?: Promise<void> }>();
@@ -50,7 +51,21 @@ export class RefreshingProviderRoutes implements GatewayRouteResolver {
             });
         return state.pending;
     }
-    async resolve(siteId: string, contractId: string) {
+    async resolve(siteId: string, contractId: string): Promise<GatewayRoute | null> {
+        const key = `${siteId}/${contractId}`;
+        const pending = this.resolutions.get(key);
+        if (pending) {
+            return pending;
+        }
+        const load = this.resolveCurrent(siteId, contractId);
+        this.resolutions.set(key, load);
+        try {
+            return await load;
+        } finally {
+            this.resolutions.delete(key);
+        }
+    }
+    private async resolveCurrent(siteId: string, contractId: string) {
         const route = await this.base.resolve(siteId, contractId);
         if (!route || route.installation.installation.status !== "enabled") {
             return route;

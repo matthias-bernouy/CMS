@@ -68,6 +68,37 @@ test("reuses a transport plan briefly and supports explicit invalidation", async
     expect(reads).toBe(3);
 });
 
+test("coalesces a cold route burst without caching across invalidation or failed reads", async () => {
+    const route = routeSnapshot();
+    const reads: ReturnType<typeof Promise.withResolvers<string | null>>[] = [];
+    const resolver = new ControlGatewayRouteResolver({
+        getGatewayRoute: () => {
+            const read = Promise.withResolvers<string | null>();
+            reads.push(read);
+            return read.promise;
+        },
+    } as unknown as ControlProviderClient);
+    const burst = Array.from({ length: 96 }, () => resolver.resolve("default", "catalog.items"));
+    expect(reads).toHaveLength(1);
+    resolver.invalidate("default", "catalog.items");
+    const fresh = resolver.resolve("default", "catalog.items");
+    expect(reads).toHaveLength(2);
+    reads[1]!.resolve(JSON.stringify({ ...route, selection: { ...route.selection, version: "1.1.0" } }));
+    expect((await fresh)?.selection.version).toBe("1.1.0");
+    reads[0]!.resolve(JSON.stringify(route));
+    expect((await Promise.all(burst)).every((item) => item?.selection.version === "1.0.0")).toBeTrue();
+    expect((await resolver.resolve("default", "catalog.items"))?.selection.version).toBe("1.1.0");
+    expect(reads).toHaveLength(2);
+    resolver.invalidate("default", "catalog.items");
+    const failed = resolver.resolve("default", "catalog.items");
+    reads[2]!.reject(new Error("control unavailable"));
+    await expect(failed).rejects.toThrow("control unavailable");
+    const retry = resolver.resolve("default", "catalog.items");
+    reads[3]!.resolve(null);
+    expect(await retry).toBeNull();
+    expect(reads).toHaveLength(4);
+});
+
 function routeSnapshot() {
     return {
         selection: {

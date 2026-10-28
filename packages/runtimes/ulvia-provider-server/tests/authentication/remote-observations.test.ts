@@ -133,3 +133,14 @@ test("bursts of official warm-up coalesce route reads without caching live autho
     expect((await f.routes.resolve("site-a", "catalog"))!.installation.installation.status).toBe("disabled");
     expect(f.lookups()).toBe(warmedReads + 1);
 });
+
+test("cold invocation bursts share route resolution and reread state after completion", async () => {
+    const f = await fixture();
+    await Promise.all(Array.from({ length: 96 }, () => f.routes.resolve("site-a", "catalog")));
+    expect(f.lookups()).toBe(2);
+    expect(f.probes()).toBe(1);
+    f.route.installation.installation.status = "disabled";
+    const burst = await Promise.all(Array.from({ length: 96 }, () => f.routes.resolve("site-a", "catalog")));
+    expect(burst.every((route) => route!.installation.installation.status === "disabled")).toBeTrue();
+    expect(f.lookups()).toBe(3);
+});

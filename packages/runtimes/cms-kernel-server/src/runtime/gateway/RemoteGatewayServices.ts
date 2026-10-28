@@ -6,6 +6,7 @@ import type { ControlProviderClient } from "./ControlProviderClient";
 
 export class ControlGatewayRouteResolver implements GatewayRouteResolver {
     readonly #cache = new Map<string, { route: GatewayRoute; expiresAt: number }>();
+    readonly #pending = new Map<string, Promise<GatewayRoute | null>>();
 
     constructor(
         private readonly control: ControlProviderClient,
@@ -19,18 +20,32 @@ export class ControlGatewayRouteResolver implements GatewayRouteResolver {
         if (cached && cached.expiresAt > this.now()) {
             return cached.route;
         }
-        const snapshot = await this.control.getGatewayRoute(contractId);
-        if (snapshot === null) {
-            this.#cache.delete(cacheKey);
-            return null;
+        const pending = this.#pending.get(cacheKey);
+        if (pending) {
+            return pending;
         }
-        const route = parseRoute(snapshot, siteId, contractId);
-        this.#cache.set(cacheKey, { route, expiresAt: this.now() + this.cacheDurationMs });
-        return route;
+        // Share concurrent transport-plan reads; dispatch still has a live authorization fence.
+        const load = this.control.getGatewayRoute(contractId).then((snapshot) => {
+            const route = snapshot === null ? null : parseRoute(snapshot, siteId, contractId);
+            if (this.#pending.get(cacheKey) === load && route) {
+                this.#cache.set(cacheKey, { route, expiresAt: this.now() + this.cacheDurationMs });
+            }
+            return route;
+        });
+        this.#pending.set(cacheKey, load);
+        try {
+            return await load;
+        } finally {
+            if (this.#pending.get(cacheKey) === load) {
+                this.#pending.delete(cacheKey);
+            }
+        }
     }
 
     invalidate(siteId: string, contractId: string): void {
-        this.#cache.delete(routeCacheKey(siteId, contractId));
+        const key = routeCacheKey(siteId, contractId);
+        this.#cache.delete(key);
+        this.#pending.delete(key);
     }
 
     async isCurrent(route: GatewayRoute): Promise<boolean> {
