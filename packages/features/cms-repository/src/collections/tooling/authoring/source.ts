@@ -1,3 +1,4 @@
+import { materializeStateSchemas } from "./stateSchemas";
 import { basename, join, resolve } from "node:path";
 import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
@@ -50,6 +51,9 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     });
     const candidate = {
         ...definition,
+        ...(definition.states === undefined
+            ? {}
+            : { states: await materializeStateSchemas(definition.states, contracts) }),
         ...(exports === undefined ? {} : { exports }),
         translations,
         assets: assets.definitions,

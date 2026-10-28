@@ -225,3 +225,16 @@ reseeding edited, renamed or deleted Pages; receipts are outside Page content.
 There is no collection Page reader, migration or second route registry. Old
 `pages` fields, Page imports/exports and `pages/` source directories are rejected.
 Use fresh instance storage for this incompatible development format change.
+
+
+### Reusing capability output schemas in authored state
+
+Within an authored collection's state schemas, `$capabilityOutput` can name an
+exact admitted `contractId`, `version`, `digest` and `capabilityId`. The collection
+build requires that contract in its supplied catalogue and replaces the reference
+with an independent copy of the capability output schema. Unknown capabilities,
+changed digests and references without a catalogue are rejected. References are
+bounded and never remain in a published collection; the admitted schema dialect
+and runtime do not resolve references or perform network requests. The official
+Provider preview state uses this form to follow its contract without maintaining
+a second copy of the output schema.
