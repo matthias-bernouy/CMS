@@ -12,9 +12,9 @@ test("discovery follows browser helpers but excludes server-only code, tests and
         await writeFile(absolute, content);
     }
     try {
-        const pkg = "packages/surfaces/cms-kernel";
-        await file(`${pkg}/package.json`, JSON.stringify({ name: "@bernouy/cms-kernel" }));
-        await file(`${pkg}/src/components/Admin.ts`, 'import { getData } from "cms-kernel/core/data"; getData();');
+        const pkg = "packages/surfaces/cms-edge";
+        await file(`${pkg}/package.json`, JSON.stringify({ name: "@bernouy/cms-edge" }));
+        await file(`${pkg}/src/components/Admin.ts`, 'import { getData } from "cms-edge/core/data"; getData();');
         await file(`${pkg}/src/core/data.ts`, 'export async function getData() { return fetch("/api/data"); }');
         await file(
             `${pkg}/src/core/server.ts`,
@@ -73,5 +73,5 @@ test("production policy does not mistake declarations, fixtures or frozen packag
     ]) {
         expect(isProductionSource(path)).toBe(false);
     }
-    expect(isProductionSource("packages/surfaces/cms-kernel/src/core/api.ts")).toBe(true);
+    expect(isProductionSource("packages/surfaces/cms-edge/src/core/api.ts")).toBe(true);
 });

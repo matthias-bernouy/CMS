@@ -10,14 +10,14 @@ import { invoke } from "../observability";
 
 type Stack = Awaited<ReturnType<typeof mcpContainers>>;
 export async function exerciseProviders(f: Stack, page: Page) {
-    await page.goto(`${f.kernelUrl}/login`);
+    await page.goto(`${f.cmsUrl}/login`);
     await page.getByLabel(/^(Email address|Adresse e-mail)$/u).fill(f.administrator.email);
     await page.getByLabel(/^(Password|Mot de passe)$/u).fill(f.administrator.password);
     await Promise.all([
         page.waitForURL(/\/admin$/u),
         page.getByRole("button", { name: /^(Sign in|Se connecter)$/u }).click(),
     ]);
-    await page.goto(`${f.kernelUrl}/admin/providers/connect`);
+    await page.goto(`${f.cmsUrl}/admin/providers/connect`);
     await page
         .getByRole("heading", { name: /^(Connect a Provider|Connecter un Provider)$/u, exact: true })
         .waitFor({ timeout: 15_000 })
@@ -58,7 +58,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     expect(approval.status()).toBe(200);
     await page.waitForURL(/\/admin\/providers$/u);
     const inventory = await page.request.get(
-        `${f.kernelUrl}/.cms/query/ulvia.cms.installations/list-provider-installations`,
+        `${f.cmsUrl}/.cms/query/ulvia.cms.installations/list-provider-installations`,
     );
     expect(inventory.status()).toBe(200);
     const { installations } = await inventory.json();
@@ -67,7 +67,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     )?.id;
     expect(installationId).toBeString();
     const command = async (capability: string, input: unknown) => {
-        const response = await page.request.post(`${f.kernelUrl}/.cms/mutation/ulvia.cms.installations/${capability}`, {
+        const response = await page.request.post(`${f.cmsUrl}/.cms/mutation/ulvia.cms.installations/${capability}`, {
             data: input,
         });
         expect(response.status()).toBe(200);
@@ -75,16 +75,16 @@ export async function exerciseProviders(f: Stack, page: Page) {
     };
     const access = async () => {
         const response = await page.request.fetch(
-            `${f.kernelUrl}/.cms/query/ulvia.cms.installations/get-provider-access`,
+            `${f.cmsUrl}/.cms/query/ulvia.cms.installations/get-provider-access`,
             { method: "QUERY", data: { installationId } },
         );
         expect(response.status()).toBe(200);
         return response.json();
     };
     const connected = await readProviderCredential(f.providerName, `${f.id}-named`, installationId);
-    expect(connected.cmsUrl).toBe(f.kernelUrl);
+    expect(connected.cmsUrl).toBe(f.gatewayUrl);
     const client = new GatewayProviderClient({
-        cmsUrl: f.kernelUrl,
+        cmsUrl: f.cmsUrl,
         token: connected.token,
         allowPrivateAddresses: true,
     });
@@ -132,7 +132,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     await f.restartProvider();
     const state = await access();
     expect(state.paired).toBe(true);
-    await page.goto(`${f.kernelUrl}/admin/providers/access?ulvia-official-provider-access-id=${installationId}`);
+    await page.goto(`${f.cmsUrl}/admin/providers/access?ulvia-official-provider-access-id=${installationId}`);
     await page
         .getByRole("heading", { name: /^(Requested capability access|Accès demandés aux capabilities)$/u, exact: true })
         .waitFor();
@@ -157,7 +157,7 @@ export async function exerciseProviders(f: Stack, page: Page) {
     ).rejects.toMatchObject({ status: 403 });
     const rotated = await readProviderCredential(f.providerName, `${f.id}-named`, installationId);
     expect(rotated.token === connected.token).toBe(false);
-    const fresh = new GatewayProviderClient({ cmsUrl: f.kernelUrl, token: rotated.token, allowPrivateAddresses: true });
+    const fresh = new GatewayProviderClient({ cmsUrl: f.cmsUrl, token: rotated.token, allowPrivateAddresses: true });
     expect(
         (
             await fresh.invoke(

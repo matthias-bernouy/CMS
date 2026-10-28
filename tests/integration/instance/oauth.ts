@@ -2,10 +2,10 @@ import { expect } from "bun:test";
 import { randomBytes, createHash } from "node:crypto";
 import { chromium } from "playwright";
 
-export async function connectBrowser(kernelUrl: string, administrator: { email: string; password: string }) {
-    const resource = `${kernelUrl}/.cms/mcp`;
-    const callback = `http://localhost:${new URL(kernelUrl).port}/mcp-test-callback`;
-    const registration = await fetch(`${kernelUrl}/.cms/oauth/register`, {
+export async function connectBrowser(cmsUrl: string, administrator: { email: string; password: string }) {
+    const resource = `${cmsUrl}/.cms/mcp`;
+    const callback = `http://localhost:${new URL(cmsUrl).port}/mcp-test-callback`;
+    const registration = await fetch(`${cmsUrl}/.cms/oauth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ client_name: "Local MCP regression client", redirect_uris: [callback] }),
@@ -36,12 +36,12 @@ export async function connectBrowser(kernelUrl: string, administrator: { email: 
         await page.route(`${callback}?**`, (route) =>
             route.fulfill({ status: 200, contentType: "text/html", body: "Authorization completed" }),
         );
-        await page.goto(`${kernelUrl}/.cms/oauth/authorize?${query}`);
+        await page.goto(`${cmsUrl}/.cms/oauth/authorize?${query}`);
         const flowCookie = (await page.context().cookies()).find((cookie) => cookie.name === "cms-connect-flow");
         expect(flowCookie?.value).toBe(await page.locator('input[name="requestId"]').inputValue());
         page.on("request", (request) => {
             if (request.method() === "POST" && new URL(request.url()).pathname === "/.cms/oauth/authorize") {
-                events.push(`Consent origin matches: ${request.headers().origin === kernelUrl}`);
+                events.push(`Consent origin matches: ${request.headers().origin === cmsUrl}`);
             }
         });
         await page.getByLabel("Email", { exact: true }).fill(administrator.email);
@@ -52,7 +52,7 @@ export async function connectBrowser(kernelUrl: string, administrator: { email: 
         ]);
         const returned = new URL(page.url());
         expect(returned.searchParams.get("state")).toBe(state);
-        const exchange = await fetch(`${kernelUrl}/.cms/oauth/token`, {
+        const exchange = await fetch(`${cmsUrl}/.cms/oauth/token`, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
@@ -111,7 +111,7 @@ export async function connectBrowser(kernelUrl: string, administrator: { email: 
             call,
             tools: catalogue.tools,
             async revoke() {
-                await page.goto(`${kernelUrl}/.cms/connections`);
+                await page.goto(`${cmsUrl}/.cms/connections`);
                 await page.getByRole("button", { name: "Revoke access" }).click();
             },
         };

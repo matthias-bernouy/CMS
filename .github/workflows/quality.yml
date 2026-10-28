@@ -82,8 +82,8 @@ jobs:
   integration-contracts:
     uses: ./.github/workflows/quality-integration-contracts.yml
 
-  kernel-smoke:
-    uses: ./.github/workflows/quality-kernel-smoke.yml
+  edge-smoke:
+    uses: ./.github/workflows/quality-edge-smoke.yml
 
   dependency-security:
     name: Dependency and secret security
@@ -152,7 +152,7 @@ jobs:
       - static-quality
       - tests
       - integration-contracts
-      - kernel-smoke
+      - edge-smoke
       - dependency-security
       - coverage
     runs-on: ubuntu-24.04
@@ -162,13 +162,13 @@ jobs:
           STATIC_RESULT: ${{ needs.static-quality.result }}
           TEST_RESULT: ${{ needs.tests.result }}
           INTEGRATION_RESULT: ${{ needs.integration-contracts.result }}
-          KERNEL_SMOKE_RESULT: ${{ needs.kernel-smoke.result }}
+          EDGE_SMOKE_RESULT: ${{ needs.edge-smoke.result }}
           SECURITY_RESULT: ${{ needs.dependency-security.result }}
           COVERAGE_RESULT: ${{ needs.coverage.result }}
         run: |
           test "$STATIC_RESULT" = success
           test "$TEST_RESULT" = success
           test "$INTEGRATION_RESULT" = success
-          test "$KERNEL_SMOKE_RESULT" = success
+          test "$EDGE_SMOKE_RESULT" = success
           test "$SECURITY_RESULT" = success
           test "$COVERAGE_RESULT" = success

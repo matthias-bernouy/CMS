@@ -33,7 +33,7 @@ export async function createNetworkJourney() {
     const providerRunner = new BunRunner({ hostname: "127.0.0.1" });
     new UlviaProvider(providerRunner, providerOptions(admission, dispatcher));
     const providerServer = serveForTest(providerRunner);
-    let kernelServer: ReturnType<typeof serveForTest> | undefined;
+    let edgeServer: ReturnType<typeof serveForTest> | undefined;
     try {
         const endpoint = providerServer.url.replace("localhost", "127.0.0.1");
         const route = await performanceRoute(admission, endpoint);
@@ -48,8 +48,8 @@ export async function createNetworkJourney() {
             authorize: async () => true,
             now: () => "2026-10-15T12:00:00.000Z",
         });
-        const kernelRunner = new BunRunner({ hostname: "127.0.0.1" });
-        kernelRunner.post("/benchmark/call", async (request) => {
+        const edgeRunner = new BunRunner({ hostname: "127.0.0.1" });
+        edgeRunner.post("/benchmark/call", async (request) => {
             const { value } = (await request.json()) as { value: string };
             const result = await gateway.invoke({
                 siteId: NETWORK_SITE_ID,
@@ -60,19 +60,19 @@ export async function createNetworkJourney() {
             });
             return Response.json(result);
         });
-        kernelServer = serveForTest(kernelRunner);
+        edgeServer = serveForTest(edgeRunner);
         return {
-            kernelUrl: kernelServer.url.replace("localhost", "127.0.0.1"),
+            cmsUrl: edgeServer.url.replace("localhost", "127.0.0.1"),
             setDelay: (delayMs: number) => {
                 providerDelayMs = delayMs;
             },
             stop: () => {
-                kernelServer?.stop();
+                edgeServer?.stop();
                 providerServer.stop();
             },
         };
     } catch (error) {
-        kernelServer?.stop();
+        edgeServer?.stop();
         providerServer.stop();
         throw error;
     }

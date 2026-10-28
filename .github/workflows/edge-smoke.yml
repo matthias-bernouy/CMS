@@ -1,4 +1,4 @@
-name: Kernel fresh-install smoke
+name: Edge fresh-install smoke
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: kernel-smoke-${{ github.ref }}
+  group: edge-smoke-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -34,5 +34,5 @@ jobs:
       - name: Install Chromium
         run: bun node_modules/playwright/cli.js install --with-deps chromium
 
-      - name: Exercise a fresh Kernel installation and restart
-        run: bun run test:kernel-smoke
+      - name: Exercise a fresh Edge installation and restart
+        run: bun run test:edge-smoke

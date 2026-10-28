@@ -4,7 +4,7 @@ import type { UiSource } from "../../contracts/types";
 
 const inspect = (content: string, overrides: Partial<UiSource> = {}) =>
     inspectNetwork({
-        path: "packages/surfaces/cms-kernel/src/components/example/data.ts",
+        path: "packages/surfaces/cms-edge/src/components/example/data.ts",
         content,
         kind: "script",
         browser: true,
@@ -110,7 +110,7 @@ describe("browser network contracts", () => {
         );
         expect(inspect("fetch(url)", { path: `/other/${path}` })[0]?.severity).toBe("WARNING");
         expect(
-            inspect("fetch(url)", { path: "packages/surfaces/cms-kernel/src/core/admin/helper.ts" })[0]?.severity,
+            inspect("fetch(url)", { path: "packages/surfaces/cms-edge/src/core/admin/helper.ts" })[0]?.severity,
         ).toBe("WARNING");
     });
 

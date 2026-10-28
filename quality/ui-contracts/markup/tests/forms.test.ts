@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { inspectMarkup } from "../index";
 
-const path = "packages/surfaces/cms-kernel/src/core/admin/auth/templates/example.html";
+const path = "packages/surfaces/cms-edge/src/core/admin/auth/templates/example.html";
 const inspect = (content: string) => inspectMarkup({ path, content, kind: "html", browser: true });
 
 describe("declarative mutation form contracts", () => {

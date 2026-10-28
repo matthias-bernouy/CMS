@@ -392,7 +392,7 @@
                 "packages/features/cms-content/src/browser/dom.ts",
                 "packages/features/cms-content/src/browser/entries/bindingCore.entry.ts",
                 "packages/features/cms-content/src/browser/entries/blocRuntime.entry.ts",
-                "packages/features/cms-content/src/exports/kernel.ts",
+                "packages/features/cms-content/src/exports/edge.ts",
                 "packages/features/cms-content/src/exports/pages/path.ts",
                 "packages/features/cms-content/src/exports/runtime/browser-dom.ts",
                 "packages/features/cms-content/src/exports/runtime/browser.ts",
@@ -531,34 +531,34 @@
                 "total": 3213
             }
         },
-        "@bernouy/cms-kernel": {
-            "path": "packages/surfaces/cms-kernel",
+        "@bernouy/cms-edge": {
+            "path": "packages/surfaces/cms-edge",
             "coveredSourceFiles": [
-                "packages/surfaces/cms-kernel/src/KernelCms.ts",
-                "packages/surfaces/cms-kernel/src/html/fileImages.ts",
-                "packages/surfaces/cms-kernel/src/html/head/buildAssets.ts",
-                "packages/surfaces/cms-kernel/src/html/head/buildHtmlBasics.ts",
-                "packages/surfaces/cms-kernel/src/html/head/buildMetaCsp.ts",
-                "packages/surfaces/cms-kernel/src/html/head/buildScriptTags.ts",
-                "packages/surfaces/cms-kernel/src/html/renderPage.ts",
-                "packages/surfaces/cms-kernel/src/html/runtimeContext.ts",
-                "packages/surfaces/cms-kernel/src/http/assets/favicon.ts",
-                "packages/surfaces/cms-kernel/src/http/assets/serveFavicon.ts",
-                "packages/surfaces/cms-kernel/src/http/auth/mountAuthRoutes.ts",
-                "packages/surfaces/cms-kernel/src/http/mountKernelRoutes.ts",
-                "packages/surfaces/cms-kernel/src/http/pages/access/preflightPageGatewayAccess.ts",
-                "packages/surfaces/cms-kernel/src/http/pages/access/resolveRequestActor.ts",
-                "packages/surfaces/cms-kernel/src/http/pages/handlePageRequest.ts",
-                "packages/surfaces/cms-kernel/src/http/pages/pageLinks.ts",
-                "packages/surfaces/cms-kernel/src/http/pages/renderRef.ts",
-                "packages/surfaces/cms-kernel/src/http/pages/reservedPaths.ts",
-                "packages/surfaces/cms-kernel/src/http/pages/resolvePageIndexing.ts",
-                "packages/surfaces/cms-kernel/src/http/pages/serveRenderablePage.ts"
+                "packages/surfaces/cms-edge/src/EdgeCms.ts",
+                "packages/surfaces/cms-edge/src/html/fileImages.ts",
+                "packages/surfaces/cms-edge/src/html/head/buildAssets.ts",
+                "packages/surfaces/cms-edge/src/html/head/buildHtmlBasics.ts",
+                "packages/surfaces/cms-edge/src/html/head/buildMetaCsp.ts",
+                "packages/surfaces/cms-edge/src/html/head/buildScriptTags.ts",
+                "packages/surfaces/cms-edge/src/html/renderPage.ts",
+                "packages/surfaces/cms-edge/src/html/runtimeContext.ts",
+                "packages/surfaces/cms-edge/src/http/assets/favicon.ts",
+                "packages/surfaces/cms-edge/src/http/assets/serveFavicon.ts",
+                "packages/surfaces/cms-edge/src/http/auth/mountAuthRoutes.ts",
+                "packages/surfaces/cms-edge/src/http/mountEdgeRoutes.ts",
+                "packages/surfaces/cms-edge/src/http/pages/access/preflightPageGatewayAccess.ts",
+                "packages/surfaces/cms-edge/src/http/pages/access/resolveRequestActor.ts",
+                "packages/surfaces/cms-edge/src/http/pages/handlePageRequest.ts",
+                "packages/surfaces/cms-edge/src/http/pages/pageLinks.ts",
+                "packages/surfaces/cms-edge/src/http/pages/renderRef.ts",
+                "packages/surfaces/cms-edge/src/http/pages/reservedPaths.ts",
+                "packages/surfaces/cms-edge/src/http/pages/resolvePageIndexing.ts",
+                "packages/surfaces/cms-edge/src/http/pages/serveRenderablePage.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/surfaces/cms-kernel/src/KernelCmsConfig.ts",
-                "packages/surfaces/cms-kernel/src/html/RenderContext.ts",
-                "packages/surfaces/cms-kernel/src/index.ts"
+                "packages/surfaces/cms-edge/src/EdgeCmsConfig.ts",
+                "packages/surfaces/cms-edge/src/html/RenderContext.ts",
+                "packages/surfaces/cms-edge/src/index.ts"
             ],
             "files": {
                 "covered": 20,
@@ -573,19 +573,19 @@
                 "total": 784
             }
         },
-        "@bernouy/cms-kernel-server": {
-            "path": "packages/runtimes/cms-kernel-server",
+        "@bernouy/cms-edge-server": {
+            "path": "packages/runtimes/cms-edge-server",
             "coveredSourceFiles": [
-                "packages/runtimes/cms-kernel-server/src/runtime/gateway/fetchProviderReport.ts",
-                "packages/runtimes/cms-kernel-server/src/runtime/kernelRuntime.ts",
-                "packages/runtimes/cms-kernel-server/src/runtime/mountKernel.ts",
-                "packages/runtimes/cms-kernel-server/src/runtime/provider/ProviderKernelClient.ts",
-                "packages/runtimes/cms-kernel-server/src/runtime/provider/ProviderKernelTransport.ts",
-                "packages/runtimes/cms-kernel-server/src/runtimeEnv.ts",
-                "packages/runtimes/cms-kernel-server/src/runtimeEnvParsing.ts"
+                "packages/runtimes/cms-edge-server/src/runtime/gateway/fetchProviderReport.ts",
+                "packages/runtimes/cms-edge-server/src/runtime/edgeRuntime.ts",
+                "packages/runtimes/cms-edge-server/src/runtime/mountEdge.ts",
+                "packages/runtimes/cms-edge-server/src/runtime/provider/ProviderEdgeClient.ts",
+                "packages/runtimes/cms-edge-server/src/runtime/provider/ProviderEdgeTransport.ts",
+                "packages/runtimes/cms-edge-server/src/runtimeEnv.ts",
+                "packages/runtimes/cms-edge-server/src/runtimeEnvParsing.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/runtimes/cms-kernel-server/src/index.ts"
+                "packages/runtimes/cms-edge-server/src/index.ts"
             ],
             "files": {
                 "covered": 7,
@@ -1254,7 +1254,7 @@
                 "packages/surfaces/ulvia-provider/src/instances/registry.ts",
                 "packages/surfaces/ulvia-provider/src/instances/transitionLease.ts",
                 "packages/surfaces/ulvia-provider/src/instances/types.ts",
-                "packages/surfaces/ulvia-provider/src/kernel/protocol.ts",
+                "packages/surfaces/ulvia-provider/src/edge/protocol.ts",
                 "packages/surfaces/ulvia-provider/src/operations/MemoryProviderOperationStore.ts",
                 "packages/surfaces/ulvia-provider/src/operations/ProviderOperationExecutor.ts",
                 "packages/surfaces/ulvia-provider/src/operations/lease.ts",
@@ -1311,7 +1311,7 @@
                 "packages/runtimes/ulvia-provider-server/src/runtime/instances/MongoInstanceTransitionStore.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/instances/MongoProviderInstanceRegistry.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/instances/ProviderInstanceHost.ts",
-                "packages/runtimes/ulvia-provider-server/src/runtime/kernel/InstanceKernelApi.ts",
+                "packages/runtimes/ulvia-provider-server/src/runtime/edge/InstanceEdgeApi.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/mountUlviaProvider.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/provider-operations/MongoProviderOperationStore.ts",
                 "packages/runtimes/ulvia-provider-server/src/runtime/stores/envelopeCrypto.ts",

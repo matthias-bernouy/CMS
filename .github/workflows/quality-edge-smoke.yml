@@ -1,4 +1,4 @@
-name: Kernel browser smoke
+name: Edge browser smoke
 
 on:
   workflow_call:
@@ -21,16 +21,16 @@ jobs:
       - name: Install Chromium
         run: bun node_modules/playwright/cli.js install --with-deps chromium
 
-      - name: Exercise the complete local Kernel flow
+      - name: Exercise the complete local Edge flow
         env:
-          ULVIA_SMOKE_ARTIFACTS_DIR: artifacts/kernel-smoke
-        run: bun run test:kernel-smoke
+          ULVIA_SMOKE_ARTIFACTS_DIR: artifacts/edge-smoke
+        run: bun run test:edge-smoke
 
       - name: Upload failure artifacts
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: kernel-smoke-failure
-          path: artifacts/kernel-smoke/
+          name: edge-smoke-failure
+          path: artifacts/edge-smoke/
           if-no-files-found: warn
           retention-days: 14

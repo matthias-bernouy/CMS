@@ -16,7 +16,7 @@ test("build manifest is stable and covers every shipped generated output", async
     const files = {
         "packages/features/example/dist/index.js": "export const value = 1;\n",
         "packages/features/example/tsconfig.tsbuildinfo": "build-state\n",
-        "packages/surfaces/cms-kernel/src/browser/admin-runtime.js": "(() => {})();\n",
+        "packages/surfaces/cms-edge/src/browser/admin-runtime.js": "(() => {})();\n",
     };
     for (const [path, contents] of Object.entries(files)) {
         const absolutePath = join(root, path);

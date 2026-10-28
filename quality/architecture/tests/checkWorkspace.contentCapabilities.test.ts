@@ -21,10 +21,10 @@ test("Delivery imports only public content capabilities, including type and dyna
         "packages/features/cms-content/src/index.ts": "export type ContentRepository = {};",
         "packages/features/cms-content/src/rendering.ts": "export type ContentReader = {};",
         "packages/features/cms-content/src/mongo.ts": "export const persistence = true;",
-        "packages/surfaces/cms-kernel/package.json": manifest("@bernouy/cms-kernel", {
+        "packages/surfaces/cms-edge/package.json": manifest("@bernouy/cms-edge", {
             dependencies: { "@bernouy/cms-content": "workspace:*" },
         }),
-        "packages/surfaces/cms-kernel/src/index.ts": [
+        "packages/surfaces/cms-edge/src/index.ts": [
             "import type { ContentReader } from '@bernouy/cms-content/rendering';",
             "import type { ContentRepository } from '@bernouy/cms-content';",
             "void import('@bernouy/cms-content/mongo');",

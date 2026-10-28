@@ -23,7 +23,7 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
             "packages/features/cms-content/src/exports/pages/path.ts",
         ],
         packageImportAllowlist: {
-            "@bernouy/cms-kernel": {
+            "@bernouy/cms-edge": {
                 "@bernouy/cms-content": [
                     "./rendering",
                     "./bindings",
@@ -32,7 +32,7 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
                     "./http",
                     "./theme",
                     "./page-path",
-                    "./kernel",
+                    "./edge",
                     "./seo",
                     "./seo/http",
                 ],

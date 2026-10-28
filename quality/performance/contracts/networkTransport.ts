@@ -4,36 +4,36 @@ import { createNetworkJourney } from "./networkTransportFixture";
 export async function runNetworkTransportBenchmarks(): Promise<void> {
     const journey = await createNetworkJourney();
     try {
-        const baseline = await networkRoundTrips(journey.kernelUrl, "two-hop round trip", 0, 1, journey.setDelay);
+        const baseline = await networkRoundTrips(journey.cmsUrl, "two-hop round trip", 0, 1, journey.setDelay);
         const delayed10 = await networkRoundTrips(
-            journey.kernelUrl,
+            journey.cmsUrl,
             "round trip with 10 ms provider latency",
             10,
             1,
             journey.setDelay,
         );
         const delayed50 = await networkRoundTrips(
-            journey.kernelUrl,
+            journey.cmsUrl,
             "round trip with 50 ms provider latency",
             50,
             1,
             journey.setDelay,
         );
         const concurrent10 = await networkRoundTrips(
-            journey.kernelUrl,
+            journey.cmsUrl,
             "10 concurrent calls with 10 ms latency",
             10,
             10,
             journey.setDelay,
         );
         const concurrent50 = await networkRoundTrips(
-            journey.kernelUrl,
+            journey.cmsUrl,
             "50 concurrent calls with 10 ms latency",
             10,
             50,
             journey.setDelay,
         );
-        printResults("Real loopback Kernel -> Gateway -> Provider transport", [
+        printResults("Real loopback Edge -> Gateway -> Provider transport", [
             baseline,
             delayed10,
             delayed50,
@@ -52,7 +52,7 @@ export async function runNetworkTransportBenchmarks(): Promise<void> {
 }
 
 async function networkRoundTrips(
-    kernelUrl: string,
+    cmsUrl: string,
     name: string,
     expectedDelayMs: number,
     concurrency: number,
@@ -64,14 +64,14 @@ async function networkRoundTrips(
         await Promise.all(
             Array.from({ length: concurrency }, async () => {
                 const value = `${expectedDelayMs}-${sequence++}`;
-                const response = await fetch(`${kernelUrl}/benchmark/call`, {
+                const response = await fetch(`${cmsUrl}/benchmark/call`, {
                     method: "POST",
                     headers: { "content-type": "application/json" },
                     body: JSON.stringify({ value }),
                 });
                 const result = (await response.json()) as { kind?: string; output?: { value?: string } };
                 if (!response.ok || result.kind !== "success" || result.output?.value !== value) {
-                    throw new Error("Kernel/Gateway/Provider benchmark returned an invalid response");
+                    throw new Error("Edge/Gateway/Provider benchmark returned an invalid response");
                 }
             }),
         );

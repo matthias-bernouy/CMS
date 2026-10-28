@@ -29,7 +29,7 @@ export async function readProviderCredential(providerName: string, key: string, 
             if (!runtime) { throw new Error("Test credential unavailable"); }
             let result = { token: runtime.invocationSecret };
             if (${JSON.stringify(connectionId ?? "")}) {
-                stores = await createProviderStores({ instanceId: instance.id, MONGO_URL: instanceMongoUrl(env.MONGO_URL, instance.storageKey), CMS_KEK: { activeKeyId: "instance", keysHex: { instance: runtime.kekHex }, rotateOnStart: false }, CMS_FILES_DIR: env.CMS_FILES_DIR + "/" + instance.storageKey, CMS_SESSION_SECRET: runtime.sessionSecret, KERNEL_PUBLIC_URL: instance.kernelUrl }, NOOP_LOGGER);
+                stores = await createProviderStores({ instanceId: instance.id, MONGO_URL: instanceMongoUrl(env.MONGO_URL, instance.storageKey), CMS_KEK: { activeKeyId: "instance", keysHex: { instance: runtime.kekHex }, rotateOnStart: false }, CMS_FILES_DIR: env.CMS_FILES_DIR + "/" + instance.storageKey, CMS_SESSION_SECRET: runtime.sessionSecret, CMS_PUBLIC_URL: instance.cmsUrl }, NOOP_LOGGER);
                 result = await new ProviderConnections(stores.providerConnections).get(${JSON.stringify(connectionId ?? "")});
                 if (!result) { throw new Error("Test connection unavailable"); }
             }

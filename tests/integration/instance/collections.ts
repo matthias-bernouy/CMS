@@ -108,7 +108,7 @@ export async function exerciseCollections(call: Call, namespace: string, provide
     return identity.publicKey as string;
 }
 
-export async function exerciseContent(call: Call, kernelUrl: string) {
+export async function exerciseContent(call: Call, cmsUrl: string) {
     const examples = await call("ulvia.cms.content", "examples.list", {
         collectionId: "mcp-kit",
         locale: "en",
@@ -137,12 +137,12 @@ export async function exerciseContent(call: Call, kernelUrl: string) {
         expectedRevision: replaced.revision,
         visible: true,
     });
-    const response = await fetch(`${kernelUrl}/mcp-regression`);
+    const response = await fetch(`${cmsUrl}/mcp-regression`);
     expect(response.status).toBe(200);
     expect(await response.text()).toContain("Created through MCP");
 }
 
-export async function exerciseFiles(call: Call, kernelUrl: string, accessToken: string) {
+export async function exerciseFiles(call: Call, cmsUrl: string, accessToken: string) {
     const bytes = new TextEncoder().encode("Local MCP file upload");
     const upload = await call("ulvia.cms.files", "workspace.upload.create", {
         filename: "mcp.txt",
@@ -150,7 +150,7 @@ export async function exerciseFiles(call: Call, kernelUrl: string, accessToken: 
         contentType: "text/plain",
         visibility: "private",
     });
-    expect(upload.uploadUrl.startsWith(`${kernelUrl}/.cms/mcp/uploads/`)).toBe(true);
+    expect(upload.uploadUrl.startsWith(`${cmsUrl}/.cms/mcp/uploads/`)).toBe(true);
     expect(
         (
             await fetch(upload.uploadUrl, {

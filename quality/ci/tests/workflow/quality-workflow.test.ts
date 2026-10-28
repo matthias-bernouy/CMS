@@ -60,7 +60,7 @@ test("quality workflow keeps every G0 check visible", async () => {
         "git diff --exit-code",
         "bun run quality/ci/audit/audit.ts",
         "bun run quality/ci/coverage/ratchet.ts",
-        "bun run --cwd packages/surfaces/cms-kernel src/tooling/prebuildAdmin.ts",
+        "bun run --cwd packages/surfaces/cms-edge src/tooling/prebuildAdmin.ts",
         "docker compose version",
         "bun test packages/features/cms-files/tests",
         "bun test packages/features/cms-gateway/tests/http packages/features/cms-gateway/tests/invocation",

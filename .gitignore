@@ -28,7 +28,7 @@ build/
 
 # Generated files
 coverage/
-packages/surfaces/cms-kernel/src/browser/admin-runtime.js
+packages/surfaces/cms-edge/src/browser/admin-runtime.js
 
 # .p9r files
 .p9r/

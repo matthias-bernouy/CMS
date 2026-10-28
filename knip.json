@@ -11,7 +11,7 @@
         "@bernouy/binary-media",
         "@bernouy/cms-auth",
         "@bernouy/cms-files",
-        "@bernouy/cms-kernel",
+        "@bernouy/cms-edge",
         "@bernouy/envelope-crypto",
         "@bernouy/image-processing",
         "@bernouy/official-repository-server",
@@ -28,7 +28,7 @@
                 "src/runtime-assets/build.ts"
             ]
         },
-        "packages/surfaces/cms-kernel": {
+        "packages/surfaces/cms-edge": {
             "entry": [
                 "src/index.ts",
                 "tests/contracts/publicReader.fixture.ts"

@@ -34,7 +34,7 @@ export async function invoke(connection: InstanceConnection, capabilityId: strin
         contractId: "ulvia.cms.observability",
         contractVersion: "1.0.0",
         capabilityId,
-        ...(capabilityId === "logs.append" ? { systemServiceId: "cms-kernel" } : {}),
+        ...(capabilityId === "logs.append" ? { systemServiceId: "cms-edge" } : {}),
     });
     return fetch(`${connection.providerUrl}/observability/logs/${capabilityId.slice(5)}`, {
         method: capabilityId === "logs.append" ? "POST" : "QUERY",
@@ -51,8 +51,10 @@ export async function exerciseObservability(
     providerUrl: string,
     primaryToken: string,
     secondaryToken: string,
+    cmsUrl: string,
 ): Promise<string> {
     const a = { providerUrl, token: primaryToken };
+    await verifyPublicTrace(a, { providerUrl, token: secondaryToken }, cmsUrl);
     const b = { providerUrl, token: secondaryToken };
     const item = {
         id: crypto.randomUUID(),
@@ -95,17 +97,53 @@ export async function exerciseObservability(
     });
     expect(await aggregate.json()).toMatchObject({ total: 1, groups: [{ key: "error", count: 1 }] });
     for (let attempt = 0; attempt < 30; attempt += 1) {
-        const logs = await (await invoke(a, "logs.query", { service: "cms-kernel", event: "kernel.started" })).json();
+        const logs = await (await invoke(a, "logs.query", { service: "cms-edge", event: "edge.started" })).json();
         if (logs.items.length) {
             return item.id;
         }
         await Bun.sleep(1000);
     }
-    throw new Error("The Kernel did not deliver its startup journal through the selected contract");
+    throw new Error("The Edge did not deliver its startup journal through the selected contract");
 }
 
 export async function verifyObservabilityPersistence(providerUrl: string, token: string, id: string): Promise<void> {
     const response = await invoke({ providerUrl, token }, "logs.get", { id });
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ id, event: "docker.scope.probe" });
+}
+
+async function verifyPublicTrace(
+    primary: InstanceConnection,
+    secondary: InstanceConnection,
+    cmsUrl: string,
+): Promise<void> {
+    const traceId = crypto.randomUUID();
+    const response = await fetch(`${cmsUrl}/login`, { headers: { "x-request-id": traceId } });
+    expect(response.status).toBe(200);
+    await response.arrayBuffer();
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+        const result = await (
+            await invoke(primary, "logs.query", { traceId, timeField: "receivedAt", limit: 200 })
+        ).json();
+        const root = result.items.find(
+            (entry: { event: string; capabilityId?: string; service: string }) =>
+                entry.service === "cms-edge" &&
+                entry.event === "gateway.invocation.completed" &&
+                entry.capabilityId === "delivery.resolve-path",
+        );
+        const content = result.items.find(
+            (entry: { event: string; parentInvocationId?: string }) =>
+                entry.event === "content.delivery.phase" && entry.parentInvocationId === root?.invocationId,
+        );
+        if (root && content) {
+            expect(root.traceId).toBe(traceId);
+            expect(content.traceId).toBe(traceId);
+            expect(
+                (await (await invoke(secondary, "logs.query", { traceId, timeField: "receivedAt" })).json()).items,
+            ).toEqual([]);
+            return;
+        }
+        await Bun.sleep(500);
+    }
+    throw new Error("The public request did not produce correlated Edge and Content observations");
 }
