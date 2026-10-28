@@ -1,4 +1,4 @@
-import { exercisePageDelivery } from "./page-delivery";
+import { exercisePageDelivery, exerciseBasicPage } from "./page-delivery";
 import { exerciseObservabilityMcp } from "./observability-mcp";
 import { exerciseDelegationStore } from "./providers/delegation";
 import { exerciseProviders } from "./providers/flow";
@@ -35,6 +35,7 @@ integration(
             connection = await connectBrowser(f.cmsUrl, f.administrator);
             expect(connection.tools).toHaveLength(63);
             await exercisePageDelivery(connection.page, f.cmsUrl);
+            await exerciseBasicPage(connection, f.cmsUrl);
             await exerciseDelegationStore(f.providerName, f.id);
             await exerciseProviders(f, connection.page);
             const namespace = f.id.replaceAll("-", "");
