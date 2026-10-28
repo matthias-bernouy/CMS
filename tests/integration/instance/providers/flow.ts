@@ -30,7 +30,13 @@ export async function exerciseProviders(f: Stack, page: Page) {
     const upstream = await readProviderCredential(f.providerName, `${f.id}-named`);
     const form = page.locator('form[cms-mutation="ulvia.cms.installations:preview-provider-connection as preview"]');
     await form.locator('[name="providerId"]').fill("ulvia.official");
-    await form.locator('[name="version"]').fill("0.1.0");
+    const manifest = await Bun.file(
+        resolve(
+            import.meta.dir,
+            "../../../../packages/runtimes/ulvia-cli/dist/bootstrap/providers/ulvia.official/definition.json",
+        ),
+    ).json();
+    await form.locator('[name="version"]').fill(manifest.version);
     await form.locator('[name="endpoint"]').fill("http://ulvia-provider:5103");
     await form.locator('[name="token"]').fill(upstream.token);
     const previewResponse = page.waitForResponse(

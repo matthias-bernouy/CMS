@@ -36,3 +36,13 @@ They can run alongside this suite. The CLI Edge smoke journey exercised by
 See [Instance MCP V1](../../../docs/architecture/instance-mcp.md) and
 [Provider connections](../../../docs/providers/connections.md) for the runtime
 protocols verified here.
+
+## Upgrade regression
+
+Supply `ULVIA_UPGRADE_BASELINE_PROVIDER_IMAGE` and
+`ULVIA_UPGRADE_BASELINE_REPOSITORY_IMAGE` with the published `1.0.0` images,
+alongside the candidate Provider and Edge variables above. The upgrade case
+publishes current releases into its isolated local Repository, provisions the
+old instance, then replaces its Provider container and requests profile `1.2.0`, then restarts Edge to negotiate the new control contract.
+It checks exact Page content, the existing MCP authorization, log queries and a
+subsequent restart. No test publishes to or reads from the public Repository.

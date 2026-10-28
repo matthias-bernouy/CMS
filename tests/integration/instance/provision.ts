@@ -26,7 +26,7 @@ export async function provisionInstance(
         );
     }
     const value = (await created.json()) as {
-        instance: { status: string };
+        instance: { id: string; status: string };
         credentials: { instanceAccessToken: string };
     };
     if (value.instance.status !== "ready") {

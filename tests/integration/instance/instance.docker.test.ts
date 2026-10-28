@@ -1,3 +1,5 @@
+import { exercisePageDelivery } from "./page-delivery";
+import { exerciseObservabilityMcp } from "./observability-mcp";
 import { exerciseDelegationStore } from "./providers/delegation";
 import { exerciseProviders } from "./providers/flow";
 import { expect, test } from "bun:test";
@@ -31,7 +33,8 @@ integration(
                 "packages/runtimes/ulvia-provider-server/src/checkRetention.ts",
             ]);
             connection = await connectBrowser(f.cmsUrl, f.administrator);
-            expect(connection.tools).toHaveLength(60);
+            expect(connection.tools).toHaveLength(63);
+            await exercisePageDelivery(connection.page, f.cmsUrl);
             await exerciseDelegationStore(f.providerName, f.id);
             await exerciseProviders(f, connection.page);
             const namespace = f.id.replaceAll("-", "");
@@ -44,6 +47,7 @@ integration(
             await exerciseContent(connection.call, f.cmsUrl);
             await exerciseFiles(connection.call, f.cmsUrl, connection.token.access_token);
             const logId = await exerciseObservability(await f.providerUrl(), f.instanceToken, f.namedToken, f.cmsUrl);
+            await exerciseObservabilityMcp(connection, logId);
             await f.restartProvider();
             await verifyObservabilityPersistence(await f.providerUrl(), f.instanceToken, logId);
             expect((await connection.call("ulvia.cms.repository", "get-identity")).publicKey).toBe(publicKey);

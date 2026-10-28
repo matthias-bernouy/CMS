@@ -3,16 +3,27 @@ import { expect } from "bun:test";
 interface InstanceConnection {
     providerUrl: string;
     token: string;
+    controlVersion?: string;
 }
 
 async function control(connection: InstanceConnection, capabilityId: string, path: string, input: unknown) {
+    if (!connection.controlVersion) {
+        const report = await (
+            await fetch(`${connection.providerUrl}/ulvia/report`, {
+                headers: { authorization: `Bearer ${connection.token}` },
+            })
+        ).json();
+        connection.controlVersion = report.implementations.find(
+            (item: { contractId: string }) => item.contractId === "ulvia.cms.installations",
+        ).version;
+    }
     const response = await fetch(`${connection.providerUrl}${path}`, {
         method: capabilityId === "gateway.route.get" ? "QUERY" : "POST",
         headers: {
             authorization: `Bearer ${connection.token}`,
             "content-type": "application/json",
             "x-ulvia-contract-id": "ulvia.cms.installations",
-            "x-ulvia-contract-version": "1.0.0",
+            "x-ulvia-contract-version": connection.controlVersion!,
             "x-ulvia-capability-id": capabilityId,
             "x-ulvia-request-id": crypto.randomUUID(),
         },
@@ -32,7 +43,7 @@ export async function invoke(connection: InstanceConnection, capabilityId: strin
         requestId,
         installationId: route.selection.installationId,
         contractId: "ulvia.cms.observability",
-        contractVersion: "1.0.0",
+        contractVersion: route.selection.version,
         capabilityId,
         ...(capabilityId === "logs.append" ? { systemServiceId: "cms-edge" } : {}),
     });
@@ -135,7 +146,15 @@ async function verifyPublicTrace(
             (entry: { event: string; parentInvocationId?: string }) =>
                 entry.event === "content.delivery.phase" && entry.parentInvocationId === root?.invocationId,
         );
-        if (root && content) {
+        const downstream = result.items.find(
+            (entry: { event: string; capabilityId?: string; service: string; parentInvocationId?: string }) =>
+                entry.service === "cms-edge" &&
+                entry.event === "gateway.invocation.completed" &&
+                entry.capabilityId === "capabilities.describe" &&
+                entry.parentInvocationId === content?.invocationId,
+        );
+        if (root && content && downstream) {
+            expect(downstream.traceId).toBe(traceId);
             expect(root.traceId).toBe(traceId);
             expect(content.traceId).toBe(traceId);
             expect(
@@ -145,5 +164,7 @@ async function verifyPublicTrace(
         }
         await Bun.sleep(500);
     }
-    throw new Error("The public request did not produce correlated Edge and Content observations");
+    throw new Error(
+        "The public request did not produce correlated Edge, Content and downstream capability observations",
+    );
 }

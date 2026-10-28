@@ -1,35 +1,14 @@
 import { provisionInstance } from "./provision";
 import { randomBytes, randomUUID } from "node:crypto";
 
-export async function docker(args: string[], allowFailure = false) {
-    const child = Bun.spawn(["docker", ...args], { stdout: "pipe", stderr: "pipe" });
-    const [code, stdout, stderr] = await Promise.all([
-        child.exited,
-        new Response(child.stdout).text(),
-        new Response(child.stderr).text(),
-    ]);
-    if (code && !allowFailure) {
-        throw new Error(`Docker ${args[0]} failed: ${stderr.slice(-3000)}`);
-    }
-    return { code, stdout, stderr };
-}
+import { docker, mappedPort, waitForHttp } from "./docker";
+import { upgradeProvider } from "./provider-upgrade";
+export { docker, waitForHttp } from "./docker";
 
-async function mappedPort(name: string, port: number) {
-    return `http://${(await docker(["port", name, `${port}/tcp`])).stdout.trim()}`;
-}
-export async function waitForHttp(url: string, headers: Record<string, string> = {}) {
-    for (let attempt = 0; attempt < 150; attempt += 1) {
-        const response = await fetch(url, { headers, signal: AbortSignal.timeout(1000) }).catch(() => null);
-        await response?.body?.cancel();
-        if (response?.ok) {
-            return;
-        }
-        await Bun.sleep(200);
-    }
-    throw new Error(`Container did not become ready: ${url}`);
-}
-
-export async function mcpContainers(images: { edge: string; provider: string; repository: string }) {
+export async function mcpContainers(
+    images: { edge: string; provider: string; repository: string },
+    prepareRepository?: (url: string) => Promise<void>,
+) {
     const id = `ulvia-mcp-${randomUUID().slice(0, 8)}`;
     const names: string[] = [];
     const operatorToken = randomBytes(32).toString("base64url");
@@ -83,6 +62,7 @@ export async function mcpContainers(images: { edge: string; provider: string; re
         await run(repositoryName, "repository", images.repository, ["--publish", "127.0.0.1::3000"]);
         const repositoryUrl = await mappedPort(repositoryName, 3000);
         await waitForHttp(`${repositoryUrl}/readyz`);
+        await prepareRepository?.(repositoryUrl);
         await run(providerName, "ulvia-provider", images.provider, [
             "--publish",
             "127.0.0.1::5103",
@@ -90,6 +70,8 @@ export async function mcpContainers(images: { edge: string; provider: string; re
             "MONGO_URL=mongodb://mongo:27017/mcp_provider_control?retryWrites=false",
             "--env",
             "CMS_FILES_DIR=/var/lib/cms/files",
+            "--volume",
+            "/var/lib/cms/files",
             "--env",
             "CMS_REPOSITORY_URL=http://repository:3000",
             "--env",
@@ -143,6 +125,13 @@ export async function mcpContainers(images: { edge: string; provider: string; re
             repositoryUrl,
             administrator,
             providerName,
+            instanceId: instance.instance.id,
+            upgradeProvider: async (image: string, version: string) => {
+                await upgradeProvider(providerName, image, version, operatorToken, instance.instance.id, names);
+                // A changed control contract is negotiated when the stateless Edge starts.
+                await docker(["restart", edgeName]);
+                await waitForHttp(`${cmsUrl}/readyz`);
+            },
             edgeName,
             close,
             async restartProvider() {

@@ -13,7 +13,25 @@ export async function exerciseCollectionUpgrades(page: Page): Promise<void> {
         console.info(`[edge-smoke] collection upgrade ${version}: submit`);
         await submitSiteUpgrade(page, apply, "apply-collection-upgrade");
         console.info(`[edge-smoke] collection upgrade ${version}: redirect`);
-        await page.waitForURL(/\/admin\/collections$/u, { waitUntil: "domcontentloaded" });
+        await page.waitForURL(/\/admin\/collections$/u, { waitUntil: "domcontentloaded" }).catch(async (error) => {
+            const state = await Promise.race([
+                page
+                    .evaluate(() => ({
+                        path: location.pathname,
+                        readyState: document.readyState,
+                        forms: Array.from(document.querySelectorAll("form[cms-mutation]")).map((form) => ({
+                            mutation: form.getAttribute("cms-mutation"),
+                            redirect: form.getAttribute("cms-mutation-redirect"),
+                            connected: form.isConnected,
+                        })),
+                    }))
+                    .catch(() => null),
+                new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000)),
+            ]);
+            throw new Error(
+                `${String(error)}; upgrade redirect state: ${JSON.stringify(state)}; current path: ${new URL(page.url()).pathname}`,
+            );
+        });
         await page.reload({ waitUntil: "domcontentloaded" });
         await installedRelease(page, `ulvia.test ${version}`).waitFor({ timeout: 60_000 });
         console.info(`[edge-smoke] collection upgrade ${version}: done`);
