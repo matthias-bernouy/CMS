@@ -3,8 +3,8 @@
     "id": "ulvia-official-file-manager",
     "label": "bloc.file-manager.label",
     "description": "bloc.file-manager.description",
-    "order": 10,
-    "catalogue": "hidden",
+    "order": 640,
+    "catalogue": "listed",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-badge",
@@ -70,5 +70,7 @@
     "root": {
         "accepts": ["div"]
     },
-    "categories": ["bloc.category.administration"]
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia-official-file-manager-default"],
+    "defaultExample": "ulvia-official-file-manager-default"
 }

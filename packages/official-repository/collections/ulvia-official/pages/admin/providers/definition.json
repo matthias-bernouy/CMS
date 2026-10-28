@@ -1,7 +1,0 @@
-{
-    "id": "providers",
-    "defaultPath": "/admin/providers",
-    "name": "page.providers.name",
-    "description": "page.providers.description",
-    "requires": []
-}

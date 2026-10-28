@@ -3,8 +3,8 @@
     "id": "ulvia-official-collection-texts",
     "label": "bloc.collection-texts.label",
     "description": "bloc.collection-texts.description",
-    "order": 40,
-    "catalogue": "hidden",
+    "order": 620,
+    "catalogue": "listed",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-cluster",
@@ -36,5 +36,7 @@
     "root": {
         "accepts": ["div"]
     },
-    "categories": ["bloc.category.administration"]
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia-official-collection-texts-default"],
+    "defaultExample": "ulvia-official-collection-texts-default"
 }

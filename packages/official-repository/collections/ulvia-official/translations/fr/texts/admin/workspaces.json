@@ -71,5 +71,6 @@
     "text.ui-archived.label": "Archivée",
     "text.ui-archive.label": "Archiver",
     "text.ui-restore.label": "Restaurer",
-    "text.ui-reading-site-compositions.label": "Lecture des compositions du site"
+    "text.ui-reading-site-compositions.label": "Lecture des compositions du site",
+    "text.ui-examples.label": "Exemples"
 }

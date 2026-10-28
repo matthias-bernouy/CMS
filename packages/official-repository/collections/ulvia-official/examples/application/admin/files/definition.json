@@ -1,0 +1,15 @@
+{
+    "id": "files",
+    "label": "page.files.name",
+    "description": "page.files.description",
+    "requires": [],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

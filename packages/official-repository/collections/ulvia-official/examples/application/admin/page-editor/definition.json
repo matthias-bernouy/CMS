@@ -1,0 +1,15 @@
+{
+    "id": "page-editor",
+    "label": "page.page-editor.name",
+    "description": "page.page-editor.description",
+    "requires": [],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

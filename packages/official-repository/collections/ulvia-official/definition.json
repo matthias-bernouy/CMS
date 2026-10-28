@@ -11,7 +11,9 @@
     "exports": {
         "blocs": [
             "ulvia-official-action",
+            "ulvia-official-admin-workspace",
             "ulvia-official-app-shell",
+            "ulvia-official-auth-shell",
             "ulvia-official-badge",
             "ulvia-official-card",
             "ulvia-official-center",
@@ -19,6 +21,10 @@
             "ulvia-official-choice-field",
             "ulvia-official-choice-group",
             "ulvia-official-cluster",
+            "ulvia-official-collection-manager",
+            "ulvia-official-collection-navigation",
+            "ulvia-official-collection-texts",
+            "ulvia-official-collection-theme",
             "ulvia-official-color-input",
             "ulvia-official-color-presets",
             "ulvia-official-container",
@@ -34,6 +40,7 @@
             "ulvia-official-field",
             "ulvia-official-field-help",
             "ulvia-official-file-input",
+            "ulvia-official-file-manager",
             "ulvia-official-footer",
             "ulvia-official-form-actions",
             "ulvia-official-form-section",
@@ -56,11 +63,13 @@
             "ulvia-official-navigation-item",
             "ulvia-official-navigation-menu",
             "ulvia-official-navigation-section",
+            "ulvia-official-page-editor",
             "ulvia-official-page-shell",
             "ulvia-official-panel",
             "ulvia-official-pricing",
             "ulvia-official-pricing-plan",
             "ulvia-official-prose",
+            "ulvia-official-provider-manager",
             "ulvia-official-radio",
             "ulvia-official-range",
             "ulvia-official-range-control",
@@ -68,12 +77,14 @@
             "ulvia-official-route-tab",
             "ulvia-official-route-tabs",
             "ulvia-official-scroll-area",
-            "ulvia-official-section",
             "ulvia-official-search-input",
+            "ulvia-official-section",
             "ulvia-official-segment",
             "ulvia-official-segmented-control",
             "ulvia-official-select",
+            "ulvia-official-settings-manager",
             "ulvia-official-sidebar",
+            "ulvia-official-site-composition-manager",
             "ulvia-official-split",
             "ulvia-official-stack",
             "ulvia-official-stat",
@@ -231,20 +242,6 @@
             "stat-two-label",
             "stat-two-value",
             "title"
-        ],
-        "pages": [
-            "access",
-            "collections",
-            "overview",
-            "page-details",
-            "page-editor",
-            "pages",
-            "providers",
-            "settings",
-            "observability",
-            "log-detail",
-            "provider-connect",
-            "provider-access"
         ],
         "assets": "*"
     },
@@ -853,6 +850,22 @@
             "schema": {
                 "type": "string",
                 "maxLength": 128
+            }
+        },
+        {
+            "id": "example-locale",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 64
+            }
+        },
+        {
+            "id": "example-cursor",
+            "scope": "param",
+            "schema": {
+                "type": "string",
+                "maxLength": 16
             }
         }
     ]

@@ -3,8 +3,8 @@
     "id": "ulvia-official-admin-workspace",
     "label": "bloc.admin-workspace.label",
     "description": "bloc.admin-workspace.description",
-    "order": 10,
-    "catalogue": "hidden",
+    "order": 500,
+    "catalogue": "listed",
     "uses": [
         "ulvia-official-app-shell",
         "ulvia-official-heading",
@@ -114,6 +114,6 @@
         "accepts": ["div"]
     },
     "categories": ["bloc.category.administration"],
-    "examples": ["admin-workspace-default"],
-    "defaultExample": "admin-workspace-default"
+    "examples": ["overview"],
+    "defaultExample": "overview"
 }

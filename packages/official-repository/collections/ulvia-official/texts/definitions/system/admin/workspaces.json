@@ -436,5 +436,11 @@
         "label": "text.ui-reading-site-compositions.label",
         "category": "text.category.admin",
         "group": "text.group.admin.workspaces"
+    },
+    {
+        "id": "ui-examples",
+        "label": "text.ui-examples.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.workspaces"
     }
 ]

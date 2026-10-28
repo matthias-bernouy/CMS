@@ -3,8 +3,8 @@
     "id": "ulvia-official-provider-manager",
     "label": "bloc.provider-manager.label",
     "description": "bloc.provider-manager.description",
-    "order": 30,
-    "catalogue": "hidden",
+    "order": 650,
+    "catalogue": "listed",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-badge",
@@ -32,5 +32,7 @@
     "root": {
         "accepts": ["div"]
     },
-    "categories": ["bloc.category.administration"]
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia-official-provider-manager-default"],
+    "defaultExample": "ulvia-official-provider-manager-default"
 }

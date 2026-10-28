@@ -115,5 +115,6 @@
     "text.ui-identifier.label": "Identifier",
     "text.ui-group.label": "Group",
     "text.ui-create-composition.label": "Create composition",
-    "text.ui-composition-created.label": "Composition created"
+    "text.ui-composition-created.label": "Composition created",
+    "text.ui-page-referenced.label": "Page is referenced"
 }

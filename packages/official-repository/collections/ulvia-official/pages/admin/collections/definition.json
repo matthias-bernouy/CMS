@@ -1,7 +1,0 @@
-{
-    "id": "collections",
-    "defaultPath": "/admin/collections",
-    "name": "page.collections.name",
-    "description": "page.collections.description",
-    "requires": []
-}

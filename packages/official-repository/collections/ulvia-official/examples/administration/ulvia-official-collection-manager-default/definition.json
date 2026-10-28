@@ -1,0 +1,14 @@
+{
+    "id": "ulvia-official-collection-manager-default",
+    "label": "bloc.collection-manager.label",
+    "description": "bloc.collection-manager.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

@@ -3,8 +3,8 @@
     "id": "ulvia-official-site-composition-manager",
     "label": "bloc.site-composition-manager.label",
     "description": "bloc.site-composition-manager.description",
-    "order": 11,
-    "catalogue": "hidden",
+    "order": 670,
+    "catalogue": "listed",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-badge",
@@ -38,5 +38,7 @@
     "root": {
         "accepts": ["div"]
     },
-    "categories": ["bloc.category.administration"]
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia-official-site-composition-manager-default"],
+    "defaultExample": "ulvia-official-site-composition-manager-default"
 }

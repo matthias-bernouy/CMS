@@ -3,8 +3,8 @@
     "id": "ulvia-official-page-editor",
     "label": "bloc.page-editor.label",
     "description": "bloc.page-editor.description",
-    "order": 10,
-    "catalogue": "hidden",
+    "order": 510,
+    "catalogue": "listed",
     "browser": {
         "frames": {
             "origins": ["self"],
@@ -63,5 +63,7 @@
     "root": {
         "accepts": ["div"]
     },
-    "categories": ["bloc.category.administration"]
+    "categories": ["bloc.category.administration"],
+    "examples": ["page-editor"],
+    "defaultExample": "page-editor"
 }

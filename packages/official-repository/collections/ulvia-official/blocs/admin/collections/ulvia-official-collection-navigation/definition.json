@@ -3,8 +3,8 @@
     "id": "ulvia-official-collection-navigation",
     "label": "bloc.collection-navigation.label",
     "description": "bloc.collection-navigation.description",
-    "order": 9,
-    "catalogue": "hidden",
+    "order": 610,
+    "catalogue": "listed",
     "uses": ["ulvia-official-navigation-item", "ulvia-official-navigation-menu", "ulvia-official-navigation-section"],
     "requires": [
         {
@@ -17,5 +17,7 @@
     "root": {
         "accepts": ["div"]
     },
-    "categories": ["bloc.category.administration"]
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia-official-collection-navigation-default"],
+    "defaultExample": "ulvia-official-collection-navigation-default"
 }

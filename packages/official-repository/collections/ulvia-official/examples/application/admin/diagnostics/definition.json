@@ -1,0 +1,31 @@
+{
+    "id": "diagnostics",
+    "label": "page.diagnostics.name",
+    "description": "page.diagnostics.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "get-site-upgrade-status",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-operations",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-provider-installations",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

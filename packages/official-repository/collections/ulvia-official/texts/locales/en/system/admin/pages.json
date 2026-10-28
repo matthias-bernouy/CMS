@@ -115,5 +115,6 @@
     "ui-identifier": "Identifier",
     "ui-group": "Group",
     "ui-create-composition": "Create composition",
-    "ui-composition-created": "Composition created and published."
+    "ui-composition-created": "Composition created and published.",
+    "ui-page-referenced": "This Page is linked from another Page. Remove those links before deleting it."
 }

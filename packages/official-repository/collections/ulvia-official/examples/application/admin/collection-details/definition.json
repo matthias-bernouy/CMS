@@ -1,0 +1,31 @@
+{
+    "id": "collection-details",
+    "label": "page.collection-details.name",
+    "description": "page.collection-details.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "get-collection-installation",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "update-collection-configuration",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "examples.list",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

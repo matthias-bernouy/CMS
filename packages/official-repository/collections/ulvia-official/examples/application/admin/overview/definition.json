@@ -1,0 +1,36 @@
+{
+    "id": "overview",
+    "label": "page.overview.name",
+    "description": "page.overview.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.content",
+            "capabilityId": "pages.list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-available-collections",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-operations",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "list-provider-installations",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

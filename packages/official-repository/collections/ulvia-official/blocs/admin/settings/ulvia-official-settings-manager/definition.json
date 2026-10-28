@@ -3,8 +3,8 @@
     "id": "ulvia-official-settings-manager",
     "label": "bloc.settings-manager.label",
     "description": "bloc.settings-manager.description",
-    "order": 20,
-    "catalogue": "hidden",
+    "order": 660,
+    "catalogue": "listed",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-field",
@@ -42,5 +42,7 @@
     "root": {
         "accepts": ["div"]
     },
-    "categories": ["bloc.category.administration"]
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia-official-settings-manager-default"],
+    "defaultExample": "ulvia-official-settings-manager-default"
 }

@@ -3,8 +3,8 @@
     "id": "ulvia-official-collection-theme",
     "label": "bloc.collection-theme.label",
     "description": "bloc.collection-theme.description",
-    "order": 30,
-    "catalogue": "hidden",
+    "order": 630,
+    "catalogue": "listed",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-badge",
@@ -46,5 +46,7 @@
     "root": {
         "accepts": ["div"]
     },
-    "categories": ["bloc.category.administration"]
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia-official-collection-theme-default"],
+    "defaultExample": "ulvia-official-collection-theme-default"
 }

@@ -115,5 +115,6 @@
     "text.ui-identifier.label": "Identifiant",
     "text.ui-group.label": "Groupe",
     "text.ui-create-composition.label": "Créer la composition",
-    "text.ui-composition-created.label": "Composition créée"
+    "text.ui-composition-created.label": "Composition créée",
+    "text.ui-page-referenced.label": "Page référencée"
 }

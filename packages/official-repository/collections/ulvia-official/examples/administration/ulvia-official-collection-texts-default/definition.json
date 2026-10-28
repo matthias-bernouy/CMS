@@ -1,0 +1,14 @@
+{
+    "id": "ulvia-official-collection-texts-default",
+    "label": "bloc.collection-texts.label",
+    "description": "bloc.collection-texts.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

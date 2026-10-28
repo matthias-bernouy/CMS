@@ -1,0 +1,26 @@
+{
+    "id": "collection-upgrade",
+    "label": "page.collection-upgrade.name",
+    "description": "page.collection-upgrade.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "plan-collection-upgrade",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "apply-collection-upgrade",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

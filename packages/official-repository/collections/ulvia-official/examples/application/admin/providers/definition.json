@@ -1,0 +1,15 @@
+{
+    "id": "providers",
+    "label": "page.providers.name",
+    "description": "page.providers.description",
+    "requires": [],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

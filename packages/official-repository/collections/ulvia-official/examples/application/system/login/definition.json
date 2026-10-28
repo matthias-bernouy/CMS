@@ -1,0 +1,21 @@
+{
+    "id": "login",
+    "label": "page.login.name",
+    "description": "page.login.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "login-password",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

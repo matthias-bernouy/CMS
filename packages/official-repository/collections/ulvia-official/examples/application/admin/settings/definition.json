@@ -1,0 +1,15 @@
+{
+    "id": "settings",
+    "label": "page.settings.name",
+    "description": "page.settings.description",
+    "requires": [],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "id": "log-detail",
+    "label": "page.log-detail.name",
+    "description": "page.log-detail.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.observability",
+            "capabilityId": "logs.get",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

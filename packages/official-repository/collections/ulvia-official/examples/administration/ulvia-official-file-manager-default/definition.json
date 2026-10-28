@@ -1,0 +1,14 @@
+{
+    "id": "ulvia-official-file-manager-default",
+    "label": "bloc.file-manager.label",
+    "description": "bloc.file-manager.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

@@ -71,5 +71,6 @@
     "ui-archived": "Archived",
     "ui-archive": "Archive",
     "ui-restore": "Restore",
-    "ui-reading-site-compositions": "Reading site compositions…"
+    "ui-reading-site-compositions": "Reading site compositions…",
+    "ui-examples": "Examples"
 }

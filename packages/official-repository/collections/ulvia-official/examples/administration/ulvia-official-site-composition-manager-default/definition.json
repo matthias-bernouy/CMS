@@ -1,0 +1,14 @@
+{
+    "id": "ulvia-official-site-composition-manager-default",
+    "label": "bloc.site-composition-manager.label",
+    "description": "bloc.site-composition-manager.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

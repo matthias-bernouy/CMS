@@ -700,5 +700,11 @@
         "label": "text.ui-composition-created.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
+    },
+    {
+        "id": "ui-page-referenced",
+        "label": "text.ui-page-referenced.label",
+        "category": "text.category.admin",
+        "group": "text.group.admin.pages"
     }
 ]

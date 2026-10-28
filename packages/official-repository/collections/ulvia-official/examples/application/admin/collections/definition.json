@@ -1,0 +1,15 @@
+{
+    "id": "collections",
+    "label": "page.collections.name",
+    "description": "page.collections.description",
+    "requires": [],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

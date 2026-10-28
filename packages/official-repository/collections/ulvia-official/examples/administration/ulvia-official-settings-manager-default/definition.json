@@ -1,0 +1,14 @@
+{
+    "id": "ulvia-official-settings-manager-default",
+    "label": "bloc.settings-manager.label",
+    "description": "bloc.settings-manager.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

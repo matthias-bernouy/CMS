@@ -1,0 +1,21 @@
+{
+    "id": "reset-password",
+    "label": "page.reset-password.name",
+    "description": "page.reset-password.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "confirm-password-reset",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

@@ -1,7 +1,0 @@
-{
-    "id": "settings",
-    "defaultPath": "/admin/settings",
-    "name": "page.settings.name",
-    "description": "page.settings.description",
-    "requires": []
-}

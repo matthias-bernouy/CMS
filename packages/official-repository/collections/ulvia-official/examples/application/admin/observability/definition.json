@@ -1,0 +1,26 @@
+{
+    "id": "observability",
+    "label": "page.observability.name",
+    "description": "page.observability.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.observability",
+            "capabilityId": "logs.query",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.observability",
+            "capabilityId": "logs.aggregate",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

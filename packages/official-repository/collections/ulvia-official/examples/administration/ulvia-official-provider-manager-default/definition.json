@@ -1,0 +1,14 @@
+{
+    "id": "ulvia-official-provider-manager-default",
+    "label": "bloc.provider-manager.label",
+    "description": "bloc.provider-manager.description",
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

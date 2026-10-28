@@ -1,0 +1,26 @@
+{
+    "id": "contract-upgrade",
+    "label": "page.contract-upgrade.name",
+    "description": "page.contract-upgrade.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "plan-contract-upgrade",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.installations",
+            "capabilityId": "apply-contract-upgrade",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

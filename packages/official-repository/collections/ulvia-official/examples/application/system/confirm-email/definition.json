@@ -1,0 +1,21 @@
+{
+    "id": "confirm-email",
+    "label": "page.confirm-email.name",
+    "description": "page.confirm-email.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "confirm-email-verification",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "previews": [
+        {
+            "id": "desktop",
+            "frame": {
+                "width": 1440,
+                "height": 900
+            }
+        }
+    ]
+}

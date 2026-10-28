@@ -1,7 +1,0 @@
-{
-    "id": "files",
-    "defaultPath": "/admin/files",
-    "name": "page.files.name",
-    "description": "page.files.description",
-    "requires": []
-}

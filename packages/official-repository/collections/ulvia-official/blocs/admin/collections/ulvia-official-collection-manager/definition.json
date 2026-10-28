@@ -3,8 +3,8 @@
     "id": "ulvia-official-collection-manager",
     "label": "bloc.collection-manager.label",
     "description": "bloc.collection-manager.description",
-    "order": 10,
-    "catalogue": "hidden",
+    "order": 600,
+    "catalogue": "listed",
     "uses": [
         "ulvia-official-action",
         "ulvia-official-badge",
@@ -31,5 +31,7 @@
     "root": {
         "accepts": ["div"]
     },
-    "categories": ["bloc.category.administration"]
+    "categories": ["bloc.category.administration"],
+    "examples": ["ulvia-official-collection-manager-default"],
+    "defaultExample": "ulvia-official-collection-manager-default"
 }
