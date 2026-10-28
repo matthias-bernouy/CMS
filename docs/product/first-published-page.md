@@ -59,7 +59,7 @@ a Provider or install an official dependency manually.
 | Save and publication | Revision-checked capabilities and editor session checks | Implemented; failure journeys need expansion |
 | Public rendering and restart | Smoke contains heading publication, route/SEO edits and restart assertions | Authored coverage; no fresh pass in the current audit |
 
-The [smoke journey](../../packages/runtimes/ulvia-cli/tests/stack/kernelSmoke/flows.ts)
+The [smoke journey](../../packages/runtimes/ulvia-cli/tests/stack/edgeSmoke/flows.ts)
 also exercises administration, Files and collection upgrades, but its Page
 creation path inserts a Heading rather than completing the target hero/media
 journey. Domain tests and controls present in source do not replace that gate.

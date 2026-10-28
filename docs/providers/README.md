@@ -2,7 +2,7 @@
 
 `@bernouy/cms-repository` describes and validates artifacts and site choices.
 `@bernouy/cms-gateway` executes selected capabilities. Runtimes supply storage,
-network access, secrets and trusted actors; the Kernel mounts the site HTTP
+network access, secrets and trusted actors; the Edge mounts the site HTTP
 entry points.
 
 ## Artifacts And Site State
@@ -65,7 +65,7 @@ release and connection steps.
 
 ```text
 Browser request
-  -> Kernel resolves one opaque credential through Access when actor lookup is needed
+  -> Edge resolves one opaque credential through Access when actor lookup is needed
   -> trusted request actor (anonymous, authenticated or administrator)
   -> exact site selection and approved installation
   -> current readiness and host authorization
@@ -110,11 +110,11 @@ operations need an explicit product workflow rather than accidental catalogue
 exposure.
 
 Ulvia Provider resolves every opaque instance Bearer against its durable
-registry before opening that instance's stores and gateway. The Kernel receives
+registry before opening that instance's stores and gateway. The Edge receives
 only its Provider URL and instance token; it does not receive the Provider
 operator secret or select an instance through a caller-supplied site header.
 The current host policy allows public, authenticated or administrator access as
-declared by each capability. Before rendering, the Kernel statically verifies
+declared by each capability. Before rendering, the Edge statically verifies
 the requirements of collection-owned and site-owned Pages, including transitive
 Bloc requirements, and derives the Page access level from those capabilities.
 This analysis controls rendering and caching; it is not a live invocation grant.
@@ -126,23 +126,23 @@ derives its HTTP routes from admitted contract bindings. The same package
 contains thin official capability adapters that coordinate injected feature
 ports; it does not select stores or persistence adapters. Browser bindings use
 logical query and mutation routes; canonical binding calls also remain available.
-The stateless Kernel resolves the selected installation and invokes its admitted
+The stateless Edge resolves the selected installation and invokes its admitted
 binding through the local Gateway.
 
-Browser credentials follow a separate, narrow path. Kernel extracts either one
+Browser credentials follow a separate, narrow path. Edge extracts either one
 Bearer credential or the fixed `cms-session` cookie and asks the selected
 `ulvia.cms.access:resolve-actor` capability to resolve it. The Provider
 receives a typed opaque credential only for that operation, resolves it through
-Access and returns actor state. Kernel then supplies that trusted actor to
+Access and returns actor state. Edge then supplies that trusted actor to
 ordinary capability calls. Arbitrary browser Cookie and Authorization headers
 are never forwarded as general Provider authority. The shared bounded JSON
 budget applies at both HTTP boundaries.
 
 | Application | Routes relative to its base path |
 | --- | --- |
-| Kernel query | `/.cms/query/<contractId>/<capabilityId>` for logical query requests using GET or QUERY |
-| Kernel mutation | `/.cms/mutation/<contractId>/<capabilityId>` for logical POST submissions |
-| Kernel | `/.cms/call/<contractId><binding.path>` for every admitted HTTP method, with capability-derived access |
+| Edge query | `/.cms/query/<contractId>/<capabilityId>` for logical query requests using GET or QUERY |
+| Edge mutation | `/.cms/mutation/<contractId>/<capabilityId>` for logical POST submissions |
+| Edge | `/.cms/call/<contractId><binding.path>` for every admitted HTTP method, with capability-derived access |
 
 Routes are mounted only when their dependencies are configured. Binary reads,
 including Files representations, use the same generic route.
@@ -215,9 +215,9 @@ transport rules. See [files and responsive images](../images/README.md).
   file responses already expose a shared-cache policy.
 
 The code establishing the production boundary is
-[createKernelGateway](../../packages/runtimes/cms-kernel-server/src/runtime/gateway/createKernelGateway.ts),
-[GatewayContentClient](../../packages/runtimes/cms-kernel-server/src/runtime/content/GatewayContentClient.ts)
-and [mountProductionKernel](../../packages/runtimes/cms-kernel-server/src/runtime/mountKernel.ts).
+[createEdgeGateway](../../packages/runtimes/cms-edge-server/src/runtime/gateway/createEdgeGateway.ts),
+[public resource forwarding](../../packages/runtimes/cms-edge-server/src/runtime/publicResource.ts)
+and [mountProductionEdge](../../packages/runtimes/cms-edge-server/src/runtime/mountEdge.ts).
 The [repository audit](../AUDIT.md) and [open platform work](../TODO.md)
 track the remaining implementation and activation gates.
 

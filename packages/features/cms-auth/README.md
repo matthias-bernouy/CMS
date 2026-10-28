@@ -14,7 +14,7 @@ Delivery transports belong to `@bernouy/cms-emailer`. Authentication only
 composes account-specific messages and sends them through the Emailer port.
 
 The package exposes no HTTP routes. Provider surfaces map its operations to an
-admitted access contract; the browser-facing Kernel only applies validated
+admitted access contract; the browser-facing Edge only applies validated
 semantic session effects.
 
 Authorization policy is deliberately outside this package. Never log credentials,

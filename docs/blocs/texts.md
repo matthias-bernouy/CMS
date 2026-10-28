@@ -38,7 +38,7 @@ site overrides and repository transport do not depend on the source layout.
 
 `@bernouy/cms-repository/collections/texts` provides pure parsing and locale
 resolution. `@bernouy/cms-content/rendering` provides the shared
-server DOM pass `renderCollectionTexts(root, locale, sources)`. The Kernel runs
+server DOM pass `renderCollectionTexts(root, locale, sources)`. The Edge runs
 this pass after composition expansion, before serializing and caching HTML.
 The same helper renders installed administration Pages.
 
@@ -102,10 +102,10 @@ not HTML or an ICU message grammar.
 
 The runtime persists immutable collection releases and revisioned site installations
 in MongoDB. `createContentReader` exposes installed public text catalogues with
-site overrides and a collection revision. The Kernel loads them on render,
+site overrides and a collection revision. The Edge loads them on render,
 includes the revision in its Page-cache keys and requests HTTP revalidation. It
 invalidates cached Pages after saving translations. The static
-`KernelCmsConfig.collectionTexts` option remains available for readers without
+`EdgeCmsConfig.collectionTexts` option remains available for readers without
 an installed-catalogue implementation.
 
 The official Settings administration Page includes a working Texts editor: category sections contain

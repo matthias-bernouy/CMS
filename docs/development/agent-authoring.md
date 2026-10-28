@@ -20,9 +20,9 @@ author's build scripts or arbitrary test commands.
 Existing collection tests cover admission, styles, assets, dependency graphs,
 installation evolution and reviewed release upgrades. `quality/official-repository` tests
 exercise authored official controls and Page-editor behavior. The CLI's
-`tests/stack/kernelSmoke` journey exercises installation, provider access,
+`tests/stack/edgeSmoke` journey exercises installation, provider access,
 Pages, files and collection upgrades in a production-shaped Docker stack.
-`bun run verify:full` runs the local Kernel browser journey after normal verify.
+`bun run verify:full` runs the local Edge browser journey after normal verify.
 These tests are repository tests, not a generic collection-authored browser
 scenario format.
 
@@ -43,7 +43,7 @@ contract does not execute a provider or certify its behavior.
    Use a dedicated named preview instance and disposable data for rendering,
    accessibility, settings, locales, assets and dependency interactions.
 4. Review release digest, browser-risk summary, dependency pins, resource usage and
-   declared exports. Run normal workspace verification; use the complete Kernel
+   declared exports. Run normal workspace verification; use the complete Edge
    journey when installation/rendering is affected.
 5. Promote the exact reviewed local artifact. An authorized signer claims or
    uses its namespace and pushes the already admitted metadata/assets. Agents

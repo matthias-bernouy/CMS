@@ -1,7 +1,7 @@
 # Provider Instance Initialization
 
 Ulvia Provider owns instance creation and the exact official system profile.
-The Kernel does not install contracts, connect a provider, import a collection,
+The Edge does not install contracts, connect a provider, import a collection,
 create an administrator or open durable stores. It starts only after an instance
 is ready and receives that instance's opaque access token.
 
@@ -17,16 +17,16 @@ Ulvia Provider owns:
 - resolution of an installations control token to the isolated instance context
   used by public contract calls.
 
-One Kernel serves one already-provisioned instance. It owns Page rendering,
+One Edge serves one already-provisioned instance. It owns Page rendering,
 public HTTP presentation, provider-neutral Gateway execution and application of
 validated response effects. Content, accounts, session tokens, files, Gateway
-state, installation state and durable release-switch intents remain behind contracts. Kernel
+state, installation state and durable release-switch intents remain behind contracts. Edge
 knows neither the Provider operator secret nor another instance's identity or
 credentials.
 
 ## Installation Flow
 
-The CLI manages one shared-services Compose project and one Kernel project per
+The CLI manages one shared-services Compose project and one Edge project per
 named instance. The same projects support a loopback installation or explicit
 public binding with ACME TLS; there is no separate production mode. Shared
 services must already be running (`ulvia start` on a
@@ -36,25 +36,25 @@ then performs the following sequence:
 1. Verify that the shared Provider is healthy and read its private operator
    connection from the local services state.
 2. Call `POST /ulvia/operator/instances` with the operator Bearer, a stable
-   idempotency key, Kernel URL and initial administrator credentials.
+   idempotency key, Edge URL and initial administrator credentials.
 3. Let the Provider create or resume the instance, generate its opaque token and
    isolated storage key, then install the exact official profile.
-4. Persist the returned Kernel connection inside the private named-instance directory.
-5. Start the deployment Kernel image with its public URL, installations Provider URL and
+4. Persist the returned Edge connection inside the private named-instance directory.
+5. Start the deployment Edge image with its public URL, installations Provider URL and
    `CMS_INSTALLATIONS_PROVIDER_TOKEN` only.
-6. Report readiness only after the Kernel health endpoint is reachable through
+6. Report readiness only after the Edge health endpoint is reachable through
    the shared proxy.
 
 Repeating `ulvia start` starts the shared services and every previously created
-Kernel without calling the provisioning endpoint again. `ulvia services ...`
-manages the shared services without changing Kernel containers, while
-`ulvia instance ... <name>` creates, starts, stops and deletes named Kernels.
-`ulvia upgrade kernel --version <version>` upgrades the existing Kernels
+Edge without calling the provisioning endpoint again. `ulvia services ...`
+manages the shared services without changing Edge containers, while
+`ulvia instance ... <name>` creates, starts, stops and deletes named Edges.
+`ulvia upgrade edge --version <version>` upgrades the existing Edges
 sequentially; there is no per-instance upgrade subcommand or atomic fleet switch.
 Nginx routes names through the configured shared ports. Instances
 default to `<name>.localhost`; public instances receive an explicit immutable
 domain during provisioning.
-Deleting a named Kernel disables its Provider instance and retains the Provider
+Deleting a named Edge disables its Provider instance and retains the Provider
 data; it is not tenant-data erasure.
 The CLI itself owns no server process: it only drives Compose. Restart reopens
 persisted stores and resumes recoverable transitions.
@@ -83,7 +83,7 @@ Every endpoint requires
 Creation returns the instance record and the raw `instanceAccessToken`. The
 registry stores only the incoming token hash and the encrypted secrets needed
 inside the Provider. The raw access token has no claims; Provider resolves it
-server-side and never asks Kernel for an instance ID header.
+server-side and never asks Edge for an instance ID header.
 
 ## Public Composition
 
@@ -91,12 +91,12 @@ Public installation uses the same CLI flow in two phases:
 
 1. start the repository and Provider, then create the instance through the
    operator API;
-2. start one Kernel with the returned access token, canonical domain and the
+2. start one Edge with the returned access token, canonical domain and the
    Provider's private network URL.
 
 Ulvia Provider needs access to its control-plane database and isolated instance
 databases. Its MongoDB account is provisioned idempotently before the Provider
-starts and those credentials are never passed to Kernel.
+starts and those credentials are never passed to Edge.
 
 ## Recovery And Limits
 
@@ -110,6 +110,6 @@ until the durable administrator step is confirmed, including crash recovery.
 Failed transitions require an explicit retry, and the active profile changes
 only after every step succeeds. A disabled instance rejects report and contract
 traffic. Backup, restore, complete tenant-data deletion and instance-token
-rotation remain explicit lifecycle work rather than hidden Kernel startup
+rotation remain explicit lifecycle work rather than hidden Edge startup
 behavior. Shared Provider MongoDB-user provisioning is handled by deployment
-infrastructure; the Kernel never receives those credentials.
+infrastructure; the Edge never receives those credentials.

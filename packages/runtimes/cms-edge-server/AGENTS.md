@@ -1,4 +1,4 @@
-# @bernouy/cms-kernel-server
+# @bernouy/cms-edge-server
 
 Production runtime composition root.
 
@@ -9,14 +9,14 @@ Production runtime composition root.
   exposed by the independently running installations Provider.
 - Compose the provider-neutral Gateway locally from remote route, identity,
   audit and invocation-token capabilities.
-- Resolve Content reads, collection assets, robots and sitemap resources
-  through the selected `ulvia.cms.content` capabilities.
-- Instantiate only the stateless Kernel HTTP composition.
+- Forward public paths through the selected `ulvia.cms.content/delivery.resolve-path`
+  capability. Do not receive Content projections or mount its internal handlers.
+- Instantiate only the stateless Edge HTTP composition.
 - Refuse to start unless the Provider instance and official resources were provisioned beforehand.
 
 ## Rules
 
-- Keep the Kernel process stateless. It receives only its public URL,
+- Keep the Edge process stateless. It receives only its public URL,
   installations Provider endpoint and opaque control token; persistence,
   authentication state, Gateway state, files and migrations remain behind
   contracts.
@@ -31,4 +31,4 @@ Production runtime composition root.
   Do not add private Gateway operations to the Provider instance API.
 - Never mount or start the Ulvia Provider surface from this package.
 
-- Require the selected `ulvia.cms.observability` read/ingestion surface at startup. Collect asynchronously with a bounded memory queue; never add a persistent Kernel journal. Machine ingestion authority is distinct from user identity.
+- Require the selected `ulvia.cms.observability` read/ingestion surface at startup. Collect asynchronously with a bounded memory queue; never add a persistent Edge journal. Machine ingestion authority is distinct from user identity.

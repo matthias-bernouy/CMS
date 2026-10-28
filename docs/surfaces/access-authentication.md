@@ -1,7 +1,7 @@
 # Access And Authentication
 
 Identity and account operations are exposed by the required
-`ulvia.cms.access` contract. The Kernel owns no authentication capability,
+`ulvia.cms.access` contract. The Edge owns no authentication capability,
 account store, administrator store, session secret or authentication route
 family. Its only responsibilities are to resolve one request actor through
 Access and to apply validated browser session effects returned by Access.
@@ -29,7 +29,7 @@ subject record.
 
 ## Browser Flow
 
-Pages use the ordinary declarative binding grammar. There is no `kernel.auth`
+Pages use the ordinary declarative binding grammar. There is no `edge.auth`
 namespace or special browser transport:
 
 ```html
@@ -41,7 +41,7 @@ namespace or special browser transport:
 ```
 
 The browser sends either the `cms-session` cookie or an
-`Authorization: Bearer` credential. Kernel forwards exactly one opaque, typed
+`Authorization: Bearer` credential. Edge forwards exactly one opaque, typed
 credential to the selected `ulvia.cms.access/resolve-actor` capability; it does
 not forward arbitrary browser Cookie or Authorization headers to every
 capability. A Bearer credential has precedence and never falls back to a cookie
@@ -62,7 +62,7 @@ capability whose admitted contract explicitly declares it. Session effects are
 currently reserved to public synchronous structured commands in
 `ulvia.cms.access`.
 
-Only after validation does Kernel emit the fixed `cms-session` cookie with
+Only after validation does Edge emit the fixed `cms-session` cookie with
 `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` on HTTPS and a bounded expiry.
 Provider `Set-Cookie` headers never pass through. A provider cannot select a
 cookie name, domain or policy.
@@ -70,6 +70,6 @@ cookie name, domain or policy.
 The official collection contributes `/login`, `/confirm-email` and
 `/reset-password` as ordinary Pages. The MVP implements local password
 authentication only. OIDC is intentionally absent; magic links, passkeys or
-OIDC can later be added as Access capabilities without adding Kernel-owned
+OIDC can later be added as Access capabilities without adding Edge-owned
 authentication endpoints, provided they resolve through the same actor and
 session-effect boundary.

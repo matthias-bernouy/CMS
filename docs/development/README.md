@@ -39,11 +39,11 @@ CMS_REPOSITORY_ALLOW_INSECURE_HTTP=true bun run ulvia -- services start --versio
 ```
 
 The connection is persisted in `services/installation.json` independently of
-network exposure and client signing identities. The Kernel smoke supplies this
+network exposure and client signing identities. The Edge smoke supplies this
 local override itself and never uses the public Repository.
 
-The CLI manages shared services and any number of named Kernel instances through
-independent Docker Compose projects. It runs the same Kernel, Provider and
+The CLI manages shared services and any number of named Edge instances through
+independent Docker Compose projects. It runs the same Edge, Provider and
 Official Repository images for loopback and public installations, plus Nginx
 and MongoDB, and never
 starts application servers inside the CLI process. Data lives below `$XDG_DATA_HOME/ulvia` or
@@ -56,7 +56,7 @@ orchestrator and lifecycle commands. The Provider's internal Docker endpoint rem
 `ulvia-provider:5103`. `start` is an
 idempotent shortcut for the shared services and every previously created local
 instance. It creates no default instance. `instance create` provisions the
-Provider tenant and starts its dedicated Kernel. Named instances use
+Provider tenant and starts its dedicated Edge. Named instances use
 `<name>.localhost` by default; public instances use
 `instance create <name> --domain <domain>`. Services and instances have
 separate stop and upgrade lifecycles.
@@ -69,7 +69,7 @@ CI authors build and publish the three official Docker Hub images explicitly:
 ```bash
 bun run images:build --version 0.0.1-beta all
 bun run images:publish --version 0.0.1-beta all
-ulvia upgrade kernel --version 0.0.1-beta
+ulvia upgrade edge --version 0.0.1-beta
 ulvia upgrade provider --version 0.0.1-beta
 ulvia upgrade repository --version 0.0.1-beta
 ```
@@ -78,7 +78,7 @@ An upgrade pulls the canonical `docker.io/cyaxis` reference, validates its OCI
 labels, and persists its immutable digest. A regular `start` reuses that digest;
 it never upgrades by following a mutable tag. A failed activation attempts to
 restart the previous image. This is best-effort image recovery, not a rollback
-of persisted data, an automatic backup or a fleet-wide transaction. Kernel
+of persisted data, an automatic backup or a fleet-wide transaction. Edge
 upgrades process instances in sequence; a later failure can leave earlier
 instances upgraded. Collection, contract, and provider
 manifest releases remain Repository artifacts and do not become Docker images.
@@ -114,7 +114,7 @@ are absent.
 
 ## Runtime Logs
 
-Kernel, Provider, and Repository operator diagnostics use structured stdout/stderr.
+Edge, Provider, and Repository operator diagnostics use structured stdout/stderr.
 Instance diagnostics are collected through the selected Observability contract.
 Inspect the last 200 matching instance records with:
 
@@ -123,7 +123,7 @@ ulvia instance logs default provider --level warn
 ulvia instance logs default all --request-id <uuid>
 ulvia instance logs default provider --event provider.operation.failed --stack
 ulvia instance logs default all --json
-ulvia instance logs default kernel --follow
+ulvia instance logs default edge --follow
 ```
 
 CMS instance journals are collected through the selected `ulvia.cms.observability` contract.
@@ -139,7 +139,7 @@ collection, retention, pagination and delivery guarantees.
 Each runtime injects a logger into coarse HTTP and process boundaries. Instance
 loggers collect into their authenticated instance journal. The HTTP runner keeps only the current `requestId` in asynchronous
 request context; this enriches nested records automatically without creating a
-global logger or passing request metadata through domain APIs. The Kernel
+global logger or passing request metadata through domain APIs. The Edge
 forwards the same `x-request-id` to the Provider, and the Provider runtime
 forwards it to repository requests through an injected transport. Provider operation identifiers
 such as `x-ulvia-request-id` remain separate because they describe a durable
@@ -177,7 +177,7 @@ the ring or rotation flag through a lifecycle command.
 For a directly configured Provider deployment, control-plane rewrapping is an
 explicit maintenance operation:
 
-1. stop the Provider and dependent Kernels and verify a restorable backup;
+1. stop the Provider and dependent Edges and verify a restorable backup;
 2. keep the old keys configured, add the new key to `CMS_KEK_RING_JSON`, select
    it with `CMS_KEK_ACTIVE_ID`, and set `CMS_KEK_ROTATE_ON_START=true`;
 3. start one Provider process and wait for the `cms_kek_rotation_audits` record to
@@ -198,7 +198,7 @@ remain [open work](../TODO.md#backup-and-operational-recovery).
 | --- | --- |
 | `bun run check:all` | Architecture, UI contracts, repository shape, style, workspace types, dead code and tooling types. |
 | `bun run verify` | Run static checks, build browser assets, regenerate official bootstrap artifacts and run the Bun test suite. |
-| `bun run verify:full` | Run `verify`, then exercise the complete local Kernel browser journey. |
+| `bun run verify:full` | Run `verify`, then exercise the complete local Edge browser journey. |
 | `bun run check:dead-code` | Report unused declarations, exports, exported types and package dependencies. |
 | `bun run check:logging` | Reject server-side `console` references and unstable logger event names outside approved presentation boundaries. |
 | `bun run check:style` | Read-only Biome check. |
@@ -210,18 +210,18 @@ remain [open work](../TODO.md#backup-and-operational-recovery).
 | `bun run images:build --version <version> all` | Build all official Cyaxis/Ulvia Docker images locally. |
 | `bun run images:publish --version <version> all` | Publish verified official images to Docker Hub. |
 | `bun test` | Run the test suite. |
-| `bun run test:kernel-smoke` | Exercise a fresh local Kernel installation, representative mutations and restart through Chromium. |
+| `bun run test:edge-smoke` | Exercise a fresh local Edge installation, representative mutations and restart through Chromium. |
 | `bun run clean` | Clean TypeScript build state, then remove every package `dist` and `tsconfig.tsbuildinfo`. |
 
 `check:all` remains the fast aggregate static check; it does not execute the
 application test suite or browser scenarios. Use `verify` before handing off a
-code change. Use `verify:full` when the complete Provider, instance and Kernel
+code change. Use `verify:full` when the complete Provider, instance and Edge
 journey is in scope. Browser/network integration tests require an environment
 that permits Chromium and local listeners.
 
-The fresh-install Kernel smoke test additionally requires Docker Compose and
+The fresh-install Edge smoke test additionally requires Docker Compose and
 Chromium. It builds the three runtime images from the current checkout using
-the local tag `0.1.0-kernel-smoke`, validates their OCI labels and immutable
+the local tag `0.1.0-edge-smoke`, validates their OCI labels and immutable
 repository digests, and prepares those image pins plus the admitted official
 and fixture catalogue in an isolated temporary CLI data directory. All service
 credentials, Provider instances and CMS site data are created by the normal
@@ -240,7 +240,7 @@ trigger these push workflows.
 ### Known Verification Blockers
 
 As reviewed on 2026-10-25, the shared setup action invokes the removed
-`cms-kernel/src/tooling/prebuildAdmin.ts`, and the coverage baseline still lists
+`cms-edge/src/tooling/prebuildAdmin.ts`, and the coverage baseline still lists
 an obsolete package set. The local smoke now supplies an explicit stack version
 and tests locally built candidate images. The remaining configured CI setup and coverage blockers must
 not be described as passing evidence.

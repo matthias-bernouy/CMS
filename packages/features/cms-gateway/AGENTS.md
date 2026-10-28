@@ -8,8 +8,6 @@ publish releases or choose providers.
 
 - `src/invocation/` owns route resolution, authorization, response validation,
   HTTP handlers, and transport implementations.
-- `src/analysis/` owns static Page capability analysis used by rendering and
-  admission. It does not grant live invocations.
 - `src/access/` owns durable administrative grants selected by the runtime.
 - `src/identity/` owns provider-wide authority aliases, their contracts, and
   memory, Mongo, and request-scoped implementations.
@@ -46,3 +44,8 @@ publish releases or choose providers.
 
 Use `cms-gateway/...` aliases inside this package and declared
 `@bernouy/cms-gateway/...` exports outside it.
+
+Native resources are synchronous binary query outputs with `resource: true`.
+They opt into signed actor context, preserve streams and use a closed resource
+metadata envelope. Protocol-neutral invocation observations must never include
+input/output payloads or change authorization, command audit or stream outcomes.

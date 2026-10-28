@@ -23,9 +23,10 @@ administration picker: the official Page-detail UI and `pages.*` capability
 inputs do not expose this configuration yet.
 
 `cms-content` resolves metadata through a separate server-side call to the injected
-gateway runtime. The Kernel supplies the authenticated actor adapter; it does
-not fetch its own public `/.cms/call` route or render the browser binding's
-result into page content.
+query port. The official Content Provider adapts it to the connection-bound SDK
+and sends the actor's opaque delegation through Edge. It does not execute the
+browser binding or render its result into page content. General declarative SSR
+is still planned.
 
 Page settings store `indexing.enabled` and an optional `indexing.entity`:
 
@@ -97,4 +98,4 @@ and the browser request have separate execution/error paths.
 
 See [candidate detection](../../packages/features/cms-content/src/pages/core/indexing/detection.ts),
 [SEO resolution](../../packages/features/cms-content/src/pages/seo/indexing/resolvePageIndexingMetadata.ts),
-and the [Kernel adapter and gateway execution](../../packages/surfaces/cms-kernel/src/http/pages/resolvePageIndexing.ts).
+and the [Content query adapter](../../packages/runtimes/ulvia-provider-server/src/runtime/content/publicDelivery.ts).

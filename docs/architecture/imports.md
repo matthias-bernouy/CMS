@@ -38,7 +38,7 @@ Inside a package, use the package-local path aliases already configured for
 that package:
 
 ```ts
-import { renderPage } from "cms-kernel/html/renderPage";
+import { renderPage } from "cms-edge/html/renderPage";
 import { isPublishedPage } from "cms-content/pages/core/lifecycle/publication";
 import { BunRunner } from "http-runner/default-implementation/BunRunner";
 ```
@@ -61,7 +61,7 @@ Subpath names are not conventions that callers may guess. They must exist in
 the producing package's `exports` map. For example, `@bernouy/cms-auth` exposes
 `/management`, `/mongo` and `/smtp`, but deliberately has no browser subpath.
 
-Production adapters are composed inside the server that consumes them. Kernel
+Production adapters are composed inside the server that consumes them. Edge
 and Provider must not share an aggregate instance-runtime package or import one
 another's composition root. Tests can also compose adapters.
 Surfaces consume interfaces and receive concrete instances through their

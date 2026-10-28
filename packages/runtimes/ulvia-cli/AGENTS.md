@@ -4,7 +4,7 @@ Ulvia CMS installation runtime.
 
 ## Responsibilities
 
-- Orchestrate shared services and independent named Kernel instances through Docker Compose.
+- Orchestrate shared services and independent named Edge instances through Docker Compose.
 - Keep runtime data and generated credentials private and persistent.
 - Standard Provider connections default to `https://repo.ulvia.fr`. Persist the
   selected Repository connection with installation configuration. Local tests
@@ -19,7 +19,7 @@ Ulvia CMS installation runtime.
   only the shared proxy according to the persistent installation configuration.
 - Never print session secrets, encryption keys, or infrastructure credentials.
 - Keep external process invocation behind the runtime process abstraction.
-- Lifecycle commands must never start the Kernel, Provider, Repository, or MongoDB directly;
+- Lifecycle commands must never start the Edge, Provider, Repository, or MongoDB directly;
   it only manages their production-shaped containers.
 - `release` reads an explicit authored resource folder and dispatches by its
   `definition.json` kind: collection, contract, or provider-manifest. It stores

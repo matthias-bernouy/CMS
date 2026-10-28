@@ -334,7 +334,7 @@ models and validation for CMS-owned installations and site selections.
   explicitly imported asset carrying the verified `inline-svg` profile.
 - Collection asset admission verifies declared size, digest, and recognizable media signatures. Installed asset
   metadata can be resolved in batches without hydrating unrelated releases or binary payloads.
-  Export controls dependency authority, while the Kernel may serve any installed immutable
+  Export controls dependency authority, while the Edge may serve any installed immutable
   asset needed by its owning collection. Public URLs include the verified content digest.
 - Collection, Bloc, setting, text, theme and Page administration
   metadata always stores translation keys, never inline display copy. The
@@ -356,4 +356,4 @@ models and validation for CMS-owned installations and site selections.
   examples remain demonstrations. Examples reuse ordinary collection texts;
   insertion preserves those references. Locale and theme mode belong to rendering
   options, never authored examples or preview frames. Preview rendering stays behind `/collections/build`;
-  browser execution belongs to the CLI and never the Kernel or admission.
+  browser execution belongs to the CLI and never the Edge or admission.

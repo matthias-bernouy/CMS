@@ -1,7 +1,7 @@
 # Page languages and routes
 
 Page content and route persistence belong to `@bernouy/cms-content`. Provider
-capabilities expose authoring operations; the Kernel renders their read-only
+capabilities expose authoring operations; the Edge renders their read-only
 projection. This guide describes that content repository, not the
 contract/provider `cms-repository` package.
 
@@ -16,9 +16,9 @@ The page title and description provide default SEO copy. Optional
 `seo[language].title` and `seo[language].description` values override it per
 language; each omitted value inherits independently. Authoring changes advance
 the corresponding content revisions. Successful logical Content and Installations
-mutations through a Kernel invalidate its render-input cache; changes made
+mutations through a Edge invalidate its render-input cache; changes made
 elsewhere depend on its revalidation window. See
-[rendering cache and freshness](kernel.md#rendering-cache-and-freshness).
+[rendering cache and freshness](edge.md#rendering-cache-and-freshness).
 
 The underlying repository supports revision-checked path matrices and localized
 SEO. The former `/api/page/seo` route and its static panel have been removed.
@@ -46,7 +46,7 @@ an alternative, those paths return 410 Gone and remain reserved. Route records
 retain their original page owner when deletion redirects to an alternative.
 Gone URLs render the configured Not Found page with HTTP status 410, no
 canonical or `hreflang`, and `noindex`. If no published Not Found page is
-configured, the Kernel returns a plain-text fallback with the same status.
+configured, the Edge returns a plain-text fallback with the same status.
 
 Mongo stores route records in `page_routes`, keyed by the exact public path
 through `_id`. Public resolution uses exact route and page-ID lookups plus

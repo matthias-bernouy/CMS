@@ -7,9 +7,10 @@ bindings, validation, and read models.
 
 - Root export exposes authoring entity types, `ContentRepository`, in-memory
   repository, validation, and authoring operations.
-- `@bernouy/cms-content/delivery` owns the shared named projection types and deep
-  codecs used by Provider and Kernel. It validates both sides of the bounded
-  transport envelope; it must not depend on cms-repository.
+- `@bernouy/cms-content/public-delivery` owns `ContentDelivery.resolvePath`,
+  the complete existing Page renderer and static Page capability analysis.
+  Runtime injects collection assets, admitted capability metadata, query execution
+  and observation ports. Never import Gateway or Repository into Content code.
 - `@bernouy/cms-content/rendering` exposes `ContentReader`, its composition
   factory and public rendering helpers. It has published-only page operations,
   rendering settings and renderable bloc artifacts, never editorial queries.
@@ -20,7 +21,7 @@ bindings, validation, and read models.
 - `@bernouy/cms-content/runtime-assets` exposes the generated system runtime
   entries to server composition; its build subpath owns their generation.
 - `@bernouy/cms-content/browser/dom` exposes binding cloak injection and inert
-  network-binding preparation for the Kernel renderer.
+  network-binding preparation for Content rendering.
 - `@bernouy/cms-content/http` exposes mountable handlers for the generated
   browser runtimes, Bloc sets and published Page snapshots.
 - `@bernouy/cms-content/seo` owns metadata, structured data, dynamic indexing
@@ -32,7 +33,7 @@ bindings, validation, and read models.
   Bloc document grammar shared by site content and external contributions.
 - File data belongs to providers implementing `ulvia.cms.files`. Content stores
   only provider-neutral file references.
-- Do not import surfaces, runtimes, Kernel internals, or persistence adapters
+- Do not import surfaces, runtimes, Edge internals, or persistence adapters
   into `core/` or `interfaces/`.
 
 ## Source Layout
@@ -68,8 +69,8 @@ bindings, validation, and read models.
   fields explicitly and do not return shared mutable authoring objects.
 - Keep route migration checks and rereads; do not claim snapshot consistency.
 - Rendering settings must not contain initialization state or SMTP settings.
-- The Kernel owns authenticated draft preview. Never add a preview mode to the
-  public reader.
+- Content authorizes administrator draft reads at the ordinary Page path.
+  Never add a draft mode to the public reader.
 - Static contributed text and immutable asset substitution run on the server
   through `/rendering`, after composition expansion. Browser binding has no
   i18n or asset filter.

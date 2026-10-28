@@ -49,14 +49,14 @@ Remaining activation gates are recorded in [Open platform work](TODO.md).
 
 ## HTTP Applications
 
-- [Kernel routing](surfaces/kernel.md): the unified Page, administration,
+- [Edge routing](surfaces/edge.md): the unified Page, administration,
   capability and asset application.
 - [Page languages and routes](surfaces/page-routes.md): localized URLs,
   redirects, deletion and recovery.
 - [Dynamic page indexing](surfaces/page-indexing.md): metadata projection and
   sitemap discovery through selected gateway capabilities.
 - [Access and authentication](surfaces/access-authentication.md): provider-owned
-  identity, account flows, administrator grants and Kernel-applied session effects.
+  identity, account flows, administrator grants and Edge-applied session effects.
 
 ## Images And UI Quality
 

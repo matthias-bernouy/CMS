@@ -10,7 +10,7 @@ CmsCore Blocs separate four concerns:
 | Authoring contract | Collection | Native roots, slots, defaults and settings. |
 
 Blocs do not create custom elements or Shadow Roots. Their stable identity is
-the value of `cms-bloc` on a native element. One Page document and one Kernel
+the value of `cms-bloc` on a native element. One Page document and one Edge
 rendering pipeline serve public and administration Pages.
 
 ## Guides
@@ -30,6 +30,6 @@ authored collection sources
   -> strict admission + immutable digest
   -> repository publication
   -> site installation and static capability analysis
-  -> Kernel server composition
+  -> Edge server composition
   -> native Light DOM + optional bloc-runtime.js behavior
 ```

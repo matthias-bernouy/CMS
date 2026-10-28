@@ -36,7 +36,7 @@ databases or choose adapters.
 `ulvia.cms.*` contracts. It receives admitted releases and a capability
 dispatcher from a runtime; it must not choose persistence or read environment
 configuration. The local CLI launches `ulvia-provider-server` and
-`cms-kernel-server` as independent processes. Each server owns its concrete
+`cms-edge-server` as independent processes. Each server owns its concrete
 adapter wiring; do not hide process ownership in a shared aggregate runtime.
 
 Never introduce dependencies against the direction above. Feature-to-feature
@@ -60,7 +60,7 @@ storage and image transforms belong to Foundation. See the
 - Import workspace packages through their package name or declared subpath:
   `@bernouy/cms-content`, `@bernouy/cms-content/mongo`, etc.
 - Inside a package, prefer the local path aliases already configured for that
-  package (`cms-kernel/...`, `cms-content/...`, `http-runner/...`, and so on)
+  package (`cms-edge/...`, `cms-content/...`, `http-runner/...`, and so on)
   over deep relative paths.
 - Do not import another package through `packages/.../src/...`.
 - Declare type dependencies with top-level `import type` statements. Inline
@@ -146,7 +146,7 @@ CLI's admitted official bootstrap snapshot.
 - For code changes, run `bun run check:all` before making changes and `bun run
   verify` before handoff. Run them in the same task workspace so the final report
   can be compared with that task's starting state. Use `bun run verify:full` when
-  the complete local Kernel journey is in scope.
+  the complete local Edge journey is in scope.
 - When concurrent work may modify the same checkout, create or use an isolated
   Git worktree before the initial check. Read-only reviews can share a checkout.
   Do not fix findings from another worktree or unrelated pre-existing findings

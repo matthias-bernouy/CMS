@@ -56,7 +56,7 @@ sessions and only those hash-addressed binary directories that no immutable
 release references. Corrupt artifacts therefore fail the deployment instead of
 producing a partially available repository.
 
-The server holds a kernel `flock` on `.server-lock` through a child whose input
+The server holds a edge `flock` on `.server-lock` through a child whose input
 pipe belongs to the server. A server crash closes the pipe and releases ownership;
 container restarts do not depend on PIDs or a stale interval. The deployment
 must provide `flock` (included in the runtime image). Competing servers fail

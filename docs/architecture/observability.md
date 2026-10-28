@@ -17,9 +17,9 @@ Time windows use occurrence time by default; `timeField: "receivedAt"` explicitl
 
 ## Authority
 
-Instance and emitter identity are not ingestion input. The instance service is constructed by the runtime; the emitter is supplied through verified invocation claims. The Kernel requests a short-lived source-bound token through the selected Installations contract. Only the actual control authentication boundary can request this identity; ordinary administrator invocations cannot impersonate the Kernel.
+Instance and emitter identity are not ingestion input. The instance service is constructed by the runtime; the emitter is supplied through verified invocation claims. The Edge requests a short-lived source-bound token through the selected Installations contract. Only the actual control authentication boundary can request this identity; ordinary administrator invocations cannot impersonate the Edge.
 
-The Kernel system identity can append diagnostic records and retains its established Content delivery queries. It cannot query or administer the journal. Browser reads use the ordinary administrator authorization path. Local CLI operators may read the named instance using its private control connection, which issues scoped invocation tokens; that control Bearer never reaches a selected capability Provider.
+The Edge system identity can append diagnostic records and retains its established Content delivery queries. It cannot query or administer the journal. Browser reads use the ordinary administrator authorization path. Local CLI operators may read the named instance using its private control connection, which issues scoped invocation tokens; that control Bearer never reaches a selected capability Provider.
 
 Third-party Providers use a separate return credential and an explicit approved
 `requires` for `logs.append`, through the [generic Provider SDK](../providers/connections.md).
@@ -33,7 +33,7 @@ Host-wide Provider and global Repository diagnostics remain operator-owned stdou
 
 Application calls retain the small `Logger` interface. A shared collector snapshots and redacts records, queues at most 2,000 records / 2 MiB, and sends batches of at most 50 records / approximately 256 KiB once per second. Delivery is single-flight, with bounded exponential backoff and jitter. Permanent rejections discard the rejected batch and report a count to the fallback destination. The delivery path suppresses its own collection to prevent recursion.
 
-The Kernel has no persistent local journal. Unacknowledged records can be lost on a crash or queue overflow. Normal shutdown attempts a two-second drain; diagnostics never block a site operation. Known drops and incomplete drains are reported locally. stdout/stderr is available before contract resolution and when collection fails.
+The Edge has no persistent local journal. Unacknowledged records can be lost on a crash or queue overflow. Normal shutdown attempts a two-second drain; diagnostics never block a site operation. Known drops and incomplete drains are reported locally. stdout/stderr is available before contract resolution and when collection fails.
 
 Mongo retains entries for 14 days from reception. Reads exclude expired entries immediately; TTL cleanup removes them asynchronously. Records carry both occurrence and reception dates. Indexed filters, bounded results and database execution deadlines constrain queries.
 
@@ -41,7 +41,7 @@ Mongo retains entries for 14 days from reception. Reads exclude expired entries 
 
 The official collection provides `/admin/observability` and `/admin/observability/detail`. Both use declared contract capabilities and existing collection bindings. They have no Mongo or implementation-specific client.
 
-`ulvia instance logs <name> [kernel | provider] [--level warn] [--event page.render.failed] [--request-id <uuid>] [--json] [--stack]` queries the selected journal. `--stack` loads details only for returned entries. The CLI uses reception-time windows so producer clock skew cannot defer a record behind an already seen page. `--follow` polls the recent result window and walks new pages until a known entry is reached. It stops explicitly if more than 2,000 entries need catching up between polls; it is not a durable subscription.
+`ulvia instance logs <name> [edge | provider] [--level warn] [--event page.render.failed] [--request-id <uuid>] [--json] [--stack]` queries the selected journal. `--stack` loads details only for returned entries. The CLI uses reception-time windows so producer clock skew cannot defer a record behind an already seen page. `--follow` polls the recent result window and walks new pages until a known entry is reached. It stops explicitly if more than 2,000 entries need catching up between polls; it is not a durable subscription.
 
 `ulvia services logs [provider | repository | mongo | proxy] [--follow]` displays container stdout/stderr for operator diagnosis. No application journal files or logging bind mounts are created.
 

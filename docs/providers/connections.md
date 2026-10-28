@@ -11,6 +11,17 @@ and never elevate an actor.
 [Bounded delegation](delegation.md) is a separate authority mode for calls made
 on behalf of the actor of one incoming invocation.
 
+## Instance URLs
+
+Provisioning stores the public `cmsUrl` separately from the Provider-facing
+`gatewayUrl`. The latter defaults to the public URL when the creation request
+omits it. Local Docker installs use a distinct private alias per Edge instance;
+`localhost` is never used as a cross-container callback. Access sessions, MCP
+OAuth discovery and public file URLs continue to use the public URL.
+The standard official instance pairs its return connection during provisioning,
+before it becomes ready, using the same encrypted credential intent, generation
+and acknowledgement rules as remote Providers.
+
 ## Installation
 
 1. Publish the contract releases and Provider manifest to a configured Repository.
@@ -91,7 +102,7 @@ selected version, destination readiness and instance-wide restrictions, then
 issues a short-lived signed call containing source provenance. Machine calls contain no user identity. Delegated calls carry a target-scoped
 user alias, when authenticated, alongside verified source provenance. System
 identity cannot be delegated. Internal `gateway.*`
-capabilities additionally require the Kernel control connection; declaring one in
+capabilities additionally require the Edge control connection; declaring one in
 a Provider manifest does not permit minting user invocations or forging audit events.
 
 Selected destination observations are refreshed on demand after 30 seconds. Probes

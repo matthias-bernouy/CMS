@@ -209,7 +209,7 @@ inline handlers and inline styles reject. Native anchors may use static internal
 paths declared by the release. Page imports pin the stable resource ID
 and default path, so admission can reject typos before publication. The
 repository projects installed Pages into the generic content read model and the
-Kernel renders them through the shared Page document pipeline. Current,
+Edge renders them through the shared Page document pipeline. Current,
 default and historical paths remain claims of one Page identity and resolve to
 its effective route.
 

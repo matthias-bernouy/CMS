@@ -6,11 +6,12 @@ establish that the complete deployment or every failure mode has been tested.
 
 ## Follow-up status
 
-The typed Content delivery follow-up introduces shared per-operation validators
-at Provider and Kernel boundaries. The shallow-decoder observation below records
-the reviewed revision; see [typed Content delivery](architecture/content-delivery.md)
-for the current protocol and regression coverage. The remaining sections retain
-the original audit context and are not a fresh validation of their current status.
+The public-delivery follow-up removes the audited projection transport and its
+Edge render-input cache entirely. Rendering and Page access analysis now live
+behind Content, and Edge receives native streamed resources. See
+[public Content delivery](architecture/content-delivery.md) for the current
+implementation. The sections below describe the historical reviewed revision;
+removed-source links have been replaced by the current architecture document.
 
 ## Assessment
 
@@ -20,7 +21,7 @@ unbounded or oversized rendering state, partially typed Content delivery,
 operational recovery and completion of the editorial journey. Preserve the
 architecture while closing these gaps.
 
-The supported deployment assumes one active Kernel per instance, one Provider
+The supported deployment assumes one active Edge per instance, one Provider
 process and one active official-repository writer. Community publication and a
 generic MCP binding are planned work, not implemented features of this revision.
 
@@ -38,7 +39,7 @@ or runtime availability; exact installed artifacts remain authoritative.
 
 Dependencies flow `runtimes -> surfaces -> features -> foundation`.
 `packages/official-repository` contains authored artifacts, not runtime wiring.
-Kernel owns HTTP presentation and receives a read-only Content projection;
+Edge owns HTTP presentation and receives a read-only Content projection;
 Provider owns persistence and the official implementations. Gateway executes
 selected capabilities. Repository owns immutable artifacts and site
 installation/selection models.
@@ -68,14 +69,14 @@ Re-run the dependency audit when updating the lockfile.
 ### Delivery And CI
 
 The shared [setup action](../.github/actions/setup-workspace/action.yml) invokes
-the removed `cms-kernel/src/tooling/prebuildAdmin.ts`; executing the command
+the removed `cms-edge/src/tooling/prebuildAdmin.ts`; executing the command
 fails with a missing-module error. Local `check:all` does not validate that step.
 
 The [coverage baseline](../quality/ci/coverage/baseline.json) describes 19
 packages, still includes `cms-seo` and omits logging, emailer, SMTP emailer and
 secrets. The ratchet requires an exact package-set match.
 
-The [fresh-install test](../packages/runtimes/ulvia-cli/tests/stack/kernel-smoke.browser.test.ts)
+The [fresh-install test](../packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts)
 starts services from the unbundled CLI without a version. First startup now
 requires an injected stack version or `--version`. Its container journey must
 also identify and exercise images built from the candidate commit.
@@ -84,7 +85,7 @@ those workflows. Pull-request and manual triggers are separate.
 
 ### Rendering Work And Contracts
 
-[PageRenderInputCache](../packages/runtimes/cms-kernel-server/src/runtime/content/delivery/PageRenderInputCache.ts)
+[former render-input cache](architecture/content-delivery.md)
 has no entry or byte ceiling. Expiration revalidates rather than removes
 entries, including missing paths. A controlled probe retained 5,000 distinct
 missing-path snapshots. Bound memory, pending work and negative caching.
@@ -93,13 +94,13 @@ missing-path snapshots. Bound memory, pending work and negative caching.
 load the complete renderable Bloc catalogue. Provider delivery then includes
 its behavior sources and collection text catalogues. A controlled empty-Page
 fixture grew from 958 to 4,198,847 serialized bytes after adding 1,000 unused
-Blocs with 4 KiB markup each. These are Provider-to-Kernel bytes, not measured
+Blocs with 4 KiB markup each. These are Provider-to-Edge bytes, not measured
 browser downloads or production latency. Add unused-resource byte/work budgets
 alongside the existing unrelated-Page and request-count tests.
 
 `ulvia.cms.content:delivery.read` describes `inputJson` and output string
 `chunks`. The nested data is not fully described by capability schemas, and
-the [Kernel decoder](../packages/runtimes/cms-kernel-server/src/runtime/content/delivery/protocol.ts)
+the [former Edge decoder](architecture/content-delivery.md)
 uses shallow checks and type assertions. A probe accepted a current route with
 `page: null`, numeric Bloc entries and numeric text values. Define and validate
 the actual delivery projections before relying on independent runtime upgrades.
@@ -140,7 +141,7 @@ provenance. See [open platform work](TODO.md) for these activation gates.
   durable journals and recovery paths.
 - Binary transport preserves streaming and provider-owned file semantics.
   Assets have immutable identities, bounded inspection and HTTP range support.
-- Authentication and secrets remain Provider-owned. Kernel applies validated
+- Authentication and secrets remain Provider-owned. Edge applies validated
   session effects without an authentication database or signing secret.
 - Structured diagnostics propagate request IDs and record stages. Existing
   performance tests gate counts and bytes as well as measured durations.
@@ -168,7 +169,7 @@ collection projection and publication storage; avoid mechanical file splitting.
 
 1. Repair CI setup, coverage inventory, dependencies and candidate-image smoke.
 2. Bound render caches and scope delivery to the Page's transitive resources.
-3. Validate typed Content projections across Provider and Kernel versions.
+3. Validate typed Content projections across Provider and Edge versions.
 4. Prove adapter concurrency, upgrade interruption and complete restore.
 5. Complete one editorial journey, including conflict and media failure cases.
 6. Establish publisher execution trust and browser mutation provenance before

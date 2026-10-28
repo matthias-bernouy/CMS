@@ -3,7 +3,7 @@
 The former integration package workflow has been removed. Validate Bloc work
 against the collection release admission, compiler, and workspace checks. The
 current collection format has local and remote immutable publication plus a
-Kernel renderer bridge.
+Edge renderer bridge.
 
 ## Local loop
 

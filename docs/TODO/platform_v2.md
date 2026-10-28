@@ -1,13 +1,15 @@
 # Platform V2 Architecture Plan
 
-Status: Content-only Pages and the first Provider-authority/delegation phase are
-implemented. Contracts reject capability `requires` and require
-`behavior.sensitive`; manifests have global and selection-aware implementation
-requirements, with static bounded delegation. See [Provider delegation](../providers/delegation.md)
-for the implemented protocol, exact review inventory and limits. The approved
-fresh baseline retains protocol v1, contract 1.0.0 and Provider 0.1.0 coordinates;
-no compatibility reader is added. The V2 identifiers, Edge rename, Gateway-wide
-invocation diagnostics and Content SSR relocation below remain design TODOs.
+Status: Content-only Pages, Provider authority/delegation, Gateway invocation
+observations, native streamed resources, public Content path resolution and the
+Edge rename are implemented. The existing renderer and indexing queries now
+run behind Content. General declarative query SSR and hosted network/mTLS
+hardening remain planned. See [public Content delivery](../architecture/content-delivery.md)
+and [Provider delegation](../providers/delegation.md).
+
+The approved fresh baseline retains protocol v1, contracts 1.0.0 and Provider
+0.1.0. “V2” in this document names the architecture plan, not an accepted
+artifact version. No compatibility reader or automatic data migration is added.
 
 ## Objective
 
@@ -54,23 +56,15 @@ Edge       = public HTTP and capability authority boundary
   collection upgrade.
 - Command audit is durable and fail-closed. Diagnostic observability is bounded,
   asynchronous and must not make business calls fail.
-- V1 data and artifacts fail explicitly. No compatibility reader, automatic
+- Removed formats fail explicitly. No compatibility reader, automatic
   conversion or dual-write path is retained.
 
-## 1. Establish An Explicit V2 Cut
+## 1. Use One Fresh Baseline
 
-Introduce incompatible protocol identifiers for every artifact whose meaning
-changes. At minimum this includes Provider manifests and collections. Contract
-artifacts also need a V2 identifier if capability requirements or actor metadata
-change their accepted shape.
-
-Add an explicit persisted schema/profile generation to instance storage. A V2
-runtime opening V1 storage must stop with an actionable error. It must never
-drop or reinterpret old data automatically. Operators recreate an instance
-through an explicit CLI action.
-
-This is preferable to permissive parsing because a stale immutable artifact can
-never be mistaken for a valid V2 artifact with weaker authority rules.
+Keep the approved v1 protocol/schema identifiers, contracts at 1.0.0 and the
+Provider manifest at 0.1.0. Remove obsolete schemas and implementation paths
+rather than adding dual readers or compatibility aliases. Operators recreate
+development instances explicitly; startup never destroys or converts storage.
 
 ## 2. Keep Implementation Dependencies Out Of Contracts
 
@@ -244,7 +238,7 @@ It can instead match a bounded capability class:
 }
 ```
 
-Every V2 capability must declare `behavior.sensitive: true` or `behavior.sensitive: false` in its
+Every capability must declare `behavior.sensitive: true` or `behavior.sensitive: false` in its
 contract. The classification covers sensitive input, output, resource existence
 and meaningful side channels, including personal, financial, secret, security
 or private organization data. There is no implicit default.
@@ -299,7 +293,7 @@ The Provider SDK should expose only two deliberate modes:
 ```ts
 client.invoke(release, capabilityId, input, { authority: "provider" });
 client.invoke(release, capabilityId, input, {
-    authority: "delegated-user",
+    authority: "delegated",
     delegation: context.delegation,
 });
 ```
@@ -458,7 +452,7 @@ the opaque delegation ticket. Content adds internal spans such as
 `route.resolve`, `page.render`, `sitemap.read` and `asset.stream` beneath the
 external `delivery.resolve-path` span.
 
-## 14. Reduce Kernel To Edge
+## 14. Reduce Edge To Edge
 
 Once Content owns resolution and rendering, the public process performs:
 
@@ -476,10 +470,10 @@ semantics from this process.
 Then rename:
 
 ```text
-@bernouy/cms-kernel        -> @bernouy/cms-edge
-@bernouy/cms-kernel-server -> @bernouy/cms-edge-server
-cms-kernel                 -> cms-edge
-KERNEL_PUBLIC_URL          -> CMS_PUBLIC_URL
+@bernouy/cms-edge        -> @bernouy/cms-edge
+@bernouy/cms-edge-server -> @bernouy/cms-edge-server
+cms-edge                 -> cms-edge
+CMS_PUBLIC_URL          -> CMS_PUBLIC_URL
 ```
 
 Keep `@bernouy/cms-gateway` as the internal capability invocation mechanism.
@@ -532,52 +526,23 @@ reaching other Provider origins directly. Permit Edge and explicitly approved
 external business APIs. Remote third-party Providers cannot have their network
 controlled by Ulvia, so target-side authorization remains the universal fence.
 
-## 17. Delete V1 State And Compatibility Code
+## 17. Remove Obsolete Implementations
 
-This plan intentionally retains none of the following:
+The old collection Page domain, Content projection multiplexer, Edge render-input
+cache and Kernel package/image/CLI identifiers are removed. Current v1 artifacts
+remain the sole accepted fresh baseline; this is not a protocol-v2 migration.
+No alias, dual-write path or automatic persistence conversion is retained.
 
-- V1 artifact readers or writers;
-- legacy profile retention for running instances;
-- collection Page migration logic;
-- dual contract requirement models;
-- data conversion at runtime startup;
-- generated V1 bootstrap snapshots and digests;
-- compatibility fixtures and tests.
+## Remaining Implementation Order
 
-Provide an explicit operator command to remove and recreate development or
-production instances. Never perform that destructive action implicitly.
+1. General query-only declarative SSR with bounded delegation and cancellation.
+2. Hosted egress and mTLS configuration, without weakening target authorization.
+3. Review agent-facing catalogue documentation and example discovery against the
+   final Content/Edge boundaries.
 
-## Implementation Order
-
-Implement the cut in this dependency order while keeping the task branch
-verifiable between steps:
-
-1. Record the invariants and introduce V2 protocol/schema markers.
-2. Remove contract requirements.
-3. Add global and implementation Provider requirements.
-4. Make Provider authorization selection-aware.
-5. Add Gateway traces and complete invocation observations.
-6. Add mandatory capability sensitivity and static exact/wildcard delegation
-   selectors.
-7. Add opaque delegation tickets and their control-authority operations.
-8. Update the Provider client SDK.
-9. Add generic example discovery; editors submit ordinary HTML to Content.
-10. Add the streamed Gateway resource result.
-11. Implement `Content.resolvePath()` and the V2 Content delivery contract.
-12. Move Page rendering and query-only SSR behind Content.
-13. Change the public runtime to proxy public paths through Content.
-14. Add profile Content seeds and update provisioning.
-15. Move official Pages to examples.
-16. Remove collection Pages and their route/upgrade domain.
-17. Simplify Content Page references and route projection.
-18. Rename Kernel packages and runtime identity to Edge.
-19. Apply hosted network policy and mTLS configuration.
-20. Delete V1 persistence, fixtures, docs and generated bootstrap output.
-21. Rebuild every official release, digest, manifest and profile.
-
-Remove collection Pages together with ordinary HTML Page creation and profile
-seeding. The external cut remains immediate, but this order
-prevents a long unverifiable implementation branch.
+The implemented baseline includes profile seeding, ordinary HTML Page creation,
+capability sensitivity, static delegation selectors, Provider SDK, native
+resource delivery and Edge runtime/CLI/image naming.
 
 ## Validation Matrix
 
@@ -634,12 +599,12 @@ business request.
 - The official Content delegation policy excludes sensitive queries.
 - Timeouts, invalid Provider responses and stale Page revisions fail safely.
 
-### Fresh V2 journey
+### Fresh instance journey
 
 ```text
 start Repository
-create V2 instance
-import V2 profile
+create instance
+import profile
 install official collection
 seed official Pages from examples
 create administrator
@@ -674,8 +639,8 @@ inspect the complete trace in Observability
 
 ## Completion Criteria
 
-- No admitted V2 contract contains implementation requirements.
-- Every V2 capability has an explicit sensitivity classification.
+- No admitted contract contains implementation requirements.
+- Every capability has an explicit sensitivity classification.
 - Provider-wide and selected-implementation requirements are the sole source of
   machine inter-Provider authority.
 - Delegated authority comes only from exact or effect/sensitivity selectors on
@@ -683,11 +648,11 @@ inspect the complete trace in Observability
 - Every legitimate Provider-to-Provider call crosses Edge and is traced.
 - Delegated SSR never exposes or accepts a CMS subject identifier in authored
   input.
-- V2 collections contain no Pages, routes or Page imports/exports.
+- collections contain no Pages, routes or Page imports/exports.
 - Examples remain generic documents and can initialize, but never become, a
   collection-owned Page.
 - All non-reserved public GET/HEAD paths resolve through Content.
 - Edge contains no Page rendering or sitemap business semantics.
 - Fresh official provisioning creates real site-owned administration Pages from
   profile seeds.
-- V1 artifacts and storage fail clearly and have no runtime compatibility path.
+- Removed formats have no runtime compatibility path; the fresh baseline uses v1 identifiers.

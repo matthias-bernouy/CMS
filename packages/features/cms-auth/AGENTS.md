@@ -8,7 +8,7 @@ signed session tokens, public account flows, and membership stores.
 - `accounts/`: CMS membership records and identity-to-subject resolution.
 - `providers/`: local credentials and password proof.
 - `sessions/`: signed session-token issuance and verification. Cookie policy
-  belongs to the Kernel boundary that applies a validated session effect.
+  belongs to the Edge boundary that applies a validated session effect.
 - `tokens/`: separate personal-access and one-time token contracts and stores.
 - `email/`: authentication-owned verification and password-reset composition.
 - `application/`: cross-domain account/public flows and credential resolution.
@@ -47,8 +47,8 @@ the exact same operation.
   bounded account-lifecycle actions, never stores.
 - Security-sensitive changes require tests around credential precedence, rate
   limits, token expiry and one-time-token recovery. Cookie behavior is tested
-  in the Kernel surface that owns it.
+  in the Edge surface that owns it.
 
 - `./oauth` owns client-neutral delegated MCP grants, PKCE, rotation and live
   authorization policy injection. These are separate from browser sessions and
-  PATs. HTTP protocol handling belongs to the Kernel; OAuth is not OIDC login.
+  PATs. HTTP protocol handling belongs to the Edge; OAuth is not OIDC login.

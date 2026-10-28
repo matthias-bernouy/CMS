@@ -1,6 +1,6 @@
 # Instance integration tests
 
-This suite exercises the real Kernel, Provider and Repository images with MongoDB
+This suite exercises the real Edge, Provider and Repository images with MongoDB
 and a Chromium client. It covers MCP OAuth consent, collection publication and
 installation, independent Page creation/replacement from examples, content and files, Provider approval and pairing, log isolation,
 key rotation, persistence and revocation.
@@ -17,7 +17,7 @@ already built exact tag:
 ```sh
 bun run images:build --version 0.1.0-integration all
 
-ULVIA_MCP_KERNEL_DOCKER_IMAGE=docker.io/cyaxis/ulvia-kernel:0.1.0-integration \
+ULVIA_MCP_EDGE_DOCKER_IMAGE=docker.io/cyaxis/ulvia-edge:0.1.0-integration \
 ULVIA_MCP_PROVIDER_DOCKER_IMAGE=docker.io/cyaxis/ulvia-provider:0.1.0-integration \
 ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:0.1.0-integration \
 bun test ./tests/integration/instance
@@ -30,7 +30,7 @@ its own resources on completion.
 
 The Repository-specific image lifecycle tests remain in
 [`tests/images/official-repository`](../../images/official-repository).
-They can run alongside this suite. The CLI Kernel smoke journey exercised by
+They can run alongside this suite. The CLI Edge smoke journey exercised by
 `bun run verify:full` is a separate integration check.
 
 See [Instance MCP V1](../../../docs/architecture/instance-mcp.md) and

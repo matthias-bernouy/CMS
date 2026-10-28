@@ -13,7 +13,7 @@ the release toolchain bundles it into the public `@cyaxis/ulvia` command-line
 package without workspace dependencies.
 
 Server composition roots are deployment units rather than reusable packages:
-`@bernouy/cms-kernel-server`, `@bernouy/ulvia-provider-server` and
+`@bernouy/cms-edge-server`, `@bernouy/ulvia-provider-server` and
 `@bernouy/official-repository-server` are private.
 `packages/official-repository` has no package manifest; its authored artifacts
 are admitted and served by the official repository runtime. A package being
@@ -47,7 +47,7 @@ already been published to a registry.
 | `@bernouy/cms-smtp-emailer` | SMTP-specific administration, secret-backed configuration and the official Nodemailer implementation. |
 | `@bernouy/cms-auth` | Provider-owned accounts, local credentials, PATs, signed session tokens, account lifecycle and authentication email composition. It exposes no HTTP routes. |
 
-Collection Pages are admitted resources. The Kernel mounts their shared route
+Collection Pages are admitted resources. The Edge mounts their shared route
 registry, rendering and revisioned execution-plan activation alongside
 site-owned Pages. There is no separate administration Page model, persistence
 model or runtime.
@@ -75,11 +75,11 @@ and serves admitted copies from a separate persistent volume.
 | Package | Responsibility |
 | --- | --- |
 | `@bernouy/ulvia-provider` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous operation execution for admitted `ulvia.cms.*` contracts. |
-| `@bernouy/cms-kernel` | Stateless HTTP mounting and Page presentation for Content Pages, request-actor resolution and injected feature handlers. |
-| `@bernouy/cms-kernel-server` | Stateless HTTP composition for one pre-provisioned instance, connected only by Provider URL and opaque instance access token. |
+| `@bernouy/cms-edge` | Stateless HTTP protocols, request-actor resolution, public resource streaming and final security/cache policy. |
+| `@bernouy/cms-edge-server` | Stateless HTTP composition for one pre-provisioned instance, connected only by Provider URL and opaque instance access token. |
 | `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, instance-scoped persistence/auth/gateway/files, exact profile transitions and recovery, operator API and Ulvia Provider listener. |
 | `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
-| `@bernouy/ulvia-cli` | Persistent local repository/Provider/Kernel container stack, including idempotent instance provisioning. |
+| `@bernouy/ulvia-cli` | Persistent local repository/Provider/Edge container stack, including idempotent instance provisioning. |
 
 See [workspace architecture](README.md) for dependency direction and
 [repository and gateway flows](../providers/README.md) for runtime wiring.

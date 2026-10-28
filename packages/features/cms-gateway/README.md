@@ -42,7 +42,7 @@ variant or image-processing model. Those concepts belong to providers such as
 
 Successful responses may carry a separately authenticated semantic effect only
 when the selected contract declares it. The current closed effect vocabulary
-contains `session`; Gateway validates it and returns it to Kernel as metadata
+contains `session`; Gateway validates it and returns it to Edge as metadata
 instead of forwarding Provider `Set-Cookie` headers.
 
 `./analysis` statically verifies Page requirements and derives Page access from

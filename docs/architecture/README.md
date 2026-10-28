@@ -44,17 +44,15 @@ every package must reproduce.
 `application` and `exports`. Its `ContentRepository` is the content
 persistence facade; it is distinct from the `@bernouy/cms-repository` package.
 
-The Provider that implements `ulvia.cms.content` projects its writable
-`ContentRepository` into the read-only `ContentReader` from
-`@bernouy/cms-content/rendering`. The production Kernel reads that projection
-through the selected Content delivery capabilities; it never receives the
-writable repository. Kernel sees only published Pages/routes, projected
-settings and renderable Bloc artifacts. `delivery.read` carries a bounded string
-envelope; the shared `@bernouy/cms-content/delivery` operation protocol deeply
-validates the inputs and decoded projections at both Provider and Kernel
-boundaries. See [typed Content delivery](content-delivery.md).
-File references are resolved through the selected `ulvia.cms.files` provider.
-Sitemap storage is an independent dependency of the Content provider runtime.
+The Provider implementing `ulvia.cms.content` composes a read-only `ContentReader`
+from its `ContentRepository` and owns the rendering pipeline. Edge invokes only
+`delivery.resolve-path`, receiving a native streamed resource rather than
+Content projections. Static Page access checks, collection text and asset
+substitution, robots and sitemap handling stay behind Content. Edge owns actor
+resolution, Gateway authority and final HTTP security/cache policy.
+See [public Content delivery](content-delivery.md).
+File references use the selected `ulvia.cms.files` provider. Sitemap storage is
+an independent dependency of the Content Provider runtime.
 
 Every Page has a monotonic concurrency revision used by authoring and
 reviewed release-change analysis. This is not user-facing page history. Page publication is
@@ -63,7 +61,7 @@ user-facing Page history is not implemented.
 File visibility and temporary private
 access are enforced by the selected Files provider.
 
-Installed collection Blocs, themes, texts and Pages are projected
+Installed collection Blocs, themes and texts are projected
 from immutable releases. Explicit release switches use the maintenance fence
 documented in [Reviewed Release Upgrades](release-upgrades.md), without rewriting Pages.
 Container image upgrades are a separate operation: they replace executable
@@ -87,7 +85,7 @@ Files providers use generic transforms from `@bernouy/image-processing`.
 
 The production runtime constructs Mongo catalogues and site stores, secret
 resolution, network adapters, identity storage and observation refresh. The
-Kernel receives provider-neutral invocation and a static Page capability analyzer.
+Edge receives provider-neutral invocation and a static Page capability analyzer.
 It exposes collection-backed provider and collection administration Pages;
 provider connection approval, credential rotation and exact contract selection
 are application workflows owned by `cms-repository`. Repository publication is
@@ -105,7 +103,7 @@ account-lifecycle operations. The Provider runtime exposes them through the
 required `ulvia.cms.access` contract. Access delegates delivery to the selected
 `ulvia.cms.emailer` implementation. The official `ulvia.cms.emailer.smtp`
 specialization owns SMTP configuration and stores it inside its isolated
-`ulvia.cms.secrets` namespace. The Kernel owns no
+`ulvia.cms.secrets` namespace. The Edge owns no
 auth capabilities or auth persistence: it resolves one request actor through
 Access and applies validated semantic session effects.
 
@@ -114,11 +112,11 @@ value store remains Foundation infrastructure behind `cms-secrets`.
 
 ## Surface And Runtime Composition
 
-The Kernel mounts every Content Page and feature-owned HTTP handlers
+The Edge mounts every Content Page and feature-owned HTTP handlers
 on one supplied `Runner`.
 SEO metadata, structured data, dynamic indexing and sitemap materialization are
 owned by `cms-content`. The selected Content implementation produces robots and
-sitemap resources through declared delivery capabilities; Kernel only mounts
+sitemap resources through declared delivery capabilities; Edge only mounts
 the injected resource handlers on its public URLs.
 Whether a Page is public, authenticated or administrative is derived by
 statically analyzing its capability requirements; there is no Page surface field or separate
@@ -133,8 +131,8 @@ operations remain in their feature packages. `ulvia-provider-server` injects
 those ports. Each server composition root owns only its concrete adapters;
 there is no aggregate instance-runtime package shared by both processes.
 
-`cms-kernel-server` and `ulvia-provider-server` each read their own environment,
-mount exactly one surface and start one listener. The Kernel runtime is
+`cms-edge-server` and `ulvia-provider-server` each read their own environment,
+mount exactly one surface and start one listener. The Edge runtime is
 stateless; the Provider runtime selects every persistent adapter. `ulvia-cli`
 manages the persistent local container stack; it does not supervise application processes.
 `official-repository-server` mounts the public immutable
@@ -145,7 +143,7 @@ set of existing `process.env.MODE` reads elsewhere is recorded in the
 [architecture policy](../../quality/architecture/repository/repositoryPolicy.ts).
 
 See [development](../development/README.md),
-[Kernel routing](../surfaces/kernel.md) and
+[Edge routing](../surfaces/edge.md) and
 [responsive images](../images/README.md).
 
 [CMS observability](observability.md) describes instance-scoped journal collection and queries.

@@ -1,6 +1,6 @@
 # Files And Responsive Images
 
-Files are provided through the standard `ulvia.cms.files` contract. The Kernel,
+Files are provided through the standard `ulvia.cms.files` contract. The Edge,
 browsers and other providers use the same binding-derived gateway
 routes under `/.cms/call/ulvia.cms.files`.
 
@@ -26,5 +26,5 @@ are ordinary contract capabilities.
 
 `ulvia-official-image` wraps a native `<img>`. Its `src`, `srcset`, `sizes`,
 `alt` and loading attributes follow the ordinary Page markup and binding rules;
-the Kernel does not interpret `FileReference` values or perform image-specific
+the Edge does not interpret `FileReference` values or perform image-specific
 projection. Image processing never runs in the gateway or the Bloc.

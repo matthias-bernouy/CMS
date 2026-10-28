@@ -65,10 +65,10 @@ pinned image digest under `<data>/repository-service/`. Its persistent network
 configuration supports local HTTP, an external HTTPS proxy or a dedicated ACME
 proxy. The Repository backend always binds to loopback; only the managed proxy
 exposes ports 80/443. Existing
-shared-service and Kernel lifecycle commands retain their separate behavior.
+shared-service and Edge lifecycle commands retain their separate behavior.
 Production supports one active server on one local volume with atomic rename,
 exclusive-create and hard-link semantics. This is not a multi-host database.
-The executable runtime holds a kernel `flock` on `.server-lock` for its lifetime
+The executable runtime holds a edge `flock` on `.server-lock` for its lifetime
 and rejects a competing server. A child holds the lock while the server owns
 its input pipe; graceful shutdown or a crash releases it without PID checks or
 a stale interval. Loss of that child stops the listener. The local filesystem
@@ -107,7 +107,7 @@ CMS site selection or proof of a remote deployment’s runtime behavior.
 
 Current CMS read-only sources continue to use their HTTP catalogue adapters.
 The Provider runtime accepts `CMS_REPOSITORY_URL` and its existing explicit
-insecure-development setting. The Kernel receives selected capabilities and
+insecure-development setting. The Edge receives selected capabilities and
 does not choose Repository credentials. A host can use `RemoteRepositoryClient`
 with a `RepositoryOwnerCredential` to publish; its `resolvePrivateKey` callback
 resolves the key through an injected `SecretReader` or isolated CMS Secrets

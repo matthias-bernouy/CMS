@@ -1,13 +1,13 @@
-# @bernouy/cms-kernel
+# @bernouy/cms-edge
 
-Unified stateless HTTP kernel for Pages, administration, Bloc assets, theme CSS,
+Unified stateless HTTP edge for Pages, administration, Bloc assets, theme CSS,
 browser runtimes and gateway capabilities. Robots and sitemap are injected
 Content delivery resources; this package only exposes them at their public URLs.
 
-The root entrypoint exposes `KernelCms` and its injected configuration types.
+The root entrypoint exposes `EdgeCms` and its injected configuration types.
 Content reads and delivery resources, request-actor resolution, caching and
 gateway transports are supplied by a runtime. Authentication capabilities,
-accounts, credentials and session-token issuance remain Provider-owned. Kernel
+accounts, credentials and session-token issuance remain Provider-owned. Edge
 only resolves the actor through Access and applies contract-authorized semantic
 session effects. Page access is derived from the capabilities used by each Page
 and its transitive Blocs.

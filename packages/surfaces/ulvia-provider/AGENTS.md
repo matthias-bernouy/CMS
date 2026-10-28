@@ -16,7 +16,7 @@ coordinate several feature ports, project the official wire response and map
 domain failures, but it must not import a runtime or select a persistence
 adapter.
 
-Keep the surface independent from the site Kernel implementation. Every
+Keep the surface independent from the site Edge implementation. Every
 cross-process operation must use an admitted contract capability: do not add a
-private Kernel protocol, browser bypass, or second implementation of domain
+private Edge protocol, browser bypass, or second implementation of domain
 behavior.

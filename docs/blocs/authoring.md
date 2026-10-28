@@ -1,7 +1,7 @@
 # Create A Collection Bloc
 
 Blocs are authored inside immutable collection releases. `ulvia release` is
-the supported compilation path; the Kernel never imports an authored folder at
+the supported compilation path; the Edge never imports an authored folder at
 runtime.
 
 ## Source Tree
@@ -138,7 +138,7 @@ A dynamic same-site Page frame uses one complete `pageUrl` expression:
 
 Static same-site frame paths are Page references and must resolve, including
 paths below `/.cms`. No arbitrary application prefix such as `/admin` receives
-special treatment. The Kernel builds `frame-src` from the declarations of the
+special treatment. The Edge builds `frame-src` from the declarations of the
 Blocs actually referenced by the Page, not by trusting rendered URLs.
 
 The repository catalogue reports JavaScript, frame origins and sandbox

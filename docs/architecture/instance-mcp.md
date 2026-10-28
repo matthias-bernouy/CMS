@@ -2,8 +2,8 @@
 
 ## Ownership and connection
 
-The CMS Kernel mounts MCP at `/.cms/mcp`. The Repository is HTTP-only;
-`/mcp` is not mounted there. The Kernel resolves the instance's selected exact
+The CMS Edge mounts MCP at `/.cms/mcp`. The Repository is HTTP-only;
+`/mcp` is not mounted there. The Edge resolves the instance's selected exact
 contracts and invokes their Provider implementations through the Gateway and
 HTTP. Remote selected capabilities exposed through MCP must also declare an
 HTTP binding. Tool arguments cannot supply a site identity or trusted actor.
@@ -36,7 +36,7 @@ extends client retention to a year. Expired provisional records are removed;
 there is no lifetime registration count that anonymous clients can exhaust.
 Connection lists use bounded cursor pagination, including revoked entries.
 Mongo persists clients, consent state and grants through the Provider runtime.
-The Kernel has no separate account or token database.
+The Edge has no separate account or token database.
 
 This is OAuth delegation, not an OIDC login provider. A future OIDC credential
 provider can reuse account subjects and policy seams, but discovery and ID-token
@@ -126,18 +126,18 @@ older Provider profiles is not implemented.
 
 Normal `bun run verify` includes domain, HTTP protocol and source-pipeline
 regressions. The opt-in real-image journey uses isolated local Docker containers
-for MongoDB, Repository, Provider and Kernel, plus Chromium. The harness lives in
+for MongoDB, Repository, Provider and Edge, plus Chromium. The harness lives in
 [`tests/integration/instance`](../../tests/integration/instance/README.md).
 It checks consent, publication, installation, rendering, file bytes, Provider
 connections, log isolation, key rotation, persistence and revocation.
 With matching local images already built, run:
 
 ```sh
-ULVIA_MCP_KERNEL_DOCKER_IMAGE=docker.io/cyaxis/ulvia-kernel:<tag> \
+ULVIA_MCP_EDGE_DOCKER_IMAGE=docker.io/cyaxis/ulvia-edge:<tag> \
 ULVIA_MCP_PROVIDER_DOCKER_IMAGE=docker.io/cyaxis/ulvia-provider:<tag> \
 ULVIA_REPOSITORY_DOCKER_IMAGE=docker.io/cyaxis/ulvia-official-repository:<tag> \
 bun test ./tests/integration/instance ./tests/images/official-repository
 ```
 
 The journey never uses the public Repository. It removes its own containers,
-volumes and network. The older CLI Kernel smoke journey is a separate check.
+volumes and network. The older CLI Edge smoke journey is a separate check.

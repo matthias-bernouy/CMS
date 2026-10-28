@@ -13,8 +13,8 @@ are derived from the collection namespace, for example
 Content model, but the current administration contract only edits values of
 installed collection tokens; it does not create arbitrary site tokens.
 
-The Kernel serves the document foundation and active values through
-`/.cms/style`. The foundation does not restyle native controls, headings,
+The Edge serves the document foundation and active values through
+`/_content/style`. The foundation does not restyle native controls, headings,
 links, media or focus states: the Bloc managing a native element owns its
 presentation. Dark values follow `prefers-color-scheme` and may be forced with
 `data-theme-mode="dark"` on the document root.

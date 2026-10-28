@@ -92,7 +92,7 @@ rejected rather than silently ignored.
 
 A query without input uses an HTTP `GET`. A query with input uses an HTTP
 `QUERY` request with a bounded JSON body. The binding describes a logical
-capability, not a gateway URL; the Kernel owns the transport route and provider
+capability, not a gateway URL; the Edge owns the transport route and provider
 selection.
 
 State inputs are snapshots. They do not implicitly subscribe the query to every
@@ -195,7 +195,7 @@ and generation-pinned by the collection dependency.
 
 `cms-mutation` binds a native form to one provider-neutral command capability.
 The author declares no URL, HTTP method, trigger, or serialization mode. The
-Kernel and the admitted contract own transport; native form submission owns
+Edge and the admitted contract own transport; native form submission owns
 activation. Named controls and optional `cms-mutation-input` descriptors form
 the logical input.
 
@@ -311,6 +311,6 @@ genuinely multi-step interaction. It must not reconstruct a declarative data
 view, duplicate query state, embed credentials, or call a provider directly.
 
 Collection settings declare provider-neutral capability requirements. The
-Kernel resolves installed providers, authorization, and transport. Binding
+Edge resolves installed providers, authorization, and transport. Binding
 syntax is exported by `@bernouy/cms-content/bindings`; the live runtime is
 exported by `@bernouy/cms-content/browser`.

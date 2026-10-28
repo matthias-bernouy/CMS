@@ -15,7 +15,7 @@ The surface maps transport to injected feature operations, including the
 official Access capabilities. Login and logout may return a typed semantic
 session effect; they never set a browser cookie directly. It does not select
 persistence, read environment configuration, start listeners, or bypass the
-normal gateway used by the site Kernel.
+normal gateway used by the site Edge.
 
 See the [workspace package map](../../../docs/architecture/packages.md). Licensed
 under the repository [MIT License](../../../LICENSE).

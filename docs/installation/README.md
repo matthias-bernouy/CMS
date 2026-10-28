@@ -93,7 +93,7 @@ Ulvia deliberately separates shared services from sites:
 | Command | Responsibility |
 | --- | --- |
 | `ulvia services start` | Starts the proxy, MongoDB, Official Repository, and Provider. |
-| `ulvia instance create <name>` | Provisions one Provider tenant and starts its Kernel. |
+| `ulvia instance create <name>` | Provisions one Provider tenant and starts its Edge. |
 | `ulvia instance start <name>` | Restarts an existing instance without provisioning it again. |
 | `ulvia start` | Starts shared services and every existing instance; it creates nothing. |
 
@@ -115,12 +115,12 @@ ulvia start
 ulvia instance stop my-site
 ulvia instance start my-site
 ulvia services logs all --level warn
-ulvia instance logs my-site kernel
+ulvia instance logs my-site edge
 ulvia services stop
 ```
 
 Stopping containers preserves persistent data. `services stop` also makes every
-site unavailable because Kernels depend on the shared Provider and proxy.
+site unavailable because Edges depend on the shared Provider and proxy.
 
 ## 5. Upgrade Ulvia
 
@@ -136,7 +136,7 @@ ulvia --version
 Upgrade deployable components independently with exact versions:
 
 ```bash
-ulvia upgrade kernel --version 0.0.1-beta
+ulvia upgrade edge --version 0.0.1-beta
 ulvia upgrade provider --version 0.0.1-beta
 ulvia upgrade repository --version 0.0.1-beta
 ```
@@ -146,7 +146,7 @@ that digest on subsequent starts. Registry channels such as `next` or `latest`
 may identify releases for humans, but an installation never persists or
 silently follows those mutable tags.
 
-`upgrade kernel` visits every local Kernel instance in sequence. Upgrades of
+`upgrade edge` visits every local Edge instance in sequence. Upgrades of
 Provider and Repository affect shared services. A failed activation attempts
 to restart the previous image, but this does not restore changed database or
 file contents and is not an atomic rollback across all instances.
@@ -157,7 +157,8 @@ schema migrations and interrupted-upgrade/restore drills remain
 ## 6. Public Domain And HTTPS
 
 Configure public networking before creating the first instance because the
-canonical Kernel URLs become part of Provider provisioning:
+public Edge URLs become part of Provider provisioning. The CLI separately configures
+a private Gateway callback URL and a unique Docker alias for each instance:
 
 ```bash
 ulvia configure network \
@@ -187,7 +188,7 @@ directory. Preserve the complete directory, including MongoDB, files,
 credentials, encryption material, Repository state, and instance definitions.
 Do not restore only selected secret or database files from different snapshots.
 
-The CLI has no general backup/restore command. Stop each Kernel with
+The CLI has no general backup/restore command. Stop each Edge with
 `ulvia instance stop <name>`, then stop shared services before copying their
 data. Restore and verify a complete backup in an isolated installation before
 treating it as a recovery guarantee; do not rely on image fallback to recover
@@ -218,7 +219,7 @@ Removing the CLI alone does not delete persistent CMS data or Docker resources.
 - **An image cannot be pulled:** verify network access and that the requested
   exact Cyaxis image version has been published.
 - **An instance returns 503:** check `ulvia services status`, then the Provider
-  and instance Kernel logs.
+  and instance Edge logs.
 - **Stored encrypted data cannot be opened:** do not generate replacement keys
   over an existing data directory; restore the matching complete backup.
 

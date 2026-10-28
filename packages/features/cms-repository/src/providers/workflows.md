@@ -135,6 +135,6 @@ or certify provider behavior. The caller chooses the maximum observation age.
 Memory catalogues and stores are reference adapters. `./providers/mongo` persists
 installation and selection records with revision-checked writes. Production
 composition supplies durable release and manifest catalogues plus a coherent
-dependency-revision source. The Kernel mounts authorized management Pages, and the
+dependency-revision source. The Edge mounts authorized management Pages, and the
 management workflow rotates local credentials. Provider-side credential
 revocation and registration/grants remain separate implementation work.

@@ -9,7 +9,7 @@ bun run images:publish --version 0.0.1-beta provider
 ```
 
 The Provider owns database access, instance provisioning and file storage. It
-does not contain the Kernel or Official Repository entrypoints.
+does not contain the Edge or Official Repository entrypoints.
 
 Image tests live in [`tests/images/provider`](../../../tests/images/provider).
 Run them from the workspace root with `bun test ./tests/images/provider`.

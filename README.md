@@ -60,16 +60,16 @@ CmsCore/
 |   |   `-- cms-secrets/       @bernouy/cms-secrets
 |   |-- surfaces/
 |   |   |-- ulvia-provider/    @bernouy/ulvia-provider
-|   |   `-- cms-kernel/        @bernouy/cms-kernel
+|   |   `-- cms-edge/        @bernouy/cms-edge
 |   |-- runtimes/
 |   |   |-- ulvia-cli/         @bernouy/ulvia-cli
-|   |   |-- cms-kernel-server/ @bernouy/cms-kernel-server
+|   |   |-- cms-edge-server/ @bernouy/cms-edge-server
 |   |   |-- ulvia-provider-server/
 |   |   `-- official-repository-server/
 |   `-- official-repository/   Authored official releases
 |
 |-- infra/
-|   `-- images/             Separate Kernel, Provider and Repository images
+|   `-- images/             Separate Edge, Provider and Repository images
 |
 |-- build.ts
 |-- tsconfig.base.json
@@ -122,11 +122,11 @@ straight to `src/` outside the explicit `cms-content` browser bundles.
 
 ## Deployment
 
-`infra/images/` ships distinct Kernel, Provider and Official Repository images.
+`infra/images/` ships distinct Edge, Provider and Official Repository images.
 The Ulvia CLI owns one parameterized Compose definition for loopback and public
 installations. The design hosts **many instances on one server**: durable
 instance data and files remain behind the Provider, while each domain routes
-published and administrative Pages to its own Kernel process. Network binding,
+published and administrative Pages to its own Edge process. Network binding,
 ports and ACME TLS are persisted installation configuration rather than a
 runtime development/production switch.
 

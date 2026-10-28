@@ -39,7 +39,7 @@ text overrides and explicitly registered internal consumers. References carry
 their location and a `catalogue` or `runtime` scope. Collection examples alone
 do not request runtime capability grants.
 
-The runtime supplies authoritative Kernel/Provider consumers. Missing consumers,
+The runtime supplies authoritative Edge/Provider consumers. Missing consumers,
 failed reads or revisions changing during analysis make an inventory incomplete.
 Native file/download bindings are resolved against exact selected HTTP routes;
 capability requirements include transitive dependencies and inherited contracts.

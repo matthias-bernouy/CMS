@@ -41,7 +41,7 @@ catalogue, and their per-path cache has no capacity bound.
 - Give each Content delivery projection a validated wire schema. String chunks
   containing JSON do not validate the nested object or its upgrade compatibility.
 - Test revalidation failures, invalidation races and changes made outside the
-  current Kernel, and document the chosen freshness guarantees.
+  current Edge, and document the chosen freshness guarantees.
 
 Exit condition: deterministic tests bound calls, bytes and retained resources
 as unrelated Pages, Blocs and requested paths grow.
@@ -74,7 +74,7 @@ domain audit records or recovery evidence.
 
 ## Collection JavaScript Isolation
 
-**Status:** collection JavaScript executes as trusted code in the Kernel
+**Status:** collection JavaScript executes as trusted code in the Edge
 document. The MVP's reviewed first-party release assumption is an operational
 trust policy, not a technical publisher allowlist or a sandbox.
 
@@ -105,7 +105,7 @@ messages, timeouts and termination without breaking the host Page.
 but the generic capability boundary does not enforce one centralized
 `Origin`/`Sec-Fetch-Site` policy for cookie-authenticated commands.
 
-Define a Kernel-boundary policy covering logical mutations and canonical
+Define a Edge-boundary policy covering logical mutations and canonical
 binding routes. Preserve bearer clients and native multipart uploads;
 distinguish absent headers from an explicit foreign origin. Verify same-site
 cross-origin cases, proxy/TLS deployment and authentication effects. Request
@@ -125,7 +125,7 @@ Page history. Dynamic-data authoring remains outside this initial slice.
 
 ## High Availability
 
-**Status:** one active Kernel per instance, one Provider process and one active
+**Status:** one active Edge per instance, one Provider process and one active
 official-repository writer are assumed. Leases protect implemented critical
 sections; multi-replica failover is not proven.
 

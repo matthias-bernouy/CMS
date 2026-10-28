@@ -1,10 +1,10 @@
-# @bernouy/cms-kernel-server
+# @bernouy/cms-edge-server
 
 Private production composition root for the CMS application.
 
 It reads and validates the listener plus one installations Provider
 endpoint/token pair, checks the public Provider report, composes the
-provider-neutral Gateway inside the Kernel and mounts the site HTTP surface.
+provider-neutral Gateway inside the Edge and mounts the site HTTP surface.
 Gateway routes, identities, audits and short-lived invocation tokens cross the
 published `ulvia.cms.installations` contract. Page projections, collection
 assets, sitemap and robots cross the selected `ulvia.cms.content` contract. The
@@ -13,7 +13,7 @@ runtime owns no database, files, sessions, installations or migration state.
 Run it from the workspace root with:
 
 ```sh
-bun run packages/runtimes/cms-kernel-server/src/index.ts
+bun run packages/runtimes/cms-edge-server/src/index.ts
 ```
 
 This package is marked `private` because it is a deployable composition root,

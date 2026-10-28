@@ -38,7 +38,7 @@ bun run ulvia -- instance credentials preview
 bun run ulvia -- instance stop preview
 bun run ulvia -- instance delete preview --yes
 bun run ulvia -- services stop
-bun run ulvia -- upgrade kernel --version 0.0.1-beta
+bun run ulvia -- upgrade edge --version 0.0.1-beta
 bun run ulvia -- upgrade provider --version 0.0.1-beta
 bun run ulvia -- upgrade repository --version 0.0.1-beta
 bun run ulvia -- reset --yes
@@ -64,7 +64,7 @@ data lives below `$XDG_DATA_HOME/ulvia` or `~/.local/share/ulvia`;
 `ULVIA_DATA_DIR` remains an explicit isolation override for tests and CI. The
 CLI stores authored releases in `<data>/repository`. Shared Provider, Repository,
 MongoDB, proxy, files, secrets and logs live below `<data>/services`; each
-stateless Kernel has independent state and logs below `<data>/instances/<name>`.
+stateless Edge has independent state and logs below `<data>/instances/<name>`.
 The CLI never starts application servers, supervises their PIDs, or builds
 software images. It pulls only the canonical public images under
 `docker.io/cyaxis`, validates their Ulvia component and stack-API labels, and
@@ -87,7 +87,7 @@ ulvia instance create website --domain example.com
 The configuration is persisted under `<data>/services/installation.json` and
 is not a per-start mode. ACME requires `0.0.0.0` and every instance in an ACME
 installation requires an explicit DNS domain. Network configuration is locked
-after the first instance because its canonical Kernel URL is part of Provider
+after the first instance because its canonical Edge URL is part of Provider
 provisioning. Repository and Provider management ports remain loopback-only.
 
 `services start` starts only the shared proxy, MongoDB, Repository and Provider.
@@ -96,8 +96,8 @@ an explicit `services start --version <version>` override. Later starts reuse
 the persisted digests and reject a conflicting `--version`; component changes
 must go through `upgrade`.
 `instance create` provisions one isolated Provider tenant and immediately starts
-its dedicated Kernel. `instance start` restarts only an already-provisioned
-instance's Kernel. All Kernels use the shared proxy port: an instance named
+its dedicated Edge. `instance start` restarts only an already-provisioned
+instance's Edge. All Edges use the shared proxy port: an instance named
 `default` is available at `http://localhost:5100`, while any other instance such
 as `preview` uses `http://preview.localhost:5100`.
 `ULVIA_HTTP_PORT`, `ULVIA_REPOSITORY_PORT`, and `ULVIA_PROVIDER_PORT` provide
@@ -114,7 +114,7 @@ Independent Repository deployments use `ulvia repository start`, `status`, `stop
 and `upgrade --version <exact-version>`. Their default volume and image pin live
 below `<data>/repository-service`. No deployment name or `global`/`community`
 qualifier is required. The command does not start
-shared services or a Kernel.
+shared services or a Edge.
 
 `ulvia repository login <url>` verifies and saves the remote identity and creates
 a default local signing identity if none exists. `ulvia identity create`, `import`,
@@ -135,12 +135,12 @@ persists across restarts and cannot be reset through deployment configuration.
 See the [installation guide](../../../docs/installation/README.md#9-standalone-repository)
 and [Repository architecture](../../../docs/architecture/community-repository.md).
 
-| Command | Provider tenant | Kernel container |
+| Command | Provider tenant | Edge container |
 | --- | --- | --- |
 | `services start` | Does not create one | Does not start one |
-| `instance create <name>` | Provisions one durable tenant | Creates and starts its Kernel |
-| `instance start <name>` | Reuses the existing tenant | Starts only that Kernel |
-| `start` | Never provisions | Starts every existing Kernel after shared services |
+| `instance create <name>` | Provisions one durable tenant | Creates and starts its Edge |
+| `instance start <name>` | Reuses the existing tenant | Starts only that Edge |
+| `start` | Never provisions | Starts every existing Edge after shared services |
 
 `instance credentials <name>` prints only that administrator's email and
 password. Provider operator and instance bearer tokens remain in
@@ -294,7 +294,7 @@ Publication, provider profile transitions, collection upgrades and container
 image replacement remain separate actions.
 
 `instance create` provisions the named instance through the Provider operator
-API, then starts its Kernel. Connection review validates the runtime report and
+API, then starts its Edge. Connection review validates the runtime report and
 exact manifest claims. Provider behavior is covered by implementation-owned tests.
 
 ## Collection examples
