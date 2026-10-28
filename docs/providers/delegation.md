@@ -44,7 +44,10 @@ Connection review exposes policies and their concrete matches against current
 site selections. A changed selection or authorization inventory invalidates the
 connection approval. Contract upgrade plans expose exact machine and delegated
 grants plus newly matched delegated pairs. Their digest covers exact source and
-target pins, approved manifest digests, access, effect and sensitivity. Applying
+target pins, approved manifest digests, access, effect and sensitivity. Capabilities
+are retained once in a compact table; grants reference their table positions. Added
+grants are compared by exact pins, independently of table positions. HTTP review
+labels are presentation data, not persisted authority. Applying
 a stale plan fails. Each expansion is bounded to 1,024 pairs; narrow excessively
 broad policies rather than silently truncating the reviewed inventory.
 
@@ -54,7 +57,8 @@ broad policies rather than silently truncating the reviewed inventory.
 2. The control authority may issue a random opaque ticket for an implementation
    with a matching source policy. It retains only a hash, the root request,
    exact source pin, installation/credential fingerprints, site selection
-   fingerprint and the verified actor with its authorization revision.
+   fingerprint and the verified actor with its authorization revision. The selection
+   fingerprint covers mutable selection identity and grants, not the expanded review inventory.
 3. The source Provider receives the ticket in signed invocation metadata as
    `context.delegation`. No browser session, user bearer or global subject is
    forwarded to that Provider for delegation.
@@ -62,12 +66,17 @@ broad policies rather than silently truncating the reviewed inventory.
    The CMS binds the source to the credential actually presented, rechecks the
    ticket, source/target selections and status, site denials, actor revision,
    reviewed concrete grant, source policy and quotas.
-5. Access owns live user membership and authorization inspection through
+5. The broker performs one full dispatch authorization and consumes the ticket
+   budget once. Its local proof rechecks mutable credentials, actor revision,
+   selections, routes and ticket lifetime immediately before signing, without
+   resolving the immutable catalogue again. Transport failures remain infrastructure failures; they are not presented as
+   permission refusals.
+6. Access owns live user membership and authorization inspection through
    `ulvia.cms.access / inspect-actor`, restricted to signed `cms-gateway` system
    authority. Anonymous tickets retain anonymous/public access only.
-6. The broker signs the target invocation with its Provider-scoped user alias
+7. The broker signs the target invocation with its Provider-scoped user alias
    and source/root provenance. The target receives no reusable delegation ticket.
-7. The Gateway closes the root ticket when the source invocation ends, including
+8. The Gateway closes the root ticket when the source invocation ends, including
    failures. For binary responses, completion, cancellation or a stream error
    closes the ticket; receiving headers alone does not. Metadata-only responses
    close immediately. Expiry remains the fallback if closing becomes unavailable.
