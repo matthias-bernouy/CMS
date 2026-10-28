@@ -1,0 +1,13 @@
+[Unit]
+Description=Detach the Cirrus framebuffer on a headless Ulvia host
+After=systemd-udev-settle.service
+Wants=systemd-udev-settle.service
+ConditionPathExists=/sys/bus/pci/drivers/cirrus-qemu
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/ulvia/headless-console.py
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

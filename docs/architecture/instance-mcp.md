@@ -8,12 +8,14 @@ contracts and invokes their Provider implementations through the Gateway and
 HTTP. Remote selected capabilities exposed through MCP must also declare an
 HTTP binding. Tool arguments cannot supply a site identity or trusted actor.
 
-The current official profile exposes 55 tools: 26 Content operations, seven
-Files workspace operations, 14 collection installation/operation operations and
-eight Repository authoring operations. Account administration, Provider control,
-Secrets, Emailer, global file namespaces and internal delivery operations are
-HTTP-only. MCP bindings have specific descriptions and behavior annotations;
-the admitted schemas still govern inputs, outputs and declared errors.
+The current official profile exposes 63 tools: 28 Content operations, seven
+Files workspace operations, 17 collection installation/operation operations,
+eight Repository authoring operations and three administrator observability
+reads (`logs.query`, `logs.get`, `logs.aggregate`). Account administration,
+Provider control, Secrets, Emailer, global file namespaces, log ingestion and
+internal delivery operations are HTTP-only. MCP bindings have specific
+descriptions and behavior annotations; the admitted schemas still govern
+inputs, outputs and declared errors.
 
 Connect a compatible OAuth client to `https://<instance>/.cms/mcp`. Discovery
 uses `/.well-known/oauth-protected-resource` and

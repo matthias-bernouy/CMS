@@ -91,3 +91,42 @@ General execution of declarative browser queries during SSR remains planned.
 The existing Content service can resolve public schemas from its local admitted
 catalogue; this lookup grants no invocation authority. Live downstream calls
 always use the connection-bound Provider SDK through Edge.
+
+
+## Invocation and cache costs
+
+Each Mongo catalogue instance retains a bounded LRU of verified immutable
+admissions (128 entries / 16 MiB of canonical UTF-16 text). Every lookup still
+reads its publication head; yank/deprecation and exact identity checks stay
+current. Manifest caches follow the same rule. Resolver hints only prioritize
+an exact selection or its known specialization, and never authorize a call.
+The Edge keeps at most 32 short-lived transport plans, each limited to 512K
+UTF-16 code units. The signing boundary and receiving Provider recheck mutable
+authority independently of these plans.
+
+Content's downstream capability calls always use the connection-bound Provider
+SDK through Edge, including when both contracts are served by the same Provider.
+The SDK rereads the connection credential for each invocation. Dispatch uses the
+HTTP listener, so Edge ingress, Gateway invocation and Provider ingress remain
+observable. There is no same-process dispatch shortcut for these calls.
+
+Identity and root delegation preparation run concurrently for queries. A failed
+preparation closes a partially issued root ticket. Dispatch still obtains a fresh
+invocation token; binary results retain their delegation until completion or
+cancellation. Commands retain their audit ordering. The route control response
+negotiates standard gzip while preserving its complete JSON shape and `no-store`;
+there is no new batch control capability or changed published contract format.
+
+Initial mutable metadata reads may be reused within one explicitly scoped
+operation; final signing and receiver fences bypass that context. Named secret
+resolution retains both metadata-read and resolve permissions without duplicate
+metadata lookup. `capabilities.describe` reads selected release metadata without
+loading target transport configuration and fences its selection before returning.
+
+With Installations `1.1.0`, Edge combines query identity, optional root delegation
+and invocation signing through `gateway.dispatch.prepare`. The control connection
+is required; user and Provider actors cannot invoke this command as authority.
+Business capabilities still traverse Edge and the authenticated HTTP listener.
+Commands preserve identity-before-start-audit ordering. Existing exact `1.0.0`
+control connections retain their declared operations until their profile changes;
+Edge negotiates the exact ready control version again on restart.

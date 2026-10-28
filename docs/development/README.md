@@ -264,3 +264,6 @@ of moved links; check executable examples when their behavior changes.
 The [root agent instructions](../../AGENTS.md) define editing/validation rules.
 [UI contracts](../quality/ui-contracts.md) explains scanner scope and limitations.
 [Commit messages](commits.md) records the suggested convention.
+
+[Page performance and headless hosts](page-performance.md) documents the local
+performance regressions and the optional Cirrus framebuffer mitigation.

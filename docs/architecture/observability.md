@@ -1,6 +1,6 @@
 # CMS observability
 
-`ulvia.cms.observability@1.0.0` is a required selection in the official CMS instance profile. Providers implementing unrelated contracts need not implement it.
+`ulvia.cms.observability@1.1.0` is a required selection in the official CMS instance profile. Providers implementing unrelated contracts need not implement it.
 
 The official Provider composes `CmsObservability` from `@bernouy/cms-observability` with `MongoJournalStore` from `@bernouy/cms-observability/mongo`. Each instance uses its existing private database and an instance-bound service. Core feature code chooses neither environment configuration nor network adapters.
 
@@ -38,6 +38,11 @@ The Edge has no persistent local journal. Unacknowledged records can be lost on 
 Mongo retains entries for 14 days from reception. Reads exclude expired entries immediately; TTL cleanup removes them asynchronously. Records carry both occurrence and reception dates. Indexed filters, bounded results and database execution deadlines constrain queries.
 
 ## Consultation
+
+The three read capabilities also expose explicit MCP bindings: `observability_logs_query`,
+`observability_logs_get` and `observability_logs_aggregate`. They require the same
+live administrator authorization and instance scope as HTTP reads. Filters and
+pagination remain bounded; `logs.append` has no MCP binding.
 
 The official collection provides `/admin/observability` and `/admin/observability/detail`. Both use declared contract capabilities and existing collection bindings. They have no Mongo or implementation-specific client.
 

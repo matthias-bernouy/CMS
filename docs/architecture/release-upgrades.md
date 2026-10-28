@@ -104,18 +104,29 @@ site contract changes cannot replace the control plane.
 
 ## Provider Retention And Recovery
 
-Manifest reapproval cannot drop exact releases retained by site selections,
-profiles or pending contract switches. Unknown retention evidence fails closed.
+Ordinary manifest reapproval cannot drop exact releases retained by site
+selections, profiles or pending contract switches. Unknown retention evidence
+fails closed. During an operator-requested instance upgrade, the provisioner may
+replace a selected release with an admitted, verified compatible newer release
+in the same major. The instance is unavailable to live invocations during this
+transition. Replacement authority requires the transition lease, exact target
+manifest and owning account/site. It preserves old HTTP bindings, rejects changed
+access/behavior or incompatible schemas, and never supersedes a pending contract
+switch. Retention revisions and the lease are checked again before approval.
+The subsequent durable step updates the exact site selections; Pages and
+collection requirements are unchanged. Ordinary approval has no such authority.
 The Provider checks all managed instance pins, including disabled instances,
 and both profiles of queued/running/retryable failed transitions before startup.
 The CLI runs a one-shot `checkRetention.ts` preflight in the candidate Provider
 image before replacing the live image; startup repeats the guard. The public
 Repository does not track sites outside this Provider's administrative scope.
 
-The profile registry can retain several exact releases/profiles. This baseline
-authors one current profile with no supported older source profile; it does not
-provide a conversion path from an earlier development stack. New instances use
-the configured default; an image update never silently changes an existing pin.
+The profile registry retains exact published profiles while instances or transitions
+still reference them. The current `ulvia.official@1.2.0` profile selects Provider
+manifest `0.3.0`, Installations `1.1.0` and Observability `1.1.0`, and explicitly permits upgrades from
+profiles `1.0.0` and `1.1.0`. It retains the same administration collection and existing Pages.
+New instances use the configured default; an image update never silently changes
+an existing profile pin.
 
 Expired worker leases can be reclaimed for an exact intent. Normal write permits
 are not erased merely because their heartbeat expired: a delayed writer may

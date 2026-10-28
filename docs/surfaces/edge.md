@@ -13,7 +13,11 @@ and Provider-scoped alias in signed invocation context, never browser cookies.
 Content owns Pages, private-site restrictions, Page capability access analysis,
 redirects, gone routes, SEO, text substitution, Bloc expansion and the final
 HTML document. Styles, browser bundles and collection assets use `/_content/*`.
-Edge does not distinguish Page and asset resources when forwarding a result.
+The generic Edge surface forwards resources uniformly. Its official runtime explicitly
+requests the versioned Content theme stylesheet, Bloc bundles, Bloc stylesheets
+and generated browser runtimes anonymously, including when the browser has a
+session cookie. Only their closed GET/HEAD URL forms qualify. Pages, snapshots,
+Files, ambiguous query strings and other assets retain ordinary actor resolution.
 See [public Content delivery](../architecture/content-delivery.md).
 
 The resource response adapter enforces a closed metadata set, private caching
