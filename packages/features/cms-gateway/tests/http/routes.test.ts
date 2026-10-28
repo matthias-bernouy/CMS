@@ -254,3 +254,34 @@ test("collection requirements report selected provider grants as ready, missing,
         selectedVersion: "1.0.0",
     });
 });
+
+test("an exact selected contract is resolved before unrelated releases, and every later selection stays live", async () => {
+    const f = await gatewayRoute();
+    let selected = f.selection;
+    const reads: string[] = [];
+    const resolver = new CatalogueGatewayRouteResolver({
+        selections: {
+            get: async () => ({ plan: { selections: [{ ...f.selection, contractId: "unrelated" }, selected] } }),
+        } as never,
+        installations: {
+            get: async () => ({
+                ...f.installation,
+                installation: { ...f.installation.installation, id: selected.installationId },
+            }),
+        } as never,
+        releases: {
+            get: async (id: string) => {
+                reads.push(id);
+                if (id !== "catalog") {
+                    throw new Error("Unrelated artifact must not load");
+                }
+                return f.release;
+            },
+        } as never,
+        manifests: { findByDigest: async () => f.manifest } as never,
+    });
+    expect((await resolver.resolve("site-a", "catalog"))?.selection.installationId).toBe("install-a");
+    expect(reads).toEqual(["catalog"]);
+    selected = { ...f.selection, installationId: "install-b" };
+    expect((await resolver.resolve("site-a", "catalog"))?.selection.installationId).toBe("install-b");
+});

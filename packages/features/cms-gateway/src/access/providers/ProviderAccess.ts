@@ -1,3 +1,4 @@
+import { GatewayAuthorityReads } from "cms-gateway/invocation/core/dispatch/GatewayAuthorityReads";
 import { activeProviderRequirements } from "@bernouy/cms-repository/providers/selections";
 import {
     currentProviderCredential,
@@ -43,18 +44,25 @@ export class ProviderAccess {
         );
     }
 
-    async authorize(target: Target, consume = false, bytes = 0): Promise<boolean> {
+    async authorize(
+        target: Target,
+        consume = false,
+        bytes = 0,
+        reads = new GatewayAuthorityReads(this.options.siteId),
+    ): Promise<boolean> {
         if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > 64 * 1024 * 1024) {
             return false;
         }
-        const source = await this.options.installations.get({
-            siteId: this.options.siteId,
-            installationId: target.sourceInstallationId,
-        });
-        const destination = await this.options.installations.get({
-            siteId: this.options.siteId,
-            installationId: target.targetInstallationId,
-        });
+        const source = await reads.installation(
+            this.options.installations,
+            this.options.siteId,
+            target.sourceInstallationId,
+        );
+        const destination = await reads.installation(
+            this.options.installations,
+            this.options.siteId,
+            target.targetInstallationId,
+        );
         if (source?.installation.status !== "enabled" || destination?.installation.status !== "enabled") {
             return false;
         }
@@ -78,8 +86,8 @@ export class ProviderAccess {
             source.installation.providerId,
             source.installation.approval.manifestVersion,
         );
-        const current = await this.options.selections.get(this.options.siteId);
-        const route = await this.options.routes.resolve(this.options.siteId, target.contractId);
+        const current = await reads.selection(this.options.selections, this.options.siteId);
+        const route = await this.options.routes.resolve(this.options.siteId, target.contractId, reads);
         if (
             !current ||
             !route ||

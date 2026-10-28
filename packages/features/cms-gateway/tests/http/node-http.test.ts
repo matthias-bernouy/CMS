@@ -180,3 +180,46 @@ test("a composition root can explicitly admit its controlled private Provider ne
         selectGatewayAddress(new URL("http://public.example"), [{ address: "8.8.8.8", family: 4 }], true),
     ).toThrow("require HTTPS");
 });
+
+test("capability dispatch always uses the authenticated network transport", async () => {
+    let remote = 0;
+    const network = new NodeGatewayHttpNetwork({
+        authorize: async () => ({ token: "short-lived-token" }),
+        resolveAddresses: async () => [{ address: "8.8.8.8", family: 4 }],
+        sendPinned: async ({ headers }) => {
+            expect(new Headers(headers).get("authorization")).toBe("Bearer short-lived-token");
+            remote++;
+            return new Response();
+        },
+    });
+    const request = {
+        origin: "https://remote.test",
+        pathAndQuery: "/query",
+        method: "GET",
+        headers: {},
+        requestId: crypto.randomUUID(),
+        providerTokenRef: "reference",
+        authentication: {
+            kind: "capability" as const,
+            instanceId: "instance:one",
+            contractId: "catalog",
+            contractVersion: "1.0.0",
+            capabilityId: "read",
+        },
+        signal: new AbortController().signal,
+    };
+    await network.exchange(request);
+    await network.exchange({ ...request, origin: "https://provider.test" });
+    expect(remote).toBe(2);
+    await expect(
+        network.exchange({ ...request, origin: "https://provider.test", headers: { authorization: "forged" } }),
+    ).rejects.toThrow("forbidden header");
+    await expect(
+        network.exchange({
+            ...request,
+            origin: "https://provider.test",
+            authentication: { kind: "provider-control" },
+            pathAndQuery: "/ulvia/report",
+        }),
+    ).rejects.toThrow("restricted to capability");
+});

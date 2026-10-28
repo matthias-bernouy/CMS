@@ -1,3 +1,4 @@
+import type { GatewayAuthorityReads } from "../core/dispatch/GatewayAuthorityReads";
 import type { ResourceMetadata } from "../resource/metadata";
 import type { TraceContext } from "@bernouy/logging";
 import type { DelegationContext } from "cms-gateway/access/delegation/interfaces";
@@ -66,7 +67,8 @@ export interface GatewayContractLineageEntry {
 }
 
 export interface GatewayRouteResolver {
-    resolve(siteId: string, contractId: string): Promise<GatewayRoute | null>;
+    /** With reads, this is a speculative preparation view; the caller must fence live authority before dispatch. */
+    resolve(siteId: string, contractId: string, reads?: GatewayAuthorityReads): Promise<GatewayRoute | null>;
     isCurrent(route: GatewayRoute): Promise<boolean>;
 }
 

@@ -1,4 +1,6 @@
-import { resolveContract, type ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { resolveSelectedRelease } from "./dispatch/resolveSelectedRelease";
+import type { GatewayAuthorityReads } from "./dispatch/GatewayAuthorityReads";
+import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
@@ -16,53 +18,32 @@ export interface CatalogueGatewayRouteResolverOptions {
 /** Immutable artifacts are pinned; live checks read only the selected route's mutable records. */
 export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
     readonly #options: CatalogueGatewayRouteResolverOptions;
+    // Lookup hints belong to this instance-bound resolver, never to a global authority cache.
+    readonly #selectionHints = new Map<string, string>();
 
     constructor(options: CatalogueGatewayRouteResolverOptions) {
         this.#options = options;
     }
 
-    async resolve(siteId: string, contractId: string): Promise<GatewayRoute | null> {
-        const stored = await this.#options.selections.get(siteId);
-        if (!stored) {
-            return null;
-        }
-        let selected:
-            | {
-                  selection: (typeof stored.plan.selections)[number];
-                  release: NonNullable<Awaited<ReturnType<ReleaseCatalogue["get"]>>>;
-                  requestedRelease: NonNullable<Awaited<ReturnType<ReleaseCatalogue["get"]>>>;
-                  lineage: Awaited<ReturnType<typeof resolveContract>>["lineage"];
-              }
-            | undefined;
-        for (const selection of stored.plan.selections) {
-            const release = await this.#options.releases.get(selection.contractId, selection.version);
-            if (!release || release.admission.digest !== selection.digest) {
-                throw new GatewayError("invalid_route", "selected release is missing or has a different digest");
-            }
-            const lineage = (await resolveContract(this.#options.releases, release.admission)).lineage;
-            const requestedIndex = lineage.findIndex((candidate) => candidate.release.contractId === contractId);
-            if (requestedIndex >= 0) {
-                const requested = lineage[requestedIndex]!.release;
-                const requestedRelease =
-                    requestedIndex === 0
-                        ? release
-                        : await this.#options.releases.get(requested.contractId, requested.version);
-                const expectedDigest = requestedIndex === 0 ? selection.digest : lineage[requestedIndex]!.digest;
-                if (!requestedRelease || requestedRelease.admission.digest !== expectedDigest) {
-                    throw new GatewayError("invalid_route", "requested ancestor release is missing or changed");
-                }
-                selected = { selection, release, requestedRelease, lineage };
-                break;
-            }
-        }
+    resolve(siteId: string, contractId: string, reads?: GatewayAuthorityReads): Promise<GatewayRoute | null> {
+        return reads
+            ? reads.route(this, siteId, contractId, () => this.resolveInitial(siteId, contractId, reads))
+            : this.resolveInitial(siteId, contractId);
+    }
+
+    private async resolveInitial(
+        siteId: string,
+        contractId: string,
+        reads?: GatewayAuthorityReads,
+    ): Promise<GatewayRoute | null> {
+        const selected = await resolveSelectedRelease(this.#options, siteId, contractId, this.#selectionHints, reads);
         if (!selected) {
             return null;
         }
         const { selection, release, requestedRelease, lineage } = selected;
-        const installation = await this.#options.installations.get({
-            siteId,
-            installationId: selection.installationId,
-        });
+        const installation = await (reads
+            ? reads.installation(this.#options.installations, siteId, selection.installationId)
+            : this.#options.installations.get({ siteId, installationId: selection.installationId }));
         if (!installation) {
             throw new GatewayError("invalid_route", "selected provider installation is missing");
         }
@@ -85,10 +66,28 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
                 ...(candidate.extends ? { extends: candidate.extends } : {}),
             })),
         };
-        if (!(await this.isCurrent(route))) {
+        // An explicit preparation context is speculative; its consumer must perform the live dispatch fence.
+        if (!reads && !(await this.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or dependency changed during route lookup");
         }
         return route;
+    }
+
+    /** Selected capability metadata does not expose transport configuration or attest Provider readiness. */
+    async describe(siteId: string, contractId: string) {
+        const selected = await resolveSelectedRelease(this.#options, siteId, contractId, this.#selectionHints);
+        if (!selected) {
+            return null;
+        }
+        const current = await this.#options.selections.get(siteId);
+        const selection = current?.plan.selections.find((item) => item.contractId === selected.selection.contractId);
+        if (
+            current?.revision !== selected.revision ||
+            canonicalizeIJson(selection ?? null) !== canonicalizeIJson(selected.selection)
+        ) {
+            throw new GatewayError("stale_route", "selection changed while describing capabilities");
+        }
+        return selected.requestedRelease;
     }
 
     async isCurrent(route: GatewayRoute): Promise<boolean> {

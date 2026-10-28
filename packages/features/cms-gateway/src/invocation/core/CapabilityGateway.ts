@@ -1,8 +1,10 @@
+import type { GatewayDispatch } from "../interfaces/Dispatch";
+import { prepareDispatch } from "./dispatch/prepareDispatch";
 import { InvocationTracker } from "../observability/InvocationTracker";
 import type { InvocationObserver, GatewayTracing } from "../observability/interfaces";
 import { isTraceContext } from "@bernouy/logging";
 import { DELEGATION_LIMITS } from "cms-gateway/access/delegation/limits";
-import { delegationStream } from "./delegationStream";
+import { delegationStream } from "./dispatch/delegationStream";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import { capabilityBindings } from "@bernouy/cms-repository/contracts/bindings";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
@@ -29,6 +31,7 @@ import type {
 import type { GatewayDelegationAuthority, DelegationTarget } from "cms-gateway/access/delegation/interfaces";
 
 export interface CapabilityGatewayOptions {
+    readonly dispatch?: GatewayDispatch;
     readonly observer?: InvocationObserver;
     readonly tracing?: GatewayTracing;
     readonly delegations?: GatewayDelegationAuthority;
@@ -64,6 +67,9 @@ export class CapabilityGateway implements GatewayAccessProbe {
     readonly #options: CapabilityGatewayOptions;
 
     constructor(options: CapabilityGatewayOptions) {
+        if (options.dispatch && !options.transportFencesRoute) {
+            throw new TypeError("Combined dispatch requires a live transport authority fence");
+        }
         this.#options = options;
     }
 
@@ -128,11 +134,14 @@ export class CapabilityGateway implements GatewayAccessProbe {
             requestBytes:
                 invocation.binaryBody?.contentLength ?? new TextEncoder().encode(JSON.stringify(input)).byteLength,
         });
-        const subjectId = await this.#providerSubjectId(invocation.actor, capability, route);
-        if (!this.#options.transportFencesRoute && !(await this.#options.routes.isCurrent(route))) {
+        const isCommand = capability.behavior.effect === "command";
+        // Preserve command audit semantics: an identity failure precedes the command's started event.
+        const commandSubjectId = isCommand
+            ? await this.#providerSubjectId(invocation.actor, capability, route)
+            : undefined;
+        if (isCommand && !this.#options.transportFencesRoute && !(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "installation changed while resolving actor identity");
         }
-        const isCommand = capability.behavior.effect === "command";
         // Cached policy only avoids unnecessary control calls; issuance revalidates live authority.
         const delegationSource = route.manifest.admission.manifest.implementations.some(
             (implementation) =>
@@ -165,36 +174,68 @@ export class CapabilityGateway implements GatewayAccessProbe {
             }
         };
         try {
-            if (delegated && !this.#options.transportFencesRoute) {
-                await this.#options.delegations!.check(
-                    delegated,
-                    true,
-                    invocation.binaryBody
-                        ? (invocation.binaryBody.contentLength ?? DELEGATION_LIMITS.requestBytes + 1)
-                        : new TextEncoder().encode(JSON.stringify(input)).length,
-                );
-            } else if (
-                !delegated &&
-                this.#options.delegations &&
-                delegationSource &&
-                (invocation.actor.kind === "anonymous" ||
-                    invocation.actor.kind === "user" ||
-                    invocation.actor.kind === "administrator")
-            ) {
-                delegation = await this.#options.delegations.issue({
-                    siteId: invocation.siteId,
-                    requestId,
-                    installationId: route.selection.installationId,
-                    contractId: invocation.contractId,
-                    version: release.version,
-                    digest: route.selection.digest,
-                    capabilityId: capability.id,
-                    actor: invocation.actor,
-                    deadline: started + DELEGATION_LIMITS.rootDeadlineMs,
-                });
+            const prepared = this.#options.dispatch
+                ? { subjectId: commandSubjectId, delegation: null }
+                : await prepareDispatch(
+                      () =>
+                          isCommand
+                              ? Promise.resolve(commandSubjectId)
+                              : this.#providerSubjectId(invocation.actor, capability, route),
+                      async () => {
+                          if (delegated && !this.#options.transportFencesRoute) {
+                              await this.#options.delegations!.check(
+                                  delegated,
+                                  true,
+                                  invocation.binaryBody
+                                      ? (invocation.binaryBody.contentLength ?? DELEGATION_LIMITS.requestBytes + 1)
+                                      : new TextEncoder().encode(JSON.stringify(input)).length,
+                              );
+                          } else if (
+                              !delegated &&
+                              this.#options.delegations &&
+                              delegationSource &&
+                              (invocation.actor.kind === "anonymous" ||
+                                  invocation.actor.kind === "user" ||
+                                  invocation.actor.kind === "administrator")
+                          ) {
+                              return this.#options.delegations.issue({
+                                  siteId: invocation.siteId,
+                                  requestId,
+                                  installationId: route.selection.installationId,
+                                  contractId: invocation.contractId,
+                                  version: release.version,
+                                  digest: route.selection.digest,
+                                  capabilityId: capability.id,
+                                  actor: invocation.actor,
+                                  deadline: started + DELEGATION_LIMITS.rootDeadlineMs,
+                              });
+                          }
+                          return null;
+                      },
+                      (root) =>
+                          this.#options.delegations!.close({
+                              siteId: invocation.siteId,
+                              ticket: root.ticket,
+                              requestId,
+                          }),
+                  );
+            delegation = prepared.delegation;
+            const subjectId = prepared.subjectId;
+            if (!this.#options.transportFencesRoute && !(await this.#options.routes.isCurrent(route))) {
+                throw new GatewayError("stale_route", "installation changed during dispatch preparation");
             }
             tracker.enter("dispatch");
-            const response = await this.#options.transport.send({
+            const send = this.#options.dispatch
+                ? async (request: Parameters<GatewayTransport["send"]>[0]) => {
+                      const dispatched = await this.#options.dispatch!(request, {
+                          actor: invocation.actor,
+                          deadline: started + DELEGATION_LIMITS.rootDeadlineMs,
+                      });
+                      delegation = dispatched.delegation;
+                      return dispatched.response;
+                  }
+                : (request: Parameters<GatewayTransport["send"]>[0]) => this.#options.transport.send(request);
+            const response = await send({
                 trace: this.#options.tracing?.current() ?? {
                     traceId: invocation.trace?.traceId ?? requestId,
                     spanId: requestId,

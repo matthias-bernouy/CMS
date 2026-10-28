@@ -24,3 +24,9 @@ export type {
     GatewayTransportRequest,
     GatewayTransportResponse,
 } from "cms-gateway/invocation/interfaces/Invocation";
+
+export { GatewayAuthorityReads } from "cms-gateway/invocation/core/dispatch/GatewayAuthorityReads";
+
+export type { GatewayDispatch } from "cms-gateway/invocation/interfaces/Dispatch";
+
+export { prepareDispatch as prepareGatewayDispatch } from "cms-gateway/invocation/core/dispatch/prepareDispatch";

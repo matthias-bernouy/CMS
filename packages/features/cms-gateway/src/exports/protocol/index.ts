@@ -27,3 +27,8 @@ export {
     decodeResourceMetadata,
     type ResourceMetadata,
 } from "cms-gateway/invocation/resource/metadata";
+
+export type {
+    ProviderDispatchPreparation,
+    PreparedProviderDispatch,
+} from "cms-gateway/protocol/ProviderDispatchPreparation";

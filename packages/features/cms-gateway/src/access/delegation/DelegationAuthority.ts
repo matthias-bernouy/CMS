@@ -1,3 +1,4 @@
+import type { GatewayAuthorityReads } from "cms-gateway/invocation/core/dispatch/GatewayAuthorityReads";
 import { DELEGATION_LIMITS } from "cms-gateway/access/delegation/limits";
 import { validDelegationTicket } from "./wire";
 import { ticketHash, fingerprint, selectionFingerprint } from "./ticket";
@@ -24,7 +25,7 @@ import {
 export class DelegationAuthority implements GatewayDelegationAuthority {
     constructor(private readonly options: DelegationAuthorityOptions) {}
 
-    async issue(value: DelegationSource) {
+    async issue(value: DelegationSource, reads?: GatewayAuthorityReads) {
         const source = structuredClone(value);
         if (source.siteId !== this.options.siteId || !isDelegationActor(source.actor)) {
             return denied();
@@ -33,7 +34,7 @@ export class DelegationAuthority implements GatewayDelegationAuthority {
         if (!Number.isSafeInteger(source.deadline) || source.deadline <= now) {
             return denied();
         }
-        const route = await this.options.routes.resolve(source.siteId, source.contractId);
+        const route = await this.options.routes.resolve(source.siteId, source.contractId, reads);
         if (
             !route ||
             route.selection.installationId !== source.installationId ||
@@ -49,7 +50,9 @@ export class DelegationAuthority implements GatewayDelegationAuthority {
         if (!capability || !policy || (!policy.sources.includes("*") && !policy.sources.includes(capability.id))) {
             return null;
         }
-        const current = await this.options.selections.get(source.siteId);
+        const current = await (reads
+            ? reads.selection(this.options.selections, source.siteId)
+            : this.options.selections.get(source.siteId));
         const actor = await this.options.inspectActor(source.actor);
         if (
             !current ||
