@@ -153,6 +153,14 @@
                     "NOT_FOUND": 404
                 }
             }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "observability_logs_get",
+                "description": "Read one retained log entry from this instance using an exact id returned by observability_logs_query. Returns bounded attributes and sanitized error details."
+            }
         }
     ]
 }

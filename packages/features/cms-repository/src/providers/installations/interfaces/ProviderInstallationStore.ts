@@ -45,6 +45,12 @@ export interface ProviderReleaseRetention {
         }>
     >;
     isCurrent(scope: ProviderInstallationScope, revision: string): Promise<boolean>;
+    /** Trusted host authorization for a fenced, coordinated replacement; ordinary reapproval stays exact. */
+    canReplace?(
+        candidate: ProviderInstallationCandidate,
+        previous: Readonly<{ contractId: string; version: string; digest: string }>,
+        next: Readonly<{ contractId: string; version: string; digest: string }>,
+    ): Promise<boolean>;
 }
 
 export interface ProviderInstallationWorkflowOptions {

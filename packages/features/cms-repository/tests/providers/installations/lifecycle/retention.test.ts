@@ -73,3 +73,29 @@ test("unreferenced releases can be removed with explicit current evidence", asyn
     const changed = await f.lifecycle.modify(await f.prepare(), "admin:owner");
     expect(changed.installation.approval.manifestVersion).toBe("2.0.0");
 });
+
+test("only a host-authorized coordinated replacement may supersede a retained pin", async () => {
+    let pins: { contractId: string; version: string; digest: string; location: string }[] = [];
+    let authorized = true;
+    let checked = 0;
+    const f = await fixture({
+        snapshot: async () => ({ complete: true, revision: "fenced:1", releases: pins }),
+        isCurrent: async () => true,
+        canReplace: async (candidate, previous, next) => {
+            checked += 1;
+            expect(candidate.siteId).toBe("site:1");
+            expect(previous.version).toBe("1.0.0");
+            expect(next.version).toBe("2.0.0");
+            return authorized;
+        },
+    });
+    pins = [{ ...f.admission.manifest.implementations[0]!, location: "site:1/selection" }];
+    const preparation = await f.prepare();
+    authorized = false;
+    await expect(f.lifecycle.modify(preparation, "admin:owner")).rejects.toMatchObject({ code: "release_in_use" });
+    expect((await f.store.get(f.scope))?.revision).toBe(1);
+    authorized = true;
+    const result = await f.lifecycle.modify(preparation, "admin:owner");
+    expect(result.installation.approval.manifestVersion).toBe("2.0.0");
+    expect(checked).toBe(3);
+});

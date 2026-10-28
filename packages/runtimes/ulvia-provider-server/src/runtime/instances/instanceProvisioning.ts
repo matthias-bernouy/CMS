@@ -52,7 +52,10 @@ async function connectProvider(
     execution: ProviderInstanceTransitionExecution,
 ): Promise<void> {
     execution.throwIfLeaseLost();
-    const management = options.composition.managementForProfile(profile);
+    const management = options.composition.managementForProfile(
+        profile,
+        options.instance.status === "upgrading" ? execution : undefined,
+    );
     const state = await management.list();
     execution.throwIfLeaseLost();
     const installation = state.installations.find(

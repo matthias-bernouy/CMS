@@ -36,7 +36,7 @@ function headers(instanceId: string, capabilityId: string, systemServiceId?: str
         requestId,
         instanceId,
         contractId,
-        contractVersion: "1.0.0",
+        contractVersion: "1.1.0",
         capabilityId,
         ...(systemServiceId ? { systemServiceId } : {}),
         issuedAt,

@@ -144,6 +144,14 @@
                     "CORE_UNAVAILABLE": 503
                 }
             }
+        },
+        {
+            "id": "mcp",
+            "transport": "mcp",
+            "tool": {
+                "name": "observability_logs_aggregate",
+                "description": "Count this instance’s retained logs by one supported dimension and bounded filters. Use for diagnostic summaries; these counts are not request rates or latency metrics."
+            }
         }
     ]
 }

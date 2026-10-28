@@ -4,6 +4,7 @@ import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
 import { registerProviderConnectionCapabilities } from "@bernouy/ulvia-provider/sdk/node";
 import { readRemoteProviderReport } from "../../gateway/providers/readReport";
 import { providerAdministration } from "../../gateway/providers/administration";
+import { compatibleTransitionRetention } from "../../stores/collections/compatibleRetention";
 import { createProviderRetention } from "../../stores/collections/retention";
 import { instanceMongoUrl } from "../../stores/storageRoots";
 import { createNativeInvocationAuthorizer } from "../../gateway/nativeAuthorization";
@@ -24,6 +25,7 @@ import {
     type OfficialInstanceProfiles,
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceRecord,
+    type ProviderInstanceTransitionExecution,
     type UlviaProviderInstanceRuntime,
 } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../../runtimeEnv";
@@ -55,7 +57,10 @@ export type InstanceComposition = Readonly<{
     gateway: Awaited<ReturnType<typeof createProviderGateway>>;
     runtime: UlviaProviderInstanceRuntime;
     management: ProviderManagement;
-    managementForProfile(profile: OfficialInstanceProfile): ProviderManagement;
+    managementForProfile(
+        profile: OfficialInstanceProfile,
+        execution?: ProviderInstanceTransitionExecution,
+    ): ProviderManagement;
     administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
     operations: ProviderOperationExecutor;
     ensureProviderReady(): Promise<void>;
@@ -202,9 +207,15 @@ export class ProviderInstanceHost {
                 reportFailure: (installationId, error) =>
                     instanceLogger.warn("provider.observation.refresh.failed", { installationId }, error),
             });
-            const managementForProfile = (profile: OfficialInstanceProfile) =>
-                new ProviderManagement(gateway, stores.contractSecrets.installations, {
-                    retention: createProviderRetention(gateway, stores.upgradeStorage, profile, instance.id),
+            const managementForProfile = (
+                profile: OfficialInstanceProfile,
+                execution?: ProviderInstanceTransitionExecution,
+            ) => {
+                const retention = createProviderRetention(gateway, stores.upgradeStorage, profile, instance.id);
+                return new ProviderManagement(gateway, stores.contractSecrets.installations, {
+                    retention: execution
+                        ? compatibleTransitionRetention(retention, gateway, instance.id, profile, execution)
+                        : retention,
                     sources: [this.#providerSource],
                     drafts: stores.connectionDrafts,
                     readReport: async (endpoint, token) =>
@@ -212,6 +223,7 @@ export class ProviderInstanceHost {
                             ? providerReport(instance, profile)
                             : readRemoteProviderReport(endpoint, token),
                 });
+            };
             const report = providerReport(instance, profile);
             const management = managementForProfile(profile);
             const providerOperations = new MongoProviderOperationStore(stores.db);

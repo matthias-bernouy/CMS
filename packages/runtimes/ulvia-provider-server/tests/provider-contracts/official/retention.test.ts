@@ -5,7 +5,7 @@ import {
     type ProviderInstanceRecord,
     type InstanceTransitionRecord,
 } from "@bernouy/ulvia-provider";
-import { assertHostedReleaseRetention } from "../../src/runtime/instances/profiles/retention";
+import { assertHostedReleaseRetention } from "../../../src/runtime/instances/profiles/retention";
 
 const digest = `sha256:${"a".repeat(64)}`;
 const profile: OfficialInstanceProfile = {

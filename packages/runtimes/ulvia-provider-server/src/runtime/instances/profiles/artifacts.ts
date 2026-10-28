@@ -1,3 +1,4 @@
+import { CURRENT_PROFILE, SUPPORTED_PROFILES, type ProfileDefinition } from "./definitions";
 import { initialPages } from "./initialPages";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
@@ -14,23 +15,6 @@ import {
 import { admitProviderManifestJson, verifyStoredProviderManifestJson } from "@bernouy/cms-repository/providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
 import type { OfficialInstanceProfile } from "@bernouy/ulvia-provider";
-
-type ProfileDefinition = Readonly<{
-    id: string;
-    version: string;
-    upgradeFromVersions: readonly string[];
-    manifest: Readonly<{ providerId: string; version: string }>;
-    collection: Readonly<{ publisherId: string; collectionId: string; version: string }>;
-}>;
-
-const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
-    id: "ulvia.official",
-    version: "1.0.0",
-    upgradeFromVersions: Object.freeze([]),
-    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.1.0" }),
-    collection: Object.freeze({ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.0.0" }),
-});
-const SUPPORTED_PROFILES = Object.freeze([CURRENT_PROFILE]);
 
 export type LoadedOfficialArtifacts = Readonly<{
     profiles: readonly OfficialInstanceProfile[];

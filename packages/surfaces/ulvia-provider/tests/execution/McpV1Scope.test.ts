@@ -4,10 +4,16 @@ import { resolve } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { capabilityBindings } from "@bernouy/cms-repository/contracts/bindings";
 
-const allowed = new Set(["ulvia.cms.repository", "ulvia.cms.content", "ulvia.cms.files", "ulvia.cms.installations"]);
+const allowed = new Set([
+    "ulvia.cms.repository",
+    "ulvia.cms.content",
+    "ulvia.cms.files",
+    "ulvia.cms.installations",
+    "ulvia.cms.observability",
+]);
 const bootstrap = resolve(import.meta.dir, "../../../../runtimes/ulvia-cli/dist/bootstrap");
 
-test("official MCP V1 exposes only Repository, ordinary content, site files and collection lifecycle tools", async () => {
+test("official MCP V1 exposes authoring, collection lifecycle and administrator observability reads", async () => {
     const index = JSON.parse(await readFile(resolve(bootstrap, "index.json"), "utf8")) as { contracts: string[] };
     let tools = 0;
     for (const path of index.contracts) {
@@ -20,6 +26,11 @@ test("official MCP V1 exposes only Repository, ordinary content, site files and 
             tools += 1;
             expect(allowed.has(release.contractId)).toBe(true);
             expect(bindings.some((binding) => binding.transport === "http")).toBe(true);
+            if (release.contractId === "ulvia.cms.observability") {
+                expect(["logs.query", "logs.get", "logs.aggregate"]).toContain(capability.id);
+                expect(capability.access).toBe("admin");
+                expect(capability.behavior.effect).toBe("query");
+            }
             if (release.contractId === "ulvia.cms.files") {
                 expect(capability.id.startsWith("workspace.")).toBe(true);
             }
@@ -43,5 +54,5 @@ test("official MCP V1 exposes only Repository, ordinary content, site files and 
             }
         }
     }
-    expect(tools).toBe(60);
+    expect(tools).toBe(63);
 });

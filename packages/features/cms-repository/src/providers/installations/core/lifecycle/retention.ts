@@ -49,10 +49,23 @@ export async function checkProviderRetention(
                 pin.digest === release.digest,
         ),
     );
-    if (blocked.length) {
+    const unsupported = [];
+    for (const previous of blocked) {
+        let authorized = false;
+        for (const next of after.admission.manifest.implementations) {
+            if (next.contractId === previous.contractId && (await retention?.canReplace?.(candidate, previous, next))) {
+                authorized = true;
+                break;
+            }
+        }
+        if (!authorized) {
+            unsupported.push(previous);
+        }
+    }
+    if (unsupported.length) {
         throw new ProviderInstallationWorkflowError(
             "release_in_use",
-            `Provider manifest drops required releases: ${blocked.map(({ contractId, version }) => `${contractId}@${version}`).join(", ")}`,
+            `Provider manifest drops required releases: ${unsupported.map(({ contractId, version }) => `${contractId}@${version}`).join(", ")}`,
         );
     }
     return { scope, revision: evidence.revision };

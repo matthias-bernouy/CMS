@@ -1,0 +1,228 @@
+{
+    "id": "gateway.dispatch.prepare",
+    "description": "Edge control connection only. Resolve the provider identity, issue an optional root delegation and sign one invocation after live authority revalidation.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync",
+        "sensitive": true
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "invocation": {
+                "type": "object",
+                "properties": {
+                    "requestId": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36
+                    },
+                    "installationId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 160
+                    },
+                    "contractId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 160
+                    },
+                    "contractVersion": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 64
+                    },
+                    "capabilityId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 160
+                    },
+                    "systemServiceId": {
+                        "type": "string",
+                        "maxLength": 128
+                    },
+                    "sourceInstallationId": {
+                        "type": "string",
+                        "maxLength": 128
+                    },
+                    "bodyBytes": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 67108864
+                    },
+                    "delegatedTicket": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 43,
+                        "sensitive": true
+                    },
+                    "sourceCredentialFingerprint": {
+                        "type": "string",
+                        "minLength": 64,
+                        "maxLength": 64
+                    },
+                    "trace": {
+                        "type": "object",
+                        "properties": {
+                            "traceId": {
+                                "type": "string",
+                                "minLength": 36,
+                                "maxLength": 36
+                            },
+                            "spanId": {
+                                "type": "string",
+                                "minLength": 36,
+                                "maxLength": 36
+                            },
+                            "parentSpanId": {
+                                "type": "string",
+                                "minLength": 36,
+                                "maxLength": 36
+                            }
+                        },
+                        "required": ["traceId", "spanId"]
+                    }
+                },
+                "required": ["requestId", "installationId", "contractId", "contractVersion", "capabilityId"]
+            },
+            "actor": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "type": "string",
+                        "enum": ["anonymous", "user", "administrator", "provider", "system"],
+                        "maxLength": 13
+                    },
+                    "subjectId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "sensitive": true
+                    },
+                    "authorizationRevision": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "installationId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    },
+                    "credentialFingerprint": {
+                        "type": "string",
+                        "minLength": 64,
+                        "maxLength": 64,
+                        "sensitive": true
+                    },
+                    "serviceId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    }
+                },
+                "required": ["kind"]
+            },
+            "deadline": {
+                "type": "integer",
+                "minimum": 0
+            },
+            "expectedSubjectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "sensitive": true
+            }
+        },
+        "required": ["invocation", "actor", "deadline"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "token": {
+                "type": "string",
+                "sensitive": true,
+                "minLength": 20,
+                "maxLength": 4096
+            },
+            "instanceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            },
+            "delegation": {
+                "type": "object",
+                "properties": {
+                    "ticket": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 43,
+                        "sensitive": true
+                    },
+                    "expiresAt": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                },
+                "required": ["ticket", "expiresAt"],
+                "nullable": true
+            }
+        },
+        "required": ["token", "instanceId", "delegation"]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        },
+        {
+            "code": "FORBIDDEN",
+            "retryable": false
+        },
+        {
+            "code": "RATE_LIMITED",
+            "retryable": true
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "INVALID_SELECTION",
+            "retryable": false
+        }
+    ],
+    "bindings": [
+        {
+            "id": "http",
+            "transport": "http",
+            "method": "POST",
+            "path": "/gateway/dispatch/prepare",
+            "input": {
+                "body": true
+            },
+            "response": {
+                "successStatuses": [200],
+                "contentTypes": ["application/json"],
+                "errorStatuses": {
+                    "INVALID_INPUT": 422,
+                    "NOT_FOUND": 404,
+                    "CORE_UNAVAILABLE": 503,
+                    "FORBIDDEN": 403,
+                    "RATE_LIMITED": 429,
+                    "REVISION_CONFLICT": 409,
+                    "INVALID_SELECTION": 422
+                }
+            }
+        }
+    ]
+}
