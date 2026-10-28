@@ -23,7 +23,7 @@ export class ControlDelegationAuthority implements GatewayDelegationAuthority {
         }
         const context = response.delegation as Record<string, unknown> | undefined;
         if (!context || !validDelegationTicket(context.ticket) || !Number.isSafeInteger(context.expiresAt)) {
-            throw new GatewayError("not_authorized", "invalid delegation response");
+            throw new GatewayError("invalid_provider_response", "invalid delegation response");
         }
         return { ticket: context.ticket, expiresAt: Number(context.expiresAt) };
     }
@@ -37,7 +37,7 @@ export class ControlDelegationAuthority implements GatewayDelegationAuthority {
                 (typeof actor.subjectId !== "string" || !Number.isSafeInteger(actor.authorizationRevision))) ||
             typeof response.rootRequestId !== "string"
         ) {
-            throw new GatewayError("not_authorized", "invalid delegated actor");
+            throw new GatewayError("invalid_provider_response", "invalid delegated actor");
         }
         return { actor, rootRequestId: response.rootRequestId };
     }
@@ -59,8 +59,15 @@ export class ControlDelegationAuthority implements GatewayDelegationAuthority {
                 throw new Error("Empty delegation response");
             }
             return response;
-        } catch {
-            throw new GatewayError("not_authorized", "delegation authority rejected the invocation");
+        } catch (error) {
+            const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
+            if (status === 401 || status === 403) {
+                throw new GatewayError("not_authorized", "delegation authority rejected the invocation");
+            }
+            if (status === 429) {
+                throw new GatewayError("rate_limited", "delegation authority rate limit exceeded");
+            }
+            throw new GatewayError("transport_failure", "delegation authority is unavailable");
         }
     }
 }

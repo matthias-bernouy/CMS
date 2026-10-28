@@ -1,3 +1,4 @@
+import { ControlDelegationAuthority } from "../../src/runtime/gateway/ControlDelegationAuthority";
 import { describe, expect, test } from "bun:test";
 import { ControlProviderClient } from "../../src/runtime/gateway/ControlProviderClient";
 import { InstallationsProviderTransport } from "../../src/runtime/gateway/InstallationsProviderTransport";
@@ -81,3 +82,44 @@ function client(requests: Array<{ url: string; init?: RequestInit }>, respond: (
     );
     return new ControlProviderClient(transport);
 }
+
+test("delegation preserves refusal, throttling and infrastructure failure semantics", async () => {
+    for (const [status, code] of [
+        [401, "not_authorized"],
+        [403, "not_authorized"],
+        [429, "rate_limited"],
+        [503, "transport_failure"],
+        [0, "transport_failure"],
+    ] as const) {
+        const authority = new ControlDelegationAuthority(async () => {
+            throw Object.assign(new Error("unavailable"), { status });
+        });
+        await expect(
+            authority.check({
+                siteId: "default",
+                ticket: "t".repeat(43),
+                sourceInstallationId: "source",
+                sourceCredentialFingerprint: "0".repeat(64),
+                contractId: "target",
+                capabilityId: "read",
+            }),
+        ).rejects.toMatchObject({ code });
+    }
+});
+
+test("malformed delegation control outputs remain protocol failures", async () => {
+    const authority = new ControlDelegationAuthority(async () => ({ delegation: { ticket: "invalid", expiresAt: 1 } }));
+    await expect(
+        authority.issue({
+            siteId: "default",
+            requestId: crypto.randomUUID(),
+            installationId: "source",
+            contractId: "source",
+            version: "1.0.0",
+            digest: "sha256:" + "a".repeat(64),
+            capabilityId: "render",
+            actor: { kind: "anonymous" },
+            deadline: Date.now() + 1000,
+        }),
+    ).rejects.toMatchObject({ code: "invalid_provider_response" });
+});
