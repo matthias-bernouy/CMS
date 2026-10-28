@@ -79,6 +79,8 @@ export class InMemoryJournalStore implements JournalStore {
                         "event",
                         "requestId",
                         "invocationId",
+                        "traceId",
+                        "parentInvocationId",
                         "contractId",
                         "capabilityId",
                     ] as const

@@ -22,6 +22,8 @@ export function mongoFilter(
         "event",
         "requestId",
         "invocationId",
+        "traceId",
+        "parentInvocationId",
         "contractId",
         "capabilityId",
     ] as const) {

@@ -24,24 +24,22 @@ function fixture() {
 test("instance authority and service identity cannot be supplied in ingestion or search input", async () => {
     const { a, b } = fixture();
     const item = entry();
-    await a.append({ entries: [item] }, "cms-kernel");
+    await a.append({ entries: [item] }, "cms-edge");
     expect((await a.get({ id: item.id })).instanceId).toBe("instance-a");
     expect((await b.query({})).items).toEqual([]);
     await expect(b.get({ id: item.id })).rejects.toThrow("NOT_FOUND");
-    await expect(a.append({ entries: [item], instanceId: "instance-b" }, "cms-kernel")).rejects.toThrow(
-        "INVALID_INPUT",
-    );
-    await expect(a.append({ entries: [{ ...item, service: "other" }] }, "cms-kernel")).rejects.toThrow("INVALID_INPUT");
+    await expect(a.append({ entries: [item], instanceId: "instance-b" }, "cms-edge")).rejects.toThrow("INVALID_INPUT");
+    await expect(a.append({ entries: [{ ...item, service: "other" }] }, "cms-edge")).rejects.toThrow("INVALID_INPUT");
     await expect(a.query({ instanceId: "instance-b" })).rejects.toThrow("INVALID_INPUT");
 });
 
 test("acknowledged retries preserve IDs, reject conflicting reuse and redact at reception", async () => {
     const { a } = fixture();
     const item = entry({ attributes: { password: "never-store-this", operation: "read" } });
-    expect(await a.append({ entries: [item] }, "cms-kernel")).toEqual({ accepted: 1, stored: 1, duplicates: 0 });
-    expect(await a.append({ entries: [item] }, "cms-kernel")).toEqual({ accepted: 1, stored: 0, duplicates: 1 });
+    expect(await a.append({ entries: [item] }, "cms-edge")).toEqual({ accepted: 1, stored: 1, duplicates: 0 });
+    expect(await a.append({ entries: [item] }, "cms-edge")).toEqual({ accepted: 1, stored: 0, duplicates: 1 });
     expect((await a.get({ id: item.id })).attributes.password).toBe("[REDACTED]");
-    await expect(a.append({ entries: [{ ...item, event: "other.failed" }] }, "cms-kernel")).rejects.toThrow(
+    await expect(a.append({ entries: [{ ...item, event: "other.failed" }] }, "cms-edge")).rejects.toThrow(
         "ENTRY_CONFLICT",
     );
     await expect(a.append({ entries: [item] }, "ulvia-provider")).rejects.toThrow("ENTRY_CONFLICT");
@@ -64,12 +62,12 @@ test("filters, summaries, detail and aggregation share the retained instance win
                 entry({ time: "2026-10-24T11:00:00.000Z" }),
             ],
         },
-        "cms-kernel",
+        "cms-edge",
     );
     await a.append({ entries: [entry({ level: "warn" })] }, "ulvia-provider");
     const result = await a.query({
         levels: ["error"],
-        service: "cms-kernel",
+        service: "cms-edge",
         component: "pages",
         eventPrefix: "page.",
         contractId: "ulvia.cms.content",
@@ -94,7 +92,7 @@ test("filters, summaries, detail and aggregation share the retained instance win
 
 test("pagination disambiguates equal reception timestamps and binds cursor to filters, expiry and instance", async () => {
     const { a, b } = fixture();
-    await a.append({ entries: Array.from({ length: 5 }, () => entry()) }, "cms-kernel");
+    await a.append({ entries: Array.from({ length: 5 }, () => entry()) }, "cms-edge");
     const first = await a.query({ limit: 2 });
     clock = new Date("2026-10-26T12:00:01.000Z");
     const second = await a.query({ limit: 2, cursor: first.nextCursor! });
@@ -116,7 +114,7 @@ test("pagination disambiguates equal reception timestamps and binds cursor to fi
 test("retention is enforced during reads even before physical TTL cleanup", async () => {
     const { a } = fixture();
     const item = entry();
-    await a.append({ entries: [item] }, "cms-kernel");
+    await a.append({ entries: [item] }, "cms-edge");
     clock = new Date("2026-11-10T12:00:00.000Z");
     expect((await a.query({ from: "2026-10-25T00:00:00.000Z", to: clock.toISOString() })).items).toEqual([]);
     expect((await a.aggregate({ groupBy: "service", from: "2026-10-25T00:00:00.000Z" })).total).toBe(0);
@@ -132,7 +130,7 @@ test("ingestion and search reject unbounded inputs before writing", async () => 
         [entry({ durationMs: -1 })],
         [entry({ time: "2027-01-01T00:00:00.000Z" })],
     ]) {
-        await expect(a.append({ entries }, "cms-kernel")).rejects.toThrow("INVALID_INPUT");
+        await expect(a.append({ entries }, "cms-edge")).rejects.toThrow("INVALID_INPUT");
     }
     for (const query of [
         { limit: 201 },
@@ -166,4 +164,23 @@ test("Provider entry IDs are isolated by authenticated emitter and instance, inc
     await expect(a.append({ entries: [{ ...item, event: "changed" }] }, "provider:source-a")).rejects.toThrow(
         "ENTRY_CONFLICT",
     );
+});
+
+test("trace and parent filters stay bound to the instance and return independent span records", async () => {
+    const { a, b } = fixture();
+    const traceId = crypto.randomUUID();
+    const parentInvocationId = crypto.randomUUID();
+    await a.append(
+        {
+            entries: [
+                entry({ traceId, invocationId: crypto.randomUUID(), parentInvocationId }),
+                entry({ traceId: crypto.randomUUID() }),
+            ],
+        },
+        "cms-edge",
+    );
+    expect((await a.query({ traceId })).items).toHaveLength(1);
+    expect((await a.query({ traceId, parentInvocationId })).items[0]).toMatchObject({ traceId, parentInvocationId });
+    expect((await a.query({ traceId, parentInvocationId: crypto.randomUUID() })).items).toHaveLength(0);
+    expect((await b.query({ traceId })).items).toHaveLength(0);
 });

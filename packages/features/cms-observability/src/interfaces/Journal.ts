@@ -8,6 +8,8 @@ export interface LogEntry {
     readonly component?: string;
     readonly requestId?: string;
     readonly invocationId?: string;
+    readonly traceId?: string;
+    readonly parentInvocationId?: string;
     readonly contractId?: string;
     readonly capabilityId?: string;
     readonly durationMs?: number;
@@ -40,6 +42,8 @@ export interface LogQuery {
     readonly eventPrefix?: string;
     readonly requestId?: string;
     readonly invocationId?: string;
+    readonly traceId?: string;
+    readonly parentInvocationId?: string;
     readonly contractId?: string;
     readonly capabilityId?: string;
     readonly limit?: number;

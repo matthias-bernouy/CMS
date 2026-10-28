@@ -4,7 +4,15 @@ import type { LogEntry } from "cms-observability/interfaces/Journal";
 export function entryFromRecord(record: LogRecord): LogEntry {
     const values = record.attributes ?? {};
     const fields: Record<string, string | number> = {};
-    for (const field of ["component", "requestId", "invocationId", "contractId", "capabilityId"] as const) {
+    for (const field of [
+        "component",
+        "requestId",
+        "invocationId",
+        "traceId",
+        "parentInvocationId",
+        "contractId",
+        "capabilityId",
+    ] as const) {
         const value = values[field];
         if (
             typeof value === "string" &&

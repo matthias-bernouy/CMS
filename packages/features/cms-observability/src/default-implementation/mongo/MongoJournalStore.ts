@@ -19,7 +19,16 @@ export class MongoJournalStore implements JournalStore {
     async init(): Promise<void> {
         await this.entries.createIndex({ instanceId: 1, id: 1 }, { unique: true });
         await this.entries.createIndex({ instanceId: 1, receivedAt: -1, id: -1 });
-        for (const field of ["level", "service", "event", "requestId", "contractId", "capabilityId"]) {
+        for (const field of [
+            "level",
+            "service",
+            "event",
+            "requestId",
+            "traceId",
+            "parentInvocationId",
+            "contractId",
+            "capabilityId",
+        ]) {
             await this.entries.createIndex({ instanceId: 1, [field]: 1, time: -1 });
         }
         await this.entries.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });

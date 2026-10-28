@@ -49,6 +49,8 @@ export function parseEntry(value: unknown): LogEntry {
         "component",
         "requestId",
         "invocationId",
+        "traceId",
+        "parentInvocationId",
         "contractId",
         "capabilityId",
         "durationMs",
@@ -79,7 +81,15 @@ export function parseEntry(value: unknown): LogEntry {
         }
     }
     const optional: Record<string, string | number> = {};
-    for (const key of ["component", "requestId", "invocationId", "contractId", "capabilityId"] as const) {
+    for (const key of [
+        "component",
+        "requestId",
+        "invocationId",
+        "traceId",
+        "parentInvocationId",
+        "contractId",
+        "capabilityId",
+    ] as const) {
         if (entry[key] !== undefined) {
             optional[key] = text(entry[key]);
         }
@@ -121,6 +131,8 @@ const QUERY_KEYS = [
     "eventPrefix",
     "requestId",
     "invocationId",
+    "traceId",
+    "parentInvocationId",
     "contractId",
     "capabilityId",
     "limit",
