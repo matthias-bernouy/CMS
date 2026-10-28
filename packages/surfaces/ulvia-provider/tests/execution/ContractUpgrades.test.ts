@@ -28,6 +28,8 @@ test("contract plan projections match their wire schema and retain explicit sour
                     selections,
                     grants: { default: "allow-selected", denied: [] },
                     issues: [],
+                    authority: { providers: [], machine: [], delegated: [] },
+                    authorityAdded: [],
                     usageRevision: digest,
                 };
             },

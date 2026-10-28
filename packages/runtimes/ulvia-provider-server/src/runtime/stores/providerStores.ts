@@ -41,8 +41,8 @@ import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from
 import type { Logger } from "@bernouy/logging";
 import { CmsSecrets } from "@bernouy/cms-secrets";
 import { MongoCmsSecretMetadataStore } from "@bernouy/cms-secrets/mongo";
-import { EncryptedProviderConnections } from "../gateway/providers/EncryptedProviderConnections";
-import { EncryptedConnectionDrafts } from "../gateway/providers/EncryptedConnectionDrafts";
+import { EncryptedProviderConnections } from "../gateway/providers/connections/EncryptedProviderConnections";
+import { EncryptedConnectionDrafts } from "../gateway/providers/connections/EncryptedConnectionDrafts";
 import { createContractSecretStores } from "./contractSecretStores";
 import { ConfiguredSmtpEmailer } from "@bernouy/cms-smtp-emailer/nodemailer";
 

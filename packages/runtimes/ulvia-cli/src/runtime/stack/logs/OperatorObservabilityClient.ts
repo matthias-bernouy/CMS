@@ -72,7 +72,7 @@ export class OperatorObservabilityClient {
                     ) {
                         throw new Error("Invalid operator invocation authorization");
                     }
-                    return issued.token;
+                    return { token: issued.token };
                 },
             }),
         });

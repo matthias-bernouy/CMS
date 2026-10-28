@@ -1,4 +1,4 @@
-import { readRemoteProviderReport } from "./readReport";
+import { readRemoteProviderReport } from "../readReport";
 import {
     preparePairing,
     completePairing,
@@ -10,8 +10,8 @@ import { secretKeyToRef, secretRefToKey } from "@bernouy/secret-store";
 import { ProviderInstallationLifecycle } from "@bernouy/cms-repository/providers/installations";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
-import type { ProviderStores } from "../../stores/providerStores";
-import type { createProviderGateway } from "../createProviderGateway";
+import type { ProviderStores } from "../../../stores/providerStores";
+import type { createProviderGateway } from "../../createProviderGateway";
 
 export class ProviderPairing {
     constructor(

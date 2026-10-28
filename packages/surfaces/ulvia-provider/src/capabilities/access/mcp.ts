@@ -2,7 +2,7 @@ import { OAuthError, type McpAuthorization } from "@bernouy/cms-auth/oauth";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
 import type { UlviaProviderGateway } from "../../ports";
-import { actorSubject, requiredGateway } from "./support";
+import { actorSubject, requiredGateway, administratorState } from "./support";
 
 export function registerMcpAccessCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -43,9 +43,15 @@ export function registerMcpAccessCapabilities(
                     case "exchange-mcp-token":
                         result = await authorization.exchange(request);
                         break;
-                    case "resolve-mcp-connection":
-                        result = await authorization.resolve(String(request.token));
+                    case "resolve-mcp-connection": {
+                        const principal = await authorization.resolve(String(request.token));
+                        const administrator = await administratorState(gateway, principal.subjectId);
+                        if (!administrator.enabled) {
+                            throw new OAuthError("access_denied", 403);
+                        }
+                        result = { ...principal, authorizationRevision: administrator.revision };
                         break;
+                    }
                     case "authorize-mcp-connection":
                         result = await authorization.authorize(
                             String(request.requestId),

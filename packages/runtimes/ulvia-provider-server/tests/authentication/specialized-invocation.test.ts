@@ -4,7 +4,7 @@ import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { specializedRoute } from "../../../../features/cms-gateway/tests/invocation/specialization/fixture";
-import { createInvocationIssuer } from "../../src/runtime/gateway/providers/issueInvocation";
+import { createInvocationIssuer } from "../../src/runtime/gateway/providers/authority/issueInvocation";
 
 test("inherited calls cross the HTTP token broker with parent pins and concrete site grants", async () => {
     const f = await specializedRoute();
@@ -18,6 +18,7 @@ test("inherited calls cross the HTTP token broker with parent pins and concrete 
         f.routes,
         { get: async () => ({ grants }) } as never,
         {
+            consumeBudget: async () => true,
             authorize: async (target) => {
                 provenance.push(target);
                 return true;
@@ -41,7 +42,7 @@ test("inherited calls cross the HTTP token broker with parent pins and concrete 
                         installationId: request.installationId!,
                     });
                     issued.push(verifyProviderInvocationToken(result.token, secret));
-                    return result.token;
+                    return { token: result.token };
                 },
                 sendPinned: async (request) => {
                     requests.push(request.url.href);
@@ -59,7 +60,7 @@ test("inherited calls cross the HTTP token broker with parent pins and concrete 
             contractId: "catalog",
             capabilityId: "item.list",
             input: {},
-            actor: { kind: "provider", installationId: "source" },
+            actor: { kind: "provider", installationId: "source", credentialFingerprint: "f".repeat(64) },
         });
     expect(await invoke()).toMatchObject({ kind: "success", output: { items: ["one"] } });
     expect(issued).toEqual([
@@ -70,14 +71,16 @@ test("inherited calls cross the HTTP token broker with parent pins and concrete 
             sourceInstallationId: "source",
         }),
     ]);
-    expect(provenance).toEqual([
-        expect.objectContaining({
+    expect(provenance).toHaveLength(2);
+    for (const target of provenance) {
+        expect(target).toMatchObject({
             contractId: "catalog",
             version: "1.0.0",
             capabilityId: "item.list",
             targetInstallationId: "install-a",
-        }),
-    ]);
+            sourceCredentialFingerprint: "f".repeat(64),
+        });
+    }
     grants.denied.push({ contractId: "catalog.sql", capabilityId: "item.list" });
     await expect(invoke()).rejects.toMatchObject({ code: "transport_failure" });
     expect(requests).toHaveLength(1);

@@ -10,7 +10,7 @@ import {
 
 const capability = {
     id: "list",
-    behavior: { effect: "query", execution: "sync" },
+    behavior: { sensitive: false, effect: "query", execution: "sync" },
     output: { type: "object", properties: { id: { type: "string", maxLength: 32 } }, required: ["id"] },
     errors: [{ code: "UNAVAILABLE", retryable: true }],
 };
@@ -117,7 +117,7 @@ function svgReleases(
                             {
                                 id: "icon",
                                 access,
-                                behavior: { effect: "query", execution: "sync" },
+                                behavior: { sensitive: false, effect: "query", execution: "sync" },
                                 input: {
                                     type: "object",
                                     properties: { name: { type: "string", maxLength: 64 } },

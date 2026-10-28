@@ -1,4 +1,4 @@
-import { accessCall, json, McpHttpError, type CmsMcpHost } from "./protocol";
+import { accessCall, mcpActor, json, McpHttpError, type CmsMcpHost } from "./protocol";
 
 export async function mcpUpload(request: Request, host: CmsMcpHost, uploadId: string) {
     if (request.method !== "PUT") {
@@ -33,7 +33,7 @@ export async function mcpUpload(request: Request, host: CmsMcpHost, uploadId: st
         siteId: "default",
         contractId: "ulvia.cms.files",
         capabilityId: "upload.write",
-        actor: { kind: "administrator", subjectId: principal.subjectId },
+        actor: mcpActor(principal),
         input: { uploadId, uploadToken: token },
         binaryBody: { stream: body, ...(length === undefined ? {} : { contentLength: length }) },
     });

@@ -74,7 +74,7 @@ export async function cmsMcpFixture() {
                         result = await authorization.exchange(input);
                         break;
                     case "resolve-mcp-connection":
-                        result = await authorization.resolve(input.token);
+                        result = { ...(await authorization.resolve(input.token)), authorizationRevision: 3 };
                         break;
                     case "list-mcp-connections":
                         result = await authorization.list(sub, input);

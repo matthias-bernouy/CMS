@@ -95,3 +95,25 @@ export function checkBrowserPost(request: Request, publicUrl: string, csrf: stri
         throw new McpHttpError("access_denied", 403);
     }
 }
+
+/** The selected Access implementation has already verified the MCP grant and live administrator policy. */
+export function mcpActor(value: unknown): GatewayActor {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        throw new McpHttpError("invalid_token", 401);
+    }
+    const principal = value as Record<string, unknown>;
+    if (
+        typeof principal.subjectId !== "string" ||
+        !principal.subjectId ||
+        principal.subjectId.length > 256 ||
+        !Number.isSafeInteger(principal.authorizationRevision) ||
+        Number(principal.authorizationRevision) < 0
+    ) {
+        throw new McpHttpError("invalid_token", 401);
+    }
+    return {
+        kind: "administrator",
+        subjectId: principal.subjectId,
+        authorizationRevision: Number(principal.authorizationRevision),
+    };
+}

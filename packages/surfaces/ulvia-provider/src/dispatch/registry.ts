@@ -1,8 +1,11 @@
+import type { DelegationContext } from "@bernouy/cms-gateway/access/delegation";
 import type { ResolvedContract } from "@bernouy/cms-repository/contracts";
 import type { GatewayActorCredential, GatewayResponseEffect } from "@bernouy/cms-gateway/protocol";
 
 /** Verified invocation metadata. Site and provider identity are injected by the runtime. */
 export interface ProviderCapabilityInvocationContext {
+    readonly delegation?: DelegationContext;
+    readonly rootRequestId?: string;
     readonly requestId: string;
     readonly contractVersion: string;
     readonly siteId: string;

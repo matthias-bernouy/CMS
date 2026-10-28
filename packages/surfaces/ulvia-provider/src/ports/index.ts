@@ -1,3 +1,7 @@
+import type { GatewayDelegationAuthority } from "@bernouy/cms-gateway/access/delegation";
+import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
+import type { ProviderAccess } from "@bernouy/cms-gateway/access/providers";
+import type { ProviderAdministration } from "./providers";
 import type { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import type { McpAuthorization } from "@bernouy/cms-auth/oauth";
 import type {
@@ -95,24 +99,15 @@ export interface UlviaProviderGateway {
     readonly identities: ProviderIdentityService;
     readonly routes: GatewayRouteResolver;
     readonly commandAudit: GatewayCommandAuditStore;
-    readonly providers?: import("@bernouy/cms-gateway/access/providers").ProviderAccess;
+    readonly providers?: ProviderAccess;
+    readonly delegations?: GatewayDelegationAuthority;
     readonly invocations: {
-        issue(input: {
-            requestId: string;
-            installationId: string;
-            contractId: string;
-            contractVersion: string;
-            capabilityId: string;
-            subjectId?: string;
-            systemServiceId?: string;
-            sourceInstallationId?: string;
-            bodyBytes?: number;
-        }): Promise<{ token: string; instanceId: string }>;
+        issue(input: ProviderInvocationIssue): Promise<{ token: string; instanceId: string }>;
     };
 }
 
 export interface UlviaProviderManagement {
-    readonly administration?: import("./providers").ProviderAdministration;
+    readonly administration?: ProviderAdministration;
     replaceSelections(input: {
         expectedRevision: number;
         selections: readonly {

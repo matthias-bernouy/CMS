@@ -23,6 +23,22 @@ export function registerAccessCapabilities(
     gateway: UlviaProviderGateway | undefined,
 ): void {
     registerMcpAccessCapabilities(dispatcher, gateway, dependencies.mcpAuthorization);
+    dispatcher.register("ulvia.cms.access", "inspect-actor", async (input, context) => {
+        if (context.systemServiceId !== "cms-gateway" || context.subjectId || context.sourceInstallationId) {
+            throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
+        }
+        const sub = requiredText(input.subjectId);
+        if (!(await dependencies.users.getBySub(sub))) {
+            return { state: "anonymous" };
+        }
+        const administrator = await administratorState(gateway, sub);
+        return {
+            state: "authenticated",
+            subjectId: sub,
+            administrator: administrator.enabled,
+            authorizationRevision: administrator.revision,
+        };
+    });
     dispatcher.register("ulvia.cms.access", "resolve-actor", async (_input, context) => {
         const subject = await dependencies.authentication.resolveCredential(context.actorCredential);
         if (!subject) {

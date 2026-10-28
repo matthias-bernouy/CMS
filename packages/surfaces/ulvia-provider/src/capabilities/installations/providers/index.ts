@@ -1,3 +1,5 @@
+import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
+import { registerDelegationCapabilities } from "./delegation";
 import { registerProviderAdministration } from "./administration";
 import { registerProviderAuthorityCapabilities } from "./authority";
 import {
@@ -21,6 +23,7 @@ export function registerProviderInstallationCapabilities(
             return handler(input, context);
         });
     registerProviderAuthorityCapabilities(dispatcher, gateway);
+    registerDelegationCapabilities(dispatcher, gateway);
     registerProviderAdministration(dispatcher, management);
     dispatcher.register("ulvia.cms.installations", "list-provider-installations", async () => {
         const active = requiredGateway(gateway);
@@ -100,21 +103,7 @@ export function registerProviderInstallationCapabilities(
     });
     registerControl("gateway.invocation.issue", async (input) => {
         return providerCommand(() =>
-            requiredGateway(gateway).invocations.issue({
-                requestId: requiredText(input.requestId),
-                installationId: requiredText(input.installationId),
-                contractId: requiredText(input.contractId),
-                contractVersion: requiredText(input.contractVersion),
-                capabilityId: requiredText(input.capabilityId),
-                ...(input.subjectId === undefined ? {} : { subjectId: requiredText(input.subjectId) }),
-                ...(input.sourceInstallationId === undefined
-                    ? {}
-                    : { sourceInstallationId: requiredText(input.sourceInstallationId) }),
-                ...(input.bodyBytes === undefined ? {} : { bodyBytes: Number(input.bodyBytes) }),
-                ...(input.systemServiceId === undefined
-                    ? {}
-                    : { systemServiceId: requiredText(input.systemServiceId) }),
-            }),
+            requiredGateway(gateway).invocations.issue(input as unknown as ProviderInvocationIssue),
         );
     });
 }
@@ -244,7 +233,7 @@ async function providerCommand<T>(operation: () => Promise<T>): Promise<T> {
         }
         const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
         const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
-        if (status === 403) {
+        if (status === 403 || code === "not_authorized") {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }
         if (status === 429) {

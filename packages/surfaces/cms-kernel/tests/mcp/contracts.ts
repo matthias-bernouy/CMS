@@ -12,8 +12,9 @@ export async function createMcpTestContract() {
         capabilities: [
             {
                 id: "echo",
+
                 access: "admin",
-                behavior: { effect: "query", execution: "sync" },
+                behavior: { sensitive: false, effect: "query", execution: "sync" },
                 input: { type: "object", properties: {}, required: [] },
                 output: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] },
                 errors: [],
@@ -33,7 +34,7 @@ export async function createMcpTestContract() {
     const update = structuredClone(contract.release.capabilities[0]!);
     Object.assign(update, {
         id: "update",
-        behavior: { effect: "command", execution: "sync", idempotency: "none" },
+        behavior: { sensitive: false, effect: "command", execution: "sync", idempotency: "none" },
         bindings: [{ id: "mcp", transport: "mcp", tool: { name: "update" } }],
     });
     const withCommand = await admitContractRelease({

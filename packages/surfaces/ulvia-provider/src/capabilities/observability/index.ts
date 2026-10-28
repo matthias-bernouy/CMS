@@ -6,7 +6,7 @@ export function registerObservabilityCapabilities(
     observability: CmsObservability,
 ): void {
     dispatcher.register("ulvia.cms.observability", "logs.append", async (input, context) => {
-        if (!context.systemServiceId && !context.sourceInstallationId) {
+        if (context.rootRequestId || context.subjectId || (!context.systemServiceId && !context.sourceInstallationId)) {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }
         return execute(() =>

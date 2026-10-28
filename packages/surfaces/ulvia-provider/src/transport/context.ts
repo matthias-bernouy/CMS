@@ -23,6 +23,10 @@ export function providerInvocationContext(
     const actorCredential = decodeActorCredential(encodedCredential);
     return {
         requestId,
+        ...(claims.delegationTicket
+            ? { delegation: { ticket: claims.delegationTicket, expiresAt: claims.delegationExpiresAt! } }
+            : {}),
+        ...(claims.rootRequestId ? { rootRequestId: claims.rootRequestId } : {}),
         contractVersion: claims.contractVersion,
         siteId: scope.siteId,
         ...(claims.connectionId ? { connectionId: claims.connectionId } : {}),

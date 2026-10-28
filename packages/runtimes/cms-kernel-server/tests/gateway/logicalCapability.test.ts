@@ -33,8 +33,14 @@ function routeSnapshot() {
                     capabilities: [
                         {
                             id: "apply-collection-upgrade",
+
                             access: "admin",
-                            behavior: { effect: "command", execution: "operation", idempotency: "keyed" },
+                            behavior: {
+                                sensitive: false,
+                                effect: "command",
+                                execution: "operation",
+                                idempotency: "keyed",
+                            },
                             output: { type: "object" },
                         },
                     ],

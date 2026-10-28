@@ -1,3 +1,4 @@
+import { mcpActor } from "cms-kernel/http/mcp/protocol";
 import { expect, test } from "bun:test";
 import { cmsMcpFixture } from "./fixture";
 import { connected } from "./connection";
@@ -38,7 +39,7 @@ test("CMS OAuth discovery, consent, authenticated tools and resources use one cl
     await rpc("tools/call", { name: "update", arguments: { input: {} } });
     expect(f.mutations).toEqual([{ contractId: "test.cms", capabilityId: "update" }]);
     const invocation = f.invocations.findLast((call) => call.contractId === "test.cms")!;
-    expect(invocation.actor).toEqual({ kind: "administrator", subjectId: "admin" });
+    expect(invocation.actor).toEqual({ kind: "administrator", subjectId: "admin", authorizationRevision: 3 });
     expect((await rpc("resources/list")).result.resources).toHaveLength(4);
     expect(
         (await rpc("resources/read", { uri: "ulvia://cms/installed-collections" })).result.contents[0].text,
@@ -86,4 +87,15 @@ test("consent and connection revocation require browser CSRF binding and current
     expect(
         (await f.request("/.cms/mcp", { method: "POST", headers: mcpHeaders(token.access_token), body: "{}" })).status,
     ).toBe(401);
+});
+
+test("MCP delegation context rejects missing or invalid authorization revisions", () => {
+    for (const authorizationRevision of [undefined, null, -1, 1.5, "3"]) {
+        expect(() => mcpActor({ subjectId: "admin", authorizationRevision })).toThrow("invalid_token");
+    }
+    expect(mcpActor({ subjectId: "admin", authorizationRevision: 3 })).toEqual({
+        kind: "administrator",
+        subjectId: "admin",
+        authorizationRevision: 3,
+    });
 });

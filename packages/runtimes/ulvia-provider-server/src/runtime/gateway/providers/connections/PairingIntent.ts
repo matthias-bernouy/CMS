@@ -3,7 +3,7 @@ import type { StoredProviderInstallation } from "@bernouy/cms-repository/provide
 import { providerInstallationFingerprint } from "@bernouy/cms-gateway/access/providers";
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import { secretKeyToRef } from "@bernouy/secret-store";
-import type { ProviderStores } from "../../stores/providerStores";
+import type { ProviderStores } from "../../../stores/providerStores";
 
 export type PairingInput = { installationId: string; expectedRevision: number; rotate?: boolean };
 export type PairingIntent = {

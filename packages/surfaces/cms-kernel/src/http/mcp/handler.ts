@@ -3,7 +3,7 @@ import { CapabilityMcpBinding, createCapabilityMcpHttpHandler } from "@bernouy/c
 import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
 import { authorizationPage, connectionsPage } from "./pages";
-import { accessCall, boundedText, form, json, McpHttpError, type CmsMcpHost } from "./protocol";
+import { accessCall, mcpActor, boundedText, form, json, McpHttpError, type CmsMcpHost } from "./protocol";
 import { createAuthoringResources } from "./resources";
 
 export function createCmsMcpHandler(
@@ -30,7 +30,7 @@ export function createCmsMcpHandler(
                 throw new McpHttpError("invalid_token", 401);
             }
             const principal = await accessCall(host, "resolve-mcp-connection", { token: bearer.slice(7) });
-            return { siteId: "default", actor: { kind: "administrator", subjectId: principal.subjectId } };
+            return { siteId: "default", actor: mcpActor(principal) };
         },
     });
     return async (request: Request): Promise<Response | null> => {

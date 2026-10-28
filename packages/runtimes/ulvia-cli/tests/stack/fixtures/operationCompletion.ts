@@ -1,3 +1,5 @@
+import type { Locator } from "playwright";
+import type { Route } from "playwright";
 import type { Page } from "playwright";
 import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
 
@@ -42,7 +44,7 @@ export async function waitForSiteOperation(page: ProbePage, handle: unknown, now
 /** Capture the accepted handle before the browser redirects and releases its response resource. */
 export async function submitSiteUpgrade(
     page: ProbePage & Pick<Page, "route" | "unroute">,
-    apply: Pick<import("playwright").Locator, "click">,
+    apply: Pick<Locator, "click">,
     capability: "apply-collection-upgrade" | "apply-contract-upgrade",
 ): Promise<void> {
     let accept!: (value: unknown) => void;
@@ -53,7 +55,7 @@ export async function submitSiteUpgrade(
     });
     const timer = setTimeout(() => reject(new Error("Site upgrade command was not acknowledged")), 15_000);
     const pattern = `**/ulvia.cms.installations/${capability}`;
-    const intercept = async (route: import("playwright").Route) => {
+    const intercept = async (route: Route) => {
         try {
             const response = await route.fetch();
             try {

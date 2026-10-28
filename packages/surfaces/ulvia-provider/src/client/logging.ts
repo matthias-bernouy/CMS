@@ -21,7 +21,12 @@ export function createConnectedProviderLogger(options: {
     });
     diagnostics.collector.connect(async (entries) => {
         try {
-            const result = await options.client.invoke(options.contract, "logs.append", { entries });
+            const result = await options.client.invoke(
+                options.contract,
+                "logs.append",
+                { entries },
+                { authority: "provider" },
+            );
             assertLogAcknowledgement(result.output, entries.length);
         } catch (error) {
             if (error instanceof ProviderClientError) {

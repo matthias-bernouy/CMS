@@ -97,8 +97,9 @@ test("provider aliases decode the selected binding rather than the first HTTP bi
         capabilities: [
             {
                 id: "find",
+
                 access: "public",
-                behavior: { effect: "query", execution: "sync" },
+                behavior: { sensitive: false, effect: "query", execution: "sync" },
                 input: {
                     type: "object",
                     properties: { value: { type: "string", maxLength: 40 } },

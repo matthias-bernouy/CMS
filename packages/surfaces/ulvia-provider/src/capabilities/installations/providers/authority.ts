@@ -19,6 +19,7 @@ export function registerProviderAuthorityCapabilities(
         return {
             allowed: await gateway.providers.authorize({
                 sourceInstallationId: requiredText(input.sourceInstallationId),
+                sourceCredentialFingerprint: requiredText(input.sourceCredentialFingerprint),
                 targetInstallationId: requiredText(input.targetInstallationId),
                 contractId: requiredText(input.contractId),
                 capabilityId: requiredText(input.capabilityId),

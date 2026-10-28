@@ -12,8 +12,9 @@ export function queryContract() {
         capabilities: [
             {
                 id: "list-products",
+
                 access: "public",
-                behavior: { effect: "query", execution: "sync" },
+                behavior: { sensitive: false, effect: "query", execution: "sync" },
                 input: { type: "object", properties: { category: { type: "string", maxLength: 50 } }, required: [] },
                 output: { type: "object", properties: {}, required: [] },
                 errors: [],

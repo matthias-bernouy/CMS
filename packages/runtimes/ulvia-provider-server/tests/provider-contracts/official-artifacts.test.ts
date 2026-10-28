@@ -80,6 +80,7 @@ async function repositoryFixture() {
     const manifest = await admitProviderManifestJson(manifestBytes, catalogue);
     entries.push({
         repositoryId: "official",
+
         kind: "provider-manifest",
         publisherId: manifest.manifest.provenance.publisherId,
         id: manifest.manifest.providerId,

@@ -1,11 +1,13 @@
 import { ContractUpgradeService } from "@bernouy/cms-repository/providers/selections";
 import { capabilityGranted } from "@bernouy/cms-repository/providers/selections";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
-import { CapabilityGateway, CatalogueGatewayRouteResolver } from "@bernouy/cms-gateway";
+import { CapabilityGateway, CatalogueGatewayRouteResolver, GatewayDispatchRejected } from "@bernouy/cms-gateway";
 import { MongoGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit/mongo";
+import { createDelegationAuthority } from "./providers/authority/delegations";
+import { invocationAuthority } from "@bernouy/cms-gateway/http";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
-import { createInvocationIssuer } from "./providers/issueInvocation";
+import { createInvocationIssuer } from "./providers/authority/issueInvocation";
 import { createSecretResolver } from "@bernouy/secret-store";
 import type { ProviderStores } from "../stores/providerStores";
 import { RefreshingProviderRoutes } from "./providers/RefreshingProviderRoutes";
@@ -25,19 +27,43 @@ export async function createProviderGateway(
     );
     const network = new NodeGatewayHttpNetwork({
         allowPrivateAddresses: true,
-        resolveToken: async (reference) => {
-            const token = await resolveSecret(reference);
-            if (!token) {
-                throw new Error("provider credential is unavailable");
+        authorize: async (request) => {
+            try {
+                return { token: (await issueInvocation(invocationAuthority(request))).token };
+            } catch (error) {
+                const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
+                const denied = error && typeof error === "object" && "code" in error && error.code === "not_authorized";
+                if (status === 403 || status === 429 || denied) {
+                    throw new GatewayDispatchRejected(status === 429 ? "rate_limited" : "not_authorized");
+                }
+                throw error;
             }
-            return token;
         },
     });
-    const access = await createProviderGatewayAccess(db, siteId, installations, manifests, resolveSecret);
+    const access = await createProviderGatewayAccess(
+        db,
+        siteId,
+        installations,
+        manifests,
+        selections,
+        routes,
+        resolveSecret,
+    );
     const commandAudit = new MongoGatewayCommandAuditStore(db);
     await commandAudit.init();
     const identities = new ProviderIdentityAliases(stores.identities);
-    const invoker = new CapabilityGateway({
+    let invoker: CapabilityGateway;
+    const delegations = await createDelegationAuthority({
+        db,
+        siteId,
+        routes,
+        selections,
+        resolveSecret,
+        invoker: () => invoker,
+    });
+    invoker = new CapabilityGateway({
+        delegations,
+        transportFencesRoute: true,
         routes,
         identities,
         transport: new HttpGatewayTransport({ network }),
@@ -64,7 +90,15 @@ export async function createProviderGateway(
               }
             : null;
     };
-    const issueInvocation = createInvocationIssuer(siteId, routes, selections, access.providers, resolveSecret);
+    const issueInvocation = createInvocationIssuer(
+        siteId,
+        routes,
+        selections,
+        access.providers,
+        resolveSecret,
+        delegations,
+        identities,
+    );
 
     const contractUpgrades = new ContractUpgradeService(
         stores.selectionChanges.store,
@@ -116,6 +150,7 @@ export async function createProviderGateway(
         invoker,
         commandAudit,
         invocations: { issue: issueInvocation },
+        delegations,
         providers: access.providers,
         resolvePageCapability,
         identities,

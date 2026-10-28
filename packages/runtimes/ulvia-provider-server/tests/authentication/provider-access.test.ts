@@ -73,6 +73,16 @@ async function accessFixture(longRange?: number, manyRequirements = false) {
         {
             installations: { get: async () => stored },
             manifests: { get: async () => ({ admission }) },
+            selections: {
+                get: async () => ({
+                    plan: {
+                        selections: admission.manifest.implementations.map((item) => ({
+                            ...item,
+                            installationId: "source",
+                        })),
+                    },
+                }),
+            },
         } as unknown as ProviderStores,
         { siteId, routes: { resolve: async () => null } } as unknown as Awaited<
             ReturnType<typeof createProviderGateway>
@@ -90,7 +100,7 @@ test.each([156, 256])("provider access returns admitted %i-character version ran
     expect(() => validateSchemaValue(output, result)).not.toThrow();
 });
 
-test("provider access validates the combined requirements of multiple admitted implementations", async () => {
+test("provider access validates the requirements of multiple selected admitted implementations", async () => {
     const { result, output } = await accessFixture(undefined, true);
     expect(result.requests.length).toBeGreaterThan(256);
     expect(result.requests.every((item) => !item.selected)).toBe(true);

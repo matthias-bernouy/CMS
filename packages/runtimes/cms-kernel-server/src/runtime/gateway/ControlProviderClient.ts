@@ -1,3 +1,5 @@
+import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
+import { ControlDelegationAuthority } from "./ControlDelegationAuthority";
 import type { GatewayCommandAuditEvent } from "@bernouy/cms-gateway/audit";
 import type { InstallationsProviderTransport } from "./InstallationsProviderTransport";
 import type { Logger } from "@bernouy/logging";
@@ -12,10 +14,13 @@ export type IssuedProviderInvocation = Readonly<{
 }>;
 
 export class ControlProviderClient {
+    readonly delegations: ControlDelegationAuthority;
     constructor(
         private readonly transport: InstallationsProviderTransport,
         private readonly logger?: Logger,
-    ) {}
+    ) {
+        this.delegations = new ControlDelegationAuthority((...args) => this.invoke(...args));
+    }
 
     async getGatewayRoute(contractId: string): Promise<string | null> {
         const response = await this.invoke("gateway.route.get", "QUERY", "/gateway/route", { contractId }, true);
@@ -46,17 +51,7 @@ export class ControlProviderClient {
         }
     }
 
-    async issueGatewayInvocation(input: {
-        requestId: string;
-        installationId: string;
-        contractId: string;
-        contractVersion: string;
-        capabilityId: string;
-        subjectId?: string;
-        systemServiceId?: string;
-        sourceInstallationId?: string;
-        bodyBytes?: number;
-    }): Promise<IssuedProviderInvocation> {
+    async issueGatewayInvocation(input: ProviderInvocationIssue): Promise<IssuedProviderInvocation> {
         const response = requiredResponse(
             await this.invoke("gateway.invocation.issue", "POST", "/gateway/invocations", input),
         );
@@ -75,6 +70,7 @@ export class ControlProviderClient {
 
     async authorizeProvider(input: {
         sourceInstallationId: string;
+        sourceCredentialFingerprint: string;
         targetInstallationId: string;
         contractId: string;
         capabilityId: string;

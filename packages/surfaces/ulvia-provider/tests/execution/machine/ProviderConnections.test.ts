@@ -155,6 +155,11 @@ test("Providers cannot use internal Gateway control capabilities to escape their
         "gateway.identity.resolve",
         "gateway.audit.append",
         "gateway.invocation.issue",
+        "gateway.provider.resolve",
+        "gateway.provider.authorize",
+        "gateway.delegation.issue",
+        "gateway.delegation.check",
+        "gateway.delegation.close",
     ]) {
         for (const actor of [{ sourceInstallationId: "source-a" }, { subjectId: "admin-a" }, {}]) {
             await expect(

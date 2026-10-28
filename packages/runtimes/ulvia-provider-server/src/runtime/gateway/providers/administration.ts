@@ -3,7 +3,7 @@ import type { ProviderManagement } from "@bernouy/cms-repository/providers/manag
 import type { ProviderAdministration } from "@bernouy/ulvia-provider";
 import type { ProviderStores } from "../../stores/providerStores";
 import type { createProviderGateway } from "../createProviderGateway";
-import { ProviderPairing } from "./ProviderPairing";
+import { ProviderPairing } from "./connections/ProviderPairing";
 
 export function providerAdministration(
     stores: ProviderStores,
@@ -49,13 +49,25 @@ export function providerAdministration(
             if (!manifest || manifest.admission.digest !== stored.installation.approval.manifestDigest) {
                 throw new TypeError("Provider manifest unavailable");
             }
+            const current = await stores.selections.get(gateway.siteId);
             const requirements = new Map(
-                manifest.admission.manifest.implementations
-                    .flatMap((item) => item.requires)
-                    .map((item) => [
-                        `${item.contractId}:${item.capabilityId}:${item.versionRange}:${item.optional}`,
-                        item,
-                    ]),
+                [
+                    ...manifest.admission.manifest.requires,
+                    ...manifest.admission.manifest.implementations
+                        .filter((item) =>
+                            current?.plan.selections.some(
+                                (selection) =>
+                                    selection.installationId === installationId &&
+                                    selection.contractId === item.contractId &&
+                                    selection.version === item.version &&
+                                    selection.digest === item.digest,
+                            ),
+                        )
+                        .flatMap((item) => item.requires),
+                ].map((item) => [
+                    `${item.contractId}:${item.capabilityId}:${item.versionRange}:${item.optional}`,
+                    item,
+                ]),
             );
             const selectedRequirement = async (
                 requirement: (typeof manifest.admission.manifest.implementations)[number]["requires"][number],
@@ -65,7 +77,14 @@ export function providerAdministration(
                 return Boolean(
                     release &&
                         satisfiesVersionRange(release.version, requirement.versionRange) &&
-                        release.capabilities.some((capability) => capability.id === requirement.capabilityId),
+                        release.capabilities.some((capability) => capability.id === requirement.capabilityId) &&
+                        (await gateway.providers.authorize({
+                            sourceInstallationId: installationId,
+                            targetInstallationId: route!.selection.installationId,
+                            contractId: requirement.contractId,
+                            capabilityId: requirement.capabilityId,
+                            version: release.version,
+                        })),
                 );
             };
             const requests = await Promise.all(

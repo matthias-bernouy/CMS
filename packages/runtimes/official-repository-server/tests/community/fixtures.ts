@@ -72,8 +72,9 @@ export function simpleContract(publisherId = "community", version = "1.0.0", nam
         capabilities: [
             {
                 id: "ping",
+
                 access: "public",
-                behavior: { effect: "query", execution: "sync" },
+                behavior: { sensitive: false, effect: "query", execution: "sync" },
                 input: { type: "object", properties: {}, required: [] },
                 output: { type: "null" },
                 errors: [],

@@ -1,7 +1,7 @@
 import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
 import { CapabilityGateway, GatewayDispatchRejected, type GatewayActor } from "@bernouy/cms-gateway";
 import { PageCapabilityAnalyzer } from "@bernouy/cms-gateway/analysis";
-import { HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
+import { HttpGatewayTransport, invocationAuthority, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { actorCredentialFromRequest } from "@bernouy/cms-gateway/protocol";
 import { kernelSystemMayInvoke } from "./kernelSystemAccess";
@@ -17,6 +17,7 @@ export function createKernelGateway(control: ControlProviderClient) {
     const logicalRoutes = new ControlGatewayRouteResolver(control, Date.now, 0);
     const gateway = new CapabilityGateway({
         routes,
+        delegations: control.delegations,
         identities: new ControlProviderIdentityService(control),
         commandAudit: new ControlGatewayAuditStore(control),
         // The control Provider resolves the live route again before issuing
@@ -27,6 +28,7 @@ export function createKernelGateway(control: ControlProviderClient) {
             actor.kind === "provider"
                 ? control.authorizeProvider({
                       sourceInstallationId: actor.installationId,
+                      sourceCredentialFingerprint: actor.credentialFingerprint,
                       targetInstallationId: route.installation.installation.id,
                       contractId: route.requestedRelease.admission.release.contractId,
                       capabilityId: capability.id,
@@ -36,7 +38,7 @@ export function createKernelGateway(control: ControlProviderClient) {
         transport: new HttpGatewayTransport({
             network: new NodeGatewayHttpNetwork({
                 allowPrivateAddresses: true,
-                authorize: (request) => brokerAuthorization(control, routes, request),
+                authorize: async (request) => ({ token: await brokerAuthorization(control, routes, request) }),
             }),
         }),
     });
@@ -120,31 +122,7 @@ async function brokerAuthorization(
     }
     let issued;
     try {
-        issued = await control.issueGatewayInvocation({
-            requestId: request.requestId,
-            installationId: request.installationId,
-            contractId: request.authentication.contractId,
-            contractVersion: request.authentication.contractVersion,
-            capabilityId: request.authentication.capabilityId,
-            ...(request.authentication.sourceInstallationId
-                ? {
-                      sourceInstallationId: request.authentication.sourceInstallationId,
-                      bodyBytes:
-                          request.contentLength ??
-                          (typeof request.body === "string"
-                              ? Buffer.byteLength(request.body)
-                              : request.body
-                                ? 64 * 1024 * 1024 + 1
-                                : 0),
-                  }
-                : {}),
-            ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
-            ...(request.authentication.systemServiceId &&
-            request.authentication.contractId === "ulvia.cms.observability" &&
-            request.authentication.capabilityId === "logs.append"
-                ? { systemServiceId: request.authentication.systemServiceId }
-                : {}),
-        });
+        issued = await control.issueGatewayInvocation(invocationAuthority(request));
     } catch (error) {
         routes.invalidate("default", request.authentication.contractId);
         const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
@@ -191,5 +169,9 @@ function parseActor(value: unknown): GatewayActor {
     ) {
         throw new TypeError("Access actor response is invalid");
     }
-    return { kind: actor.administrator ? "administrator" : "user", subjectId: actor.subjectId };
+    return {
+        kind: actor.administrator ? "administrator" : "user",
+        subjectId: actor.subjectId,
+        authorizationRevision: Number(actor.authorizationRevision),
+    };
 }

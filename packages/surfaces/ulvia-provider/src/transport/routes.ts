@@ -1,8 +1,9 @@
+import type { HttpBindingDefinition } from "@bernouy/cms-repository/contracts/bindings";
 import { capabilityBindings, pathTemplatesOverlap } from "@bernouy/cms-repository/contracts/bindings";
 import type { CapabilityDefinition, ResolvedContract } from "@bernouy/cms-repository/contracts";
 
 export type HttpBoundCapability = CapabilityDefinition & {
-    readonly binding: import("@bernouy/cms-repository/contracts/bindings").HttpBindingDefinition;
+    readonly binding: HttpBindingDefinition;
 };
 
 export type ProviderRoute = {

@@ -11,6 +11,7 @@ export async function repositoryRoute(contract: AdmittedContractRelease): Promis
     const pin = { contractId: contract.release.contractId, version: contract.release.version, digest: contract.digest };
     const admission = await admitProviderManifest(
         {
+            requires: [],
             kind: "provider-manifest",
             protocol: "ulvia-provider/v1",
             schemaDialect: "ulvia-schema/v1",

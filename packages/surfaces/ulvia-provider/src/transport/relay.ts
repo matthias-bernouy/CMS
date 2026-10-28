@@ -1,3 +1,4 @@
+import type { GatewayResponseEffect } from "@bernouy/cms-gateway/protocol";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
 import type { HttpBoundCapability as CapabilityDefinition } from "./routes";
@@ -272,7 +273,7 @@ function successResponse(
     method: string,
     capability: CapabilityDefinition,
     output: unknown,
-    responseEffect?: import("@bernouy/cms-gateway/protocol").GatewayResponseEffect,
+    responseEffect?: GatewayResponseEffect,
 ): Response {
     const status = capability.binding.response.successStatuses[0]!;
     const headers = {

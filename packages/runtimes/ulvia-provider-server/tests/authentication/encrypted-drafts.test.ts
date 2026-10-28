@@ -3,7 +3,7 @@ import { BSON, type Db } from "mongodb";
 import { createHash } from "node:crypto";
 import { encryptAesGcm, decryptAesGcm, type SecretCrypto } from "@bernouy/envelope-crypto";
 import type { PendingProviderConnection } from "@bernouy/cms-repository/providers/management";
-import { EncryptedConnectionDrafts } from "../../src/runtime/gateway/providers/EncryptedConnectionDrafts";
+import { EncryptedConnectionDrafts } from "../../src/runtime/gateway/providers/connections/EncryptedConnectionDrafts";
 
 test("encrypted connection drafts survive a real BSON round trip and remain bound to their instance", async () => {
     const documents = new Map<string, Uint8Array>();

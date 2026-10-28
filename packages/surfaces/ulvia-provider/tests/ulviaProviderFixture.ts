@@ -119,8 +119,9 @@ export async function contractRelease(version = "1.0.0") {
             capabilities: [
                 {
                     id: "echo",
+
                     access: "admin",
-                    behavior: { effect: "command", idempotency: "none", execution: "sync" },
+                    behavior: { sensitive: false, effect: "command", idempotency: "none", execution: "sync" },
                     input: {
                         type: "object",
                         properties: {

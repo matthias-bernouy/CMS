@@ -14,7 +14,7 @@ export function registerProviderAdministration(
         return management.administration;
     };
     const actor = (context: ProviderCapabilityInvocationContext) => {
-        if (!context.subjectId || context.sourceInstallationId || context.systemServiceId) {
+        if (!context.subjectId || (context.sourceInstallationId && !context.rootRequestId) || context.systemServiceId) {
             throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
         }
         return context.subjectId;

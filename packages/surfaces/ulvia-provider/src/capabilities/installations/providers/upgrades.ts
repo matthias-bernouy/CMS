@@ -37,6 +37,8 @@ export function registerContractUpgradeCapabilities(
                 source: plan.source.map(({ siteId: _, ...selection }) => selection),
                 usageDigest: plan.usageRevision,
                 grants: plan.grants,
+                authority: plan.authority,
+                authorityAdded: plan.authorityAdded,
             };
         }),
     );
