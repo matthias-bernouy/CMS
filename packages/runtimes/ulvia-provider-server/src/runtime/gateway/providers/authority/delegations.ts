@@ -23,34 +23,41 @@ export async function createDelegationAuthority(options: {
             const token = reference ? await options.resolveSecret(reference) : null;
             return token ? providerCredentialFingerprint(token) : null;
         },
-        inspectActor: async (actor): Promise<DelegationActor | null> => {
-            if (actor.kind === "anonymous") {
-                return { kind: "anonymous" };
-            }
-            const result = await options.invoker().invoke({
-                siteId: options.siteId,
-                contractId: "ulvia.cms.access",
-                capabilityId: "inspect-actor",
-                input: { subjectId: actor.subjectId },
-                actor: { kind: "system", serviceId: "cms-gateway" },
-            });
-            if (result.kind !== "success" || !result.output || typeof result.output !== "object") {
-                return null;
-            }
-            const current = result.output as Record<string, unknown>;
-            if (
-                current.state !== "authenticated" ||
-                current.subjectId !== actor.subjectId ||
-                typeof current.administrator !== "boolean" ||
-                !Number.isSafeInteger(current.authorizationRevision)
-            ) {
-                return null;
-            }
-            return {
-                kind: current.administrator ? "administrator" : "user",
-                subjectId: actor.subjectId,
-                authorizationRevision: Number(current.authorizationRevision),
-            };
-        },
+        inspectActor: (actor) => inspectDelegationActor(options.invoker(), options.siteId, actor),
     });
+}
+
+/** Inspect through the selected Access contract using the existing restricted server authority. */
+export async function inspectDelegationActor(
+    invoker: CapabilityGateway,
+    siteId: string,
+    actor: { kind: "anonymous" } | { kind: "user" | "administrator"; subjectId: string },
+): Promise<DelegationActor | null> {
+    if (actor.kind === "anonymous") {
+        return { kind: "anonymous" };
+    }
+    const result = await invoker.invoke({
+        siteId,
+        contractId: "ulvia.cms.access",
+        capabilityId: "inspect-actor",
+        input: { subjectId: actor.subjectId },
+        actor: { kind: "system", serviceId: "cms-gateway" },
+    });
+    if (result.kind !== "success" || !result.output || typeof result.output !== "object") {
+        return null;
+    }
+    const current = result.output as Record<string, unknown>;
+    if (
+        current.state !== "authenticated" ||
+        current.subjectId !== actor.subjectId ||
+        typeof current.administrator !== "boolean" ||
+        !Number.isSafeInteger(current.authorizationRevision)
+    ) {
+        return null;
+    }
+    return {
+        kind: current.administrator ? "administrator" : "user",
+        subjectId: actor.subjectId,
+        authorizationRevision: Number(current.authorizationRevision),
+    };
 }

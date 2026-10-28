@@ -1,3 +1,4 @@
+import { GatewayAuthorityReads } from "@bernouy/cms-gateway";
 import { assertInvocationScope } from "./scope";
 import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
 import type { DelegationDispatchAuthority, DelegationAuthorization } from "@bernouy/cms-gateway/access/delegation";
@@ -19,9 +20,9 @@ export function createInvocationIssuer(
     identities?: ProviderIdentityService,
     inspectActor?: (subjectId: string) => Promise<"user" | "administrator" | null>,
 ) {
-    return async (input: ProviderInvocationIssue) => {
+    return async (input: ProviderInvocationIssue, reads = new GatewayAuthorityReads(siteId)) => {
         assertInvocationScope(input);
-        const route = await routes.resolve(siteId, input.contractId);
+        const route = await routes.resolve(siteId, input.contractId, reads);
         const release = route?.requestedRelease.admission.release;
         const instanceId = route?.installation.observation?.report.instanceId;
         if (
@@ -45,7 +46,7 @@ export function createInvocationIssuer(
         ) {
             throw Object.assign(new Error("Selected Provider is not ready"), { code: "route_not_found", status: 404 });
         }
-        const current = await selections.get(siteId);
+        const current = await reads.selection(selections, siteId);
         if (!current || !capabilityGranted(current.grants, route.selection.contractId, input.capabilityId)) {
             throw Object.assign(new Error("Capability is not granted for this site"), {
                 code: "forbidden",
@@ -66,6 +67,7 @@ export function createInvocationIssuer(
                 },
                 true,
                 input.bodyBytes ?? 0,
+                reads,
             ))
         ) {
             throw Object.assign(new Error("Provider capability is not authorized"), { code: "forbidden", status: 403 });
@@ -153,6 +155,13 @@ export function createInvocationIssuer(
         }
         if (resourceSubject && (await inspectActor?.(resourceSubject)) !== actorKind) {
             throw Object.assign(new Error("Resource actor changed at dispatch fence"), { status: 403 });
+        }
+        const dispatchSelection = await selections.get(siteId);
+        if (
+            !dispatchSelection ||
+            !capabilityGranted(dispatchSelection.grants, route.selection.contractId, input.capabilityId)
+        ) {
+            throw Object.assign(new Error("Capability grant changed before dispatch"), { status: 403 });
         }
         if (!(await routes.isCurrent(route))) {
             throw Object.assign(new Error("Invocation authorization changed"), { code: "stale_route", status: 409 });

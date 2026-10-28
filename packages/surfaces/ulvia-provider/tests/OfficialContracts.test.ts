@@ -93,7 +93,9 @@ test("mounts and dispatches every official CMS contract release", async () => {
                 Authorization: `Bearer ${TOKEN}`,
                 "x-ulvia-request-id": "00000000-0000-4000-8000-000000000099",
                 "x-ulvia-contract-id": "ulvia.cms.installations",
-                "x-ulvia-contract-version": "1.0.0",
+                "x-ulvia-contract-version": contracts.find(
+                    ({ release }) => release.contractId === "ulvia.cms.installations",
+                )!.release.version,
                 "x-ulvia-capability-id": "list-provider-installations",
             },
         });

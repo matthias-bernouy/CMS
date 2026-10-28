@@ -1,4 +1,5 @@
-import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
+import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
+import { GatewayAuthorityReads, type GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { capabilityGranted, type ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import type { ProviderInstallationStore, ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
@@ -11,7 +12,7 @@ export function createNativeInvocationAuthorizer(
     installations: Pick<ProviderInstallationStore, "get">,
     routes: GatewayRouteResolver,
 ) {
-    return async (claims: ProviderInvocationClaims): Promise<boolean> => {
+    return async (claims: ProviderInvocationClaims, controlAuthority = false): Promise<boolean> => {
         if (claims.contractId === "ulvia.provider.connections") {
             return Boolean(
                 claims.connectionId &&
@@ -29,8 +30,9 @@ export function createNativeInvocationAuthorizer(
         // A concurrent upgrade may change an unrelated contract while this snapshot is read.
         // Retry the complete authorization once; every destination and grant check remains fresh.
         for (let attempt = 0; attempt < 2; attempt++) {
-            const current = await selections.get(siteId);
-            const route = await routes.resolve(siteId, claims.contractId);
+            const reads = new GatewayAuthorityReads(siteId);
+            const current = await reads.selection(selections, siteId);
+            const route = await routes.resolve(siteId, claims.contractId, reads);
             const selection = current?.plan.selections.find(
                 ({ contractId }) => contractId === route?.selection.contractId,
             );
@@ -49,6 +51,8 @@ export function createNativeInvocationAuthorizer(
                 requested.contractId !== claims.contractId ||
                 !served ||
                 claims.instanceId !== report.instanceId ||
+                ((!controlAuthority || claims.contractId !== "ulvia.cms.installations") &&
+                    claims.connectionId !== selection.installationId) ||
                 !capabilityGranted(current.grants, selection.contractId, claims.capabilityId)
             ) {
                 return false;
@@ -57,6 +61,7 @@ export function createNativeInvocationAuthorizer(
             const matches = Boolean(
                 installed &&
                     installed.installation.status === "enabled" &&
+                    canonicalizeIJson(installed.installation) === canonicalizeIJson(route!.installation.installation) &&
                     installed.installation.providerId === report.providerId &&
                     installed.installation.accountId === report.account.id &&
                     installed.observation?.report.instanceId === report.instanceId &&

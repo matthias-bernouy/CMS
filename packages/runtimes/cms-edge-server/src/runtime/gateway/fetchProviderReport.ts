@@ -10,6 +10,30 @@ export const INSTALLATIONS_CONTRACT = {
     digest: "sha256:4f2526f8db9a93b942db94a09cd0a0666c4b243bc496f770bf287ba4a8152608",
 } as const;
 
+export type InstallationsControlContract = Readonly<{ contractId: string; version: string; digest: string }>;
+export const PREPARED_INSTALLATIONS_CONTRACT: InstallationsControlContract = {
+    contractId: "ulvia.cms.installations",
+    version: "1.1.0",
+    digest: "sha256:e66c8a3bda74f0eebca19391556683e553bc727bab6953707be20d8a80151cb3",
+};
+
+export function installationsControlContract(report: ProviderRuntimeReport): InstallationsControlContract {
+    for (const contract of [PREPARED_INSTALLATIONS_CONTRACT, INSTALLATIONS_CONTRACT]) {
+        if (
+            report.implementations.some(
+                (candidate) =>
+                    candidate.contractId === contract.contractId &&
+                    candidate.version === contract.version &&
+                    candidate.digest === contract.digest &&
+                    candidate.status === "ready",
+            )
+        ) {
+            return contract;
+        }
+    }
+    throw new Error("Installations Provider does not expose the compatible control contract");
+}
+
 /** Validates the stable public Provider report before the Edge accepts its control capabilities. */
 export async function fetchInstallationsProviderReport(
     transport: InstallationsProviderTransport,
@@ -23,14 +47,7 @@ export async function fetchInstallationsProviderReport(
         throw new Error(`Installations Provider report request failed (${response.status})`);
     }
     const report = parseProviderRuntimeReportJson(await readBoundedReport(response));
-    const implementation = report.implementations.find(
-        (candidate) =>
-            candidate.contractId === INSTALLATIONS_CONTRACT.contractId &&
-            candidate.version === INSTALLATIONS_CONTRACT.version,
-    );
-    if (implementation?.digest !== INSTALLATIONS_CONTRACT.digest || implementation.status !== "ready") {
-        throw new Error("Installations Provider does not expose the compatible control contract");
-    }
+    installationsControlContract(report);
     return report;
 }
 

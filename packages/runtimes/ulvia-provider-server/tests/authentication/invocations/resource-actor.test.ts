@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { gatewayRoute } from "../../../../features/cms-gateway/tests/fixtures";
-import { createInvocationIssuer } from "../../src/runtime/gateway/providers/authority/issueInvocation";
+import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
+import { createInvocationIssuer } from "../../../src/runtime/gateway/providers/authority/issueInvocation";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 async function fixture() {
     const route = structuredClone(await gatewayRoute({ binary: true, resource: true }));

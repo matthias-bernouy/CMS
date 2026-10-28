@@ -1,3 +1,5 @@
+import type { ProviderDispatchPreparation, PreparedProviderDispatch } from "@bernouy/cms-gateway/protocol";
+import { validDelegationTicket } from "@bernouy/cms-gateway/access/delegation";
 import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
 import { ControlDelegationAuthority } from "./ControlDelegationAuthority";
 import type { GatewayCommandAuditEvent } from "@bernouy/cms-gateway/audit";
@@ -5,7 +7,7 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 import type { Logger } from "@bernouy/logging";
 import { measureCurrentRequestTiming } from "@bernouy/http-runner/observability";
 
-import { INSTALLATIONS_CONTRACT } from "./fetchProviderReport";
+import { INSTALLATIONS_CONTRACT, type InstallationsControlContract } from "./fetchProviderReport";
 const MAX_CONTROL_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 export type IssuedProviderInvocation = Readonly<{
@@ -18,8 +20,30 @@ export class ControlProviderClient {
     constructor(
         private readonly transport: InstallationsProviderTransport,
         private readonly logger?: Logger,
+        private readonly contract: InstallationsControlContract = INSTALLATIONS_CONTRACT,
     ) {
         this.delegations = new ControlDelegationAuthority((...args) => this.invoke(...args));
+    }
+
+    get supportsPreparation(): boolean {
+        return this.contract.version === "1.1.0";
+    }
+
+    async prepareGatewayDispatch(input: ProviderDispatchPreparation): Promise<PreparedProviderDispatch> {
+        const response = requiredResponse(
+            await this.invoke("gateway.dispatch.prepare", "POST", "/gateway/dispatch/prepare", input),
+        );
+        const delegation = response.delegation as PreparedProviderDispatch["delegation"];
+        if (
+            delegation !== null &&
+            (!delegation ||
+                !validDelegationTicket(delegation.ticket) ||
+                !Number.isSafeInteger(delegation.expiresAt) ||
+                delegation.expiresAt <= Date.now())
+        ) {
+            throw new TypeError("Invalid prepared delegation");
+        }
+        return { token: requiredText(response, "token"), instanceId: requiredText(response, "instanceId"), delegation };
     }
 
     async getGatewayRoute(contractId: string): Promise<string | null> {
@@ -95,10 +119,11 @@ export class ControlProviderClient {
                 method,
                 headers: {
                     accept: "application/json",
+                    ...(capabilityId === "gateway.route.get" ? { "accept-encoding": "gzip" } : {}),
                     "content-type": "application/json",
                     "x-ulvia-request-id": crypto.randomUUID(),
-                    "x-ulvia-contract-id": INSTALLATIONS_CONTRACT.contractId,
-                    "x-ulvia-contract-version": INSTALLATIONS_CONTRACT.version,
+                    "x-ulvia-contract-id": this.contract.contractId,
+                    "x-ulvia-contract-version": this.contract.version,
                     "x-ulvia-capability-id": capabilityId,
                 },
                 body: JSON.stringify(input),
@@ -138,7 +163,16 @@ export class ControlProviderClient {
 }
 
 function controlTimingName(capabilityId: string): string {
-    return capabilityId === "gateway.route.get" ? "gateway_route" : "gateway_authorize";
+    if (capabilityId === "gateway.route.get") {
+        return "gateway_route";
+    }
+    if (capabilityId === "gateway.identity.resolve") {
+        return "gateway_identity";
+    }
+    if (capabilityId.startsWith("gateway.delegation.")) {
+        return "gateway_delegation";
+    }
+    return "gateway_authorize";
 }
 
 class ControlProviderError extends Error {

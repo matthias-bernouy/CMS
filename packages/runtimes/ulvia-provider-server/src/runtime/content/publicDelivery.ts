@@ -1,3 +1,4 @@
+import { contentGatewayClient } from "./gatewayClient";
 import { contentPhaseObserver } from "./observe";
 import { ContentDelivery, PageCapabilityAnalyzer } from "@bernouy/cms-content/public-delivery";
 import { createContentReader } from "@bernouy/cms-content/rendering";
@@ -22,10 +23,11 @@ export function createPublicDelivery(
     const assets = { siteId: gateway.siteId, store: stores.collections };
     const connections = new ProviderConnections(stores.providerConnections);
     const client = (context: ProviderCapabilityInvocationContext) => {
-        if (!context.connectionId) {
-            throw new Error("Content CMS connection is unavailable");
-        }
-        return connections.client(context.connectionId, true);
+        return contentGatewayClient({
+            connections,
+            context,
+            siteId: gateway.siteId,
+        });
     };
     const release = async (contractId: string) => {
         const route = await gateway.routes.resolve(gateway.siteId, contractId);

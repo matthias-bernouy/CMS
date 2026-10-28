@@ -1,4 +1,4 @@
-import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
+import type { ProviderInvocationIssue, ProviderDispatchPreparation } from "@bernouy/cms-gateway/protocol";
 import { registerDelegationCapabilities } from "./delegation";
 import { registerProviderAdministration } from "./administration";
 import { registerProviderAuthorityCapabilities } from "./authority";
@@ -101,6 +101,15 @@ export function registerProviderInstallationCapabilities(
         }
         return { accepted: true };
     });
+    registerControl("gateway.dispatch.prepare", async (input) =>
+        providerCommand(() => {
+            const prepare = requiredGateway(gateway).invocations.prepare;
+            if (!prepare) {
+                throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+            }
+            return prepare(input as unknown as ProviderDispatchPreparation);
+        }),
+    );
     registerControl("gateway.invocation.issue", async (input) => {
         return providerCommand(() =>
             requiredGateway(gateway).invocations.issue(input as unknown as ProviderInvocationIssue),

@@ -92,3 +92,26 @@ test("logical capability metadata uses the requested parent release rather than 
         idempotency: "keyed",
     });
 });
+
+test("requests without actor credentials and immutable public assets resolve anonymously without a control call", async () => {
+    const gateway = createEdgeGateway({} as ControlProviderClient);
+    expect(await gateway.resolveActor(new Request("https://site.test/"))).toEqual({ kind: "anonymous" });
+    expect(
+        await gateway.resolveActor(
+            new Request("https://site.test/_content/assets/bloc-runtime.js?v=0123456789", {
+                headers: { cookie: "cms-session=private" },
+            }),
+        ),
+    ).toEqual({ kind: "anonymous" });
+});
+
+test("malformed credentials cannot block an explicitly public immutable asset", async () => {
+    const gateway = createEdgeGateway({} as ControlProviderClient);
+    expect(
+        await gateway.resolveActor(
+            new Request("https://site.test/_content/assets/bloc-runtime.js?v=0123456789", {
+                headers: { cookie: "cms-session=" },
+            }),
+        ),
+    ).toEqual({ kind: "anonymous" });
+});

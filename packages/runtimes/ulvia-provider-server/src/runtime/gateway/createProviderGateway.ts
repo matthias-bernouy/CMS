@@ -1,10 +1,11 @@
+import { createDispatchPreparer } from "./providers/authority/prepareDispatch";
 import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
 import { ContractUpgradeService } from "@bernouy/cms-repository/providers/selections";
 import { capabilityGranted } from "@bernouy/cms-repository/providers/selections";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { CapabilityGateway, CatalogueGatewayRouteResolver, GatewayDispatchRejected } from "@bernouy/cms-gateway";
 import { MongoGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit/mongo";
-import { createDelegationAuthority } from "./providers/authority/delegations";
+import { createDelegationAuthority, inspectDelegationActor } from "./providers/authority/delegations";
 import { invocationAuthority } from "@bernouy/cms-gateway/http";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
@@ -22,10 +23,8 @@ export async function createProviderGateway(
 ) {
     const { db, releases, manifests, installations, selections } = stores;
     const resolveSecret = createSecretResolver(stores.contractSecrets.installations);
-    const routes = new RefreshingProviderRoutes(
-        new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests }),
-        { installations, resolveSecret, ...observations },
-    );
+    const catalogue = new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests });
+    const routes = new RefreshingProviderRoutes(catalogue, { installations, resolveSecret, ...observations });
     const network = new NodeGatewayHttpNetwork({
         allowPrivateAddresses: true,
         authorize: async (request) => {
@@ -163,6 +162,7 @@ export async function createProviderGateway(
 
     return {
         siteId,
+        describeContract: (contractId: string) => catalogue.describe(siteId, contractId),
         contractUpgrades,
         releases,
         manifests,
@@ -171,7 +171,17 @@ export async function createProviderGateway(
         routes,
         invoker,
         commandAudit,
-        invocations: { issue: issueInvocation },
+        invocations: {
+            issue: issueInvocation,
+            prepare: createDispatchPreparer({
+                siteId,
+                routes,
+                identities,
+                delegations,
+                issue: issueInvocation,
+                inspectActor: (actor) => inspectDelegationActor(invoker, siteId, actor),
+            }),
+        },
         delegations,
         providers: access.providers,
         resolvePageCapability,

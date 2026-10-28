@@ -17,6 +17,27 @@ test("local operator queries use the native loopback origin and never forward th
         async fetch(request) {
             const path = new URL(request.url).pathname;
             requests.push({ path, authorization: request.headers.get("authorization") });
+            if (path === "/ulvia/report") {
+                return Response.json({
+                    protocol: "ulvia-provider/v1",
+                    providerId: "ulvia.official",
+                    instanceId,
+                    account: { id: "operator", label: "Operator fixture" },
+                    buildVersion: "1.0.0",
+                    manifest: { version: "0.3.0", digest: `sha256:${"a".repeat(64)}` },
+                    implementations: [
+                        {
+                            contractId: "ulvia.cms.installations",
+                            version: "1.1.0",
+                            digest: `sha256:${"b".repeat(64)}`,
+                            status: "ready",
+                        },
+                    ],
+                });
+            }
+            if (path.startsWith("/gateway/")) {
+                expect(request.headers.get("x-ulvia-contract-version")).toBe("1.1.0");
+            }
             if (path === "/gateway/route") {
                 return Response.json({
                     route: JSON.stringify({
@@ -57,10 +78,17 @@ test("local operator queries use the native loopback origin and never forward th
         const client = new OperatorObservabilityClient(server.url.origin, "private-control-bearer", instanceId);
         expect((await client.query({ service: "cms-edge" })).items).toEqual([]);
         expect(requests).toEqual([
+            { path: "/ulvia/report", authorization: "Bearer private-control-bearer" },
             { path: "/gateway/route", authorization: "Bearer private-control-bearer" },
             { path: "/gateway/invocations", authorization: "Bearer private-control-bearer" },
             { path: "/observability/logs/query", authorization: "Bearer scoped-operator-invocation" },
         ]);
+        const foreign = new OperatorObservabilityClient(
+            server.url.origin,
+            "private-control-bearer",
+            "instance:another",
+        );
+        await expect(foreign.query({ service: "cms-edge" })).rejects.toThrow("does not match the instance");
     } finally {
         server.stop(true);
     }

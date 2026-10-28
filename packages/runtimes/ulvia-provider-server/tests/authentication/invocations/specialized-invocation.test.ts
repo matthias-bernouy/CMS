@@ -3,8 +3,8 @@ import { CapabilityGateway } from "@bernouy/cms-gateway";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
-import { specializedRoute } from "../../../../features/cms-gateway/tests/invocation/specialization/fixture";
-import { createInvocationIssuer } from "../../src/runtime/gateway/providers/authority/issueInvocation";
+import { specializedRoute } from "../../../../../features/cms-gateway/tests/invocation/specialization/fixture";
+import { createInvocationIssuer } from "../../../src/runtime/gateway/providers/authority/issueInvocation";
 
 test("inherited calls cross the HTTP token broker with parent pins and concrete site grants", async () => {
     const f = await specializedRoute();

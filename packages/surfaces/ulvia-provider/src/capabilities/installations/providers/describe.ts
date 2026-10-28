@@ -7,11 +7,11 @@ export function registerCapabilityDescription(
     gateway?: UlviaProviderGateway,
 ): void {
     dispatcher.register("ulvia.cms.installations", "capabilities.describe", async (input) => {
-        if (!gateway || typeof input.contractId !== "string") {
+        if (!gateway?.describeContract || typeof input.contractId !== "string") {
             throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
         }
-        const route = await gateway.routes.resolve(gateway.siteId, input.contractId);
-        const release = route?.requestedRelease.admission.release;
+        const selected = await gateway.describeContract(input.contractId);
+        const release = selected?.admission.release;
         if (!release) {
             return { found: false, version: "", capabilities: [] };
         }

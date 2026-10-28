@@ -28,7 +28,13 @@ export class ControlGatewayRouteResolver implements GatewayRouteResolver {
         const load = this.control.getGatewayRoute(contractId).then((snapshot) => {
             const route = snapshot === null ? null : parseRoute(snapshot, siteId, contractId);
             if (this.#pending.get(cacheKey) === load && route) {
-                this.#cache.set(cacheKey, { route, expiresAt: this.now() + this.cacheDurationMs });
+                // The cache is per control connection (one instance), and holds transport plans only.
+                if (snapshot!.length <= 512 * 1024) {
+                    if (this.#cache.size >= 32) {
+                        this.#cache.delete(this.#cache.keys().next().value!);
+                    }
+                    this.#cache.set(cacheKey, { route, expiresAt: this.now() + this.cacheDurationMs });
+                }
             }
             return route;
         });

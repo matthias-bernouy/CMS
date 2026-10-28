@@ -30,7 +30,12 @@ function fixture(onInstallationRead: () => void = () => {}, concreteContract = "
         installationId: "native",
     };
     const grants = { default: "allow-selected", denied: [] as { contractId: string; capabilityId: string }[] };
-    const installation = { status: "enabled", providerId: "ulvia.official", accountId: "instance:one" };
+    const installation = {
+        status: "enabled",
+        providerId: "ulvia.official",
+        accountId: "instance:one",
+        endpoint: "https://original.test",
+    };
     const authorize = createNativeInvocationAuthorizer(
         "site",
         report,
@@ -49,12 +54,14 @@ function fixture(onInstallationRead: () => void = () => {}, concreteContract = "
         {
             resolve: async () => ({
                 selection,
+                installation: { installation: structuredClone(installation) },
                 requestedRelease: { admission: { release: { contractId: "ulvia.cms.content", version: "1.0.0" } } },
             }),
         } as never,
     );
     const claims = {
         instanceId: report.instanceId,
+        connectionId: "native",
         contractId: "ulvia.cms.content",
         contractVersion: selection.version,
         capabilityId: "site.get",
@@ -124,6 +131,21 @@ test("a retry never restores authority after the destination changes during auth
         f.selection.installationId = "external";
         f.bumpRevision();
         mutate = () => {};
+    };
+    expect(await f.authorize(f.claims)).toBe(false);
+});
+
+test("a same-instance same-version installation redirect cannot reuse a token for its previous connection", async () => {
+    const f = fixture();
+    expect(await f.authorize({ ...f.claims, connectionId: "another-installation" })).toBe(false);
+    expect(await f.authorize({ ...f.claims, connectionId: undefined })).toBe(false);
+});
+
+test("the receiver rejects installation changes after its initial route read even when the selection revision is unchanged", async () => {
+    let mutate = () => {};
+    const f = fixture(() => mutate());
+    mutate = () => {
+        f.installation.endpoint = "https://changed.test";
     };
     expect(await f.authorize(f.claims)).toBe(false);
 });

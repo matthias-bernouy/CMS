@@ -1,3 +1,5 @@
+import type { ProviderDispatchPreparation, PreparedProviderDispatch } from "@bernouy/cms-gateway/protocol";
+import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
 import type { DeliveryActor, ContentDeliveryHost } from "@bernouy/cms-content/public-delivery";
 import type { GatewayDelegationAuthority } from "@bernouy/cms-gateway/access/delegation";
@@ -106,6 +108,7 @@ interface UlviaProviderAdministratorStore {
 }
 
 export interface UlviaProviderGateway {
+    readonly describeContract?: (contractId: string) => Promise<CatalogueContractRelease | null>;
     readonly siteId: string;
     readonly contractUpgrades?: ContractUpgradeService;
     readonly installations: ProviderInstallationStore;
@@ -117,6 +120,7 @@ export interface UlviaProviderGateway {
     readonly providers?: ProviderAccess;
     readonly delegations?: GatewayDelegationAuthority;
     readonly invocations: {
+        prepare?(input: ProviderDispatchPreparation): Promise<PreparedProviderDispatch>;
         issue(input: ProviderInvocationIssue): Promise<{ token: string; instanceId: string }>;
     };
 }

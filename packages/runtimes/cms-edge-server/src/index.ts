@@ -1,7 +1,7 @@
 import { mountProductionEdge } from "./runtime/mountEdge";
 import { ControlProviderClient } from "./runtime/gateway/ControlProviderClient";
 import { createEdgeGateway } from "./runtime/gateway/createEdgeGateway";
-import { fetchInstallationsProviderReport } from "./runtime/gateway/fetchProviderReport";
+import { fetchInstallationsProviderReport, installationsControlContract } from "./runtime/gateway/fetchProviderReport";
 import { InstallationsProviderTransport } from "./runtime/gateway/InstallationsProviderTransport";
 import { readRuntimeEnv } from "./runtimeEnv";
 import { createEdgeDiagnostics, connectEdgeDiagnostics } from "./runtime/diagnostics";
@@ -21,8 +21,11 @@ async function startEdge(): Promise<void> {
         env.CMS_INSTALLATIONS_PROVIDER_URL,
         env.CMS_INSTALLATIONS_PROVIDER_TOKEN,
     );
-    await fetchInstallationsProviderReport(transport);
-    const gateway = createEdgeGateway(new ControlProviderClient(transport, logger), logger);
+    const report = await fetchInstallationsProviderReport(transport);
+    const gateway = createEdgeGateway(
+        new ControlProviderClient(transport, logger, installationsControlContract(report)),
+        logger,
+    );
     await connectEdgeDiagnostics(diagnostics, gateway);
     const edge = await mountProductionEdge({ env, gateway, logger });
 

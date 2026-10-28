@@ -1,4 +1,4 @@
-import type { GatewayRoute, GatewayRouteResolver } from "@bernouy/cms-gateway";
+import type { GatewayAuthorityReads, GatewayRoute, GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderReportReader } from "@bernouy/cms-repository/providers/management";
 
@@ -51,7 +51,10 @@ export class RefreshingProviderRoutes implements GatewayRouteResolver {
             });
         return state.pending;
     }
-    async resolve(siteId: string, contractId: string): Promise<GatewayRoute | null> {
+    async resolve(siteId: string, contractId: string, reads?: GatewayAuthorityReads): Promise<GatewayRoute | null> {
+        if (reads) {
+            return reads.route(this, siteId, contractId, () => this.resolveCurrent(siteId, contractId, reads));
+        }
         const key = `${siteId}/${contractId}`;
         const pending = this.resolutions.get(key);
         if (pending) {
@@ -65,8 +68,8 @@ export class RefreshingProviderRoutes implements GatewayRouteResolver {
             this.resolutions.delete(key);
         }
     }
-    private async resolveCurrent(siteId: string, contractId: string) {
-        const route = await this.base.resolve(siteId, contractId);
+    private async resolveCurrent(siteId: string, contractId: string, reads?: GatewayAuthorityReads) {
+        const route = await this.base.resolve(siteId, contractId, reads);
         if (!route || route.installation.installation.status !== "enabled") {
             return route;
         }
@@ -79,7 +82,8 @@ export class RefreshingProviderRoutes implements GatewayRouteResolver {
         const pending = this.flights.get(key);
         if (pending) {
             await pending;
-            return this.base.resolve(siteId, contractId);
+            reads?.clear();
+            return this.base.resolve(siteId, contractId, reads);
         }
         if (now < (this.next.get(key) ?? 0)) {
             return route;
@@ -92,7 +96,8 @@ export class RefreshingProviderRoutes implements GatewayRouteResolver {
         });
         this.flights.set(key, flight);
         await flight;
-        return this.base.resolve(siteId, contractId);
+        reads?.clear();
+        return this.base.resolve(siteId, contractId, reads);
     }
     isCurrent(route: GatewayRoute) {
         return this.base.isCurrent(route);

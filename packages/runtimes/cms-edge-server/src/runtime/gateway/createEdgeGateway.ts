@@ -1,3 +1,5 @@
+import { preparedEdgeDispatch } from "./preparedDispatch";
+import { isPublicContentAsset } from "../publicContentAssets";
 import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
 import { NOOP_LOGGER, type Logger } from "@bernouy/logging";
 import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
@@ -27,6 +29,7 @@ export function createEdgeGateway(control: ControlProviderClient, logger: Logger
         // every short-lived invocation token. That broker is the dispatch
         // fence; the cached route is only a transport plan.
         transportFencesRoute: true,
+        ...(control.supportsPreparation ? { dispatch: preparedEdgeDispatch(control, routes) } : {}),
         authorize: async (actor, capability, route) =>
             actor.kind === "provider"
                 ? control.authorizeProvider({
@@ -140,7 +143,13 @@ async function brokerAuthorization(
 }
 
 async function resolveActor(gateway: CapabilityGateway, request: Request): Promise<GatewayActor> {
+    if (isPublicContentAsset(request)) {
+        return { kind: "anonymous" };
+    }
     const actorCredential = actorCredentialFromRequest(request);
+    if (!actorCredential) {
+        return { kind: "anonymous" };
+    }
     const result = await gateway.invoke({
         siteId: "default",
         contractId: "ulvia.cms.access",

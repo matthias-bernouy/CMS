@@ -1,3 +1,4 @@
+import { parseProviderRuntimeReportJson } from "@bernouy/cms-repository/providers/installations";
 import type { GatewayRoute } from "@bernouy/cms-gateway";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
@@ -8,6 +9,7 @@ type ReadCapability = "logs.query" | "logs.get";
 
 /** The private local control connection is operator authority; its Bearer is never sent to a selected Provider. */
 export class OperatorObservabilityClient {
+    #contractVersion?: Promise<string>;
     constructor(
         private readonly endpoint: string,
         private readonly token: string,
@@ -109,7 +111,7 @@ export class OperatorObservabilityClient {
                 "content-type": "application/json",
                 "x-ulvia-request-id": crypto.randomUUID(),
                 "x-ulvia-contract-id": "ulvia.cms.installations",
-                "x-ulvia-contract-version": "1.0.0",
+                "x-ulvia-contract-version": await this.contractVersion(),
                 "x-ulvia-capability-id": capabilityId,
             },
             body: JSON.stringify(input),
@@ -120,33 +122,70 @@ export class OperatorObservabilityClient {
             await response.body?.cancel();
             throw new Error(`Local Provider rejected the operator request (${response.status})`);
         }
-        const reader = response.body?.getReader();
-        if (!reader) {
-            throw new Error("Local Provider returned an empty response");
+        return readResponse(response);
+    }
+
+    private contractVersion(): Promise<string> {
+        if (this.#contractVersion) {
+            return this.#contractVersion;
         }
-        let source = "";
-        const decoder = new TextDecoder();
-        try {
-            let bytes = 0;
-            for (;;) {
-                const part = await reader.read();
-                if (part.done) {
-                    break;
-                }
-                bytes += part.value.byteLength;
-                if (bytes > 2 * 1024 * 1024) {
-                    await reader.cancel();
-                    throw new Error("Local Provider response exceeds its limit");
-                }
-                source += decoder.decode(part.value, { stream: true });
+        const load = async () => {
+            const response = await fetch(new URL("/ulvia/report", this.endpoint), {
+                headers: { authorization: `Bearer ${this.token}` },
+                redirect: "manual",
+                signal: AbortSignal.timeout(5000),
+            });
+            if (!response.ok) {
+                await response.body?.cancel();
+                throw new Error("Local Provider report is unavailable");
             }
-            const value: unknown = JSON.parse(source + decoder.decode());
-            if (!value || typeof value !== "object" || Array.isArray(value)) {
-                throw new Error("Invalid local Provider response");
+            const report = parseProviderRuntimeReportJson(JSON.stringify(await readResponse(response)));
+            const control = report.implementations.find(
+                (item) => item.contractId === "ulvia.cms.installations" && item.status === "ready",
+            );
+            if (report.instanceId !== this.instanceId || !control || !["1.0.0", "1.1.0"].includes(control.version)) {
+                throw new Error("Local Provider control contract does not match the instance");
             }
-            return value as Record<string, unknown>;
-        } finally {
-            reader.releaseLock();
+            return control.version;
+        };
+        const pending = load();
+        this.#contractVersion = pending;
+        pending.catch(() => {
+            if (this.#contractVersion === pending) {
+                this.#contractVersion = undefined;
+            }
+        });
+        return pending;
+    }
+}
+
+async function readResponse(response: Response): Promise<Record<string, unknown>> {
+    const reader = response.body?.getReader();
+    if (!reader) {
+        throw new Error("Local Provider returned an empty response");
+    }
+    let source = "";
+    const decoder = new TextDecoder();
+    try {
+        let bytes = 0;
+        for (;;) {
+            const part = await reader.read();
+            if (part.done) {
+                break;
+            }
+            bytes += part.value.byteLength;
+            if (bytes > 2 * 1024 * 1024) {
+                await reader.cancel();
+                throw new Error("Local Provider response exceeds its limit");
+            }
+            source += decoder.decode(part.value, { stream: true });
         }
+        const value: unknown = JSON.parse(source + decoder.decode());
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+            throw new Error("Invalid local Provider response");
+        }
+        return value as Record<string, unknown>;
+    } finally {
+        reader.releaseLock();
     }
 }
