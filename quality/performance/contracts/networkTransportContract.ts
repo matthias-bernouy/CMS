@@ -21,8 +21,9 @@ export async function performanceContract(): Promise<AdmittedContractRelease> {
             capabilities: [
                 {
                     id: "echo",
+
                     access: "public",
-                    behavior: { effect: "query", execution: "sync" },
+                    behavior: { sensitive: false, effect: "query", execution: "sync" },
                     input: {
                         type: "object",
                         properties: { value: { type: "string", maxLength: 64 } },
@@ -55,6 +56,7 @@ export async function performanceRoute(admission: AdmittedContractRelease, endpo
     const release = await releases.publish(admission);
     const manifestAdmission = await admitProviderManifest(
         {
+            requires: [],
             kind: "provider-manifest",
             protocol: "ulvia-provider/v1",
             schemaDialect: "ulvia-schema/v1",

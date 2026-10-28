@@ -1,3 +1,4 @@
+import { exerciseDelegationStore } from "./providers/delegation";
 import { exerciseProviders } from "./providers/flow";
 import { expect, test } from "bun:test";
 import { exerciseObservability, verifyObservabilityPersistence } from "./observability";
@@ -31,6 +32,7 @@ integration(
             ]);
             connection = await connectBrowser(f.kernelUrl, f.administrator);
             expect(connection.tools).toHaveLength(60);
+            await exerciseDelegationStore(f.providerName, f.id);
             await exerciseProviders(f, connection.page);
             const namespace = f.id.replaceAll("-", "");
             const publicKey = await exerciseCollections(connection.call, namespace, f.providerName);

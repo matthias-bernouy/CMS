@@ -100,9 +100,16 @@ export async function exerciseProviders(f: Stack, page: Page) {
         event: "docker.provider.called",
         attributes: {},
     };
-    expect((await client.invoke(release, "logs.append", { entries: [entry] })).output).toMatchObject({ stored: 1 });
-    expect((await client.invoke(release, "logs.append", { entries: [entry] })).output).toMatchObject({ duplicates: 1 });
-    await expect(client.invoke(release, "logs.query", {})).rejects.toMatchObject({ retryable: false, status: 403 });
+    expect(
+        (await client.invoke(release, "logs.append", { entries: [entry] }, { authority: "provider" })).output,
+    ).toMatchObject({ stored: 1 });
+    expect(
+        (await client.invoke(release, "logs.append", { entries: [entry] }, { authority: "provider" })).output,
+    ).toMatchObject({ duplicates: 1 });
+    await expect(client.invoke(release, "logs.query", {}, { authority: "provider" })).rejects.toMatchObject({
+        retryable: false,
+        status: 403,
+    });
     const diagnostics = createConnectedProviderLogger({
         client,
         contract: release,
@@ -141,13 +148,25 @@ export async function exerciseProviders(f: Stack, page: Page) {
     expect((await rotatedResponse).status()).toBe(200);
     await page.waitForURL(/\/admin\/providers$/u);
     await expect(
-        client.invoke(release, "logs.append", { entries: [{ ...entry, id: crypto.randomUUID() }] }),
-    ).rejects.toMatchObject({ status: 401 });
+        client.invoke(
+            release,
+            "logs.append",
+            { entries: [{ ...entry, id: crypto.randomUUID() }] },
+            { authority: "provider" },
+        ),
+    ).rejects.toMatchObject({ status: 403 });
     const rotated = await readProviderCredential(f.providerName, `${f.id}-named`, installationId);
     expect(rotated.token === connected.token).toBe(false);
     const fresh = new GatewayProviderClient({ cmsUrl: f.kernelUrl, token: rotated.token, allowPrivateAddresses: true });
     expect(
-        (await fresh.invoke(release, "logs.append", { entries: [{ ...entry, id: crypto.randomUUID() }] })).output,
+        (
+            await fresh.invoke(
+                release,
+                "logs.append",
+                { entries: [{ ...entry, id: crypto.randomUUID() }] },
+                { authority: "provider" },
+            )
+        ).output,
     ).toMatchObject({ stored: 1 });
     await command("set-provider-status", {
         installationId,
@@ -155,10 +174,20 @@ export async function exerciseProviders(f: Stack, page: Page) {
         action: "revoke",
     });
     await expect(
-        fresh.invoke(release, "logs.append", { entries: [{ ...entry, id: crypto.randomUUID() }] }),
-    ).rejects.toMatchObject({ status: 401 });
+        fresh.invoke(
+            release,
+            "logs.append",
+            { entries: [{ ...entry, id: crypto.randomUUID() }] },
+            { authority: "provider" },
+        ),
+    ).rejects.toMatchObject({ status: 403 });
     await f.restartProvider();
     await expect(
-        fresh.invoke(release, "logs.append", { entries: [{ ...entry, id: crypto.randomUUID() }] }),
-    ).rejects.toMatchObject({ status: 401 });
+        fresh.invoke(
+            release,
+            "logs.append",
+            { entries: [{ ...entry, id: crypto.randomUUID() }] },
+            { authority: "provider" },
+        ),
+    ).rejects.toMatchObject({ status: 403 });
 }
