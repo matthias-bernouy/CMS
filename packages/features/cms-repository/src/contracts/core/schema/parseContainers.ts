@@ -76,9 +76,13 @@ export function parseArraySchema(
 }
 
 export function parseBinarySchema(record: UnknownRecord, path: string, state: SchemaParseState): UlviaBinarySchema {
-    rejectUnknownKeys(record, ["type", "description", "nullable", "maxBytes"], path, "invalid_schema");
+    rejectUnknownKeys(record, ["type", "description", "nullable", "maxBytes", "resource"], path, "invalid_schema");
+    if (record.resource !== undefined && record.resource !== true) {
+        throw new ReleaseValidationError("invalid_schema", "resource must be true", path);
+    }
     return {
         type: "binary",
+        ...(record.resource === true ? { resource: true as const } : {}),
         maxBytes: requireBoundedInteger(record.maxBytes, `${path}.maxBytes`, state.limits.maxBinaryBytes),
         ...base(record, path),
     };

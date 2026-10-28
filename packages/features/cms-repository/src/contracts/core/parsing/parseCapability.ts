@@ -17,7 +17,7 @@ import type {
     CapabilityResponseEffect,
     ContractFixtureAssetDefinition,
 } from "../../interfaces/ContractRelease";
-import type { UlviaObjectSchema } from "../../interfaces/UlviaSchema";
+import type { UlviaObjectSchema, UlviaSchema } from "../../interfaces/UlviaSchema";
 import { type SchemaParseState } from "../schema/context";
 import { parseSchemaAt } from "../schema/parseSchema";
 import { parseErrorCode, parseIdentifier } from "./identifiers";
@@ -78,6 +78,23 @@ export function parseCapability(
     const output = parseSchemaAt(record.output, `${path}.output`, schemaState, 1);
     const errors = parseErrors(record.errors, `${path}.errors`, schemaState);
     const behavior = parseBehavior(record.behavior, `${path}.behavior`);
+    if (
+        hasResourceProfile(input) ||
+        errors.some((error) => error.output && hasResourceProfile(error.output)) ||
+        (hasResourceProfile(output) &&
+            !(
+                output.type === "binary" &&
+                output.resource &&
+                behavior.effect === "query" &&
+                behavior.execution === "sync"
+            ))
+    ) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "native resources require a synchronous binary query output",
+            path,
+        );
+    }
     const bindings = parseCapabilityBindings(record, path, limits);
     if (bindings.bindings.some((binding) => binding.transport === "mcp")) {
         validateMcpSchemas(input as UlviaObjectSchema, output, errors, path);
@@ -191,4 +208,20 @@ function enumValue<T extends string>(value: unknown, path: string, accepted: Rea
         throw new ReleaseValidationError("invalid_contract", `unsupported value ${JSON.stringify(parsed)}`, path);
     }
     return parsed;
+}
+
+function hasResourceProfile(schema: UlviaSchema): boolean {
+    if (schema.type === "binary") {
+        return schema.resource === true;
+    }
+    if (schema.type === "object") {
+        return Object.values(schema.properties).some(hasResourceProfile);
+    }
+    if (schema.type === "array") {
+        return hasResourceProfile(schema.items);
+    }
+    if (schema.type === "map") {
+        return hasResourceProfile(schema.values);
+    }
+    return false;
 }

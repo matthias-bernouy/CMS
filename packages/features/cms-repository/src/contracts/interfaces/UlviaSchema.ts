@@ -53,6 +53,7 @@ export interface UlviaArraySchema extends UlviaSchemaBase {
 }
 
 export interface UlviaBinarySchema extends UlviaSchemaBase {
+    readonly resource?: true;
     readonly type: "binary";
     readonly maxBytes: number;
 }

@@ -26,6 +26,9 @@ export function firstSchemaSubsetViolation(source: UlviaSchema, target: UlviaSch
                 firstSchemaSubsetViolation(source.items, target.items, `${path}.items`)
             );
         case "binary":
+            if (source.resource !== (target.type === "binary" ? target.resource : undefined)) {
+                return `${path}.resource`;
+            }
             if (target.type !== "binary") {
                 return `${path}.type`;
             }
