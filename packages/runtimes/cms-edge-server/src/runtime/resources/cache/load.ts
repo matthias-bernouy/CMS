@@ -10,7 +10,7 @@ export async function loadCacheResource(
     now: () => number,
 ): Promise<CachedResource | Response> {
     const startedAt = now();
-    const { response, cacheControl, tags = [] } = await load(request);
+    const { response, cacheControl, tags = [] } = await load(request, true);
     if (response.status >= 500) {
         return response;
     }
@@ -31,6 +31,10 @@ export async function loadCacheResource(
         return response;
     }
     const maximum = options.maxEntryBytes ?? 1024 * 1024;
+    const declaredSize = response.headers.get("content-length");
+    if (declaredSize !== null && /^[0-9]+$/u.test(declaredSize) && Number(declaredSize) > maximum) {
+        return response;
+    }
     const body = await readCacheBody(response, maximum);
     if (body instanceof Response) {
         return body;

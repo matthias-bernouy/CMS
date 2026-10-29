@@ -1,3 +1,4 @@
+import { NonCacheHints } from "./hints";
 import { cacheKey, unconditional } from "./policy";
 import { loadCacheResource } from "./load";
 import { cachedResponse, streamingResponse } from "./representation";
@@ -12,8 +13,10 @@ export class ResponseCache {
     private bytes = 0;
     private active = 0;
     private readonly now: () => number;
+    private readonly hints: NonCacheHints;
     constructor(private readonly options: CacheOptions = {}) {
         this.now = options.now ?? Date.now;
+        this.hints = new NonCacheHints(this.now);
         for (const key of ["maxEntries", "maxBytes", "maxEntryBytes", "maxPending", "maxWaiters"] as const) {
             if (options[key] !== undefined && (!Number.isSafeInteger(options[key]) || options[key]! < 1)) {
                 throw new TypeError(`Invalid resource cache ${key}`);
@@ -28,16 +31,24 @@ export class ResponseCache {
             }
         }
         this.pending.clear();
+        this.hints.clear();
     }
     snapshot() {
-        return { entries: this.entries.size, bytes: this.bytes, fills: this.active, generation: this.generation };
+        return {
+            entries: this.entries.size,
+            bytes: this.bytes,
+            fills: this.active,
+            generation: this.generation,
+            hints: this.hints.snapshot(),
+        };
     }
     async handle(request: Request, load: CacheLoad, eligible = true): Promise<Response> {
         const key = this.options.enabled === false || !eligible ? null : cacheKey(request);
         if (key === null) {
-            const result = await load(request);
-            result.response.headers.set("x-cache", "BYPASS");
-            return result.response;
+            return this.bypass(request, load);
+        }
+        if (this.hints.has(key)) {
+            return this.bypass(request, load);
         }
         const entry = this.entries.get(key);
         if (entry) {
@@ -63,23 +74,23 @@ export class ResponseCache {
             }
         }
         if (request.method === "HEAD") {
-            const result = await load(request);
-            result.response.headers.set("x-cache", "BYPASS");
-            return result.response;
+            return this.bypass(request, load);
         }
         let existing = this.pending.get(key);
         if (existing && this.now() - existing.startedAt >= 15_000) {
             this.pending.delete(key);
             existing = undefined;
         }
+        // An unknown resource may be private or too large. Do not make its first
+        // concurrent visitors wait for a response that cannot be shared.
+        if (existing && !entry) {
+            return this.bypass(request, load);
+        }
         if (
             (existing?.waiters ?? 0) >= (this.options.maxWaiters ?? 64) ||
             (!existing && this.active >= (this.options.maxPending ?? 16))
         ) {
-            return new Response("Resource cache capacity exceeded", {
-                status: 503,
-                headers: { "cache-control": "no-store", "retry-after": "1" },
-            });
+            return this.bypass(request, load);
         }
         try {
             if (existing) {
@@ -106,9 +117,7 @@ export class ResponseCache {
                     return cachedResponse(entry, request, this.now(), "STALE");
                 }
                 if (existing) {
-                    const direct = await load(request);
-                    direct.response.headers.set("x-cache", "BYPASS");
-                    return direct.response;
+                    return this.bypass(request, load);
                 }
                 return streamingResponse(value, request, "MISS");
             }
@@ -126,6 +135,10 @@ export class ResponseCache {
             throw error;
         }
     }
+    private async bypass(request: Request, load: CacheLoad): Promise<Response> {
+        const result = await load(request, false);
+        return streamingResponse(result.response, request, "BYPASS");
+    }
     private async fill(key: string, request: Request, load: CacheLoad): Promise<CachedResource | Response> {
         const generation = this.generation;
         this.active++;
@@ -137,8 +150,9 @@ export class ResponseCache {
                 .then(async () => {
                     const entry = await loadCacheResource(key, request, load, this.options, this.now);
                     if (entry instanceof Response) {
-                        if (entry.status < 500 && generation === this.generation) {
+                        if (entry.status < 500 && generation === this.generation && this.pending.get(key) === fill) {
                             this.remove(key);
+                            this.hints.set(key);
                         }
                         return entry;
                     }
@@ -159,6 +173,13 @@ export class ResponseCache {
                         }
                         this.entries.set(key, entry);
                         this.bytes += bytes;
+                    }
+                    if (
+                        generation === this.generation &&
+                        this.pending.get(key) === fill &&
+                        (bytes > maximum || bytes > (this.options.maxBytes ?? 16 * 1024 * 1024))
+                    ) {
+                        this.hints.set(key);
                     }
                     return entry;
                 })

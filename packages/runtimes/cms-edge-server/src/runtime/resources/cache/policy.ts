@@ -1,3 +1,4 @@
+import { actorCredentialFromRequest } from "@bernouy/cms-gateway/protocol";
 import type { SharedPolicy } from "./types";
 
 export function sharedPolicy(value: string | null, pages: boolean): SharedPolicy | null {
@@ -51,11 +52,20 @@ export function sharedPolicy(value: string | null, pages: boolean): SharedPolicy
 export function cacheKey(request: Request): string | null {
     if (
         !["GET", "HEAD"].includes(request.method) ||
-        request.headers.has("cookie") ||
         request.headers.has("authorization") ||
         request.headers.has("range") ||
-        request.headers.has("if-range")
+        request.headers.has("if-range") ||
+        /(?:^|,)\s*(?:no-cache|no-store|max-age=0)(?:\s*(?:,|$))/iu.test(request.headers.get("cache-control") ?? "") ||
+        request.headers.get("pragma")?.toLowerCase() === "no-cache"
     ) {
+        return null;
+    }
+    try {
+        if (actorCredentialFromRequest(request)) {
+            return null;
+        }
+    } catch {
+        // Invalid session credentials still bypass; unrelated browser cookies never reach the Provider.
         return null;
     }
     const url = new URL(request.url);

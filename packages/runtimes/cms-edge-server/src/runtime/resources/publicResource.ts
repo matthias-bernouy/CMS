@@ -7,7 +7,7 @@ import { resourceHttpResponse, type ResourceResponsePolicy } from "@bernouy/cms-
 export function createPublicResourceHandler(
     gateway: GatewayInvoker & Partial<Pick<GatewayHttpInvoker, "resolveContract">>,
     policy: ResourceResponsePolicy = {},
-    cache = new ResponseCache(),
+    cache = new ResponseCache({ enabled: false }),
 ) {
     return async (request: Request, actor: GatewayActor): Promise<Response> => {
         // These resources are already anonymously readable and contain no Page/user projection.
@@ -17,7 +17,7 @@ export function createPublicResourceHandler(
         }
         return cache.handle(
             request,
-            async (request) => {
+            async (request, cacheFill) => {
                 const url = new URL(request.url);
                 const headers = request.headers;
                 let range: ReturnType<typeof parseRange>;
@@ -33,10 +33,12 @@ export function createPublicResourceHandler(
                     };
                 }
                 try {
-                    const contract = await gateway.resolveContract?.({
-                        siteId: "default",
-                        contractId: "ulvia.cms.content",
-                    });
+                    const contract = cacheFill
+                        ? await gateway.resolveContract?.({
+                              siteId: "default",
+                              contractId: "ulvia.cms.content",
+                          })
+                        : undefined;
                     const extended = contract?.release.capabilities.find((item) => item.id === "delivery.resolve-path")
                         ?.input.properties.resourceMetadata;
                     const result = await gateway.invoke({

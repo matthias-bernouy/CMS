@@ -95,3 +95,36 @@ test("versioned public Content assets omit user authority while Pages, Files and
         await response.body?.cancel();
     }
 });
+
+test("the public helper disables caching unless the host injects its invalidated cache; bypasses skip negotiation", async () => {
+    let calls = 0;
+    let negotiation = 0;
+    const gateway = {
+        resolveContract: async () => {
+            negotiation++;
+            throw new Error("No metadata needed for a bypass");
+        },
+        invoke: async () => {
+            calls++;
+            return {
+                kind: "binary" as const,
+                requestId: crypto.randomUUID(),
+                contentType: "text/plain",
+                stream: new Response("public").body!,
+                resource: {
+                    status: 200,
+                    headers: { "content-type": "text/plain", "cache-control": "public, max-age=60" },
+                },
+            };
+        },
+    };
+    const handler = createPublicResourceHandler(gateway);
+    for (let index = 0; index < 2; index++) {
+        const response = await handler(new Request("https://site.test/page"), { kind: "anonymous" });
+        expect(response.headers.get("x-cache")).toBe("BYPASS");
+        expect(response.headers.get("vary")).toContain("Accept-Language");
+        await response.text();
+    }
+    expect(calls).toBe(2);
+    expect(negotiation).toBe(0);
+});

@@ -22,8 +22,11 @@ test("a purge detaches old fills and prevents old responses repopulating the cac
     expect(await (await cache.handle(request(), load)).text()).toBe("version-2");
     expect(calls).toBe(2);
 });
-test("concurrent misses coalesce; fill and waiter capacities bound retained work", async () => {
-    const cache = new ResponseCache({ maxPending: 1, maxWaiters: 2 });
+test("known revalidations coalesce; fill and waiter capacities bound retained work without rejecting overflow", async () => {
+    let now = 0;
+    const cache = new ResponseCache({ maxPending: 1, maxWaiters: 2, now: () => now });
+    await cache.handle(request(), async () => resource("old", "public, max-age=1"));
+    now = 1000;
     const gate = barrier();
     let calls = 0;
     const load = async () => {
@@ -33,12 +36,19 @@ test("concurrent misses coalesce; fill and waiter capacities bound retained work
     };
     const a = cache.handle(request(), load);
     const b = cache.handle(request(), load);
-    expect((await cache.handle(request(), load)).status).toBe(503);
-    expect((await cache.handle(request("/other"), load)).status).toBe(503);
+    const overflow = cache.handle(request(), load);
+    const distinct = cache.handle(request("/other"), load);
     expect(cache.snapshot().fills).toBe(1);
     gate.release();
-    await Promise.all([a, b]);
-    expect(calls).toBe(1);
+    const responses = await Promise.all([a, b, overflow, distinct]);
+    expect(responses.map((response) => response.status)).toEqual([200, 200, 200, 200]);
+    expect(responses.map((response) => response.headers.get("x-cache"))).toEqual([
+        "MISS",
+        "COALESCED",
+        "BYPASS",
+        "BYPASS",
+    ]);
+    expect(calls).toBe(3);
     expect(cache.snapshot().fills).toBe(0);
 });
 test("external changes become visible after 15 seconds; completed commands purge immediately", async () => {

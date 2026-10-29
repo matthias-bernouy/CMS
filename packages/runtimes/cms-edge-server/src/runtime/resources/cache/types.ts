@@ -10,7 +10,7 @@ export type CachedResource = {
     bytes: number;
 };
 type ResourceLoad = { response: Response; cacheControl: string | null; tags?: readonly string[] };
-export type CacheLoad = (request: Request) => Promise<ResourceLoad>;
+export type CacheLoad = (request: Request, cacheFill?: boolean) => Promise<ResourceLoad>;
 export type CacheOptions = {
     enabled?: boolean;
     pages?: boolean;
