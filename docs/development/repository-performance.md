@@ -112,11 +112,10 @@ The priorities above record the original investigation. The implemented changes
 are described below. No publication or installation operation was benchmarked
 against production; write journeys use an isolated local Repository.
 
-The older global `test:performance` entry point still contains fixtures for
-removed collection Page/migration APIs and stale Gateway types. Its TypeScript
-check currently fails independently of this investigation. The dedicated
-Repository entry point has its own checked configuration; a successful result
-does not establish that the older global performance suite passes.
+The global `test:performance` suite was subsequently repaired to use current
+examples, read-only upgrade analysis and resolved Gateway contracts. It now
+runs in `verify` and CI. See [guardrails](guardrails.md) for the independent
+Docker delivery journey and remaining performance limits.
 
 ## Authenticated local write journey
 

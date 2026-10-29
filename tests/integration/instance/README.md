@@ -46,3 +46,12 @@ publishes current releases into its isolated local Repository, provisions the
 old instance, then replaces its Provider container and requests profile `1.2.0`, then restarts Edge to negotiate the new control contract.
 It checks exact Page content, the existing MCP authorization, log queries and a
 subsequent restart. No test publishes to or reads from the public Repository.
+
+## Delivery work budgets
+
+`bun run test:performance:delivery` builds matching candidate images and runs
+`performance.docker.test.ts` explicitly. It also runs in `verify:full` and the
+CI smoke workflows. The ordinary suite skips this case unless
+`ULVIA_RUN_DELIVERY_PERFORMANCE=1`; the explicit runner refuses missing partial
+image sets. See [guardrails](../../../docs/development/guardrails.md) for
+instrumentation, budgets, timing interpretation and cache freshness limits.

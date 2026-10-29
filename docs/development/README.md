@@ -232,24 +232,26 @@ To reuse an already built matching trio, set
 `ULVIA_SMOKE_IMAGE_VERSION=<local-version>` explicitly. This skips image builds
 but still verifies each component, stack API, version and digest. Without that
 override, `bun run verify:full` builds and tests the candidate source directly.
-The smoke is opt-in locally. Workflows are configured for pull requests, pushes
-to `master`,
-nightly execution and manual dispatch; pushes to `codex/alpha-v0` alone do not
-trigger these push workflows.
+The smoke is opt-in locally. Quality runs on pull requests and pushes to
+`codex/alpha-v0`; a separate nightly/manual workflow runs the same journey
+without duplicating the PR/push run. Both also run the Docker delivery budgets.
+See [security and performance guardrails](guardrails.md) for reports, scope
+selection, measured budgets and remaining limits.
 
 ### Known Verification Blockers
 
-As reviewed on 2026-10-25, the shared setup action invokes the removed
-`cms-edge/src/tooling/prebuildAdmin.ts`, and the coverage baseline still lists
-an obsolete package set. The local smoke now supplies an explicit stack version
-and tests locally built candidate images. The remaining configured CI setup and coverage blockers must
-not be described as passing evidence.
+The setup action now builds the browser runtime and official bootstrap with
+current commands. Candidate smoke images use an explicit version. The coverage
+baseline still needs reconciliation with the current package set; remote CI
+and dependency-security checks must not be described as passing based on local
+verification alone.
 
 Many Mongo adapter tests use doubles. Real database concurrency, index behavior,
 interruption and restore need additional environment-level tests. The
 [audit](../AUDIT.md) records successful local checks and confirmed gaps.
 Performance work should gate calls, transferred bytes and retained resources;
-the optional `test:performance` suite also records machine-dependent timings.
+`verify` now runs `test:performance` with machine-dependent timing ceilings,
+while `verify:full` also runs the real Docker delivery budget journey.
 
 `check:dead-code` exits with a failure when it finds unused declarations,
 exports, exported types or package dependencies. Public exports can be
