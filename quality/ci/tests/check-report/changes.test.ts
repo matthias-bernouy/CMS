@@ -42,7 +42,8 @@ test("changed files include staged, unstaged, renamed, deleted, untracked and co
             "unstaged",
         ]);
         expect(await changedFiles(root, "base")).toContain("committed");
-        await expect(changedFiles(root, "missing-reference")).rejects.toThrow("Cannot determine changed files");
+        expect(await changedFiles(root, "missing-reference")).toContain("committed");
+        expect(await changedFiles(root, "missing-reference")).toContain("deleted");
     } finally {
         await rm(root, { recursive: true, force: true });
     }
@@ -52,4 +53,24 @@ test("options reject missing bases, option-like references and unknown arguments
     for (const args of [["--base"], ["--base", "--verbose"], ["--unknown"]]) {
         expect(() => parseOptions(args)).toThrow("Usage:");
     }
+});
+
+test("a force-pushed unrelated base broadens review to all indexed paths while repository failures still fail", async () => {
+    const root = await mkdtemp(join(tmpdir(), "guardrail-force-push-"));
+    try {
+        await git(root, "init", "-q");
+        await git(root, "config", "user.email", "test@example.invalid");
+        await git(root, "config", "user.name", "Test");
+        await writeFile(join(root, "unchanged.ts"), "export const value = 1;");
+        await git(root, "add", ".");
+        await git(root, "commit", "-qm", "old history");
+        await git(root, "branch", "previous");
+        await git(root, "checkout", "--orphan", "rewritten");
+        await git(root, "commit", "-qm", "new history");
+        expect(await changedFiles(root, "previous")).toEqual(["unchanged.ts"]);
+        expect(await changedFiles(root, "f".repeat(40))).toEqual(["unchanged.ts"]);
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+    await expect(changedFiles(root, "missing")).rejects.toThrow();
 });

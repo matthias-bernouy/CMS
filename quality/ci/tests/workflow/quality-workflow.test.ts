@@ -131,7 +131,7 @@ test("CI runs candidate budgets once on pull requests and keeps a nightly journe
         "utf8",
     );
     const nightly = await readFile(resolve(import.meta.dir, "../../../../.github/workflows/edge-smoke.yml"), "utf8");
-    expect(workflow).toContain("- codex/alpha-v0");
+    expect(workflow).toContain("branches:\n      - master\n      - codex/alpha-v0");
     expect(workflow).toContain('bun run check:all --base "$CHECK_BASE_REF"');
     expect(workflow).toContain("bun run test:performance");
     expect(workflow).toContain("name: Install Chromium for performance budgets");

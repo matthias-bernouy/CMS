@@ -11,7 +11,23 @@ async function git(root: string, args: string[]): Promise<string> {
     return stdout;
 }
 export async function changedFiles(root: string, base?: string): Promise<string[]> {
-    const reference = base ? (await git(root, ["merge-base", "HEAD", base])).trim() : "HEAD";
+    let reference = "HEAD";
+    if (base) {
+        try {
+            reference = (await git(root, ["merge-base", "HEAD", base])).trim();
+        } catch {
+            // A force-push can remove the advertised base even with complete current history.
+            // Treat every tracked path as changed; never silently narrow the review to HEAD^.
+            const [tracked, deleted, untracked] = await Promise.all([
+                git(root, ["ls-files", "-z"]),
+                git(root, ["diff", "--name-only", "--no-renames", "-z", "HEAD", "--"]),
+                git(root, ["ls-files", "--others", "--exclude-standard", "-z"]),
+            ]);
+            return [
+                ...new Set([tracked, deleted, untracked].flatMap((value) => value.split("\0")).filter(Boolean)),
+            ].sort();
+        }
+    }
     const [tracked, untracked] = await Promise.all([
         git(root, ["diff", "--name-only", "--no-renames", "-z", reference, "--"]),
         git(root, ["ls-files", "--others", "--exclude-standard", "-z"]),
