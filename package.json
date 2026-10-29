@@ -20,7 +20,7 @@
         "images:publish": "bun run infra/images/build.ts publish",
         "cli:build": "bun run infra/cli/build.ts build",
         "cli:publish": "bun run infra/cli/build.ts publish",
-        "check:all": "bun run quality/ci/check-all.ts",
+        "check:all": "bun run quality/ci/check-all/index.ts",
         "verify": "bun run check:all && bun run build:browser && bun run generate:official-bootstrap && bun test",
         "verify:full": "bun run verify && bun run test:edge-smoke",
         "check:architecture": "bun run quality/architecture/check.ts",

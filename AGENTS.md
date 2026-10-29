@@ -180,3 +180,20 @@ CLI's admitted official bootstrap snapshot.
   or executable examples when the change requires it.
 - Do not overwrite unrelated dirty work. Read existing changes before touching a
   modified file.
+
+## Security And Performance Evidence
+
+- Assess affected callers of shared code, including unchanged files. Passing
+  automated checks is not evidence of a complete security or performance review.
+- For data mutations, test authorization and invalid input; refusals must leave
+  business state unchanged. Security journal entries and refusal counters may
+  still be emitted. For instance-scoped changes, attempt cross-instance access.
+- For persistence lists, verify pagination, operation count and loaded volume.
+  For uploads/downloads, check size/concurrency bounds and resource release.
+- For caches, verify key completeness, entry/byte/pending-load bounds,
+  invalidation and failed loads. For per-request code, provide before/after
+  operation/internal-call counts; include latency or CPU measurements when
+  relevant to the change.
+- Cite relevant test paths/names or measurements and remaining limits in the
+  handoff. Keep evidence proportionate: labels and documentation ordinarily need
+  no new security/performance tests. Explain any relevant omitted verification.

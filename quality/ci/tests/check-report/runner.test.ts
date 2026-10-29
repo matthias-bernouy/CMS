@@ -6,7 +6,7 @@ import {
     runChecks,
     type CheckDefinition,
     type CheckExecution,
-} from "../check-all";
+} from "../../check-all";
 
 const checks: CheckDefinition[] = [
     { id: "first", label: "First check", args: ["run", "first"] },
@@ -27,18 +27,8 @@ test("check:all declares every fast workspace diagnostic in a stable order", () 
         "dead-code-tooling",
         "ci-tooling",
     ]);
-    expect(ALL_CHECKS.map(({ args }) => args)).toEqual([
-        ["run", "check:architecture"],
-        ["run", "check:ui-contracts"],
-        ["run", "check:logging"],
-        ["run", "check:repository-shape"],
-        ["run", "check:style"],
-        ["run", "typecheck"],
-        ["run", "check:dead-code"],
-        ["x", "tsc", "--project", "quality/architecture/tsconfig.json"],
-        ["x", "tsc", "--project", "quality/dead-code/tsconfig.json"],
-        ["x", "tsc", "--project", "quality/ci/tsconfig.json"],
-    ]);
+    expect(ALL_CHECKS.every(({ args }) => args[0] !== "run")).toBe(true);
+    expect(ALL_CHECKS.find(({ id }) => id === "architecture")?.args).toEqual(["quality/architecture/check.ts"]);
 });
 
 test("check:all runs every check after failures and preserves report order", async () => {

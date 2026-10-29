@@ -1,8 +1,10 @@
+import { checkRequestBodyLimits } from "./repository/requestBody";
 import { resolve } from "node:path";
 import { checkWorkspaceArchitecture, formatArchitectureViolations } from "./core/checkWorkspace";
 import { repositoryArchitectureOptions } from "./repository/repositoryPolicy";
 
 export async function checkRepositoryArchitecture(rootDir: string): Promise<void> {
+    await checkRequestBodyLimits(rootDir);
     const violations = await checkWorkspaceArchitecture(repositoryArchitectureOptions(rootDir));
     if (violations.length === 0) {
         return;

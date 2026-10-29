@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { checkWorkspaceArchitecture } from "../core/checkWorkspace";
-import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixture";
+import { checkWorkspaceArchitecture } from "../../core/checkWorkspace";
+import { createWorkspaceFixture, manifest, ofKind } from "../checkWorkspace.fixture";
 
 const { createWorkspace } = createWorkspaceFixture();
 
