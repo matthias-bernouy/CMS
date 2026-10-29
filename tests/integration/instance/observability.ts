@@ -1,62 +1,7 @@
 import { expect } from "bun:test";
-
-interface InstanceConnection {
-    providerUrl: string;
-    token: string;
-    controlVersion?: string;
-}
-
-async function control(connection: InstanceConnection, capabilityId: string, path: string, input: unknown) {
-    if (!connection.controlVersion) {
-        const report = await (
-            await fetch(`${connection.providerUrl}/ulvia/report`, {
-                headers: { authorization: `Bearer ${connection.token}` },
-            })
-        ).json();
-        connection.controlVersion = report.implementations.find(
-            (item: { contractId: string }) => item.contractId === "ulvia.cms.installations",
-        ).version;
-    }
-    const response = await fetch(`${connection.providerUrl}${path}`, {
-        method: capabilityId === "gateway.route.get" ? "QUERY" : "POST",
-        headers: {
-            authorization: `Bearer ${connection.token}`,
-            "content-type": "application/json",
-            "x-ulvia-contract-id": "ulvia.cms.installations",
-            "x-ulvia-contract-version": connection.controlVersion!,
-            "x-ulvia-capability-id": capabilityId,
-            "x-ulvia-request-id": crypto.randomUUID(),
-        },
-        body: JSON.stringify(input),
-    });
-    expect(response.status).toBe(200);
-    return response.json();
-}
-
-export async function invoke(connection: InstanceConnection, capabilityId: string, input: unknown) {
-    const { route: serialized } = await control(connection, "gateway.route.get", "/gateway/route", {
-        contractId: "ulvia.cms.observability",
-    });
-    const route = JSON.parse(serialized);
-    const requestId = crypto.randomUUID();
-    const issued = await control(connection, "gateway.invocation.issue", "/gateway/invocations", {
-        requestId,
-        installationId: route.selection.installationId,
-        contractId: "ulvia.cms.observability",
-        contractVersion: route.selection.version,
-        capabilityId,
-        ...(capabilityId === "logs.append" ? { systemServiceId: "cms-edge" } : {}),
-    });
-    return fetch(`${connection.providerUrl}/observability/logs/${capabilityId.slice(5)}`, {
-        method: capabilityId === "logs.append" ? "POST" : "QUERY",
-        headers: {
-            authorization: `Bearer ${issued.token}`,
-            "content-type": "application/json",
-            "x-ulvia-request-id": requestId,
-        },
-        body: JSON.stringify(input),
-    });
-}
+import { invoke } from "./observability/invoke";
+import { verifyPublicTrace } from "./observability/public-trace";
+export { invoke } from "./observability/invoke";
 
 export async function exerciseObservability(
     providerUrl: string,
@@ -121,50 +66,4 @@ export async function verifyObservabilityPersistence(providerUrl: string, token:
     const response = await invoke({ providerUrl, token }, "logs.get", { id });
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ id, event: "docker.scope.probe" });
-}
-
-async function verifyPublicTrace(
-    primary: InstanceConnection,
-    secondary: InstanceConnection,
-    cmsUrl: string,
-): Promise<void> {
-    const traceId = crypto.randomUUID();
-    const response = await fetch(`${cmsUrl}/login`, { headers: { "x-request-id": traceId } });
-    expect(response.status).toBe(200);
-    await response.arrayBuffer();
-    for (let attempt = 0; attempt < 30; attempt += 1) {
-        const result = await (
-            await invoke(primary, "logs.query", { traceId, timeField: "receivedAt", limit: 200 })
-        ).json();
-        const root = result.items.find(
-            (entry: { event: string; capabilityId?: string; service: string }) =>
-                entry.service === "cms-edge" &&
-                entry.event === "gateway.invocation.completed" &&
-                entry.capabilityId === "delivery.resolve-path",
-        );
-        const content = result.items.find(
-            (entry: { event: string; parentInvocationId?: string }) =>
-                entry.event === "content.delivery.phase" && entry.parentInvocationId === root?.invocationId,
-        );
-        const downstream = result.items.find(
-            (entry: { event: string; capabilityId?: string; service: string; parentInvocationId?: string }) =>
-                entry.service === "cms-edge" &&
-                entry.event === "gateway.invocation.completed" &&
-                entry.capabilityId === "capabilities.describe" &&
-                entry.parentInvocationId === content?.invocationId,
-        );
-        if (root && content && downstream) {
-            expect(downstream.traceId).toBe(traceId);
-            expect(root.traceId).toBe(traceId);
-            expect(content.traceId).toBe(traceId);
-            expect(
-                (await (await invoke(secondary, "logs.query", { traceId, timeField: "receivedAt" })).json()).items,
-            ).toEqual([]);
-            return;
-        }
-        await Bun.sleep(500);
-    }
-    throw new Error(
-        "The public request did not produce correlated Edge, Content and downstream capability observations",
-    );
 }

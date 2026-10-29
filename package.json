@@ -21,8 +21,8 @@
         "cli:build": "bun run infra/cli/build.ts build",
         "cli:publish": "bun run infra/cli/build.ts publish",
         "check:all": "bun run quality/ci/check-all/index.ts",
-        "verify": "bun run check:all && bun run build:browser && bun run generate:official-bootstrap && bun test",
-        "verify:full": "bun run verify && bun run test:edge-smoke",
+        "verify": "bun run check:all && bun run build:browser && bun run generate:official-bootstrap && bun test && bun run test:performance",
+        "verify:full": "bun run verify && bun run test:edge-smoke && bun run test:performance:delivery",
         "check:architecture": "bun run quality/architecture/check.ts",
         "check:dead-code": "bun run quality/dead-code/check.ts",
         "check:directory-fanout": "bun run quality/ci/repository-shape/directory-fanout/check.ts",
@@ -38,7 +38,8 @@
         "test:performance": "bun run build:browser && bun run generate:official-bootstrap && bun x tsc --project quality/performance/tsconfig.json && bun run quality/performance/run.ts",
         "test:edge-smoke": "bun run generate:official-bootstrap && ULVIA_RUN_EDGE_SMOKE=1 bun test packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",
         "generate:official-bootstrap": "bun run --cwd packages/runtimes/ulvia-cli generate:bootstrap",
-        "check:ui-contracts": "bun run quality/ui-contracts/check.ts"
+        "check:ui-contracts": "bun run quality/ui-contracts/check.ts",
+        "test:performance:delivery": "bun run tests/performance/delivery/run.ts"
     },
     "devDependencies": {
         "@bernouy/binary-media": "workspace:*",

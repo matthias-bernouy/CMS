@@ -1,0 +1,3 @@
+/** Installed only in disposable Docker server processes; host-side imports have no effect. */
+export const fetchPreloadSource =
+    'import { appendFileSync } from "node:fs";\n// Test-only preload. Record paths only; credentials and request/response bodies are never written.\nconst original = globalThis.fetch;\nglobalThis.fetch = Object.assign((...args: Parameters<typeof fetch>) => {\n    const target = args[0];\n    const url = new URL(typeof target === "string" || target instanceof URL ? target : target.url);\n    appendFileSync("/tmp/ulvia-performance-fetch.ndjson", `${url.pathname}\\n`);\n    return original(...args);\n}, original);\n';

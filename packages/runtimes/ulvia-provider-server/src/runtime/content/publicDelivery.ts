@@ -1,3 +1,4 @@
+import { createDescriptionCache } from "./descriptionCache";
 import { contentGatewayClient } from "./gatewayClient";
 import { contentPhaseObserver } from "./observe";
 import { ContentDelivery, PageCapabilityAnalyzer } from "@bernouy/cms-content/public-delivery";
@@ -19,6 +20,7 @@ export function createPublicDelivery(
     publicUrl: string,
 ): Pick<CmsContentDependencies, "publicDelivery" | "contentQuery"> {
     const cache = new InMemoryCache();
+    const description = createDescriptionCache();
     const content = createContentReader(stores.repo);
     const assets = { siteId: gateway.siteId, store: stores.collections };
     const connections = new ProviderConnections(stores.providerConnections);
@@ -59,20 +61,21 @@ export function createPublicDelivery(
                 pageCapabilities: new PageCapabilityAnalyzer({
                     satisfiesVersionRange,
                     resolveCapability: async () => null,
-                    resolveContract: async (contractId) => {
-                        const response = await client(context).invoke(
-                            await release("ulvia.cms.installations"),
-                            "capabilities.describe",
-                            { contractId },
-                            { authority: "provider" },
-                        );
-                        const value = response.output as {
-                            found: boolean;
-                            version: string;
-                            capabilities: { id: string; access: "public" | "authenticated" | "admin" }[];
-                        };
-                        return value?.found ? value : null;
-                    },
+                    resolveContract: (contractId) =>
+                        description(contractId, async () => {
+                            const response = await client(context).invoke(
+                                await release("ulvia.cms.installations"),
+                                "capabilities.describe",
+                                { contractId },
+                                { authority: "provider" },
+                            );
+                            const value = response.output as {
+                                found: boolean;
+                                version: string;
+                                capabilities: { id: string; access: "public" | "authenticated" | "admin" }[];
+                            };
+                            return value?.found ? value : null;
+                        }),
                 }),
             }),
         contentQuery: async (context, contractId, capabilityId, input) => {

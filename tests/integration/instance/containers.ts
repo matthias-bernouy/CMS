@@ -8,6 +8,7 @@ export { docker, waitForHttp } from "./docker";
 export async function mcpContainers(
     images: { edge: string; provider: string; repository: string },
     prepareRepository?: (url: string) => Promise<void>,
+    fetchPreload?: string,
 ) {
     const id = `ulvia-mcp-${randomUUID().slice(0, 8)}`;
     const names: string[] = [];
@@ -33,8 +34,22 @@ export async function mcpContainers(
             "--network-alias",
             alias,
             ...options,
+            ...(fetchPreload ? ["--no-healthcheck"] : []),
+            ...(fetchPreload && (alias === "edge" || alias === "ulvia-provider")
+                ? ["--volume", `${fetchPreload}:/ulvia-test/fetch.ts:ro`]
+                : []),
             image,
-            ...args,
+            ...(fetchPreload && (alias === "edge" || alias === "ulvia-provider")
+                ? [
+                      "bun",
+                      "run",
+                      "--no-macros",
+                      "--preload=/ulvia-test/fetch.ts",
+                      alias === "edge"
+                          ? "packages/runtimes/cms-edge-server/src/index.ts"
+                          : "packages/runtimes/ulvia-provider-server/src/index.ts",
+                  ]
+                : args),
         ]);
     };
     const close = async () => {
