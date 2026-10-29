@@ -53,16 +53,10 @@ export class ProviderAccess {
         if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > 64 * 1024 * 1024) {
             return false;
         }
-        const source = await reads.installation(
-            this.options.installations,
-            this.options.siteId,
-            target.sourceInstallationId,
-        );
-        const destination = await reads.installation(
-            this.options.installations,
-            this.options.siteId,
-            target.targetInstallationId,
-        );
+        const [source, destination] = await Promise.all([
+            reads.installation(this.options.installations, this.options.siteId, target.sourceInstallationId),
+            reads.installation(this.options.installations, this.options.siteId, target.targetInstallationId),
+        ]);
         if (source?.installation.status !== "enabled" || destination?.installation.status !== "enabled") {
             return false;
         }

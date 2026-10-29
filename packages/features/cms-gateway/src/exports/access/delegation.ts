@@ -1,3 +1,4 @@
+export { DeferredDelegationStore } from "cms-gateway/access/delegation/authority/DeferredDelegationStore";
 export { DelegationAuthority } from "cms-gateway/access/delegation/authority/DelegationAuthority";
 export { InMemoryDelegationStore } from "cms-gateway/access/delegation/InMemoryDelegationStore";
 export {

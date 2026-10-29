@@ -73,6 +73,7 @@ export interface GatewayRouteResolver {
 }
 
 export interface GatewayTransportRequest {
+    readonly onDispatch?: () => void;
     /** Host-owned initial reads for this dispatch only. Never serialize as wire authority. */
     readonly authorityReads?: GatewayAuthorityReads;
     readonly actorKind?: "anonymous" | "user" | "administrator";

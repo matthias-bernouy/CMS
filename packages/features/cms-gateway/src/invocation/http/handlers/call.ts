@@ -25,6 +25,26 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
         ) {
             return gatewayFailureResponse("not_authorized", 403);
         }
+        if (authority === "provider" && config.invokeProvider) {
+            const authorization = request.headers.get("authorization");
+            if (!authorization?.startsWith("Bearer ") || !/^[\x21-\x7e]{32,4096}$/u.test(authorization.slice(7))) {
+                return gatewayFailureResponse("not_authorized", 403);
+            }
+            const response = await handleGatewayHttpCall(request, {
+                siteId: config.siteId,
+                invoker: {
+                    resolveContract: (value) => config.invoker.resolveContract(value),
+                    invoke: (value) => config.invokeProvider!(authorization.slice(7), value),
+                },
+                actor: { kind: "anonymous" }, // Only the broker derives Provider authority.
+                trace: readTraceContext(request.headers.get(TRACE_CONTEXT_HEADER)),
+                prefix: routePrefix(config.basePath),
+                onFailure: config.onFailure,
+            });
+            return response.status === 401
+                ? new Response(response.body, { status: 403, headers: response.headers })
+                : response;
+        }
         const installationId = await providerInstallation(config, request);
         if (authority !== null && !installationId) {
             return gatewayFailureResponse("not_authorized", 403);

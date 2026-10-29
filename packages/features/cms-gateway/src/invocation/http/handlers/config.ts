@@ -1,5 +1,5 @@
 import type { GatewayHttpInvoker } from "../route/interfaces";
-import type { GatewayActor } from "cms-gateway/invocation/interfaces/Invocation";
+import type { GatewayActor, GatewayInvocation, GatewayResult } from "cms-gateway/invocation/interfaces/Invocation";
 import type { GatewayHttpFailureObserver } from "../handleHttpCall";
 
 export type CapabilityHttpHandlerConfig = {
@@ -7,6 +7,7 @@ export type CapabilityHttpHandlerConfig = {
     basePath: string;
     invoker: GatewayHttpInvoker;
     resolveActor(request: Request): Promise<GatewayActor>;
+    invokeProvider?: (credential: string, invocation: GatewayInvocation) => Promise<GatewayResult>;
     authenticateProvider?: (token: string) => Promise<string | null>;
     onFailure?: GatewayHttpFailureObserver;
 };

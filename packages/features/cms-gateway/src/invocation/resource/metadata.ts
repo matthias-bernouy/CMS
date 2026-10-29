@@ -1,5 +1,7 @@
 export const RESOURCE_HEADER = "x-ulvia-resource";
 export interface ResourceMetadata {
+    readonly vary?: readonly string[];
+    readonly cacheTags?: readonly string[];
     readonly status: number;
     readonly headers: Readonly<Record<string, string>>;
 }
@@ -25,7 +27,7 @@ export function parseResourceMetadata(value: unknown): ResourceMetadata {
     }
     const record = value as Record<string, unknown>;
     if (
-        Object.keys(record).sort().join() !== "headers,status" ||
+        Object.keys(record).some((key) => !["headers", "status", "vary", "cacheTags"].includes(key)) ||
         !STATUSES.has(Number(record.status)) ||
         typeof record.status !== "number" ||
         !record.headers ||
@@ -34,6 +36,10 @@ export function parseResourceMetadata(value: unknown): ResourceMetadata {
     ) {
         throw new TypeError("Invalid resource metadata");
     }
+    const vary = boundedList(record.vary, 3, (value) =>
+        ["accept", "accept-language", "accept-encoding"].includes(value),
+    );
+    const cacheTags = boundedList(record.cacheTags, 32, (value) => /^[a-z0-9][a-z0-9:._-]{0,127}$/u.test(value));
     const headers: Record<string, string> = {};
     for (const [name, content] of Object.entries(record.headers)) {
         if (
@@ -74,7 +80,12 @@ export function parseResourceMetadata(value: unknown): ResourceMetadata {
     if (headers["content-length"] !== undefined && !/^(?:0|[1-9][0-9]{0,14})$/u.test(headers["content-length"])) {
         throw new TypeError("Invalid resource length");
     }
-    return Object.freeze({ status: record.status, headers: Object.freeze(headers) });
+    return Object.freeze({
+        status: record.status,
+        headers: Object.freeze(headers),
+        ...(vary ? { vary: Object.freeze(vary) } : {}),
+        ...(cacheTags ? { cacheTags: Object.freeze(cacheTags) } : {}),
+    });
 }
 export function decodeResourceMetadata(header: string | null): ResourceMetadata | undefined {
     if (header === null) {
@@ -84,4 +95,19 @@ export function decodeResourceMetadata(header: string | null): ResourceMetadata 
         throw new TypeError("Resource metadata is too large");
     }
     return parseResourceMetadata(JSON.parse(header));
+}
+
+function boundedList(value: unknown, maximum: number, valid: (value: string) => boolean): string[] | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (
+        !Array.isArray(value) ||
+        value.length > maximum ||
+        new Set(value).size !== value.length ||
+        value.some((item) => typeof item !== "string" || !valid(item))
+    ) {
+        throw new TypeError("Invalid resource cache metadata");
+    }
+    return [...value];
 }

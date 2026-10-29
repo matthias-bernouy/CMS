@@ -32,6 +32,10 @@ import type {
 import type { GatewayDelegationAuthority, DelegationTarget } from "cms-gateway/access/delegation/interfaces";
 
 export interface CapabilityGatewayOptions {
+    /** Host-owned correlation for one prepared invocation; never accepted from wire input. */
+    readonly requestId?: () => string;
+    /** Host invalidation after a command actually reached transport, including unknown outcomes. */
+    readonly commandSettled?: (contractId: string, capabilityId: string) => void;
     readonly dispatch?: GatewayDispatch;
     /** Trusted initial preparation shared only within this invocation; requires a live transport fence. */
     readonly prepareRoute?: (value: Pick<GatewayInvocation, "siteId" | "contractId" | "actor">) => Promise<{
@@ -95,7 +99,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
     }
 
     async invoke(value: GatewayInvocation): Promise<GatewayResult> {
-        const requestId = crypto.randomUUID();
+        const requestId = this.#options.requestId?.() ?? crypto.randomUUID();
         const parent = isTraceContext(value?.trace) ? value.trace : this.#options.tracing?.current();
         const trace = {
             traceId: parent?.traceId ?? requestId,
@@ -172,6 +176,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
         let result: GatewayResult;
         let delegation: Awaited<ReturnType<GatewayDelegationAuthority["issue"]>> = null;
         let streamed = false;
+        let dispatched = false;
         const closeDelegation = async () => {
             if (delegation) {
                 try {
@@ -248,6 +253,9 @@ export class CapabilityGateway implements GatewayAccessProbe {
                   }
                 : (request: Parameters<GatewayTransport["send"]>[0]) => this.#options.transport.send(request);
             const response = await send({
+                onDispatch: () => {
+                    dispatched = true;
+                },
                 ...(reads ? { authorityReads: reads } : {}),
                 trace: this.#options.tracing?.current() ?? {
                     traceId: invocation.trace?.traceId ?? requestId,
@@ -352,6 +360,9 @@ export class CapabilityGateway implements GatewayAccessProbe {
             }
             throw new GatewayError("transport_failure", "provider transport failed");
         } finally {
+            if (isCommand && dispatched) {
+                this.#options.commandSettled?.(invocation.contractId, capability.id);
+            }
             if (!streamed) {
                 await closeDelegation();
             }

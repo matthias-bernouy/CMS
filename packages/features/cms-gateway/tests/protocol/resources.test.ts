@@ -31,3 +31,26 @@ test("resource redirects accept only bounded root paths or HTTP URLs", () => {
         expect(() => parseResourceMetadata({ status: 302, headers: { location } })).toThrow();
     }
 });
+
+test("negotiated Vary and cache tags are bounded, immutable and cannot vary on unkeyed or credential fields", () => {
+    const headers = { "content-type": "text/html" };
+    const result = parseResourceMetadata({
+        status: 200,
+        headers,
+        vary: ["accept-language"],
+        cacheTags: ["content:pages"],
+    });
+    expect(result.vary).toEqual(["accept-language"]);
+    expect(Object.isFrozen(result.cacheTags)).toBe(true);
+    for (const vary of [["cookie"], ["authorization"], ["user-agent"], ["*"], ["accept", "accept"]]) {
+        expect(() => parseResourceMetadata({ status: 200, headers, vary })).toThrow();
+    }
+    for (const cacheTags of [
+        ["token secret"],
+        ["x".repeat(129)],
+        Array.from({ length: 33 }, (_, i) => `tag:${i}`),
+        ["tag", "tag"],
+    ]) {
+        expect(() => parseResourceMetadata({ status: 200, headers, cacheTags })).toThrow();
+    }
+});

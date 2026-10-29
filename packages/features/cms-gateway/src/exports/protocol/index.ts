@@ -32,4 +32,6 @@ export {
 export type {
     ProviderDispatchPreparation,
     PreparedProviderDispatch,
+    ProviderMachinePreparation,
+    PreparedProviderMachine,
 } from "cms-gateway/protocol/ProviderDispatchPreparation";

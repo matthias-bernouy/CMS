@@ -82,6 +82,7 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
         );
         const address = selectGatewayAddress(origin, addresses, this.#options.allowPrivateAddresses);
         const authorization = await withAbort(() => this.#authorization(request), request.signal);
+        request.onDispatch?.();
         return (this.#options.sendPinned ?? sendPinnedHttpRequest)({
             url,
             address,
