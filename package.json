@@ -34,6 +34,7 @@
         "typecheck": "tsc --build",
         "clean": "bun run quality/ci/clean.ts",
         "test": "bun test",
+        "test:performance:repository": "bun run build:browser && bun run generate:official-bootstrap && bun x tsc --project quality/performance/collections/repository/tsconfig.json && bun run quality/performance/collections/repository/run.ts",
         "test:performance": "bun run build:browser && bun run generate:official-bootstrap && bun x tsc --project quality/performance/tsconfig.json && bun run quality/performance/run.ts",
         "test:edge-smoke": "bun run generate:official-bootstrap && ULVIA_RUN_EDGE_SMOKE=1 bun test packages/runtimes/ulvia-cli/tests/stack/edge-smoke.browser.test.ts",
         "generate:official-bootstrap": "bun run --cwd packages/runtimes/ulvia-cli generate:bootstrap",

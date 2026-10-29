@@ -267,3 +267,6 @@ The [root agent instructions](../../AGENTS.md) define editing/validation rules.
 
 [Page performance and headless hosts](page-performance.md) documents the local
 performance regressions and the optional Cirrus framebuffer mitigation.
+
+[Repository performance](repository-performance.md) documents catalogue timings,
+HTTP/storage work budgets and the isolated official-collection benchmark.

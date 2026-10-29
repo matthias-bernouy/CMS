@@ -1,0 +1,81 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "ulvia-provider/*": [
+                "../../../../packages/surfaces/ulvia-provider/src/*"
+            ],
+            "cms-edge/*": [
+                "../../../../packages/surfaces/cms-edge/src/*"
+            ],
+            "cms-auth/*": [
+                "../../../../packages/features/cms-auth/src/*"
+            ],
+            "cms-gateway/*": [
+                "../../../../packages/features/cms-gateway/src/*"
+            ],
+            "cms-secrets/*": [
+                "../../../../packages/features/cms-secrets/src/*"
+            ],
+            "cms-smtp-emailer/*": [
+                "../../../../packages/features/cms-smtp-emailer/src/*"
+            ],
+            "cms-repository/*": [
+                "../../../../packages/features/cms-repository/src/*"
+            ],
+            "cms-observability/*": [
+                "../../../../packages/features/cms-observability/src/*"
+            ],
+            "cms-files/*": [
+                "../../../../packages/features/cms-files/src/*"
+            ],
+            "cms-emailer/*": [
+                "../../../../packages/features/cms-emailer/src/*"
+            ],
+            "cms-content/*": [
+                "../../../../packages/features/cms-content/src/*"
+            ],
+            "ulvia-cli/*": [
+                "../../../../packages/runtimes/ulvia-cli/src/*"
+            ],
+            "ulvia-provider-server/*": [
+                "../../../../packages/runtimes/ulvia-provider-server/src/*"
+            ],
+            "official-repository-server/*": [
+                "../../../../packages/runtimes/official-repository-server/src/*"
+            ],
+            "cms-edge-server/*": [
+                "../../../../packages/runtimes/cms-edge-server/src/*"
+            ],
+            "http-runner/*": [
+                "../../../../packages/foundation/http-runner/src/*"
+            ],
+            "logging/*": [
+                "../../../../packages/foundation/logging/src/*"
+            ],
+            "rate-limiter/*": [
+                "../../../../packages/foundation/rate-limiter/src/*"
+            ],
+            "image-processing/*": [
+                "../../../../packages/foundation/image-processing/src/*"
+            ],
+            "binary-media/*": [
+                "../../../../packages/foundation/binary-media/src/*"
+            ],
+            "secret-store/*": [
+                "../../../../packages/foundation/secret-store/src/*"
+            ],
+            "blob-store/*": [
+                "../../../../packages/foundation/blob-store/src/*"
+            ],
+            "envelope-crypto/*": [
+                "../../../../packages/foundation/envelope-crypto/src/*"
+            ]
+        }
+    },
+    "include": [
+        "./*.ts",
+        "../../../../tests/performance/repository/**/*.ts",
+        "../../../../tests/integration/instance/collection-catalogue.ts"
+    ]
+}

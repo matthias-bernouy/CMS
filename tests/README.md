@@ -4,6 +4,7 @@ Cross-component and image tests live here. Package-owned unit and integration
 tests remain in `packages/*/tests`; architecture and CI tooling tests remain in
 `quality/`.
 
+- [`performance/repository`](performance/repository): catalogue HTTP and admission work budgets.
 - [`images/edge`](images/edge): stateless Edge image boundary checks.
 - [`images/provider`](images/provider): stateful Provider image boundary checks.
 - [`images/official-repository`](images/official-repository): image boundary,

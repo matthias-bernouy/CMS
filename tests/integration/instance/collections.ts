@@ -1,5 +1,6 @@
 import { expect } from "bun:test";
 import { docker } from "./containers";
+import { exerciseCollectionCatalogue, observeRepositoryCall } from "./collection-catalogue";
 
 type Call = (contract: string, capability: string, input?: Record<string, unknown>) => Promise<any>;
 
@@ -67,7 +68,8 @@ function snapshot(namespace: string, macroMarker?: string) {
     return JSON.stringify({ files });
 }
 
-export async function exerciseCollections(call: Call, namespace: string, providerName: string) {
+export async function exerciseCollections(invoke: Call, namespace: string, providerName: string) {
+    const call = observeRepositoryCall(invoke);
     const identity = await call("ulvia.cms.repository", "get-identity");
     expect(identity.publicKey).toBeString();
     await call("ulvia.cms.repository", "claim-namespace", { namespace });
@@ -84,6 +86,7 @@ export async function exerciseCollections(call: Call, namespace: string, provide
         expectedDigest: prepared.digest,
     });
     expect(published.digest).toBe(prepared.digest);
+    await exerciseCollectionCatalogue(call, published.digest, false);
     const current = await call("ulvia.cms.installations", "list-collection-installations");
     const installed = await call("ulvia.cms.installations", "install-collection", {
         expectedRevision: current.revision,
@@ -99,6 +102,7 @@ export async function exerciseCollections(call: Call, namespace: string, provide
         ],
     });
     expect(installed.items.some((item: { collectionId: string }) => item.collectionId === "mcp-kit")).toBe(true);
+    await exerciseCollectionCatalogue(call, published.digest, true);
     const sources = await call("ulvia.cms.repository", "get-collection-sources", {
         namespace,
         collectionId: "mcp-kit",
