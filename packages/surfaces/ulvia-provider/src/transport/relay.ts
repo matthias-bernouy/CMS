@@ -120,7 +120,7 @@ export function createProviderContractRelay(
             }
             const response = successResponse(request.method, capability, output, responseEffect);
             return controlAuthority && contractId === "ulvia.cms.installations" && capability.id === "gateway.route.get"
-                ? routeResponse(request, response)
+                ? await routeResponse(request, response)
                 : response;
         } catch (cause) {
             if (cause instanceof ProviderCapabilityDispatchError) {
