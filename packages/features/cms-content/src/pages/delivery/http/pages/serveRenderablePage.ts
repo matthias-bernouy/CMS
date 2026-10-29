@@ -118,7 +118,7 @@ async function renderWithFallbacks(
                         metadata,
                     ),
                 ),
-                "no-store",
+                "private, no-store",
                 { skipCspHeader: true },
             );
         }
@@ -139,7 +139,7 @@ async function renderWithFallbacks(
             artifactRevision ? `${cacheKey}:artifact:${artifactRevision}` : cacheKey,
             delivery.cache,
             () => observeDelivery(delivery, "page.render", () => renderPage(page, renderContext, metadata)),
-            cacheable ? "public, no-cache" : "private, no-store",
+            cacheable ? "public, no-cache, s-maxage=15" : "private, no-store",
             { skipCspHeader: true },
         );
     } catch (error) {

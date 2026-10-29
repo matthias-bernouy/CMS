@@ -1,3 +1,4 @@
+import type { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";
 import { randomUUIDv7 } from "bun";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository, PageMeta, PagesQuery } from "cms-content/application/interfaces/ContentRepository";
@@ -107,12 +108,18 @@ export class MongoContentRepository extends MongoPageRepository implements Conte
         return countValues(documents.flatMap((document) => normalizeTags((document as { tags: unknown }).tags)));
     }
 
-    async getSystem(): Promise<TSystem> {
-        return systemFromDocument(await readSystemDocument(this.system));
+    async getSystem(reads?: RenderingResourceReads): Promise<TSystem> {
+        // Keep both ordered route/settings fences fresh; retain only their revision.
+        const document = await readSystemDocument(this.system);
+        reads?.rememberRevision(this, "system", document.settingsRevision ?? 0);
+        return systemFromDocument(document);
     }
 
-    async getSystemRevision(): Promise<number> {
-        return (await readSystemDocument(this.system)).settingsRevision ?? 0;
+    async getSystemRevision(reads?: RenderingResourceReads): Promise<number> {
+        const revision = reads?.revision(this, "system");
+        return revision === undefined
+            ? ((await readSystemDocument(this.system)).settingsRevision ?? 0)
+            : Number(revision);
     }
 
     async updateSystem(update: Partial<TSystem>, expectedRevision?: number): Promise<TSystem> {

@@ -1,3 +1,4 @@
+import type { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { SiteBlocGroup } from "cms-content/blocs/interfaces/blocs";
@@ -45,12 +46,13 @@ export class InMemoryContentRepository extends InMemoryPageRepository implements
         );
     }
 
-    async getSystem(): Promise<TSystem> {
+    async getSystem(reads?: RenderingResourceReads): Promise<TSystem> {
+        reads?.rememberRevision(this, "system", this.systemRevision);
         return structuredClone(this.system);
     }
 
-    async getSystemRevision(): Promise<number> {
-        return this.systemRevision;
+    async getSystemRevision(reads?: RenderingResourceReads): Promise<number> {
+        return Number(reads?.revision(this, "system") ?? this.systemRevision);
     }
 
     async updateSystem(update: Partial<TSystem>, expectedRevision?: number): Promise<TSystem> {

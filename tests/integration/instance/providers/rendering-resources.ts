@@ -46,16 +46,16 @@ export async function exerciseRenderingResources(providerName: string, stackId: 
             commands = [];
             const first = await reader.getPageRenderInputs("/");
             assert.equal(first.route.kind, "current");
-            assert.equal(commands.length, 9);
+            assert.equal(commands.length, 7);
             const count = collection => commands.filter(value => value === collection).length;
             assert.equal(count("collection_installations"), 1);
-            assert.equal(count("blocs"), 2);
-            assert.equal(count("system"), 3);
+            assert.equal(count("blocs"), 1);
+            assert.equal(count("system"), 2);
             assert.equal(count("page_routes"), 2);
             assert.equal(count("pages"), 1);
             commands = [];
             await reader.getPageRenderInputs("/");
-            assert.equal(commands.length, 9);
+            assert.equal(commands.length, 7);
             assert.equal(count("collection_installations"), 1);
             await collections.saveTexts("site", "scoped", 1, { title: { en: "Changed" } });
             const changed = await reader.getPageRenderInputs("/");
@@ -66,7 +66,7 @@ export async function exerciseRenderingResources(providerName: string, stackId: 
             const current = await local.getPage("/");
             await local.updatePage({ id: current.id, visible: false }, current.revision);
             assert.deepEqual((await reader.getPageRenderInputs("/")).route, { kind: "unavailable" });
-            console.log(JSON.stringify({ warmCommands: 9, collectionReads: 1, settingsReads: 3, routeReads: 2, changesFresh: true }));
+            console.log(JSON.stringify({ warmCommands: 7, collectionReads: 1, settingsReads: 2, routeReads: 2, changesFresh: true }));
         } finally { await db.dropDatabase(); await client.close(); }
     `;
     const result = await docker([
@@ -80,9 +80,9 @@ export async function exerciseRenderingResources(providerName: string, stackId: 
         script,
     ]);
     expect(JSON.parse(result.stdout.trim())).toEqual({
-        warmCommands: 9,
+        warmCommands: 7,
         collectionReads: 1,
-        settingsReads: 3,
+        settingsReads: 2,
         routeReads: 2,
         changesFresh: true,
     });

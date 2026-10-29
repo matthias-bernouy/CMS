@@ -34,14 +34,15 @@ export function installPageRenderInputReaders(
         const reads = new RenderingResourceReads();
         try {
             const contributions = repository.getTextContributions?.(reads) ?? Promise.resolve(undefined);
-            const [resolved, loadedContributions, systemRevision, siteBlocsRevision, renderableBlocs] =
-                await Promise.all([
-                    loaders.routeWithSettings(path, reads),
-                    contributions,
-                    repository.getSystemRevision?.() ?? 0,
-                    repository.getSiteBlocsRevision?.() ?? "[]",
-                    loaders.getRenderableBlocs(reads),
-                ]);
+            const [resolved, loadedContributions, renderableBlocs] = await Promise.all([
+                loaders.routeWithSettings(path, reads),
+                contributions,
+                loaders.getRenderableBlocs(reads),
+            ]);
+            const [systemRevision, siteBlocsRevision] = await Promise.all([
+                repository.getSystemRevision?.(reads) ?? 0,
+                repository.getSiteBlocsRevision?.(reads) ?? "[]",
+            ]);
             const renderingRevision = await revisionDigest([
                 loadedContributions?.revision ?? 0,
                 systemRevision,

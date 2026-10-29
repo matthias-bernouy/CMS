@@ -75,3 +75,24 @@ test("Page input loading closes its resource context on success and failure", as
         await expect(captured!.resource({}, "late", async () => "unreachable")).rejects.toThrow("closed");
     }
 });
+
+test("revision metadata belongs to the loaded settings and Bloc records, never another rendering operation", async () => {
+    const { InMemoryContentRepository } = await import("@bernouy/cms-content");
+    const repository = new InMemoryContentRepository();
+    const other = new InMemoryContentRepository();
+    const reads = new RenderingResourceReads();
+    await repository.getSystem(reads);
+    const revision = await repository.getSystemRevision(reads);
+    await repository.updateSystem({ initializationStep: 3 });
+    expect(await repository.getSystemRevision(reads)).toBe(revision);
+    expect(await repository.getSystemRevision()).toBeGreaterThan(revision);
+    // A real settings fence must still read fresh state and refresh its metadata.
+    expect((await repository.getSystem(reads)).initializationStep).toBe(3);
+    expect(await repository.getSystemRevision(reads)).toBe(await repository.getSystemRevision());
+    expect(await other.getSystemRevision(reads)).not.toBe(await repository.getSystemRevision(reads));
+    await repository.getBlocsList({}, reads);
+    reads.close();
+    await expect(repository.getSystemRevision(reads)).rejects.toThrow("closed");
+    await expect(repository.getSiteBlocsRevision(reads)).rejects.toThrow("closed");
+    expect(await repository.getSiteBlocsRevision(new RenderingResourceReads())).toBe("[]");
+});

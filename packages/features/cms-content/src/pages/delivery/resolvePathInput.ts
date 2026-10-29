@@ -1,4 +1,5 @@
 export interface ResolvePathRequest {
+    readonly resourceMetadata?: "cache-v1";
     readonly path: string;
     readonly method: "GET" | "HEAD";
     readonly query: readonly { readonly name: string; readonly value: string }[];
@@ -8,7 +9,17 @@ export interface ResolvePathRequest {
     readonly ifRange?: string;
     readonly range?: { readonly start?: number; readonly end?: number };
 }
-const FIELDS = new Set(["path", "method", "query", "accept", "acceptLanguage", "ifNoneMatch", "ifRange", "range"]);
+const FIELDS = new Set([
+    "resourceMetadata",
+    "path",
+    "method",
+    "query",
+    "accept",
+    "acceptLanguage",
+    "ifNoneMatch",
+    "ifRange",
+    "range",
+]);
 export function parseResolvePathRequest(value: unknown): ResolvePathRequest {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
         throw new TypeError("Invalid public path request");
@@ -16,6 +27,7 @@ export function parseResolvePathRequest(value: unknown): ResolvePathRequest {
     const input = value as Record<string, unknown>;
     if (
         Object.keys(input).some((key) => !FIELDS.has(key)) ||
+        (input.resourceMetadata !== undefined && input.resourceMetadata !== "cache-v1") ||
         typeof input.path !== "string" ||
         !input.path.startsWith("/") ||
         input.path.startsWith("//") ||

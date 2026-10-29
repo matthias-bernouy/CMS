@@ -52,6 +52,18 @@ export function registerContentDeliveryCapabilities(
                 "x-robots-tag",
             ]);
             const resource = parseResourceMetadata({
+                ...(request.resourceMetadata === "cache-v1"
+                    ? {
+                          vary: ["accept", "accept-language"],
+                          cacheTags: [
+                              (response.headers.get("content-type") ?? "").startsWith("text/html")
+                                  ? "content:pages"
+                                  : (response.headers.get("cache-control") ?? "").includes("immutable")
+                                    ? "content:immutable"
+                                    : "content:mutable",
+                          ],
+                      }
+                    : {}),
                 status: response.status,
                 headers: Object.fromEntries([...response.headers].filter(([name]) => permitted.has(name))),
             });

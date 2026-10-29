@@ -194,7 +194,7 @@ export function withInstalledCollections(
     const releases = async () => (await installedState()).collections.map((item) => item.release);
     const composeTheme = createCollectionThemeComposer();
     const localRenderingBlocs = (reads?: RenderingResourceReads) => {
-        const load = () => repository.getBlocsList({ includeHidden: true, projection: "rendering" });
+        const load = () => repository.getBlocsList({ includeHidden: true, projection: "rendering" }, reads);
         return reads
             ? reads.resource(resourceOwner, "local-rendering", load).then((value) => structuredClone(value))
             : load();

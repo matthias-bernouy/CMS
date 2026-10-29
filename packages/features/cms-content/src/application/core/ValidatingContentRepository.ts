@@ -255,16 +255,16 @@ export class ValidatingContentRepository implements ContentRepository {
         return this.inner.getTagCounts();
     }
 
-    getSiteBlocsRevision(): Promise<string> {
-        return this.inner.getSiteBlocsRevision?.() ?? Promise.resolve("[]");
+    getSiteBlocsRevision(reads?: RenderingResourceReads): Promise<string> {
+        return this.inner.getSiteBlocsRevision?.(reads) ?? Promise.resolve("[]");
     }
 
     // ── Pass-through: system (settings validated elsewhere) ────────────────
     getSystem(reads?: RenderingResourceReads): Promise<TSystem> {
         return this.inner.getSystem(reads);
     }
-    getSystemRevision(): Promise<number> {
-        return this.inner.getSystemRevision();
+    getSystemRevision(reads?: RenderingResourceReads): Promise<number> {
+        return this.inner.getSystemRevision(reads);
     }
     updateSystem(system: Partial<TSystem>, expectedRevision?: number): Promise<TSystem> {
         return this.pageMutations.run(() => this.inner.updateSystem(validateSettingsPatch(system), expectedRevision));

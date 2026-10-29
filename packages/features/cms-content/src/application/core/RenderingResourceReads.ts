@@ -2,6 +2,22 @@
 export class RenderingResourceReads {
     #pending = new WeakMap<object, Map<string, Promise<unknown>>>();
     #closed = false;
+    #revisions = new WeakMap<object, Map<string, number | string>>();
+
+    rememberRevision(owner: object, key: string, revision: number | string): void {
+        this.assertOpen();
+        let entries = this.#revisions.get(owner);
+        if (!entries) {
+            entries = new Map();
+            this.#revisions.set(owner, entries);
+        }
+        entries.set(key, revision);
+    }
+
+    revision(owner: object, key: string): number | string | undefined {
+        this.assertOpen();
+        return this.#revisions.get(owner)?.get(key);
+    }
 
     async resource<T>(owner: object, key: string, load: () => Promise<T>): Promise<T> {
         this.assertOpen();
@@ -32,6 +48,7 @@ export class RenderingResourceReads {
     close(): void {
         this.#closed = true;
         this.#pending = new WeakMap();
+        this.#revisions = new WeakMap();
     }
 
     private assertOpen(): void {

@@ -20,7 +20,10 @@ export function createPublicDelivery(
     publicUrl: string,
 ): Pick<CmsContentDependencies, "publicDelivery" | "contentQuery"> {
     const cache = new InMemoryCache();
-    const description = createDescriptionCache();
+    const readSelectionRevision = async () =>
+        (await stores.executionState.read(gateway.siteId, [])).selections?.revision ?? 0;
+    const description = createDescriptionCache(readSelectionRevision);
+    const analyzer = new PageCapabilityAnalyzer({ satisfiesVersionRange, resolveCapability: async () => null });
     const content = createContentReader(stores.repo);
     const assets = { siteId: gateway.siteId, store: stores.collections };
     const connections = new ProviderConnections(stores.providerConnections);
@@ -58,25 +61,27 @@ export function createPublicDelivery(
                     }),
                 resolveSvgSources: (sources) =>
                     resolveSvgSources({ cache, assets, client: client(context), release }, sources),
-                pageCapabilities: new PageCapabilityAnalyzer({
-                    satisfiesVersionRange,
-                    resolveCapability: async () => null,
-                    resolveContract: (contractId) =>
-                        description(contractId, async () => {
-                            const response = await client(context).invoke(
-                                await release("ulvia.cms.installations"),
-                                "capabilities.describe",
-                                { contractId },
-                                { authority: "provider" },
-                            );
-                            const value = response.output as {
-                                found: boolean;
-                                version: string;
-                                capabilities: { id: string; access: "public" | "authenticated" | "admin" }[];
-                            };
-                            return value?.found ? value : null;
-                        }),
-                }),
+                pageCapabilities: {
+                    requiredAccess: async (page) => {
+                        const revision = await readSelectionRevision();
+                        return analyzer.requiredAccess(page, (contractId) =>
+                            description(contractId, revision, async () => {
+                                const response = await client(context).invoke(
+                                    await release("ulvia.cms.installations"),
+                                    "capabilities.describe",
+                                    { contractId },
+                                    { authority: "provider" },
+                                );
+                                const value = response.output as {
+                                    found: boolean;
+                                    version: string;
+                                    capabilities: { id: string; access: "public" | "authenticated" | "admin" }[];
+                                };
+                                return value?.found ? value : null;
+                            }),
+                        );
+                    },
+                },
             }),
         contentQuery: async (context, contractId, capabilityId, input) => {
             if (!context.delegation) {

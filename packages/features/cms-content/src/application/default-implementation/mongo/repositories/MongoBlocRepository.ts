@@ -1,3 +1,5 @@
+import { siteBlocsRevision } from "cms-content/blocs/core/catalogue/siteBlocsRevision";
+import type { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";
 import type {
     BlocListItemResponse,
     SiteBlocPublicationGuard,
@@ -138,8 +140,10 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
         return withMongoSiteBlocPublicationLock(this.db, this.siteBlocPublicationLocks, operation);
     }
 
-    async getBlocsList(options: BlocListOptions = {}): Promise<BlocListItemResponse[]> {
-        return projectBlocList(await this.getBlocRecords(), options);
+    async getBlocsList(options: BlocListOptions = {}, reads?: RenderingResourceReads): Promise<BlocListItemResponse[]> {
+        const records = await this.getBlocRecords();
+        reads?.rememberRevision(this, "blocs", siteBlocsRevision(records));
+        return projectBlocList(records, options);
     }
 
     async getBlocViewJS(htmlTag: string): Promise<string | null> {
@@ -155,7 +159,11 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
         return Object.fromEntries(tags.map((tag) => [tag, views.get(tag) ?? null]));
     }
 
-    async getSiteBlocsRevision(): Promise<string> {
+    async getSiteBlocsRevision(reads?: RenderingResourceReads): Promise<string> {
+        const revision = reads?.revision(this, "blocs");
+        if (revision !== undefined) {
+            return String(revision);
+        }
         const records = await this.blocs
             .find(
                 { "ownership.kind": "site-builder" },

@@ -1,3 +1,5 @@
+import { siteBlocsRevision } from "cms-content/blocs/core/catalogue/siteBlocsRevision";
+import type { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";
 import type { BlocListOptions } from "cms-content/application/interfaces/ContentRepository";
 import { projectBlocList } from "cms-content/application/core/projectBlocList";
 import type {
@@ -117,8 +119,10 @@ export class InMemoryBlocRepository {
         return this.siteBlocPublications.run(operation);
     }
 
-    async getBlocsList(options: BlocListOptions = {}) {
-        return projectBlocList([...this.blocs.values()], options);
+    async getBlocsList(options: BlocListOptions = {}, reads?: RenderingResourceReads) {
+        const records = [...this.blocs.values()];
+        reads?.rememberRevision(this, "blocs", siteBlocsRevision(records));
+        return projectBlocList(records, options);
     }
 
     async getBlocViewJS(htmlTag: string): Promise<string | null> {
@@ -131,8 +135,8 @@ export class InMemoryBlocRepository {
         );
     }
 
-    async getSiteBlocsRevision(): Promise<string> {
-        return siteBlocsRevision([...this.blocs.values()]);
+    async getSiteBlocsRevision(reads?: RenderingResourceReads): Promise<string> {
+        return String(reads?.revision(this, "blocs") ?? siteBlocsRevision([...this.blocs.values()]));
     }
 
     async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {
@@ -167,13 +171,4 @@ export class InMemoryBlocRepository {
         this.blocs.set(tag, { ...current, siteDefinition: definition });
         return structuredClone(definition);
     }
-}
-
-function siteBlocsRevision(records: readonly BlocRecord[]): string {
-    return JSON.stringify(
-        records
-            .filter((record) => record.ownership.kind === "site-builder")
-            .map((record) => [record.tag, record.siteDefinition?.publishedRevision ?? null])
-            .sort(([left], [right]) => String(left).localeCompare(String(right))),
-    );
 }

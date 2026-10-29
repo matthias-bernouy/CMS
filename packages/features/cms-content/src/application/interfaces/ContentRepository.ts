@@ -134,7 +134,7 @@ export interface ContentRepository {
     /** Batch projection used by delivery to avoid one persistence read per rendered Bloc. */
     getBlocViewsJS(htmlTags: readonly string[]): Promise<Readonly<Record<string, string | null>>>;
     /** Compact revision of published site-owned Blocs used by rendered Pages. */
-    getSiteBlocsRevision?(): Promise<string>;
+    getSiteBlocsRevision?(reads?: RenderingResourceReads): Promise<string>;
     /** Author-side source map for resource export. Returns null when the bloc has no source bundle. */
     getBlocSource(htmlTag: string): Promise<Record<string, string> | null>;
 
@@ -172,6 +172,6 @@ export interface ContentRepository {
 
     // SYSTEM
     getSystem(reads?: RenderingResourceReads): Promise<TSystem>;
-    getSystemRevision(): Promise<number>;
+    getSystemRevision(reads?: RenderingResourceReads): Promise<number>;
     updateSystem(system: Partial<TSystem>, expectedRevision?: number): Promise<TSystem>;
 }

@@ -42,8 +42,11 @@ export function pageRequiresCapabilityAnalysis(page: PageCapabilityDocument): bo
 export class PageCapabilityAnalyzer implements PageCapabilityAccessPort {
     constructor(private readonly options: PageCapabilityAnalyzerOptions) {}
 
-    async requiredAccess(page: PageCapabilityDocument): Promise<PageCapabilityAccess | null> {
-        const resolve = this.requestResolver();
+    async requiredAccess(
+        page: PageCapabilityDocument,
+        resolveContract = this.options.resolveContract,
+    ): Promise<PageCapabilityAccess | null> {
+        const resolve = this.requestResolver(resolveContract);
         const requirements = await this.resolveRequirementsWith(page, resolve);
         if (!requirements) {
             return null;
@@ -108,7 +111,7 @@ export class PageCapabilityAnalyzer implements PageCapabilityAccessPort {
         return [...requirements.values()];
     }
 
-    private requestResolver(): CapabilityResolver {
+    private requestResolver(resolveContract = this.options.resolveContract): CapabilityResolver {
         const capabilities = new Map<string, Promise<ResolvedPageCapability | null>>();
         const contracts = new Map<string, ReturnType<NonNullable<PageCapabilityAnalyzerOptions["resolveContract"]>>>();
         return (contractId, capabilityId) => {
@@ -117,7 +120,7 @@ export class PageCapabilityAnalyzer implements PageCapabilityAccessPort {
             if (cached) {
                 return cached;
             }
-            const pending = this.resolve(contractId, capabilityId, contracts);
+            const pending = this.resolve(contractId, capabilityId, contracts, resolveContract);
             capabilities.set(key, pending);
             return pending;
         };
@@ -127,13 +130,14 @@ export class PageCapabilityAnalyzer implements PageCapabilityAccessPort {
         contractId: string,
         capabilityId: string,
         contracts: Map<string, ReturnType<NonNullable<PageCapabilityAnalyzerOptions["resolveContract"]>>>,
+        resolveContract = this.options.resolveContract,
     ): Promise<ResolvedPageCapability | null> {
-        if (!this.options.resolveContract) {
+        if (!resolveContract) {
             return this.options.resolveCapability(contractId, capabilityId).catch(() => null);
         }
         let contract = contracts.get(contractId);
         if (!contract) {
-            contract = this.options.resolveContract(contractId).catch(() => null);
+            contract = resolveContract(contractId).catch(() => null);
             contracts.set(contractId, contract);
         }
         const resolved = await contract;
