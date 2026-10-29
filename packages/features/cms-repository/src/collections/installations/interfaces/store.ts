@@ -37,7 +37,22 @@ export type InstalledCollectionAssetMetadata = {
     digest: string;
     asset: CollectionAssetDefinition;
 };
+export type CollectionReleaseSummary = {
+    digest: string;
+    publisherId: string;
+    collectionId: string;
+    version: string;
+    blocCount: number;
+    exampleCount: number;
+    assetCount: number;
+    textCount: number;
+    themeTokenCount: number;
+    configurable: boolean;
+};
+export type InstalledCollectionSummary = CollectionReleaseSummary & { repositoryId?: string };
+
 export interface CollectionStorage {
+    getReleaseSummaries(digests: readonly string[]): Promise<CollectionReleaseSummary[]>;
     putRelease(artifact: StoredCollectionRelease): Promise<void>;
     getRelease(digest: string): Promise<StoredCollectionRelease | null>;
     getReleaseMetadata(digest: string): Promise<StoredCollectionReleaseMetadata | null>;

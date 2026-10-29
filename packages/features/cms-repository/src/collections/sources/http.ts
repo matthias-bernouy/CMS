@@ -54,7 +54,7 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
         );
     }
 
-    async get(reference: CollectionRepositoryReference) {
+    async getMetadata(reference: CollectionRepositoryReference) {
         if (!validCollectionReference(reference)) {
             throw new TypeError("Invalid repository reference");
         }
@@ -64,7 +64,11 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
             "Collection",
             { request: this.request },
         );
-        const release = parseCollectionRelease(parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64));
+        return parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64);
+    }
+
+    async get(reference: CollectionRepositoryReference) {
+        const release = parseCollectionRelease(await this.getMetadata(reference));
         const assets = new Array<{ id: string; bytes: Uint8Array }>(release.assets.length);
         let nextIndex = 0;
         const fetchAsset = async () => {

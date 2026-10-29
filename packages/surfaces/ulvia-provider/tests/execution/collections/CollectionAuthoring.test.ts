@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { CollectionAuthoring } from "@bernouy/cms-repository/repository/authoring";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
-import { registerCollectionAuthoringCapabilities } from "../../src/capabilities/installations/authoring";
+import { registerCollectionAuthoringCapabilities } from "../../../src/capabilities/installations/authoring";
 
 test("invalid collection sources return bounded actionable diagnostics and never request publication authority", async () => {
     const root = await mkdtemp(join(tmpdir(), "authoring-diagnostics-"));

@@ -1,3 +1,4 @@
+import { readReleaseSummaries } from "./releaseSummaries";
 import type { Db } from "mongodb";
 import { assertBlobRange, type BlobRange } from "@bernouy/blob-store";
 import {
@@ -98,6 +99,9 @@ export class MongoCollectionStorage implements CollectionStorage {
             return;
         }
         await this.getRelease(verified.digest);
+    }
+    getReleaseSummaries(digests: readonly string[]) {
+        return readReleaseSummaries(this.db, digests);
     }
     async getRelease(digest: string) {
         const metadata = await this.getReleaseMetadata(digest);

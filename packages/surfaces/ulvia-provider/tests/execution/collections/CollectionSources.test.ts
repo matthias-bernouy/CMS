@@ -6,7 +6,7 @@ import {
     parseCollectionRelease,
 } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
-import { CollectionSources } from "../../src/capabilities/installations/sources";
+import { CollectionSources } from "../../../src/capabilities/installations/sources";
 
 test("stages only the exact browser-risk report approved by the caller", async () => {
     const release = parseCollectionRelease({
@@ -44,12 +44,14 @@ test("stages only the exact browser-risk report approved by the caller", async (
     const source: CollectionRepositorySource = {
         id: "official",
         list: async () => [entry],
+        getMetadata: async () => release,
         get: async () => ({ release, assets: [] }),
     };
     let imports = 0;
     const store = {
-        snapshot: async () => ({ revision: 0, collections: [] }),
+        listInstalled: async () => ({ revision: 0, items: [] }),
         admitRelease: async () => artifact,
+        validateReleaseRequirements: async () => {},
         importAdmittedRelease: async () => {
             imports++;
             return artifact;
@@ -132,11 +134,13 @@ test("derives displayed browser authority from the admitted bundle instead of re
     const source: CollectionRepositorySource = {
         id: "official",
         list: async () => [forgedEntry],
+        getMetadata: async () => document,
         get: async () => ({ release: document, assets: [] }),
     };
     const store = {
-        snapshot: async () => ({ revision: 0, collections: [] }),
+        listInstalled: async () => ({ revision: 0, items: [] }),
         admitRelease: async () => artifact,
+        validateReleaseRequirements: async () => {},
     };
 
     const catalogue = await new CollectionSources(store as never, [source]).catalogue("site");

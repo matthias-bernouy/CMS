@@ -1,3 +1,4 @@
+import { collectionReleaseSummary } from "../../core/releaseSummary";
 import { verifyStoredCollectionArtifact } from "../../../core/admission/collectionArtifact";
 import { assertBlobRange, type BlobRange } from "@bernouy/blob-store";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../../../core/limits";
@@ -37,6 +38,12 @@ export class MemoryCollectionStorage implements CollectionStorage {
                     bytes: new Uint8Array(await asset.bytes.arrayBuffer()),
                 })),
             ),
+        });
+    }
+    async getReleaseSummaries(digests: readonly string[]) {
+        return [...new Set(digests)].flatMap((digest) => {
+            const artifact = this.releases.get(digest);
+            return artifact ? [collectionReleaseSummary(digest, artifact.release)] : [];
         });
     }
     async getRelease(digest: string) {

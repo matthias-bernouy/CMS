@@ -14,8 +14,7 @@ export function registerCollectionInstallationCapabilities(
 ): void {
     registerCollectionOperationCapabilities(dispatcher, operations);
     dispatcher.register("ulvia.cms.installations", "list-collection-installations", async (_input, context) => {
-        const snapshot = await dependencies.collections.snapshot(context.siteId);
-        return projectSnapshot(snapshot);
+        return dependencies.collections.listInstalled(context.siteId);
     });
     dispatcher.register("ulvia.cms.installations", "list-site-usage", async (input, context) =>
         collectionCommand(async () => {
@@ -49,12 +48,14 @@ export function registerCollectionInstallationCapabilities(
         }),
     );
     dispatcher.register("ulvia.cms.installations", "get-collection-installation", async (input, context) => {
-        const snapshot = await dependencies.collections.snapshot(context.siteId);
-        const collection = snapshot.collections.find(({ collectionId }) => collectionId === input.collectionId);
-        if (!collection) {
+        const installed = await dependencies.collections.readInstalled(
+            context.siteId,
+            requiredText(input.collectionId),
+        );
+        if (!installed) {
             throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
         }
-        return projectInstalled(collection, snapshot.revision, true);
+        return projectInstalled(installed.collection, installed.revision, true);
     });
     dispatcher.register("ulvia.cms.installations", "list-available-collections", async (_input, context) => {
         if (!sources) {
@@ -70,10 +71,10 @@ export function registerCollectionInstallationCapabilities(
     dispatcher.register("ulvia.cms.installations", "install-collection", async (input, context) =>
         collectionCommand(async () => {
             const expectedRevision = integer(input.expectedRevision);
-            const before = await dependencies.collections.snapshot(context.siteId);
+            const before = await dependencies.collections.listInstalled(context.siteId);
             assertRevision(before.revision, expectedRevision);
             const staged = await collectionTargets(input.targets, sources);
-            const installed = new Set(before.collections.map(({ collectionId }) => collectionId));
+            const installed = new Set(before.items.map(({ collectionId }) => collectionId));
             for (const target of staged) {
                 const artifact = await dependencies.collections.getRelease(target.digest);
                 if (artifact && installed.has(artifact.release.collectionId)) {

@@ -1,3 +1,5 @@
+import { verifyCollectionRequirements } from "../../core/admission/requirements";
+import { listInstalledCollections, readInstalledCollection } from "./installedCatalogue";
 import { assertUpgradePermit, type CollectionUpgradePermit } from "../upgrades/runtime/permit";
 import type { ReleaseCatalogue } from "../../../exports/contracts/catalogue";
 import type { BlobRange } from "@bernouy/blob-store";
@@ -32,6 +34,10 @@ export class CollectionStore {
     /** Fully validates and snapshots a bundle without making it durable. */
     admitRelease(input: unknown, assets: readonly CollectionBundleAsset[] = []): Promise<AdmittedCollectionRelease> {
         return admitCollectionRelease(input, assets, { contracts: this.contracts });
+    }
+
+    validateReleaseRequirements(artifact: AdmittedCollectionRelease): Promise<void> {
+        return verifyCollectionRequirements(artifact.release, this.contracts);
     }
 
     /** Persists the exact immutable artifact previously returned by `admitRelease`. */
@@ -96,6 +102,14 @@ export class CollectionStore {
 
     async revision(siteId: string): Promise<number> {
         return (await this.storage.readSite(siteId)).revision;
+    }
+
+    listInstalled(siteId: string) {
+        return listInstalledCollections(this.storage, siteId);
+    }
+
+    readInstalled(siteId: string, collectionId: string) {
+        return readInstalledCollection(this.storage, siteId, collectionId);
     }
 
     async snapshot(siteId: string): Promise<{ revision: number; collections: InstalledCollection[] }> {

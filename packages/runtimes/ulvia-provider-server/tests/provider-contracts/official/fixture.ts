@@ -128,6 +128,7 @@ export async function repositoryFixture(includePrevious = false) {
                 hasTheme: collection.release.theme !== undefined,
             },
         ],
+        getMetadata: async () => collectionValue,
         get: async () => ({ release: collectionValue, assets: collectionAssets }),
     };
     return {

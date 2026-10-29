@@ -61,6 +61,7 @@ export const COLLECTION_STORE_FENCED_MUTATIONS = [
 const COLLECTION_STORE_NON_SITE_MUTATIONS_OR_READS = [
     "importRelease",
     "admitRelease",
+    "validateReleaseRequirements",
     "importAdmittedRelease",
     "getReleaseAsset",
     "getInstalledAssetMetadata",
@@ -68,6 +69,8 @@ const COLLECTION_STORE_NON_SITE_MUTATIONS_OR_READS = [
     "getRelease",
     "revision",
     "snapshot",
+    "listInstalled",
+    "readInstalled",
 ] as const satisfies readonly (keyof CollectionStore)[];
 
 type ContentRepositoryUnclassified = Exclude<

@@ -22,7 +22,10 @@ test("all administration capability areas dispatch outputs matching their offici
     system.site.language = "en";
     const core = {
         repo: { getSystem: async () => system, getSystemRevision: async () => 0 },
-        collections: { snapshot: async () => ({ revision: 0, collections: [] }) },
+        collections: {
+            listInstalled: async () => ({ revision: 0, items: [] }),
+            snapshot: async () => ({ revision: 0, collections: [] }),
+        },
         users: {
             list: async () => ({
                 users: [{ sub: "local:user-1", email: "admin@example.test", createdAt: now, lastSeenAt: now }],

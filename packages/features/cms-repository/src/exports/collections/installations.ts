@@ -8,6 +8,8 @@ export { assertCollectionResourceIsolation } from "cms-repository/collections/in
 export { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
 export type {
     CollectionStorage,
+    CollectionReleaseSummary,
+    InstalledCollectionSummary,
     CollectionInstallRequest,
     InstalledCollection,
     InstalledCollectionAssetMetadata,
