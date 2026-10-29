@@ -115,3 +115,26 @@ describe("cachedResponseAsync", () => {
         expect(await second.text()).toBe("async body");
     });
 });
+
+test("identity responses perform no compression; negotiated variants are computed once", () => {
+    let gzip = 0;
+    let brotli = 0;
+    const entry = compress("content", "text/plain", {
+        gzip: (bytes) => {
+            gzip++;
+            return bytes;
+        },
+        brotli: (bytes) => {
+            brotli++;
+            return bytes;
+        },
+    });
+    expect(new TextDecoder().decode(entry.raw)).toBe("content");
+    expect(gzip).toBe(0);
+    expect(brotli).toBe(0);
+    expect(entry.gzip).toBe(entry.gzip);
+    expect(gzip).toBe(1);
+    expect(brotli).toBe(0);
+    expect(entry.brotli).toBe(entry.brotli);
+    expect(brotli).toBe(1);
+});
