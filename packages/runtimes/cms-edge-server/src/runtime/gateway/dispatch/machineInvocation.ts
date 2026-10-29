@@ -19,6 +19,13 @@ export function machineInvocation(
         if (value.delegationTicket || value.siteId !== "default") {
             throw new GatewayError("not_authorized", "Machine preparation requires the local instance");
         }
+        const length = value.binaryBody?.contentLength;
+        if (value.binaryBody && (!Number.isSafeInteger(length) || length! < 0 || length! > 64 * 1024 * 1024)) {
+            throw new GatewayError(
+                "invalid_input",
+                "Provider binary calls require a Content-Length between 0 and 67108864 bytes",
+            );
+        }
         const route = await routes.resolve(value.siteId, value.contractId);
         const release = route?.requestedRelease.admission.release;
         const capability = release?.capabilities.find((item) => item.id === value.capabilityId);
@@ -43,7 +50,7 @@ export function machineInvocation(
                     contractVersion: release.version,
                     capabilityId: value.capabilityId,
                     bodyBytes: value.binaryBody
-                        ? (value.binaryBody.contentLength ?? 64 * 1024 * 1024 + 1)
+                        ? value.binaryBody.contentLength!
                         : new TextEncoder().encode(JSON.stringify(value.input)).byteLength,
                     trace,
                 },
@@ -55,7 +62,11 @@ export function machineInvocation(
                         ? "not_authorized"
                         : status === 429
                           ? "rate_limited"
-                          : "transport_failure",
+                          : [400, 411, 413, 422].includes(status)
+                            ? "invalid_input"
+                            : [404, 409].includes(status)
+                              ? "not_selected"
+                              : "transport_failure",
                     "Machine authority preparation failed",
                 );
             });
