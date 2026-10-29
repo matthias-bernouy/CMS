@@ -32,6 +32,7 @@ import { join } from "node:path";
 import { SharpImageTransformer } from "@bernouy/image-processing/sharp";
 import { MongoIdentityService } from "@bernouy/cms-gateway/identity/mongo";
 import {
+    MongoProviderExecutionStateReader,
     MongoContractSelectionStore,
     MongoProviderInstallationStore,
     MongoProviderManifestCatalogue,
@@ -43,7 +44,8 @@ import { CmsSecrets } from "@bernouy/cms-secrets";
 import { MongoCmsSecretMetadataStore } from "@bernouy/cms-secrets/mongo";
 import { EncryptedProviderConnections } from "../gateway/providers/connections/EncryptedProviderConnections";
 import { EncryptedConnectionDrafts } from "../gateway/providers/connections/EncryptedConnectionDrafts";
-import { createContractSecretStores } from "./contractSecretStores";
+import { MongoCmsSecretResolutionReader } from "./secrets/MongoCmsSecretResolutionReader";
+import { createContractSecretStores } from "./secrets/contractSecretStores";
 import { ConfiguredSmtpEmailer } from "@bernouy/cms-smtp-emailer/nodemailer";
 
 const SCOPE_ID = "default";
@@ -82,6 +84,11 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
     const selectionDependencies = new CatalogueSelectionDependencies(releases, manifests, installations);
     const selectionStore = new MongoContractSelectionStore(db, selectionDependencies);
     const selections = withSiteWriteFence(selectionStore, upgradeStorage, SCOPE_ID, ["replace"]);
+    const executionState = new MongoProviderExecutionStateReader(db, selections, installations);
+    await executionState.init().catch(async (error) => {
+        await mongo.close();
+        throw error;
+    });
 
     const secretCrypto = await createEnvelopeSecretCrypto(db, env.CMS_KEK).catch(async (error) => {
         await mongo.close();
@@ -169,7 +176,9 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         namespaceKeys: db.collection("cms_secret_namespace_keys"),
     });
     await secretMetadata.init();
-    const cmsSecrets = new CmsSecrets(secretMetadata, secrets);
+    const cmsSecrets = new CmsSecrets(secretMetadata, secrets, {
+        resolutionReader: new MongoCmsSecretResolutionReader(db, SCOPE_ID, secretCrypto),
+    });
     const contractSecrets = await createContractSecretStores(cmsSecrets, secrets);
     const emailer = new ConfiguredSmtpEmailer({ secrets: contractSecrets.smtpEmailer });
     const identities = new MongoIdentityService(db);
@@ -207,6 +216,7 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         manifests,
         installations,
         selections,
+        executionState,
         selectionChanges: { store: selectionStore, dependencies: selectionDependencies },
         sitemapStore: new LocalFsBlobStore(join(env.CMS_FILES_DIR, "sitemaps")),
         close: () => mongo.close(),

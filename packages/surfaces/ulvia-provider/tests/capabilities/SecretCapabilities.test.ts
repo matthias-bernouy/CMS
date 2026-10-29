@@ -78,12 +78,10 @@ test("secret capabilities reject a namespace key without resolve permission", as
 });
 
 function secrets(): CmsSecrets {
-    return new CmsSecrets(
-        new InMemoryCmsSecretMetadataStore(),
-        new InMemorySecretStore(),
-        () => "secret-1",
-        () => new Date("2026-10-22T10:00:00.000Z"),
-    );
+    return new CmsSecrets(new InMemoryCmsSecretMetadataStore(), new InMemorySecretStore(), {
+        createId: () => "secret-1",
+        now: () => new Date("2026-10-22T10:00:00.000Z"),
+    });
 }
 
 function namespaceInput(namespace: { namespaceId: string; namespaceKey: string }) {

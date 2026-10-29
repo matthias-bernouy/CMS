@@ -44,3 +44,8 @@ export type {
 } from "cms-repository/providers/selections/interfaces/SelectionAuthority";
 
 export { activeProviderRequirements } from "cms-repository/providers/selections/core/authority/grants";
+
+export type {
+    ProviderExecutionState,
+    ProviderExecutionStateReader,
+} from "cms-repository/providers/selections/interfaces/ProviderExecutionStateReader";

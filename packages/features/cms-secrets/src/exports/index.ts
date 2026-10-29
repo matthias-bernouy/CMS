@@ -13,3 +13,5 @@ export {
     type SecretNamespaceRecord,
 } from "cms-secrets/interfaces/CmsSecret";
 export type { CmsSecretMetadataStore } from "cms-secrets/interfaces/CmsSecretMetadataStore";
+
+export type { CmsSecretResolutionReader } from "cms-secrets/interfaces/CmsSecretResolutionReader";

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { CmsSecrets } from "@bernouy/cms-secrets";
 import { InMemoryCmsSecretMetadataStore } from "@bernouy/cms-secrets/memory";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import { createContractSecretStores } from "../../src/runtime/stores/contractSecretStores";
+import { createContractSecretStores } from "../../../src/runtime/stores/secrets/contractSecretStores";
 
 test("contract secret stores keep values isolated and preserve namespace authority", async () => {
     const bootstrap = new InMemorySecretStore();

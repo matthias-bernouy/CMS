@@ -93,16 +93,13 @@ export class SecretNamespaceAuthority {
         namespaceKey: string,
         permission: SecretNamespacePermission | readonly SecretNamespacePermission[],
     ) {
-        const key = await authorizeNamespaceKey(
+        return authorizeNamespaceKey(
+            namespaceId,
             namespaceKey,
             await this.store.getNamespaceKey(credentialId(namespaceKey, "snk")),
             permission,
             this.now(),
         );
-        if (key.namespaceId !== namespaceId) {
-            throw new CmsSecretNotFound("secret namespace does not exist");
-        }
-        return key;
     }
 
     private async requiredKey(namespaceId: string, keyId: string): Promise<SecretNamespaceKeyRecord> {

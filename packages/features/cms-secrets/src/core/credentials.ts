@@ -1,4 +1,4 @@
-import { CmsSecretNotAuthorized } from "cms-secrets/core/errors";
+import { CmsSecretNotAuthorized, CmsSecretNotFound } from "cms-secrets/core/errors";
 import type { SecretNamespaceKeyRecord, SecretNamespacePermission } from "cms-secrets/interfaces/CmsSecret";
 
 export function newCredential(prefix: string): { id: string; value: string } {
@@ -21,6 +21,7 @@ export function credentialId(value: string, prefix: string): string {
 }
 
 export async function authorizeNamespaceKey(
+    namespaceId: string,
     value: string,
     key: SecretNamespaceKeyRecord | null,
     permission: SecretNamespacePermission | readonly SecretNamespacePermission[],
@@ -29,6 +30,7 @@ export async function authorizeNamespaceKey(
     const permissions = typeof permission === "string" ? [permission] : permission;
     if (
         !key ||
+        key.id !== credentialId(value, "snk") ||
         key.revokedAt ||
         (key.expiresAt && key.expiresAt <= now) ||
         permissions.length === 0 ||
@@ -36,6 +38,9 @@ export async function authorizeNamespaceKey(
         !constantTimeEqual(await credentialVerifier(value), key.verifier)
     ) {
         throw new CmsSecretNotAuthorized();
+    }
+    if (key.namespaceId !== namespaceId) {
+        throw new CmsSecretNotFound("secret namespace does not exist");
     }
     return key;
 }

@@ -147,12 +147,10 @@ describe("CmsSecrets", () => {
 
 function fixture(): CmsSecrets {
     let nextId = 0;
-    return new CmsSecrets(
-        new InMemoryCmsSecretMetadataStore(),
-        new InMemorySecretStore(),
-        () => `secret-${++nextId}`,
-        () => new Date("2026-10-22T10:00:00.000Z"),
-    );
+    return new CmsSecrets(new InMemoryCmsSecretMetadataStore(), new InMemorySecretStore(), {
+        createId: () => `secret-${++nextId}`,
+        now: () => new Date("2026-10-22T10:00:00.000Z"),
+    });
 }
 
 function createNamespace(secrets: CmsSecrets, name: string) {

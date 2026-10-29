@@ -1,3 +1,5 @@
+import { resolveNamedSecret } from "cms-secrets/core/resolveNamedSecret";
+import type { CmsSecretResolutionReader } from "cms-secrets/interfaces/CmsSecretResolutionReader";
 import type { SecretStore } from "@bernouy/secret-store";
 import { SecretNamespaceAuthority } from "cms-secrets/core/SecretNamespaceAuthority";
 import { CmsSecretConflict, CmsSecretNotFound } from "cms-secrets/core/errors";
@@ -14,10 +16,13 @@ export class CmsSecrets {
     constructor(
         private readonly metadata: CmsSecretMetadataStore,
         private readonly values: SecretStore,
-        private readonly createId: () => string = () => crypto.randomUUID(),
-        private readonly now: () => Date = () => new Date(),
+        private readonly options: {
+            createId?: () => string;
+            now?: () => Date;
+            resolutionReader?: CmsSecretResolutionReader;
+        } = {},
     ) {
-        this.namespaces = new SecretNamespaceAuthority(metadata, now);
+        this.namespaces = new SecretNamespaceAuthority(metadata, this.now);
     }
 
     createNamespace(input: { name: string; createdBy: { kind: "administrator" | "provider" | "system"; id: string } }) {
@@ -72,7 +77,7 @@ export class CmsSecrets {
         if (await this.metadata.findByName(namespaceId, name)) {
             throw new CmsSecretConflict("secret name already exists");
         }
-        const id = this.createId();
+        const id = this.options.createId?.() ?? crypto.randomUUID();
         const storageKey = `CMS_SECRET_${id.replaceAll("-", "_").toUpperCase()}`;
         const secret = { id, namespaceId, name, storageKey, version: 1, createdAt: this.now() };
         if (!(await this.metadata.create(secret))) {
@@ -98,21 +103,15 @@ export class CmsSecrets {
         return secret ? publicSecretMetadata(secret) : null;
     }
 
-    /** One credential check requires both permissions before reading metadata or a value. */
+    /** Named resolution requires both permissions before exposing metadata or decrypting a value. */
     async resolveByName(namespaceId: string, namespaceKey: string, name: string) {
-        await this.namespaces.authorizeFor(namespaceId, namespaceKey, ["secrets.metadata.read", "secrets.resolve"]);
-        const secret = await this.metadata.findByName(namespaceId, name);
-        if (!secret) {
-            return null;
-        }
-        if (secret.namespaceId !== namespaceId || secret.name !== name) {
-            throw new CmsSecretNotFound("secret does not exist");
-        }
-        const value = await this.values.get(secret.storageKey);
-        if (value === null) {
-            throw new CmsSecretNotFound("secret value is unavailable");
-        }
-        return { namespaceId, secretId: secret.id, version: secret.version, value };
+        return resolveNamedSecret(
+            this.metadata,
+            this.values,
+            this.now,
+            { namespaceId, namespaceKey, name },
+            this.options.resolutionReader,
+        );
     }
 
     async list(namespaceId: string, namespaceKey: string, limit: number): Promise<readonly PublicSecretMetadata[]> {
@@ -167,6 +166,8 @@ export class CmsSecrets {
         }
         return { namespaceId, secretId: secret.id, version: secret.version, value };
     }
+
+    private readonly now = () => (this.options.now ?? (() => new Date()))();
 
     private async required(namespaceId: string, id: string) {
         const secret = await this.metadata.get(id);
