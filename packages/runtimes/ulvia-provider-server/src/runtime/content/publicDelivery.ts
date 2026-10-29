@@ -77,7 +77,10 @@ export function createPublicDelivery(
                                     version: string;
                                     capabilities: { id: string; access: "public" | "authenticated" | "admin" }[];
                                 };
-                                return value?.found ? value : null;
+                                if (value?.found !== true && value?.found !== false) {
+                                    throw new Error("Capability description response is unavailable");
+                                }
+                                return value.found ? value : null;
                             }),
                         );
                     },

@@ -2,7 +2,7 @@ type Description = Readonly<{
     version: string;
     capabilities: readonly { id: string; access: "public" | "authenticated" | "admin" }[];
 }>;
-type Entry = { value: Description; bytes: number };
+type Entry = { value: Description | null; bytes: number };
 
 /** Rendering metadata only; never grants authority to invoke a capability. One cache per instance runtime. */
 export function createDescriptionCache(readRevision: () => Promise<number>) {
@@ -30,7 +30,7 @@ export function createDescriptionCache(readRevision: () => Promise<number>) {
         const active = pending.get(key);
         if (active) {
             if (active.waiters >= 256) {
-                throw new Error("Page capability description waiter capacity exceeded");
+                return load();
             }
             active.waiters++;
             try {
@@ -40,20 +40,20 @@ export function createDescriptionCache(readRevision: () => Promise<number>) {
             }
         }
         if (pending.size >= 16) {
-            throw new Error("Page capability description load capacity exceeded");
+            return load();
         }
         const task = Promise.resolve()
             .then(load)
             .then(async (value) => {
-                if (!value) {
-                    return null;
-                }
-                const snapshot = Object.freeze({
-                    version: value.version,
-                    capabilities: Object.freeze(
-                        value.capabilities.map((capability) => Object.freeze({ ...capability })),
-                    ),
-                });
+                const snapshot =
+                    value === null
+                        ? null
+                        : Object.freeze({
+                              version: value.version,
+                              capabilities: Object.freeze(
+                                  value.capabilities.map((capability) => Object.freeze({ ...capability })),
+                              ),
+                          });
                 const size = Buffer.byteLength(JSON.stringify(snapshot));
                 // An oversized result may be used for this call but is never retained.
                 if (size <= 64 * 1024 && (await readRevision()) === revision) {

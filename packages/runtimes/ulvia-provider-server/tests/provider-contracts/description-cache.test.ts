@@ -37,7 +37,7 @@ test("a selection change during a load never stores its result under the old rev
     const restricted = { ...value, capabilities: [{ id: "read", access: "admin" as const }] };
     expect(await cache("contract", 2, async () => restricted)).toEqual(restricted);
 });
-test("failed, missing and oversized descriptions are retried; distinct pending loads are bounded", async () => {
+test("failed and oversized descriptions are retried; pending-load saturation bypasses storage", async () => {
     const cache = createDescriptionCache(async () => 1);
     let loads = 0;
     await expect(
@@ -45,7 +45,7 @@ test("failed, missing and oversized descriptions are retried; distinct pending l
             throw new Error("unavailable");
         }),
     ).rejects.toThrow();
-    expect(await cache("contract", 1, async () => null)).toBeNull();
+
     await cache("contract", 1, async () => {
         loads++;
         return value;
@@ -69,7 +69,7 @@ test("failed, missing and oversized descriptions are retried; distinct pending l
             return value;
         }),
     );
-    await expect(cache("overflow", 1, async () => value)).rejects.toThrow("capacity");
+    expect(await cache("overflow", 1, async () => value)).toEqual(value);
     release();
     await Promise.all(tasks);
 });
@@ -103,7 +103,7 @@ test("entry and byte bounds evict metadata and shared snapshots are immutable", 
     }).toThrow();
 });
 
-test("coalesced description waiters are bounded without issuing extra Provider calls", async () => {
+test("excess description waiters bypass the shared pending load instead of failing", async () => {
     const cache = createDescriptionCache(async () => 1);
     let release!: () => void;
     const barrier = new Promise<void>((resolve) => {
@@ -116,8 +116,38 @@ test("coalesced description waiters are bounded without issuing extra Provider c
         return value;
     };
     const tasks = Array.from({ length: 256 }, () => cache("contract", 1, load));
-    await expect(cache("contract", 1, load)).rejects.toThrow("waiter capacity");
+    const overflow = cache("contract", 1, load);
     release();
+    expect(await overflow).toEqual(value);
     await Promise.all(tasks);
-    expect(calls).toBe(1);
+    expect(calls).toBe(2);
+});
+
+test("a missing selected contract is cached only under a verified revision; failures never become negatives", async () => {
+    let revision = 1;
+    let loads = 0;
+    const cache = createDescriptionCache(async () => revision);
+    const missing = async () => {
+        loads++;
+        return null;
+    };
+    expect(await cache("missing", 1, missing)).toBeNull();
+    expect(await cache("missing", 1, missing)).toBeNull();
+    expect(loads).toBe(1);
+    revision = 2;
+    expect(await cache("missing", 2, async () => value)).toEqual(value);
+    await cache("racing", 2, async () => {
+        revision = 3;
+        return null;
+    });
+    expect(await cache("racing", 2, async () => value)).toEqual(value);
+    for (let attempt = 0; attempt < 2; attempt++) {
+        await expect(
+            cache("unavailable", 3, async () => {
+                loads++;
+                throw new Error("Provider unavailable");
+            }),
+        ).rejects.toThrow("Provider unavailable");
+    }
+    expect(loads).toBe(3);
 });
