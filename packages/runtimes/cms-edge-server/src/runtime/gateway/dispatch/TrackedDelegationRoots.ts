@@ -9,20 +9,49 @@ export class TrackedDelegationRoots {
     private readonly active = new Map<string, Root>();
     private readonly closed = new Map<string, Root>();
     private readonly inFlight = new Set<string>();
+    private readonly reservations = new Set<symbol>();
     constructor(
         private readonly now = Date.now,
         private readonly maximum = 256,
     ) {}
-    register(context: DelegationContext, requestId: string, siteId = "default"): void {
+    reserve(releasing: readonly Omit<Closure, "siteId">[] = []): symbol {
+        this.prune();
+        const credit = new Set(
+            releasing
+                .filter(
+                    (item) =>
+                        this.inFlight.has(item.ticket) && this.closed.get(item.ticket)?.requestId === item.requestId,
+                )
+                .map((item) => item.ticket),
+        ).size;
+        if (
+            this.reservations.size >= this.maximum ||
+            this.active.size + this.closed.size + this.reservations.size >= this.maximum + credit
+        ) {
+            throw new GatewayError("rate_limited", "Delegation tracking capacity exceeded");
+        }
+        const reservation = Symbol();
+        this.reservations.add(reservation);
+        return reservation;
+    }
+    releaseReservation(reservation: symbol | undefined): void {
+        if (reservation !== undefined) {
+            this.reservations.delete(reservation);
+        }
+    }
+    register(context: DelegationContext, requestId: string, siteId = "default", reservation?: symbol): void {
         this.prune();
         if (
             context.expiresAt <= this.now() ||
-            this.active.size + this.closed.size >= this.maximum ||
+            (reservation !== undefined && !this.reservations.has(reservation)) ||
+            this.active.size + this.closed.size + this.reservations.size - (reservation !== undefined ? 1 : 0) >=
+                this.maximum ||
             this.active.has(context.ticket) ||
             this.closed.has(context.ticket)
         ) {
             throw new GatewayError("not_authorized", "Root tracking capacity or lifetime exceeded");
         }
+        this.releaseReservation(reservation);
         this.active.set(context.ticket, { ...context, requestId, siteId, used: false });
     }
     use(target: Pick<DelegationTarget, "ticket" | "siteId">): boolean {

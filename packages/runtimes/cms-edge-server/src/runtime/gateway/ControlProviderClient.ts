@@ -53,45 +53,65 @@ export class ControlProviderClient {
         });
     }
 
-    async prepareGatewayDispatch(input: ProviderDispatchPreparation): Promise<PreparedProviderDispatch> {
-        const prepared = await this.withClosures(input, async (value) => {
-            const response = requiredResponse(
-                await this.invoke("gateway.dispatch.prepare", "POST", "/gateway/dispatch/prepare", value),
-            );
-            const delegation = response.delegation as PreparedProviderDispatch["delegation"];
-            if (
-                delegation !== null &&
-                (!delegation ||
-                    !validDelegationTicket(delegation.ticket) ||
-                    !Number.isSafeInteger(delegation.expiresAt) ||
-                    delegation.expiresAt <= Date.now())
-            ) {
-                throw new TypeError("Invalid prepared delegation");
-            }
-            return {
-                token: requiredText(response, "token"),
-                instanceId: requiredText(response, "instanceId"),
-                delegation,
-            };
-        });
-        if (prepared.delegation) {
-            this.roots?.register(prepared.delegation, input.invocation.requestId);
-        }
-        return prepared;
+    async prepareGatewayDispatch(
+        input: ProviderDispatchPreparation,
+        reserveRoot = true,
+    ): Promise<PreparedProviderDispatch> {
+        return this.withClosures(
+            input,
+            async (value) => {
+                const response = requiredResponse(
+                    await this.invoke("gateway.dispatch.prepare", "POST", "/gateway/dispatch/prepare", value),
+                );
+                const delegation = response.delegation as PreparedProviderDispatch["delegation"];
+                if (
+                    delegation !== null &&
+                    (!delegation ||
+                        !validDelegationTicket(delegation.ticket) ||
+                        !Number.isSafeInteger(delegation.expiresAt) ||
+                        delegation.expiresAt <= Date.now())
+                ) {
+                    throw new TypeError("Invalid prepared delegation");
+                }
+                return {
+                    token: requiredText(response, "token"),
+                    instanceId: requiredText(response, "instanceId"),
+                    delegation,
+                };
+            },
+            async (prepared, reservation) => {
+                if (prepared.delegation) {
+                    await this.delegations.trackIssued(
+                        prepared.delegation,
+                        input.invocation.requestId,
+                        "default",
+                        reservation,
+                    );
+                }
+            },
+            reserveRoot,
+        );
     }
 
     private async withClosures<T extends object, Result>(
         input: T,
         load: (value: T) => Promise<Result>,
+        accepted?: (value: Result, reservation: symbol | undefined) => Promise<void>,
+        reserveRoot = false,
     ): Promise<Result> {
         const batch = this.roots?.batch() ?? [];
+        let reservation: symbol | undefined;
         try {
+            reservation = reserveRoot ? this.roots?.reserve(batch) : undefined;
             const result = await load({ ...input, ...(batch.length ? { closedDelegations: batch } : {}) });
             this.roots?.acknowledge(batch);
+            await accepted?.(result, reservation);
             return result;
         } catch (error) {
             this.roots?.release(batch);
             throw error;
+        } finally {
+            this.roots?.releaseReservation(reservation);
         }
     }
 

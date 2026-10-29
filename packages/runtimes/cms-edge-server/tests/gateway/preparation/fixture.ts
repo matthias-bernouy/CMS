@@ -129,6 +129,9 @@ export async function preparedFixture(command = false, settled?: () => void, mac
             wrongAudience: () => {
                 wrongAudience = true;
             },
+            reject: (code: number) => {
+                status = code;
+            },
             deny: () => {
                 status = 403;
             },

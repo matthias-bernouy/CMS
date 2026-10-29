@@ -21,17 +21,36 @@ export class ControlDelegationAuthority implements GatewayDelegationAuthority {
         private readonly roots?: TrackedDelegationRoots,
     ) {}
     async issue(source: DelegationSource) {
-        const response = await this.call("issue", { source });
-        if (response.delegation === null) {
-            return null;
+        const reservation = this.roots?.reserve();
+        try {
+            const response = await this.call("issue", { source });
+            if (response.delegation === null) {
+                return null;
+            }
+            const context = response.delegation as Record<string, unknown> | undefined;
+            if (!context || !validDelegationTicket(context.ticket) || !Number.isSafeInteger(context.expiresAt)) {
+                throw new GatewayError("invalid_provider_response", "invalid delegation response");
+            }
+            const issued = { ticket: context.ticket, expiresAt: Number(context.expiresAt) };
+            await this.trackIssued(issued, source.requestId, source.siteId, reservation);
+            return issued;
+        } finally {
+            this.roots?.releaseReservation(reservation);
         }
-        const context = response.delegation as Record<string, unknown> | undefined;
-        if (!context || !validDelegationTicket(context.ticket) || !Number.isSafeInteger(context.expiresAt)) {
-            throw new GatewayError("invalid_provider_response", "invalid delegation response");
+    }
+    async trackIssued(
+        context: { ticket: string; expiresAt: number },
+        requestId: string,
+        siteId = "default",
+        reservation?: symbol,
+    ) {
+        try {
+            this.roots?.register(context, requestId, siteId, reservation);
+        } catch (error) {
+            // A returned root remains Provider-owned even when local admission fails.
+            await this.closeRemote({ siteId, ticket: context.ticket, requestId });
+            throw error;
         }
-        const issued = { ticket: context.ticket, expiresAt: Number(context.expiresAt) };
-        this.roots?.register(issued, source.requestId, source.siteId);
-        return issued;
     }
     async check(target: DelegationTarget) {
         if (this.roots && !this.roots.use(target)) {
@@ -57,6 +76,9 @@ export class ControlDelegationAuthority implements GatewayDelegationAuthority {
         if (this.roots && this.roots.close(context) !== "used") {
             return;
         }
+        await this.closeRemote(context);
+    }
+    private async closeRemote(context: { siteId: string; ticket: string; requestId: string }) {
         const response = await this.call("close", { context });
         if (response.accepted !== true) {
             throw new Error("Invalid delegation closure acknowledgement");

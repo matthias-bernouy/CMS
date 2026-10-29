@@ -11,6 +11,18 @@ export function preparedEdgeDispatch(
     routes: ControlGatewayRouteResolver,
 ): GatewayDispatch {
     return async (request, context) => {
+        const route = await routes.resolve("default", request.release.contractId);
+        const implementation = route?.manifest.admission.manifest.implementations.find(
+            (item) =>
+                item.contractId === route.selection.contractId &&
+                item.version === route.selection.version &&
+                item.digest === route.selection.digest,
+        );
+        const reserveRoot =
+            !request.delegated &&
+            context.actor.kind !== "provider" &&
+            context.actor.kind !== "system" &&
+            Boolean(implementation?.delegation?.sources.some((id) => id === "*" || id === request.capability.id));
         let delegation: DelegationContext | null = null;
         const close = async () => {
             if (delegation) {
@@ -30,11 +42,14 @@ export function preparedEdgeDispatch(
                         ...invocation
                     } = invocationAuthority(exchange);
                     try {
-                        const issued = await control.prepareGatewayDispatch({
-                            invocation,
-                            ...context,
-                            ...(subjectId ? { expectedSubjectId: subjectId } : {}),
-                        });
+                        const issued = await control.prepareGatewayDispatch(
+                            {
+                                invocation,
+                                ...context,
+                                ...(subjectId ? { expectedSubjectId: subjectId } : {}),
+                            },
+                            reserveRoot,
+                        );
                         delegation = issued.delegation;
                         if (
                             exchange.authentication.kind !== "capability" ||
