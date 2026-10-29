@@ -1,5 +1,4 @@
 import type { Locator } from "playwright";
-import type { Route } from "playwright";
 import type { Page } from "playwright";
 import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
 
@@ -41,44 +40,51 @@ export async function waitForSiteOperation(page: ProbePage, handle: unknown, now
     throw new Error("Site operation did not finish before its deadline");
 }
 
-/** Capture the accepted handle before the browser redirects and releases its response resource. */
+/** Observe the real 202 and identify its durable operation without rewriting the browser response. */
 export async function submitSiteUpgrade(
-    page: ProbePage & Pick<Page, "route" | "unroute">,
+    page: ProbePage & Pick<Page, "waitForResponse">,
     apply: Pick<Locator, "click">,
     capability: "apply-collection-upgrade" | "apply-contract-upgrade",
 ): Promise<void> {
-    let accept!: (value: unknown) => void;
-    let reject!: (reason: unknown) => void;
-    const accepted = new Promise<unknown>((resolve, fail) => {
-        accept = resolve;
-        reject = fail;
-    });
-    const timer = setTimeout(() => reject(new Error("Site upgrade command was not acknowledged")), 15_000);
-    const pattern = `**/ulvia.cms.installations/${capability}`;
-    const intercept = async (route: Route) => {
-        try {
-            const response = await route.fetch();
-            try {
-                const handle: unknown = await response.json();
-                await route.fulfill({ response });
-                if (!response.ok()) {
-                    throw new Error(`Site upgrade command failed (${response.status()})`);
-                }
-                accept(handle);
-            } finally {
-                await response.dispose();
+    const before = new Set((await listSiteOperations(page)).map((item) => item.operationId));
+    const accepted = page
+        .waitForResponse(
+            (response) =>
+                response.request().method() === "POST" &&
+                new URL(response.url()).pathname.endsWith(`/ulvia.cms.installations/${capability}`),
+            { timeout: 15_000 },
+        )
+        .then((response) => {
+            if (response.status() !== 202) {
+                throw new Error(`Site upgrade command was not acknowledged (${response.status()})`);
             }
-        } catch (error) {
-            reject(error);
-            await route.abort().catch(() => undefined);
-        }
-    };
-    await page.route(pattern, intercept, { times: 1 });
+        });
+    await Promise.all([accepted, apply.click({ noWaitAfter: true })]);
+    const created = (await listSiteOperations(page)).filter(
+        (item) => item.capabilityId === capability && !before.has(item.operationId),
+    );
+    if (created.length !== 1) {
+        throw new Error("Site upgrade did not produce one unambiguous new operation");
+    }
+    await waitForSiteOperation(page, { operationId: created[0]!.operationId });
+}
+
+async function listSiteOperations(page: ProbePage): Promise<{ operationId: string; capabilityId: string }[]> {
+    const endpoint = new URL("/.cms/query/ulvia.cms.installations/list-operations", page.url()).href;
+    const response = await page.request.fetch(endpoint, { method: "QUERY", data: { limit: 100 } });
     try {
-        const [handle] = await Promise.all([accepted, apply.click()]);
-        await waitForSiteOperation(page, handle);
+        if (!response.ok()) {
+            throw new Error(`Operation inventory failed (${response.status()})`);
+        }
+        const value = (await response.json()) as { items: { operationId: string; capabilityId: string }[] };
+        if (!Array.isArray(value.items) || value.items.length > 100) {
+            throw new Error("Invalid operation inventory");
+        }
+        for (const item of value.items) {
+            parseCapabilityOperationHandle({ operationId: item.operationId });
+        }
+        return value.items;
     } finally {
-        clearTimeout(timer);
-        await page.unroute(pattern, intercept);
+        await response.dispose();
     }
 }
