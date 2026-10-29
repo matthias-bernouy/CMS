@@ -1,7 +1,9 @@
 # Delivery Performance Plan
 
-Status: design TODO. Measurements describe the reviewed revision; the phases
-below are not implemented unless explicitly identified as current behavior.
+Status: phases 0–5 implemented and verified locally on 2026-10-29.
+`check:all`, `verify:full`, the dedicated Docker suite and the sustained delivery
+journey pass. The implementation is integrated into `codex/alpha-v0`; no
+publication or deployment has been performed.
 
 ## Measured Baseline
 
@@ -44,7 +46,7 @@ protocol: two or three internal calls and sequential authority reads.
   (`cms-gateway/src/access/providers/ProviderAccess.ts`). Such Pages and
   `/admin/pages` return 503 for the rest of the minute.
 - **No Edge response cache.** Every public `GET`, including content-addressed
-  immutable assets, crosses the Gateway (`cms-edge-server/src/runtime/publicResource.ts`).
+  immutable assets, crosses the Gateway (`cms-edge-server/src/runtime/resources/publicResource.ts`).
 - **Delegation ticket on every request.** The official manifest declares
   `delivery.resolve-path` as a delegation source, so every request, assets
   included, writes a root ticket and closes it with another control call.
@@ -164,7 +166,7 @@ in isolation).
 
 ### 2. Edge Cache For Immutable Assets
 
-Wrap `gateway.invoke` in `cms-edge-server/src/runtime/publicResource.ts`:
+Wrap `gateway.invoke` in `cms-edge-server/src/runtime/resources/publicResource.ts`:
 
 - key on the canonical `resolve-path` input: path, the **ordered** query list
   without sorting (the contract transports an ordered list, and repeated
@@ -298,3 +300,85 @@ call or Mongo operation. Purge-scope commands that complete, including
 selection changes, are visible on the next request; unknown outcomes and other
 writes appear within 15 seconds of the effective write. Misses stay within the
 tightened budget.
+
+
+## Implementation evidence
+
+The reproducible journey is `tests/integration/instance/performance.docker.test.ts`.
+It keeps the Edge cache disabled for 420 requests across three image-capable
+Pages and administrator reads over 126 seconds, then repeats with the cache.
+Its hit probes assert zero internal HTTP calls and zero Mongo operations.
+`artifacts/delivery-performance/latest.json` records the current candidate.
+The final journey counts both fetch-based control requests and the native pinned
+HTTP business transport, with a separate regression exercising the real
+transport and a streaming upload. Only paths are recorded. Mongo totals include
+background diagnostic writes; per-view fractions are means over ten requests,
+not a claim that an individual request performs a fractional operation. Latency
+is local response-body elapsed time on the Docker host, not WAN latency.
+
+
+### Final local measurement
+
+The final run uses locally built candidate images and includes the native
+business HTTP transport in the internal-call count. The baseline above belongs
+to the earlier plan revision; it is not a simultaneous comparison of identical
+sources. Raw results are retained in
+`artifacts/delivery-plan/final-measurement.json` and the full command output in
+`artifacts/delivery-plan/verify-full-final.txt`.
+
+| Warm request | p50 | Mean internal HTTP calls | Mean Mongo operations |
+| --- | --- | --- | --- |
+| Literal Page, cache disabled | 16.16 ms | 2.4 | 15.2 |
+| Image-capable Page, cache disabled | 16.37 ms | 2.8 | 17.6 |
+| Immutable asset, cache disabled | 12.44 ms | 2.4 | 10.5 |
+| Page hit | 0.27 ms | 0 | 0 |
+| Asset hit | 0.26 ms | 0 | 0 |
+
+Both 420-request runs passed, each over 125 seconds across three public Pages
+and 105 administrator reads: 840 requests, no 503. Each twenty-request hit probe
+has a 100% hit ratio. The fifteen-entry journal batch uses one majority bulk
+wire command; warm median is 8.31 ms with all twelve indexes retained.
+
+Validation:
+
+- `bun run check:all`: 10 passed, zero errors.
+- `bun run verify:full`: 2,682 ordinary tests passed, seven opt-in skips;
+  performance budgets, the CLI browser journey and the Docker delivery journey
+  all passed. The delivery case made 1,294 assertions.
+- Dedicated Docker image/instance/upgrade suite: seven passed, one performance
+  case skipped there because it runs separately, zero failures; 336 assertions.
+- Final `git diff --check` and local documentation link checks passed.
+
+
+Description invalidation, slow fills, purge generations, bounded retention,
+credential/range bypass, SSR query restrictions and native metadata have focused
+regressions. Real Mongo assertions retain the route/settings fence while
+reducing the rendering budget from nine reads to seven. Root persistence now
+starts at first consumption; unused roots avoid writes, while Edge-owned root tracking closes unused roots locally and batches
+cleanup into the next preparation. Consumed roots still close remotely.
+Completed or unknown tickets cannot regain authority through a Provider claim.
+
+Control versions 1.0.0/1.1.0 retain their existing paths. Installations 1.2.0
+negotiates explicit machine preparation; delegated end-user calls keep their
+live actor inspections. Content 1.1.0 opts into bounded Vary/tags, allowing
+rendered state to purge without evicting immutable bytes. Untagged responses
+and installation/selection changes still purge globally. Profile 1.3.0 selects
+these contracts and collection 1.1.0, whose exact state-schema pins were updated.
+
+
+### Review limits
+
+Both issuer authorization fences, receiver checks, per-instance actor/key reads
+and pinned HTTP policy remain in place. The combined control call removes an
+outer authentication/authorization exchange; it does not substitute an Edge
+claim for Provider authority. Focused tests cover invalid inputs, wrong audiences,
+other instances, live revocation, closure races and failed loads. Docker covers
+rotation, persistence and a published 1.0.0 instance upgraded to profile 1.3.0.
+
+`ResponseCache` remains one cohesive 189-line state machine, despite the
+180-line review advisory. `ControlProviderClient` remains the single negotiated
+control adapter; its larger size is also advisory. There are no directory-fanout
+errors. Multi-process invalidation, general declarative SSR, the existing Provider
+render-cache capacity work, remote CI and production latency are outside this
+local delivery. Integration creates local commits only; publication and deployment
+remain separate actions.

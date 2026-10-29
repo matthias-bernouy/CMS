@@ -115,7 +115,8 @@ preparation closes a partially issued root ticket. Dispatch still obtains a fres
 invocation token; binary results retain their delegation until completion or
 cancellation. Commands retain their audit ordering. The route control response
 negotiates standard gzip while preserving its complete JSON shape and `no-store`;
-there is no new batch control capability or changed published contract format.
+the exact 1.0.0 control path retains its declared envelope. The later negotiated
+1.1.0 and 1.2.0 preparation capabilities are described below.
 
 Initial mutable metadata reads may be reused within one explicitly scoped
 operation; final signing and receiver fences bypass that context. Named secret
@@ -130,3 +131,79 @@ Business capabilities still traverse Edge and the authenticated HTTP listener.
 Commands preserve identity-before-start-audit ordering. Existing exact `1.0.0`
 control connections retain their declared operations until their profile changes;
 Edge negotiates the exact ready control version again on restart.
+
+
+## Shared Edge response cache
+
+Each production Edge owns an ephemeral response cache (`CMS_EDGE_RESPONSE_CACHE`,
+`true` by default in production and `false` in development). Cookies, Bearer
+credentials, non-anonymous actors, ranges and `If-Range` bypass it. Its identity
+contains the canonical path, ordered query pairs, Accept and normalized
+Accept-Language. It never stores private/no-store, partial, redirect, 304 or
+error responses. Conditional GET and HEAD hits need no Provider invocation.
+A HEAD miss does not populate the cache. Cached identity and gzip bytes share
+an ETag identity; gzip uses the weak representation validator. Vary is preserved.
+
+Public Pages declare `public, no-cache, s-maxage=15`; browsers receive the
+no-cache policy without s-maxage. Freshness starts when a fill begins, not when
+its body finishes. Fills older than 15 seconds cannot capture a new request or
+replace a newer fill. Explicit stale-while-revalidate/stale-if-error policies
+are supported, but ordinary Pages do not opt into them. Dynamic indexing runs
+its authorized query on every view and uses `private, no-store` in both caches.
+
+Completed dispatched Content and Installations mutations invalidate before
+returning their response, including declared errors. Pre-dispatch refusals do
+not invalidate. Unknown outcomes and out-of-band writes can remain stale for
+at most 15 seconds after the effective write. A purge advances a generation:
+new requests cannot join old fills, and old fills cannot repopulate the cache.
+Logs and Access authentication commands are neutral; file mutations affecting
+inline SVG invalidate rendered state. The official command inventory is tested.
+
+Content 1.1.0 accepts `resourceMetadata: "cache-v1"`. Edge sends this option only
+when the selected input declares it. Native metadata can then carry bounded
+`vary` and `cacheTags` lists. Only Accept, Accept-Language and Accept-Encoding
+are allowed variation dimensions. Content mutations purge Page and mutable
+resource tags; immutable addressed bytes survive these edits. Installation,
+selection and unknown official mutations purge globally. Untagged older
+responses always follow global invalidation. Metadata cannot supply cookies,
+security headers, credential variation or a new authority input.
+
+The cache retains at most 256 entries and 16 MiB of serialized representation
+bytes, with a 1 MiB entry bound, 16 concurrent fills and 64 waiters per fill.
+Oversized bodies continue streaming without being cached. `Age` and `x-cache`
+expose the delivery outcome; debug observations do not generate Provider work
+for production cache hits. These caches are process-local: multi-Edge purge
+coordination remains outside the supported deployment model.
+
+## Reduced origin work
+
+Capability descriptions remain calls through Edge. One analyzer/cache belongs
+to each Provider instance. Keys include the current selection revision read
+through ProviderExecutionStateReader. A miss rechecks that revision after the
+call and retains the description only when it is unchanged. Failures are
+retryable; entry, byte, pending-load and waiter bounds limit retention.
+
+Rendering reuses only revision metadata from the settings and Bloc records it
+actually loaded. The ordered settings and route rereads remain fresh. The real
+Mongo regression gates seven warm Content reads instead of nine: system twice,
+Bloc records once, collection installations once, routes twice and the Page once.
+Compression creates Brotli/gzip variants only on their first negotiation.
+
+Unused delegation roots reserve bounded metadata in the authority process;
+their first consumed child persists the existing durable quota record. Closing
+an unused root requires no Mongo write. Consumed roots still close immediately through control. Edge tracks root
+liveness itself and refuses completed/unknown tickets before delegation
+inspection. Unused roots close locally; at most 64 cleanup proofs accompany
+the next preparation, with retries until acknowledged. Pending and closed
+roots share a 256-entry bound; no Provider claim decides liveness. A restart loses unused
+reservations and refuses those tickets. Consumed roots retain atomic budgets,
+live actor/key/selection checks and the original closure and expiry fences.
+
+Installations 1.2.0 adds control-only `gateway.provider.prepare`. For explicit
+machine calls Edge groups authentication, authorization and signing into one
+control call. The broker derives the source from the opaque credential. A
+single-use host proof binds the source, request ID, installation, release,
+capability and audience before ordinary pinned HTTP dispatch. Commands retain
+input validation, durable audit and post-dispatch invalidation. Delegated user
+calls retain their existing actor inspection path. Older control versions use
+their original operations. No Provider-to-Provider business shortcut is added.

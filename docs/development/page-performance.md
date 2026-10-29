@@ -252,3 +252,17 @@ is closed after success or failure, rejects late reads and is recreated for the
 next rendering. Collection and text revisions remain part of the render cache
 identity; removing a collection or hiding a Page remains visible on subsequent
 requests.
+
+
+The delivery performance journey also measures response caching and sustained
+quota behavior. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
+for the current cache and invalidation guarantees. Installations 1.2.0 groups
+explicit machine authentication and preparation while delegated calls preserve
+their original actor inspection path. Profile 1.3.0 selects these minor contracts.
+Mongo diagnostic ingestion uses one unordered majority-acknowledged bulkWrite
+per validated batch. The (instanceId, id) unique index rejects conflicting
+fingerprints; concurrent equal upserts are reconciled with one bounded majority
+read. Errors other than verified duplicate races remain unacknowledged.
+The twelve indexes include Mongo's _id index, tenant/ID uniqueness, reception
+pagination, eight supported filter indexes and TTL cleanup. They are retained:
+this change reduces network commands without deleting supported query paths.

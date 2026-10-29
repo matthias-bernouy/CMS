@@ -224,7 +224,7 @@ transport rules. See [files and responsive images](../images/README.md).
 
 The code establishing the production boundary is
 [createEdgeGateway](../../packages/runtimes/cms-edge-server/src/runtime/gateway/createEdgeGateway.ts),
-[public resource forwarding](../../packages/runtimes/cms-edge-server/src/runtime/publicResource.ts)
+[public resource forwarding](../../packages/runtimes/cms-edge-server/src/runtime/resources/publicResource.ts)
 and [mountProductionEdge](../../packages/runtimes/cms-edge-server/src/runtime/mountEdge.ts).
 The [repository audit](../AUDIT.md) and [open platform work](../TODO.md)
 track the remaining implementation and activation gates.

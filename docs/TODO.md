@@ -13,8 +13,10 @@ performance review guardrails for agents are tracked in the
 
 ## Delivery And Verification
 
-**Status:** static checks, build and ordinary tests pass locally; complete CI
-and fresh-container verification have known blockers. The removed CI prebuild,
+**Status:** static checks, build, ordinary tests, `verify:full` and the dedicated
+Docker image/instance/upgrade suite pass locally. Evidence is recorded in the
+delivery plan; remote CI, coverage reconciliation and dependency advisories
+remain separate verification work. The removed CI prebuild,
 branch triggers and obsolete performance fixtures are repaired; work budgets
 now run in `verify`, and delivery Docker budgets in `verify:full` and CI.
 See [guardrails](development/guardrails.md) for implemented controls and limits.
@@ -48,12 +50,14 @@ as unrelated Pages, Blocs and requested paths grow.
 
 ## Delivery Performance And Edge Cache
 
-**Status:** the initial delivery guardrails and a bounded per-instance
-five-second description cache are implemented. The local Docker journey passes
-200 image-capable Page views per minute without 503. This is the initial
-single-Page journey; the extended multi-Page/two-window scenario and exact
-selection-revision invalidation required by the revised plan remain to do.
-The Edge response cache is also still planned.
+**Status:** phases 0–5 are implemented locally. Description caching uses exact
+selection revisions; production Edge caches anonymous Pages and immutable
+resources with bounded retention and explicit invalidation. The Docker journey
+runs 420 requests across three image-capable Pages and administrator reads for
+over two minutes, first without the cache and then with it. Hits require zero
+Provider work and zero Mongo operations. Origin reads, compression, journal
+batches and delegation/control preparation are reduced. Final verification
+results and measured budgets are recorded in the plan. No release is published.
 
 The measurements, decisions and phases are in the
 [delivery performance plan](TODO/performance.md).

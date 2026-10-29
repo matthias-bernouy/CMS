@@ -122,9 +122,10 @@ image before replacing the live image; startup repeats the guard. The public
 Repository does not track sites outside this Provider's administrative scope.
 
 The profile registry retains exact published profiles while instances or transitions
-still reference them. The current `ulvia.official@1.2.0` profile selects Provider
-manifest `0.3.0`, Installations `1.1.0` and Observability `1.1.0`, and explicitly permits upgrades from
-profiles `1.0.0` and `1.1.0`. It retains the same administration collection and existing Pages.
+still reference them. The current `ulvia.official@1.3.0` profile selects Provider
+manifest `0.4.0`, Content `1.1.0`, Installations `1.2.0`, Observability `1.1.0`
+and administration collection `1.1.0`. It explicitly permits upgrades from
+profiles `1.0.0`, `1.1.0` and `1.2.0`, preserving existing Pages.
 New instances use the configured default; an image update never silently changes
 an existing profile pin.
 

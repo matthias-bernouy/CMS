@@ -52,29 +52,34 @@ partial sets and revisions other than HEAD fail. Labels identify the commit;
 local uncommitted source is included when building images in this checkout.
 
 The journey measures warm literal Pages, image-capable Pages and immutable
-Bloc styles. It gates Mongo commands, internal fetches and response bytes,
-records p50 elapsed response-body time, and executes 200 anonymous views in
-one minute without 503. The initial mean budgets are 30/35/30 Mongo commands
-and 6/7/6 internal fetches respectively, with a 512 KiB response ceiling.
-The asset budget includes Provider control-database reads, which were absent
-from the initial 20-command estimate. Reports include counts by collection.
-Background journal activity can add fractional operations to these averages.
-Latency remains diagnostic to avoid hardware-dependent CI failures.
+Bloc styles. It gates Mongo operations, internal HTTP requests and response bytes,
+records p50 elapsed response-body time, and executes 420 requests over 126
+seconds across three Pages and administrator reads with the Edge cache disabled,
+then repeats with it enabled. The mean origin ceilings are 26/30/22 Mongo
+operations and 5 internal HTTP requests, with a 512 KiB response ceiling. Unused roots
+must perform neither delegation writes nor a standalone closure control call.
+Cache-hit probes assert 100% hits, zero internal calls and zero Mongo work.
+Reports include counts by collection and internal route. Background journal
+activity can add fractional operations to these averages. Latency remains
+diagnostic to avoid hardware-dependent CI failures.
 
 Profiling is enabled only in the disposable Mongo container. Background Docker
 healthchecks are disabled in this measured fixture; explicit readiness probes
 still run, and the other integration fixtures keep normal healthchecks. A test-only
-preload records outbound paths, never tokens or bodies. Reports live in
+preload records both fetch controls and the native pinned HTTP business
+transport. Its regression uses the actual transport, including a streamed body;
+records contain paths only, never query parameters, tokens or bodies. Reports live in
 `artifacts/delivery-performance/latest.json`. No public Repository is used.
 
-The zero-503 prerequisite caches capability descriptions per instance for
-five seconds, coalesces loads and never caches failures/misses. Retention is
-capped at 64 entries/256 KiB of serialized metadata, 64 KiB per entry, with 16 pending distinct loads.
-Snapshots are immutable. This cache only classifies Page access; actual
-invocations retain their existing authorization checks. Classification may lag
-a selection change by five seconds. No SSR query data is introduced.
+The zero-503 prerequisite caches capability descriptions per instance and
+selection revision. Misses reread that revision after the through-Edge call;
+changed revisions and failures are never cached. Retention is capped at 64
+entries/256 KiB of serialized metadata, 64 KiB per entry, 16 distinct pending
+loads and 256 waiters per load. Immutable snapshots classify Page access;
+actual invocations retain fresh authorization. Dynamic indexing remains live
+and private/no-store, including after a capability restriction.
 
 `verify:full` runs the CLI browser smoke and this Docker budget journey. PR/push
 CI on `codex/alpha-v0` and nightly/manual smoke reuse explicitly built candidate
-images. Edge response caching, cache-hit budgets and zero Provider/Mongo work
-per hit remain part of the subsequent delivery performance phases.
+images. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
+for the implemented response cache, invalidation and process-local limits.
