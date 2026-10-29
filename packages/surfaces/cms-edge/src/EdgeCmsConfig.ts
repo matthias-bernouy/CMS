@@ -12,6 +12,7 @@ export type EdgeCmsConfig = {
     capabilityGateway?: {
         readonly siteId: string;
         readonly invoker: CapabilityHttpHandlerConfig["invoker"];
+        readonly invokeProvider?: CapabilityHttpHandlerConfig["invokeProvider"];
         readonly authenticateProvider?: (token: string) => Promise<string | null>;
         readonly resolveCapability?: (
             contractId: string,

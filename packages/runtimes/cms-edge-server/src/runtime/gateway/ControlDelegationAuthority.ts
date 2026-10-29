@@ -1,3 +1,4 @@
+import type { TrackedDelegationRoots } from "./dispatch/TrackedDelegationRoots";
 import type {
     GatewayDelegationAuthority,
     DelegationSource,
@@ -15,7 +16,10 @@ type ControlInvocation = (
 ) => Promise<Record<string, unknown> | null>;
 
 export class ControlDelegationAuthority implements GatewayDelegationAuthority {
-    constructor(private readonly invoke: ControlInvocation) {}
+    constructor(
+        private readonly invoke: ControlInvocation,
+        private readonly roots?: TrackedDelegationRoots,
+    ) {}
     async issue(source: DelegationSource) {
         const response = await this.call("issue", { source });
         if (response.delegation === null) {
@@ -25,9 +29,14 @@ export class ControlDelegationAuthority implements GatewayDelegationAuthority {
         if (!context || !validDelegationTicket(context.ticket) || !Number.isSafeInteger(context.expiresAt)) {
             throw new GatewayError("invalid_provider_response", "invalid delegation response");
         }
-        return { ticket: context.ticket, expiresAt: Number(context.expiresAt) };
+        const issued = { ticket: context.ticket, expiresAt: Number(context.expiresAt) };
+        this.roots?.register(issued, source.requestId, source.siteId);
+        return issued;
     }
     async check(target: DelegationTarget) {
+        if (this.roots && !this.roots.use(target)) {
+            throw new GatewayError("not_authorized", "Root invocation is no longer active on this Edge");
+        }
         const response = await this.call("check", { target });
         const actor = response.actor as DelegationActor | undefined;
         if (
@@ -39,9 +48,15 @@ export class ControlDelegationAuthority implements GatewayDelegationAuthority {
         ) {
             throw new GatewayError("invalid_provider_response", "invalid delegated actor");
         }
+        if (this.roots && !this.roots.use(target)) {
+            throw new GatewayError("not_authorized", "Root closed during delegation inspection");
+        }
         return { actor, rootRequestId: response.rootRequestId };
     }
     async close(context: { siteId: string; ticket: string; requestId: string }) {
+        if (this.roots && this.roots.close(context) !== "used") {
+            return;
+        }
         const response = await this.call("close", { context });
         if (response.accepted !== true) {
             throw new Error("Invalid delegation closure acknowledgement");

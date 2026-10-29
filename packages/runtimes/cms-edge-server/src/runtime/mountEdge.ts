@@ -1,12 +1,18 @@
+import type { ResponseCache } from "./resources/cache/ResponseCache";
 import type { RuntimeEnv } from "../runtimeEnv";
 import { createCmsMcpHandler } from "@bernouy/cms-edge";
 import { PRODUCTION_EDGE_RUNTIME, type ProductionEdgeRuntime } from "./edgeRuntime";
 import type { Logger } from "@bernouy/logging";
 import type { createEdgeGateway } from "./gateway/createEdgeGateway";
-import { createPublicResourceHandler } from "./publicResource";
+import { createPublicResourceHandler } from "./resources/publicResource";
 export type { ProductionEdgeRuntime } from "./edgeRuntime";
 export type ProductionEdgeHandle = { stop(): Promise<void> };
-type MountOptions = { env: RuntimeEnv; gateway: ReturnType<typeof createEdgeGateway>; logger: Logger };
+type MountOptions = {
+    env: RuntimeEnv;
+    gateway: ReturnType<typeof createEdgeGateway>;
+    logger: Logger;
+    cache?: ResponseCache;
+};
 export async function mountProductionEdge(
     options: MountOptions,
     runtime: ProductionEdgeRuntime = PRODUCTION_EDGE_RUNTIME,
@@ -25,15 +31,20 @@ export async function mountProductionEdge(
             contracts: gateway.contracts,
         }),
         resolveActor: gateway.resolveActor,
-        resourceHandler: createPublicResourceHandler(gateway.invoker, {
-            reportOnly: env.MODE === "DEV",
-            csp: env.CMS_CSP_ALLOWED_ORIGINS,
-        }),
+        resourceHandler: createPublicResourceHandler(
+            gateway.invoker,
+            {
+                reportOnly: env.MODE === "DEV",
+                csp: env.CMS_CSP_ALLOWED_ORIGINS,
+            },
+            options.cache,
+        ),
         sessionCookie: { secure: env.CMS_PUBLIC_URL.startsWith("https:") },
         capabilityGateway: {
             siteId: "default",
             invoker: gateway.invoker,
             authenticateProvider: gateway.authenticateProvider,
+            invokeProvider: gateway.invokeProvider,
             resolveCapability: gateway.resolveCapability,
         },
     });

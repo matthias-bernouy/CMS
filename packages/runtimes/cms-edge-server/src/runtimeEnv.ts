@@ -7,6 +7,7 @@ export { parsePort } from "./runtimeEnvParsing";
 
 export type RuntimeEnv = {
     MODE: "DEV" | "PROD";
+    CMS_EDGE_RESPONSE_CACHE?: boolean;
     CMS_CSP_ALLOWED_ORIGINS: CspExtras;
     CMS_PORT: number;
     CMS_HOST: string;
@@ -23,6 +24,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
 
     return {
         MODE,
+        CMS_EDGE_RESPONSE_CACHE: parseCacheEnabled(source.CMS_EDGE_RESPONSE_CACHE, MODE),
         CMS_CSP_ALLOWED_ORIGINS: parseCspPolicy(source.CMS_CSP_ALLOWED_ORIGINS),
         CMS_PORT,
         CMS_HOST: parseListenerHost(source.CMS_HOST, "CMS_HOST"),
@@ -72,4 +74,14 @@ function parseUlviaProviderConfig(
         ),
         CMS_INSTALLATIONS_PROVIDER_TOKEN: token!,
     };
+}
+
+function parseCacheEnabled(raw: string | undefined, mode: RuntimeEnv["MODE"]): boolean {
+    if (raw === undefined) {
+        return mode !== "DEV";
+    }
+    if (raw !== "true" && raw !== "false") {
+        throw new Error("CMS_EDGE_RESPONSE_CACHE must be true or false");
+    }
+    return raw === "true";
 }

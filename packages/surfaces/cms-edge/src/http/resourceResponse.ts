@@ -37,7 +37,12 @@ export async function resourceHttpResponse(
     if (!headers.get("content-type")?.toLowerCase().startsWith("text/html")) {
         headers.set("content-security-policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
     }
-    headers.set("vary", "Accept-Encoding");
+    headers.set(
+        "vary",
+        [...new Set([...(metadata.vary ?? []).filter((name) => name !== "accept-encoding"), "Accept-Encoding"])].join(
+            ", ",
+        ),
+    );
     const bodyless = request.method === "HEAD" || status === 304 || [301, 302, 303, 307, 308].includes(status);
     if (bodyless) {
         // The Provider sends an empty native wire body for HEAD/304. Consume EOF so
@@ -85,7 +90,10 @@ function safeCachePolicy(value: string | null): string {
     const parts = value.split(",").map((part) => part.trim().toLowerCase());
     if (
         parts.some(
-            (part) => !/^(?:public|no-cache|must-revalidate|immutable|max-age=(?:0|[1-9][0-9]{0,7}))$/u.test(part),
+            (part) =>
+                !/^(?:public|no-cache|must-revalidate|immutable|(?:max-age|s-maxage|stale-while-revalidate|stale-if-error)=(?:0|[1-9][0-9]{0,7}))$/u.test(
+                    part,
+                ),
         )
     ) {
         return "no-store";
@@ -93,7 +101,7 @@ function safeCachePolicy(value: string | null): string {
     if (parts.some((part) => part.startsWith("max-age=") && Number(part.slice(8)) > 31536000)) {
         return "no-store";
     }
-    return parts.join(", ");
+    return parts.filter((part) => !part.startsWith("s-maxage=")).join(", ");
 }
 function compressible(type: string | null): boolean {
     return Boolean(type && /^(?:text\/|application\/(?:javascript|json|xml)|image\/svg\+xml)/iu.test(type));

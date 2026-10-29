@@ -133,6 +133,27 @@
                 "minLength": 1,
                 "maxLength": 256,
                 "sensitive": true
+            },
+            "closedDelegations": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "ticket": {
+                            "type": "string",
+                            "minLength": 43,
+                            "maxLength": 43,
+                            "sensitive": true
+                        },
+                        "requestId": {
+                            "type": "string",
+                            "minLength": 36,
+                            "maxLength": 36
+                        }
+                    },
+                    "required": ["ticket", "requestId"]
+                }
             }
         },
         "required": ["invocation", "actor", "deadline"]

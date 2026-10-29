@@ -1,3 +1,5 @@
+import { TrackedDelegationRoots } from "./dispatch/TrackedDelegationRoots";
+import type { ProviderMachinePreparation, PreparedProviderMachine } from "@bernouy/cms-gateway/protocol";
 import type { ProviderDispatchPreparation, PreparedProviderDispatch } from "@bernouy/cms-gateway/protocol";
 import { validDelegationTicket } from "@bernouy/cms-gateway/access/delegation";
 import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
@@ -17,33 +19,80 @@ export type IssuedProviderInvocation = Readonly<{
 
 export class ControlProviderClient {
     readonly delegations: ControlDelegationAuthority;
+    private readonly roots?: TrackedDelegationRoots;
     constructor(
         private readonly transport: InstallationsProviderTransport,
         private readonly logger?: Logger,
         private readonly contract: InstallationsControlContract = INSTALLATIONS_CONTRACT,
     ) {
-        this.delegations = new ControlDelegationAuthority((...args) => this.invoke(...args));
+        this.roots = this.contract.version === "1.2.0" ? new TrackedDelegationRoots() : undefined;
+        this.delegations = new ControlDelegationAuthority((...args) => this.invoke(...args), this.roots);
     }
 
     get supportsPreparation(): boolean {
-        return this.contract.version === "1.1.0";
+        return this.contract.version === "1.1.0" || this.contract.version === "1.2.0";
+    }
+
+    get supportsMachinePreparation(): boolean {
+        return this.contract.version === "1.2.0";
+    }
+    async prepareProviderDispatch(input: ProviderMachinePreparation): Promise<PreparedProviderMachine> {
+        return this.withClosures(input, async (value) => {
+            const response = requiredResponse(
+                await this.invoke("gateway.provider.prepare", "POST", "/gateway/providers/prepare", value),
+            );
+            if (response.delegation !== null) {
+                throw new TypeError("Machine preparation cannot issue a user delegation");
+            }
+            return {
+                token: requiredText(response, "token"),
+                instanceId: requiredText(response, "instanceId"),
+                sourceInstallationId: requiredText(response, "sourceInstallationId"),
+                delegation: null,
+            };
+        });
     }
 
     async prepareGatewayDispatch(input: ProviderDispatchPreparation): Promise<PreparedProviderDispatch> {
-        const response = requiredResponse(
-            await this.invoke("gateway.dispatch.prepare", "POST", "/gateway/dispatch/prepare", input),
-        );
-        const delegation = response.delegation as PreparedProviderDispatch["delegation"];
-        if (
-            delegation !== null &&
-            (!delegation ||
-                !validDelegationTicket(delegation.ticket) ||
-                !Number.isSafeInteger(delegation.expiresAt) ||
-                delegation.expiresAt <= Date.now())
-        ) {
-            throw new TypeError("Invalid prepared delegation");
+        const prepared = await this.withClosures(input, async (value) => {
+            const response = requiredResponse(
+                await this.invoke("gateway.dispatch.prepare", "POST", "/gateway/dispatch/prepare", value),
+            );
+            const delegation = response.delegation as PreparedProviderDispatch["delegation"];
+            if (
+                delegation !== null &&
+                (!delegation ||
+                    !validDelegationTicket(delegation.ticket) ||
+                    !Number.isSafeInteger(delegation.expiresAt) ||
+                    delegation.expiresAt <= Date.now())
+            ) {
+                throw new TypeError("Invalid prepared delegation");
+            }
+            return {
+                token: requiredText(response, "token"),
+                instanceId: requiredText(response, "instanceId"),
+                delegation,
+            };
+        });
+        if (prepared.delegation) {
+            this.roots?.register(prepared.delegation, input.invocation.requestId);
         }
-        return { token: requiredText(response, "token"), instanceId: requiredText(response, "instanceId"), delegation };
+        return prepared;
+    }
+
+    private async withClosures<T extends object, Result>(
+        input: T,
+        load: (value: T) => Promise<Result>,
+    ): Promise<Result> {
+        const batch = this.roots?.batch() ?? [];
+        try {
+            const result = await load({ ...input, ...(batch.length ? { closedDelegations: batch } : {}) });
+            this.roots?.acknowledge(batch);
+            return result;
+        } catch (error) {
+            this.roots?.release(batch);
+            throw error;
+        }
     }
 
     async getGatewayRoute(contractId: string): Promise<string | null> {

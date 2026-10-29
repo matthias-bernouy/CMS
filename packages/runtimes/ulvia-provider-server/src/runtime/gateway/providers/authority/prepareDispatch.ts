@@ -10,7 +10,7 @@ export function createDispatchPreparer(options: {
     routes: GatewayRouteResolver;
     identities: ProviderIdentityService;
     inspectActor?(actor: { kind: "user" | "administrator"; subjectId: string }): Promise<DelegationActor | null>;
-    delegations: Pick<DelegationAuthority, "prepare">;
+    delegations: Pick<DelegationAuthority, "prepare"> & Partial<Pick<DelegationAuthority, "close">>;
     issue(
         input: ProviderInvocationIssue,
         reads: GatewayAuthorityReads,
@@ -23,6 +23,16 @@ export function createDispatchPreparer(options: {
 }) {
     return async (value: ProviderDispatchPreparation) => {
         let input = structuredClone(value);
+        if (input.closedDelegations?.length) {
+            if (input.closedDelegations.length > 64 || !options.delegations.close) {
+                throw Object.assign(new Error("Invalid root closure batch"), { status: 403 });
+            }
+            await Promise.all(
+                input.closedDelegations.map((context) =>
+                    options.delegations.close!({ ...context, siteId: options.siteId }),
+                ),
+            );
+        }
         const actorToInspect = input.actor;
         if (
             (actorToInspect.kind === "user" || actorToInspect.kind === "administrator") &&

@@ -11,6 +11,7 @@ describe("stateless Edge runtime env", () => {
     test("requires only listener and Provider connection settings", () => {
         expect(readRuntimeEnv(validEnv())).toEqual({
             MODE: "PROD",
+            CMS_EDGE_RESPONSE_CACHE: true,
             CMS_CSP_ALLOWED_ORIGINS: { connectExtras: [], mediaExtras: [] },
             CMS_PORT: 3000,
             CMS_HOST: "0.0.0.0",

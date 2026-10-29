@@ -1,3 +1,4 @@
+import type { ProviderMachinePreparation, PreparedProviderMachine } from "@bernouy/cms-gateway/protocol";
 import type { ProviderDispatchPreparation, PreparedProviderDispatch } from "@bernouy/cms-gateway/protocol";
 import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
@@ -120,6 +121,7 @@ export interface UlviaProviderGateway {
     readonly providers?: ProviderAccess;
     readonly delegations?: GatewayDelegationAuthority;
     readonly invocations: {
+        prepareProvider?(input: ProviderMachinePreparation): Promise<PreparedProviderMachine>;
         prepare?(input: ProviderDispatchPreparation): Promise<PreparedProviderDispatch>;
         issue(input: ProviderInvocationIssue): Promise<{ token: string; instanceId: string }>;
     };

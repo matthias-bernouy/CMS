@@ -1,5 +1,9 @@
 import { providerCredentialFingerprint } from "@bernouy/cms-gateway/access/providers";
-import { DelegationAuthority, type DelegationActor } from "@bernouy/cms-gateway/access/delegation";
+import {
+    DeferredDelegationStore,
+    DelegationAuthority,
+    type DelegationActor,
+} from "@bernouy/cms-gateway/access/delegation";
 import { MongoDelegationStore } from "@bernouy/cms-gateway/access/delegation/mongo";
 import type { CapabilityGateway, GatewayRoute, GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
@@ -18,7 +22,7 @@ export async function createDelegationAuthority(options: {
     await store.init();
     return new DelegationAuthority({
         ...options,
-        store,
+        store: new DeferredDelegationStore(options.siteId, store),
         credentialFingerprint: async (route) => {
             const reference = route.installation.installation.gatewayTokenRef;
             const token = reference ? await options.resolveSecret(reference) : null;

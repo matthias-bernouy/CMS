@@ -1,5 +1,7 @@
-import { preparedEdgeDispatch } from "./preparedDispatch";
-import { isPublicContentAsset } from "../publicContentAssets";
+import { machineInvocation } from "./dispatch/machineInvocation";
+import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
+import { preparedEdgeDispatch } from "./dispatch/preparedDispatch";
+import { isPublicContentAsset } from "../resources/publicContentAssets";
 import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
 import { NOOP_LOGGER, type Logger } from "@bernouy/logging";
 import type { McpInvocationContext } from "@bernouy/cms-gateway/mcp";
@@ -16,10 +18,17 @@ import {
     ControlProviderIdentityService,
 } from "./RemoteGatewayServices";
 
-export function createEdgeGateway(control: ControlProviderClient, logger: Logger = NOOP_LOGGER) {
+export function createEdgeGateway(
+    control: ControlProviderClient,
+    logger: Logger = NOOP_LOGGER,
+    commandSettled?: (contractId: string, capabilityId: string) => void,
+) {
     const routes = new ControlGatewayRouteResolver(control);
     const logicalRoutes = new ControlGatewayRouteResolver(control, Date.now, 0);
-    const gateway = new CapabilityGateway({
+    const makeTransport = (authorize: (request: GatewayHttpExchange) => Promise<{ token: string }>) =>
+        new HttpGatewayTransport({ network: new NodeGatewayHttpNetwork({ allowPrivateAddresses: true, authorize }) });
+    const gatewayOptions: CapabilityGatewayOptions = {
+        ...(commandSettled ? { commandSettled } : {}),
         ...gatewayObservability(logger),
         routes,
         delegations: control.delegations,
@@ -41,13 +50,9 @@ export function createEdgeGateway(control: ControlProviderClient, logger: Logger
                       version: route.requestedRelease.admission.release.version,
                   })
                 : edgeSystemMayInvoke(actor, route.requestedRelease.admission.release.contractId, capability.id),
-        transport: new HttpGatewayTransport({
-            network: new NodeGatewayHttpNetwork({
-                allowPrivateAddresses: true,
-                authorize: async (request) => ({ token: await brokerAuthorization(control, routes, request) }),
-            }),
-        }),
-    });
+        transport: makeTransport(async (request) => ({ token: await brokerAuthorization(control, routes, request) })),
+    };
+    const gateway = new CapabilityGateway(gatewayOptions);
     const resolveContract = async (contractId: string) => {
         // Capability access is an authorization input, not a transport plan:
         // always resolve it from current control state.
@@ -111,6 +116,9 @@ export function createEdgeGateway(control: ControlProviderClient, logger: Logger
             return [...contracts.values()];
         },
         invoker: gateway,
+        invokeProvider: control.supportsMachinePreparation
+            ? machineInvocation(control, routes, gatewayOptions, makeTransport)
+            : undefined,
         authenticateProvider: (token: string) => control.authenticateProvider(token),
         resolveCapability,
         resolveActor: (request: Request) => resolveActor(gateway, request),

@@ -17,8 +17,14 @@ export const PREPARED_INSTALLATIONS_CONTRACT: InstallationsControlContract = {
     digest: "sha256:e66c8a3bda74f0eebca19391556683e553bc727bab6953707be20d8a80151cb3",
 };
 
+export const MACHINE_INSTALLATIONS_CONTRACT: InstallationsControlContract = {
+    contractId: "ulvia.cms.installations",
+    version: "1.2.0",
+    digest: "sha256:58e2ea89d4cbf5d0a86100b4f30165400cf05d866fa877446ccc98be2574a4d8",
+};
+
 export function installationsControlContract(report: ProviderRuntimeReport): InstallationsControlContract {
-    for (const contract of [PREPARED_INSTALLATIONS_CONTRACT, INSTALLATIONS_CONTRACT]) {
+    for (const contract of [MACHINE_INSTALLATIONS_CONTRACT, PREPARED_INSTALLATIONS_CONTRACT, INSTALLATIONS_CONTRACT]) {
         if (
             report.implementations.some(
                 (candidate) =>

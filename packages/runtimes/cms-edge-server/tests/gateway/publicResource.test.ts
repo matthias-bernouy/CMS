@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createPublicResourceHandler } from "../../src/runtime/publicResource";
+import { createPublicResourceHandler } from "../../src/runtime/resources/publicResource";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
 test("public resolution forwards selected bounded fields and trusted actor only", async () => {
     const calls: GatewayInvocation[] = [];

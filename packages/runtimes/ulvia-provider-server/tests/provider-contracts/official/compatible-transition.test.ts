@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { beforeAll, expect, test } from "bun:test";
 import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderInstallationCandidate } from "@bernouy/cms-repository/providers/installations";
@@ -17,6 +17,12 @@ async function baseFixture() {
     const repository = await repositoryFixture(true);
     return { repository, profiles: await loadOfficialArtifacts(repository.providers, repository.collections) };
 }
+
+// Four retained profiles and two complete collections are fixture admission work, not request latency.
+beforeAll(async () => {
+    base ??= baseFixture();
+    await base;
+}, 15_000);
 
 async function fixture(change: (release: ContractRelease) => ContractRelease = (value) => value) {
     const { repository: f, profiles } = await (base ??= baseFixture());

@@ -1,3 +1,5 @@
+import { ResponseCache } from "./runtime/resources/cache/ResponseCache";
+import { commandCacheEffect, commandCacheTags } from "./runtime/resources/cache/commandPolicy";
 import { mountProductionEdge } from "./runtime/mountEdge";
 import { ControlProviderClient } from "./runtime/gateway/ControlProviderClient";
 import { createEdgeGateway } from "./runtime/gateway/createEdgeGateway";
@@ -22,12 +24,22 @@ async function startEdge(): Promise<void> {
         env.CMS_INSTALLATIONS_PROVIDER_TOKEN,
     );
     const report = await fetchInstallationsProviderReport(transport);
+    const cache = new ResponseCache({
+        enabled: env.CMS_EDGE_RESPONSE_CACHE,
+        event: (outcome) => logger.debug("edge.resource.cache", { outcome }),
+    });
     const gateway = createEdgeGateway(
         new ControlProviderClient(transport, logger, installationsControlContract(report)),
         logger,
+        (contractId, capabilityId) => {
+            const effect = commandCacheEffect(contractId, capabilityId);
+            if (effect !== "neutral") {
+                cache.purge(commandCacheTags(contractId));
+            }
+        },
     );
     await connectEdgeDiagnostics(diagnostics, gateway);
-    const edge = await mountProductionEdge({ env, gateway, logger });
+    const edge = await mountProductionEdge({ env, gateway, logger, cache });
 
     let stopping = false;
     const shutdown = async (signal: string) => {

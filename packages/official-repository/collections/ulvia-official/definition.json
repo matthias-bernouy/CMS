@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "collectionId": "ulvia-official",
     "publisherId": "ulvia.official",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "name": "collection.name",
     "description": "collection.description",
     "locale": "en",
@@ -734,8 +734,8 @@
                             "data": {
                                 "$capabilityOutput": {
                                     "contractId": "ulvia.cms.installations",
-                                    "version": "1.1.0",
-                                    "digest": "sha256:e66c8a3bda74f0eebca19391556683e553bc727bab6953707be20d8a80151cb3",
+                                    "version": "1.2.0",
+                                    "digest": "sha256:58e2ea89d4cbf5d0a86100b4f30165400cf05d866fa877446ccc98be2574a4d8",
                                     "capabilityId": "preview-provider-connection"
                                 }
                             }

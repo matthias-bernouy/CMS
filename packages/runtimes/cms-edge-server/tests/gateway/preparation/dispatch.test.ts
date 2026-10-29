@@ -47,3 +47,22 @@ test("an audience mismatch closes preparation without dispatch and refusals neve
         f.close();
     }
 });
+
+test("host invalidation runs after dispatched commands, including unknown outcomes, and never on preparation refusal", async () => {
+    let purges = 0;
+    const f = await preparedFixture(true, () => {
+        purges++;
+    });
+    try {
+        await f.invoke();
+        expect(purges).toBe(1);
+        f.failBusiness();
+        await expect(f.invoke()).rejects.toMatchObject({ code: "outcome_unknown" });
+        expect(purges).toBe(2);
+        f.deny();
+        await expect(f.invoke()).rejects.toMatchObject({ code: "not_authorized" });
+        expect(purges).toBe(2);
+    } finally {
+        f.close();
+    }
+});

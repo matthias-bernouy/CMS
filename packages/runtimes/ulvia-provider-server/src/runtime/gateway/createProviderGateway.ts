@@ -1,3 +1,4 @@
+import { createMachinePreparer } from "./providers/authority/prepareMachine";
 import { createDispatchPreparer } from "./providers/authority/prepareDispatch";
 import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
 import { ContractUpgradeService } from "@bernouy/cms-repository/providers/selections";
@@ -183,6 +184,16 @@ export async function createProviderGateway(
         },
     );
 
+    const prepareInvocation = createDispatchPreparer({
+        siteId,
+        captureAuthority,
+        routes,
+        identities,
+        delegations,
+        issue: issueInvocation,
+        inspectActor: (actor) => inspectDelegationActor(invoker, siteId, actor),
+    });
+
     return {
         siteId,
         describeContract: (contractId: string) => catalogue.describe(siteId, contractId),
@@ -196,15 +207,8 @@ export async function createProviderGateway(
         commandAudit,
         invocations: {
             issue: issueInvocation,
-            prepare: createDispatchPreparer({
-                siteId,
-                captureAuthority,
-                routes,
-                identities,
-                delegations,
-                issue: issueInvocation,
-                inspectActor: (actor) => inspectDelegationActor(invoker, siteId, actor),
-            }),
+            prepare: prepareInvocation,
+            prepareProvider: createMachinePreparer(access.providers, prepareInvocation),
         },
         delegations,
         providers: access.providers,

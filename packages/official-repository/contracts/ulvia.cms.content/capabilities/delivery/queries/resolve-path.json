@@ -67,6 +67,12 @@
             "ifRange": {
                 "type": "string",
                 "maxLength": 1024
+            },
+            "resourceMetadata": {
+                "type": "string",
+                "enum": ["cache-v1"],
+                "maxLength": 8,
+                "description": "Opt into bounded representation Vary fields and cache dependency tags in native metadata. Omit for the original metadata envelope."
             }
         },
         "required": ["path", "method", "query"]

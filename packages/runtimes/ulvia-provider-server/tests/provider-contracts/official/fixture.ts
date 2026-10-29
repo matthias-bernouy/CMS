@@ -1,3 +1,4 @@
+import { historicalContracts, historicalManifests } from "./history";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
@@ -23,23 +24,7 @@ export async function repositoryFixture(includePrevious = false) {
         index.contracts.map(async (path) => admitContractReleaseJson(await readFile(resolve(ROOT, path)))),
     );
     if (includePrevious) {
-        const current = admissions.find(({ release }) => release.contractId === "ulvia.cms.observability")!;
-        const previous = JSON.parse(current.canonicalJson);
-        previous.version = "1.0.0";
-        for (const capability of previous.capabilities) {
-            capability.bindings = capability.bindings.filter(
-                (binding: { transport: string }) => binding.transport !== "mcp",
-            );
-        }
-        admissions.unshift(await admitContractReleaseJson(JSON.stringify(previous)));
-        const installations = JSON.parse(
-            admissions.find(({ release }) => release.contractId === "ulvia.cms.installations")!.canonicalJson,
-        );
-        installations.version = "1.0.0";
-        installations.capabilities = installations.capabilities.filter(
-            (capability: { id: string }) => capability.id !== "gateway.dispatch.prepare",
-        );
-        admissions.unshift(await admitContractReleaseJson(JSON.stringify(installations)));
+        admissions.unshift(...(await historicalContracts(admissions)));
     }
     const contractDigests = new Map(admissions.map(({ release, digest }) => [release.contractId, digest]));
     await publishContractSet(catalogue, admissions);
@@ -62,31 +47,7 @@ export async function repositoryFixture(includePrevious = false) {
     const manifest = await admitProviderManifestJson(manifestBytes, catalogue);
     const manifests = [manifest];
     if (includePrevious) {
-        const previous = JSON.parse(manifest.canonicalJson);
-        previous.version = "0.1.0";
-        const old = admissions.find(
-            ({ release }) => release.contractId === "ulvia.cms.observability" && release.version === "1.0.0",
-        )!;
-        const oldInstallations = admissions.find(
-            ({ release }) => release.contractId === "ulvia.cms.installations" && release.version === "1.0.0",
-        )!;
-        const intermediate = JSON.parse(manifest.canonicalJson);
-        intermediate.version = "0.2.0";
-        intermediate.implementations = intermediate.implementations.map((pin: { contractId: string }) =>
-            pin.contractId === oldInstallations.release.contractId
-                ? { ...pin, version: "1.0.0", digest: oldInstallations.digest }
-                : pin,
-        );
-        manifests.push(await admitProviderManifestJson(JSON.stringify(intermediate), catalogue));
-        previous.implementations = previous.implementations.map((pin: { contractId: string }) =>
-            pin.contractId === old.release.contractId
-                ? { ...pin, version: old.release.version, digest: old.digest }
-                : pin.contractId === oldInstallations.release.contractId
-                  ? { ...pin, version: "1.0.0", digest: oldInstallations.digest }
-                  : pin,
-        );
-        previous.provenance.publishedAt = "2026-10-01T00:00:00Z";
-        manifests.push(await admitProviderManifestJson(JSON.stringify(previous), catalogue));
+        manifests.push(...(await historicalManifests(manifest.canonicalJson, catalogue, admissions)));
     }
     for (const admitted of manifests) {
         entries.push({
@@ -108,6 +69,10 @@ export async function repositoryFixture(includePrevious = false) {
         index.collectionAssets.map(async ({ id, path }) => ({ id, bytes: await readFile(resolve(ROOT, path)) })),
     );
     const collection = await admitCollectionRelease(collectionValue, collectionAssets, { contracts: catalogue });
+    const historicalCollection = includePrevious ? { ...collectionValue, version: "1.0.0" } : undefined;
+    const previousCollection = historicalCollection
+        ? await admitCollectionRelease(historicalCollection, collectionAssets, { contracts: catalogue })
+        : undefined;
     const providers: ProviderRepositorySource = {
         id: "official",
         list: async (kind) => entries.filter((entry) => entry.kind === kind),
@@ -116,6 +81,20 @@ export async function repositoryFixture(includePrevious = false) {
     const collections: CollectionRepositorySource = {
         id: "official",
         list: async () => [
+            ...(previousCollection
+                ? [
+                      {
+                          repositoryId: "official",
+                          publisherId: previousCollection.release.publisherId,
+                          collectionId: previousCollection.release.collectionId,
+                          version: previousCollection.release.version,
+                          digest: previousCollection.digest,
+                          name: previousCollection.release.name,
+                          blocCount: previousCollection.release.blocs.length,
+                          hasTheme: true,
+                      },
+                  ]
+                : []),
             {
                 repositoryId: "official",
                 publisherId: collection.release.publisherId,
@@ -128,8 +107,12 @@ export async function repositoryFixture(includePrevious = false) {
                 hasTheme: collection.release.theme !== undefined,
             },
         ],
-        getMetadata: async () => collectionValue,
-        get: async () => ({ release: collectionValue, assets: collectionAssets }),
+        getMetadata: async (reference) =>
+            reference.version === "1.0.0" && historicalCollection ? historicalCollection : collectionValue,
+        get: async (reference) => ({
+            release: reference.version === "1.0.0" && historicalCollection ? historicalCollection : collectionValue,
+            assets: collectionAssets,
+        }),
     };
     return {
         providers,
