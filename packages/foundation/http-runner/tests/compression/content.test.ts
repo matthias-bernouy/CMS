@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { cachedResponse, cachedResponseAsync, compress } from "@bernouy/http-runner";
-import { bytesEqual, MemCache, reqWithAccept } from "./support/compression";
+import { bytesEqual, MemCache, reqWithAccept } from "../support/compression";
 
 describe("compress", () => {
     test("encodes a string and produces all three variants", () => {

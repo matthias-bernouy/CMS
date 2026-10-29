@@ -73,3 +73,25 @@ test("Edge compresses text streams and leaves ranges unchanged", async () => {
     expect(range.headers.get("content-encoding")).toBeNull();
     expect(await range.text()).toBe("ab");
 });
+
+test("browser stale directives are bounded and duplicated directives are refused", async () => {
+    for (const directive of ["stale-while-revalidate", "stale-if-error", "s-maxage"]) {
+        const response = await resourceHttpResponse(
+            result("body", {
+                "cache-control": `public, max-age=1, ${directive}=31536001`,
+            }),
+            new Request("https://site.test/"),
+            { kind: "anonymous" },
+        );
+        expect(response.headers.get("cache-control")).toBe("no-store");
+        await response.text();
+    }
+    const response = await resourceHttpResponse(
+        result("body", {
+            "cache-control": "public, max-age=1, max-age=2",
+        }),
+        new Request("https://site.test/"),
+        { kind: "anonymous" },
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+});

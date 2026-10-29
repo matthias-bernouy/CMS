@@ -74,6 +74,10 @@ export {
     cachedResponse,
     cachedResponseAsync,
     sendCompressed,
+    acceptsGzip,
+    acceptsIdentity,
+    isCompressibleType,
+    prepareStreamingResponse,
     type SendCompressedOptions,
 } from "http-runner/core/compression";
 export {

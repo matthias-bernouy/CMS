@@ -7,3 +7,6 @@ export {
     sendCompressed,
     type SendCompressedOptions,
 } from "./compression/response";
+
+export { acceptsGzip, acceptsIdentity, isCompressibleType } from "./compression/negotiation";
+export { prepareStreamingResponse } from "./compression/streaming";

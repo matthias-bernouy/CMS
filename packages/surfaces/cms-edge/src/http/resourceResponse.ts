@@ -1,6 +1,6 @@
 import type { GatewayActor, GatewayResult } from "@bernouy/cms-gateway";
 import { parseResourceMetadata } from "@bernouy/cms-gateway/protocol";
-import { buildCspContent, securityHeaders, type CspExtras } from "@bernouy/http-runner";
+import { buildCspContent, securityHeaders, prepareStreamingResponse, type CspExtras } from "@bernouy/http-runner";
 
 export interface ResourceResponsePolicy {
     readonly csp?: CspExtras;
@@ -39,9 +39,16 @@ export async function resourceHttpResponse(
     }
     headers.set(
         "vary",
-        [...new Set([...(metadata.vary ?? []).filter((name) => name !== "accept-encoding"), "Accept-Encoding"])].join(
-            ", ",
-        ),
+        [
+            ...new Set([
+                "Accept",
+                "Accept-Language",
+                ...(metadata.vary ?? []).filter(
+                    (name) => name !== "accept" && name !== "accept-language" && name !== "accept-encoding",
+                ),
+                "Accept-Encoding",
+            ]),
+        ].join(", "),
     );
     const bodyless = request.method === "HEAD" || status === 304 || [301, 302, 303, 307, 308].includes(status);
     if (bodyless) {
@@ -59,30 +66,9 @@ export async function resourceHttpResponse(
         }
         return new Response(null, { status, headers });
     }
-    let body = result.stream;
-    if (
-        status === 200 &&
-        compressible(headers.get("content-type")) &&
-        acceptsGzip(request.headers.get("accept-encoding"))
-    ) {
-        body = body
-            .pipeThrough(
-                new TransformStream<Uint8Array, BufferSource>({
-                    transform(chunk, controller) {
-                        controller.enqueue(new Uint8Array(chunk).buffer);
-                    },
-                }),
-            )
-            .pipeThrough(new CompressionStream("gzip"));
-        headers.set("content-encoding", "gzip");
-        headers.delete("content-length");
-        const etag = headers.get("etag");
-        if (etag && !etag.startsWith("W/")) {
-            headers.set("etag", `W/${etag}`);
-        }
-    }
-    return new Response(body, { status, headers });
+    return prepareStreamingResponse(request, new Response(result.stream, { status, headers }));
 }
+
 function safeCachePolicy(value: string | null): string {
     if (!value || value.length > 256 || /(?:private|no-store)/iu.test(value)) {
         return "no-store";
@@ -98,18 +84,17 @@ function safeCachePolicy(value: string | null): string {
     ) {
         return "no-store";
     }
-    if (parts.some((part) => part.startsWith("max-age=") && Number(part.slice(8)) > 31536000)) {
+    if (
+        parts.some(
+            (part) =>
+                /^(?:max-age|s-maxage|stale-while-revalidate|stale-if-error)=/u.test(part) &&
+                Number(part.split("=")[1]) > 31536000,
+        )
+    ) {
+        return "no-store";
+    }
+    if (new Set(parts.map((part) => part.split("=")[0])).size !== parts.length) {
         return "no-store";
     }
     return parts.filter((part) => !part.startsWith("s-maxage=")).join(", ");
-}
-function compressible(type: string | null): boolean {
-    return Boolean(type && /^(?:text\/|application\/(?:javascript|json|xml)|image\/svg\+xml)/iu.test(type));
-}
-function acceptsGzip(value: string | null): boolean {
-    return Boolean(
-        value
-            ?.split(",")
-            .some((part) => /^gzip(?:\s*;\s*q=(?:1(?:\.0{0,3})?|0?\.[0-9]{0,2}[1-9]))?$/iu.test(part.trim())),
-    );
 }
