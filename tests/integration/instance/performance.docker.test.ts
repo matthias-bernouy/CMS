@@ -1,3 +1,4 @@
+import { exerciseMutationFreshness } from "./performance/freshness/mutations";
 import { exerciseFreshness } from "./performance/freshness";
 import { exerciseBulkJournal } from "./observability/bulk-journal";
 import { verifyPublicTrace } from "./observability/public-trace";
@@ -78,6 +79,7 @@ integration(
             report.cachedAsset = await measureCached(stack, path!);
             report.loadWithCache = await exerciseLoad(stack, connection);
             report.freshness = await exerciseFreshness(connection, stack.cmsUrl);
+            report.mutations = await exerciseMutationFreshness(connection, stack.cmsUrl);
             const authenticated = await connection.page.request.get(`${stack.cmsUrl}/performance-image`);
             expect(authenticated.status()).toBe(200);
             expect(authenticated.headers()["cache-control"]).toBe("private, no-store");

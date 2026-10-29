@@ -82,6 +82,7 @@
         "./**/*.ts",
         "../../tests/performance/delivery/**/*.ts",
         "../../tests/integration/instance/performance/**/*.ts",
-        "../../tests/integration/instance/performance.docker.test.ts"
+        "../../tests/integration/instance/performance.docker.test.ts",
+        "../../tests/integration/instance/freshness.docker.test.ts"
     ]
 }

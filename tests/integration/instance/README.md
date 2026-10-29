@@ -55,3 +55,10 @@ CI smoke workflows. The ordinary suite skips this case unless
 `ULVIA_RUN_DELIVERY_PERFORMANCE=1`; the explicit runner refuses missing partial
 image sets. See [guardrails](../../../docs/development/guardrails.md) for
 instrumentation, budgets, timing interpretation and cache freshness limits.
+
+
+`freshness.docker.test.ts` separately exercises warmed anonymous Pages across
+collection installation/configuration, reviewed selection-grant changes and
+Files mutations. Its helpers also run in the delivery performance journey.
+Files assertions use supported image references and fresh origin reads, not an
+undeclared SVG binding or browser-cache revocation.
