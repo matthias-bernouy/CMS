@@ -20,6 +20,7 @@ import { withAbort } from "cms-gateway/invocation/http/transport/withAbort";
 import { decodeSessionEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export interface GatewayHttpExchange extends PreparedHttpInvocation {
+    readonly authorityReads?: GatewayTransportRequest["authorityReads"];
     readonly requestId: string;
     readonly installationId?: string;
     readonly providerTokenRef: string;
@@ -99,6 +100,7 @@ export class HttpGatewayTransport implements GatewayTransport {
         );
         const exchange: GatewayHttpExchange = {
             ...prepared,
+            ...(request.authorityReads ? { authorityReads: request.authorityReads } : {}),
             requestId: request.requestId,
             installationId: request.installationId,
             providerTokenRef: request.providerTokenRef,
@@ -106,6 +108,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                 kind: "capability",
                 ...(request.trace ? { trace: request.trace } : {}),
                 instanceId: request.instanceId,
+
                 contractId: request.release.contractId,
                 contractVersion: request.release.version,
                 capabilityId: request.capability.id,

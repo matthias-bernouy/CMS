@@ -104,3 +104,64 @@ test("capability metadata avoids transport stores and fences a concurrent select
     change = true;
     await expect(resolver.describe("site-a", "catalog")).rejects.toMatchObject({ code: "stale_route" });
 });
+
+test("captured metadata belongs to exact store objects and a final authority check reads fresh state", async () => {
+    const f = await gatewayRoute();
+    let snapshot = {
+        selections: {
+            siteId: "site-a",
+            revision: 1,
+            grants: { default: "allow-selected", denied: [] },
+            plan: { selections: [f.selection] },
+        },
+        installations: [f.installation],
+    };
+    let captures = 0;
+    const executionState = {
+        read: async () => {
+            captures++;
+            return structuredClone(snapshot);
+        },
+    } as never;
+    const selections = {
+        get: async () => {
+            throw new Error("Unexpected selection payload read");
+        },
+    } as never;
+    const installations = {
+        get: async () => {
+            throw new Error("Unexpected installation payload read");
+        },
+    } as never;
+    const reads = await GatewayAuthorityReads.capture("site-a", selections, installations, executionState, [
+        "install-a",
+    ]);
+    const resolver = new CatalogueGatewayRouteResolver({
+        selections,
+        installations,
+        executionState,
+        releases: { get: async () => f.release } as unknown as CatalogueGatewayRouteResolverOptions["releases"],
+        manifests: {
+            findByDigest: async () => f.manifest,
+        } as unknown as CatalogueGatewayRouteResolverOptions["manifests"],
+    });
+    const route = await resolver.resolve("site-a", "catalog", reads);
+    expect(captures).toBe(1);
+    expect(await resolver.checkAuthority(route!, "item.list")).toEqual({ current: true, granted: true });
+    snapshot = {
+        ...snapshot,
+        installations: [{ ...f.installation, installation: { ...f.installation.installation, status: "disabled" } }],
+    };
+    expect(await resolver.checkAuthority(route!, "item.list")).toEqual({ current: false, granted: true });
+    expect(captures).toBe(3);
+    // Ordinary resolution also joins its initial metadata using the previously learned ID hint.
+    snapshot = { ...snapshot, installations: [f.installation] };
+    expect((await resolver.resolve("site-a", "catalog"))!.selection).toEqual(f.selection);
+    expect(captures).toBe(5);
+    const otherStore = { get: async () => null };
+    expect(await reads.selection(otherStore, "site-a")).toBeNull();
+    expect(() => reads.selection(selections, "another-site")).toThrow("another site");
+    await expect(
+        GatewayAuthorityReads.capture("other-site", selections, installations, executionState, ["install-a"]),
+    ).rejects.toThrow("another site");
+});

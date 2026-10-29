@@ -1,92 +1,30 @@
 import type { GatewayAuthorityReads } from "cms-gateway/invocation/core/dispatch/GatewayAuthorityReads";
 import { DELEGATION_LIMITS } from "cms-gateway/access/delegation/limits";
-import { validDelegationTicket } from "./wire";
-import { ticketHash, fingerprint, selectionFingerprint } from "./ticket";
-import {
-    implementation,
-    isDelegationActor,
-    actorMayInvoke,
-    denied,
-    reviewedDelegation,
-    delegationFence,
-} from "./validation";
-import { randomBytes } from "node:crypto";
+import { prepareDelegation } from "./prepareDelegation";
+import { validDelegationTicket } from "../wire";
+import { ticketHash, fingerprint, selectionFingerprint } from "../ticket";
+import { implementation, actorMayInvoke, denied, reviewedDelegation, delegationFence } from "../validation";
 import { delegationAllows } from "@bernouy/cms-repository/providers";
 import { capabilityGranted } from "@bernouy/cms-repository/providers/selections";
-import { providerInstallationFingerprint } from "../providers/credentials";
-import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
+import { providerInstallationFingerprint } from "../../providers/credentials";
 import {
     type DelegationAuthorityOptions,
     type DelegationSource,
     type DelegationTarget,
+    type PreparedDelegation,
     type GatewayDelegationAuthority,
-} from "./interfaces";
+} from "../interfaces";
 
 export class DelegationAuthority implements GatewayDelegationAuthority {
     constructor(private readonly options: DelegationAuthorityOptions) {}
 
     async issue(value: DelegationSource, reads?: GatewayAuthorityReads) {
-        const source = structuredClone(value);
-        if (source.siteId !== this.options.siteId || !isDelegationActor(source.actor)) {
-            return denied();
-        }
-        const now = this.now();
-        if (!Number.isSafeInteger(source.deadline) || source.deadline <= now) {
-            return denied();
-        }
-        const route = await this.options.routes.resolve(source.siteId, source.contractId, reads);
-        if (
-            !route ||
-            route.selection.installationId !== source.installationId ||
-            route.selection.digest !== source.digest ||
-            route.requestedRelease.admission.release.version !== source.version
-        ) {
-            return denied();
-        }
-        const capability = route.requestedRelease.admission.release.capabilities.find(
-            ({ id }) => id === source.capabilityId,
-        );
-        const policy = implementation(route)?.delegation;
-        if (!capability || !policy || (!policy.sources.includes("*") && !policy.sources.includes(capability.id))) {
-            return null;
-        }
-        const current = await (reads
-            ? reads.selection(this.options.selections, source.siteId)
-            : this.options.selections.get(source.siteId));
-        const actor = await this.options.inspectActor(source.actor);
-        if (
-            !current ||
-            !actor ||
-            fingerprint(actor) !== fingerprint(source.actor) ||
-            !actorMayInvoke(actor, capability.access) ||
-            !capabilityGranted(current.grants, route.selection.contractId, capability.id) ||
-            !(await this.options.routes.isCurrent(route))
-        ) {
-            return denied();
-        }
-        const credentialFingerprint = await this.options.credentialFingerprint(route);
-        if (!credentialFingerprint) {
-            return denied();
-        }
-        const ticket = randomBytes(32).toString("base64url");
-        const expiresAt = Math.min(source.deadline, now + DELEGATION_LIMITS.lifetimeMs);
-        const created = await this.options.store.create(
-            {
-                hash: ticketHash(ticket),
-                siteId: source.siteId,
-                source,
-                installationFingerprint: providerInstallationFingerprint(route.installation),
-                credentialFingerprint,
-                selectionFingerprint: selectionFingerprint(current),
-                actorFingerprint: fingerprint(actor),
-                expiresAt,
-            },
-            now,
-        );
-        if (!created) {
-            throw new GatewayError("not_authorized", "delegation capacity exceeded");
-        }
-        return { ticket, expiresAt };
+        const prepared = await this.prepare(value, reads);
+        return prepared ? prepared.finalize(value, async (context) => context) : null;
+    }
+
+    async prepare(value: DelegationSource, reads?: GatewayAuthorityReads): Promise<PreparedDelegation | null> {
+        return prepareDelegation(this.options, value, reads);
     }
 
     async check(value: DelegationTarget, consume = false, bytes = 0) {

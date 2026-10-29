@@ -1,4 +1,4 @@
-export { DelegationAuthority } from "cms-gateway/access/delegation/DelegationAuthority";
+export { DelegationAuthority } from "cms-gateway/access/delegation/authority/DelegationAuthority";
 export { InMemoryDelegationStore } from "cms-gateway/access/delegation/InMemoryDelegationStore";
 export {
     DELEGATION_HEADER,
@@ -10,9 +10,11 @@ export type {
     DelegationDispatchAuthority,
     DelegationAuthorization,
     DelegationSource,
+    DelegationScope,
     DelegationTarget,
     DelegationActor,
     DelegationContext,
+    PreparedDelegation,
     DelegationStore,
     DelegationRecord,
 } from "cms-gateway/access/delegation/interfaces";

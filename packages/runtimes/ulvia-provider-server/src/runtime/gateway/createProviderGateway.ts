@@ -3,7 +3,12 @@ import { gatewayObservability } from "@bernouy/cms-gateway/observability/node";
 import { ContractUpgradeService } from "@bernouy/cms-repository/providers/selections";
 import { capabilityGranted } from "@bernouy/cms-repository/providers/selections";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
-import { CapabilityGateway, CatalogueGatewayRouteResolver, GatewayDispatchRejected } from "@bernouy/cms-gateway";
+import {
+    GatewayAuthorityReads,
+    CapabilityGateway,
+    CatalogueGatewayRouteResolver,
+    GatewayDispatchRejected,
+} from "@bernouy/cms-gateway";
 import { MongoGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit/mongo";
 import { createDelegationAuthority, inspectDelegationActor } from "./providers/authority/delegations";
 import { invocationAuthority } from "@bernouy/cms-gateway/http";
@@ -23,13 +28,21 @@ export async function createProviderGateway(
 ) {
     const { db, releases, manifests, installations, selections } = stores;
     const resolveSecret = createSecretResolver(stores.contractSecrets.installations);
-    const catalogue = new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests });
+    const catalogue = new CatalogueGatewayRouteResolver({
+        selections,
+        installations,
+        releases,
+        manifests,
+        executionState: stores.executionState,
+    });
+    const captureAuthority = (ids: readonly string[]) =>
+        GatewayAuthorityReads.capture(siteId, selections, installations, stores.executionState, ids);
     const routes = new RefreshingProviderRoutes(catalogue, { installations, resolveSecret, ...observations });
     const network = new NodeGatewayHttpNetwork({
         allowPrivateAddresses: true,
         authorize: async (request) => {
             try {
-                return { token: (await issueInvocation(invocationAuthority(request))).token };
+                return { token: (await issueInvocation(invocationAuthority(request), request.authorityReads)).token };
             } catch (error) {
                 const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
                 const denied = error && typeof error === "object" && "code" in error && error.code === "not_authorized";
@@ -60,16 +73,25 @@ export async function createProviderGateway(
         selections,
         resolveSecret,
         invoker: () => invoker,
+        checkAuthority: (route, capabilityId) => catalogue.checkAuthority(route, capabilityId),
     });
     invoker = new CapabilityGateway({
         ...gatewayObservability(stores.logger),
         delegations,
         transportFencesRoute: true,
+        prepareRoute: async (value) => {
+            const reads = await catalogue.capture(
+                value.siteId,
+                value.contractId,
+                value.actor.kind === "provider" ? [value.actor.installationId] : [],
+            );
+            return { reads, route: await routes.resolve(value.siteId, value.contractId, reads) };
+        },
         routes,
         identities,
         transport: new HttpGatewayTransport({ network }),
-        authorize: async (actor, capability, route) => {
-            const current = await selections.get(siteId);
+        authorize: async (actor, capability, route, reads) => {
+            const current = reads ? await reads.selection(selections, siteId) : await selections.get(siteId);
             return Boolean(
                 current &&
                     capabilityGranted(current.grants, route.selection.contractId, capability.id) &&
@@ -119,6 +141,7 @@ export async function createProviderGateway(
                     : "user"
                 : null;
         },
+        { capture: captureAuthority, check: (route, capabilityId) => catalogue.checkAuthority(route, capabilityId) },
     );
 
     const contractUpgrades = new ContractUpgradeService(
@@ -175,6 +198,7 @@ export async function createProviderGateway(
             issue: issueInvocation,
             prepare: createDispatchPreparer({
                 siteId,
+                captureAuthority,
                 routes,
                 identities,
                 delegations,

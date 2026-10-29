@@ -1,9 +1,11 @@
 import { GatewayPinnedArtifacts } from "./dispatch/GatewayPinnedArtifacts";
 import { resolveSelectedRelease } from "./dispatch/resolveSelectedRelease";
-import type { GatewayAuthorityReads } from "./dispatch/GatewayAuthorityReads";
+import { GatewayAuthorityReads } from "./dispatch/GatewayAuthorityReads";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
+import { capabilityGranted } from "@bernouy/cms-repository/providers/selections";
+import type { ProviderExecutionStateReader } from "@bernouy/cms-repository/providers/selections";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import type { GatewayRoute, GatewayRouteResolver } from "cms-gateway/invocation/interfaces/Invocation";
@@ -11,6 +13,7 @@ import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 
 export interface CatalogueGatewayRouteResolverOptions {
     readonly selections: ContractSelectionStore;
+    readonly executionState?: ProviderExecutionStateReader;
     readonly installations: ProviderInstallationStore;
     readonly releases: ReleaseCatalogue;
     readonly manifests: ProviderManifestCatalogue;
@@ -22,16 +25,41 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
     // Lookup hints belong to this instance-bound resolver, never to a global authority cache.
     readonly #artifacts: GatewayPinnedArtifacts;
     readonly #selectionHints = new Map<string, string>();
+    readonly #installationHints = new Map<string, string>();
 
     constructor(options: CatalogueGatewayRouteResolverOptions) {
         this.#options = options;
         this.#artifacts = new GatewayPinnedArtifacts(options.releases, options.manifests);
     }
 
-    resolve(siteId: string, contractId: string, reads?: GatewayAuthorityReads): Promise<GatewayRoute | null> {
+    async resolve(siteId: string, contractId: string, reads?: GatewayAuthorityReads): Promise<GatewayRoute | null> {
+        if (!reads && this.#options.executionState) {
+            const initial = await this.capture(siteId, contractId);
+            const route = await this.resolveInitial(siteId, contractId, initial);
+            if (route && !(await this.isCurrent(route))) {
+                throw new GatewayError("stale_route", "selection or dependency changed during route lookup");
+            }
+            return route;
+        }
         return reads
             ? reads.route(this, siteId, contractId, () => this.resolveInitial(siteId, contractId, reads))
             : this.resolveInitial(siteId, contractId);
+    }
+
+    /** Initial lookup only; a transport using it must retain its independent final dispatch fence. */
+    capture(siteId: string, contractId: string, installationIds: readonly string[] = []) {
+        const reads = new GatewayAuthorityReads(siteId);
+        if (!this.#options.executionState) {
+            return Promise.resolve(reads);
+        }
+        const hint = this.#installationHints.get(`${siteId}\0${contractId}`);
+        return GatewayAuthorityReads.capture(
+            siteId,
+            this.#options.selections,
+            this.#options.installations,
+            this.#options.executionState,
+            [...new Set([...installationIds, ...(hint ? [hint] : [])])],
+        );
     }
 
     private async resolveInitial(
@@ -80,6 +108,11 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
         if (!reads && !(await this.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or dependency changed during route lookup");
         }
+        if (this.#installationHints.size >= 256) {
+            this.#installationHints.delete(this.#installationHints.keys().next().value!);
+        }
+        // A lookup hint only chooses IDs for the next fresh read; it never authorizes execution.
+        this.#installationHints.set(`${siteId}\0${contractId}`, selection.installationId);
         return route;
     }
 
@@ -101,24 +134,44 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
     }
 
     async isCurrent(route: GatewayRoute): Promise<boolean> {
+        return (await this.checkAuthority(route)).current;
+    }
+
+    /** A new read for the final fence, independent from any initial preparation context. */
+    async checkAuthority(route: GatewayRoute, capabilityId?: string): Promise<{ current: boolean; granted: boolean }> {
         const { siteId, contractId, installationId } = route.selection;
-        const [stored, current] = await Promise.all([
-            this.#options.selections.get(siteId),
-            this.#options.installations.get({ siteId, installationId }),
-        ]);
+        const state = this.#options.executionState
+            ? await this.#options.executionState.read(siteId, [installationId])
+            : await Promise.all([
+                  this.#options.selections.get(siteId),
+                  this.#options.installations.get({ siteId, installationId }),
+              ]).then(([selections, installation]) => ({
+                  selections,
+                  installations: installation ? [installation] : [],
+              }));
+        const stored = state.selections;
+        const current = state.installations.find((item) => item.installation.id === installationId);
+        const granted = Boolean(
+            stored && (capabilityId === undefined || capabilityGranted(stored.grants, contractId, capabilityId)),
+        );
         const selection = stored?.plan.selections.find((item) => item.contractId === contractId);
         if (
             !selection ||
             !current ||
+            current.installation.siteId !== siteId ||
             selection.siteId !== siteId ||
             selection.version !== route.selection.version ||
             selection.digest !== route.selection.digest ||
             selection.installationId !== installationId ||
             canonicalizeIJson(current.installation) !== canonicalizeIJson(route.installation.installation)
         ) {
-            return false;
+            return { current: false, granted };
         }
-        return !readyForSelection(route.installation, route.selection) || readyForSelection(current, route.selection);
+        return {
+            current:
+                !readyForSelection(route.installation, route.selection) || readyForSelection(current, route.selection),
+            granted,
+        };
     }
 }
 

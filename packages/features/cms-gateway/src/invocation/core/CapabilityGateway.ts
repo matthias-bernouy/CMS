@@ -1,3 +1,4 @@
+import type { GatewayAuthorityReads } from "./dispatch/GatewayAuthorityReads";
 import type { GatewayDispatch } from "../interfaces/Dispatch";
 import { prepareDispatch } from "./dispatch/prepareDispatch";
 import { InvocationTracker } from "../observability/InvocationTracker";
@@ -32,6 +33,11 @@ import type { GatewayDelegationAuthority, DelegationTarget } from "cms-gateway/a
 
 export interface CapabilityGatewayOptions {
     readonly dispatch?: GatewayDispatch;
+    /** Trusted initial preparation shared only within this invocation; requires a live transport fence. */
+    readonly prepareRoute?: (value: Pick<GatewayInvocation, "siteId" | "contractId" | "actor">) => Promise<{
+        route: GatewayRoute | null;
+        reads: GatewayAuthorityReads;
+    }>;
     readonly observer?: InvocationObserver;
     readonly tracing?: GatewayTracing;
     readonly delegations?: GatewayDelegationAuthority;
@@ -42,6 +48,7 @@ export interface CapabilityGatewayOptions {
         actor: GatewayActor,
         capability: CapabilityDefinition,
         route: GatewayRoute,
+        reads?: GatewayAuthorityReads,
     ) => Promise<boolean>;
     readonly identities?: ProviderIdentityService;
     /** Required for command capabilities. Commands fail closed before dispatch when audit is unavailable. */
@@ -58,6 +65,7 @@ export interface CapabilityGatewayOptions {
 
 type AuthorizedRoute = {
     route: GatewayRoute;
+    reads?: GatewayAuthorityReads;
     instanceId: string;
     release: ContractRelease;
     capability: CapabilityDefinition;
@@ -67,8 +75,8 @@ export class CapabilityGateway implements GatewayAccessProbe {
     readonly #options: CapabilityGatewayOptions;
 
     constructor(options: CapabilityGatewayOptions) {
-        if (options.dispatch && !options.transportFencesRoute) {
-            throw new TypeError("Combined dispatch requires a live transport authority fence");
+        if ((options.dispatch || options.prepareRoute) && !options.transportFencesRoute) {
+            throw new TypeError("Prepared dispatch requires a live transport authority fence");
         }
         this.#options = options;
     }
@@ -127,7 +135,11 @@ export class CapabilityGateway implements GatewayAccessProbe {
             invocation = { ...invocation, actor: checked.actor };
             rootRequestId = checked.rootRequestId;
         }
-        const { route, instanceId, release, capability } = await this.#authorizedRoute(invocation, false, tracker);
+        const { route, instanceId, release, capability, reads } = await this.#authorizedRoute(
+            invocation,
+            false,
+            tracker,
+        );
         assertActorCredentialTarget(invocation, capability);
         const input = snapshotInput(invocation.input, capability);
         tracker.update({
@@ -236,6 +248,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                   }
                 : (request: Parameters<GatewayTransport["send"]>[0]) => this.#options.transport.send(request);
             const response = await send({
+                ...(reads ? { authorityReads: reads } : {}),
                 trace: this.#options.tracing?.current() ?? {
                     traceId: invocation.trace?.traceId ?? requestId,
                     spanId: requestId,
@@ -389,7 +402,18 @@ export class CapabilityGateway implements GatewayAccessProbe {
         tracker?: InvocationTracker,
     ): Promise<AuthorizedRoute> {
         tracker?.enter("resolution");
-        const route = await this.#options.routes.resolve(value.siteId, value.contractId);
+        const prepared =
+            !verifyCurrent && this.#options.prepareRoute
+                ? await this.#options.prepareRoute({
+                      siteId: value.siteId,
+                      contractId: value.contractId,
+                      actor: value.actor,
+                  })
+                : undefined;
+        if (prepared && prepared.reads.siteId !== value.siteId) {
+            throw new GatewayError("invalid_route", "prepared route belongs to another site");
+        }
+        const route = prepared ? prepared.route : await this.#options.routes.resolve(value.siteId, value.contractId);
         if (!route) {
             throw new GatewayError("not_selected", "site has no selected release for this contract");
         }
@@ -435,13 +459,19 @@ export class CapabilityGateway implements GatewayAccessProbe {
             throw new GatewayError("invalid_input", "idempotency keys are accepted only by keyed commands");
         }
         checkAccess(value.actor, capability);
-        if (!(await this.#options.authorize(value.actor, capability, route))) {
+        if (!(await this.#options.authorize(value.actor, capability, route, prepared?.reads))) {
             throw new GatewayError("not_authorized", "host grant denied this capability");
         }
         if (verifyCurrent && !(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or installation changed during access check");
         }
-        return { route, instanceId, release: capabilityRelease, capability };
+        return {
+            route,
+            instanceId,
+            release: capabilityRelease,
+            capability,
+            ...(prepared ? { reads: prepared.reads } : {}),
+        };
     }
 
     async #providerSubjectId(

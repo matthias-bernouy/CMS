@@ -112,10 +112,22 @@ export function verifyProviderInvocationToken(
         throw new TypeError("Provider invocation token signature is invalid.");
     }
     const claims = parseClaims(encodedClaims);
-    if (claims.issuedAt > nowSeconds + CLOCK_SKEW_SECONDS || claims.expiresAt < nowSeconds - CLOCK_SKEW_SECONDS) {
+    if (!providerInvocationIsCurrent(claims, nowSeconds)) {
         throw new TypeError("Provider invocation token has expired.");
     }
     return Object.freeze(claims);
+}
+
+/** Recheck a verified lease after asynchronous setup without rereading keys or authority. */
+export function providerInvocationIsCurrent(
+    claims: ProviderInvocationClaims,
+    nowSeconds = Math.floor(Date.now() / 1000),
+): boolean {
+    return (
+        Number.isSafeInteger(nowSeconds) &&
+        claims.issuedAt <= nowSeconds + CLOCK_SKEW_SECONDS &&
+        claims.expiresAt >= nowSeconds - CLOCK_SKEW_SECONDS
+    );
 }
 
 /** Reads only the bounded, untrusted key selector. Verification must still follow before using any claim. */

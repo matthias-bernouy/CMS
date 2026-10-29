@@ -129,6 +129,7 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
                       ...(request.authentication.trace ? { trace: request.authentication.trace } : {}),
                       requestId: request.requestId,
                       instanceId: request.authentication.instanceId,
+
                       contractId: request.authentication.contractId,
                       contractVersion: request.authentication.contractVersion,
                       capabilityId: request.authentication.capabilityId,

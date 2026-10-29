@@ -1,3 +1,4 @@
+import type { ProviderExecutionStateReader } from "@bernouy/cms-repository/providers/selections";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import type { GatewayRoute, GatewayRouteResolver } from "cms-gateway/invocation/interfaces/Invocation";
@@ -6,6 +7,29 @@ import type { GatewayRoute, GatewayRouteResolver } from "cms-gateway/invocation/
 export class GatewayAuthorityReads {
     #pending = new WeakMap<object, Map<string, Promise<unknown>>>();
     constructor(readonly siteId: string) {}
+
+    static async capture(
+        siteId: string,
+        selections: Pick<ContractSelectionStore, "get">,
+        installations: Pick<ProviderInstallationStore, "get">,
+        state: ProviderExecutionStateReader,
+        installationIds: readonly string[],
+    ): Promise<GatewayAuthorityReads> {
+        const captured = await state.read(siteId, installationIds);
+        const reads = new GatewayAuthorityReads(siteId);
+        reads.read(selections, siteId, () => Promise.resolve(captured.selections));
+        for (const installationId of installationIds) {
+            const record = captured.installations.find((item) => item.installation.id === installationId) ?? null;
+            if (record && record.installation.siteId !== siteId) {
+                throw new TypeError("Captured installation belongs to another site");
+            }
+            reads.read(installations, `${siteId}\0${installationId}`, () => Promise.resolve(record));
+        }
+        if (captured.selections && captured.selections.siteId !== siteId) {
+            throw new TypeError("Captured selection belongs to another site");
+        }
+        return reads;
+    }
 
     selection(store: Pick<ContractSelectionStore, "get">, siteId: string) {
         this.assertSite(siteId);

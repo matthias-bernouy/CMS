@@ -73,6 +73,8 @@ export interface GatewayRouteResolver {
 }
 
 export interface GatewayTransportRequest {
+    /** Host-owned initial reads for this dispatch only. Never serialize as wire authority. */
+    readonly authorityReads?: GatewayAuthorityReads;
     readonly actorKind?: "anonymous" | "user" | "administrator";
     readonly trace?: TraceContext;
     readonly delegation?: DelegationContext;

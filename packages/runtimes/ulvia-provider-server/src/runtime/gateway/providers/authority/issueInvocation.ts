@@ -1,12 +1,18 @@
 import { GatewayAuthorityReads } from "@bernouy/cms-gateway";
 import { assertInvocationScope } from "./scope";
 import type { ProviderInvocationIssue } from "@bernouy/cms-gateway/protocol";
-import type { DelegationDispatchAuthority, DelegationAuthorization } from "@bernouy/cms-gateway/access/delegation";
+import type {
+    DelegationDispatchAuthority,
+    DelegationAuthorization,
+    PreparedDelegation,
+    DelegationActor,
+    DelegationContext,
+} from "@bernouy/cms-gateway/access/delegation";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
 import { getProviderInstallationReadiness } from "@bernouy/cms-repository/providers/installations";
 import { capabilityGranted, type ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import { signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
-import type { GatewayRouteResolver } from "@bernouy/cms-gateway";
+import type { GatewayRoute, GatewayRouteResolver } from "@bernouy/cms-gateway";
 import type { ProviderAccess } from "@bernouy/cms-gateway/access/providers";
 
 /** Fresh route, readiness and manifest authority fence immediately before signing. */
@@ -19,9 +25,19 @@ export function createInvocationIssuer(
     delegations?: DelegationDispatchAuthority,
     identities?: ProviderIdentityService,
     inspectActor?: (subjectId: string) => Promise<"user" | "administrator" | null>,
+    authority?: {
+        capture(installationIds: readonly string[]): Promise<GatewayAuthorityReads>;
+        check(route: GatewayRoute, capabilityId: string): Promise<{ current: boolean; granted: boolean }>;
+    },
 ) {
-    return async (input: ProviderInvocationIssue, reads = new GatewayAuthorityReads(siteId)) => {
+    return async (input: ProviderInvocationIssue, reads?: GatewayAuthorityReads, root?: PreparedDelegation) => {
         assertInvocationScope(input);
+        reads ??= authority
+            ? await authority.capture([
+                  input.installationId,
+                  ...(input.sourceInstallationId ? [input.sourceInstallationId] : []),
+              ])
+            : new GatewayAuthorityReads(siteId);
         const route = await routes.resolve(siteId, input.contractId, reads);
         const release = route?.requestedRelease.admission.release;
         const instanceId = route?.installation.observation?.report.instanceId;
@@ -152,47 +168,84 @@ export function createInvocationIssuer(
                 });
             }
         }
-        if (resourceSubject) {
-            // Inspect once at the final fence, after credentials and source authority were resolved.
-            // An earlier role lookup would be speculative and must be repeated here anyway.
-            actorKind = (await inspectActor?.(resourceSubject)) ?? undefined;
-            if (!actorKind || input.actorKind !== actorKind) {
-                throw Object.assign(new Error("Resource actor changed at dispatch fence"), { status: 403 });
+        const sign = (rootContext?: DelegationContext, actor?: DelegationActor) => {
+            if (actor && capability.output.type === "binary" && capability.output.resource) {
+                const sameSubject = actor.kind === "anonymous" ? !subjectId : actor.subjectId === resourceSubject;
+                if (!sameSubject || actor.kind !== input.actorKind) {
+                    throw Object.assign(new Error("Resource actor does not match the prepared delegation"), {
+                        status: 403,
+                    });
+                }
+                actorKind = actor.kind;
             }
-        }
-        const dispatchSelection = await selections.get(siteId);
-        if (
-            !dispatchSelection ||
-            !capabilityGranted(dispatchSelection.grants, route.selection.contractId, input.capabilityId)
-        ) {
-            throw Object.assign(new Error("Capability grant changed before dispatch"), { status: 403 });
-        }
-        if (!(await routes.isCurrent(route))) {
-            throw Object.assign(new Error("Invocation authorization changed"), { code: "stale_route", status: 409 });
-        }
-        const issuedAt = Math.floor(Date.now() / 1_000);
-        return {
-            instanceId,
-            token: signProviderInvocationToken(secret, {
-                version: 1,
-                ...(input.trace ? { trace: input.trace } : {}),
-                requestId: input.requestId,
+            const issuedAt = Math.floor(Date.now() / 1_000);
+            const delegation = rootContext ?? input.delegation;
+            return {
                 instanceId,
-                contractId: input.contractId,
-                contractVersion: input.contractVersion,
-                capabilityId: input.capabilityId,
-                ...(subjectId ? { subjectId } : {}),
-                ...(actorKind ? { actorKind } : {}),
-                ...(rootRequestId ? { rootRequestId } : {}),
-                ...(input.delegation
-                    ? { delegationTicket: input.delegation.ticket, delegationExpiresAt: input.delegation.expiresAt }
-                    : {}),
-                ...(input.systemServiceId ? { systemServiceId: input.systemServiceId } : {}),
-                ...(input.sourceInstallationId ? { sourceInstallationId: input.sourceInstallationId } : {}),
-                connectionId: input.installationId,
-                issuedAt,
-                expiresAt: issuedAt + 30,
-            }),
+                ...(rootContext ? { delegation: rootContext } : {}),
+                token: signProviderInvocationToken(secret, {
+                    version: 1,
+                    ...(input.trace ? { trace: input.trace } : {}),
+                    requestId: input.requestId,
+                    instanceId,
+                    contractId: input.contractId,
+                    contractVersion: input.contractVersion,
+                    capabilityId: input.capabilityId,
+                    ...(subjectId ? { subjectId } : {}),
+                    ...(actorKind ? { actorKind } : {}),
+                    ...(rootRequestId ? { rootRequestId } : {}),
+                    ...(delegation
+                        ? { delegationTicket: delegation.ticket, delegationExpiresAt: delegation.expiresAt }
+                        : {}),
+                    ...(input.systemServiceId ? { systemServiceId: input.systemServiceId } : {}),
+                    ...(input.sourceInstallationId ? { sourceInstallationId: input.sourceInstallationId } : {}),
+                    connectionId: input.installationId,
+                    issuedAt,
+                    expiresAt: issuedAt + 30,
+                }),
+            };
         };
+        const finish = async () => {
+            if (resourceSubject) {
+                actorKind = (await inspectActor?.(resourceSubject)) ?? undefined;
+                if (!actorKind || input.actorKind !== actorKind) {
+                    throw Object.assign(new Error("Resource actor changed at dispatch fence"), { status: 403 });
+                }
+            }
+            const final = authority ? await authority.check(route, input.capabilityId) : undefined;
+            const dispatchSelection = final ? null : await selections.get(siteId);
+            const granted = final
+                ? final.granted
+                : Boolean(
+                      dispatchSelection &&
+                          capabilityGranted(dispatchSelection.grants, route.selection.contractId, input.capabilityId),
+                  );
+            if (!granted) {
+                throw Object.assign(new Error("Capability grant changed before dispatch"), { status: 403 });
+            }
+            if (!(final ? final.current : await routes.isCurrent(route))) {
+                throw Object.assign(new Error("Invocation authorization changed"), {
+                    code: "stale_route",
+                    status: 409,
+                });
+            }
+            return sign();
+        };
+
+        return root
+            ? root.finalize(
+                  {
+                      siteId,
+                      requestId: input.requestId,
+                      installationId: input.installationId,
+                      contractId: input.contractId,
+                      version: input.contractVersion,
+                      digest: route.selection.digest,
+                      capabilityId: input.capabilityId,
+                  },
+                  async (context, actor) => sign(context, actor),
+                  route,
+              )
+            : finish();
     };
 }

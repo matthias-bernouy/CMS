@@ -4,6 +4,7 @@ export {
     readProviderInvocationKeyId,
     signProviderInvocationToken,
     verifyProviderInvocationToken,
+    providerInvocationIsCurrent,
     type ProviderInvocationClaims,
 } from "cms-gateway/protocol/ProviderInvocationToken";
 export {

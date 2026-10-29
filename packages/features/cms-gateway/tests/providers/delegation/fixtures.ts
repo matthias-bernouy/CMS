@@ -13,6 +13,8 @@ export async function delegationFixture(
     options: {
         sourceEndpoint?: string;
         sourceBinary?: boolean;
+        sourceResource?: boolean;
+        sourceAccess?: string;
         targetEndpoint?: string;
         sourceEffect?: "query" | "command";
         targetEffect?: "query" | "command";
@@ -31,6 +33,8 @@ export async function delegationFixture(
     const source = await gatewayRoute({
         endpoint: options.sourceEndpoint,
         binary: options.sourceBinary,
+        resource: options.sourceResource,
+        access: options.sourceAccess,
         contractId: "origin",
         providerId: "origin.provider",
         installationId: "origin-install",
@@ -65,6 +69,8 @@ export async function delegationFixture(
     };
     const state = {
         now: Date.now(),
+        inspections: 0,
+        actorActive: true,
         actor: { kind: "anonymous" } as DelegationActor,
         credential: providerCredentialFingerprint("credential-v1"),
         current: {
@@ -91,7 +97,10 @@ export async function delegationFixture(
         selections,
         store,
         now: () => state.now,
-        inspectActor: async () => state.actor,
+        inspectActor: async () => {
+            state.inspections++;
+            return state.actorActive ? state.actor : null;
+        },
         credentialFingerprint: async () => state.credential,
     });
     const root = () => ({

@@ -1,3 +1,4 @@
+import type { DelegationSource, PreparedDelegation } from "@bernouy/cms-gateway/access/delegation";
 import { expect, test } from "bun:test";
 import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
@@ -22,12 +23,11 @@ async function fixture() {
     let reads = 0;
     const closed: string[] = [];
     const events: string[] = [];
-    const selections = {
-        get: async () => {
-            reads++;
-            return { grants: { default: "allow-selected", denied: [] } };
-        },
-    } as never;
+    const readSelection = async () => {
+        reads++;
+        return { grants: { default: "allow-selected", denied: [] } };
+    };
+    const selections = { get: readSelection } as never;
     const routes = { resolve: async () => route, isCurrent: async () => live };
     const identities = {
         getOrCreate: async () => {
@@ -40,13 +40,24 @@ async function fixture() {
         resolve: async () => "cms-user",
     };
     const delegations = {
-        issue: async (_source: unknown, context?: Parameters<ReturnType<typeof createInvocationIssuer>>[1]) => {
+        prepare: async (
+            source: DelegationSource,
+            context?: Parameters<ReturnType<typeof createInvocationIssuer>>[1],
+        ) => {
             events.push("delegation");
             await context!.selection(selections, "site-a");
-            return { ticket: "t".repeat(43), expiresAt: Date.now() + 10_000 };
-        },
-        close: async (context: { ticket: string }) => {
-            closed.push(context.ticket);
+            return {
+                finalize: async (_scope, dispatch) => {
+                    await readSelection();
+                    if (!(await routes.isCurrent())) {
+                        throw Object.assign(new Error("Route changed at final fence"), { status: 409 });
+                    }
+                    return dispatch({ ticket: "t".repeat(43), expiresAt: Date.now() + 10_000 }, source.actor);
+                },
+                cancel: async () => {
+                    closed.push("t".repeat(43));
+                },
+            } satisfies PreparedDelegation;
         },
     };
     const issue = createInvocationIssuer(

@@ -1,3 +1,4 @@
+import { GatewayAuthorityReads } from "@bernouy/cms-gateway";
 import { expect, test } from "bun:test";
 import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
@@ -153,4 +154,42 @@ test("a site grant revoked during secret resolution cannot produce an invocation
         },
     );
     await expect(issue(f.input)).rejects.toMatchObject({ status: 403 });
+});
+
+test("grouped signing fences remain fresh after secret resolution and do not reuse preparation authority", async () => {
+    for (const failure of ["grant", "route"] as const) {
+        const f = await fixture();
+        let current = true;
+        let checks = 0;
+        const issue = createInvocationIssuer(
+            "site-a",
+            {
+                resolve: async () => f.route,
+                isCurrent: async () => {
+                    throw new Error("Expected the combined final fence");
+                },
+            },
+            { get: async () => ({ grants: { default: "allow-selected", denied: [] } }) } as never,
+            { authorize: async () => true, consumeBudget: async () => true },
+            async () => {
+                current = false;
+                return f.secret;
+            },
+            undefined,
+            undefined,
+            undefined,
+            {
+                capture: async () => new GatewayAuthorityReads("site-a"),
+                check: async () => {
+                    checks++;
+                    return {
+                        current: failure === "route" ? current : true,
+                        granted: failure === "grant" ? current : true,
+                    };
+                },
+            },
+        );
+        await expect(issue(f.input)).rejects.toMatchObject({ status: failure === "grant" ? 403 : 409 });
+        expect(checks).toBe(1);
+    }
 });

@@ -7,7 +7,7 @@ import { providerAdministration } from "../../gateway/providers/administration";
 import { compatibleTransitionRetention } from "../../stores/collections/compatibleRetention";
 import { createProviderRetention } from "../../stores/collections/retention";
 import { instanceMongoUrl } from "../../stores/storageRoots";
-import { createNativeInvocationAuthorizer } from "../../gateway/nativeAuthorization";
+import { createNativeInvocationAuthorizer } from "../../gateway/native/authorizeInvocation";
 import { join } from "node:path";
 import { mkdir } from "node:fs/promises";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
@@ -346,13 +346,12 @@ export class ProviderInstanceHost {
                     logger: instanceLogger,
                     report,
                     dispatcher,
-                    authorizeInvocation: createNativeInvocationAuthorizer(
-                        SITE_ID,
+                    authorizeInvocation: createNativeInvocationAuthorizer({
+                        siteId: SITE_ID,
                         report,
-                        stores.selections,
-                        stores.installations,
-                        gateway.routes,
-                    ),
+                        releases: stores.releases,
+                        executionState: stores.executionState,
+                    }),
                 },
             };
             instanceLogger.info("provider.instance.composition.created", {
