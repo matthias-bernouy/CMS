@@ -24,6 +24,9 @@ and fresh-container verification have known blockers.
   executions of the same smoke journey.
 - Add real Mongo adapter tests for index uniqueness, concurrent writes,
   transactions where supported and recovery after interruption.
+- Repair `bun run test:performance`. It fails to typecheck and to run since
+  `prepareCollectionMigration` was removed in `9234fcfd7`, and it is not part
+  of `check:all`, `verify` or CI.
 
 Exit condition: a clean checkout passes the complete delivery gate and one
 fresh container/proxy journey against the software being reviewed.
@@ -45,6 +48,102 @@ catalogue, and their per-path cache has no capacity bound.
 
 Exit condition: deterministic tests bound calls, bytes and retained resources
 as unrelated Pages, Blocs and requested paths grow.
+
+## Delivery Performance And Edge Cache
+
+**Status:** measured on 2026-10-29 against images built from `4d6cac938`, on an
+isolated Docker stack with a loopback client on a 16-core host. The Edge has no
+response cache: every public `GET`, including immutable assets, crosses the
+Gateway. `ulvia-official-image` requires `ulvia.cms.files/files.read`, and
+navigation, hero, footer, card and testimonial Blocs include it through `uses`.
+Pages using them call `ulvia.cms.installations/capabilities.describe` through
+the Edge on every view. That call consumes the Provider call budget of 120
+calls per minute per source (`ProviderAccess.ts`), so these Pages and
+`/admin/pages` return 503 after about 120 views per minute.
+
+| Warm request | p50 | Internal HTTP calls | Mongo operations | Throughput |
+| --- | --- | --- | --- | --- |
+| Page with literal Blocs only | 17.5 ms | 2, plus ticket closure | 21 | ~110/s |
+| Page using image-capable Blocs | 44.6 ms | ~8 | 66 | 2/s sustained |
+| Immutable CSS/JS asset | 11.9 ms | 3 | ~12 | 232/s |
+
+Content work is about 5 ms of a simple Page request. The rest is authority
+preparation, a second authenticated call, the root delegation ticket and Edge
+re-compression. The Provider saturates one CPU core first.
+
+Every request keeps crossing the Edge. For anonymous traffic the Edge acts as
+a CDN over Provider responses; misses, authenticated and administrator traffic
+use a reduced Provider path.
+
+### Decisions (2026-10-29)
+
+1. **Edge freshness.** Public Pages send `public, no-cache, s-maxage=15`. The
+   Edge applies `s-maxage` and removes it before responding, so browsers still
+   revalidate. Writes the Edge does not observe appear within 15 seconds.
+2. **Purge v1.** Every command dispatched through the Edge, whether completed,
+   declared-error or unknown-outcome, clears the whole Edge cache before its
+   response is returned. A purge generation prevents storing a response that
+   was fetched before the purge. Targeted purge belongs to phase 5.
+3. **Capability description cache.** Content caches `capabilities.describe`
+   results per instance for 5 seconds, with one shared load and no cached
+   failures. Page access analysis governs rendering and caching, not invocation
+   authority, and no query data is server-rendered yet. A Page access level may
+   lag a selection change by up to 20 seconds. Revisit before server-rendering
+   query data; phase 5 replaces the delay with exact invalidation.
+4. **Contract evolution.** Minor versions of `ulvia.cms.installations` and
+   `ulvia.cms.content` are accepted in principle. Each one ships with Edge
+   version negotiation and an instance profile update, and only after phase 3
+   and 4 measurements justify it. Merging authority preparation with dispatch
+   is not planned.
+5. **Coordination.** Work in an isolated worktree, one commit per task, with a
+   measured before/after per phase. Phase 4 changes to Provider authority
+   preparation and authentication material wait until in-flight performance
+   work in those files is committed.
+
+### Phases
+
+- **0. Guardrails.** Add an opt-in Docker performance journey beside
+  `tests/integration/instance/instance.docker.test.ts`. It gates operations
+  and internal calls per view, the absence of 503 at 200 views per minute, the
+  cache hit ratio and zero Provider work per hit. Thresholds start at the
+  baseline and tighten after each phase.
+- **1. Remove the 503.** Apply decision 3 in
+  `ulvia-provider-server/src/runtime/content/publicDelivery.ts` and keep one
+  analyzer per instance. Expected: about 18 ms and 21 operations per view.
+- **2. Edge cache, immutable assets.** Wrap `gateway.invoke` in
+  `cms-edge-server/src/runtime/publicResource.ts`. Key on the canonical
+  `resolve-path` input and serve only requests without a session cookie or
+  Bearer. Store public responses with explicit freshness only, never
+  `private`, `no-store` or 404. Bound bytes per entry and in total, store the
+  gzip body once, coalesce misses, answer `304` and `HEAD` locally, and log
+  hits and misses. Expected: under 0.5 ms and no Provider work per hit.
+- **3. Edge cache, Pages.** Apply decisions 1 and 2, extend `safeCachePolicy`
+  in `cms-edge/src/http/resourceResponse.ts`, and add `stale-if-error`.
+  Test publication, unpublication, updates, route changes, site visibility and
+  language, theme, site Blocs, collection installation and upgrade, and
+  selection changes. Test that credentials, private responses and 404 are never
+  cached and that unkeyed headers cannot alter a cached response. Document the
+  freshness guarantee in [Content delivery](architecture/content-delivery.md).
+- **4. Reduce misses without contract changes.** Read `system` and `blocs`
+  once per operation, keeping the ordered route/settings fence. Remove
+  duplicate installation and secret-key reads in dispatch preparation. Write
+  journal batches with one unordered `bulkWrite` in `MongoJournalStore.ts` and
+  review its 12 indexes. Stop eager Brotli and gzip in the Provider. Expected:
+  about 13 ms and 16 operations per miss.
+- **5. Protocol evolutions, after measurement.** Sign the selection revision
+  for exact description invalidation, issue root delegation tickets lazily,
+  combine Provider authentication, authorization and preparation into one
+  control call, and carry `Vary` and cache tags in resource metadata for
+  targeted purge.
+
+Multi-process Edge and Provider deployments stay out of scope; see
+[High Availability](#high-availability). Purge would then need cross-process
+propagation.
+
+Exit condition: the performance journey shows no 503 at 200 views per minute
+for Pages using image-capable Blocs. Anonymous hits perform no Provider call or
+Mongo operation. Writes through the Edge are visible on the next request and
+other writes within 15 seconds. Misses stay within the tightened budget.
 
 ## Internal Persistence Migrations
 
