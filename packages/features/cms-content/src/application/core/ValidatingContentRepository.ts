@@ -1,3 +1,4 @@
+import type { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";
 import { PageMutationValidation } from "cms-content/pages/core/routing/mutations";
 import type {
     ContentRepository,
@@ -44,11 +45,11 @@ export class ValidatingContentRepository implements ContentRepository {
     ) {
         this.pageMutations = new PageMutationValidation(inner);
     }
-    async getTextContributions() {
-        return (await this.inner.getTextContributions?.()) ?? { revision: 0, texts: [] };
+    async getTextContributions(reads?: RenderingResourceReads) {
+        return (await this.inner.getTextContributions?.(reads)) ?? { revision: 0, texts: [] };
     }
-    async getPageRequirements(page: TPage) {
-        return (await this.inner.getPageRequirements?.(page)) ?? [];
+    async getPageRequirements(page: TPage, reads?: RenderingResourceReads) {
+        return (await this.inner.getPageRequirements?.(page, reads)) ?? [];
     }
     getSiteBlocGroups(): Promise<SiteBlocGroup[]> {
         return this.inner.getSiteBlocGroups();
@@ -147,8 +148,11 @@ export class ValidatingContentRepository implements ContentRepository {
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T> {
         return this.inner.withSiteBlocPublicationLock(operation);
     }
-    getBlocsList(options?: Parameters<ContentRepository["getBlocsList"]>[0]): Promise<BlocListItemResponse[]> {
-        return this.inner.getBlocsList(options);
+    getBlocsList(
+        options?: Parameters<ContentRepository["getBlocsList"]>[0],
+        reads?: RenderingResourceReads,
+    ): Promise<BlocListItemResponse[]> {
+        return this.inner.getBlocsList(options, reads);
     }
     getBlocViewJS(htmlTag: string) {
         return this.inner.getBlocViewJS(htmlTag);
@@ -256,8 +260,8 @@ export class ValidatingContentRepository implements ContentRepository {
     }
 
     // ── Pass-through: system (settings validated elsewhere) ────────────────
-    getSystem(): Promise<TSystem> {
-        return this.inner.getSystem();
+    getSystem(reads?: RenderingResourceReads): Promise<TSystem> {
+        return this.inner.getSystem(reads);
     }
     getSystemRevision(): Promise<number> {
         return this.inner.getSystemRevision();

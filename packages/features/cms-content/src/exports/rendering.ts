@@ -68,3 +68,5 @@ export {
     type PageDocumentRenderContext,
     type RenderedPageDocument,
 } from "cms-content/pages/core/rendering/renderPageDocument";
+
+export { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";

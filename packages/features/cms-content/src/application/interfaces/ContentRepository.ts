@@ -1,3 +1,4 @@
+import type { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";
 import type {
     BlocRecord,
     SiteBlocGroup,
@@ -43,6 +44,8 @@ export type BlocListItemResponse = {
 };
 
 export type BlocListOptions = {
+    /** Rendering omits initialDocument, defaultContent, slots, settings and thumbnail. */
+    projection?: "catalogue" | "rendering";
     /** Include Blocs hidden from the authoring catalogue. */
     includeHidden?: boolean;
 };
@@ -101,8 +104,8 @@ export type PageScan = {
 
 export interface ContentRepository {
     /** Runtime projections supplied by package/extension adapters. */
-    getTextContributions?(): Promise<ContentTextSnapshot>;
-    getPageRequirements?(page: TPage): Promise<readonly PageCapabilityRequirement[]>;
+    getTextContributions?(reads?: RenderingResourceReads): Promise<ContentTextSnapshot>;
+    getPageRequirements?(page: TPage, reads?: RenderingResourceReads): Promise<readonly PageCapabilityRequirement[]>;
     getSiteBlocGroups(): Promise<SiteBlocGroup[]>;
     updateSiteBlocGroup(id: string, input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup>;
     createSiteBlocGroup(input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup>;
@@ -126,7 +129,7 @@ export interface ContentRepository {
     restoreSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition>;
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T>;
 
-    getBlocsList(options?: BlocListOptions): Promise<BlocListItemResponse[]>;
+    getBlocsList(options?: BlocListOptions, reads?: RenderingResourceReads): Promise<BlocListItemResponse[]>;
     getBlocViewJS(htmlTag: string): Promise<string | null>;
     /** Batch projection used by delivery to avoid one persistence read per rendered Bloc. */
     getBlocViewsJS(htmlTags: readonly string[]): Promise<Readonly<Record<string, string | null>>>;
@@ -168,7 +171,7 @@ export interface ContentRepository {
     getTagCounts(): Promise<ValueCount[]>;
 
     // SYSTEM
-    getSystem(): Promise<TSystem>;
+    getSystem(reads?: RenderingResourceReads): Promise<TSystem>;
     getSystemRevision(): Promise<number>;
     updateSystem(system: Partial<TSystem>, expectedRevision?: number): Promise<TSystem>;
 }

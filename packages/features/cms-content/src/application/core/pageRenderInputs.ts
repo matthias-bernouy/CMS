@@ -1,15 +1,19 @@
+import { RenderingResourceReads } from "./RenderingResourceReads";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { ContentReader, PageRenderInputs, RenderableBloc } from "cms-content/application/interfaces/ContentReader";
 import type { ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
 import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
 
 type RenderInputLoaders = {
-    routeWithSettings(path: string): Promise<{
+    routeWithSettings(
+        path: string,
+        reads?: RenderingResourceReads,
+    ): Promise<{
         route: Awaited<ReturnType<ContentReader["resolveRenderableRoute"]>>;
         settings: RenderingSettings;
     }>;
     getContentTexts(): Promise<ContentTextSource[]>;
-    getRenderableBlocs(): Promise<RenderableBloc[]>;
+    getRenderableBlocs(reads?: RenderingResourceReads): Promise<RenderableBloc[]>;
 };
 
 export function installPageRenderInputReaders(
@@ -27,27 +31,33 @@ export function installPageRenderInputReaders(
         return pageRenderRevision(route, renderingRevision);
     };
     reader.getPageRenderInputs = async (path): Promise<PageRenderInputs> => {
-        const contributions = repository.getTextContributions?.() ?? Promise.resolve(undefined);
-        const [resolved, loadedContributions, systemRevision, siteBlocsRevision, renderableBlocs] = await Promise.all([
-            loaders.routeWithSettings(path),
-            contributions,
-            repository.getSystemRevision?.() ?? 0,
-            repository.getSiteBlocsRevision?.() ?? "[]",
-            loaders.getRenderableBlocs(),
-        ]);
-        const renderingRevision = await revisionDigest([
-            loadedContributions?.revision ?? 0,
-            systemRevision,
-            siteBlocsRevision,
-        ]);
-        return {
-            route: resolved.route,
-            artifactRevision: await pageRenderRevision(resolved.route, renderingRevision),
-            renderingRevision,
-            settings: resolved.settings,
-            contentTexts: [...(loadedContributions?.texts ?? [])],
-            renderableBlocs,
-        };
+        const reads = new RenderingResourceReads();
+        try {
+            const contributions = repository.getTextContributions?.(reads) ?? Promise.resolve(undefined);
+            const [resolved, loadedContributions, systemRevision, siteBlocsRevision, renderableBlocs] =
+                await Promise.all([
+                    loaders.routeWithSettings(path, reads),
+                    contributions,
+                    repository.getSystemRevision?.() ?? 0,
+                    repository.getSiteBlocsRevision?.() ?? "[]",
+                    loaders.getRenderableBlocs(reads),
+                ]);
+            const renderingRevision = await revisionDigest([
+                loadedContributions?.revision ?? 0,
+                systemRevision,
+                siteBlocsRevision,
+            ]);
+            return {
+                route: resolved.route,
+                artifactRevision: await pageRenderRevision(resolved.route, renderingRevision),
+                renderingRevision,
+                settings: resolved.settings,
+                contentTexts: [...(loadedContributions?.texts ?? [])],
+                renderableBlocs,
+            };
+        } finally {
+            reads.close();
+        }
     };
 }
 

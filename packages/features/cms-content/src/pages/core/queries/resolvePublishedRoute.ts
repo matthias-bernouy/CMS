@@ -1,3 +1,4 @@
+import type { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";
 import type { TPage, PageRoute } from "cms-content/pages/interfaces/pages";
 import { publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
@@ -18,14 +19,15 @@ export async function resolvePublishedRoute(
 export async function readPublishedRoute(
     path: string,
     repository: PublishedRouteRepository,
+    reads?: RenderingResourceReads,
 ): Promise<{ route: PublishedRouteResolution | null; system: TSystem }> {
-    const before = await repository.getSystem();
+    const before = await repository.getSystem(reads);
     if (before.pageRoutesUpdating) {
         return { route: { kind: "updating" }, system: before };
     }
     const route = await repository.getPageRoute(path);
     if (!route) {
-        const after = await repository.getSystem();
+        const after = await repository.getSystem(reads);
         if (after.pageRoutesUpdating || languageConfigurationChanged(before, after)) {
             return { route: { kind: "updating" }, system: after };
         }
@@ -36,7 +38,7 @@ export async function readPublishedRoute(
     }
     const page = await repository.getPageById(route.pageId);
     const finalRoute = await repository.getPageRoute(path);
-    const system = await repository.getSystem();
+    const system = await repository.getSystem(reads);
     if (system.pageRoutesUpdating || languageConfigurationChanged(before, system)) {
         return { route: { kind: "updating" }, system };
     }

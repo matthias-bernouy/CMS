@@ -1,3 +1,4 @@
+import type { RenderingResourceReads } from "./RenderingResourceReads";
 import {
     readPublishedRoute,
     resolvePublishedRoute,
@@ -18,11 +19,11 @@ import { installPageRenderInputReaders } from "cms-content/application/core/page
 
 /** Public delivery reads only site-owned Pages and installed rendering resources. */
 export function createContentReader(repository: ContentRepository): ContentReader {
-    const sitePage = async (page: TPage): Promise<RenderablePage> => ({
+    const sitePage = async (page: TPage, reads?: RenderingResourceReads): Promise<RenderablePage> => ({
         reference: { kind: "site", pageId: page.id },
         page,
         source: { kind: "site", pageId: page.id, revision: page.revision },
-        requirements: [...((await repository.getPageRequirements?.(page)) ?? [])],
+        requirements: [...((await repository.getPageRequirements?.(page, reads)) ?? [])],
     });
     const getRenderablePage = async (path: string): Promise<RenderablePage | null> => {
         const page = projectPublishedPage(await repository.getPublishedPage(path));
@@ -33,12 +34,12 @@ export function createContentReader(repository: ContentRepository): ContentReade
             (await repository.getPublishedPages())
                 .map(projectPublishedPage)
                 .filter((page): page is TPage => page !== null)
-                .map(sitePage),
+                .map((page) => sitePage(page)),
         );
     const getContentTexts = async () => [...((await repository.getTextContributions?.())?.texts ?? [])];
     const getRenderingSettings = async () => projectRenderingSettings(await repository.getSystem());
-    const getRenderableBlocs = async (): Promise<RenderableBloc[]> =>
-        (await repository.getBlocsList({ includeHidden: true })).map((bloc) => ({
+    const getRenderableBlocs = async (reads?: RenderingResourceReads): Promise<RenderableBloc[]> =>
+        (await repository.getBlocsList({ includeHidden: true, projection: "rendering" }, reads)).map((bloc) => ({
             id: bloc.id,
             kind: bloc.kind,
             markupHTML: bloc.markupHTML,
@@ -49,16 +50,16 @@ export function createContentReader(repository: ContentRepository): ContentReade
             ...(bloc.styleCollectionId ? { styleCollectionId: bloc.styleCollectionId } : {}),
             hasBehavior: bloc.hasBehavior,
         }));
-    const renderableRoute = async (route: PublishedRouteResolution | null) => {
+    const renderableRoute = async (route: PublishedRouteResolution | null, reads?: RenderingResourceReads) => {
         if (route?.kind !== "current") {
             return route;
         }
         const page = projectPublishedPage(route.page);
-        return page ? { ...route, page: await sitePage(page) } : { kind: "unavailable" as const };
+        return page ? { ...route, page: await sitePage(page, reads) } : { kind: "unavailable" as const };
     };
-    const routeWithSettings = async (path: string) => {
-        const { route, system } = await readPublishedRoute(path, repository);
-        return { route: await renderableRoute(route), settings: projectRenderingSettings(system) };
+    const routeWithSettings = async (path: string, reads?: RenderingResourceReads) => {
+        const { route, system } = await readPublishedRoute(path, repository, reads);
+        return { route: await renderableRoute(route, reads), settings: projectRenderingSettings(system) };
     };
     const reader: ContentReader = {
         getContentRevision: async () => (await repository.getTextContributions?.())?.revision ?? 0,

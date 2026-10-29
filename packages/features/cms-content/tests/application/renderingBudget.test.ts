@@ -132,7 +132,8 @@ function renderingFixture(unrelatedPageCount = 0): {
             count("getPageRequirements");
             return [];
         },
-        getBlocsList: async () => {
+        getBlocsList: async (options) => {
+            expect(options).toEqual({ includeHidden: true, projection: "rendering" });
             count("getBlocsList");
             return [];
         },

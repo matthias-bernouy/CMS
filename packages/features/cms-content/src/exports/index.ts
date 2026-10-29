@@ -120,6 +120,7 @@ export type {
     RenderablePageSource,
     RenderableRouteResolution,
 } from "cms-content/application/interfaces/ContentReader";
+export { projectBlocList } from "cms-content/application/core/projectBlocList";
 export { createContentReader } from "cms-content/application/core/createContentReader";
 export { resolvePublishedRoute } from "cms-content/pages/core/queries/resolvePublishedRoute";
 export type {

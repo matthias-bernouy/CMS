@@ -1,3 +1,4 @@
+import type { RenderingResourceReads } from "@bernouy/cms-content/rendering";
 import { collectionExampleDocument } from "../../core/validation/examples/document";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import {
@@ -12,6 +13,7 @@ import {
     type BlocRecord,
     type ContentRepository,
     createBlocUsageResolver,
+    projectBlocList,
     validateBlocWrite,
 } from "@bernouy/cms-content";
 import { createInstalledSnapshotReader } from "./installedSnapshot";
@@ -87,7 +89,10 @@ export function withInstalledCollections(
     let cache: InstalledState | undefined;
     let pending: Promise<InstalledState> | undefined;
     const installedSnapshot = createInstalledSnapshotReader(store, siteId);
-    const installedState = async (): Promise<InstalledState> => {
+    const resourceOwner = {};
+    const installedState = (reads?: RenderingResourceReads): Promise<InstalledState> =>
+        reads ? reads.resource(resourceOwner, "installed", loadCurrentInstalledState) : loadCurrentInstalledState();
+    const loadCurrentInstalledState = async (): Promise<InstalledState> => {
         const revision = await store.revision(siteId);
         if (cache?.revision === revision) {
             return cache;
@@ -188,9 +193,15 @@ export function withInstalledCollections(
     };
     const releases = async () => (await installedState()).collections.map((item) => item.release);
     const composeTheme = createCollectionThemeComposer();
+    const localRenderingBlocs = (reads?: RenderingResourceReads) => {
+        const load = () => repository.getBlocsList({ includeHidden: true, projection: "rendering" });
+        return reads
+            ? reads.resource(resourceOwner, "local-rendering", load).then((value) => structuredClone(value))
+            : load();
+    };
     const overrides: Partial<ContentRepository> = {
-        getSystem: async () => {
-            const [system, installed] = await Promise.all([repository.getSystem(), installedState()]);
+        getSystem: async (reads) => {
+            const [system, installed] = await Promise.all([repository.getSystem(reads), installedState(reads)]);
             return {
                 ...system,
                 theme: composeTheme(
@@ -205,8 +216,8 @@ export function withInstalledCollections(
                 patch.theme ? { ...patch, theme: composeCollectionThemes(patch.theme, await releases()) } : patch,
                 expectedRevision,
             ),
-        getTextContributions: async () => {
-            const snapshot = await installedSnapshot();
+        getTextContributions: async (reads) => {
+            const snapshot = reads ? await installedState(reads) : await installedSnapshot();
             return {
                 revision: snapshot.revision,
                 texts: snapshot.collections.map(({ release, textOverrides }) =>
@@ -214,11 +225,8 @@ export function withInstalledCollections(
                 ),
             };
         },
-        getPageRequirements: async (page) => {
-            const [local, installed] = await Promise.all([
-                repository.getBlocsList({ includeHidden: true }),
-                installedState(),
-            ]);
+        getPageRequirements: async (page, reads) => {
+            const [local, installed] = await Promise.all([localRenderingBlocs(reads), installedState(reads)]);
             const resources = installed.records.map(({ artifact }) => ({
                 id: artifact!.id,
                 markupHTML: artifact!.markupHTML,
@@ -237,13 +245,17 @@ export function withInstalledCollections(
         },
         getBlocRecords: records,
         getBlocRecord: read,
-        getBlocsList: async (options) => {
-            const local = await repository.getBlocsList(options);
-            const resources = (await installedState()).records.map((record) => ({
-                ...structuredClone(record.artifact!),
-                hasBehavior: Boolean(record.artifact?.viewJS),
-            }));
-            return [...local, ...resources.filter((bloc) => options?.includeHidden || bloc.catalogue !== "hidden")];
+        getBlocsList: async (options, reads) => {
+            const shared =
+                options?.includeHidden === true &&
+                options.projection === "rendering" &&
+                Object.keys(options).every((key) => key === "includeHidden" || key === "projection");
+            const [local, installed] = await Promise.all([
+                shared ? localRenderingBlocs(reads) : repository.getBlocsList(options, reads),
+                installedState(reads),
+            ]);
+            const resources = projectBlocList(installed.records, options);
+            return [...local, ...resources];
         },
         getBlocViewJS: async (tag) => {
             const record = (await installedState()).byTag.get(tag);

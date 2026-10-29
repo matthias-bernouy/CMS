@@ -77,7 +77,25 @@ test("indexes installed Blocs once per collection revision", async () => {
         missing: null,
     });
     await repository.getBlocRecord("cached-card");
-    await repository.getBlocsList();
+    const list = await repository.getBlocsList();
+    expect(list[0]).toMatchObject({ id: "cached-card", name: "Card", hasBehavior: false });
+    // Listing a rendering/authoring catalogue must not materialize executable artifact payloads.
+    expect(list[0]).not.toHaveProperty("viewJS");
+    expect(list[0]!.initialDocument).toBeDefined();
+    const rendering = await repository.getBlocsList({ includeHidden: true, projection: "rendering" });
+    expect(rendering[0]).not.toHaveProperty("initialDocument");
+    expect(rendering[0]).not.toHaveProperty("slots");
+    expect(rendering[0]).toMatchObject({
+        id: "cached-card",
+        kind: "component",
+        markupHTML: "<article></article>",
+        root: { accepts: ["div"] },
+        hasBehavior: false,
+    });
+    list[0]!.root.accepts[0] = "section";
+    list[0]!.uses!.push("caller-mutation");
+    expect((await repository.getBlocRecord("cached-card"))!.artifact!.root.accepts).toEqual(["div"]);
+    expect((await repository.getBlocsList())[0]!.uses).toEqual([]);
     await repository.getTextContributions?.();
     await repository.getTextContributions?.();
     expect(storage.metadataReads).toBe(1);
