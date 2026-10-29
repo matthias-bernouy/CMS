@@ -150,7 +150,12 @@ Page history. Dynamic-data authoring remains outside this initial slice.
 
 **Status:** one active Edge per instance, one Provider process and one active
 official-repository writer are assumed. Leases protect implemented critical
-sections; multi-replica failover is not proven.
+sections; multi-replica failover is not proven. Unconsumed delegation roots live
+in one Provider process, and root liveness/queued closures live in one Edge
+process. Replicas or restarts lose that local context and refuse those calls.
+Removing this limit requires shared ownership/liveness and cross-replica tests,
+in addition to distributed response-cache invalidation. Multiple isolated CMS
+sites within the supported process topology remain supported.
 
 Treat horizontal replicas as unsupported until migrations, background jobs,
 publication, cache invalidation and recovery have split-brain and

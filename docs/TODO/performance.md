@@ -93,8 +93,9 @@ each phase measures them.
    Gateway (`cms-edge-server/src/runtime/diagnostics.ts:43`), and the
    authentication commands of `ulvia.cms.access`. A test enumerates every
    official command and fails when one is not classified as purging or
-   neutral; `ulvia.cms.files` is classified with evidence, because inline SVG
-   rendering reads file bytes. Non-official contracts are neutral while only
+   neutral; `ulvia.cms.files` is conservatively classified as purging rendered
+   state, with real Page/file-origin regressions. The generic Files binding is
+   not itself an admitted cms-svg source (see the follow-up below). Non-official contracts are neutral while only
    Content and Installations state reaches cacheable HTML. A purge advances a
    generation. A response is stored only if the generation did not change while
    it was loaded, and a request arriving after a purge never joins a load
@@ -375,10 +376,81 @@ claim for Provider authority. Focused tests cover invalid inputs, wrong audience
 other instances, live revocation, closure races and failed loads. Docker covers
 rotation, persistence and a published 1.0.0 instance upgraded to profile 1.3.0.
 
-`ResponseCache` remains one cohesive 189-line state machine, despite the
-180-line review advisory. `ControlProviderClient` remains the single negotiated
-control adapter; its larger size is also advisory. There are no directory-fanout
+At the initial delivery, `ResponseCache` was one cohesive 189-line state
+machine, despite the 180-line review advisory. `ControlProviderClient` remains
+the single negotiated control adapter; its larger size is also advisory. There are no directory-fanout
 errors. Multi-process invalidation, general declarative SSR, the existing Provider
 render-cache capacity work, remote CI and production latency are outside this
 local delivery. Integration creates local commits only; publication and deployment
 remain separate actions.
+
+
+## Review follow-up
+
+The follow-up corrections cover all twelve review points without a new contract
+release or changes to instance authority:
+
+- Cache fill/waiter saturation uses an unbuffered bypass. Active stalled work
+  remains counted; detaching an old fill cannot hide resource consumption.
+- Conditional misses still produce 304 for unretained/oversized responses and
+  cancel their upstream body. Known oversized Content-Length avoids buffering.
+- Unknown cold keys do not queue behind a potentially unshareable response.
+  Five-second non-cacheability hints bound repeated probes (128 keys, 256 KiB),
+  store no payload, and clear on purge. Known revalidations still coalesce.
+- Declared root issuance reserves tracking before control dispatch. Accepted
+  cleanup proofs release capacity in the same operation; non-root calls remain
+  available. Rejected issued roots are closed explicitly; failed reservations
+  release their slot. The underlying 256-ticket authority quota remains intact.
+- Verified negative descriptions cache by revision. Saturated coordination loads
+  directly through Edge; failures are never converted to cached negatives.
+- Unknown/excess binary lengths and control 4xx validation refusals retain client
+  error semantics. They never reach business dispatch as a retryable outage.
+- Route compression is awaited inside its error boundary. Unavailable Git bases
+  widen scope to the whole indexed tree. CI push triggers include master/alpha.
+- Real freshness covers Collections, configuration, selection grants and Files,
+  including refusal/state preservation. Files is tested through ordinary image
+  URLs: its generic binary binding does not qualify as an explicit SVG binding.
+- Analytics cookies remain cacheable for verified anonymous actors. Session
+  credentials, Authorization, ranges and explicit client revalidation bypass.
+- Cache activation is explicit at composition. Native/cache response streaming
+  shares gzip and conditional logic; browser stale durations are bounded, Vary
+  remains complete, and bypasses skip cache-metadata negotiation.
+- High Availability records the process-owned pending roots and Edge liveness;
+  multiple isolated sites are supported, horizontal replicas remain unsupported.
+
+Focused evidence includes `tests/resources/fallback.test.ts`, `hints.test.ts`,
+`tests/gateway/preparation/root-capacity.test.ts`, `machine-errors.test.ts`,
+the description-cache tests, Foundation streaming tests, the actual relay error
+path, force-push scope tests and the real Docker freshness journey. These
+complement the original delivery budgets, authorization/rotation and upgrade
+suites.
+
+Final local evidence (2026-10-29), retained in `artifacts/review-fixes/`:
+
+- Initial and final `check:all`: all ten checks pass; no directory-fanout errors.
+- `verify:full`: 2,702 ordinary tests pass, eight opt-in skips and zero failures;
+  performance budgets and the CLI browser journey pass. The separate Docker
+  delivery test passes with 1,390 assertions.
+- Three-image/instance/upgrade Docker suite: eight pass, one delivery-performance
+  case skipped there because it runs separately, zero failures; 453 assertions.
+- Delivery load: 420 requests without cache and 420 with cache, including 210
+  authenticated administrator responses, all successful. Each phase exceeds
+  125 seconds across three public Pages.
+- Warm origin p50: literal Page 15.13 ms, image-capable Page 17.15 ms, asset
+  11.87 ms. Mongo operations/request: 16.3, 19.6 and 10.0; internal HTTP calls:
+  2.4 for each sample, including asynchronous audit/journal traffic.
+- Cached Page/asset p50: 0.252 / 0.219 ms; all 20 probes per resource are hits,
+  with zero internal calls and zero Mongo operations. These are local Docker
+  measurements, not production latency claims.
+- Content, collection installation/configuration, selection grants and File
+  completion/metadata/visibility/deletion are visible on the first subsequent
+  origin request. Invalid configuration leaves state and revision unchanged.
+- `git diff --check` and all 16 local documentation links pass. Formatting
+  produces no remaining changes.
+
+`ResponseCache` (210 lines) and `ControlProviderClient` (302 lines) retain their
+cohesive state-machine/control-adapter responsibilities; their size advisories
+are reviewed rather than hidden by mechanical splits. Existing workflow/relay
+size advisories also remain. Process-local delegation ownership and invalidation
+still require one Edge and one Provider process per deployment. Publication
+and deployment remain separate actions; validation runs only local images and fixtures.

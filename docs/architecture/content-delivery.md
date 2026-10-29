@@ -136,8 +136,10 @@ Edge negotiates the exact ready control version again on restart.
 ## Shared Edge response cache
 
 Each production Edge owns an ephemeral response cache (`CMS_EDGE_RESPONSE_CACHE`,
-`true` by default in production and `false` in development). Cookies, Bearer
-credentials, non-anonymous actors, ranges and `If-Range` bypass it. Its identity
+`true` by default in production and `false` in development). The `cms-session` cookie, Authorization headers, non-anonymous actors, ranges
+and `If-Range` bypass it. Unrelated analytics/consent cookies do not affect
+cache eligibility; the Provider never receives them. Explicit client
+`Cache-Control: no-cache/no-store/max-age=0` and `Pragma: no-cache` also bypass. Its identity
 contains the canonical path, ordered query pairs, Accept and normalized
 Accept-Language. It never stores private/no-store, partial, redirect, 304 or
 error responses. Conditional GET and HEAD hits need no Provider invocation.
@@ -156,8 +158,9 @@ returning their response, including declared errors. Pre-dispatch refusals do
 not invalidate. Unknown outcomes and out-of-band writes can remain stale for
 at most 15 seconds after the effective write. A purge advances a generation:
 new requests cannot join old fills, and old fills cannot repopulate the cache.
-Logs and Access authentication commands are neutral; file mutations affecting
-inline SVG invalidate rendered state. The official command inventory is tested.
+Logs and Access authentication commands are neutral. File mutations
+conservatively invalidate rendered state; fresh origin file reads independently
+check visibility and deletion. The official command inventory is tested.
 
 Content 1.1.0 accepts `resourceMetadata: "cache-v1"`. Edge sends this option only
 when the selected input declares it. Native metadata can then carry bounded
@@ -170,7 +173,18 @@ security headers, credential variation or a new authority input.
 
 The cache retains at most 256 entries and 16 MiB of serialized representation
 bytes, with a 1 MiB entry bound, 16 concurrent fills and 64 waiters per fill.
-Oversized bodies continue streaming without being cached. `Age` and `x-cache`
+Oversized bodies continue streaming without being cached. Fill/waiter saturation
+also streams directly, retaining no response and introducing no cache-generated
+503. A fill older than 15 seconds stops accepting new waiters, but its actual
+buffering work remains counted until it finishes. Cold resources whose
+cacheability is unknown are not coalesced: concurrent callers start their own
+stream rather than wait and then reload. Known revalidations can coalesce.
+Uncacheable decisions retain only a five-second bypass hint, capped at 128 keys
+and 256 KiB of UTF-8 keys; every hinted request still contacts the origin.
+Purges clear hints and fence older fills. Conditional requests receive a 304
+when their validator matches even if a response cannot be retained, and unused
+upstream bodies are cancelled. The runtime explicitly injects the cache and its
+purge callback; the public helper disables caching when no cache is provided. `Age` and `x-cache`
 expose the delivery outcome; debug observations do not generate Provider work
 for production cache hits. These caches are process-local: multi-Edge purge
 coordination remains outside the supported deployment model.
@@ -180,8 +194,10 @@ coordination remains outside the supported deployment model.
 Capability descriptions remain calls through Edge. One analyzer/cache belongs
 to each Provider instance. Keys include the current selection revision read
 through ProviderExecutionStateReader. A miss rechecks that revision after the
-call and retains the description only when it is unchanged. Failures are
-retryable; entry, byte, pending-load and waiter bounds limit retention.
+call and retains the description only when it is unchanged. A verified
+`found: false` is retained under the same revision; transport/protocol failures
+are retryable. Entry, byte, pending-load and waiter bounds limit retention;
+saturated coordination falls back to a fresh through-Edge description call.
 
 Rendering reuses only revision metadata from the settings and Bloc records it
 actually loaded. The ordered settings and route rereads remain fresh. The real
@@ -195,7 +211,12 @@ an unused root requires no Mongo write. Consumed roots still close immediately t
 liveness itself and refuses completed/unknown tickets before delegation
 inspection. Unused roots close locally; at most 64 cleanup proofs accompany
 the next preparation, with retries until acknowledged. Pending and closed
-roots share a 256-entry bound; no Provider claim decides liveness. A restart loses unused
+roots share a 256-entry bound; no Provider claim decides liveness. Declared
+root-producing preparations reserve a local tracking slot before issuance.
+Acknowledged closure batches can release their reserved space in that same
+preparation. Non-delegating calls need no slot. Failed calls release their
+reservations, and a returned root rejected during registration is explicitly
+closed through control. A restart loses unused
 reservations and refuses those tickets. Consumed roots retain atomic budgets,
 live actor/key/selection checks and the original closure and expiry fences.
 
@@ -207,3 +228,22 @@ capability and audience before ordinary pinned HTTP dispatch. Commands retain
 input validation, durable audit and post-dispatch invalidation. Delegated user
 calls retain their existing actor inspection path. Older control versions use
 their original operations. No Provider-to-Provider business shortcut is added.
+
+
+Browser compression and conditional streaming share Foundation negotiation with
+the cache. Already-encoded responses are not recompressed. Browser max-age,
+shared max-age and stale durations are bounded to one year; malformed or duplicate
+directives become no-store. Accept, Accept-Language and Accept-Encoding remain in
+Vary even when cache-metadata negotiation is skipped for a bypass.
+
+Provider binary calls require a known Content-Length within the control schema's
+64 MiB ceiling; selected capability and Provider quotas can impose lower bounds.
+Missing/invalid lengths and broker input refusals are client errors, not a
+retryable transport outage.
+
+Files URLs may be used by ordinary image references. The generic files.read
+binding does not currently declare an SVG response type and therefore cannot
+be authored directly as cms-svg. Capability-backed inline SVG requires an
+explicit selected public SVG binding and an immutable response. Tests of Files
+freshness cover origin reads and Page invalidation; changing visibility cannot
+retract public bytes already cached by a browser.

@@ -13,8 +13,9 @@ write failure fails the command.
 
 Local scope includes staged, unstaged and untracked files. Use
 `bun run check:all --base <ref>` for committed work: its scope is the merge base
-through the working tree, including untracked files. Failed Git discovery
-fails the command instead of claiming an empty review scope. Path matching
+through the working tree, including untracked files. An unavailable or unrelated base (including a force-push) widens scope to all
+indexed and untracked paths, including local deletions. It never substitutes
+HEAD^ or an empty scope. Actual Git discovery failures still fail the command. Path matching
 only selects reminders; also review affected callers of shared code.
 
 `AGENTS.md` defines proportionate evidence, including forbidden actor/instance
@@ -73,13 +74,25 @@ records contain paths only, never query parameters, tokens or bodies. Reports li
 
 The zero-503 prerequisite caches capability descriptions per instance and
 selection revision. Misses reread that revision after the through-Edge call;
-changed revisions and failures are never cached. Retention is capped at 64
+changed revisions and failures are never cached. Verified missing selections
+are cached as negative descriptions under their revision; saturated pending
+coordination bypasses storage rather than making the Page unavailable. Retention is capped at 64
 entries/256 KiB of serialized metadata, 64 KiB per entry, 16 distinct pending
 loads and 256 waiters per load. Immutable snapshots classify Page access;
 actual invocations retain fresh authorization. Dynamic indexing remains live
 and private/no-store, including after a capability restriction.
 
 `verify:full` runs the CLI browser smoke and this Docker budget journey. PR/push
-CI on `codex/alpha-v0` and nightly/manual smoke reuse explicitly built candidate
+CI on `master` and `codex/alpha-v0`, plus nightly/manual smoke reuse explicitly built candidate
 images. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
 for the implemented response cache, invalidation and process-local limits.
+
+
+The Docker freshness journey also primes anonymous Page hits before collection
+installation/configuration, a reviewed selection-grant operation and Files
+completion/rename/visibility/deletion. It checks a revoked grant refuses a real
+command without changing its state, invalid configuration is unchanged, and
+private/deleted file bytes are not returned by fresh origin reads. These checks
+run in the delivery budget and in `tests/integration/instance/freshness.docker.test.ts`.
+The fixture uses the mounted HTTP and MCP bindings; it does not bypass authority
+or publish to the public Repository.
