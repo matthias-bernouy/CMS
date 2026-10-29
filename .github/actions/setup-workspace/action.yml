@@ -15,4 +15,4 @@ runs:
 
     - name: Bootstrap browser assets
       shell: bash
-      run: bun run --cwd packages/surfaces/cms-edge src/tooling/prebuildAdmin.ts
+      run: bun run build:browser && bun run generate:official-bootstrap

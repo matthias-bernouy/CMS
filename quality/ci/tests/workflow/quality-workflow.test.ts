@@ -60,7 +60,7 @@ test("quality workflow keeps every G0 check visible", async () => {
         "git diff --exit-code",
         "bun run quality/ci/audit/audit.ts",
         "bun run quality/ci/coverage/ratchet.ts",
-        "bun run --cwd packages/surfaces/cms-edge src/tooling/prebuildAdmin.ts",
+        "bun run build:browser && bun run generate:official-bootstrap",
         "docker compose version",
         "bun test packages/features/cms-files/tests",
         "bun test packages/features/cms-gateway/tests/http packages/features/cms-gateway/tests/invocation",
@@ -73,7 +73,7 @@ test("quality workflow keeps every G0 check visible", async () => {
         "packages/official-repository",
         "packages/surfaces",
         "packages/runtimes",
-        "infra",
+        "tests",
         "quality",
     ]) {
         expect(workflow).toContain(`path: ${testPath}`);
@@ -122,4 +122,27 @@ test("secret baseline contains only the audited historical fingerprints", async 
     for (const fingerprint of fingerprints) {
         expect(fingerprint).toMatch(/^[0-9a-f]{40}:.+:[a-z0-9-]+:\d+$/);
     }
+});
+
+test("CI runs candidate budgets once on pull requests and keeps a nightly journey", async () => {
+    const workflow = await readFile(workflowPath, "utf8");
+    const smoke = await readFile(
+        resolve(import.meta.dir, "../../../../.github/workflows/quality-edge-smoke.yml"),
+        "utf8",
+    );
+    const nightly = await readFile(resolve(import.meta.dir, "../../../../.github/workflows/edge-smoke.yml"), "utf8");
+    expect(workflow).toContain("- codex/alpha-v0");
+    expect(workflow).toContain('bun run check:all --base "$CHECK_BASE_REF"');
+    expect(workflow).toContain("bun run test:performance");
+    expect(workflow).toContain("name: Install Chromium for performance budgets");
+    for (const file of [smoke, nightly]) {
+        expect(file).toContain("bun run images:build --version 0.1.0-ci all");
+        expect(file).toContain("ULVIA_SMOKE_IMAGE_VERSION: 0.1.0-ci");
+        expect(file).toContain("bun run test:performance:delivery");
+    }
+    expect(nightly).not.toContain("  pull_request:");
+    expect(nightly).not.toContain("  push:");
+    expect(nightly).toContain("  schedule:");
+    const setup = await readFile(setupActionPath, "utf8");
+    expect(setup).not.toContain("prebuildAdmin");
 });

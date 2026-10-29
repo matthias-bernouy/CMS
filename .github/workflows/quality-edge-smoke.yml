@@ -21,16 +21,29 @@ jobs:
       - name: Install Chromium
         run: bun node_modules/playwright/cli.js install --with-deps chromium
 
+      - name: Build candidate images
+        run: bun run images:build --version 0.1.0-ci all
+
       - name: Exercise the complete local Edge flow
         env:
+          ULVIA_SMOKE_IMAGE_VERSION: 0.1.0-ci
           ULVIA_SMOKE_ARTIFACTS_DIR: artifacts/edge-smoke
         run: bun run test:edge-smoke
 
-      - name: Upload failure artifacts
-        if: failure()
+      - name: Gate delivery performance on candidate images
+        env:
+          ULVIA_MCP_EDGE_DOCKER_IMAGE: docker.io/cyaxis/ulvia-edge:0.1.0-ci
+          ULVIA_MCP_PROVIDER_DOCKER_IMAGE: docker.io/cyaxis/ulvia-provider:0.1.0-ci
+          ULVIA_REPOSITORY_DOCKER_IMAGE: docker.io/cyaxis/ulvia-official-repository:0.1.0-ci
+        run: bun run test:performance:delivery
+
+      - name: Upload smoke and budget evidence
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: edge-smoke-failure
-          path: artifacts/edge-smoke/
+          name: edge-smoke-evidence
+          path: |
+            artifacts/edge-smoke/
+            artifacts/delivery-performance/
           if-no-files-found: warn
           retention-days: 14

@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - codex/alpha-v0
   workflow_dispatch:
 
 permissions:
@@ -32,10 +32,27 @@ jobs:
         uses: ./.github/actions/setup-workspace
 
       - name: Run all workspace checks
-        run: bun run check:all
+        env:
+          CHECK_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^' }}
+        run: bun run check:all --base "$CHECK_BASE_REF"
+
+      - name: Install Chromium for performance budgets
+        run: bun node_modules/playwright/cli.js install --with-deps chromium
+
+      - name: Verify performance budgets
+        run: bun run test:performance
 
       - name: Verify deterministic build and clean worktree
         run: bash quality/ci/determinism/deterministic-build.sh
+
+      - name: Upload complete check report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: workspace-checks
+          path: artifacts/check-all/
+          if-no-files-found: warn
+          retention-days: 14
 
   tests:
     name: Tests (${{ matrix.name }})
@@ -55,8 +72,8 @@ jobs:
             path: packages/surfaces
           - name: runtimes
             path: packages/runtimes
-          - name: infrastructure
-            path: infra
+          - name: integration harnesses
+            path: tests
           - name: CI tooling
             path: quality
     steps:
@@ -67,7 +84,7 @@ jobs:
         uses: ./.github/actions/setup-workspace
 
       - name: Verify Docker Compose for infrastructure tests
-        if: matrix.name == 'infrastructure'
+        if: matrix.name == 'integration harnesses'
         run: docker compose version
 
       - name: Install Chromium for surface browser tests
