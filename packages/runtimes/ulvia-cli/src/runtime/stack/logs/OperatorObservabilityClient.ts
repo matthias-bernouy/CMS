@@ -1,3 +1,4 @@
+import { isCanonicalSemVer, satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compatibility";
 import { parseProviderRuntimeReportJson } from "@bernouy/cms-repository/providers/installations";
 import type { GatewayRoute } from "@bernouy/cms-gateway";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
@@ -143,7 +144,12 @@ export class OperatorObservabilityClient {
             const control = report.implementations.find(
                 (item) => item.contractId === "ulvia.cms.installations" && item.status === "ready",
             );
-            if (report.instanceId !== this.instanceId || !control || !["1.0.0", "1.1.0"].includes(control.version)) {
+            if (
+                report.instanceId !== this.instanceId ||
+                !control ||
+                !isCanonicalSemVer(control.version) ||
+                !satisfiesVersionRange(control.version, "^1.0.0")
+            ) {
                 throw new Error("Local Provider control contract does not match the instance");
             }
             return control.version;
