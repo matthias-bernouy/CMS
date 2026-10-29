@@ -1,5 +1,9 @@
 import { exercisePageDelivery, exerciseBasicPage } from "./page-delivery";
 import { exerciseObservabilityMcp } from "./observability-mcp";
+import { exerciseRenderingResources } from "./providers/rendering-resources";
+import { exerciseNamedSecretResolution } from "./providers/secret-resolution";
+import { exerciseAuthenticationMaterial } from "./providers/authentication";
+import { exerciseExecutionState } from "./providers/execution-state";
 import { exerciseDelegationStore } from "./providers/delegation";
 import { exerciseProviders } from "./providers/flow";
 import { expect, test } from "bun:test";
@@ -37,6 +41,10 @@ integration(
             await exercisePageDelivery(connection.page, f.cmsUrl);
             await exerciseBasicPage(connection, f.cmsUrl);
             await exerciseDelegationStore(f.providerName, f.id);
+            await exerciseExecutionState(f.providerName, f.id);
+            await exerciseAuthenticationMaterial(f.providerName, f.id);
+            await exerciseNamedSecretResolution(f.providerName, f.id);
+            await exerciseRenderingResources(f.providerName, f.id);
             await exerciseProviders(f, connection.page);
             const namespace = f.id.replaceAll("-", "");
             const publicKey = await exerciseCollections(connection.call, namespace, f.providerName);

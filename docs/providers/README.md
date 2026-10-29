@@ -89,10 +89,18 @@ the installation's provider credential. Its closed claims contain only the
 request ID, provider-owned opaque instance audience, exact contract version and
 capability, timestamps, an opaque destination connection identifier, and either
 a provider-scoped subject, a source Provider identifier, or an authorized system
-service. These identities cannot be combined. Site and user-role metadata are
-never forwarded. The provider checks the audience,
-selects the exact release route from the verified claims and receives its local
-site/provider scope from runtime configuration. The durable credential itself
+service. These identity modes cannot be combined. Binary resources additionally
+carry verified actor kind; CMS-global subject identifiers are never forwarded.
+The provider checks the signature, audience, capability and expiry and receives
+its local site/provider scope from runtime configuration. Installed native calls
+use the signed invocation as a short-lived capability lease: grants, selections
+and installation status are checked when issuing it. Their subsequent change
+prevents new issuance but does not recall a previously issued lease. The native
+host still checks current instance and connection-key activity on every call.
+Leases have a nominal 30-second maximum lifetime, with the token verifier's
+existing five-second clock tolerance. They are checked again after asynchronous
+runtime preparation. The private control channel retains fresh site authority
+checks. The durable credential itself
 is sent only to the authenticated `/ulvia/report` control endpoint.
 
 The generic execution path supports structured synchronous calls,
