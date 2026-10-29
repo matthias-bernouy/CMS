@@ -5,9 +5,8 @@ import {
     verifyProviderInvocationToken,
     type ProviderInvocationClaims,
 } from "@bernouy/cms-gateway/protocol";
-import type { ProviderInstanceRecord, ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
-import type { InstanceCredential, InstanceCredentialStore } from "./InstanceCredentialStore";
-import type { EncryptedInstanceCredentials } from "./EncryptedInstanceCredentials";
+import type { ProviderInstanceRecord } from "@bernouy/ulvia-provider";
+import type { InstanceAuthenticationReader } from "./material/InstanceAuthenticationReader";
 
 export type AuthenticatedInvocation = Readonly<{
     instance: ProviderInstanceRecord;
@@ -15,22 +14,14 @@ export type AuthenticatedInvocation = Readonly<{
 }>;
 
 export class ProviderInstanceAuthenticator {
-    constructor(
-        private readonly instances: ProviderInstanceRegistry,
-        private readonly credentials: InstanceCredentialStore,
-        private readonly encryptedCredentials: EncryptedInstanceCredentials,
-    ) {}
+    constructor(private readonly authentication: InstanceAuthenticationReader) {}
 
     async authenticateControlToken(token: string): Promise<ProviderInstanceRecord | null> {
-        const credential = await this.credentials.getByAccessTokenHash(hashInstanceAccessToken(token));
-        if (!credential) {
-            return null;
-        }
-        const secret = await this.readEnabledAccessToken(credential);
-        if (!secret || !equalSecrets(token, secret)) {
-            return null;
-        }
-        return this.readReadyInstance(credential.instanceId);
+        const material = await this.authentication.read({
+            field: "accessTokenHash",
+            value: hashInstanceAccessToken(token),
+        });
+        return material && equalSecrets(token, material.secrets.instanceAccessToken) ? material.instance : null;
     }
 
     async authenticateReportToken(token: string): Promise<ProviderInstanceRecord | null> {
@@ -39,11 +30,11 @@ export class ProviderInstanceAuthenticator {
             return control;
         }
         try {
-            const credential = await this.credentials.getByInvocationKeyId(providerInvocationKeyId(token));
-            const expected = credential && (await this.readEnabledInvocationSecret(credential));
-            return credential && expected && equalSecrets(token, expected)
-                ? this.readReadyInstance(credential.instanceId)
-                : null;
+            const material = await this.authentication.read({
+                field: "invocationKeyId",
+                value: providerInvocationKeyId(token),
+            });
+            return material && equalSecrets(token, material.secrets.invocationSecret) ? material.instance : null;
         } catch {
             return null;
         }
@@ -56,43 +47,19 @@ export class ProviderInstanceAuthenticator {
         } catch {
             return null;
         }
-        const credential = await this.credentials.getByInvocationKeyId(keyId);
-        if (!credential) {
-            return null;
-        }
-        const secret = await this.readEnabledInvocationSecret(credential);
-        if (!secret) {
+        const material = await this.authentication.read({ field: "invocationKeyId", value: keyId });
+        if (!material) {
             return null;
         }
         try {
-            const claims = verifyProviderInvocationToken(token, secret);
-            if (claims.instanceId !== credential.instanceId) {
+            const claims = verifyProviderInvocationToken(token, material.secrets.invocationSecret);
+            if (claims.instanceId !== material.instance.id) {
                 return null;
             }
-            const instance = await this.readReadyInstance(credential.instanceId);
-            return instance ? { instance, claims } : null;
+            return { instance: material.instance, claims };
         } catch {
             return null;
         }
-    }
-
-    async readEnabledAccessToken(credential: InstanceCredential): Promise<string | null> {
-        if (!credential.enabled) {
-            return null;
-        }
-        return (await this.encryptedCredentials.readSecret(credential.secretKey))?.instanceAccessToken ?? null;
-    }
-
-    async readEnabledInvocationSecret(credential: InstanceCredential): Promise<string | null> {
-        if (!credential.enabled) {
-            return null;
-        }
-        return (await this.encryptedCredentials.readSecret(credential.secretKey))?.invocationSecret ?? null;
-    }
-
-    private async readReadyInstance(instanceId: string): Promise<ProviderInstanceRecord | null> {
-        const instance = await this.instances.get(instanceId);
-        return instance?.status === "ready" ? instance : null;
     }
 }
 

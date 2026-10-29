@@ -7,7 +7,7 @@ import {
 } from "@bernouy/ulvia-provider";
 import type { Collection, Db } from "mongodb";
 
-type ProviderInstanceDocument = Omit<ProviderInstanceRecord, "createdAt" | "updatedAt"> & {
+export type ProviderInstanceDocument = Omit<ProviderInstanceRecord, "createdAt" | "updatedAt"> & {
     createdAt: Date;
     updatedAt: Date;
 };
@@ -36,21 +36,21 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
             updatedAt: now,
         };
         await this.#instances.insertOne(document);
-        return serialize(document);
+        return serializeProviderInstance(document);
     }
 
     async get(instanceId: string): Promise<ProviderInstanceRecord | null> {
         const document = await this.#instances.findOne({ id: instanceId });
-        return document ? serialize(document) : null;
+        return document ? serializeProviderInstance(document) : null;
     }
 
     async getByIdempotencyKey(idempotencyKey: string): Promise<ProviderInstanceRecord | null> {
         const document = await this.#instances.findOne({ idempotencyKey });
-        return document ? serialize(document) : null;
+        return document ? serializeProviderInstance(document) : null;
     }
 
     async list(): Promise<readonly ProviderInstanceRecord[]> {
-        return (await this.#instances.find().sort({ createdAt: 1 }).toArray()).map(serialize);
+        return (await this.#instances.find().sort({ createdAt: 1 }).toArray()).map(serializeProviderInstance);
     }
 
     async update(
@@ -73,11 +73,11 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
         if (!document) {
             throw new ProviderInstanceRevisionConflictError(instanceId);
         }
-        return serialize(document);
+        return serializeProviderInstance(document);
     }
 }
 
-function serialize(document: ProviderInstanceDocument): ProviderInstanceRecord {
+export function serializeProviderInstance(document: ProviderInstanceDocument): ProviderInstanceRecord {
     const {
         id,
         idempotencyKey,

@@ -1,7 +1,7 @@
 import type { Collection, Db } from "mongodb";
 import type { InstanceCredential, InstanceCredentialStore } from "./InstanceCredentialStore";
 
-type CredentialDocument = Omit<InstanceCredential, "createdAt" | "updatedAt"> & {
+export type CredentialDocument = Omit<InstanceCredential, "createdAt" | "updatedAt"> & {
     createdAt: Date;
     updatedAt: Date;
 };

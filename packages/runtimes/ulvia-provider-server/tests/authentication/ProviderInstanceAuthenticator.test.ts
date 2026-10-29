@@ -1,133 +1,78 @@
 import { describe, expect, test } from "bun:test";
 import { providerInvocationKeyId, signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
-import type { ProviderInstanceRecord, ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
-import {
-    ProviderInstanceAuthenticator,
-    hashInstanceAccessToken,
-} from "../../src/runtime/authentication/ProviderInstanceAuthenticator";
-import type {
-    InstanceCredential,
-    InstanceCredentialStore,
-} from "../../src/runtime/authentication/InstanceCredentialStore";
-import type { EncryptedInstanceCredentials } from "../../src/runtime/authentication/EncryptedInstanceCredentials";
+import { ProviderInstanceAuthenticator } from "../../src/runtime/authentication/ProviderInstanceAuthenticator";
+import { materialFixture, TOKEN, INVOCATION_SECRET, INSTANCE_ID } from "./material/fixture";
 
-const TOKEN = "opaque-instance-token-that-is-long-enough";
-const INVOCATION_SECRET = "opaque-invocation-secret-that-is-long-enough";
-const INSTANCE_ID = "instance:alpha";
+function invocation(instanceId = INSTANCE_ID, secret = INVOCATION_SECRET) {
+    const issuedAt = Math.floor(Date.now() / 1000);
+    return signProviderInvocationToken(secret, {
+        version: 1,
+        requestId: crypto.randomUUID(),
+        instanceId,
+        contractId: "ulvia.cms.content",
+        contractVersion: "1.0.0",
+        capabilityId: "pages.list",
+        connectionId: "native",
+        issuedAt,
+        expiresAt: issuedAt + 30,
+    });
+}
 
 describe("ProviderInstanceAuthenticator", () => {
-    test("resolves raw control and signed invocation credentials to one ready instance", async () => {
-        const instance = readyInstance();
-        const credential = instanceCredential();
-        const authenticator = new ProviderInstanceAuthenticator(
-            registry(instance),
-            credentialStore(credential),
-            encryptedCredentials(),
-        );
-
+    test("resolves control, report and signed invocation credentials to one ready instance", async () => {
+        const f = materialFixture();
+        const authenticator = new ProviderInstanceAuthenticator(f.reader);
         expect((await authenticator.authenticateControlToken(TOKEN))?.id).toBe(INSTANCE_ID);
-        const issuedAt = Math.floor(Date.now() / 1_000);
-        const signed = signProviderInvocationToken(INVOCATION_SECRET, {
-            version: 1,
-            requestId: "00000000-0000-4000-8000-000000000001",
-            instanceId: INSTANCE_ID,
-            contractId: "ulvia.cms.content",
-            contractVersion: "1.0.0",
-            capabilityId: "pages.list",
-            issuedAt,
-            expiresAt: issuedAt + 30,
-        });
-        expect((await authenticator.authenticateInvocationToken(signed))?.claims.instanceId).toBe(INSTANCE_ID);
+        expect((await authenticator.authenticateReportToken(TOKEN))?.id).toBe(INSTANCE_ID);
+        expect((await authenticator.authenticateReportToken(INVOCATION_SECRET))?.id).toBe(INSTANCE_ID);
+        expect((await authenticator.authenticateInvocationToken(invocation()))?.claims.instanceId).toBe(INSTANCE_ID);
+        expect(f.decrypts).toBe(1);
     });
 
-    test("rejects disabled instances and credentials from another instance", async () => {
-        const disabled = { ...readyInstance(), status: "disabled" as const };
-        const authenticator = new ProviderInstanceAuthenticator(
-            registry(disabled),
-            credentialStore(instanceCredential()),
-            encryptedCredentials(),
-        );
+    test("the report credential never becomes control authority or an unsigned invocation", async () => {
+        const f = materialFixture();
+        const authenticator = new ProviderInstanceAuthenticator(f.reader);
+        expect(await authenticator.authenticateControlToken(INVOCATION_SECRET)).toBeNull();
+        expect(await authenticator.authenticateInvocationToken(INVOCATION_SECRET)).toBeNull();
+        expect(await authenticator.authenticateReportToken("wrong".repeat(16))).toBeNull();
+        expect(await authenticator.authenticateInvocationToken(invocation("instance:other"))).toBeNull();
+        const signed = invocation();
+        expect(await authenticator.authenticateInvocationToken(`${signed.slice(0, -3)}bad`)).toBeNull();
+    });
+
+    test("a capability lease cannot bypass fresh credential or instance revocation with a hot cache", async () => {
+        const f = materialFixture();
+        const authenticator = new ProviderInstanceAuthenticator(f.reader);
+        const token = invocation();
+        expect(await authenticator.authenticateInvocationToken(token)).not.toBeNull();
+        f.document!.enabled = false;
+        expect(await authenticator.authenticateInvocationToken(token)).toBeNull();
         expect(await authenticator.authenticateControlToken(TOKEN)).toBeNull();
+        expect(await authenticator.authenticateReportToken(INVOCATION_SECRET)).toBeNull();
+        f.document!.enabled = true;
+        f.document!.instance.status = "disabled";
+        expect(await authenticator.authenticateInvocationToken(token)).toBeNull();
+        expect(f.decrypts).toBe(1);
     });
-});
 
-function readyInstance(): ProviderInstanceRecord {
-    return {
-        id: INSTANCE_ID,
-        idempotencyKey: "create-alpha",
-        idempotencyFingerprint: "fingerprint",
-        storageKey: "alpha",
-        cmsUrl: "http://127.0.0.1:5100",
-        label: "Alpha",
-        status: "ready",
-        profile: { id: "ulvia.official", version: "1.0.0" },
-        revision: 1,
-        createdAt: new Date(0).toISOString(),
-        updatedAt: new Date(0).toISOString(),
-    };
-}
-
-function encryptedCredentials(): EncryptedInstanceCredentials {
-    return {
-        readSecret: async () => ({
-            instanceAccessToken: TOKEN,
-            invocationSecret: INVOCATION_SECRET,
-            sessionSecret: "s".repeat(64),
-            kekHex: "0".repeat(64),
-        }),
-    } as EncryptedInstanceCredentials;
-}
-
-function instanceCredential(): InstanceCredential {
-    return {
-        instanceId: INSTANCE_ID,
-        invocationKeyId: providerInvocationKeyId(INVOCATION_SECRET),
-        accessTokenHash: hashInstanceAccessToken(TOKEN),
-        secretKey: "ULVIA_INSTANCE_ALPHA",
-        enabled: true,
-        revision: 1,
-        createdAt: new Date(0).toISOString(),
-        updatedAt: new Date(0).toISOString(),
-    };
-}
-
-function registry(instance: ProviderInstanceRecord): ProviderInstanceRegistry {
-    return {
-        init: async () => undefined,
-        create: async () => instance,
-        get: async (id) => (id === instance.id ? instance : null),
-        getByIdempotencyKey: async () => null,
-        list: async () => [instance],
-        update: async () => instance,
-    };
-}
-
-function credentialStore(credential: InstanceCredential): InstanceCredentialStore {
-    return {
-        init: async () => undefined,
-        put: async () => credential,
-        getByInstanceId: async (instanceId) => (instanceId === credential.instanceId ? credential : null),
-        getByInvocationKeyId: async (keyId) => (keyId === credential.invocationKeyId ? credential : null),
-        getByAccessTokenHash: async (hash) => (hash === credential.accessTokenHash ? credential : null),
-        disable: async () => undefined,
-    };
-}
-
-test("the report credential never becomes control authority or a signed invocation", async () => {
-    const authenticator = new ProviderInstanceAuthenticator(
-        registry(readyInstance()),
-        credentialStore(instanceCredential()),
-        encryptedCredentials(),
-    );
-    expect((await authenticator.authenticateReportToken(INVOCATION_SECRET))?.id).toBe(INSTANCE_ID);
-    expect(await authenticator.authenticateControlToken(INVOCATION_SECRET)).toBeNull();
-    expect(await authenticator.authenticateInvocationToken(INVOCATION_SECRET)).toBeNull();
-    expect(await authenticator.authenticateReportToken("wrong".repeat(16))).toBeNull();
-    const disabled = { ...instanceCredential(), enabled: false };
-    const denied = new ProviderInstanceAuthenticator(
-        registry(readyInstance()),
-        credentialStore(disabled),
-        encryptedCredentials(),
-    );
-    expect(await denied.authenticateReportToken(INVOCATION_SECRET)).toBeNull();
+    test("rotated ciphertext and key metadata reject previous signatures and control tokens", async () => {
+        const f = materialFixture();
+        const authenticator = new ProviderInstanceAuthenticator(f.reader);
+        const token = invocation();
+        expect(await authenticator.authenticateInvocationToken(token)).not.toBeNull();
+        const nextSecret = "N".repeat(43);
+        f.document!.invocationKeyId = providerInvocationKeyId(nextSecret);
+        f.document!.accessTokenHash = "new-hash";
+        f.document!.secret.ciphertext = Buffer.from("rotated");
+        f.decrypt = async () =>
+            JSON.stringify({
+                instanceAccessToken: "A".repeat(43),
+                invocationSecret: nextSecret,
+                sessionSecret: "s".repeat(64),
+                kekHex: "0".repeat(64),
+            });
+        expect(await authenticator.authenticateInvocationToken(token)).toBeNull();
+        expect(await authenticator.authenticateControlToken(TOKEN)).toBeNull();
+        expect(await authenticator.authenticateInvocationToken(invocation(INSTANCE_ID, nextSecret))).not.toBeNull();
+    });
 });

@@ -11,6 +11,7 @@ import {
 } from "@bernouy/ulvia-provider";
 import { EncryptedInstanceCredentials } from "./runtime/authentication/EncryptedInstanceCredentials";
 import { MongoInstanceCredentialStore } from "./runtime/authentication/MongoInstanceCredentialStore";
+import { MongoInstanceAuthenticationReader } from "./runtime/authentication/material/MongoInstanceAuthenticationReader";
 import { ProviderInstanceAuthenticator } from "./runtime/authentication/ProviderInstanceAuthenticator";
 import { createEnvelopeSecretCrypto } from "./runtime/stores/envelopeCrypto";
 import { ProviderInstanceHost } from "./runtime/instances/composition/ProviderInstanceHost";
@@ -92,7 +93,9 @@ try {
             profiles,
             env.CMS_SESSION_SECRET,
         );
-        const authenticator = new ProviderInstanceAuthenticator(instances, credentialStore, credentials);
+        const authenticator = new ProviderInstanceAuthenticator(
+            new MongoInstanceAuthenticationReader(controlDb, "ulvia-provider-control", secretCrypto),
+        );
         provider = mountUlviaProvider({
             env,
             contracts: artifacts.contracts,
