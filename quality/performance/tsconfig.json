@@ -7,18 +7,81 @@
         "noEmit": true,
         "sourceMap": false,
         "paths": {
-            "binary-media/*": ["../../packages/foundation/binary-media/src/*"],
-            "blob-store/*": ["../../packages/foundation/blob-store/src/*"],
-            "cms-auth/*": ["../../packages/features/cms-auth/src/*"],
-            "cms-content/*": ["../../packages/features/cms-content/src/*"],
-            "cms-files/*": ["../../packages/features/cms-files/src/*"],
-            "cms-gateway/*": ["../../packages/features/cms-gateway/src/*"],
-            "cms-repository/*": ["../../packages/features/cms-repository/src/*"],
-            "http-runner/*": ["../../packages/foundation/http-runner/src/*"]
-            ,"image-processing/*": ["../../packages/foundation/image-processing/src/*"]
-            ,"rate-limiter/*": ["../../packages/foundation/rate-limiter/src/*"]
-            ,"secret-store/*": ["../../packages/foundation/secret-store/src/*"]
+            "binary-media/*": [
+                "../../packages/foundation/binary-media/src/*"
+            ],
+            "blob-store/*": [
+                "../../packages/foundation/blob-store/src/*"
+            ],
+            "cms-auth/*": [
+                "../../packages/features/cms-auth/src/*"
+            ],
+            "cms-content/*": [
+                "../../packages/features/cms-content/src/*"
+            ],
+            "cms-files/*": [
+                "../../packages/features/cms-files/src/*"
+            ],
+            "cms-gateway/*": [
+                "../../packages/features/cms-gateway/src/*"
+            ],
+            "cms-repository/*": [
+                "../../packages/features/cms-repository/src/*"
+            ],
+            "http-runner/*": [
+                "../../packages/foundation/http-runner/src/*"
+            ],
+            "image-processing/*": [
+                "../../packages/foundation/image-processing/src/*"
+            ],
+            "rate-limiter/*": [
+                "../../packages/foundation/rate-limiter/src/*"
+            ],
+            "secret-store/*": [
+                "../../packages/foundation/secret-store/src/*"
+            ],
+            "cms-emailer/*": [
+                "../../packages/features/cms-emailer/src/*"
+            ],
+            "cms-observability/*": [
+                "../../packages/features/cms-observability/src/*"
+            ],
+            "cms-secrets/*": [
+                "../../packages/features/cms-secrets/src/*"
+            ],
+            "cms-smtp-emailer/*": [
+                "../../packages/features/cms-smtp-emailer/src/*"
+            ],
+            "envelope-crypto/*": [
+                "../../packages/foundation/envelope-crypto/src/*"
+            ],
+            "logging/*": [
+                "../../packages/foundation/logging/src/*"
+            ],
+            "cms-edge-server/*": [
+                "../../packages/runtimes/cms-edge-server/src/*"
+            ],
+            "official-repository-server/*": [
+                "../../packages/runtimes/official-repository-server/src/*"
+            ],
+            "ulvia-cli/*": [
+                "../../packages/runtimes/ulvia-cli/src/*"
+            ],
+            "ulvia-provider-server/*": [
+                "../../packages/runtimes/ulvia-provider-server/src/*"
+            ],
+            "cms-edge/*": [
+                "../../packages/surfaces/cms-edge/src/*"
+            ],
+            "ulvia-provider/*": [
+                "../../packages/surfaces/ulvia-provider/src/*"
+            ]
         }
     },
-    "include": ["./**/*.ts"]
+    "include": [
+        "./**/*.ts",
+        "../../tests/performance/delivery/**/*.ts",
+        "../../tests/integration/instance/performance/**/*.ts",
+        "../../tests/integration/instance/performance.docker.test.ts"
+    ]
 }

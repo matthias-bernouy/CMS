@@ -4,12 +4,13 @@ import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
-import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import { resolveContract, type AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import {
     DefaultProviderCapabilityDispatcher,
     UlviaProvider,
     type UlviaProviderInstanceRuntime,
 } from "@bernouy/ulvia-provider";
+import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { NOOP_LOGGER } from "@bernouy/logging";
 import {
     NETWORK_INSTANCE_ID,
@@ -31,7 +32,7 @@ export async function createNetworkJourney() {
         return { value: input.value };
     });
     const providerRunner = new BunRunner({ hostname: "127.0.0.1" });
-    new UlviaProvider(providerRunner, providerOptions(admission, dispatcher));
+    new UlviaProvider(providerRunner, await providerOptions(admission, dispatcher));
     const providerServer = serveForTest(providerRunner);
     let edgeServer: ReturnType<typeof serveForTest> | undefined;
     try {
@@ -78,14 +79,14 @@ export async function createNetworkJourney() {
     }
 }
 
-function providerOptions(admission: AdmittedContractRelease, dispatcher: DefaultProviderCapabilityDispatcher) {
+async function providerOptions(admission: AdmittedContractRelease, dispatcher: DefaultProviderCapabilityDispatcher) {
     const runtime: UlviaProviderInstanceRuntime = {
         siteId: NETWORK_SITE_ID,
         report: runtimeReport(admission, `sha256:${"0".repeat(64)}`),
         dispatcher,
     };
     return {
-        contracts: [admission.release],
+        contracts: [await resolveContract(new InMemoryReleaseCatalogue(), admission)],
         logger: NOOP_LOGGER,
         authenticateControlToken: async (token: string) =>
             token === NETWORK_TOKEN ? { resource: runtime, release: () => undefined } : null,

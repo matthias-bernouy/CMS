@@ -90,6 +90,16 @@ export async function performanceRoute(admission: AdmittedContractRelease, endpo
             installationId: "performance-provider",
         },
         release,
+        requestedRelease: release,
+        lineage: [
+            {
+                contractId: admission.release.contractId,
+                version: admission.release.version,
+                digest: admission.digest,
+                name: admission.release.name,
+                capabilityIds: admission.release.capabilities.map(({ id }) => id),
+            },
+        ],
         manifest: { admission: manifestAdmission, publishedAt: timestamp },
         installation: {
             revision: 1,

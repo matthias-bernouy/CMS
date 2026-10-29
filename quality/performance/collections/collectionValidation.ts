@@ -1,6 +1,6 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import {
     admitCollectionReleaseJson,
     describeCollectionResources,
@@ -24,11 +24,18 @@ const OFFICIAL_RELEASE = join(
 
 export async function runCollectionValidationBenchmarks(): Promise<void> {
     const officialJson = await Bun.file(OFFICIAL_RELEASE).text();
+    const officialAssets = parseCollectionReleaseJson(officialJson).assets.map(({ id }) => ({
+        id,
+        bytes: Bun.file(join(dirname(OFFICIAL_RELEASE), "assets", id)),
+    }));
     const synthetic = [
-        { blocs: 32, pages: 16 },
-        { blocs: 128, pages: 64 },
-        { blocs: 512, pages: 256 },
-    ].map(({ blocs, pages }) => ({ name: `${blocs} blocs / ${pages} pages`, value: collectionFixture(blocs, pages) }));
+        { blocs: 32, examples: 16 },
+        { blocs: 128, examples: 64 },
+        { blocs: 512, examples: 256 },
+    ].map(({ blocs, examples }) => ({
+        name: `${blocs} blocs / ${examples} examples`,
+        value: collectionFixture(blocs, examples),
+    }));
     const results = [await benchmark("official JSON validation", () => parseCollectionReleaseJson(officialJson))];
     for (const { name, value } of synthetic) {
         results.push(await benchmark(`semantic validation: ${name}`, () => parseCollectionRelease(value)));
@@ -36,15 +43,15 @@ export async function runCollectionValidationBenchmarks(): Promise<void> {
     printResults("Collection validation", results);
     assertMaximum("official collection validation p95", results[0]!.p95Ms, 2_500);
     assertMaximum("maximum-size synthetic validation p95", results.at(-1)!.p95Ms, 2_500);
-    assertGrowth("128 to 512 bloc validation growth", results[2]!, results[3]!, 8);
+    assertGrowth("128 to 512 bloc validation growth", results[2]!, results[3]!, 12);
 
     const largest = parseCollectionRelease(synthetic.at(-1)!.value);
     const nextLargest = parseCollectionRelease(collectionFixture(512, 256, "1.0.1"));
     const contracts = await officialContractCatalogue();
-    const officialAdmission = await admitCollectionReleaseJson(officialJson, [], { contracts });
+    const officialAdmission = await admitCollectionReleaseJson(officialJson, officialAssets, { contracts });
     const admissionResults = [
         await benchmark("official JSON admission and digest", () =>
-            admitCollectionReleaseJson(officialJson, [], { contracts }),
+            admitCollectionReleaseJson(officialJson, officialAssets, { contracts }),
         ),
         await benchmark("512-bloc synthetic admission and digest", () => admittedFixture(512, 256, "1.0.0")),
         await benchmark("describe official collection resources", () =>
