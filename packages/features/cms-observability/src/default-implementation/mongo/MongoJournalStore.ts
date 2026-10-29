@@ -1,4 +1,4 @@
-import type { Db } from "mongodb";
+import { MongoBulkWriteError, type Db } from "mongodb";
 import type {
     JournalPosition,
     JournalStore,
@@ -35,33 +35,62 @@ export class MongoJournalStore implements JournalStore {
     }
 
     async append(entries: readonly StoredLogEntry[]) {
-        let stored = 0;
-        let duplicates = 0;
+        if (!entries.length) {
+            return { stored: 0, duplicates: 0 };
+        }
+        const unique = new Map<string, StoredLogEntry>();
         for (const entry of entries) {
-            const { expiresAt, ...rest } = entry;
-            const filter = { instanceId: entry.instanceId, id: entry.id };
-            try {
-                const result = await this.entries.updateOne(
-                    filter,
-                    { $setOnInsert: { ...rest, expiresAt: new Date(expiresAt) } },
-                    { upsert: true, writeConcern: { w: "majority" } },
-                );
-                if (result.upsertedCount) {
-                    stored += 1;
-                    continue;
-                }
-            } catch (error) {
-                if (!(error && typeof error === "object" && "code" in error && error.code === 11000)) {
-                    throw error;
-                }
-            }
-            const previous = await this.entries.findOne(filter, { projection: { fingerprint: 1 } });
-            if (!previous || previous.fingerprint !== entry.fingerprint) {
+            const key = JSON.stringify([entry.instanceId, entry.id]);
+            const previous = unique.get(key);
+            if (previous && previous.fingerprint !== entry.fingerprint) {
                 throw new ObservabilityError("ENTRY_CONFLICT");
             }
-            duplicates += 1;
+            unique.set(key, entry);
         }
-        return { stored, duplicates };
+        const rows = [...unique.values()];
+        const operations = rows.map(({ expiresAt, ...entry }) => ({
+            updateOne: {
+                // The unique (instanceId, id) index rejects a conflicting fingerprint.
+                filter: { instanceId: entry.instanceId, id: entry.id, fingerprint: entry.fingerprint },
+                update: { $setOnInsert: { ...entry, expiresAt: new Date(expiresAt) } },
+                upsert: true,
+            },
+        }));
+        let stored: number;
+        try {
+            const result = await this.entries.bulkWrite(operations, {
+                ordered: false,
+                writeConcern: { w: "majority" },
+            });
+            stored = result.upsertedCount;
+        } catch (error) {
+            if (
+                !(error instanceof MongoBulkWriteError) ||
+                error.err ||
+                error.result.getWriteConcernError() ||
+                !Array.isArray(error.writeErrors) ||
+                !error.writeErrors.length ||
+                error.writeErrors.some((item) => item.code !== 11000)
+            ) {
+                throw error;
+            }
+            // A concurrent equal upsert can race the unique index. Verify all failed IDs in one bounded read.
+            const failed = error.writeErrors.map((item) => rows[item.index]!);
+            const previous = await this.entries
+                .find(
+                    { $or: failed.map(({ instanceId, id }) => ({ instanceId, id })) },
+                    { projection: { instanceId: 1, id: 1, fingerprint: 1 }, readConcern: { level: "majority" } },
+                )
+                .toArray();
+            const fingerprints = new Map(
+                previous.map((row) => [JSON.stringify([row.instanceId, row.id]), row.fingerprint]),
+            );
+            if (failed.some((row) => fingerprints.get(JSON.stringify([row.instanceId, row.id])) !== row.fingerprint)) {
+                throw new ObservabilityError("ENTRY_CONFLICT");
+            }
+            stored = error.result.upsertedCount;
+        }
+        return { stored, duplicates: entries.length - stored };
     }
 
     async query(instanceId: string, query: NormalizedLogQuery, now: string, after?: JournalPosition) {
