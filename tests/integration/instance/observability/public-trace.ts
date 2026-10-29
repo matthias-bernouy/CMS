@@ -7,12 +7,17 @@ export async function verifyPublicTrace(
     cmsUrl: string,
     requireDescriptionMiss = false,
 ): Promise<void> {
+    // Trace the origin path explicitly; separate cache-hit probes require zero Provider work.
     const traceId = crypto.randomUUID();
-    const response = await fetch(`${cmsUrl}/login`, { headers: { "x-request-id": traceId } });
+    const response = await fetch(`${cmsUrl}/login`, {
+        headers: { "x-request-id": traceId, cookie: "ulvia-trace-probe=1" },
+    });
     expect(response.status).toBe(200);
     await response.arrayBuffer();
     const warmTraceId = crypto.randomUUID();
-    const warm = await fetch(`${cmsUrl}/login`, { headers: { "x-request-id": warmTraceId } });
+    const warm = await fetch(`${cmsUrl}/login`, {
+        headers: { "x-request-id": warmTraceId, cookie: "ulvia-trace-probe=1" },
+    });
     expect(warm.status).toBe(200);
     await warm.arrayBuffer();
     let last: unknown[] = [];

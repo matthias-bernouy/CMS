@@ -44,7 +44,7 @@ integration(
                     connection!.call("ulvia.cms.content", "pages.get", { id: page.id }),
                 ),
             );
-            await stack.upgradeProvider(candidate!, "1.2.0");
+            await stack.upgradeProvider(candidate!, "1.3.0");
             const catalogue = await connection.rpc("tools/list");
             connection.tools.splice(0, connection.tools.length, ...catalogue.tools);
             expect(connection.tools).toHaveLength(63);

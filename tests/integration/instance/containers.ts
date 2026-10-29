@@ -9,6 +9,7 @@ export async function mcpContainers(
     images: { edge: string; provider: string; repository: string },
     prepareRepository?: (url: string) => Promise<void>,
     fetchPreload?: string,
+    initialResponseCache?: boolean,
 ) {
     const id = `ulvia-mcp-${randomUUID().slice(0, 8)}`;
     const names: string[] = [];
@@ -118,16 +119,19 @@ export async function mcpContainers(
             administrator,
             "http://named-edge:3000",
         );
-        await run(edgeName, "edge", images.edge, [
-            "--publish",
-            `127.0.0.1:${edgePort}:3000`,
-            "--env",
-            `CMS_PUBLIC_URL=${cmsUrl}`,
-            "--env",
-            "CMS_INSTALLATIONS_PROVIDER_URL=http://ulvia-provider:5103",
-            "--env",
-            `CMS_INSTALLATIONS_PROVIDER_TOKEN=${instance.credentials.instanceAccessToken}`,
-        ]);
+        const startEdge = async (cache = initialResponseCache) =>
+            run(edgeName, "edge", images.edge, [
+                "--publish",
+                `127.0.0.1:${edgePort}:3000`,
+                "--env",
+                `CMS_PUBLIC_URL=${cmsUrl}`,
+                "--env",
+                "CMS_INSTALLATIONS_PROVIDER_URL=http://ulvia-provider:5103",
+                "--env",
+                `CMS_INSTALLATIONS_PROVIDER_TOKEN=${instance.credentials.instanceAccessToken}`,
+                ...(cache === undefined ? [] : ["--env", `CMS_EDGE_RESPONSE_CACHE=${cache}`]),
+            ]);
+        await startEdge();
         await waitForHttp(`${cmsUrl}/readyz`);
         return {
             id,
@@ -148,6 +152,11 @@ export async function mcpContainers(
                 await waitForHttp(`${cmsUrl}/readyz`);
             },
             edgeName,
+            async setResponseCache(enabled: boolean) {
+                await docker(["rm", "--force", edgeName]);
+                await startEdge(enabled);
+                await waitForHttp(`${cmsUrl}/readyz`);
+            },
             close,
             async restartProvider() {
                 await docker(["restart", providerName]);

@@ -1,12 +1,14 @@
+import { exerciseFreshness } from "./performance/freshness";
+import { exerciseBulkJournal } from "./observability/bulk-journal";
 import { verifyPublicTrace } from "./observability/public-trace";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { fetchPreloadSource } from "./performance/fetch-preload";
+import { networkPreloadSource } from "./performance/network-preload";
 import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { mcpContainers } from "./containers";
 import { connectBrowser } from "./oauth";
-import { measureResource, publishPerformancePages, exerciseLoad } from "./performance/journey";
+import { measureResource, publishPerformancePages, exerciseLoad, measureCached } from "./performance/journey";
 const enabled = process.env.ULVIA_RUN_DELIVERY_PERFORMANCE === "1";
 const integration = enabled ? test : test.skip;
 integration(
@@ -22,13 +24,16 @@ integration(
         }
         const instrumentation = await mkdtemp(join(tmpdir(), "ulvia-delivery-probe-"));
         const preload = join(instrumentation, "fetch.ts");
-        await writeFile(preload, fetchPreloadSource);
-        const stack = await mcpContainers(images as Record<keyof typeof images, string>, undefined, preload).catch(
-            async (error) => {
-                await rm(instrumentation, { recursive: true, force: true });
-                throw error;
-            },
-        );
+        await writeFile(preload, networkPreloadSource());
+        const stack = await mcpContainers(
+            images as Record<keyof typeof images, string>,
+            undefined,
+            preload,
+            false,
+        ).catch(async (error) => {
+            await rm(instrumentation, { recursive: true, force: true });
+            throw error;
+        });
         let connection: Awaited<ReturnType<typeof connectBrowser>> | undefined;
         const report: Record<string, unknown> = {};
         try {
@@ -41,6 +46,7 @@ integration(
                 stack.cmsUrl,
                 true,
             );
+            report.journal = await exerciseBulkJournal(stack.providerName, stack.id);
             await publishPerformancePages(connection);
             const literal = await measureResource(stack, "/performance-literal");
             report.literal = literal;
@@ -55,17 +61,23 @@ integration(
             const asset = await measureResource(stack, path!);
             report.asset = asset;
             for (const [sample, operations, calls] of [
-                [literal, 30, 6],
-                [image, 35, 7],
-                [asset, 30, 6],
+                [literal, 26, 5],
+                [image, 30, 5],
+                [asset, 22, 5],
             ] as const) {
-                expect(sample.mongoPerRequest).toBeGreaterThan(0); // Until Edge response caching lands.
+                expect(sample.mongoPerRequest).toBeGreaterThan(0); // This budget deliberately disables the Edge cache.
+                expect(sample.mongoByCollection?.gateway_delegations ?? 0).toBe(0);
                 expect(sample.mongoPerRequest).toBeLessThanOrEqual(operations);
                 expect(sample.internalCallsPerRequest).toBeGreaterThan(0);
                 expect(sample.internalCallsPerRequest).toBeLessThanOrEqual(calls);
                 expect(sample.bytesPerRequest).toBeLessThan(512 * 1024);
             }
-            report.load = await exerciseLoad(stack);
+            report.loadWithoutCache = await exerciseLoad(stack, connection);
+            await stack.setResponseCache(true);
+            report.cachedPage = await measureCached(stack, "/performance-image");
+            report.cachedAsset = await measureCached(stack, path!);
+            report.loadWithCache = await exerciseLoad(stack, connection);
+            report.freshness = await exerciseFreshness(connection, stack.cmsUrl);
             const authenticated = await connection.page.request.get(`${stack.cmsUrl}/performance-image`);
             expect(authenticated.status()).toBe(200);
             expect(authenticated.headers()["cache-control"]).toBe("private, no-store");
@@ -89,5 +101,5 @@ integration(
             }
         }
     },
-    240_000,
+    600_000,
 );

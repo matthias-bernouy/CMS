@@ -45,3 +45,20 @@ export async function internalRequests(providerName: string, edgeName: string, r
     }
     return count;
 }
+
+export async function internalRequestPaths(providerName: string, edgeName: string) {
+    const paths: Record<string, number> = {};
+    for (const name of [providerName, edgeName]) {
+        const result = await docker([
+            "exec",
+            name,
+            "bun",
+            "-e",
+            'console.log(JSON.stringify((await Bun.file("/tmp/ulvia-performance-fetch.ndjson").text()).trim().split("\\n").filter(Boolean)))',
+        ]);
+        for (const path of JSON.parse(result.stdout.trim()) as string[]) {
+            paths[path] = (paths[path] ?? 0) + 1;
+        }
+    }
+    return paths;
+}
