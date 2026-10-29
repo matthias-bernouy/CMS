@@ -125,21 +125,11 @@ export class LocalCollectionRepository {
         collectionId: string,
         version: string,
     ): Promise<VerifiedCollectionReleaseMetadata | null> {
-        if (!isRepositoryIdentifier(publisherId) || !isCollectionNamespace(collectionId) || !VERSION.test(version)) {
+        const document = await this.readDocument(publisherId, collectionId, version);
+        if (!document) {
             return null;
         }
-        const path = this.releasePath(publisherId, collectionId, version);
-        const bytes = await readFile(path).catch((error: NodeJS.ErrnoException) => {
-            if (error.code === "ENOENT") {
-                this.metadataCache.delete(path);
-                return null;
-            }
-            throw error;
-        });
-        if (!bytes) {
-            return null;
-        }
-        const canonicalJson = bytes.toString("utf8");
+        const { path, bytes, canonicalJson } = document;
         const cached = this.metadataCache.get(path, canonicalJson);
         if (cached) {
             return cached;
@@ -164,12 +154,29 @@ export class LocalCollectionRepository {
         assetId: string,
         metadataOnly = false,
     ): Promise<{ definition: CollectionAssetDefinition; bytes: Blob } | null> {
-        const metadata = await this.getMetadata(publisherId, collectionId, version);
-        const definition = metadata?.release.assets.find((asset) => asset.id === assetId);
-        if (!metadata || !definition) {
+        const document = await this.readDocument(publisherId, collectionId, version);
+        if (!document) {
             return null;
         }
-        const bytes = Bun.file(join(this.assetDirectory(metadata.canonicalJson), assetFileName(assetId)));
+        const project = (metadata: VerifiedCollectionReleaseMetadata) => ({
+            definition: metadata.release.assets.find((asset) => asset.id === assetId),
+            digest: metadata.digest,
+        });
+        let selected = this.metadataCache.project(document.path, document.canonicalJson, project);
+        if (!selected) {
+            const metadata = await this.getMetadata(publisherId, collectionId, version);
+            if (!metadata) {
+                return null;
+            }
+            selected = project(metadata);
+        }
+        const definition = selected.definition;
+        if (!definition) {
+            return null;
+        }
+        const bytes = Bun.file(
+            join(this.root, "assets", "collections", selected.digest.slice("sha256:".length), assetFileName(assetId)),
+        );
         if (metadataOnly) {
             return (await bytes.exists()) && bytes.size === definition.byteLength ? { definition, bytes } : null;
         }
@@ -183,6 +190,23 @@ export class LocalCollectionRepository {
 
     async prune(): Promise<void> {
         await pruneRepository(this.root);
+    }
+
+    private async readDocument(publisherId: string, collectionId: string, version: string) {
+        if (!isRepositoryIdentifier(publisherId) || !isCollectionNamespace(collectionId) || !VERSION.test(version)) {
+            return null;
+        }
+        const path = this.releasePath(publisherId, collectionId, version);
+        const bytes = await readFile(path).catch((error: NodeJS.ErrnoException) => {
+            if (error.code === "ENOENT") {
+                this.metadataCache.delete(path);
+                return null;
+            }
+            throw error;
+        });
+        return bytes
+            ? { path, bytes, canonicalJson: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes) }
+            : null;
     }
 
     private releasePath(publisherId: string, collectionId: string, version: string): string {
