@@ -10,6 +10,9 @@ bun install --frozen-lockfile
 Collection authors: see [collection examples](../blocs/examples.md) for v2 metadata,
 reusable insertion examples and locally generated previews.
 
+Provider authors: see [HTTP context and streaming](provider-http.md) for the generic receiver,
+standard responses, validators and the compatible Content transition.
+
 ## Local CMS
 
 ```bash

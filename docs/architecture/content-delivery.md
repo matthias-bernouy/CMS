@@ -1,7 +1,8 @@
 # Public Content Delivery
 
 Every non-reserved public `GET` or `HEAD` crosses Edge's Gateway through
-`ulvia.cms.content/delivery.resolve-path`. The selected Content Provider owns
+`ulvia.cms.content/delivery.resolve-resource`, falling back to `delivery.resolve-path`
+when the selected release lacks the replacement. The selected Content Provider owns
 path resolution and final HTML. Edge receives no Page, Bloc catalogue, text
 catalogue, rendering settings or editorial projection.
 
@@ -14,10 +15,26 @@ Browser -> Edge -> Gateway -> Content.resolvePath()
 
 ## Request and authority
 
-The bounded input contains `path`, `method`, ordered `query` entries and optional
-`accept`, `acceptLanguage`, `ifNoneMatch`, `ifRange` and single-byte `range`
-metadata. Cookies, bearer credentials, arbitrary headers and CMS subject IDs
-are never authored input. Instance provisioning distinguishes the browser-facing
+Content 1.2.0 introduces `delivery.resolve-resource` with only `path`, `method`
+and ordered `query` entries as business input. A bounded common request context
+carries representation headers, including language, validators and byte ranges.
+The previous `delivery.resolve-path` remains executable with its original schema
+and is deprecated with an explicit `replacedBy` reference. Its optional inputs
+and `resourceMetadata: "cache-v1"` opt-in remain meaningful for legacy calls.
+
+Edge resolves the selected contract on a cache miss/bypass and chooses by
+effective capability presence, following exact parent pins and invoking the
+declaring owner, never by a guessed version threshold. It does not fall back
+on authorization or transport failures. The replacement always supplies bounded
+resource cache metadata. Neither a collection code change nor a Page rewrite is
+needed for this internal Edge call. Future removal requires a major release and
+an upgrade plan with no active legacy references.
+
+Cookies, bearer credentials, connection headers and CMS subject IDs never enter
+the application context. The public resource Request is distinct from the JSON
+`QUERY` used to invoke its capability. See [provider HTTP development](../development/provider-http.md).
+
+Instance provisioning distinguishes the browser-facing
 `cmsUrl` from the Provider callback `gatewayUrl` (defaulting to the public URL
 when omitted at creation). The standard CLI sets a unique private Docker alias
 for the latter. Official pairing completes before an instance becomes ready.
@@ -86,7 +103,8 @@ command audit remains fail-closed and separate.
 This change moves the existing renderer and preserves its existing SEO/indexing
 queries. Those queries return through Edge using the opaque delegation ticket.
 The official Content implementation permits only non-sensitive query delegation
-from `delivery.resolve-path`; a query source cannot execute a command.
+from `delivery.resolve-path` and `delivery.resolve-resource`; a query source
+cannot execute a command.
 General execution of declarative browser queries during SSR remains planned.
 The existing Content service can resolve public schemas from its local admitted
 catalogue; this lookup grants no invocation authority. Live downstream calls
@@ -139,9 +157,9 @@ Each production Edge owns an ephemeral response cache (`CMS_EDGE_RESPONSE_CACHE`
 `true` by default in production and `false` in development). The `cms-session` cookie, Authorization headers, non-anonymous actors, ranges
 and `If-Range` bypass it. Unrelated analytics/consent cookies do not affect
 cache eligibility; the Provider never receives them. Explicit client
-`Cache-Control: no-cache/no-store/max-age=0` and `Pragma: no-cache` also bypass. Its identity
-contains the canonical path, ordered query pairs, Accept and normalized
-Accept-Language. It never stores private/no-store, partial, redirect, 304 or
+Cache-Control or Pragma directives and mutation/date preconditions also bypass.
+Its identity contains the full public URL, including origin and raw query,
+Accept and normalized Accept-Language. It never stores private/no-store, partial, redirect, 304 or
 error responses. Conditional GET and HEAD hits need no Provider invocation.
 A HEAD miss does not populate the cache. Cached identity and gzip bytes share
 an ETag identity; gzip uses the weak representation validator. Vary is preserved.
@@ -164,8 +182,9 @@ check visibility and deletion. The official command inventory is tested.
 
 Content 1.1.0 accepts `resourceMetadata: "cache-v1"`. Edge sends this option only
 when the selected input declares it. Native metadata can then carry bounded
-`vary` and `cacheTags` lists. Only Accept, Accept-Language and Accept-Encoding
-are allowed variation dimensions. Content mutations purge Page and mutable
+`vary` and `cacheTags` lists. Shared storage supports Accept, Accept-Language and
+Accept-Encoding; additional application variation dimensions or `*` prevent
+shared storage. Content mutations purge Page and mutable
 resource tags; immutable addressed bytes survive these edits. Installation,
 selection and unknown official mutations purge globally. Untagged older
 responses always follow global invalidation. Metadata cannot supply cookies,
