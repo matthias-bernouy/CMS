@@ -95,13 +95,13 @@ lookup resolves the exact selected release and pinned ancestors and checks the
 selection again before returning. It does not load transport configuration or
 attest Provider readiness; actual dispatch retains those checks.
 
-Installations `1.1.0` adds the control-only `gateway.dispatch.prepare` command.
+Installations `1.0.0` exposes the control-only `gateway.dispatch.prepare` command.
 It combines identity resolution, optional root delegation and token issuance.
 The Edge sends the resulting business request through ordinary pinned HTTP.
 Commands still resolve identity before their start audit. Failed preparation or
 transport closes any issued root ticket; a binary response retains it until
-completion or cancellation. The official `1.2.0` profile uses manifest `0.3.0`.
-Existing published profiles stay pinned. After changing the control contract,
+completion or cancellation. The official `1.0.0` profile uses manifest `1.0.0`.
+The development baseline retains no preceding official profile. After changing the control contract,
 restart the stateless Edge so its startup report selects the exact ready pin.
 
 Repository execution metadata can be read through `ProviderExecutionStateReader`.
@@ -256,9 +256,9 @@ requests.
 
 The delivery performance journey also measures response caching and sustained
 quota behavior. See [Content delivery](../architecture/content-delivery.md#shared-edge-response-cache)
-for the current cache and invalidation guarantees. Installations 1.2.0 groups
+for the current cache and invalidation guarantees. Installations 1.0.0 groups
 explicit machine authentication and preparation while delegated calls preserve
-their original actor inspection path. Profile 1.3.0 selects these minor contracts.
+their original actor inspection path. Profile 1.0.0 selects the official baseline contracts.
 Mongo diagnostic ingestion uses one unordered majority-acknowledged bulkWrite
 per validated batch. The (instanceId, id) unique index rejects conflicting
 fingerprints; concurrent equal upserts are reconciled with one bounded majority

@@ -15,6 +15,14 @@ parameter mappings, codecs and response contracts remain executable; additional
 bindings may be introduced. Changing an exact parent compares effective inherited
 capabilities rather than only the child's authored additions.
 
+Adding an error `output` schema, including a required `message`, is a compatible
+minor change. Further additive detail fields follow the same recursive projection
+rules as successful outputs. Execution projects details to the selected release:
+an older release with no error output keeps its code without the new details.
+Declared detail fields cannot disappear or change incompatibly. Error codes,
+retryability and existing HTTP error statuses retain their identity guarantees.
+Editing an error description alone is an editorial patch change.
+
 A breaking implementation uses a new capability ID and a distinct HTTP binding.
 The transition release retains the original and declares its replacement:
 
@@ -70,9 +78,8 @@ Plans report concrete locations, require complete inventories and check source
 and target availability, grants, exact digests and revisions before committing.
 
 A host adapter can declare explicit supported alternatives in its usage evidence.
-For example, current Edge code prefers `delivery.resolve-resource` and knows how
-to invoke `delivery.resolve-path` for older selections. This is implementation
-evidence supplied by the host. It is never inferred from `replacedBy` and is not
+Such alternatives must be implementation evidence supplied by the host.
+The official Edge baseline requires `delivery.resolve-resource` and declares no alternative. It is never inferred from `replacedBy` and is not
 an authored collection requirement or permission to redirect an existing call.
 The chosen alternative still requires its execution grant.
 
@@ -87,10 +94,10 @@ present. A verified compatible collection release can widen that range. The
 safe order is: select the transition contract, install consumers using the new
 capability, then select a removal major accepted by their declared ranges.
 
-The Delivery transition changes an internal Edge caller. Official collection
-1.1.0 remains unchanged. Content 1.2.0 includes both capabilities, deprecates the
-original and changes no Page storage format. This work does not author or activate
-the eventual removal major.
+The official development baseline starts at 1.0.0 with only
+`delivery.resolve-resource`. It contains no authored capability deprecation or
+retained profile from the preceding development iterations. Future changes use
+the lifecycle above; a clean baseline does not weaken immutable publication.
 
 ## External Sources
 

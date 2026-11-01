@@ -46,7 +46,7 @@ persistence facade; it is distinct from the `@bernouy/cms-repository` package.
 
 The Provider implementing `ulvia.cms.content` composes a read-only `ContentReader`
 from its `ContentRepository` and owns the rendering pipeline. Edge invokes
-`delivery.resolve-resource` with an explicit legacy fallback, receiving a native streamed resource rather than
+`delivery.resolve-resource`, receiving a native streamed resource rather than
 Content projections. Static Page access checks, collection text and asset
 substitution, robots and sitemap handling stay behind Content. Edge owns actor
 resolution, Gateway authority and final HTTP security/cache policy.

@@ -119,4 +119,4 @@ modules sharing one Provider process or prevent that process from using its
 other approved machine rights. Query declarations are contractual behavior,
 not a proof that an implementation has no side effects. This phase supplies
 communication and delegation infrastructure; it does not relocate SSR or add
-`delivery.resolve-path`.
+`delivery.resolve-resource`.

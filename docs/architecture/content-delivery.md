@@ -1,8 +1,7 @@
 # Public Content Delivery
 
 Every non-reserved public `GET` or `HEAD` crosses Edge's Gateway through
-`ulvia.cms.content/delivery.resolve-resource`, falling back to `delivery.resolve-path`
-when the selected release lacks the replacement. The selected Content Provider owns
+`ulvia.cms.content/delivery.resolve-resource`. The selected Content Provider owns
 path resolution and final HTML. Edge receives no Page, Bloc catalogue, text
 catalogue, rendering settings or editorial projection.
 
@@ -15,20 +14,15 @@ Browser -> Edge -> Gateway -> Content.resolvePath()
 
 ## Request and authority
 
-Content 1.2.0 introduces `delivery.resolve-resource` with only `path`, `method`
+Content 1.0.0 exposes `delivery.resolve-resource` with only `path`, `method`
 and ordered `query` entries as business input. A bounded common request context
 carries representation headers, including language, validators and byte ranges.
-The previous `delivery.resolve-path` remains executable with its original schema
-and is deprecated with an explicit `replacedBy` reference. Its optional inputs
-and `resourceMetadata: "cache-v1"` opt-in remain meaningful for legacy calls.
 
-Edge resolves the selected contract on a cache miss/bypass and chooses by
-effective capability presence, following exact parent pins and invoking the
-declaring owner, never by a guessed version threshold. It does not fall back
-on authorization or transport failures. The replacement always supplies bounded
-resource cache metadata. Neither a collection code change nor a Page rewrite is
-needed for this internal Edge call. Future removal requires a major release and
-an upgrade plan with no active legacy references.
+Edge resolves the selected contract on a cache miss/bypass, follows exact parent
+pins and invokes the declaring owner. The selected contract must expose the
+resource capability; missing capabilities and authorization failures are refused.
+Every successful resource response supplies bounded resource cache metadata.
+There is no alternate historical Delivery capability or metadata input opt-in.
 
 Cookies, bearer credentials, connection headers and CMS subject IDs never enter
 the application context. The public resource Request is distinct from the JSON
@@ -103,7 +97,7 @@ command audit remains fail-closed and separate.
 This change moves the existing renderer and preserves its existing SEO/indexing
 queries. Those queries return through Edge using the opaque delegation ticket.
 The official Content implementation permits only non-sensitive query delegation
-from `delivery.resolve-path` and `delivery.resolve-resource`; a query source
+from `delivery.resolve-resource`; a query source
 cannot execute a command.
 General execution of declarative browser queries during SSR remains planned.
 The existing Content service can resolve public schemas from its local admitted
@@ -128,13 +122,13 @@ The SDK rereads the connection credential for each invocation. Dispatch uses the
 HTTP listener, so Edge ingress, Gateway invocation and Provider ingress remain
 observable. There is no same-process dispatch shortcut for these calls.
 
-Identity and root delegation preparation run concurrently for queries. A failed
-preparation closes a partially issued root ticket. Dispatch still obtains a fresh
-invocation token; binary results retain their delegation until completion or
-cancellation. Commands retain their audit ordering. The route control response
-negotiates standard gzip while preserving its complete JSON shape and `no-store`;
-the exact 1.0.0 control path retains its declared envelope. The later negotiated
-1.1.0 and 1.2.0 preparation capabilities are described below.
+Identity, optional root delegation and invocation signing are combined by
+`gateway.dispatch.prepare`. Binary results retain their delegation until
+completion or cancellation. Unused closed roots are acknowledged in bounded
+batches on later preparations; used roots close through their authority path.
+Commands retain identity-before-audit and audit-before-business ordering.
+The route control response negotiates standard gzip while preserving its complete
+JSON shape and `no-store`.
 
 Initial mutable metadata reads may be reused within one explicitly scoped
 operation; final signing and receiver fences bypass that context. Named secret
@@ -142,14 +136,10 @@ resolution retains both metadata-read and resolve permissions without duplicate
 metadata lookup. `capabilities.describe` reads selected release metadata without
 loading target transport configuration and fences its selection before returning.
 
-With Installations `1.1.0`, Edge combines query identity, optional root delegation
-and invocation signing through `gateway.dispatch.prepare`. The control connection
-is required; user and Provider actors cannot invoke this command as authority.
-Business capabilities still traverse Edge and the authenticated HTTP listener.
-Commands preserve identity-before-start-audit ordering. Existing exact `1.0.0`
-control connections retain their declared operations until their profile changes;
-Edge negotiates the exact ready control version again on restart.
-
+The control connection is required for preparation; user and Provider actors
+cannot invoke this command as control authority. Business capabilities still
+traverse Edge and the authenticated HTTP listener. Edge verifies the exact ready
+Installations 1.0.0 control contract on startup.
 
 ## Shared Edge response cache
 
@@ -180,14 +170,12 @@ Logs and Access authentication commands are neutral. File mutations
 conservatively invalidate rendered state; fresh origin file reads independently
 check visibility and deletion. The official command inventory is tested.
 
-Content 1.1.0 accepts `resourceMetadata: "cache-v1"`. Edge sends this option only
-when the selected input declares it. Native metadata can then carry bounded
-`vary` and `cacheTags` lists. Shared storage supports Accept, Accept-Language and
-Accept-Encoding; additional application variation dimensions or `*` prevent
-shared storage. Content mutations purge Page and mutable
-resource tags; immutable addressed bytes survive these edits. Installation,
-selection and unknown official mutations purge globally. Untagged older
-responses always follow global invalidation. Metadata cannot supply cookies,
+Every Content resource response supplies bounded `vary` and `cacheTags`
+metadata. Shared storage supports Accept, Accept-Language and Accept-Encoding;
+additional variation dimensions or `*` prevent shared storage. Content mutations
+purge Page and mutable resource tags; immutable addressed bytes survive these
+edits. Installation, selection and unknown official mutations purge globally.
+Untagged responses follow global invalidation. Metadata cannot supply cookies,
 security headers, credential variation or a new authority input.
 
 The cache retains at most 256 entries and 16 MiB of serialized representation
@@ -239,21 +227,20 @@ closed through control. A restart loses unused
 reservations and refuses those tickets. Consumed roots retain atomic budgets,
 live actor/key/selection checks and the original closure and expiry fences.
 
-Installations 1.2.0 adds control-only `gateway.provider.prepare`. For explicit
+Installations 1.0.0 exposes control-only `gateway.provider.prepare`. For explicit
 machine calls Edge groups authentication, authorization and signing into one
 control call. The broker derives the source from the opaque credential. A
 single-use host proof binds the source, request ID, installation, release,
 capability and audience before ordinary pinned HTTP dispatch. Commands retain
 input validation, durable audit and post-dispatch invalidation. Delegated user
-calls retain their existing actor inspection path. Older control versions use
-their original operations. No Provider-to-Provider business shortcut is added.
+calls retain their live actor inspection path. No Provider-to-Provider business shortcut is added.
 
 
 Browser compression and conditional streaming share Foundation negotiation with
 the cache. Already-encoded responses are not recompressed. Browser max-age,
 shared max-age and stale durations are bounded to one year; malformed or duplicate
 directives become no-store. Accept, Accept-Language and Accept-Encoding remain in
-Vary even when cache-metadata negotiation is skipped for a bypass.
+Vary even when shared storage is bypassed.
 
 Provider binary calls require a known Content-Length within the control schema's
 64 MiB ceiling; selected capability and Provider quotas can impose lower bounds.

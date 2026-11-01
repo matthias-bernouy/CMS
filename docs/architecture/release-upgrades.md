@@ -1,7 +1,7 @@
 # Reviewed Release Upgrades
 
 The fresh baseline uses Provider/collection protocols v1 and contract, collection
-and instance profile releases 1.0.0. The official Provider manifest is 0.1.0;
+and instance profile releases 1.0.0. The official Provider manifest is 1.0.0;
 its software build is 1.0.0. Published artifacts remain immutable. This change
 provides no readers or data conversion for earlier development formats.
 
@@ -121,13 +121,11 @@ The CLI runs a one-shot `checkRetention.ts` preflight in the candidate Provider
 image before replacing the live image; startup repeats the guard. The public
 Repository does not track sites outside this Provider's administrative scope.
 
-The profile registry retains exact published profiles while instances or transitions
-still reference them. The current `ulvia.official@1.3.0` profile selects Provider
-manifest `0.4.0`, Content `1.1.0`, Installations `1.2.0`, Observability `1.1.0`
-and administration collection `1.1.0`. It explicitly permits upgrades from
-profiles `1.0.0`, `1.1.0` and `1.2.0`, preserving existing Pages.
-New instances use the configured default; an image update never silently changes
-an existing profile pin.
+The official development baseline has one `ulvia.official@1.0.0` profile,
+Provider manifest 1.0.0, contracts at 1.0.0 and administration collection 1.0.0.
+It declares no preceding profile to upgrade from. Future profiles retain exact
+releases while instances or transitions reference them. An image update never
+silently changes an existing profile pin.
 
 Expired worker leases can be reclaimed for an exact intent. Normal write permits
 are not erased merely because their heartbeat expired: a delayed writer may

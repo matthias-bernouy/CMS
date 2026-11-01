@@ -48,7 +48,7 @@ protocol: two or three internal calls and sequential authority reads.
 - **No Edge response cache.** Every public `GET`, including content-addressed
   immutable assets, crosses the Gateway (`cms-edge-server/src/runtime/resources/publicResource.ts`).
 - **Delegation ticket on every request.** The official manifest declares
-  `delivery.resolve-path` as a delegation source, so every request, assets
+  `delivery.resolve-resource` as a delegation source, so every request, assets
   included, writes a root ticket and closes it with another control call.
 - **Journal ingestion.** Each log batch is a Gateway command, then
   `MongoJournalStore.ts` upserts entries one at a time into a collection with
@@ -359,13 +359,11 @@ starts at first consumption; unused roots avoid writes, while Edge-owned root tr
 cleanup into the next preparation. Consumed roots still close remotely.
 Completed or unknown tickets cannot regain authority through a Provider claim.
 
-Control versions 1.0.0/1.1.0 retain their existing paths. Installations 1.2.0
-negotiates explicit machine preparation; delegated end-user calls keep their
-live actor inspections. Content 1.1.0 opts into bounded Vary/tags, allowing
-rendered state to purge without evicting immutable bytes. Untagged responses
-and installation/selection changes still purge globally. Profile 1.3.0 selects
-these contracts and collection 1.1.0, whose exact state-schema pins were updated.
-
+The 1.0.0 baseline requires explicit machine preparation; delegated end-user
+calls keep live actor inspections. Content resources supply bounded Vary/tags,
+allowing rendered state to purge without evicting immutable bytes. Untagged
+responses and installation/selection changes purge globally. Profile 1.0.0
+selects these contracts and collection 1.0.0 with regenerated exact schema pins.
 
 ### Review limits
 
@@ -373,8 +371,8 @@ Both issuer authorization fences, receiver checks, per-instance actor/key reads
 and pinned HTTP policy remain in place. The combined control call removes an
 outer authentication/authorization exchange; it does not substitute an Edge
 claim for Provider authority. Focused tests cover invalid inputs, wrong audiences,
-other instances, live revocation, closure races and failed loads. Docker covers
-rotation, persistence and a published 1.0.0 instance upgraded to profile 1.3.0.
+other instances, live revocation, closure races and failed loads. Docker journeys cover rotation and persistence when enabled; the reset baseline
+has no previous published profile to upgrade from.
 
 At the initial delivery, `ResponseCache` was one cohesive 189-line state
 machine, despite the 180-line review advisory. `ControlProviderClient` remains

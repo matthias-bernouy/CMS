@@ -8,7 +8,7 @@ hardening remain planned. See [public Content delivery](../architecture/content-
 and [Provider delegation](../providers/delegation.md).
 
 The approved fresh baseline retains protocol v1, contracts 1.0.0 and Provider
-0.1.0. “V2” in this document names the architecture plan, not an accepted
+1.0.0. “V2” in this document names the architecture plan, not an accepted
 artifact version. No compatibility reader or automatic data migration is added.
 
 ## Objective
@@ -62,7 +62,7 @@ Edge       = public HTTP and capability authority boundary
 ## 1. Use One Fresh Baseline
 
 Keep the approved v1 protocol/schema identifiers, contracts at 1.0.0 and the
-Provider manifest at 0.1.0. Remove obsolete schemas and implementation paths
+Provider manifest at 1.0.0. Remove obsolete schemas and implementation paths
 rather than adding dual readers or compatibility aliases. Operators recreate
 development instances explicitly; startup never destroys or converts storage.
 
@@ -119,7 +119,7 @@ on each implementation:
                 }
             ],
             "delegation": {
-                "sources": ["delivery.resolve-path"],
+                "sources": ["delivery.resolve-resource"],
                 "allow": [
                     {
                         "contractId": "*",
@@ -273,7 +273,7 @@ query source   -> query target only
 command source -> query or command target when the policy permits it
 ```
 
-A query such as `delivery.resolve-path` can therefore never produce a delegated
+A query such as `delivery.resolve-resource` can therefore never produce a delegated
 command, even under an explicit `*`, `*` selector. This prevents GET rendering,
 crawlers, cache revalidation and automatic retries from mutating business state.
 
@@ -367,7 +367,7 @@ Replace the public delivery multiplexer and resource-specific delivery
 capabilities with one read-only capability:
 
 ```text
-delivery.resolve-path
+delivery.resolve-resource
 ```
 
 In application code this is `Content.resolvePath()`.
@@ -445,12 +445,12 @@ official Provider adapts that port to the Provider Gateway client.
 
 Initially execute only declarative queries during SSR. Commands remain browser
 operations. The official Content implementation requests only non-sensitive
-query delegation for `delivery.resolve-path`. A different Content Provider may
+query delegation for `delivery.resolve-resource`. A different Content Provider may
 request all queries, including sensitive ones, but that broader wildcard selector
 must be visible and explicitly approved. Downstream authenticated queries use
 the opaque delegation ticket. Content adds internal spans such as
 `route.resolve`, `page.render`, `sitemap.read` and `asset.stream` beneath the
-external `delivery.resolve-path` span.
+external `delivery.resolve-resource` span.
 
 ## 14. Reduce Edge To Edge
 
@@ -458,7 +458,7 @@ Once Content owns resolution and rendering, the public process performs:
 
 1. health and reserved-route handling;
 2. actor resolution;
-3. invocation of `delivery.resolve-path`;
+3. invocation of `delivery.resolve-resource`;
 4. Gateway authorization and delegation;
 5. cache, CSP, HTTP security and response streaming;
 6. MCP and `/.cms/call`;
