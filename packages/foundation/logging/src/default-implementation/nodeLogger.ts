@@ -1,5 +1,6 @@
 import { createLogger, type LoggerOptions, type LogSink } from "logging/core/logger";
 import { LOG_LEVELS, type Logger, type LogRecord } from "logging/interfaces/Logger";
+import { operatorOutput } from "./output/shared";
 
 export type LogFormat = "json" | "pretty";
 export type NodeLoggerOptions = Omit<LoggerOptions, "sink"> & Readonly<{ format?: LogFormat }>;
@@ -16,12 +17,7 @@ export function createNodeLogSink(options: NodeLoggerOptions): LogSink {
             return;
         }
         const line = options.format === "pretty" ? formatPretty(record) : JSON.stringify(record);
-        const target = record.level === "error" || record.level === "fatal" ? process.stderr : process.stdout;
-        try {
-            target.write(`${line}\n`);
-        } catch {
-            // A closed process stream must not affect application behavior.
-        }
+        operatorOutput().write(`${line}\n`, record.level);
     };
 }
 

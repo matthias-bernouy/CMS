@@ -56,15 +56,22 @@ export interface ProviderCapabilityRegistry extends ProviderCapabilityDispatcher
 }
 
 export class ProviderCapabilityDispatchError extends Error {
+    /** Stable diagnostic identifier; never part of the capability response. */
+    readonly reason?: string;
+
     constructor(
         readonly code: string,
         readonly status: number,
         message = code,
         readonly responseHeaders: Readonly<Record<string, string>> = {},
         readonly output?: unknown,
+        reason?: string,
     ) {
         super(message);
         this.name = "ProviderCapabilityDispatchError";
+        if (reason && reason.length <= 128 && /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/u.test(reason)) {
+            this.reason = reason;
+        }
     }
 }
 

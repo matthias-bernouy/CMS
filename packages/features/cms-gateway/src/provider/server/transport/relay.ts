@@ -162,6 +162,8 @@ export function createProviderContractRelay(
                         contractId,
                         capabilityId: capability.id,
                         errorCode: cause.code,
+                        invocationId: context.requestId,
+                        ...(cause.reason ? { reason: cause.reason } : {}),
                         status,
                     });
                     if (request.method === "HEAD") {

@@ -1,5 +1,5 @@
 import { expect, spyOn, test } from "bun:test";
-import { createNodeLogger, createNodeLogSink } from "@bernouy/logging/node";
+import { createNodeLogger, createNodeLogSink, nodeLogOutputStats } from "@bernouy/logging/node";
 
 test("operator diagnostics route structured redacted records to stdout and stderr", () => {
     const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
@@ -77,6 +77,33 @@ test("closed operator streams cannot fail an application operation", () => {
         expect(() => logger.info("service.ready")).not.toThrow();
         expect(() => logger.error("service.failed")).not.toThrow();
     } finally {
+        stdout.mockRestore();
+        stderr.mockRestore();
+    }
+});
+
+test("independent loggers and child sinks share the process output budget and drain listener", () => {
+    let blocked = true;
+    const stdout = spyOn(process.stdout, "write").mockImplementation(() => !blocked);
+    const stderr = spyOn(process.stderr, "write").mockImplementation(() => true);
+    try {
+        const first = createNodeLogger({ service: "first" });
+        const second = createNodeLogger({ service: "second" }).child({ component: "child" });
+        first.info("service.ready");
+        second.info("service.ready");
+        expect(stdout).toHaveBeenCalledTimes(1);
+        expect(nodeLogOutputStats()).toMatchObject({ queued: 1, blocked: 1 });
+        blocked = false;
+        process.stdout.emit("drain");
+        expect(stdout).toHaveBeenCalledTimes(2);
+        expect(JSON.parse(String(stdout.mock.calls[1]![0]))).toMatchObject({
+            service: "second",
+            attributes: { component: "child" },
+        });
+        expect(nodeLogOutputStats()).toMatchObject({ queued: 0, blocked: 0, bytes: 0 });
+    } finally {
+        blocked = false;
+        process.stdout.emit("drain");
         stdout.mockRestore();
         stderr.mockRestore();
     }

@@ -42,6 +42,7 @@ test("the same INVALID_PAGE code reports distinct real validation reasons withou
     await expect(
         outlines.invoke("ulvia.cms.content", "pages.update", { html: "<h1>First</h1><h1>Second</h1>" }, context("fr")),
     ).rejects.toMatchObject({
+        reason: "page.multiple_h1",
         output: { message: "La page peut afficher plusieurs titres H1. Elle doit en afficher au maximum un." },
     });
     await expect(

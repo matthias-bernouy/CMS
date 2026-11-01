@@ -4,7 +4,12 @@ import { collectionEnabled } from "./collectionContext";
 import { entryFromRecord } from "./entry";
 
 export function createObservabilityLogger(options: Omit<LoggerOptions, "sink"> & { fallback: LogSink }) {
-    const fallback = createLogger({ service: options.service, level: "trace", sink: options.fallback });
+    const fallback = createLogger({
+        service: options.service,
+        level: "trace",
+        attributes: options.attributes,
+        sink: options.fallback,
+    });
     const collector = new BufferedLogCollector(fallback);
     const logger = createLogger({
         ...options,

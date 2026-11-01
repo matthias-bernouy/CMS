@@ -85,6 +85,12 @@ and quality weights, and falls back to English. These preferences are independen
 of the site’s configured content languages. The response carries `Content-Language`.
 Providers using the generic SDK choose their own messages and supported languages.
 Consumers must branch on the stable error code, never on the message text.
+`ProviderCapabilityDispatchError` accepts an optional sixth `reason` argument:
+a lowercase diagnostic identifier of at most 128 characters, using dot,
+underscore or hyphen separators. It appears in Provider refusal logs, not in
+the capability's wire output. Official adapters supply known business reasons
+and omit their parameters from diagnostic logs. Asynchronous failure observers
+receive the same identifier after error-output projection.
 Explicit handler error outputs remain authoritative: the SDK projects their
 fields through the selected schema, without replacing their message or language.
 Set `Content-Language` when supplying a translated message. Without an explicit

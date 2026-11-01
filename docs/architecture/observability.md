@@ -1,6 +1,6 @@
 # CMS observability
 
-`ulvia.cms.observability@1.1.0` is a required selection in the official CMS instance profile. Providers implementing unrelated contracts need not implement it.
+`ulvia.cms.observability@1.0.0` is a required selection in the official CMS instance profile. Providers implementing unrelated contracts need not implement it.
 
 The official Provider composes `CmsObservability` from `@bernouy/cms-observability` with `MongoJournalStore` from `@bernouy/cms-observability/mongo`. Each instance uses its existing private database and an instance-bound service. Core feature code chooses neither environment configuration nor network adapters.
 
@@ -29,11 +29,45 @@ Append authority does not imply journal read or administration authority.
 
 Host-wide Provider and global Repository diagnostics remain operator-owned stdout/stderr records. They are not copied into hosted site journals.
 
+Declared Provider refusals record their stable error code and, when known, a
+bounded diagnostic `reason`, such as `page.multiple_h1`. The official surface
+recognizes its own reason catalogue and preserves this identifier through
+localization and asynchronous execution. Logs do not copy the translated message,
+reason parameters or capability inputs. This diagnostic tag is not a contract
+field, response header or persisted operation output. Asynchronous failure
+observations retain the operation and request identifiers for correlation.
+
 ## Collection and persistence
 
 Application calls retain the small `Logger` interface. A shared collector snapshots and redacts records, queues at most 2,000 records / 2 MiB, and sends batches of at most 50 records / approximately 256 KiB once per second. Delivery is single-flight, with bounded exponential backoff and jitter. Permanent rejections discard the rejected batch and report a count to the fallback destination. The delivery path suppresses its own collection to prevent recursion.
 
 The Edge has no persistent local journal. Unacknowledged records can be lost on a crash or queue overflow. Normal shutdown attempts a two-second drain; diagnostics never block a site operation. Known drops and incomplete drains are reported locally. stdout/stderr is available before contract resolution and when collection fails.
+
+The first collection loss emits `observability.delivery.dropped` immediately.
+Further losses are summarized at most once per ten seconds during enqueue or
+flush, with any remaining summary emitted on close. Each summary includes the
+newly lost count and current queue state, and is excluded from collection to
+prevent recursion. `collector.stats()` exposes queued entries, bytes, cumulative
+drops, consecutive failures, connection and in-flight state, retry time and the
+last successful acknowledgement time. A successful operator write is not a
+persistence acknowledgement.
+
+All Node loggers share one operator-output queue per process, limited to 1,000
+pending entries / 1 MiB of UTF-8 text across stdout and stderr. A destination
+that returns `false` receives no further writes until `drain`; the other
+destination remains usable. Errors can replace older lower-priority queued
+records, and fatal records can also replace queued errors. If the budget still
+cannot admit a record, it is dropped. Native stream buffers are separate from
+this queue and stop receiving entries at their backpressure signal. Closed
+destinations release their queued entries without failing application work.
+
+`nodeLogOutputStats()` from `@bernouy/logging/node` reports queue volume, drops
+(including critical drops), blocked/unavailable destinations and destination
+failures. Losses produce bounded JSON `logging.output.dropped` summaries at most
+once per second when an operator destination can accept them. Reporting timers
+do not keep a process alive. If both destinations are unavailable, reports cannot
+be delivered. Neither this queue nor the collection queue survives process loss;
+durable business audit remains a separate responsibility.
 
 Mongo retains entries for 14 days from reception. Reads exclude expired entries immediately; TTL cleanup removes them asynchronously. Records carry both occurrence and reception dates. Indexed filters, bounded results and database execution deadlines constrain queries.
 

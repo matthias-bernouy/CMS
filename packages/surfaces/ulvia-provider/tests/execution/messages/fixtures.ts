@@ -23,6 +23,7 @@ export async function invokeHttp(
     capabilityId: string,
     input: unknown,
     language = "fr",
+    logger: Logger = NOOP_LOGGER,
 ) {
     const routes = compileProviderRoutes([contract]);
     const route = routes.find((item) => item.capability.id === capabilityId)!;
@@ -31,7 +32,7 @@ export async function invokeHttp(
         routes,
         dispatcher,
         { siteId: "default", providerId: "ulvia.official" },
-        NOOP_LOGGER,
+        logger,
     );
     return (await relay(
         new Request(`https://provider.test${route.capability.binding.path}`, {
@@ -60,6 +61,7 @@ export async function invokeHttp(
 }
 
 import { NOOP_LOGGER } from "@bernouy/logging";
+import type { Logger } from "@bernouy/logging";
 import { compileProviderRoutes } from "@bernouy/cms-gateway/provider/server";
 import type { DefaultProviderCapabilityDispatcher } from "@bernouy/ulvia-provider";
 import { createProviderContractRelay } from "../../../src/transport/relay";

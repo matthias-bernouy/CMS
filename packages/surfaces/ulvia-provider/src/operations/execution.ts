@@ -14,6 +14,7 @@ export type ProviderOperationFailureObservation = Readonly<{
     errorCode: string;
     kind: "executor-failed" | "handler-failed" | "handler-rejected" | "handler-unavailable" | "lease-lost";
     durationMs: number;
+    reason?: string;
 }>;
 
 export type ProviderOperationExecutionOptions = Readonly<{
@@ -80,7 +81,15 @@ export async function runProviderOperation(
         }
         const code = error instanceof ProviderCapabilityDispatchError ? error.code : "OPERATION_FAILED";
         if (error instanceof ProviderCapabilityDispatchError) {
-            reportFailure(options, record, "handler-rejected", code, performance.now() - startedAt);
+            reportFailure(
+                options,
+                record,
+                "handler-rejected",
+                code,
+                performance.now() - startedAt,
+                undefined,
+                error.reason,
+            );
         } else {
             reportFailure(options, record, "handler-failed", code, performance.now() - startedAt, error);
         }
@@ -153,6 +162,7 @@ export function reportFailure(
     errorCode: string,
     durationMs: number,
     error?: unknown,
+    reason?: string,
 ): void {
     try {
         options.onFailure?.(
@@ -163,6 +173,7 @@ export function reportFailure(
                 requestId: record.context.requestId,
                 errorCode,
                 kind,
+                ...(reason ? { reason } : {}),
                 durationMs: Math.round(durationMs * 100) / 100,
             },
             error,

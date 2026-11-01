@@ -1,5 +1,6 @@
 import { ProviderCapabilityDispatchError } from "@bernouy/cms-gateway/provider/server";
 import type { ErrorMessageKey } from "./catalogue";
+import { ERROR_MESSAGES } from "./catalogue";
 
 export type FailureReason = Readonly<{
     code: string;
@@ -15,8 +16,16 @@ export function officialFailure(
     reason?: Readonly<{ code: ErrorMessageKey; parameters?: FailureReason["parameters"] }>,
     headers: Readonly<Record<string, string>> = {},
 ): ProviderCapabilityDispatchError {
-    const error = new ProviderCapabilityDispatchError(code, status, code, headers);
     const issue = reason ?? (source instanceof Error && "issue" in source ? source.issue : undefined);
+    const diagnostic =
+        issue &&
+        typeof issue === "object" &&
+        "code" in issue &&
+        typeof issue.code === "string" &&
+        Object.hasOwn(ERROR_MESSAGES, issue.code)
+            ? issue.code
+            : undefined;
+    const error = new ProviderCapabilityDispatchError(code, status, code, headers, undefined, diagnostic);
     if (issue && typeof issue === "object" && "code" in issue && typeof issue.code === "string") {
         reasons.set(error, issue as FailureReason);
     }

@@ -2,6 +2,7 @@ import type { Logger } from "@bernouy/logging";
 import type { LogEntry } from "cms-observability/interfaces/Journal";
 import { LogDeliveryError } from "./LogDeliveryError";
 import { withoutLogCollection } from "./collectionContext";
+import { CollectionHealth } from "./CollectionHealth";
 
 type Destination = (entries: readonly LogEntry[]) => Promise<void>;
 
@@ -16,11 +17,14 @@ export class BufferedLogCollector {
     #retryAt = 0;
     #failures = 0;
     #closed = false;
+    #lastSuccessAt?: number;
+    readonly #health: CollectionHealth;
 
     constructor(
         private readonly fallback: Logger,
         private readonly options: { maxEntries?: number; maxBytes?: number; now?: () => number } = {},
     ) {
+        this.#health = new CollectionHealth(fallback, () => this.now());
         for (const value of [options.maxEntries ?? 2000, options.maxBytes ?? 2 * 1024 * 1024]) {
             if (!Number.isSafeInteger(value) || value < 1) {
                 throw new TypeError("Collector limits must be positive integers");
@@ -37,6 +41,7 @@ export class BufferedLogCollector {
             this.#bytes + bytes > (this.options.maxBytes ?? 2 * 1024 * 1024)
         ) {
             this.#dropped += 1;
+            this.#health.report(this.stats());
             return;
         }
         this.#queue.push({ entry: snapshot, bytes });
@@ -55,10 +60,20 @@ export class BufferedLogCollector {
     }
 
     stats() {
-        return { queued: this.#queue.length, bytes: this.#bytes, dropped: this.#dropped, failures: this.#failures };
+        return {
+            queued: this.#queue.length,
+            bytes: this.#bytes,
+            dropped: this.#dropped,
+            failures: this.#failures,
+            connected: Boolean(this.#destination),
+            flushing: Boolean(this.#flight),
+            retryAt: this.#retryAt,
+            lastSuccessAt: this.#lastSuccessAt,
+        };
     }
 
     async flush(): Promise<void> {
+        this.#health.report(this.stats());
         if (this.#flight) {
             return this.#flight;
         }
@@ -79,6 +94,7 @@ export class BufferedLogCollector {
                 await this.#destination!(batch.map(({ entry }) => entry));
                 this.#queue.splice(0, batch.length);
                 this.#bytes -= bytes;
+                this.#lastSuccessAt = this.now();
                 this.#failures = 0;
                 this.#retryAt = 0;
             } catch (error) {
@@ -86,6 +102,7 @@ export class BufferedLogCollector {
                     this.#queue.splice(0, batch.length);
                     this.#bytes -= bytes;
                     this.#dropped += batch.length;
+                    this.#health.report(this.stats());
                     this.fallback.warn("observability.delivery.rejected", this.stats());
                     return;
                 }
@@ -131,6 +148,7 @@ export class BufferedLogCollector {
                 clearTimeout(timer);
             }
             this.#closed = true;
+            this.#health.report(this.stats(), true);
             if (this.#queue.length || this.#dropped) {
                 this.fallback.warn("observability.delivery.incomplete", this.stats());
             }

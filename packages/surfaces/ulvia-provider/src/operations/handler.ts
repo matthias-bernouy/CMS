@@ -45,6 +45,7 @@ export function validatedOperationHandler(
                         RESPONSE_HEADERS,
                     ),
                     output,
+                    localized.reason,
                 );
             }
             throw error;

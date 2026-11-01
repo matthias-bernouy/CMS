@@ -77,5 +77,6 @@ export function localizeOfficialError(
         error.code,
         { ...error.responseHeaders, "content-language": language },
         { message: errorMessage(contractId, capabilityId, error.code, language, failureReason(error)) },
+        error.reason ?? contextualMessage(contractId, capabilityId, error.code),
     );
 }
