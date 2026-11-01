@@ -2,7 +2,7 @@ import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
 import { deepFreeze } from "../protocol/values";
 import { compileContractBindings } from "../bindings/compileContractBindings";
 import type { ContractRelease } from "../../interfaces/ContractRelease";
-import { compareCapability } from "./compareCapability";
+import { compareCapability } from "./capability/compare";
 import { isSemVerPrerelease, semVerReleaseTarget, versionBump, type VersionBump } from "./semver";
 
 export type CompatibilityIssueCode =

@@ -1,7 +1,7 @@
 import type { CapabilityDefinition } from "../../../interfaces/ContractRelease";
 import type { ReleaseLimits } from "../../protocol/limits";
 import { ReleaseValidationError } from "../../protocol/errors";
-import { compareCapability } from "../../compatibility/compareCapability";
+import { compareCapability } from "../../compatibility/capability/compare";
 import { firstRemovedField } from "./fields";
 import { firstChangedBinding } from "./bindings";
 
