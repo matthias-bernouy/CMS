@@ -10,7 +10,7 @@ export function boundedText(value: string, maximum: number): string {
 export function normalizeMimeType(value: string): string {
     const normalized = boundedText(value, 255).toLowerCase();
     if (!/^[!#$%&'*+.^_`|~0-9a-z-]+\/[!#$%&'*+.^_`|~0-9a-z-]+$/u.test(normalized)) {
-        throw new CmsFilesError("INVALID_INPUT", 422);
+        throw new CmsFilesError("INVALID_INPUT", 422, {}, { code: "file.mime" });
     }
     return normalized;
 }
@@ -18,7 +18,7 @@ export function normalizeMimeType(value: string): string {
 export function validFutureDate(value: string, now: Date): string {
     const date = new Date(value);
     if (!Number.isFinite(date.getTime()) || date <= now) {
-        throw new CmsFilesError("INVALID_INPUT", 422);
+        throw new CmsFilesError("INVALID_INPUT", 422, {}, { code: "file.expiry" });
     }
     return date.toISOString();
 }

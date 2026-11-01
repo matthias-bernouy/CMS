@@ -6,13 +6,13 @@ export function normalizeEmail(email: string): string {
 
 export function validateEmail(email: string): void {
     if (!email || !email.includes("@")) {
-        throw new AuthValidationError("email", "invalid");
+        throw new AuthValidationError("email", "invalid", { code: "auth.email" });
     }
 }
 
 export function requireToken(token: string): string {
     if (!token) {
-        throw new AuthValidationError("token", "required");
+        throw new AuthValidationError("token", "required", { code: "auth.token" });
     }
     return token;
 }

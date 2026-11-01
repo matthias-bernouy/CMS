@@ -14,7 +14,9 @@ import {
 /** Page path: `/seg/seg` shape (see `isValidRegisteredPagePath`). */
 export function validatePagePath(value: string): string {
     if (!isValidRegisteredPagePath(value)) {
-        throw new ContentValidationError("path", "must be a valid public path outside reserved CMS routes");
+        throw new ContentValidationError("path", "must be a valid public path outside reserved CMS routes", {
+            code: "page.path_invalid",
+        });
     }
     return value;
 }
@@ -45,7 +47,10 @@ export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
     ]);
     for (const key of Object.keys(page)) {
         if (!allowed.has(key)) {
-            throw new ContentValidationError(key, "unsupported Page property");
+            throw new ContentValidationError(key, "unsupported Page property", {
+                code: "field.unsupported",
+                parameters: { field: key },
+            });
         }
     }
     const out: Partial<TPage> = { ...page };
@@ -74,7 +79,10 @@ export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
     }
     if (page.visible !== undefined) {
         if (typeof page.visible !== "boolean") {
-            throw new ContentValidationError("visible", "boolean expected");
+            throw new ContentValidationError("visible", "boolean expected", {
+                code: "field.boolean",
+                parameters: { field: "visible" },
+            });
         }
         out.visible = page.visible;
     }

@@ -13,7 +13,9 @@ export type PlannedPagePaths = {
 export function planPagePaths(paths: Record<string, string>, system: TSystem): PlannedPagePaths {
     const defaultLanguage = system.site.language;
     if (!defaultLanguage) {
-        throw new ContentValidationError("paths", "configure the default site language first");
+        throw new ContentValidationError("paths", "configure the default site language first", {
+            code: "page.default_language",
+        });
     }
     const available = new Map(
         [defaultLanguage, ...(system.site.additionalLanguages ?? [])].map((language) => [
@@ -28,10 +30,16 @@ export function planPagePaths(paths: Record<string, string>, system: TSystem): P
     for (const [rawLanguage, localPath] of Object.entries(paths)) {
         const language = available.get(rawLanguage.toLowerCase());
         if (!language) {
-            throw new ContentValidationError("paths", `language ${rawLanguage} is not configured`);
+            throw new ContentValidationError("paths", `language ${rawLanguage} is not configured`, {
+                code: "language.unconfigured",
+                parameters: { language: rawLanguage },
+            });
         }
         if (seenLanguages.has(language)) {
-            throw new ContentValidationError("paths", `language ${language} appears more than once`);
+            throw new ContentValidationError("paths", `language ${language} appears more than once`, {
+                code: "language.duplicate",
+                parameters: { language },
+            });
         }
         seenLanguages.add(language);
         if (!localPath) {
@@ -39,7 +47,9 @@ export function planPagePaths(paths: Record<string, string>, system: TSystem): P
         }
         const path = publicPagePath(language, localPath, defaultLanguage);
         if (!isValidRegisteredPagePath(path)) {
-            throw new ContentValidationError("paths", "public path is reserved by the CMS");
+            throw new ContentValidationError("paths", "public path is reserved by the CMS", {
+                code: "page.path_reserved",
+            });
         }
         if (used.has(path)) {
             throw new DuplicatePagePathError(path);
@@ -50,7 +60,7 @@ export function planPagePaths(paths: Record<string, string>, system: TSystem): P
     }
     const primary = normalized[defaultLanguage];
     if (!primary) {
-        throw new ContentValidationError("paths", "the default language needs a path");
+        throw new ContentValidationError("paths", "the default language needs a path", { code: "page.primary_path" });
     }
     return { paths: normalized, current, primaryPath: publicPagePath(defaultLanguage, primary, defaultLanguage) };
 }

@@ -9,7 +9,10 @@ export function validateNativeDocumentReferences(document: Document, field: stri
             continue;
         }
         if (ids.has(id)) {
-            throw new ContentValidationError(field, `duplicate static native id ${JSON.stringify(id)}`);
+            throw new ContentValidationError(field, `duplicate static native id ${JSON.stringify(id)}`, {
+                code: "page.duplicate_id",
+                parameters: { id },
+            });
         }
         ids.set(id, element);
     }
@@ -21,10 +24,13 @@ export function validateNativeDocumentReferences(document: Document, field: stri
             throw new ContentValidationError(
                 field,
                 `native button commandfor references missing id ${JSON.stringify(targetId)}`,
+                { code: "page.command_missing", parameters: { id: targetId } },
             );
         }
         if (target.localName.toLowerCase() !== "dialog") {
-            throw new ContentValidationError(field, `native button commandfor target must be a <dialog>`);
+            throw new ContentValidationError(field, `native button commandfor target must be a <dialog>`, {
+                code: "page.command_dialog",
+            });
         }
         validateCommandDialogName(target, ids, field);
     }
@@ -36,13 +42,16 @@ function validateCommandDialogName(target: Element, ids: ReadonlyMap<string, Ele
     }
     const labelledBy = target.getAttribute("aria-labelledby")?.trim().split(/\s+/u).filter(Boolean) ?? [];
     if (labelledBy.length === 0) {
-        throw new ContentValidationError(field, "a command-targeted native <dialog> requires an accessible name");
+        throw new ContentValidationError(field, "a command-targeted native <dialog> requires an accessible name", {
+            code: "page.dialog_name",
+        });
     }
     const missing = labelledBy.find((id) => !ids.has(id));
     if (missing) {
         throw new ContentValidationError(
             field,
             `native dialog aria-labelledby references missing id ${JSON.stringify(missing)}`,
+            { code: "page.label_missing", parameters: { id: missing } },
         );
     }
 }

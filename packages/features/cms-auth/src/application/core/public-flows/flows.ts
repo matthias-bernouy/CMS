@@ -65,11 +65,11 @@ export async function requestEmailVerification(
 export async function confirmEmailVerification(cfg: PublicAuthFlowConfig, input: { token: string }): Promise<void> {
     await withReservedToken(cfg, "email_verification", requireToken(input.token), "verify-email", async (sub) => {
         if (!(await hasActivatedMembership(cfg, sub))) {
-            throw new AuthValidationError("token", "invalid or expired");
+            throw new AuthValidationError("token", "invalid or expired", { code: "auth.token" });
         }
         const marked = await cfg.credentials.markEmailVerified(sub);
         if (!marked) {
-            throw new AuthValidationError("token", "credential not found");
+            throw new AuthValidationError("token", "credential not found", { code: "auth.token" });
         }
     });
 }
@@ -95,11 +95,11 @@ export async function confirmPasswordReset(
     validatePassword(input.password);
     await withReservedToken(cfg, "password_reset", token, `set-password:${input.password}`, async (sub) => {
         if (!(await hasActivatedMembership(cfg, sub))) {
-            throw new AuthValidationError("token", "invalid or expired");
+            throw new AuthValidationError("token", "invalid or expired", { code: "auth.token" });
         }
         const changed = await cfg.credentials.setPassword(sub, input.password);
         if (!changed) {
-            throw new AuthValidationError("token", "credential not found");
+            throw new AuthValidationError("token", "credential not found", { code: "auth.token" });
         }
         await cfg.credentials.markEmailVerified(sub);
     });
@@ -114,12 +114,12 @@ async function withReservedToken(
 ): Promise<void> {
     const reservation = await cfg.tokens.reserve(purpose, token, operation);
     if (!reservation) {
-        throw new AuthValidationError("token", "invalid or expired");
+        throw new AuthValidationError("token", "invalid or expired", { code: "auth.token" });
     }
     try {
         await mutate(reservation.authToken.sub);
         if (!(await cfg.tokens.finalize(reservation.id))) {
-            throw new AuthValidationError("token", "reservation expired");
+            throw new AuthValidationError("token", "reservation expired", { code: "auth.token" });
         }
     } catch (error) {
         await cfg.tokens.release(reservation.id).catch(() => false);

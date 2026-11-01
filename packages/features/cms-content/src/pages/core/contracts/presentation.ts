@@ -1,3 +1,4 @@
+import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
 import {
@@ -24,7 +25,7 @@ export async function updateCmsPageRoute(
     }
     const language = configuredLanguage(input.language, system.site.language, system.site.additionalLanguages);
     if (typeof input.path !== "string" || input.path.length > 2_048) {
-        throw new TypeError("Invalid Page route path.");
+        throw new ContentValidationError("path", "Invalid Page route path.", { code: "page.path_invalid" });
     }
     const paths = pagePathsForSystem(page, system);
     const path = input.path.trim();
@@ -58,8 +59,8 @@ export async function updateCmsPageSeo(
     }
     const language = configuredLanguage(input.language, system.site.language, system.site.additionalLanguages);
     const seo = structuredClone(page.seo ?? {});
-    const title = optionalText(input.title, 70, "SEO title");
-    const description = optionalText(input.description, 200, "SEO description");
+    const title = optionalText(input.title, 70, "title", language);
+    const description = optionalText(input.description, 200, "description", language);
     if (title || description) {
         seo[language] = { ...(title ? { title } : {}), ...(description ? { description } : {}) };
     } else {
@@ -74,17 +75,29 @@ export async function updateCmsPageSeo(
 
 function configuredLanguage(value: unknown, primary: string, additional: readonly string[] | undefined): string {
     if (typeof value !== "string" || ![primary, ...(additional ?? [])].includes(value)) {
-        throw new TypeError("The Page language is not configured for this site.");
+        throw new ContentValidationError("language", "The Page language is not configured for this site.", {
+            code: "language.unconfigured",
+            parameters: { language: typeof value === "string" ? value : "" },
+        });
     }
     return value;
 }
 
-function optionalText(value: unknown, maximum: number, label: string): string {
+function optionalText(value: unknown, maximum: number, label: string, language: string): string {
     if (value === undefined) {
         return "";
     }
     if (typeof value !== "string" || value.length > maximum) {
-        throw new TypeError(`Invalid ${label}.`);
+        throw new ContentValidationError(
+            `seo.${label}`,
+            `Invalid SEO ${label}.`,
+            typeof value !== "string"
+                ? { code: "field.text", parameters: { field: `seo.${label}` } }
+                : {
+                      code: label === "title" ? "seo.title_long" : "seo.description_long",
+                      parameters: { max: maximum, language },
+                  },
+        );
     }
     return value.trim();
 }

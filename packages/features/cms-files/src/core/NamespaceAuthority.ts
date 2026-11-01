@@ -64,7 +64,7 @@ export class NamespaceAuthority {
         }
         const permissions = [...new Set(input.permissions)];
         if (permissions.length === 0 || permissions.some((permission) => !ALL_PERMISSIONS.includes(permission))) {
-            throw new CmsFilesError("INVALID_INPUT", 422);
+            throw new CmsFilesError("INVALID_INPUT", 422, {}, { code: "permissions.invalid" });
         }
         const expiresAt = input.expiresAt ? validFutureDate(input.expiresAt, this.now()) : undefined;
         const credential = newCredential("nsk");

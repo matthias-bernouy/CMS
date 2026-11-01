@@ -1,3 +1,4 @@
+import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { PageRevisionConflictError } from "cms-content/application/core/validation/errors";
 import { validatePageTitle } from "cms-content/pages/core/validation/page";
@@ -30,10 +31,10 @@ export async function renameCmsPage(
     input: CmsPageRenameInput,
 ): Promise<CmsPageRenameOutput> {
     if (typeof input.id !== "string" || input.id.length === 0 || input.id.length > 200) {
-        throw new TypeError("Invalid Page id.");
+        throw new ContentValidationError("id", "Invalid Page id.");
     }
     if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 1) {
-        throw new TypeError("Invalid expected Page revision.");
+        throw new ContentValidationError("expectedRevision", "Invalid expected Page revision.");
     }
     const title = validatePageTitle(input.title);
     try {

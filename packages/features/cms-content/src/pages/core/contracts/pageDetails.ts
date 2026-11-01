@@ -1,3 +1,4 @@
+import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
@@ -47,14 +48,14 @@ export async function getCmsPage(
 
 export function cmsPageId(value: unknown): string {
     if (typeof value !== "string" || value.length === 0 || value.length > 200) {
-        throw new TypeError("Invalid Page id.");
+        throw new ContentValidationError("id", "Invalid Page id.");
     }
     return value;
 }
 
 export function cmsPageRevision(value: unknown): number {
     if (!Number.isSafeInteger(value) || (value as number) < 1) {
-        throw new TypeError("Invalid expected Page revision.");
+        throw new ContentValidationError("expectedRevision", "Invalid expected Page revision.");
     }
     return value as number;
 }

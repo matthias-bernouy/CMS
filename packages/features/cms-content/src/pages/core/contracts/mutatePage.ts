@@ -1,3 +1,4 @@
+import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import {
@@ -30,7 +31,9 @@ export async function updateCmsPage(
         }
     }
     if (Object.keys(patch).length === 1) {
-        throw new TypeError("A Page update must contain at least one change.");
+        throw new ContentValidationError("page", "A Page update must contain at least one change.", {
+            code: "page.no_change",
+        });
     }
     const updated = await repository.updatePage(patch, expectedRevision);
     if (!updated) {
@@ -46,7 +49,10 @@ export async function publishCmsPage(
     const id = cmsPageId(input.id);
     const expectedRevision = cmsPageRevision(input.expectedRevision);
     if (typeof input.visible !== "boolean") {
-        throw new TypeError("Invalid Page visibility.");
+        throw new ContentValidationError("visible", "Invalid Page visibility.", {
+            code: "field.boolean",
+            parameters: { field: "visible" },
+        });
     }
     const updated = await repository.updatePage({ id, visible: input.visible }, expectedRevision);
     if (!updated) {

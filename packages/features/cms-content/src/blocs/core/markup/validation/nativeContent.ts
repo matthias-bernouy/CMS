@@ -31,12 +31,15 @@ export function validatePageContentMarkup(value: string): string {
     document.body.innerHTML = normalized;
     for (const node of Array.from(document.body.childNodes)) {
         if (node.nodeType === 3 && node.textContent?.trim()) {
-            throw new ContentValidationError("content", "Page root text must be owned by a Bloc slot");
+            throw new ContentValidationError("content", "Page root text must be owned by a Bloc slot", {
+                code: "page.root_text",
+            });
         }
         if (node.nodeType === 1 && !(node as Element).hasAttribute("cms-bloc")) {
             throw new ContentValidationError(
                 "content",
                 `native <${(node as Element).localName}> cannot be a Page root without cms-bloc`,
+                { code: "page.root_bloc", parameters: { tag: (node as Element).localName } },
             );
         }
     }
@@ -130,7 +133,7 @@ function validateNativeMarkup(
     }
     const securityIssue = storedMarkupSecurityIssue(value);
     if (securityIssue) {
-        throw new ContentValidationError(field, securityIssue);
+        throw new ContentValidationError(field, securityIssue, { code: "page.html_invalid", parameters: { field } });
     }
     const hardened = hardenStoredHtml(value);
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
@@ -139,11 +142,13 @@ function validateNativeMarkup(
         assertBlocDomBudget(field, document.body);
     }
     if (containsComment(document.body)) {
-        throw new ContentValidationError(field, "HTML comments are not part of the persisted Page grammar");
+        throw new ContentValidationError(field, "HTML comments are not part of the persisted Page grammar", {
+            code: "page.html_comments",
+        });
     }
     const issue = nativeDomTreeIssue(document.body, { ...options, rootParentTag });
     if (issue) {
-        throw new ContentValidationError(field, issue);
+        throw new ContentValidationError(field, issue, { code: "page.html_invalid", parameters: { field } });
     }
     validateNativeDocumentReferences(document, field);
     return document.body.innerHTML;

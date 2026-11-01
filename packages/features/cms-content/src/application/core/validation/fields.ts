@@ -15,13 +15,22 @@ const CONTROL_CHARS = /[\x00-\x1F\x7F]/;
 export function validateLabel(field: string, value: string, max: number): string {
     const trimmed = value.trim();
     if (trimmed.length === 0) {
-        throw new ContentValidationError(field, "cannot be empty");
+        throw new ContentValidationError(field, "cannot be empty", {
+            code: field === "title" ? "page.title_empty" : "field.empty",
+            parameters: { field },
+        });
     }
     if (trimmed.length > max) {
-        throw new ContentValidationError(field, `too long (${trimmed.length}); max ${max}`);
+        throw new ContentValidationError(field, `too long (${trimmed.length}); max ${max}`, {
+            code: field === "title" ? "page.title_long" : "field.too_long",
+            parameters: { field, max },
+        });
     }
     if (CONTROL_CHARS.test(trimmed)) {
-        throw new ContentValidationError(field, "contains invalid control characters");
+        throw new ContentValidationError(field, "contains invalid control characters", {
+            code: field === "title" ? "page.title_characters" : "field.characters",
+            parameters: { field },
+        });
     }
     return trimmed;
 }
@@ -30,7 +39,10 @@ export function validateLabel(field: string, value: string, max: number): string
 export function validateOptionalText(field: string, value: string, max: number): string {
     const trimmed = value.trim();
     if (trimmed.length > max) {
-        throw new ContentValidationError(field, `too long; max ${max}`);
+        throw new ContentValidationError(field, `too long; max ${max}`, {
+            code: "field.too_long",
+            parameters: { field, max },
+        });
     }
     return trimmed;
 }
@@ -40,7 +52,10 @@ export const MAX_PAGE_CONTENT_LENGTH = 1024 * 1024;
 /** Stored rich-text/HTML content: size-bounded then DOM-hardened (sanitized). */
 export function validateContent(value: string): string {
     if (value.length > MAX_PAGE_CONTENT_LENGTH) {
-        throw new ContentValidationError("content", `too long; max ${MAX_PAGE_CONTENT_LENGTH} chars`);
+        throw new ContentValidationError("content", `too long; max ${MAX_PAGE_CONTENT_LENGTH} chars`, {
+            code: "page.content_long",
+            parameters: { max: MAX_PAGE_CONTENT_LENGTH },
+        });
     }
     return validatePageContentMarkup(value);
 }
@@ -59,10 +74,16 @@ export function validateTags(tags: string[]): string[] {
             continue;
         }
         if (tag.length > MAX_TAG_LENGTH) {
-            throw new ContentValidationError("tags", `"${tag}" exceeds ${MAX_TAG_LENGTH} chars`);
+            throw new ContentValidationError("tags", `"${tag}" exceeds ${MAX_TAG_LENGTH} chars`, {
+                code: "page.tag_long",
+                parameters: { tag, max: MAX_TAG_LENGTH },
+            });
         }
         if (!TAG_REGEX.test(tag)) {
-            throw new ContentValidationError("tags", `"${tag}" has invalid chars`);
+            throw new ContentValidationError("tags", `"${tag}" has invalid chars`, {
+                code: "page.tag_invalid",
+                parameters: { tag },
+            });
         }
         if (seen.has(tag)) {
             continue;
@@ -70,7 +91,10 @@ export function validateTags(tags: string[]): string[] {
         seen.add(tag);
         out.push(tag);
         if (out.length > MAX_TAGS) {
-            throw new ContentValidationError("tags", `too many tags; max ${MAX_TAGS}`);
+            throw new ContentValidationError("tags", `too many tags; max ${MAX_TAGS}`, {
+                code: "page.tags_many",
+                parameters: { max: MAX_TAGS },
+            });
         }
     }
     return out;
@@ -79,7 +103,7 @@ export function validateTags(tags: string[]): string[] {
 /** Required opaque id (the document primary key on updates). */
 export function validateId(value: string): string {
     if (value.length === 0) {
-        throw new ContentValidationError("id", "required");
+        throw new ContentValidationError("id", "required", { code: "field.required", parameters: { field: "id" } });
     }
     return value;
 }

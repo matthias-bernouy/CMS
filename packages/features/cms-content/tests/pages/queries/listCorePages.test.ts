@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     InMemoryContentRepository,
+    ContentValidationError,
     listCmsPages,
     PageRevisionConflictError,
     renameCmsPage,
@@ -36,10 +37,12 @@ describe("ulvia.cms.content/pages.list implementation", () => {
 
     test("rejects unbounded list inputs", async () => {
         const repository = new InMemoryContentRepository();
-        await expect(listCmsPages(repository, { limit: 101 })).rejects.toThrow(TypeError);
-        await expect(listCmsPages(repository, { cursor: "", limit: 1 })).rejects.toThrow(TypeError);
-        await expect(listCmsPages(repository, { query: "x".repeat(121) })).rejects.toThrow(TypeError);
-        await expect(listCmsPages(repository, { visibility: "hidden" as never })).rejects.toThrow(TypeError);
+        await expect(listCmsPages(repository, { limit: 101 })).rejects.toThrow(ContentValidationError);
+        await expect(listCmsPages(repository, { cursor: "", limit: 1 })).rejects.toThrow(ContentValidationError);
+        await expect(listCmsPages(repository, { query: "x".repeat(121) })).rejects.toThrow(ContentValidationError);
+        await expect(listCmsPages(repository, { visibility: "hidden" as never })).rejects.toThrow(
+            ContentValidationError,
+        );
     });
 
     test("filters Page metadata without exposing editorial documents", async () => {

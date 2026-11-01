@@ -36,7 +36,12 @@ export class UploadManager {
             throw new CmsFilesError("NOT_FOUND", 404);
         }
         if (!Number.isSafeInteger(input.size) || input.size < 0 || input.size > this.maxFileBytes) {
-            throw new CmsFilesError("INVALID_INPUT", 422);
+            throw new CmsFilesError(
+                "INVALID_INPUT",
+                422,
+                {},
+                { code: "file.size", parameters: { max: this.maxFileBytes } },
+            );
         }
         const fileId = input.fileId ? boundedText(input.fileId, 128) : undefined;
         if (fileId) {

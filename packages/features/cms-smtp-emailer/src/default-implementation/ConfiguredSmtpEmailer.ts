@@ -127,13 +127,23 @@ function normalizeConfiguration(input: SmtpEmailerConfigurationUpdate, password:
     };
     if (configuration.enabled) {
         if (!EMAIL_PATTERN.test(configuration.fromEmail)) {
-            throw new SmtpEmailConfigurationError("Enabled email delivery requires a valid sender address.");
+            throw new SmtpEmailConfigurationError(
+                "Enabled email delivery requires a valid sender address.",
+                "invalid_configuration",
+                { code: "smtp.sender" },
+            );
         }
         if (configuration.replyTo && !EMAIL_PATTERN.test(configuration.replyTo)) {
-            throw new SmtpEmailConfigurationError("Email reply-to address is invalid.");
+            throw new SmtpEmailConfigurationError("Email reply-to address is invalid.", "invalid_configuration", {
+                code: "smtp.reply",
+            });
         }
         if (!configuration.smtp.host || !configuration.smtp.username || !configuration.smtp.password) {
-            throw new SmtpEmailConfigurationError("Enabled email delivery requires complete SMTP credentials.");
+            throw new SmtpEmailConfigurationError(
+                "Enabled email delivery requires complete SMTP credentials.",
+                "invalid_configuration",
+                { code: "smtp.credentials" },
+            );
         }
     }
     return configuration;
@@ -160,7 +170,11 @@ function requiredBoolean(value: unknown): boolean {
 
 function requiredPort(value: unknown): number {
     if (!Number.isInteger(value) || Number(value) < 1 || Number(value) > 65_535) {
-        throw new SmtpEmailConfigurationError("SMTP port must be an integer between 1 and 65535.");
+        throw new SmtpEmailConfigurationError(
+            "SMTP port must be an integer between 1 and 65535.",
+            "invalid_configuration",
+            { code: "smtp.port" },
+        );
     }
     return Number(value);
 }

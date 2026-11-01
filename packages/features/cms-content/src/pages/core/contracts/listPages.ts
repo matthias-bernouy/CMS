@@ -1,3 +1,4 @@
+import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 
 export interface CmsPagesListInput {
@@ -27,18 +28,21 @@ export async function listCmsPages(
     const cursor = input.cursor;
     const limit = input.limit ?? 50;
     if (cursor !== undefined && (typeof cursor !== "string" || cursor.length === 0 || cursor.length > 256)) {
-        throw new TypeError("Invalid Page cursor.");
+        throw new ContentValidationError("cursor", "Invalid Page cursor.");
     }
     if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
-        throw new TypeError("Page list limit must be between 1 and 100.");
+        throw new ContentValidationError("limit", "Page list limit must be between 1 and 100.");
     }
     const query = input.query?.trim();
     if (query !== undefined && query.length > 120) {
-        throw new TypeError("Page list query must not exceed 120 characters.");
+        throw new ContentValidationError("query", "Page list query must not exceed 120 characters.", {
+            code: "field.too_long",
+            parameters: { field: "query", max: 120 },
+        });
     }
     const visibility = input.visibility ?? "all";
     if (!(["all", "published", "draft"] as const).includes(visibility)) {
-        throw new TypeError("Invalid Page visibility filter.");
+        throw new ContentValidationError("visible", "Invalid Page visibility filter.");
     }
     const pages = await repository.getPagesMetadata({
         ...(query ? { search: query } : {}),

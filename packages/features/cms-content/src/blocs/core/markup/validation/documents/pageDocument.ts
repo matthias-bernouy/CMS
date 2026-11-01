@@ -61,6 +61,7 @@ export function validatePageDocument(
         throw new ContentValidationError(
             "content",
             `unknown or hidden reference(s): ${missing.map((tag) => `bloc "${tag}"`).join(", ")}`,
+            { code: "page.bloc_unknown", parameters: { bloc: missing.join(", ") } },
         );
     }
 
@@ -100,6 +101,7 @@ function validateHiddenNesting(
             throw new ContentValidationError(
                 "content",
                 `hidden Bloc <${id}> must be nested in a slot that explicitly accepts it`,
+                { code: "page.bloc_hidden", parameters: { bloc: id } },
             );
         }
     }
@@ -121,7 +123,10 @@ function validateHosts(
             if (allowUnknown) {
                 continue;
             }
-            throw new ContentValidationError("content", `unknown or hidden reference: bloc "${tag}"`);
+            throw new ContentValidationError("content", `unknown or hidden reference: bloc "${tag}"`, {
+                code: "page.bloc_unknown",
+                parameters: { bloc: tag },
+            });
         }
         const issue = pageBlocHostAttributesIssue(
             Object.fromEntries(element.getAttributeNames().map((name) => [name, element.getAttribute(name) ?? ""])),

@@ -1,3 +1,4 @@
+import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import { cmsPageDetails, type CmsPageDetails } from "cms-content/pages/core/contracts/pageDetails";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
@@ -16,7 +17,10 @@ export async function createCmsPage(
     const path = validatePagePath(input.path);
     const title = validatePageTitle(input.title);
     if (input.content !== undefined && typeof input.content !== "string") {
-        throw new TypeError("Invalid Page content.");
+        throw new ContentValidationError("content", "Invalid Page content.", {
+            code: "field.text",
+            parameters: { field: "content" },
+        });
     }
     await repository.insertPage(path, title, input.content);
     const created = await repository.getPage(path);

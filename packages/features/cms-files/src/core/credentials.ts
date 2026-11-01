@@ -43,6 +43,9 @@ export class CmsFilesError extends Error {
         readonly code: string,
         readonly status: number,
         readonly responseHeaders: Readonly<Record<string, string>> = {},
+        readonly issue:
+            | Readonly<{ code: string; parameters?: Readonly<Record<string, string | number>> }>
+            | undefined = undefined,
     ) {
         super(code);
         this.name = "CmsFilesError";

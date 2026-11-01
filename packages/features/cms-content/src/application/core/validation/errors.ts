@@ -9,6 +9,10 @@ export class ContentValidationError extends Error {
     constructor(
         readonly field: string,
         message: string,
+        readonly issue: Readonly<{ code: string; parameters?: Readonly<Record<string, string | number>> }> = {
+            code: "field.invalid",
+            parameters: { field },
+        },
     ) {
         super(`Invalid ${field}: ${message}`);
         this.name = "ContentValidationError";

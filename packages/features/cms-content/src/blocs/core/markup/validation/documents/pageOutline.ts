@@ -20,7 +20,9 @@ function walkNodes(nodes: readonly Element[], initial: readonly OutlineState[]):
 
 function walkElement(element: Element, incoming: readonly OutlineState[]): readonly OutlineState[] {
     if (element.hasAttribute("cms-repeat") && containsH1(element)) {
-        throw new ContentValidationError("content", "expanded Page h1 cannot be repeated");
+        throw new ContentValidationError("content", "expanded Page h1 cannot be repeated", {
+            code: "page.repeated_h1",
+        });
     }
 
     let active = applyHeading(element, incoming);
@@ -42,12 +44,15 @@ function applyHeading(element: Element, states: readonly OutlineState[]): readon
     return states.map((state) => {
         const h1Count = state.h1Count + (level === 1 ? 1 : 0);
         if (h1Count > 1) {
-            throw new ContentValidationError("content", "expanded Page may contain at most one h1 in any branch");
+            throw new ContentValidationError("content", "expanded Page may contain at most one h1 in any branch", {
+                code: "page.multiple_h1",
+            });
         }
         if (state.previousLevel !== undefined && level > state.previousLevel + 1) {
             throw new ContentValidationError(
                 "content",
                 `expanded Page heading hierarchy skips from h${state.previousLevel} to h${level}`,
+                { code: "page.heading_skip", parameters: { previous: state.previousLevel, next: level } },
             );
         }
         return { h1Count, previousLevel: level };
