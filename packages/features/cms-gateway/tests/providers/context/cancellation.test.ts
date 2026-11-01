@@ -48,7 +48,7 @@ test("the canonical HTTP view remains present for long resource URLs and snapsho
     f.dispatcher.register("catalog", "item.list", async (_input, context) => {
         expect(context.http.resource).toEqual({ method: "GET" });
         expect(context.http.transportRequest?.method).toBe("GET");
-        expect(context.headers).toBe(context.http.headers);
+        expect(context).not.toHaveProperty("headers");
         context.http.headers.set("accept-language", "en");
         expect(context.requestContext?.headers["accept-language"]).toBe("en");
         return new Response("ok", { headers: { "content-type": "text/plain" } });

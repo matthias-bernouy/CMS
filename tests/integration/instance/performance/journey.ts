@@ -26,7 +26,7 @@ export async function measureResource(stack: Stack, path: string, requestCount =
     const paths = await internalRequestPaths(stack.providerName, stack.edgeName);
     const calls = Object.values(paths).reduce((total, count) => total + count, 0);
     expect(paths["/gateway/delegations/close"] ?? 0).toBe(0);
-    expect(paths["/delivery/resolve-path"]).toBe(requestCount);
+    expect(paths["/delivery/resolve-resource"]).toBe(requestCount);
     return {
         internalPaths: paths,
         path,

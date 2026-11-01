@@ -1,3 +1,4 @@
+import { officialFailure } from "../dispatch/errors/failure";
 import { CmsFilesError, type CmsFilesService } from "@bernouy/cms-files";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../dispatch/registry";
 import type { CmsFileWorkspace } from "../ports";
@@ -78,7 +79,7 @@ export function registerFileCapabilities(
     dispatcher.register("ulvia.cms.files", "upload.write", async (input, context) =>
         fileCall(async () => {
             if (!context.binaryBody) {
-                throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+                throw officialFailure("INVALID_INPUT", 422, undefined, { code: "file.binary" });
             }
             await files.writeUpload(
                 requiredText(input.uploadId),
@@ -300,7 +301,7 @@ async function fileCall<T>(operation: () => Promise<T>): Promise<T> {
             throw error;
         }
         if (error instanceof CmsFilesError) {
-            throw new ProviderCapabilityDispatchError(error.code, error.status, error.code, error.responseHeaders);
+            throw officialFailure(error.code, error.status, error, undefined, error.responseHeaders);
         }
         throw error;
     }

@@ -10,7 +10,6 @@ export interface ProviderOperationRecord {
     readonly capabilityId: string;
     readonly idempotencyKey: string;
     readonly inputDigest: string;
-    readonly inputDigestVersion?: 2;
     readonly input: Readonly<Record<string, unknown>>;
     readonly context: ProviderOperationContext;
     readonly status: ProviderOperationStatus;
@@ -20,6 +19,7 @@ export interface ProviderOperationRecord {
     readonly result?: unknown;
     readonly errorCode?: string;
     readonly errorOutput?: unknown;
+    readonly errorContentLanguage?: string;
     readonly lease?: { readonly token: string; readonly expiresAt: string };
 }
 
@@ -36,7 +36,14 @@ export interface ProviderOperationStore {
     claim(id: string, expectedRevision: number, token: string, expiresAt: string, now: string): Promise<boolean>;
     renew(id: string, token: string, expiresAt: string, now: string): Promise<boolean>;
     succeed(id: string, token: string, result: unknown, now: string): Promise<boolean>;
-    fail(id: string, token: string, errorCode: string, now: string, errorOutput?: unknown): Promise<boolean>;
+    fail(
+        id: string,
+        token: string,
+        errorCode: string,
+        now: string,
+        errorOutput?: unknown,
+        errorContentLanguage?: string,
+    ): Promise<boolean>;
 }
 
 export interface ProviderOperationExecutionContext {
@@ -49,13 +56,9 @@ export type ProviderOperationHandler = (
     input: Readonly<Record<string, unknown>>,
     context: ProviderCapabilityInvocationContext & {
         readonly http: ProviderHttpContext;
-        readonly headers: Headers;
         readonly signal: AbortSignal;
     },
     execution: ProviderOperationExecutionContext,
 ) => Promise<unknown>;
 
-export type ProviderOperationContext = Omit<
-    ProviderCapabilityInvocationContext,
-    "http" | "headers" | "signal" | "request" | "resourceRequest" | "binaryBody"
->;
+export type ProviderOperationContext = Omit<ProviderCapabilityInvocationContext, "http" | "signal" | "binaryBody">;

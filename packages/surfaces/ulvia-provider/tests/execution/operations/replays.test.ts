@@ -1,6 +1,4 @@
 import { expect, test } from "bun:test";
-import { createHash } from "node:crypto";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import {
     MemoryProviderOperationStore,
     ProviderOperationExecutor,
@@ -28,36 +26,6 @@ test("business input cannot collide with the execution-header envelope", async (
         expect((await store.list("site-a", "example.jobs", undefined, 10)).items).toHaveLength(1);
         expect((await store.get("site-a", first.operationId))?.input).toEqual(wrapped);
         expect(await store.get("site-b", first.operationId)).toBeNull();
-    } finally {
-        await executor.stop();
-    }
-});
-
-test("legacy operations replay from their saved input and reject a colliding old digest", async () => {
-    const store = new MemoryProviderOperationStore();
-    const now = new Date().toISOString();
-    await store.createOrGet({
-        id: crypto.randomUUID(),
-        siteId: "site-a",
-        contractId: "example.jobs",
-        capabilityId: "apply",
-        idempotencyKey: "one",
-        inputDigest: `sha256:${createHash("sha256").update(canonicalizeIJson(wrapped)).digest("hex")}`,
-        input: wrapped,
-        context,
-        status: "succeeded",
-        revision: 1,
-        createdAt: now,
-        updatedAt: now,
-        result: { done: true },
-    });
-    const executor = new ProviderOperationExecutor(store);
-    try {
-        const replay = await executor.enqueue("example.jobs", "apply", wrapped, context);
-        expect((await store.get("site-a", replay.operationId))?.status).toBe("succeeded");
-        await expect(
-            executor.enqueue("example.jobs", "apply", {}, { ...context, requestContext: { headers: wrapped.headers } }),
-        ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
     } finally {
         await executor.stop();
     }
@@ -98,7 +66,7 @@ test("durable failures preserve bounded JSON details and refuse oversized detail
     }
 });
 
-test("an asynchronous handler cannot persist undeclared error details", async () => {
+test("asynchronous handlers without an output schema preserve error codes without persisting details", async () => {
     const store = new MemoryProviderOperationStore();
     const executor = new ProviderOperationExecutor(store);
     executor.register("example.jobs", "apply", async () => {
@@ -108,7 +76,7 @@ test("an asynchronous handler cannot persist undeclared error details", async ()
     await executor.stop();
     expect(await store.get("site-a", operation.operationId)).toMatchObject({
         status: "failed",
-        errorCode: "OPERATION_FAILED",
+        errorCode: "INVALID_PAGE",
     });
     expect((await store.get("site-a", operation.operationId))?.errorOutput).toBeUndefined();
 });

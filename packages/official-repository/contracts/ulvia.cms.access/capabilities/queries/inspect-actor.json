@@ -45,7 +45,18 @@
     "errors": [
         {
             "code": "FORBIDDEN",
-            "retryable": false
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
         }
     ],
     "bindings": [

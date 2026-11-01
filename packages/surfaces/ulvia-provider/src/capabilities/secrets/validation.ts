@@ -1,3 +1,4 @@
+import { officialFailure } from "../../dispatch/errors/failure";
 import { CmsSecretConflict, CmsSecretNotAuthorized, CmsSecretNotFound } from "@bernouy/cms-secrets";
 import { ProviderCapabilityDispatchError } from "../../dispatch/registry";
 
@@ -9,21 +10,21 @@ export async function secretCall<T>(
         return await operation();
     } catch (error) {
         if (error instanceof CmsSecretNotAuthorized) {
-            throw new ProviderCapabilityDispatchError("NOT_AUTHORIZED", 403);
+            throw officialFailure("NOT_AUTHORIZED", 403, error);
         }
         if (error instanceof CmsSecretNotFound) {
-            throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
+            throw officialFailure("NOT_FOUND", 404, error);
         }
         if (error instanceof CmsSecretConflict) {
-            throw new ProviderCapabilityDispatchError(conflictCode, 409);
+            throw officialFailure(conflictCode, 409, error);
         }
         if (error instanceof TypeError) {
-            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+            throw officialFailure("INVALID_INPUT", 422, error);
         }
         if (error instanceof ProviderCapabilityDispatchError) {
             throw error;
         }
-        throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+        throw officialFailure("CORE_UNAVAILABLE", 503, error);
     }
 }
 

@@ -2,7 +2,7 @@ import { randomUUIDv7 } from "bun";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityInvocationContext } from "../dispatch/registry";
 import type { ProviderOperationHandler, ProviderOperationRecord, ProviderOperationStore } from "./types";
 import { reportFailure, runProviderOperation, type ProviderOperationFailureObservation } from "./execution";
-import type { CapabilityErrorDefinition } from "@bernouy/cms-repository/contracts";
+import type { CapabilityErrorDefinition, ResolvedContract } from "@bernouy/cms-repository/contracts";
 import { validatedOperationHandler } from "./handler";
 
 export type { ProviderOperationFailureObservation } from "./execution";
@@ -11,6 +11,7 @@ const DEFAULT_LEASE_MS = 30_000;
 const DEFAULT_RECOVERY_LIMIT = 100;
 
 export type ProviderOperationExecutorOptions = Readonly<{
+    contracts?: readonly ResolvedContract[];
     leaseMs?: number;
     recoveryLimit?: number;
     retainResource?: () => () => void;
@@ -19,6 +20,7 @@ export type ProviderOperationExecutorOptions = Readonly<{
 
 export class ProviderOperationExecutor {
     readonly #handlers = new Map<string, ProviderOperationHandler>();
+    readonly #errors = new Map<string, readonly CapabilityErrorDefinition[]>();
     readonly #running = new Map<string, Promise<void>>();
     #stopping = false;
 
@@ -27,6 +29,14 @@ export class ProviderOperationExecutor {
         private readonly now: () => Date = () => new Date(),
         private readonly options: ProviderOperationExecutorOptions = {},
     ) {
+        for (const contract of options.contracts ?? []) {
+            for (const capability of contract.capabilities) {
+                this.#errors.set(
+                    `${operationKey(contract.release.contractId, capability.definition.id)}\0${contract.release.version}`,
+                    capability.definition.errors,
+                );
+            }
+        }
         if (this.leaseMs < 3) {
             throw new TypeError("Provider operation lease duration must be at least 3 milliseconds.");
         }
@@ -46,7 +56,14 @@ export class ProviderOperationExecutor {
         if (this.#handlers.has(key)) {
             throw new Error(`Provider operation is already registered: ${contractId}/${capabilityId}`);
         }
-        this.#handlers.set(key, validatedOperationHandler(handler, errors));
+        this.#handlers.set(
+            key,
+            validatedOperationHandler(
+                handler,
+                this.options.contracts ? (version) => this.#errors.get(`${key}\0${version}`) : errors,
+                { contractId, capabilityId },
+            ),
+        );
     }
 
     async enqueue(
@@ -69,7 +86,6 @@ export class ProviderOperationExecutor {
             capabilityId,
             idempotencyKey: context.idempotencyKey,
             inputDigest: operationDigest(input, context),
-            inputDigestVersion: 2,
             input: structuredClone(input),
             context: snapshotOperationContext(context),
             status: "queued",
@@ -78,11 +94,7 @@ export class ProviderOperationExecutor {
             updatedAt: now,
         };
         const stored = await this.store.createOrGet(candidate);
-        const storedDigest =
-            stored.record.inputDigestVersion === 2
-                ? stored.record.inputDigest
-                : operationDigest(stored.record.input, stored.record.context);
-        if (storedDigest !== candidate.inputDigest) {
+        if (stored.record.inputDigest !== candidate.inputDigest) {
             throw new ProviderCapabilityDispatchError("IDEMPOTENCY_CONFLICT", 409);
         }
         void this.#execute(stored.record).catch(() => undefined);

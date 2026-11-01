@@ -86,7 +86,13 @@ test("mounts and dispatches every official CMS contract release", async () => {
                 ...(body === undefined ? {} : { body: JSON.stringify(body) }),
             });
             expect(response.status, `${contractId}/${capabilityId}`).toBe(503);
-            expect(await response.json()).toEqual({ error: { code: "CORE_UNAVAILABLE" } });
+            expect(response.headers.get("content-language")).toBe("en");
+            expect(await response.json()).toEqual({
+                error: {
+                    code: "CORE_UNAVAILABLE",
+                    output: { message: "The service is temporarily unavailable. Try again later." },
+                },
+            });
         }
         const controlResponse = await server.request("GET", "/list-provider-installations", {
             headers: {

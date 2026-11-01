@@ -5,10 +5,14 @@ test("Edge queries prepare identity, delegation and signing in one control reque
     const f = await preparedFixture();
     try {
         expect(await f.invoke()).toMatchObject({ kind: "success", output: { items: ["authorized"] } });
-        expect(f.events).toEqual(["prepare", "business", "close"]);
+        expect(f.events).toEqual(["prepare", "business"]);
         expect(f.preparations[0]).toMatchObject({
             actor: { kind: "administrator", subjectId: "cms-user", authorizationRevision: 1 },
         });
+        await f.invoke();
+        expect(f.preparations[1]!.closedDelegations).toEqual([
+            { ticket: "t".repeat(43), requestId: f.preparations[0]!.invocation.requestId },
+        ]);
         expect(f.preparations[0]!.invocation).not.toHaveProperty("subjectId");
         expect(f.preparations[0]!.invocation).not.toHaveProperty("delegation");
         expect(f.preparations[0]!.invocation).toMatchObject({
@@ -26,7 +30,7 @@ test("combined command dispatch preserves identity-before-audit and audit-before
     const f = await preparedFixture(true);
     try {
         await f.invoke();
-        expect(f.events).toEqual(["identity", "started", "prepare", "business", "completed", "close"]);
+        expect(f.events).toEqual(["identity", "started", "prepare", "business", "completed"]);
         expect(f.preparations[0]!.expectedSubjectId).toBe("alias");
         expect(f.preparations[0]!.invocation.bodyBytes).toBeGreaterThan(0);
     } finally {
@@ -39,10 +43,10 @@ test("an audience mismatch closes preparation without dispatch and refusals neve
     try {
         f.wrongAudience();
         await expect(f.invoke()).rejects.toMatchObject({ code: "transport_failure" });
-        expect(f.events).toEqual(["prepare", "close"]);
+        expect(f.events).toEqual(["prepare"]);
         f.deny();
         await expect(f.invoke()).rejects.toMatchObject({ code: "not_authorized" });
-        expect(f.events).toEqual(["prepare", "close", "prepare"]);
+        expect(f.events).toEqual(["prepare", "prepare"]);
     } finally {
         f.close();
     }

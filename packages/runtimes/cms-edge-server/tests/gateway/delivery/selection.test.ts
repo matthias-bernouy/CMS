@@ -1,12 +1,10 @@
 import { expect, test } from "bun:test";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
 import { createPublicResourceHandler } from "../../../src/runtime/resources/publicResource";
-import { publicDeliveryInvocation } from "../../../src/runtime/resources/publicDeliveryInvocation";
-import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import { ResponseCache } from "../../../src/runtime/resources/cache/ResponseCache";
 
-test("Edge chooses the admitted replacement independently of SemVer and sends headers only through context", async () => {
-    for (const version of ["1.2.0", "2.0.0"]) {
+test("Edge chooses the admitted resource capability independently of SemVer and sends headers only through context", async () => {
+    for (const version of ["1.0.0", "1.1.0"]) {
         const calls: GatewayInvocation[] = [];
         let resolutions = 0;
         const handler = createPublicResourceHandler({
@@ -55,27 +53,6 @@ test("Edge chooses the admitted replacement independently of SemVer and sends he
         expect(calls[0]?.requestContext?.resource).toEqual({ url: request.url, method: "GET" });
     }
 });
-test("legacy selection preserves its schema, metadata opt-in and validator bytes", () => {
-    const legacy = {
-        release: {
-            version: "1.1.0",
-            capabilities: [
-                {
-                    id: "delivery.resolve-path",
-                    input: { properties: { resourceMetadata: { type: "string", enum: ["cache-v1"] } } },
-                },
-            ],
-        },
-    } as unknown as AdmittedContractRelease;
-    const result = publicDeliveryInvocation(
-        new Request("https://site.test/", { headers: { "if-none-match": 'W/"v1"', range: "bytes=-12" } }),
-        legacy,
-        true,
-    );
-    expect(result.capabilityId).toBe("delivery.resolve-path");
-    expect(result.input).toMatchObject({ ifNoneMatch: 'W/"v1"', range: { end: 12 }, resourceMetadata: "cache-v1" });
-});
-
 test("a shared resource cache hit performs no contract resolution or provider invocation", async () => {
     let resolutions = 0;
     let invocations = 0;
@@ -123,5 +100,20 @@ test("invalid browser metadata is refused before Delivery resolution or invocati
         { kind: "anonymous" },
     );
     expect(response.status).toBe(400);
+    expect(calls).toBe(0);
+});
+
+test("a selected contract without the resource capability is refused before provider invocation", async () => {
+    let calls = 0;
+    const handler = createPublicResourceHandler({
+        resolveContract: async () => ({ release: { contractId: "ulvia.cms.content", capabilities: [] } }) as never,
+        invoke: async () => {
+            calls++;
+            throw new Error("Unexpected invocation");
+        },
+    });
+    await expect(handler(new Request("https://site.test/page"), { kind: "anonymous" })).rejects.toMatchObject({
+        code: "invalid_route",
+    });
     expect(calls).toBe(0);
 });

@@ -31,6 +31,7 @@ test("public resolution forwards selected bounded fields and trusted actor only"
     expect(await response.text()).toBe("ok");
     expect(calls[0]).toMatchObject({
         actor,
+        requestContext: { headers: { range: "bytes=1-2", "if-range": '"v1"' } },
         input: {
             path: "/foo",
             method: "GET",
@@ -38,15 +39,14 @@ test("public resolution forwards selected bounded fields and trusted actor only"
                 { name: "a", value: "1" },
                 { name: "a", value: "2" },
             ],
-            range: { start: 1, end: 2 },
-            ifRange: '"v1"',
         },
     });
     expect(JSON.stringify(calls[0]?.input)).not.toContain("secret");
     expect(JSON.stringify(calls[0]?.input)).not.toContain("cms-subject");
-    const invalid = await handler(new Request("https://site.test/", { headers: { range: "bytes=1-2,4-5" } }), actor);
-    expect(invalid.status).toBe(400);
-    expect(calls).toHaveLength(1);
+    const multiple = await handler(new Request("https://site.test/", { headers: { range: "bytes=1-2,4-5" } }), actor);
+    expect(multiple.status).toBe(200);
+    expect(calls).toHaveLength(2);
+    expect(calls[1]?.requestContext?.headers.range).toBe("bytes=1-2,4-5");
 });
 
 test("versioned public Content assets omit user authority while Pages, Files and ambiguous URLs remain private", async () => {
@@ -102,7 +102,7 @@ test("the public helper disables caching unless the host injects its invalidated
     const gateway = {
         resolveContract: async () => {
             negotiation++;
-            return { release: { capabilities: [] } } as never;
+            return { release: { capabilities: [{ id: "delivery.resolve-resource" }] } } as never;
         },
         invoke: async () => {
             calls++;

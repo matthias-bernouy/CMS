@@ -1,0 +1,63 @@
+import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
+import { expect, test } from "bun:test";
+import { resolve } from "node:path";
+import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { ERROR_MESSAGES } from "../../../src/dispatch/errors/catalogue";
+import { errorMessage } from "../../../src/dispatch/errors/localize";
+import { messageLanguage } from "../../../src/dispatch/errors/locale";
+import { bootstrap } from "./fixtures";
+import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+
+test("all official baseline errors have complete French and English message outputs in 1.0.0", async () => {
+    const index = await Bun.file(resolve(bootstrap, "index.json")).json();
+    const codes = new Set<string>();
+    for (const path of index.contracts) {
+        const { release } = await admitContractReleaseJson(await Bun.file(resolve(bootstrap, path)).text());
+        expect(release.version).toBe("1.0.0");
+        for (const capability of release.capabilities) {
+            for (const error of capability.errors) {
+                codes.add(error.code);
+                expect(Object.hasOwn(ERROR_MESSAGES, error.code)).toBe(true);
+                expect(error.output).toBeDefined();
+                for (const language of ["fr", "en"] as const) {
+                    const message = errorMessage(release.contractId, capability.id, error.code, language);
+                    expect(message).not.toMatch(/\{[a-z]+\}/u);
+                    expect(message.length).toBeGreaterThan(0);
+                    expect(() => validateSchemaValue(error.output!, { message })).not.toThrow();
+                }
+            }
+        }
+    }
+    expect(codes.size).toBe(34);
+});
+
+test("message languages honor weighted regional preferences and exclusions with English fallback", () => {
+    const cases = [
+        [undefined, "en"],
+        ["es,zh", "en"],
+        ["fr-CA, en;q=0.8", "fr"],
+        ["fr;q=0.2, en-GB;q=0.9", "en"],
+        ["en;q=0, *;q=0.7", "fr"],
+        ["fr;q=0, en;q=0", "en"],
+        ["fr;q=2, en;q=0.5", "en"],
+        ["fr;q=0.8,en;q=0.8", "fr"],
+        ["FR-ch", "fr"],
+    ] as const;
+    for (const [preference, expected] of cases) {
+        expect(messageLanguage(preference)).toBe(expected);
+    }
+});
+
+test("unknown reasons, missing parameters and diagnostics use a bounded safe fallback", () => {
+    const render = (reason: Parameters<typeof errorMessage>[4]) =>
+        errorMessage("ulvia.cms.content", "pages.create", "INVALID_PAGE", "fr", reason);
+    expect(render({ code: "unknown-secret", parameters: { diagnostic: "password=secret" } })).toBe(
+        "La page contient des informations invalides.",
+    );
+    expect(render({ code: "page.heading_skip" })).toBe("La page contient des informations invalides.");
+    const message = render({ code: "page.bloc_unknown", parameters: { bloc: "a\n".repeat(4096) } });
+    expect(message.length).toBeLessThan(400);
+    expect(message).not.toContain("\n");
+    const unicode = render({ code: "page.bloc_unknown", parameters: { bloc: "a" + "😀".repeat(200) } });
+    expect(() => parseStrictJson(JSON.stringify({ message: unicode }), 4096, 8)).not.toThrow();
+});

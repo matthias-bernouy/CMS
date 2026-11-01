@@ -1,3 +1,4 @@
+import { officialFailure } from "../../../dispatch/errors/failure";
 import {
     BlocRevisionConflictError,
     ContentConflictError,
@@ -9,11 +10,7 @@ import {
     publishCmsSiteBloc,
     setCmsSiteBlocArchived,
 } from "@bernouy/cms-content";
-import {
-    ProviderCapabilityDispatchError,
-    type ProviderCapabilityHandler,
-    type ProviderCapabilityRegistry,
-} from "../../../dispatch/registry";
+import { type ProviderCapabilityHandler, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import type { CmsContentDependencies } from "../../../ports";
 
 export function registerSiteBlocCapabilities(
@@ -38,16 +35,16 @@ async function siteBlocCommand(operation: () => Promise<unknown>): Promise<unkno
         return await operation();
     } catch (error) {
         if (error instanceof SiteBlocNotFoundError) {
-            throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
+            throw officialFailure("NOT_FOUND", 404, error);
         }
         if (error instanceof BlocRevisionConflictError) {
-            throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
+            throw officialFailure("REVISION_CONFLICT", 409, error);
         }
         if (error instanceof ContentConflictError) {
-            throw new ProviderCapabilityDispatchError("TAG_CONFLICT", 409);
+            throw officialFailure("TAG_CONFLICT", 409, error);
         }
         if (error instanceof ContentValidationError || error instanceof TypeError) {
-            throw new ProviderCapabilityDispatchError("INVALID_SITE_BLOC", 422);
+            throw officialFailure("INVALID_SITE_BLOC", 422, error);
         }
         throw error;
     }

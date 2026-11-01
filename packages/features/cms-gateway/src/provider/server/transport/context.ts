@@ -24,19 +24,13 @@ export function providerInvocationContext(
     const actorCredential = decodeActorCredential(encodedCredential);
     const metadata = decodeRequestContext(request.headers.get(REQUEST_CONTEXT_HEADER)) ?? requestContext(request);
     return hydrateProviderInvocationContext({
-        headers: new Headers(metadata.headers),
+        http: {
+            headers: new Headers(metadata.headers),
+            transportRequest: request,
+            ...(metadata.resource ? { resource: metadata.resource } : {}),
+        },
         requestContext: metadata,
         signal: request.signal,
-        request,
-        ...(metadata.resource?.url
-            ? {
-                  resourceRequest: new Request(metadata.resource.url, {
-                      method: metadata.resource.method,
-                      headers: metadata.headers,
-                      signal: request.signal,
-                  }),
-              }
-            : {}),
         requestId,
         ...(claims.trace ? { trace: claims.trace } : {}),
         ...(claims.actorKind ? { actorKind: claims.actorKind } : {}),

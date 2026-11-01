@@ -1,3 +1,4 @@
+import { officialFailure } from "../../../dispatch/errors/failure";
 import { listExamples, getExample } from "./examples";
 import {
     ContentValidationError,
@@ -16,11 +17,7 @@ import {
     updateCmsPageRoute,
     updateCmsPageSeo,
 } from "@bernouy/cms-content";
-import {
-    ProviderCapabilityDispatchError,
-    type ProviderCapabilityHandler,
-    type ProviderCapabilityRegistry,
-} from "../../../dispatch/registry";
+import { type ProviderCapabilityHandler, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import type { CmsContentDependencies } from "../../../ports";
 
 export function registerPageCapabilities(
@@ -33,10 +30,10 @@ export function registerPageCapabilities(
         );
     };
     dispatcher.register("ulvia.cms.content", "examples.list", (input) =>
-        pageCommand(() => listExamples(dependencies, input as never), "INVALID_PAGE"),
+        pageCommand(() => listExamples(dependencies, input as never), "INVALID_INPUT"),
     );
     dispatcher.register("ulvia.cms.content", "examples.get", (input) =>
-        pageCommand(() => getExample(dependencies, input as never), "INVALID_PAGE"),
+        pageCommand(() => getExample(dependencies, input as never), "INVALID_INPUT"),
     );
     register("list", (input) => listCmsPages(dependencies.repo, input));
     register("get", (input) => getCmsPage(dependencies.repo, input as never));
@@ -55,22 +52,22 @@ async function pageCommand(operation: () => Promise<unknown>, invalidCode: strin
         return await operation();
     } catch (error) {
         if (error instanceof CmsPageNotFoundError) {
-            throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
+            throw officialFailure("NOT_FOUND", 404, error);
         }
         if (error instanceof PageReferencedError) {
-            throw new ProviderCapabilityDispatchError("PAGE_REFERENCED", 409);
+            throw officialFailure("PAGE_REFERENCED", 409, error);
         }
         if (error instanceof PageRevisionConflictError) {
-            throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
+            throw officialFailure("REVISION_CONFLICT", 409, error);
         }
         if (error instanceof DuplicatePagePathError) {
-            throw new ProviderCapabilityDispatchError("PATH_CONFLICT", 409);
+            throw officialFailure("PATH_CONFLICT", 409, error);
         }
         if (typeof error === "object" && error && "status" in error && error.status === 423) {
-            throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+            throw officialFailure("CORE_UNAVAILABLE", 503, error);
         }
-        if (error instanceof ContentValidationError || error instanceof TypeError) {
-            throw new ProviderCapabilityDispatchError(invalidCode, 422);
+        if (error instanceof ContentValidationError) {
+            throw officialFailure(invalidCode, 422, error);
         }
         throw error;
     }

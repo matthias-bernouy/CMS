@@ -23,7 +23,7 @@ async function fixture() {
 
 test("official observability exposes only three administrator read tools with bounded filter schemas", async () => {
     const { release, binding } = await fixture();
-    expect(release.release.version).toBe("1.1.0");
+    expect(release.release.version).toBe("1.0.0");
     const { tools } = await binding.list(context);
     expect(tools.map(({ name }) => name)).toEqual([
         "observability_logs_aggregate",

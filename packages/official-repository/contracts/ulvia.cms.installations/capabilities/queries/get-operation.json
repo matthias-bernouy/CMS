@@ -83,6 +83,17 @@
                     }
                 },
                 "required": ["upgradeId", "status"]
+            },
+            "errorOutput": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
             }
         },
         "required": ["operationId", "capabilityId", "status", "revision", "createdAt", "updatedAt"]
@@ -90,15 +101,48 @@
     "errors": [
         {
             "code": "NOT_FOUND",
-            "retryable": false
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
         },
         {
             "code": "INVALID_INPUT",
-            "retryable": false
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
         },
         {
             "code": "CORE_UNAVAILABLE",
-            "retryable": true
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
         }
     ],
     "bindings": [

@@ -3,10 +3,7 @@ import { signProviderInvocationToken, verifyProviderInvocationToken } from "@ber
 import { gatewayRoute } from "../../../../../features/cms-gateway/tests/fixtures";
 import { ControlProviderClient } from "../../../src/runtime/gateway/ControlProviderClient";
 import { InstallationsProviderTransport } from "../../../src/runtime/gateway/InstallationsProviderTransport";
-import {
-    PREPARED_INSTALLATIONS_CONTRACT,
-    MACHINE_INSTALLATIONS_CONTRACT,
-} from "../../../src/runtime/gateway/fetchProviderReport";
+import { INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/fetchProviderReport";
 import { createEdgeGateway } from "../../../src/runtime/gateway/createEdgeGateway";
 
 export async function preparedFixture(command = false, settled?: () => void, machine = false) {
@@ -73,7 +70,7 @@ export async function preparedFixture(command = false, settled?: () => void, mac
                 if (path !== (machine ? "/gateway/providers/prepare" : "/gateway/dispatch/prepare")) {
                     throw new Error("Unexpected control request: " + path);
                 }
-                expect(new Headers(init?.headers).get("x-ulvia-contract-version")).toBe(machine ? "1.2.0" : "1.1.0");
+                expect(new Headers(init?.headers).get("x-ulvia-contract-version")).toBe("1.0.0");
                 events.push(machine ? "machine-prepare" : "prepare");
                 preparations.push(input);
                 if (status !== 200) {
@@ -101,11 +98,7 @@ export async function preparedFixture(command = false, settled?: () => void, mac
             }) as typeof fetch,
         );
         const gateway = createEdgeGateway(
-            new ControlProviderClient(
-                transport,
-                undefined,
-                machine ? MACHINE_INSTALLATIONS_CONTRACT : PREPARED_INSTALLATIONS_CONTRACT,
-            ),
+            new ControlProviderClient(transport, undefined, INSTALLATIONS_CONTRACT),
             undefined,
             settled,
         );

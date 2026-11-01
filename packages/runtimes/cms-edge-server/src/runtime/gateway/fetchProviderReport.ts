@@ -7,35 +7,22 @@ import type { InstallationsProviderTransport } from "./InstallationsProviderTran
 export const INSTALLATIONS_CONTRACT = {
     contractId: "ulvia.cms.installations",
     version: "1.0.0",
-    digest: "sha256:4f2526f8db9a93b942db94a09cd0a0666c4b243bc496f770bf287ba4a8152608",
+    digest: "sha256:cfb6892bba3bdfff585a75ad20191d129d71c1b1de5ccdd71de6b49e65f9115e",
 } as const;
 
 export type InstallationsControlContract = Readonly<{ contractId: string; version: string; digest: string }>;
-export const PREPARED_INSTALLATIONS_CONTRACT: InstallationsControlContract = {
-    contractId: "ulvia.cms.installations",
-    version: "1.1.0",
-    digest: "sha256:e66c8a3bda74f0eebca19391556683e553bc727bab6953707be20d8a80151cb3",
-};
-
-export const MACHINE_INSTALLATIONS_CONTRACT: InstallationsControlContract = {
-    contractId: "ulvia.cms.installations",
-    version: "1.2.0",
-    digest: "sha256:58e2ea89d4cbf5d0a86100b4f30165400cf05d866fa877446ccc98be2574a4d8",
-};
-
 export function installationsControlContract(report: ProviderRuntimeReport): InstallationsControlContract {
-    for (const contract of [MACHINE_INSTALLATIONS_CONTRACT, PREPARED_INSTALLATIONS_CONTRACT, INSTALLATIONS_CONTRACT]) {
-        if (
-            report.implementations.some(
-                (candidate) =>
-                    candidate.contractId === contract.contractId &&
-                    candidate.version === contract.version &&
-                    candidate.digest === contract.digest &&
-                    candidate.status === "ready",
-            )
-        ) {
-            return contract;
-        }
+    const contract = INSTALLATIONS_CONTRACT;
+    if (
+        report.implementations.some(
+            (candidate) =>
+                candidate.contractId === contract.contractId &&
+                candidate.version === contract.version &&
+                candidate.digest === contract.digest &&
+                candidate.status === "ready",
+        )
+    ) {
+        return contract;
     }
     throw new Error("Installations Provider does not expose the compatible control contract");
 }

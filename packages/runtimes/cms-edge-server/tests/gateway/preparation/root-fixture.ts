@@ -1,6 +1,6 @@
 import { ControlProviderClient } from "../../../src/runtime/gateway/ControlProviderClient";
 import { InstallationsProviderTransport } from "../../../src/runtime/gateway/InstallationsProviderTransport";
-import { MACHINE_INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/fetchProviderReport";
+import { INSTALLATIONS_CONTRACT } from "../../../src/runtime/gateway/fetchProviderReport";
 export function fixture() {
     const calls: { path: string; input: any }[] = [];
     let fail = false;
@@ -35,7 +35,7 @@ export function fixture() {
             }) as typeof fetch,
         ),
         undefined,
-        MACHINE_INSTALLATIONS_CONTRACT,
+        INSTALLATIONS_CONTRACT,
     );
     const prepare = (reserveRoot = true) => {
         const requestId = crypto.randomUUID();

@@ -1,3 +1,4 @@
+import { operationFailureOutput, operationErrorLanguage } from "./messages";
 import { randomUUID } from "node:crypto";
 import { ProviderCapabilityDispatchError } from "../dispatch/registry";
 import type { ProviderOperationHandler, ProviderOperationRecord, ProviderOperationStore } from "./types";
@@ -34,7 +35,14 @@ export async function runProviderOperation(
     }
     if (!handler) {
         reportFailure(options, record, "handler-unavailable", "OPERATION_HANDLER_UNAVAILABLE", 0);
-        await store.fail(record.id, token, "OPERATION_HANDLER_UNAVAILABLE", options.now().toISOString());
+        await store.fail(
+            record.id,
+            token,
+            "OPERATION_HANDLER_UNAVAILABLE",
+            options.now().toISOString(),
+            operationFailureOutput(record, "OPERATION_HANDLER_UNAVAILABLE"),
+            operationErrorLanguage(record),
+        );
         return;
     }
     const startedAt = performance.now();
@@ -48,7 +56,6 @@ export async function runProviderOperation(
             record.input,
             hydrateProviderInvocationContext({
                 ...record.context,
-                headers: new Headers(record.context.requestContext?.headers),
                 signal: execution.signal,
             }),
             execution,
@@ -77,7 +84,7 @@ export async function runProviderOperation(
         } else {
             reportFailure(options, record, "handler-failed", code, performance.now() - startedAt, error);
         }
-        let output: unknown;
+        let output: unknown = operationFailureOutput(record, code);
         if (error instanceof ProviderCapabilityDispatchError && error.output !== undefined) {
             try {
                 const bytes = canonicalIJsonBytes(error.output);
@@ -86,11 +93,25 @@ export async function runProviderOperation(
                 }
                 output = JSON.parse(new TextDecoder().decode(bytes));
             } catch {
-                await store.fail(record.id, token, "OPERATION_FAILED", options.now().toISOString());
+                await store.fail(
+                    record.id,
+                    token,
+                    "OPERATION_FAILED",
+                    options.now().toISOString(),
+                    operationFailureOutput(record, "OPERATION_FAILED"),
+                    operationErrorLanguage(record),
+                );
                 return;
             }
         }
-        await store.fail(record.id, token, code, options.now().toISOString(), output);
+        await store.fail(
+            record.id,
+            token,
+            code,
+            options.now().toISOString(),
+            output,
+            operationErrorLanguage(record, error),
+        );
     } finally {
         heartbeatAbort.abort();
         await heartbeat;

@@ -126,11 +126,33 @@
     "errors": [
         {
             "code": "NOT_FOUND",
-            "retryable": false
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
         },
         {
             "code": "CORE_UNAVAILABLE",
-            "retryable": true
+            "retryable": true,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
         }
     ],
     "bindings": [

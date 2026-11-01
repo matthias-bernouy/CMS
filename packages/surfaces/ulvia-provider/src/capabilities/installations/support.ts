@@ -1,3 +1,4 @@
+import { officialFailure } from "../../dispatch/errors/failure";
 import { ProviderCapabilityDispatchError } from "../../dispatch/registry";
 import type { CollectionUpgradeTarget } from "@bernouy/cms-repository/collections/installations";
 import {
@@ -37,16 +38,16 @@ export async function collectionCommand<T>(operation: () => Promise<T>): Promise
         }
         const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
         if (status === 404) {
-            throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
+            throw officialFailure("NOT_FOUND", 404, error);
         }
         if (status === 409) {
-            throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
+            throw officialFailure("REVISION_CONFLICT", 409, error);
         }
         if (status === 423) {
-            throw new ProviderCapabilityDispatchError("UPGRADE_IN_PROGRESS", 423);
+            throw officialFailure("UPGRADE_IN_PROGRESS", 423, error);
         }
         if (error instanceof TypeError || error instanceof RangeError || status === 400 || status === 422) {
-            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+            throw officialFailure("INVALID_INPUT", 422, error);
         }
         throw error;
     }

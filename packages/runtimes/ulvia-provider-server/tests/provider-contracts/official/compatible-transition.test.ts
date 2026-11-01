@@ -14,11 +14,11 @@ let base:
       }>
     | undefined;
 async function baseFixture() {
-    const repository = await repositoryFixture(true);
+    const repository = await repositoryFixture();
     return { repository, profiles: await loadOfficialArtifacts(repository.providers, repository.collections) };
 }
 
-// Four retained profiles and two complete collections are fixture admission work, not request latency.
+// Admit the official baseline once; future releases in this test are synthetic.
 beforeAll(async () => {
     base ??= baseFixture();
     await base;
@@ -28,9 +28,9 @@ async function fixture(change: (release: ContractRelease) => ContractRelease = (
     const { repository: f, profiles } = await (base ??= baseFixture());
     const before = profiles.profiles[0]!.contracts.find(({ contractId }) => contractId === "ulvia.cms.observability")!;
     const source = f.contracts.find(
-        ({ release }) => release.contractId === before.contractId && release.version === "1.1.0",
+        ({ release }) => release.contractId === before.contractId && release.version === "1.0.0",
     )!;
-    const admission = await admitContractRelease(change(source.release));
+    const admission = await admitContractRelease(change({ ...source.release, version: "1.1.0" }));
     const after = {
         contractId: admission.release.contractId,
         version: admission.release.version,

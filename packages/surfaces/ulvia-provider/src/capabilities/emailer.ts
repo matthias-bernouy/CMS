@@ -1,3 +1,4 @@
+import { officialFailure } from "../dispatch/errors/failure";
 import {
     SmtpEmailConfigurationError,
     type SmtpEmailerAdministration,
@@ -63,12 +64,12 @@ async function emailerCall<T>(operation: () => Promise<T>): Promise<T> {
             throw error;
         }
         if (isEmailDeliveryDisabledError(error)) {
-            throw new ProviderCapabilityDispatchError("EMAIL_DISABLED", 409);
+            throw officialFailure("EMAIL_DISABLED", 409, error);
         }
         if (error instanceof SmtpEmailConfigurationError) {
-            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+            throw officialFailure("INVALID_INPUT", 422, error);
         }
-        throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+        throw officialFailure("CORE_UNAVAILABLE", 503, error);
     }
 }
 

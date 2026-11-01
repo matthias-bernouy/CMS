@@ -38,7 +38,7 @@ export function createEdgeGateway(
         // every short-lived invocation token. That broker is the dispatch
         // fence; the cached route is only a transport plan.
         transportFencesRoute: true,
-        ...(control.supportsPreparation ? { dispatch: preparedEdgeDispatch(control, routes) } : {}),
+        dispatch: preparedEdgeDispatch(control, routes),
         authorize: async (actor, capability, route) =>
             actor.kind === "provider"
                 ? control.authorizeProvider({
@@ -116,9 +116,7 @@ export function createEdgeGateway(
             return [...contracts.values()];
         },
         invoker: gateway,
-        invokeProvider: control.supportsMachinePreparation
-            ? machineInvocation(control, routes, gatewayOptions, makeTransport)
-            : undefined,
+        invokeProvider: machineInvocation(control, routes, gatewayOptions, makeTransport),
         authenticateProvider: (token: string) => control.authenticateProvider(token),
         resolveCapability,
         resolveActor: (request: Request) => resolveActor(gateway, request),

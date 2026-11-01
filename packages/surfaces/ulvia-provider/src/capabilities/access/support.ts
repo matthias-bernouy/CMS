@@ -1,3 +1,4 @@
+import { officialFailure } from "../../dispatch/errors/failure";
 import type { TUser } from "@bernouy/cms-auth";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityInvocationContext } from "../../dispatch/registry";
 import type { UlviaProviderGateway } from "../../ports";
@@ -41,9 +42,9 @@ export async function accessCommand<T>(operation: () => Promise<T>): Promise<T> 
         }
         const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
         if (status === 409) {
-            throw new ProviderCapabilityDispatchError("REVISION_CONFLICT", 409);
+            throw officialFailure("REVISION_CONFLICT", 409, error);
         }
-        throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+        throw officialFailure("INVALID_INPUT", 422, error);
     }
 }
 

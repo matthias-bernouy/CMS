@@ -1,3 +1,4 @@
+import { officialFailure } from "../../dispatch/errors/failure";
 import { deleteUserCompletely } from "@bernouy/cms-auth/management";
 import {
     capabilityResponse,
@@ -192,7 +193,7 @@ async function accountAction<T>(action: () => Promise<T>): Promise<T> {
             throw error;
         }
         if (error && typeof error === "object" && "status" in error && Number(error.status) === 400) {
-            throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
+            throw officialFailure("INVALID_INPUT", 422, error);
         }
         throw error;
     }

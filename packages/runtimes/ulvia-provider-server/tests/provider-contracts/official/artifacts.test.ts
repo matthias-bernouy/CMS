@@ -8,7 +8,7 @@ test("builds the official profile from verified repository releases", async () =
     const loaded = await loadOfficialArtifacts(fixture.providers, fixture.collections);
 
     expect(loaded.profiles).toEqual([loaded.defaultProfile]);
-    expect(loaded.defaultProfile.version).toBe("1.4.0");
+    expect(loaded.defaultProfile.version).toBe("1.0.0");
     expect(loaded.defaultProfile.manifest.digest).toBe(fixture.manifestDigest);
     expect(loaded.defaultProfile.collection.digest).toBe(fixture.collectionDigest);
     expect(loaded.defaultProfile.contracts).toEqual(
@@ -39,29 +39,17 @@ test("rejects repository metadata that does not match the official bytes", async
     await expect(loadOfficialArtifacts(providers, fixture.collections)).rejects.toThrow("digest mismatch");
 });
 
-test("retains published profile 1.0.0 while upgrading the exact observability selection", async () => {
-    const fixture = await repositoryFixture(true);
+test("the official baseline contains one profile and one version of every contract", async () => {
+    const fixture = await repositoryFixture();
     const loaded = await loadOfficialArtifacts(fixture.providers, fixture.collections);
-    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.0.0", "1.1.0", "1.2.0", "1.3.0", "1.4.0"]);
-    expect(loaded.defaultProfile.version).toBe("1.4.0");
-    expect(loaded.defaultProfile.upgradeFromVersions).toEqual(["1.0.0", "1.1.0", "1.2.0", "1.3.0"]);
-    const previous = loaded.profiles[0]!;
-    const current = loaded.defaultProfile;
-    expect(previous.manifest.version).toBe("0.1.0");
-    expect(previous.contracts.find(({ contractId }) => contractId === "ulvia.cms.observability")).toMatchObject({
-        version: "1.0.0",
-        digest: "sha256:2cb491b040262a9993e52733ab58437779b529471b4df461bae036863943c498",
-    });
-    expect(current.manifest.version).toBe("0.5.0");
-    expect(current.contracts.find(({ contractId }) => contractId === "ulvia.cms.observability")).toMatchObject({
-        version: "1.1.0",
-    });
-    expect(current.collection.version).toBe("1.1.0");
-    expect(current.collection.digest).toBe(fixture.collectionDigest);
-    expect(previous.collection.digest).toBe("sha256:7384c6a73f8879f03cc0023193112ce48bf890ae0137f683056e55480dd21bc7");
-    expect(
-        loaded.contracts
-            .filter(({ release }) => release.contractId === "ulvia.cms.observability")
-            .map(({ release }) => release.version),
-    ).toEqual(["1.0.0", "1.1.0"]);
-}, 15_000);
+    expect(loaded.profiles.map(({ version }) => version)).toEqual(["1.0.0"]);
+    expect(loaded.defaultProfile.upgradeFromVersions).toEqual([]);
+    expect(loaded.defaultProfile.manifest.version).toBe("1.0.0");
+    expect(loaded.defaultProfile.collection.version).toBe("1.0.0");
+    expect(fixture.contracts).toHaveLength(11);
+    expect(fixture.contracts.every(({ release }) => release.version === "1.0.0")).toBe(true);
+    const content = loaded.contracts.find(({ release }) => release.contractId === "ulvia.cms.content")!;
+    expect(content.capabilities.some(({ definition }) => definition.deprecation)).toBe(false);
+    expect(content.capabilities.some(({ definition }) => definition.id === "delivery.resolve-resource")).toBe(true);
+    expect(content.capabilities.some(({ definition }) => definition.id === "delivery.resolve-path")).toBe(false);
+});

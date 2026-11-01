@@ -19,23 +19,15 @@ export type IssuedProviderInvocation = Readonly<{
 
 export class ControlProviderClient {
     readonly delegations: ControlDelegationAuthority;
-    private readonly roots?: TrackedDelegationRoots;
+    private readonly roots = new TrackedDelegationRoots();
     constructor(
         private readonly transport: InstallationsProviderTransport,
         private readonly logger?: Logger,
         private readonly contract: InstallationsControlContract = INSTALLATIONS_CONTRACT,
     ) {
-        this.roots = this.contract.version === "1.2.0" ? new TrackedDelegationRoots() : undefined;
         this.delegations = new ControlDelegationAuthority((...args) => this.invoke(...args), this.roots);
     }
 
-    get supportsPreparation(): boolean {
-        return this.contract.version === "1.1.0" || this.contract.version === "1.2.0";
-    }
-
-    get supportsMachinePreparation(): boolean {
-        return this.contract.version === "1.2.0";
-    }
     async prepareProviderDispatch(input: ProviderMachinePreparation): Promise<PreparedProviderMachine> {
         return this.withClosures(input, async (value) => {
             const response = requiredResponse(
@@ -99,19 +91,19 @@ export class ControlProviderClient {
         accepted?: (value: Result, reservation: symbol | undefined) => Promise<void>,
         reserveRoot = false,
     ): Promise<Result> {
-        const batch = this.roots?.batch() ?? [];
+        const batch = this.roots.batch();
         let reservation: symbol | undefined;
         try {
-            reservation = reserveRoot ? this.roots?.reserve(batch) : undefined;
+            reservation = reserveRoot ? this.roots.reserve(batch) : undefined;
             const result = await load({ ...input, ...(batch.length ? { closedDelegations: batch } : {}) });
-            this.roots?.acknowledge(batch);
+            this.roots.acknowledge(batch);
             await accepted?.(result, reservation);
             return result;
         } catch (error) {
-            this.roots?.release(batch);
+            this.roots.release(batch);
             throw error;
         } finally {
-            this.roots?.releaseReservation(reservation);
+            this.roots.releaseReservation(reservation);
         }
     }
 

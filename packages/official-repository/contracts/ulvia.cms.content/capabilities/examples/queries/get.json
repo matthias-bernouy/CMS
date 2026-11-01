@@ -49,8 +49,19 @@
     },
     "errors": [
         {
-            "code": "INVALID_PAGE",
-            "retryable": false
+            "code": "INVALID_INPUT",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
         }
     ],
     "bindings": [
@@ -66,7 +77,7 @@
                 "successStatuses": [200],
                 "contentTypes": ["application/json"],
                 "errorStatuses": {
-                    "INVALID_PAGE": 422
+                    "INVALID_INPUT": 422
                 }
             }
         },

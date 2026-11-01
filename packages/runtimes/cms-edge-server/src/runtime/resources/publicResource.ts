@@ -18,11 +18,11 @@ export function createPublicResourceHandler(
         }
         return cache.handle(
             request,
-            async (request, cacheFill) => {
+            async (request) => {
                 try {
                     const context = readGatewayRequestContext(request, true);
                     const contract = await resolveDeliveryContract(gateway);
-                    const selected = publicDeliveryInvocation(request, contract, cacheFill);
+                    const selected = publicDeliveryInvocation(request);
                     const result = await gateway.invoke({
                         siteId: "default",
                         contractId: contract?.release.contractId ?? "ulvia.cms.content",

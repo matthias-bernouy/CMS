@@ -1,4 +1,3 @@
-import { historicalContracts, historicalManifests } from "./history";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
@@ -10,7 +9,7 @@ import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy
 
 const ROOT = resolve(import.meta.dir, "../../../../ulvia-cli/dist/bootstrap");
 
-export async function repositoryFixture(includePrevious = false) {
+export async function repositoryFixture() {
     const index = JSON.parse(await readFile(resolve(ROOT, "index.json"), "utf8")) as {
         contracts: string[];
         provider: string;
@@ -23,9 +22,6 @@ export async function repositoryFixture(includePrevious = false) {
     const admissions = await Promise.all(
         index.contracts.map(async (path) => admitContractReleaseJson(await readFile(resolve(ROOT, path)))),
     );
-    if (includePrevious) {
-        admissions.unshift(...(await historicalContracts(admissions)));
-    }
     const contractDigests = new Map(admissions.map(({ release, digest }) => [release.contractId, digest]));
     await publishContractSet(catalogue, admissions);
     for (const admission of admissions) {
@@ -46,9 +42,6 @@ export async function repositoryFixture(includePrevious = false) {
     const manifestBytes = await readFile(resolve(ROOT, index.provider));
     const manifest = await admitProviderManifestJson(manifestBytes, catalogue);
     const manifests = [manifest];
-    if (includePrevious) {
-        manifests.push(...(await historicalManifests(manifest.canonicalJson, catalogue, admissions)));
-    }
     for (const admitted of manifests) {
         entries.push({
             repositoryId: "official",
@@ -69,10 +62,6 @@ export async function repositoryFixture(includePrevious = false) {
         index.collectionAssets.map(async ({ id, path }) => ({ id, bytes: await readFile(resolve(ROOT, path)) })),
     );
     const collection = await admitCollectionRelease(collectionValue, collectionAssets, { contracts: catalogue });
-    const historicalCollection = includePrevious ? { ...collectionValue, version: "1.0.0" } : undefined;
-    const previousCollection = historicalCollection
-        ? await admitCollectionRelease(historicalCollection, collectionAssets, { contracts: catalogue })
-        : undefined;
     const providers: ProviderRepositorySource = {
         id: "official",
         list: async (kind) => entries.filter((entry) => entry.kind === kind),
@@ -81,20 +70,6 @@ export async function repositoryFixture(includePrevious = false) {
     const collections: CollectionRepositorySource = {
         id: "official",
         list: async () => [
-            ...(previousCollection
-                ? [
-                      {
-                          repositoryId: "official",
-                          publisherId: previousCollection.release.publisherId,
-                          collectionId: previousCollection.release.collectionId,
-                          version: previousCollection.release.version,
-                          digest: previousCollection.digest,
-                          name: previousCollection.release.name,
-                          blocCount: previousCollection.release.blocs.length,
-                          hasTheme: true,
-                      },
-                  ]
-                : []),
             {
                 repositoryId: "official",
                 publisherId: collection.release.publisherId,
@@ -107,10 +82,9 @@ export async function repositoryFixture(includePrevious = false) {
                 hasTheme: collection.release.theme !== undefined,
             },
         ],
-        getMetadata: async (reference) =>
-            reference.version === "1.0.0" && historicalCollection ? historicalCollection : collectionValue,
-        get: async (reference) => ({
-            release: reference.version === "1.0.0" && historicalCollection ? historicalCollection : collectionValue,
+        getMetadata: async () => collectionValue,
+        get: async () => ({
+            release: collectionValue,
             assets: collectionAssets,
         }),
     };

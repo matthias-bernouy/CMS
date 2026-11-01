@@ -89,7 +89,14 @@ export class MemoryProviderOperationStore implements ProviderOperationStore {
         }));
     }
 
-    fail(id: string, token: string, errorCode: string, now: string, errorOutput?: unknown): Promise<boolean> {
+    fail(
+        id: string,
+        token: string,
+        errorCode: string,
+        now: string,
+        errorOutput?: unknown,
+        errorContentLanguage?: string,
+    ): Promise<boolean> {
         return this.#ownedUpdate(id, token, (record) => ({
             ...record,
             status: "failed",
@@ -97,6 +104,7 @@ export class MemoryProviderOperationStore implements ProviderOperationStore {
             updatedAt: now,
             errorCode,
             ...(errorOutput === undefined ? {} : { errorOutput: structuredClone(errorOutput) }),
+            ...(errorContentLanguage ? { errorContentLanguage } : {}),
             lease: undefined,
         }));
     }

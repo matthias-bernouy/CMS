@@ -1,3 +1,4 @@
+import { operationLanguage, operationMessage } from "../../operations/messages";
 import type { ProviderOperationExecutor } from "../../operations/ProviderOperationExecutor";
 import type { ProviderOperationRecord } from "../../operations/types";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityRegistry } from "../../dispatch/registry";
@@ -35,7 +36,10 @@ export function registerCollectionOperationCapabilities(
         if (!operation || operation.contractId !== CONTRACT_ID) {
             throw new ProviderCapabilityDispatchError("NOT_FOUND", 404);
         }
-        return projectOperation(operation, true);
+        const detail = projectOperation(operation, true);
+        return operation.status === "failed"
+            ? Response.json(detail, { headers: { "content-language": operationLanguage(operation) } })
+            : detail;
     });
 }
 
@@ -48,6 +52,7 @@ function projectOperation(operation: ProviderOperationRecord, detailed: boolean)
         createdAt: operation.createdAt,
         updatedAt: operation.updatedAt,
         ...(operation.errorCode ? { errorCode: operation.errorCode } : {}),
+        ...(detailed && operation.errorCode ? { errorOutput: operationMessage(operation) } : {}),
         ...(detailed && operation.result !== undefined ? { result: structuredClone(operation.result) } : {}),
     };
 }

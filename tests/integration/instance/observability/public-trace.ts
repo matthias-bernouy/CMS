@@ -37,7 +37,7 @@ export async function verifyPublicTrace(
             (entry: { event: string; capabilityId?: string; service: string }) =>
                 entry.service === "cms-edge" &&
                 entry.event === "gateway.invocation.completed" &&
-                entry.capabilityId === "delivery.resolve-path",
+                entry.capabilityId === "delivery.resolve-resource",
         );
         const content = result.items.find(
             (entry: { event: string; parentInvocationId?: string }) =>
@@ -64,7 +64,7 @@ export async function verifyPublicTrace(
             (entry: { event: string; capabilityId?: string; service: string }) =>
                 entry.service === "cms-edge" &&
                 entry.event === "gateway.invocation.completed" &&
-                entry.capabilityId === "delivery.resolve-path",
+                entry.capabilityId === "delivery.resolve-resource",
         );
         const warmContent = warmResult.items.find(
             (entry: { event: string; parentInvocationId?: string }) =>

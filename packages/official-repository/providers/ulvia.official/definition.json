@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia.official",
     "name": "Ulvia Provider",
-    "version": "0.5.0",
+    "version": "1.0.0",
     "provenance": {
         "publisherId": "ulvia.official",
         "publishedAt": "2026-10-30T00:00:00Z"
@@ -31,7 +31,7 @@
         {
             "contractId": "ulvia.cms.access",
             "version": "1.0.0",
-            "digest": "sha256:ef8e151b44f61d5d6f8ba7c8de241353eeaa7e58887c2454c284a5b01a307f23",
+            "digest": "sha256:be92bdcaf55af05a0890fd318154e8d34f9c33e607a35b0432ae5827bc070ba5",
             "requires": [
                 {
                     "contractId": "ulvia.cms.emailer",
@@ -43,8 +43,8 @@
         },
         {
             "contractId": "ulvia.cms.installations",
-            "version": "1.2.0",
-            "digest": "sha256:58e2ea89d4cbf5d0a86100b4f30165400cf05d866fa877446ccc98be2574a4d8",
+            "version": "1.0.0",
+            "digest": "sha256:cfb6892bba3bdfff585a75ad20191d129d71c1b1de5ccdd71de6b49e65f9115e",
             "requires": [
                 {
                     "contractId": "ulvia.cms.secrets",
@@ -80,8 +80,8 @@
         },
         {
             "contractId": "ulvia.cms.content",
-            "version": "1.2.0",
-            "digest": "sha256:308a8a093457a9d545f37cd891fc9cee6e6cdbf6958162c293bd2ecaa319693c",
+            "version": "1.0.0",
+            "digest": "sha256:0e9cf80bd3622ac5566f79bbf7391610fa3b6710c7defb1d341d13643cf106ae",
             "requires": [
                 {
                     "contractId": "ulvia.cms.installations",
@@ -91,7 +91,7 @@
                 }
             ],
             "delegation": {
-                "sources": ["delivery.resolve-path", "delivery.resolve-resource"],
+                "sources": ["delivery.resolve-resource"],
                 "allow": [
                     {
                         "contractId": "*",
@@ -105,7 +105,7 @@
         {
             "contractId": "ulvia.cms.emailer.smtp",
             "version": "1.0.0",
-            "digest": "sha256:fb41849cc77835e0ddbc2483e86214928f3bd05e10ad9a7796cce671c7a754a6",
+            "digest": "sha256:73d52f5bc3bdfbce8dfa91e98536908f264fece5eac3f68f662dba585b3a8838",
             "requires": [
                 {
                     "contractId": "ulvia.cms.secrets",
@@ -136,7 +136,7 @@
         {
             "contractId": "ulvia.cms.files",
             "version": "1.0.0",
-            "digest": "sha256:85b173258327e931fdf59add73e1762f3606e024e95501b4138ec43bee66832d",
+            "digest": "sha256:c296ff5cc599f2a48e56a5ee1f6e881749b58136fd1e5386b4609207eaf322fc",
             "requires": [
                 {
                     "contractId": "ulvia.cms.secrets",
@@ -167,25 +167,25 @@
         {
             "contractId": "ulvia.cms.secrets",
             "version": "1.0.0",
-            "digest": "sha256:81a3c7da566eb88945a61c5aa8baf7f194ad2d1b3c06bdbe8030ec20efda14e2",
+            "digest": "sha256:757c2d149ee4a80bc60111eb440a0d0cb331ab638bfc8ca8eace5cf774eecaa4",
             "requires": []
         },
         {
             "contractId": "ulvia.cms.repository",
             "version": "1.0.0",
-            "digest": "sha256:279696d5f42bfd95d49a8fee59a34ffa4b67eed5cfb90700d9e365a6fed0a2a6",
+            "digest": "sha256:757bf6a335f99e77d6acde1dad9e856c71b34ce409d8a983445d9187f05cf99a",
             "requires": []
         },
         {
             "contractId": "ulvia.cms.observability",
-            "version": "1.1.0",
-            "digest": "sha256:5afc7d53dc3d600155c9952e567b6a22a1b0bdae390fce3072175e9e925b9843",
+            "version": "1.0.0",
+            "digest": "sha256:16e0edbc78b7337655858c45afeb9b9200a9cdfafb5a80d6572864a4f8937073",
             "requires": []
         },
         {
             "contractId": "ulvia.provider.connections",
             "version": "1.0.0",
-            "digest": "sha256:68981ce5d98c792b6892625a8505c2b0bc0f2e333d6bc48db9029a4bb9db71c7",
+            "digest": "sha256:7acd429e759835e8c037f4f83e5d1a0f29d1b7ffa0e110d7375789da7ac97cba",
             "requires": []
         }
     ],

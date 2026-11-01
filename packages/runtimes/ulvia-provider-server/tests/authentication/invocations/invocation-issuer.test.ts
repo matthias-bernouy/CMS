@@ -135,7 +135,7 @@ test("delegated signing derives the alias from the live actor and never falls ba
 });
 
 test("Edge system cannot invoke user-scoped Content resolution", async () => {
-    const f = await fixture({ contractId: "ulvia.cms.content", capabilityId: "delivery.resolve-path" });
+    const f = await fixture({ contractId: "ulvia.cms.content", capabilityId: "delivery.resolve-resource" });
     const { sourceInstallationId: _, sourceCredentialFingerprint: _proof, ...root } = f.input;
     await expect(f.issue({ ...root, systemServiceId: "cms-edge" })).rejects.toMatchObject({ status: 403 });
 });

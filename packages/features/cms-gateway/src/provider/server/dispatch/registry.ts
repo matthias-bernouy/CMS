@@ -8,13 +8,7 @@ import { hydrateProviderInvocationContext, type ProviderHttpContext } from "./ht
 /** Verified invocation metadata. Site and provider identity are injected by the runtime. */
 export interface ProviderCapabilityInvocationContext {
     readonly http?: ProviderHttpContext;
-    /** @deprecated Use http.headers. */
-    readonly headers?: Headers;
     readonly signal?: AbortSignal;
-    /** @deprecated Use http.transportRequest for transport diagnostics. */
-    readonly request?: Request;
-    /** @deprecated Use http.resource, which remains present when its optional URL is omitted. */
-    readonly resourceRequest?: Request;
     /** Serializable transport snapshot; use http.headers in handlers. */
     readonly requestContext?: GatewayRequestContext;
     readonly trace?: TraceContext;
@@ -43,7 +37,6 @@ export type ProviderCapabilityHandler = (
     input: Readonly<Record<string, unknown>>,
     context: ProviderCapabilityInvocationContext & {
         readonly http: ProviderHttpContext;
-        readonly headers: Headers;
         readonly signal: AbortSignal;
     },
 ) => Promise<unknown>;

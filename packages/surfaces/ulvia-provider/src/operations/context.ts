@@ -5,15 +5,7 @@ import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
 import type { ProviderOperationContext } from "./types";
 
 export function snapshotOperationContext(context: ProviderCapabilityInvocationContext): ProviderOperationContext {
-    const {
-        http: _http,
-        headers: _headers,
-        signal: _signal,
-        request: _request,
-        resourceRequest: _resourceRequest,
-        binaryBody,
-        ...durable
-    } = context;
+    const { http: _http, signal: _signal, binaryBody, ...durable } = context;
     if (binaryBody) {
         throw new TypeError("Durable operations cannot persist a live binary stream");
     }
@@ -22,7 +14,7 @@ export function snapshotOperationContext(context: ProviderCapabilityInvocationCo
               headers: Object.fromEntries(context.http.headers),
               ...(context.http.resource ? { resource: context.http.resource } : {}),
           }
-        : (context.requestContext ?? (context.headers ? { headers: Object.fromEntries(context.headers) } : undefined));
+        : context.requestContext;
     const result = {
         ...durable,
         ...(requestContext ? { requestContext: snapshotRequestContext(requestContext) } : {}),
@@ -33,9 +25,7 @@ export function operationDigest(
     input: Readonly<Record<string, unknown>>,
     context: ProviderCapabilityInvocationContext,
 ): string {
-    const headers = context.http
-        ? Object.fromEntries(context.http.headers)
-        : (context.requestContext?.headers ?? (context.headers ? Object.fromEntries(context.headers) : {}));
+    const headers = context.http ? Object.fromEntries(context.http.headers) : (context.requestContext?.headers ?? {});
     // Presentation and cache preferences do not change a command. Preconditions and custom headers do.
     const executionHeaders = Object.fromEntries(
         Object.entries(headers).filter(

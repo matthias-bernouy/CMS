@@ -59,7 +59,7 @@ export function createCollectionUpgradeAnalysis(
                                 type: "capability",
                                 contractId: "ulvia.cms.content",
                                 capabilityId: "delivery.resolve-resource",
-                                alternatives: [{ capabilityId: "delivery.resolve-path" }],
+                                versionRange: "^1.0.0",
                                 scope: "runtime",
                                 location: "internal:edge-provider/ulvia.cms.content/delivery",
                             } as const,

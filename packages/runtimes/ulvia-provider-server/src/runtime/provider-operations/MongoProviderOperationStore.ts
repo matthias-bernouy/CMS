@@ -94,7 +94,7 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
             {
                 $set: { status: "running", updatedAt: now, lease: { token, expiresAt } },
                 $inc: { revision: 1 },
-                $unset: { result: "", errorCode: "", errorOutput: "" },
+                $unset: { result: "", errorCode: "", errorOutput: "", errorContentLanguage: "" },
             },
         );
         return result.modifiedCount === 1;
@@ -112,7 +112,14 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
         return this.#finish(id, token, { status: "succeeded", result: structuredClone(result) }, now);
     }
 
-    fail(id: string, token: string, errorCode: string, now: string, errorOutput?: unknown): Promise<boolean> {
+    fail(
+        id: string,
+        token: string,
+        errorCode: string,
+        now: string,
+        errorOutput?: unknown,
+        errorContentLanguage?: string,
+    ): Promise<boolean> {
         return this.#finish(
             id,
             token,
@@ -120,6 +127,7 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
                 status: "failed",
                 errorCode,
                 ...(errorOutput === undefined ? {} : { errorOutput: structuredClone(errorOutput) }),
+                ...(errorContentLanguage ? { errorContentLanguage } : {}),
             },
             now,
         );
@@ -129,7 +137,7 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
         id: string,
         token: string,
         patch: Pick<ProviderOperationRecord, "status"> &
-            Partial<Pick<ProviderOperationRecord, "result" | "errorCode" | "errorOutput">>,
+            Partial<Pick<ProviderOperationRecord, "result" | "errorCode" | "errorOutput" | "errorContentLanguage">>,
         now: string,
     ): Promise<boolean> {
         const result = await this.#records.updateOne(

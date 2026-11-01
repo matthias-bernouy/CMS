@@ -15,7 +15,7 @@ import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
-import type { ReleaseDigest } from "@bernouy/cms-repository/contracts";
+import type { ReleaseDigest, ResolvedContract } from "@bernouy/cms-repository/contracts";
 import {
     CollectionSources,
     DefaultProviderCapabilityDispatcher,
@@ -78,6 +78,7 @@ export class ProviderInstanceHost {
         private readonly credentials: EncryptedInstanceCredentials,
         private readonly profiles: OfficialInstanceProfiles,
         private readonly logger: Logger,
+        private readonly contracts: readonly ResolvedContract[],
     ) {
         this.#providerSource = new HttpProviderRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL, {
             request: correlatedRepositoryFetch,
@@ -229,6 +230,7 @@ export class ProviderInstanceHost {
             const providerOperations = new MongoProviderOperationStore(stores.db);
             await providerOperations.init();
             const operations = new ProviderOperationExecutor(providerOperations, undefined, {
+                contracts: this.contracts,
                 retainResource: lifetime.retain,
                 onFailure: (observation, error) => {
                     const attributes = { instanceId: instance.id, ...observation };

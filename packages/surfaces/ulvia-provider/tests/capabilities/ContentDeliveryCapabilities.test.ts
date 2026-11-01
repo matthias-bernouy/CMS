@@ -1,9 +1,5 @@
 import { expect, test } from "bun:test";
-import {
-    DefaultProviderCapabilityDispatcher,
-    type ProviderBinaryResult,
-    type ProviderCapabilityInvocationContext,
-} from "@bernouy/ulvia-provider";
+import { DefaultProviderCapabilityDispatcher, type ProviderCapabilityInvocationContext } from "@bernouy/ulvia-provider";
 import { registerContentCapabilities } from "@bernouy/ulvia-provider/capabilities";
 const context: ProviderCapabilityInvocationContext = {
     requestId: crypto.randomUUID(),
@@ -34,16 +30,17 @@ function fixture() {
     } as never);
     return { dispatcher, calls };
 }
-test("Content returns a native resource stream and strips all non-resource headers", async () => {
+test("Content returns a native resource stream with cache metadata", async () => {
     const { dispatcher, calls } = fixture();
     const result = (await dispatcher.invoke(
         "ulvia.cms.content",
-        "delivery.resolve-path",
+        "delivery.resolve-resource",
         { path: "/", method: "GET", query: [] },
         context,
-    )) as ProviderBinaryResult;
-    expect(await new Response(result.stream).text()).toBe("page");
-    expect(result.resource).toEqual({ status: 200, headers: { "content-type": "text/html", etag: '"v1"' } });
+    )) as ProviderResourceResponse;
+    expect(await result.response.text()).toBe("page");
+    expect(result.response.headers.get("content-type")).toBe("text/html");
+    expect(result.metadata.cacheTags).toEqual(["content:pages"]);
     expect((calls[0] as unknown[]).slice(0, 2)).toEqual([
         { path: "/", method: "GET", query: [] },
         { kind: "anonymous" },
@@ -54,7 +51,7 @@ test("missing signed actor context and authored actor injection fail before reso
     await expect(
         dispatcher.invoke(
             "ulvia.cms.content",
-            "delivery.resolve-path",
+            "delivery.resolve-resource",
             { path: "/", method: "GET", query: [] },
             { ...context, actorKind: undefined },
         ),
@@ -62,7 +59,7 @@ test("missing signed actor context and authored actor injection fail before reso
     await expect(
         dispatcher.invoke(
             "ulvia.cms.content",
-            "delivery.resolve-path",
+            "delivery.resolve-resource",
             { path: "/", method: "GET", query: [], actorKind: "administrator" },
             context,
         ),
@@ -70,12 +67,12 @@ test("missing signed actor context and authored actor injection fail before reso
     expect(calls).toHaveLength(0);
 });
 
-test("new Delivery reads HTTP metadata outside input and rejects legacy fields", async () => {
+test("Delivery reads HTTP metadata outside input and rejects representation fields", async () => {
     const { dispatcher, calls } = fixture();
     const modern = {
         ...context,
-        contractVersion: "1.2.0",
-        headers: new Headers({ "accept-language": "fr", "if-none-match": 'W/"v1"', range: "bytes=-12" }),
+        contractVersion: "1.0.0",
+        http: { headers: new Headers({ "accept-language": "fr", "if-none-match": 'W/"v1"', range: "bytes=-12" }) },
     };
     const result = (await dispatcher.invoke(
         "ulvia.cms.content",
@@ -99,17 +96,9 @@ test("new Delivery reads HTTP metadata outside input and rejects legacy fields",
     ).rejects.toMatchObject({ code: "INVALID_INPUT" });
     expect(calls).toHaveLength(1);
 });
-test("the legacy capability retains its explicit header inputs alongside common context", async () => {
+test("the removed delivery capability cannot be invoked", async () => {
     const { dispatcher, calls } = fixture();
-    const result = (await dispatcher.invoke(
-        "ulvia.cms.content",
-        "delivery.resolve-path",
-        { path: "/", method: "GET", query: [], acceptLanguage: "en", ifNoneMatch: 'W/"old"' },
-        { ...context, headers: new Headers({ "accept-language": "fr" }) },
-    )) as ProviderBinaryResult;
-    await result.stream.cancel();
-    const request = (calls[0] as unknown[])[3] as { headers: Headers };
-    expect(request.headers.get("accept-language")).toBe("en");
-    expect(request.headers.get("if-none-match")).toBe('W/"old"');
+    await expect(dispatcher.invoke("ulvia.cms.content", "delivery.resolve-path", {}, context)).rejects.toThrow();
+    expect(calls).toHaveLength(0);
 });
 import type { ProviderResourceResponse } from "@bernouy/cms-gateway/provider/server";

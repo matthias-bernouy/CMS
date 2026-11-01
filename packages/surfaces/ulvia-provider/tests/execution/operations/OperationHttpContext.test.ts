@@ -14,7 +14,7 @@ test("durable operations snapshot HTTP metadata, detach browser cancellation and
     executor.register("example.jobs", "apply", async (_input, context, execution) => {
         executions++;
         await gate;
-        expect(context.headers?.get("if-match")).toBe('"v1"');
+        expect(context.http.headers?.get("if-match")).toBe('"v1"');
         expect(context.signal).toBe(execution.signal);
         expect(context.signal?.aborted).toBe(false);
         return { done: true };
@@ -25,9 +25,8 @@ test("durable operations snapshot HTTP metadata, detach browser cancellation and
         siteId: "site-a",
         providerId: "example",
         idempotencyKey: "one",
-        headers,
+        http: { headers, transportRequest: new Request("https://site.test/") },
         signal: abort.signal,
-        request: new Request("https://site.test/"),
     };
     try {
         const first = await executor.enqueue("example.jobs", "apply", {}, context);
@@ -45,7 +44,7 @@ test("durable operations snapshot HTTP metadata, detach browser cancellation and
             "example.jobs",
             "apply",
             {},
-            { ...context, headers: new Headers({ "if-match": '"v1"', "accept-language": "en" }) },
+            { ...context, http: { headers: new Headers({ "if-match": '"v1"', "accept-language": "en" }) } },
         );
         expect(replay).toEqual(first);
         expect(await store.get("other-site", first.operationId)).toBeNull();

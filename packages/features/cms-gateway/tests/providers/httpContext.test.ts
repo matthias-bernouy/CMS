@@ -6,7 +6,7 @@ test("an independent provider receives normal headers and returns validated JSON
     const f = await fixture(false);
     f.dispatcher.register("catalog", "item.list", async (_input, context) =>
         Response.json(
-            { items: [context.headers.get("accept-language")] },
+            { items: [context.http.headers.get("accept-language")] },
             { headers: { etag: '"v1"', link: '</next>; rel="next"', "content-language": "fr" } },
         ),
     );
@@ -29,8 +29,8 @@ test("native Response streams arrive before production completes and cancellatio
     const f = await fixture(true);
     let cancelled = false;
     f.dispatcher.register("catalog", "item.list", async (_input, context) => {
-        expect(context.resourceRequest?.headers.get("range")).toBe("bytes=0-1");
-        expect(context.request?.headers.get("range")).toBeNull();
+        expect(context.http.headers.get("range")).toBe("bytes=0-1");
+        expect(context.http.transportRequest?.headers.get("range")).toBeNull();
         return new Response(
             new ReadableStream({
                 start: (controller) => controller.enqueue(new TextEncoder().encode("hi")),
@@ -74,8 +74,8 @@ test("a public HEAD strips a native Response body even when its technical bindin
     const f = await fixture(true);
     let cancelled = false;
     f.dispatcher.register("catalog", "item.list", async (_input, context) => {
-        expect(context.request?.method).toBe("GET");
-        expect(context.resourceRequest?.method).toBe("HEAD");
+        expect(context.http.transportRequest?.method).toBe("GET");
+        expect(context.http.resource?.method).toBe("HEAD");
         return new Response(
             new ReadableStream({
                 cancel() {
