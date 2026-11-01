@@ -58,3 +58,18 @@ test("unacceptable identity returns 406 and cancels the upstream body", async ()
     expect(response.status).toBe(406);
     expect(cancelled).toBe(true);
 });
+
+test("HEAD negotiates the same validator and encoding as a gzip GET", async () => {
+    const headers = { "content-type": "text/plain", etag: '"version"', "content-length": "5" };
+    const head = await prepareStreamingResponse(
+        new Request("https://site.test/", {
+            method: "HEAD",
+            headers: { "accept-encoding": "gzip", "if-none-match": 'W/"version"' },
+        }),
+        new Response(null, { headers }),
+    );
+    expect(head.status).toBe(304);
+    expect(head.headers.get("etag")).toBe('W/"version"');
+    expect(head.headers.get("content-encoding")).toBe("gzip");
+    expect(head.headers.get("content-length")).toBeNull();
+});

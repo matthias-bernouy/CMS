@@ -1,4 +1,4 @@
-import { ifNoneMatchMatches } from "../byteRanges";
+import { evaluateHttpPreconditions } from "./preconditions";
 import { acceptsGzip, acceptsIdentity, isCompressibleType } from "./negotiation";
 
 /** Apply browser negotiation without buffering the origin body or recompressing an encoded response. */
@@ -7,8 +7,8 @@ export async function prepareStreamingResponse(request: Request, response: Respo
     let body = response.body;
     const gzip =
         response.status === 200 &&
-        request.method !== "HEAD" &&
         !headers.has("content-encoding") &&
+        !/(?:^|,)\s*no-transform\s*(?:,|$)/iu.test(headers.get("cache-control") ?? "") &&
         isCompressibleType(headers.get("content-type")) &&
         acceptsGzip(request.headers.get("accept-encoding"));
     if (gzip) {
@@ -19,18 +19,22 @@ export async function prepareStreamingResponse(request: Request, response: Respo
             headers.set("etag", `W/${tag}`);
         }
     }
-    if (
-        response.status === 200 &&
-        ["GET", "HEAD"].includes(request.method) &&
-        ifNoneMatchMatches(request.headers.get("if-none-match"), (headers.get("etag") ?? "").replace(/^W\//u, ""))
-    ) {
+    const condition =
+        response.status === 200 && ["GET", "HEAD"].includes(request.method)
+            ? evaluateHttpPreconditions(request, {
+                  etag: headers.get("etag"),
+                  lastModified: headers.get("last-modified"),
+              })
+            : undefined;
+    if (condition) {
         await body?.cancel();
         headers.delete("content-length");
-        return new Response(null, { status: 304, headers });
+        return new Response(null, { status: condition, headers });
     }
     if (
         response.status === 200 &&
         !headers.has("content-encoding") &&
+        !/(?:^|,)\s*no-transform\s*(?:,|$)/iu.test(headers.get("cache-control") ?? "") &&
         !acceptsIdentity(request.headers.get("accept-encoding"))
     ) {
         await body?.cancel();

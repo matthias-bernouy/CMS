@@ -2,6 +2,7 @@ import type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
 import { getOrGenerateEntry, getOrGenerateEntryAsync } from "http-runner/core/cacheGeneration";
 import type { CspExtras } from "../buildCspContent";
 import { cspHeaderForEntry, securityHeaders } from "./headers";
+import { ifNoneMatchMatches } from "../byteRanges";
 
 /** Options controlling headers and the body-bearing response status. */
 export type SendCompressedOptions = {
@@ -48,7 +49,7 @@ export function sendCompressed(
     assertBodyStatus(status);
 
     const etag = etagFor(entry.hash, encoding);
-    if (req.headers.get("if-none-match") === etag) {
+    if (ifNoneMatchMatches(req.headers.get("if-none-match"), etag)) {
         return new Response(null, {
             status: 304,
             headers: { "Content-Type": entry.contentType, "Vary": "Accept-Encoding", ETag: etag, ...common },

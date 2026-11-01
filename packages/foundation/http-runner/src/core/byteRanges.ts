@@ -46,10 +46,24 @@ export function ifRangeAllowsPartial(value: string | null, strongEtag: string): 
 
 /** Weak comparison is correct for GET/HEAD cache revalidation. */
 export function ifNoneMatchMatches(value: string | null, etag: string): boolean {
-    return (
-        value
-            ?.split(",")
-            .map((candidate) => candidate.trim().replace(/^W\//u, ""))
-            .some((candidate) => candidate === "*" || candidate === etag) ?? false
+    return value !== null && matchesEntityTag(value, etag, true, true);
+}
+
+/** Shared tag comparison for read revalidation and strong mutation preconditions. */
+export function matchesEntityTag(
+    value: string,
+    etag: string | null | undefined,
+    weak: boolean,
+    exists: boolean,
+): boolean {
+    if (value.trim() === "*") {
+        return exists;
+    }
+    if (!exists || !etag || (!weak && etag.startsWith("W/"))) {
+        return false;
+    }
+    const tags = value.match(/(?:W\/)?"[\x21\x23-\x7e\x80-\xff]*"/gu) ?? [];
+    return tags.some((tag) =>
+        weak ? tag.replace(/^W\//u, "") === etag.replace(/^W\//u, "") : !tag.startsWith("W/") && tag === etag,
     );
 }

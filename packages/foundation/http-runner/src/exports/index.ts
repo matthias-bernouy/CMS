@@ -89,3 +89,5 @@ export {
     type ContentRange,
 } from "http-runner/core/byteRanges";
 export { buildCspContent, type CspExtras } from "http-runner/core/buildCspContent";
+
+export { evaluateHttpPreconditions, type HttpValidators } from "http-runner/core/compression/preconditions";
