@@ -23,3 +23,5 @@ export {
     isContentReservedPath,
     type ContentDeliveryOptions,
 } from "cms-content/pages/delivery/ContentDelivery";
+
+export { parseLegacyResolvePathRequest, legacyPublicPathRequest } from "cms-content/pages/delivery/requests/legacy";

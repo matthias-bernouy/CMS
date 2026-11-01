@@ -23,7 +23,7 @@ export async function loadCacheResource(
                     !name.trim() ||
                     ["accept", "accept-language", "accept-encoding"].includes(name.trim().toLowerCase()),
             ) &&
-        !/(?:private|no-store)/i.test(response.headers.get("cache-control") ?? "no-store") &&
+        !/(?:private|no-store|no-transform)/i.test(response.headers.get("cache-control") ?? "no-store") &&
         !response.headers.has("set-cookie")
             ? sharedPolicy(cacheControl, options.pages !== false)
             : null;

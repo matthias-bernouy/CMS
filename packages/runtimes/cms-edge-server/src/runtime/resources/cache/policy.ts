@@ -15,6 +15,7 @@ export function sharedPolicy(value: string | null, pages: boolean): SharedPolicy
                 "private",
                 "no-store",
                 "no-cache",
+                "no-transform",
                 "must-revalidate",
                 "immutable",
                 "max-age",
@@ -55,8 +56,9 @@ export function cacheKey(request: Request): string | null {
         request.headers.has("authorization") ||
         request.headers.has("range") ||
         request.headers.has("if-range") ||
-        /(?:^|,)\s*(?:no-cache|no-store|max-age=0)(?:\s*(?:,|$))/iu.test(request.headers.get("cache-control") ?? "") ||
-        request.headers.get("pragma")?.toLowerCase() === "no-cache"
+        ["if-match", "if-unmodified-since"].some((name) => request.headers.has(name)) ||
+        request.headers.has("cache-control") ||
+        request.headers.has("pragma")
     ) {
         return null;
     }
@@ -70,8 +72,7 @@ export function cacheKey(request: Request): string | null {
     }
     const url = new URL(request.url);
     const key = JSON.stringify([
-        url.pathname,
-        [...url.searchParams],
+        url.href,
         request.headers.get("accept"),
         request.headers.get("accept-language")?.trim().toLowerCase() ?? null,
     ]);
@@ -84,6 +85,7 @@ export function unconditional(request: Request): Request {
         headers.set("accept-language", language.trim().toLowerCase());
     }
     headers.delete("if-none-match");
+    headers.delete("if-modified-since");
     headers.delete("accept-encoding");
-    return new Request(request.url, { method: "GET", headers, signal: request.signal });
+    return new Request(request.url, { method: "GET", headers, signal: new AbortController().signal });
 }

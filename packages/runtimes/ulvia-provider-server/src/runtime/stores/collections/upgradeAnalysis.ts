@@ -16,7 +16,6 @@ const INTERNAL = [
     ["ulvia.cms.observability", "logs.query"],
     ["ulvia.cms.observability", "logs.get"],
     ["ulvia.cms.observability", "logs.aggregate"],
-    ["ulvia.cms.content", "delivery.resolve-path"],
     ["ulvia.cms.installations", "capabilities.describe"],
     ["ulvia.cms.access", "resolve-actor"],
     ["ulvia.cms.installations", "list-provider-installations"],
@@ -45,16 +44,26 @@ export function createCollectionUpgradeAnalysis(
                             dependencyRevision: (await dependencies.capture(siteId)).revision,
                         }),
                         complete: selected !== null,
-                        references: INTERNAL.map(
-                            ([contractId, capabilityId]): CapabilityUse => ({
+                        references: [
+                            ...INTERNAL.map(
+                                ([contractId, capabilityId]): CapabilityUse => ({
+                                    type: "capability",
+                                    contractId,
+                                    capabilityId,
+                                    versionRange: "^1.0.0",
+                                    scope: "runtime",
+                                    location: `internal:edge-provider/${contractId}/${capabilityId}`,
+                                }),
+                            ),
+                            {
                                 type: "capability",
-                                contractId,
-                                capabilityId,
-                                versionRange: "^1.0.0",
+                                contractId: "ulvia.cms.content",
+                                capabilityId: "delivery.resolve-resource",
+                                alternatives: [{ capabilityId: "delivery.resolve-path" }],
                                 scope: "runtime",
-                                location: `internal:edge-provider/${contractId}/${capabilityId}`,
-                            }),
-                        ),
+                                location: "internal:edge-provider/ulvia.cms.content/delivery",
+                            } as const,
+                        ],
                     };
                 },
             },

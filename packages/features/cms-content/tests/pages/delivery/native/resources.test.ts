@@ -19,10 +19,17 @@ function fixture() {
             }),
         pageCapabilities: { requiredAccess: async () => "admin" },
     });
-    const read = (path: string, method = "GET", kind: "anonymous" | "administrator" = "anonymous", extra = {}) =>
+    const read = (
+        path: string,
+        method = "GET",
+        kind: "anonymous" | "administrator" = "anonymous",
+        headers: HeadersInit = {},
+    ) =>
         delivery.resolvePath(
-            { path, method, query: [], ...extra },
+            { path, method, query: [] },
             { kind, ...(kind === "administrator" ? { subjectId: "provider-alias" } : {}) },
+            undefined,
+            { headers },
         );
     return { repo, read };
 }
@@ -37,12 +44,12 @@ test("Content owns system resources, bodyless HEAD and representation conditions
     const etag = favicon.headers.get("etag")!;
     expect(favicon.headers.get("content-type")).toBe("image/svg+xml");
     expect((await read("/favicon.ico", "HEAD")).body).toBeNull();
-    const conditional = await read("/favicon.ico", "GET", "anonymous", { ifNoneMatch: etag });
+    const conditional = await read("/favicon.ico", "GET", "anonymous", { "if-none-match": etag });
     expect(conditional.status).toBe(304);
     expect(conditional.headers.get("content-type")).toBe("image/svg+xml");
     const asset = await read("/_content/collections/catalog/assets/a.svg", "GET", "anonymous", {
-        range: { start: 1, end: 4 },
-        ifRange: '"v1"',
+        range: "bytes=1-4",
+        "if-range": '"v1"',
     });
     expect(asset.status).toBe(206);
     expect(await asset.text()).toBe("bytes=1-4");

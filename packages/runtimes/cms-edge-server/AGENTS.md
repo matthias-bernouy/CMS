@@ -9,8 +9,8 @@ Production runtime composition root.
   exposed by the independently running installations Provider.
 - Compose the provider-neutral Gateway locally from remote route, identity,
   audit and invocation-token capabilities.
-- Forward public paths through the selected `ulvia.cms.content/delivery.resolve-path`
-  capability. Do not receive Content projections or mount its internal handlers.
+- Forward public paths through selected `ulvia.cms.content/delivery.resolve-resource`,
+  falling back to `delivery.resolve-path` only when the selected release lacks its replacement. Do not receive Content projections or mount its internal handlers.
 - Instantiate only the stateless Edge HTTP composition.
 - Refuse to start unless the Provider instance and official resources were provisioned beforehand.
 

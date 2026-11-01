@@ -4,10 +4,10 @@
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia.official",
     "name": "Ulvia Provider",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "provenance": {
         "publisherId": "ulvia.official",
-        "publishedAt": "2026-10-29T00:00:00Z"
+        "publishedAt": "2026-10-30T00:00:00Z"
     },
     "buildVersionRange": ">=1.0.0 <2.0.0",
     "endpoint": {
@@ -80,8 +80,8 @@
         },
         {
             "contractId": "ulvia.cms.content",
-            "version": "1.1.0",
-            "digest": "sha256:33a99f6ab4ed51122c835d69f16fd5fbbe3c80b34204036a1e3e8024f3e91de0",
+            "version": "1.2.0",
+            "digest": "sha256:308a8a093457a9d545f37cd891fc9cee6e6cdbf6958162c293bd2ecaa319693c",
             "requires": [
                 {
                     "contractId": "ulvia.cms.installations",
@@ -91,7 +91,7 @@
                 }
             ],
             "delegation": {
-                "sources": ["delivery.resolve-path"],
+                "sources": ["delivery.resolve-path", "delivery.resolve-resource"],
                 "allow": [
                     {
                         "contractId": "*",

@@ -16,6 +16,36 @@ test("public hits, conditional GET and HEAD perform no additional Provider work"
     expect(head.headers.get("content-length")).toBe("6");
     expect(f.calls()).toBe(1);
 });
+
+test("fresh cache entries revalidate dates and give ETags precedence without Provider work", async () => {
+    const cache = new ResponseCache();
+    const modified = "Wed, 21 Oct 2015 07:28:00 GMT";
+    let calls = 0;
+    const load = async (input: Request) => {
+        calls++;
+        expect(input.headers.has("if-modified-since")).toBe(false);
+        const result = resource();
+        result.response.headers.set("last-modified", modified);
+        return result;
+    };
+    for (const headers of [
+        { "if-modified-since": modified },
+        { "if-modified-since": modified, "if-none-match": 'W/"version"' },
+    ]) {
+        const response = await cache.handle(request("/page", headers), load);
+        expect(response.status).toBe(304);
+        expect(await response.text()).toBe("");
+    }
+    for (const headers of [
+        { "if-modified-since": modified, "if-none-match": '"different"' },
+        { "if-modified-since": "invalid" },
+        { "if-modified-since": "Wed, 21 Oct 2015 06:28:00 GMT" },
+    ]) {
+        expect((await cache.handle(request("/page", headers), load)).status).toBe(200);
+    }
+    expect((await cache.handle(request("/page", { "if-modified-since": modified }, "HEAD"), load)).status).toBe(304);
+    expect(calls).toBe(1);
+});
 test("misses strip conditional headers and negotiate gzip independently of cache identity", async () => {
     const cache = new ResponseCache();
     let calls = 0;

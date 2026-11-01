@@ -52,7 +52,11 @@ test("HEAD and not-modified responses complete empty streams without creating a 
         });
         expect(response.status).toBe(status);
         expect(response.body).toBeNull();
-        expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'self'");
+        if (status === 304) {
+            expect(response.headers.get("content-security-policy")).toBeNull();
+        } else {
+            expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'self'");
+        }
     }
 });
 test("Edge compresses text streams and leaves ranges unchanged", async () => {
@@ -94,4 +98,27 @@ test("browser stale directives are bounded and duplicated directives are refused
         { kind: "anonymous" },
     );
     expect(response.headers.get("cache-control")).toBe("no-store");
+});
+
+test("a minimal native 304 preserves cached representation policy and still protects private actors", async () => {
+    for (const kind of ["anonymous", "user"] as const) {
+        const response = await resourceHttpResponse(
+            {
+                kind: "binary",
+                requestId: crypto.randomUUID(),
+                contentType: "application/octet-stream",
+                stream: new ReadableStream({ start: (controller) => controller.close() }),
+                resource: { status: 304, headers: { etag: '"v1"' } },
+            },
+            new Request("https://site.test/", { headers: { "if-none-match": '"v1"' } }),
+            kind === "anonymous" ? { kind } : { kind, subjectId: "alias" },
+        );
+        expect(response.status).toBe(304);
+        expect(response.body).toBeNull();
+        expect(response.headers.get("etag")).toBe('"v1"');
+        expect(response.headers.get("content-type")).toBeNull();
+        expect(response.headers.get("content-security-policy")).toBeNull();
+        expect(response.headers.get("x-frame-options")).toBeNull();
+        expect(response.headers.get("cache-control")).toBe(kind === "anonymous" ? null : "private, no-store");
+    }
 });

@@ -8,6 +8,7 @@ export async function historicalContracts(admissions: readonly AdmittedContractR
     for (const [id, version] of [
         ["ulvia.cms.observability", "1.0.0"],
         ["ulvia.cms.content", "1.0.0"],
+        ["ulvia.cms.content", "1.1.0"],
         ["ulvia.cms.installations", "1.0.0"],
         ["ulvia.cms.installations", "1.1.0"],
     ]) {
@@ -20,8 +21,14 @@ export async function historicalContracts(admissions: readonly AdmittedContractR
                 );
             }
         } else if (id === "ulvia.cms.content") {
-            delete value.capabilities.find((item: { id: string }) => item.id === "delivery.resolve-path").input
-                .properties.resourceMetadata;
+            value.capabilities = value.capabilities.filter(
+                (item: { id: string }) => item.id !== "delivery.resolve-resource",
+            );
+            const delivery = value.capabilities.find((item: { id: string }) => item.id === "delivery.resolve-path");
+            delete delivery.deprecation;
+            if (version === "1.0.0") {
+                delete delivery.input.properties.resourceMetadata;
+            }
         } else {
             delete value.capabilities.find((item: { id: string }) => item.id === "gateway.dispatch.prepare").input
                 .properties.closedDelegations;
@@ -42,18 +49,30 @@ export async function historicalManifests(
     admissions: readonly AdmittedContractRelease[],
 ) {
     return Promise.all(
-        ["0.1.0", "0.2.0", "0.3.0"].map(async (version) => {
+        ["0.1.0", "0.2.0", "0.3.0", "0.4.0"].map(async (version) => {
             const value = JSON.parse(current);
             value.version = version;
-            value.provenance.publishedAt = version === "0.1.0" ? "2026-10-01T00:00:00Z" : "2026-10-28T00:00:00Z";
+            value.provenance.publishedAt =
+                version === "0.1.0"
+                    ? "2026-10-01T00:00:00Z"
+                    : version === "0.4.0"
+                      ? "2026-10-29T00:00:00Z"
+                      : "2026-10-28T00:00:00Z";
             for (const pin of value.implementations) {
+                if (pin.contractId === "ulvia.cms.content") {
+                    pin.delegation.sources = ["delivery.resolve-path"];
+                }
                 const previous =
                     pin.contractId === "ulvia.cms.content"
-                        ? "1.0.0"
+                        ? version === "0.4.0"
+                            ? "1.1.0"
+                            : "1.0.0"
                         : pin.contractId === "ulvia.cms.installations"
-                          ? version === "0.3.0"
-                              ? "1.1.0"
-                              : "1.0.0"
+                          ? version === "0.4.0"
+                              ? "1.2.0"
+                              : version === "0.3.0"
+                                ? "1.1.0"
+                                : "1.0.0"
                           : pin.contractId === "ulvia.cms.observability" && version === "0.1.0"
                             ? "1.0.0"
                             : undefined;

@@ -47,6 +47,7 @@ export interface CmsContentDependencies {
             input: unknown,
             actor: DeliveryActor,
             executeQuery?: ContentDeliveryHost["executeQuery"],
+            context?: { readonly headers?: HeadersInit; readonly signal?: AbortSignal },
         ): Promise<Response>;
     };
     readonly contentQuery?: (

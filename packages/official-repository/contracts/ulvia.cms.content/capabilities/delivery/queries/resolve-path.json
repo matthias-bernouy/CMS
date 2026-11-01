@@ -115,5 +115,9 @@
                 }
             }
         }
-    ]
+    ],
+    "deprecation": {
+        "reason": "Use delivery.resolve-resource, which carries HTTP metadata through the common request context.",
+        "replacedBy": "delivery.resolve-resource"
+    }
 }

@@ -31,6 +31,7 @@ export class ContentDelivery {
         value: unknown,
         actor: DeliveryActor,
         executeQuery?: ContentDeliveryHost["executeQuery"],
+        context: { readonly headers?: HeadersInit; readonly signal?: AbortSignal } = {},
     ): Promise<Response> {
         const input = parseResolvePathRequest(value);
         if (isProtocolPath(input.path)) {
@@ -39,7 +40,7 @@ export class ContentDelivery {
                 headers: { "cache-control": "no-store" },
             });
         }
-        const request = publicPathRequest(input, this.options.publicUrl);
+        const request = publicPathRequest(input, this.options.publicUrl, context);
         const host: ContentDeliveryHost = {
             ...this.options,
             basePath: "",

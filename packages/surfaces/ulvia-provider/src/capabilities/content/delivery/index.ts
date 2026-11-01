@@ -1,10 +1,5 @@
-import { parseResolvePathRequest } from "@bernouy/cms-content/public-delivery";
 import { parseResourceMetadata } from "@bernouy/cms-gateway/protocol";
-import {
-    ProviderCapabilityDispatchError,
-    type ProviderBinaryResult,
-    type ProviderCapabilityRegistry,
-} from "../../../dispatch/registry";
+import { type ProviderBinaryResult, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import type { CmsContentDependencies } from "../../../ports";
 
 export function registerContentDeliveryCapabilities(
@@ -15,28 +10,7 @@ export function registerContentDeliveryCapabilities(
         "ulvia.cms.content",
         "delivery.resolve-path",
         async (input, context): Promise<ProviderBinaryResult> => {
-            if (!context.actorKind || (context.actorKind !== "anonymous" && !context.subjectId)) {
-                throw new ProviderCapabilityDispatchError("FORBIDDEN", 403);
-            }
-            let request: ReturnType<typeof parseResolvePathRequest>;
-            try {
-                request = parseResolvePathRequest(input);
-            } catch {
-                throw new ProviderCapabilityDispatchError("INVALID_INPUT", 422);
-            }
-            if (!dependencies.publicDelivery) {
-                throw new ProviderCapabilityDispatchError("CORE_UNAVAILABLE", 503);
-            }
-            const response = await dependencies
-                .publicDelivery(context)
-                .resolvePath(
-                    request,
-                    { kind: context.actorKind, ...(context.subjectId ? { subjectId: context.subjectId } : {}) },
-                    dependencies.contentQuery
-                        ? (contractId, capabilityId, value) =>
-                              dependencies.contentQuery!(context, contractId, capabilityId, value)
-                        : undefined,
-                );
+            const { response, cacheMetadata } = await resolveDelivery(input, context, dependencies, true);
             const permitted = new Set([
                 "content-type",
                 "content-length",
@@ -46,22 +20,28 @@ export function registerContentDeliveryCapabilities(
                 "content-disposition",
                 "etag",
                 "last-modified",
+                "expires",
+                "vary",
+                "link",
                 "location",
                 "cache-control",
                 "retry-after",
                 "x-robots-tag",
             ]);
             const resource = parseResourceMetadata({
-                ...(request.resourceMetadata === "cache-v1"
+                ...(cacheMetadata
                     ? {
-                          vary: ["accept", "accept-language"],
-                          cacheTags: [
-                              (response.headers.get("content-type") ?? "").startsWith("text/html")
-                                  ? "content:pages"
-                                  : (response.headers.get("cache-control") ?? "").includes("immutable")
-                                    ? "content:immutable"
-                                    : "content:mutable",
+                          vary: [
+                              ...new Set([
+                                  "accept",
+                                  "accept-language",
+                                  ...(response.headers.get("vary") ?? "")
+                                      .split(",")
+                                      .map((value) => value.trim().toLowerCase())
+                                      .filter(Boolean),
+                              ]),
                           ],
+                          cacheTags: deliveryCacheTags(response),
                       }
                     : {}),
                 status: response.status,
@@ -83,4 +63,14 @@ export function registerContentDeliveryCapabilities(
             };
         },
     );
+    dispatcher.register("ulvia.cms.content", "delivery.resolve-resource", async (input, context) => {
+        const { response } = await resolveDelivery(input, context, dependencies, false);
+        return resourceResponse(response, {
+            vary: ["accept", "accept-language"],
+            cacheTags: deliveryCacheTags(response),
+        });
+    });
 }
+
+import { resolveDelivery, deliveryCacheTags } from "./resolve";
+import { resourceResponse } from "@bernouy/cms-gateway/provider/server";

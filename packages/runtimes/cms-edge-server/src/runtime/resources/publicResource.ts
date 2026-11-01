@@ -1,6 +1,7 @@
 import type { GatewayHttpInvoker } from "@bernouy/cms-gateway/http";
 import { ResponseCache } from "./cache/ResponseCache";
 import { isPublicContentAsset } from "./publicContentAssets";
+import { resolveDeliveryContract } from "./deliveryContract";
 import { GatewayError, type GatewayActor, type GatewayInvoker } from "@bernouy/cms-gateway";
 import { resourceHttpResponse, type ResourceResponsePolicy } from "@bernouy/cms-edge";
 
@@ -18,51 +19,17 @@ export function createPublicResourceHandler(
         return cache.handle(
             request,
             async (request, cacheFill) => {
-                const url = new URL(request.url);
-                const headers = request.headers;
-                let range: ReturnType<typeof parseRange>;
                 try {
-                    range = parseRange(headers.get("range"));
-                } catch {
-                    return {
-                        response: new Response("Invalid byte range", {
-                            status: 400,
-                            headers: { "cache-control": "no-store" },
-                        }),
-                        cacheControl: null,
-                    };
-                }
-                try {
-                    const contract = cacheFill
-                        ? await gateway.resolveContract?.({
-                              siteId: "default",
-                              contractId: "ulvia.cms.content",
-                          })
-                        : undefined;
-                    const extended = contract?.release.capabilities.find((item) => item.id === "delivery.resolve-path")
-                        ?.input.properties.resourceMetadata;
+                    const context = readGatewayRequestContext(request, true);
+                    const contract = await resolveDeliveryContract(gateway);
+                    const selected = publicDeliveryInvocation(request, contract, cacheFill);
                     const result = await gateway.invoke({
                         siteId: "default",
-                        contractId: "ulvia.cms.content",
-                        capabilityId: "delivery.resolve-path",
+                        contractId: contract?.release.contractId ?? "ulvia.cms.content",
+                        ...selected,
                         actor,
-                        input: {
-                            ...(extended?.type === "string" && extended.enum?.includes("cache-v1")
-                                ? { resourceMetadata: "cache-v1" }
-                                : {}),
-                            path: url.pathname,
-                            method: request.method,
-                            query: [...url.searchParams].map(([name, value]) => ({ name, value })),
-                            ...(headers.has("accept") ? { accept: headers.get("accept")! } : {}),
-                            ...(headers.has("accept-language")
-                                ? { acceptLanguage: headers.get("accept-language")! }
-                                : {}),
-                            ...(headers.has("if-none-match")
-                                ? { ifNoneMatch: headers.get("if-none-match")!.replace(/^W\//u, "") }
-                                : {}),
-                            ...(headers.has("if-range") ? { ifRange: headers.get("if-range")! } : {}),
-                            ...(range ? { range } : {}),
-                        },
+                        requestContext: context,
+                        signal: request.signal,
                     });
                     return {
                         response: await resourceHttpResponse(result, request, actor, policy),
@@ -87,17 +54,5 @@ export function createPublicResourceHandler(
         );
     };
 }
-function parseRange(value: string | null): { start?: number; end?: number } | undefined {
-    if (value === null) {
-        return undefined;
-    }
-    const match = /^bytes=(\d*)-(\d*)$/u.exec(value);
-    if (
-        !match ||
-        (!match[1] && !match[2]) ||
-        [match[1], match[2]].some((part) => part && !Number.isSafeInteger(Number(part)))
-    ) {
-        throw new TypeError("Unsupported byte range");
-    }
-    return { ...(match[1] ? { start: Number(match[1]) } : {}), ...(match[2] ? { end: Number(match[2]) } : {}) };
-}
+import { publicDeliveryInvocation } from "./publicDeliveryInvocation";
+import { readGatewayRequestContext } from "@bernouy/cms-gateway/http/handlers";

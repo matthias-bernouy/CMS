@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createPublicResourceHandler } from "../../src/runtime/resources/publicResource";
+import { createPublicResourceHandler } from "../../../src/runtime/resources/publicResource";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
 test("public resolution forwards selected bounded fields and trusted actor only", async () => {
     const calls: GatewayInvocation[] = [];
@@ -96,13 +96,13 @@ test("versioned public Content assets omit user authority while Pages, Files and
     }
 });
 
-test("the public helper disables caching unless the host injects its invalidated cache; bypasses skip negotiation", async () => {
+test("the public helper disables caching unless the host injects its invalidated cache; bypasses resolve the selected capability", async () => {
     let calls = 0;
     let negotiation = 0;
     const gateway = {
         resolveContract: async () => {
             negotiation++;
-            throw new Error("No metadata needed for a bypass");
+            return { release: { capabilities: [] } } as never;
         },
         invoke: async () => {
             calls++;
@@ -126,5 +126,5 @@ test("the public helper disables caching unless the host injects its invalidated
         await response.text();
     }
     expect(calls).toBe(2);
-    expect(negotiation).toBe(0);
+    expect(negotiation).toBe(2);
 });

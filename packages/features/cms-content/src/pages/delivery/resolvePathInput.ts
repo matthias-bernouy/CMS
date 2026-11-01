@@ -1,25 +1,9 @@
 export interface ResolvePathRequest {
-    readonly resourceMetadata?: "cache-v1";
     readonly path: string;
     readonly method: "GET" | "HEAD";
     readonly query: readonly { readonly name: string; readonly value: string }[];
-    readonly accept?: string;
-    readonly acceptLanguage?: string;
-    readonly ifNoneMatch?: string;
-    readonly ifRange?: string;
-    readonly range?: { readonly start?: number; readonly end?: number };
 }
-const FIELDS = new Set([
-    "resourceMetadata",
-    "path",
-    "method",
-    "query",
-    "accept",
-    "acceptLanguage",
-    "ifNoneMatch",
-    "ifRange",
-    "range",
-]);
+const FIELDS = new Set(["path", "method", "query"]);
 export function parseResolvePathRequest(value: unknown): ResolvePathRequest {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
         throw new TypeError("Invalid public path request");
@@ -27,7 +11,6 @@ export function parseResolvePathRequest(value: unknown): ResolvePathRequest {
     const input = value as Record<string, unknown>;
     if (
         Object.keys(input).some((key) => !FIELDS.has(key)) ||
-        (input.resourceMetadata !== undefined && input.resourceMetadata !== "cache-v1") ||
         typeof input.path !== "string" ||
         !input.path.startsWith("/") ||
         input.path.startsWith("//") ||
@@ -58,50 +41,16 @@ export function parseResolvePathRequest(value: unknown): ResolvePathRequest {
     ) {
         throw new TypeError("Invalid public query");
     }
-    for (const name of ["accept", "acceptLanguage", "ifNoneMatch", "ifRange"]) {
-        if (
-            input[name] !== undefined &&
-            (typeof input[name] !== "string" || input[name].length > 1024 || /[\r\n\x00]/u.test(input[name]))
-        ) {
-            throw new TypeError("Invalid public representation");
-        }
-    }
-    if (input.range !== undefined) {
-        const range = input.range as Record<string, unknown>;
-        if (
-            !range ||
-            typeof range !== "object" ||
-            Array.isArray(range) ||
-            !Object.keys(range).length ||
-            Object.keys(range).some((key) => !["start", "end"].includes(key)) ||
-            Object.values(range).some((part) => !Number.isSafeInteger(part) || Number(part) < 0) ||
-            (range.start !== undefined && range.end !== undefined && Number(range.end) < Number(range.start))
-        ) {
-            throw new TypeError("Invalid resource range");
-        }
-    }
     return structuredClone(input) as unknown as ResolvePathRequest;
 }
-export function publicPathRequest(input: ResolvePathRequest, publicUrl: string): Request {
+export function publicPathRequest(
+    input: ResolvePathRequest,
+    publicUrl: string,
+    context: { readonly headers?: HeadersInit; readonly signal?: AbortSignal } = {},
+): Request {
     const url = new URL(input.path, publicUrl);
     for (const part of input.query) {
         url.searchParams.append(part.name, part.value);
     }
-    const headers = new Headers();
-    if (input.accept) {
-        headers.set("accept", input.accept);
-    }
-    if (input.acceptLanguage) {
-        headers.set("accept-language", input.acceptLanguage);
-    }
-    if (input.ifNoneMatch) {
-        headers.set("if-none-match", input.ifNoneMatch);
-    }
-    if (input.ifRange) {
-        headers.set("if-range", input.ifRange);
-    }
-    if (input.range) {
-        headers.set("range", `bytes=${input.range.start ?? ""}-${input.range.end ?? ""}`);
-    }
-    return new Request(url, { method: input.method, headers });
+    return new Request(url, { method: input.method, headers: context.headers, signal: context.signal });
 }

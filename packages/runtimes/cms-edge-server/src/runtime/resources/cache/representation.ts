@@ -4,7 +4,7 @@ import {
     acceptsGzip,
     acceptsIdentity,
     isCompressibleType,
-    ifNoneMatchMatches,
+    evaluateHttpPreconditions,
     prepareStreamingResponse,
 } from "@bernouy/http-runner";
 export function gzipVariant(bytes: Uint8Array<ArrayBuffer>, type: string | null): Uint8Array<ArrayBuffer> | undefined {
@@ -28,13 +28,13 @@ export function cachedResponse(entry: CachedResource, request: Request, now: num
     headers.set("vary", headers.get("vary") ?? "Accept-Encoding");
     headers.set("age", String(Math.max(0, Math.floor((now - entry.storedAt) / 1000))));
     headers.set("x-cache", state);
-    const matched = ifNoneMatchMatches(
-        request.headers.get("if-none-match"),
-        (headers.get("etag") ?? "").replace(/^W\//u, ""),
-    );
-    if (matched) {
+    const condition = evaluateHttpPreconditions(request, {
+        etag: headers.get("etag"),
+        lastModified: headers.get("last-modified"),
+    });
+    if (condition) {
         headers.delete("content-length");
-        return new Response(null, { status: 304, headers });
+        return new Response(null, { status: condition, headers });
     }
     return new Response(request.method === "HEAD" ? null : bytes, { status: 200, headers });
 }

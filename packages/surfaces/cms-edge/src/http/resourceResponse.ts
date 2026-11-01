@@ -25,32 +25,43 @@ export async function resourceHttpResponse(
     const headers = new Headers(metadata.headers);
     const status = metadata.status;
     const cache = headers.get("cache-control");
-    headers.set("cache-control", actor.kind !== "anonymous" ? "private, no-store" : safeCachePolicy(cache));
-    for (const [name, value] of Object.entries(securityHeaders())) {
-        headers.set(name, value);
+    if (actor.kind !== "anonymous") {
+        headers.set("cache-control", "private, no-store");
+    } else if (cache || status !== 304) {
+        headers.set("cache-control", safeCachePolicy(cache));
     }
-    if (headers.get("content-type")?.toLowerCase().startsWith("text/html")) {
-        headers.set("x-frame-options", "SAMEORIGIN");
-        const csp = buildCspContent(policy.csp, { includeHeaderOnlyDirectives: false }) + "; frame-ancestors 'self'";
-        headers.set(policy.reportOnly ? "content-security-policy-report-only" : "content-security-policy", csp);
-    }
-    if (!headers.get("content-type")?.toLowerCase().startsWith("text/html")) {
-        headers.set("content-security-policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    // A 304 updates an existing representation. Missing type/policy must not
+    // replace its cached HTML CSP or cache policy with defaults for a new body.
+    if (status !== 304) {
+        for (const [name, value] of Object.entries(securityHeaders())) {
+            headers.set(name, value);
+        }
+        if (headers.get("content-type")?.toLowerCase().startsWith("text/html")) {
+            headers.set("x-frame-options", "SAMEORIGIN");
+            const csp =
+                buildCspContent(policy.csp, { includeHeaderOnlyDirectives: false }) + "; frame-ancestors 'self'";
+            headers.set(policy.reportOnly ? "content-security-policy-report-only" : "content-security-policy", csp);
+        } else {
+            headers.set("content-security-policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+        }
     }
     headers.set(
         "vary",
-        [
-            ...new Set([
-                "Accept",
-                "Accept-Language",
-                ...(metadata.vary ?? []).filter(
-                    (name) => name !== "accept" && name !== "accept-language" && name !== "accept-encoding",
-                ),
-                "Accept-Encoding",
-            ]),
-        ].join(", "),
+        metadata.vary?.includes("*")
+            ? "*"
+            : [
+                  ...new Set([
+                      "Accept",
+                      "Accept-Language",
+                      ...(metadata.vary ?? []).filter(
+                          (name) => name !== "accept" && name !== "accept-language" && name !== "accept-encoding",
+                      ),
+                      "Accept-Encoding",
+                  ]),
+              ].join(", "),
     );
-    const bodyless = request.method === "HEAD" || status === 304 || [301, 302, 303, 307, 308].includes(status);
+    const bodyless =
+        request.method === "HEAD" || [204, 205, 304].includes(status) || [301, 302, 303, 307, 308].includes(status);
     if (bodyless) {
         // The Provider sends an empty native wire body for HEAD/304. Consume EOF so
         // invocation observations and delegation lifetime complete normally.
@@ -64,7 +75,8 @@ export async function resourceHttpResponse(
         } finally {
             reader.releaseLock();
         }
-        return new Response(null, { status, headers });
+        const response = new Response(null, { status, headers });
+        return request.method === "HEAD" && status === 200 ? prepareStreamingResponse(request, response) : response;
     }
     return prepareStreamingResponse(request, new Response(result.stream, { status, headers }));
 }
@@ -77,7 +89,7 @@ function safeCachePolicy(value: string | null): string {
     if (
         parts.some(
             (part) =>
-                !/^(?:public|no-cache|must-revalidate|immutable|(?:max-age|s-maxage|stale-while-revalidate|stale-if-error)=(?:0|[1-9][0-9]{0,7}))$/u.test(
+                !/^(?:public|no-cache|no-transform|must-revalidate|immutable|(?:max-age|s-maxage|stale-while-revalidate|stale-if-error)=(?:0|[1-9][0-9]{0,7}))$/u.test(
                     part,
                 ),
         )

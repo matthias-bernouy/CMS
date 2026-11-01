@@ -3,7 +3,7 @@ import { edgeSystemMayInvoke } from "../../src/runtime/gateway/edgeSystemAccess"
 
 test("Edge system authority is limited to diagnostic ingestion", () => {
     const actor = { kind: "system", serviceId: "cms-edge" } as const;
-    for (const capability of ["delivery.resolve-path", "pages.list", "pages.get"]) {
+    for (const capability of ["delivery.resolve-path", "delivery.resolve-resource", "pages.list", "pages.get"]) {
         expect(edgeSystemMayInvoke(actor, "ulvia.cms.content", capability)).toBe(false);
     }
     expect(edgeSystemMayInvoke(actor, "ulvia.cms.observability", "logs.append")).toBe(true);

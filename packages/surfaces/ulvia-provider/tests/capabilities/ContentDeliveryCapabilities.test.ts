@@ -69,3 +69,47 @@ test("missing signed actor context and authored actor injection fail before reso
     ).rejects.toMatchObject({ code: "INVALID_INPUT" });
     expect(calls).toHaveLength(0);
 });
+
+test("new Delivery reads HTTP metadata outside input and rejects legacy fields", async () => {
+    const { dispatcher, calls } = fixture();
+    const modern = {
+        ...context,
+        contractVersion: "1.2.0",
+        headers: new Headers({ "accept-language": "fr", "if-none-match": 'W/"v1"', range: "bytes=-12" }),
+    };
+    const result = (await dispatcher.invoke(
+        "ulvia.cms.content",
+        "delivery.resolve-resource",
+        { path: "/", method: "GET", query: [] },
+        modern,
+    )) as ProviderResourceResponse;
+    expect(await result.response.text()).toBe("page");
+    expect(result.metadata.cacheTags).toEqual(["content:pages"]);
+    const request = (calls[0] as unknown[])[3] as { headers: Headers };
+    expect(request.headers.get("accept-language")).toBe("fr");
+    expect(request.headers.get("if-none-match")).toBe('W/"v1"');
+    expect(request.headers.get("range")).toBe("bytes=-12");
+    await expect(
+        dispatcher.invoke(
+            "ulvia.cms.content",
+            "delivery.resolve-resource",
+            { path: "/", method: "GET", query: [], acceptLanguage: "en" },
+            modern,
+        ),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    expect(calls).toHaveLength(1);
+});
+test("the legacy capability retains its explicit header inputs alongside common context", async () => {
+    const { dispatcher, calls } = fixture();
+    const result = (await dispatcher.invoke(
+        "ulvia.cms.content",
+        "delivery.resolve-path",
+        { path: "/", method: "GET", query: [], acceptLanguage: "en", ifNoneMatch: 'W/"old"' },
+        { ...context, headers: new Headers({ "accept-language": "fr" }) },
+    )) as ProviderBinaryResult;
+    await result.stream.cancel();
+    const request = (calls[0] as unknown[])[3] as { headers: Headers };
+    expect(request.headers.get("accept-language")).toBe("en");
+    expect(request.headers.get("if-none-match")).toBe('W/"old"');
+});
+import type { ProviderResourceResponse } from "@bernouy/cms-gateway/provider/server";

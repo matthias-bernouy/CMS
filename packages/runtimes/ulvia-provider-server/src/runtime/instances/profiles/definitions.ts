@@ -30,11 +30,19 @@ const PREPARED_PROFILE: ProfileDefinition = Object.freeze({
     collection: Object.freeze({ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.0.0" }),
 });
 
-export const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
+const RESOURCE_CACHE_PROFILE: ProfileDefinition = Object.freeze({
     id: "ulvia.official",
     version: "1.3.0",
     upgradeFromVersions: Object.freeze(["1.0.0", "1.1.0", "1.2.0"]),
     manifest: Object.freeze({ providerId: "ulvia.official", version: "0.4.0" }),
+    collection: Object.freeze({ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.1.0" }),
+});
+
+export const CURRENT_PROFILE: ProfileDefinition = Object.freeze({
+    id: "ulvia.official",
+    version: "1.4.0",
+    upgradeFromVersions: Object.freeze(["1.0.0", "1.1.0", "1.2.0", "1.3.0"]),
+    manifest: Object.freeze({ providerId: "ulvia.official", version: "0.5.0" }),
     collection: Object.freeze({ publisherId: "ulvia.official", collectionId: "ulvia-official", version: "1.1.0" }),
 });
 
@@ -43,5 +51,6 @@ export const SUPPORTED_PROFILES = Object.freeze([
     PREVIOUS_PROFILE,
     OBSERVABILITY_PROFILE,
     PREPARED_PROFILE,
+    RESOURCE_CACHE_PROFILE,
     CURRENT_PROFILE,
 ]);

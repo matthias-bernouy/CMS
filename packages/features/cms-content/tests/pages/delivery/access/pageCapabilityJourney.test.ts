@@ -88,6 +88,8 @@ test("a published Page is analyzed statically and invokes its public capability 
             bindingId: "http",
             bindingTransport: "http",
             actor: { kind: "anonymous" },
+            requestContext: { headers: {} },
+            signal: expect.any(AbortSignal),
         },
     ]);
 });

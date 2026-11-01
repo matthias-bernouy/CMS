@@ -57,13 +57,11 @@ export default class ContentHarness {
                     path: url.pathname.slice(basePath.length) || "/",
                     method: request.method,
                     query: [...url.searchParams].map(([name, value]) => ({ name, value })),
-                    ...(request.headers.has("if-none-match")
-                        ? { ifNoneMatch: request.headers.get("if-none-match") }
-                        : {}),
                 },
                 actor,
                 (contractId, capabilityId, input) =>
                     executeIndexingCapability(options.capabilityGateway, actor, contractId, capabilityId, input),
+                { headers: request.headers, signal: request.signal },
             );
         };
         for (const method of ["GET", "HEAD"] as const) {
