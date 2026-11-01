@@ -5,7 +5,10 @@ export interface ResourceMetadata {
     readonly status: number;
     readonly headers: Readonly<Record<string, string>>;
 }
-const STATUSES = new Set([200, 206, 301, 302, 303, 304, 307, 308, 400, 401, 403, 404, 410, 416, 422, 500, 503]);
+const STATUSES = new Set([
+    200, 201, 202, 204, 205, 206, 301, 302, 303, 304, 307, 308, 400, 401, 403, 404, 406, 409, 410, 412, 416, 422, 429,
+    500, 502, 503, 504,
+]);
 const HEADERS = new Set([
     "content-type",
     "content-length",
@@ -15,6 +18,9 @@ const HEADERS = new Set([
     "content-disposition",
     "etag",
     "last-modified",
+    "expires",
+    "vary",
+    "link",
     "location",
     "cache-control",
     "retry-after",
@@ -36,8 +42,26 @@ export function parseResourceMetadata(value: unknown): ResourceMetadata {
     ) {
         throw new TypeError("Invalid resource metadata");
     }
-    const vary = boundedList(record.vary, 3, (value) =>
-        ["accept", "accept-language", "accept-encoding"].includes(value),
+    if (
+        record.vary !== undefined &&
+        (!Array.isArray(record.vary) || new Set(record.vary).size !== record.vary.length)
+    ) {
+        throw new TypeError("Invalid Vary dimensions");
+    }
+    const vary = boundedList(
+        record.vary === undefined && !(record.headers as Record<string, unknown>).vary
+            ? undefined
+            : [
+                  ...new Set([
+                      ...(Array.isArray(record.vary) ? record.vary : record.vary === undefined ? [] : [record.vary]),
+                      ...String((record.headers as Record<string, unknown>).vary ?? "")
+                          .split(",")
+                          .map((name) => name.trim().toLowerCase())
+                          .filter(Boolean),
+                  ]),
+              ],
+        16,
+        (value) => value === "*" || value === "accept-encoding" || applicationHeaderName(value),
     );
     const cacheTags = boundedList(record.cacheTags, 32, (value) => /^[a-z0-9][a-z0-9:._-]{0,127}$/u.test(value));
     const headers: Record<string, string> = {};
@@ -45,7 +69,7 @@ export function parseResourceMetadata(value: unknown): ResourceMetadata {
         if (
             !HEADERS.has(name) ||
             typeof content !== "string" ||
-            content.length > 2048 ||
+            content.length > MAX_APPLICATION_HEADER_VALUE ||
             /[\x00-\x1f\x7f]/u.test(content)
         ) {
             throw new TypeError("Unsafe resource header");
@@ -53,7 +77,7 @@ export function parseResourceMetadata(value: unknown): ResourceMetadata {
         headers[name] = content;
     }
     if (
-        [200, 206, 304].includes(record.status) &&
+        ([200, 206].includes(record.status) || headers["content-type"] !== undefined) &&
         (!headers["content-type"] ||
             !/^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+(?:;.*)?$/u.test(headers["content-type"]))
     ) {
@@ -111,3 +135,5 @@ function boundedList(value: unknown, maximum: number, valid: (value: string) => 
     }
     return [...value];
 }
+
+import { applicationHeaderName, MAX_APPLICATION_HEADER_VALUE } from "cms-gateway/protocol/http/headers";

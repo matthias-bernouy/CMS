@@ -172,8 +172,11 @@ async function defaultResolveAddresses(hostname: string): Promise<readonly Resol
 
 function trustedHeaders(request: GatewayHttpExchange, authorization: GatewayHttpAuthorization): Record<string, string> {
     return {
+        ...forwardedHeaders(request),
         ...request.headers,
+        ...(request.requestContext ? { [REQUEST_CONTEXT_HEADER]: encodeRequestContext(request.requestContext) } : {}),
         accept: request.accept ?? "application/json",
+        "accept-encoding": "identity",
         authorization: `Bearer ${authorization.token}`,
         ...(authorization.providerAuthority ? { [PROVIDER_AUTHORITY_HEADER]: authorization.providerAuthority } : {}),
         ...(authorization.delegationTicket ? { [DELEGATION_HEADER]: authorization.delegationTicket } : {}),
@@ -232,4 +235,26 @@ function assertSafeApplicationHeaders(request: GatewayHttpExchange): void {
             throw new TypeError("provider binding supplied a forbidden header");
         }
     }
+}
+
+import {
+    REQUEST_CONTEXT_HEADER,
+    encodeRequestContext,
+    snapshotRequestContext,
+} from "cms-gateway/protocol/http/requestContext";
+function forwardedHeaders(request: GatewayHttpExchange): Readonly<Record<string, string>> {
+    if (!request.requestContext) {
+        return {};
+    }
+    const context = snapshotRequestContext(request.requestContext);
+    const forwarded = context.resource
+        ? Object.fromEntries(Object.entries(context.headers).filter(([name]) => name === "accept-language"))
+        : { ...context.headers };
+    for (const name of Object.keys(forwarded)) {
+        if (Object.hasOwn(request.headers, name) && request.headers[name] !== forwarded[name]) {
+            throw new TypeError("Context collides with an admitted header binding");
+        }
+    }
+    const bound = new Set(request.boundHeaderNames ?? []);
+    return Object.fromEntries(Object.entries(forwarded).filter(([name]) => !bound.has(name)));
 }

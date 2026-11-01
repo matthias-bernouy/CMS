@@ -17,6 +17,27 @@ export function validateHttpResponse(
     if (!Number.isInteger(response.status)) {
         throw new GatewayError("invalid_provider_response", "provider response status is invalid");
     }
+    if (response.notModified) {
+        if (
+            response.status !== 304 ||
+            capability.behavior.effect !== "query" ||
+            capability.behavior.execution !== "sync" ||
+            response.output !== undefined ||
+            response.errorCode ||
+            response.responseEffect ||
+            response.bytes ||
+            response.stream
+        ) {
+            throw new GatewayError("invalid_provider_response", "invalid revalidation outcome");
+        }
+        return {
+            kind: "not-modified",
+            notModified: true,
+            status: 304,
+            requestId,
+            responseHeaders: projectedHeaders(response, [...RESPONSE_HEADERS]),
+        };
+    }
     const responseEffect = validatedResponseEffect(capability, binding, response);
     if (binding.response.successStatuses.includes(response.status)) {
         if (response.errorCode !== undefined) {
@@ -33,6 +54,7 @@ export function validateHttpResponse(
                     requestId,
                     status: response.status,
                     output: parseCapabilityOperationHandle(response.output),
+                    responseHeaders: projectedHeaders(response, [...RESPONSE_HEADERS]),
                     ...(responseEffect ? { responseEffect } : {}),
                 });
             } catch {
@@ -59,16 +81,9 @@ export function validateHttpResponse(
                 requestId,
                 status: response.status,
                 stream,
-                contentType: response.contentType!.split(";", 1)[0]!.trim().toLowerCase(),
+                contentType: response.contentType!,
                 ...(response.contentLength === undefined ? {} : { contentLength: response.contentLength }),
-                responseHeaders: projectedHeaders(response, [
-                    "etag",
-                    "content-disposition",
-                    "content-range",
-                    "accept-ranges",
-                    "cache-control",
-                    "last-modified",
-                ]),
+                responseHeaders: projectedHeaders(response, [...RESPONSE_HEADERS]),
                 ...(responseEffect ? { responseEffect } : {}),
             });
         }
@@ -82,6 +97,7 @@ export function validateHttpResponse(
                 requestId,
                 status: response.status,
                 output,
+                responseHeaders: projectedHeaders(response, [...RESPONSE_HEADERS]),
                 ...(responseEffect ? { responseEffect } : {}),
             });
         } catch {
@@ -173,7 +189,7 @@ function projectedHeaders(
         if (value === undefined) {
             continue;
         }
-        if (typeof value !== "string" || value.length > 1024 || /[\x00-\x1f\x7f]/.test(value)) {
+        if (typeof value !== "string" || value.length > MAX_APPLICATION_HEADER_VALUE || /[\x00-\x1f\x7f]/.test(value)) {
             throw new GatewayError("invalid_provider_response", "provider response header is invalid");
         }
         result[name] = value;
@@ -221,3 +237,5 @@ function byteStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
 function invalidErrorOutput(): never {
     throw new GatewayError("invalid_provider_response", "undeclared error output");
 }
+
+import { RESPONSE_HEADERS, MAX_APPLICATION_HEADER_VALUE } from "cms-gateway/protocol/http/headers";

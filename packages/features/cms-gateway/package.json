@@ -21,6 +21,7 @@
         "./access/providers": "./src/exports/access/providers.ts",
         "./access/providers/mongo": "./src/exports/access/provider-mongo.ts",
         "./provider": "./src/exports/http/provider.ts",
+        "./provider/server": "./src/exports/http/provider-server.ts",
         "./provider/node": "./src/exports/http/provider-client.ts",
         "./access/delegation": "./src/exports/access/delegation.ts",
         "./access/delegation/mongo": "./src/exports/access/delegation-mongo.ts",

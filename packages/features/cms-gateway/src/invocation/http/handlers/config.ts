@@ -5,6 +5,7 @@ import type { GatewayHttpFailureObserver } from "../handleHttpCall";
 export type CapabilityHttpHandlerConfig = {
     siteId: string;
     basePath: string;
+    requestHeaders?: readonly string[];
     invoker: GatewayHttpInvoker;
     resolveActor(request: Request): Promise<GatewayActor>;
     invokeProvider?: (credential: string, invocation: GatewayInvocation) => Promise<GatewayResult>;

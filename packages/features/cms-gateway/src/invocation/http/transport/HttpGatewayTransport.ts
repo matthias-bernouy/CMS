@@ -20,6 +20,9 @@ import { withAbort } from "cms-gateway/invocation/http/transport/withAbort";
 import { decodeSessionEffect } from "cms-gateway/protocol/TrustedCapabilityEffects";
 
 export interface GatewayHttpExchange extends PreparedHttpInvocation {
+    /** All admitted input header mappings, including omitted optional properties. */
+    readonly boundHeaderNames?: readonly string[];
+    readonly requestContext?: GatewayTransportRequest["requestContext"];
     readonly onDispatch?: () => void;
     readonly authorityReads?: GatewayTransportRequest["authorityReads"];
     readonly requestId: string;
@@ -94,13 +97,15 @@ export class HttpGatewayTransport implements GatewayTransport {
     private async exchange(request: GatewayHttpTransportRequest): Promise<GatewayHttpTransportResponse> {
         const prepared = buildHttpInvocation(request);
         const abort = new AbortController();
-        const signal = abort.signal;
+        const signal = request.signal ? AbortSignal.any([abort.signal, request.signal]) : abort.signal;
         const firstByteTimeout = setTimeout(
             () => abort.abort(new DOMException("Provider first byte timed out", "TimeoutError")),
             this.#timeoutMs,
         );
         const exchange: GatewayHttpExchange = {
             ...prepared,
+            boundHeaderNames: request.binding.headers.map(({ wireName }) => wireName),
+            ...(request.requestContext ? { requestContext: request.requestContext } : {}),
             ...(request.onDispatch ? { onDispatch: request.onDispatch } : {}),
             ...(request.authorityReads ? { authorityReads: request.authorityReads } : {}),
             requestId: request.requestId,
@@ -145,8 +150,25 @@ export class HttpGatewayTransport implements GatewayTransport {
             throw error;
         }
         try {
+            if (
+                response.status === 304 &&
+                request.capability.behavior.effect === "query" &&
+                request.capability.behavior.execution === "sync" &&
+                (request.capability.output.type !== "binary" || !request.capability.output.resource) &&
+                isRevalidationRequest(
+                    request.binding.method,
+                    new Headers({ ...prepared.headers, ...request.requestContext?.headers }),
+                )
+            ) {
+                await readBounded(response, 0, signal);
+                clearTimeout(firstByteTimeout);
+                return { status: 304, notModified: true, responseHeaders: allowedResponseHeaders(response.headers) };
+            }
             if (response.redirected || (response.status >= 300 && response.status < 400)) {
                 throw new TypeError("provider redirects are forbidden");
+            }
+            if (response.headers.has("content-encoding") && response.headers.get("content-encoding") !== "identity") {
+                throw new TypeError("Provider ignored identity transfer encoding negotiation");
             }
             const contentType = response.headers.get("content-type") ?? undefined;
             const responseHeaders = allowedResponseHeaders(response.headers);
@@ -179,7 +201,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                     status: response.status,
                     ...(resource ? { resource } : {}),
                     contentType,
-                    stream: boundedStream(prefetched, maximum, abort, this.#inactivityTimeoutMs),
+                    stream: boundedStream(prefetched, maximum, abort, this.#inactivityTimeoutMs, signal),
                     ...(contentLength === undefined ? {} : { contentLength }),
                     responseHeaders,
                     ...(responseEffect ? { responseEffect } : {}),
@@ -237,27 +259,7 @@ export class HttpGatewayTransport implements GatewayTransport {
     }
 }
 
-function allowedResponseHeaders(headers: Headers): Readonly<Record<string, string>> {
-    const values: Record<string, string> = {};
-    for (const name of [
-        "retry-after",
-        "etag",
-        "content-disposition",
-        "content-range",
-        "accept-ranges",
-        "cache-control",
-        "last-modified",
-    ]) {
-        const value = headers.get(name);
-        if (value !== null) {
-            if (value.length > 1024 || /[\x00-\x1f\x7f]/.test(value)) {
-                throw new TypeError("provider response header is invalid");
-            }
-            values[name] = value;
-        }
-    }
-    return Object.freeze(values);
-}
+const allowedResponseHeaders = selectResponseHeaders;
 
 function parseContentLength(value: string | null, maximum: number): number | undefined {
     if (value === null) {
@@ -275,26 +277,34 @@ function boundedStream(
     maximum: number,
     abort: AbortController,
     inactivityTimeoutMs: number,
+    signal: AbortSignal,
 ): ReadableStream<Uint8Array> {
     if (!prefetched.reader) {
         return new ReadableStream({ start: (controller) => controller.close() });
     }
     const reader = prefetched.reader;
-    const signal = abort.signal;
     let length = 0;
     let first = prefetched.first;
+    const onAbort = () => {
+        void reader.cancel(signal.reason).catch(() => undefined);
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    const cleanup = () => signal.removeEventListener("abort", onAbort);
     return new ReadableStream<Uint8Array>({
         async pull(controller) {
             if (signal.aborted) {
+                cleanup();
                 await reader.cancel(signal.reason).catch(() => undefined);
                 controller.error(signal.reason);
                 return;
             }
             try {
-                const next = first ?? (await readWithTimeout(reader, inactivityTimeoutMs, abort));
+                const next =
+                    first ?? (await withAbort(() => readWithTimeout(reader, inactivityTimeoutMs, abort), signal));
                 first = undefined;
                 const { done, value } = next;
                 if (done) {
+                    cleanup();
                     controller.close();
                     return;
                 }
@@ -307,10 +317,13 @@ function boundedStream(
                 }
                 controller.enqueue(value);
             } catch (error) {
+                cleanup();
+                await reader.cancel(error).catch(() => undefined);
                 controller.error(error);
             }
         },
         async cancel(reason) {
+            cleanup();
             abort.abort(reason);
             await reader.cancel(reason).catch(() => undefined);
         },
@@ -402,3 +415,6 @@ function positiveBound(value: number, name: string): number {
     }
     return value;
 }
+
+import { selectResponseHeaders } from "cms-gateway/protocol/http/headers";
+import { isRevalidationRequest } from "cms-gateway/protocol/http/conditional";

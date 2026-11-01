@@ -13,6 +13,8 @@ import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 export const MAX_GATEWAY_JSON_BYTES = MAX_CAPABILITY_JSON_BYTES;
 const INVOCATION_FIELDS = new Set([
     "siteId",
+    "requestContext",
+    "signal",
     "trace",
     "contractId",
     "capabilityId",
@@ -60,6 +62,9 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     if (value.trace !== undefined && !isTraceContext(value.trace)) {
         throw new GatewayError("invalid_input", "Invalid trace context");
     }
+    if (value.signal !== undefined && !(value.signal instanceof AbortSignal)) {
+        throw new GatewayError("invalid_input", "Invalid cancellation signal");
+    }
     const actor = snapshotActor(value.actor);
     if (
         value.delegationTicket !== undefined &&
@@ -75,8 +80,13 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             throw new TypeError("input exceeds gateway limit");
         }
         const binaryBody = snapshotBinaryBody(value.binaryBody);
+        if (value.requestContext) {
+            encodeRequestContext(value.requestContext);
+        }
         return {
             siteId: value.siteId,
+            ...(value.requestContext ? { requestContext: snapshotRequestContext(value.requestContext) } : {}),
+            ...(value.signal ? { signal: value.signal } : {}),
             ...(value.trace ? { trace: { ...value.trace } } : {}),
             contractId: value.contractId,
             capabilityId: value.capabilityId,
@@ -206,3 +216,5 @@ function requireId(value: unknown): void {
         throw new GatewayError("not_authorized", "actor identity is invalid");
     }
 }
+
+import { snapshotRequestContext, encodeRequestContext } from "cms-gateway/protocol/http/requestContext";

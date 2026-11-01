@@ -15,6 +15,9 @@ export interface GatewayHttpCallOptions {
     readonly siteId: string;
     readonly actor: GatewayActor;
     readonly prefix: string;
+    readonly requestHeaders?: readonly string[];
+    /** Set by the host only for its authenticated Provider entrypoint. */
+    readonly trustedRequestContext?: boolean;
     readonly onFailure?: GatewayHttpFailureObserver;
     readonly delegationTicket?: string;
     readonly actorCredential?: GatewayInvocation["actorCredential"];
@@ -42,6 +45,13 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
         const idempotencyKey = requestIdempotencyKey(request, route);
         const result = await options.invoker.invoke({
             siteId: options.siteId,
+            requestContext: readGatewayRequestContext(
+                request,
+                false,
+                options.requestHeaders,
+                options.actor.kind === "provider" || options.trustedRequestContext,
+            ),
+            signal: request.signal,
             ...(options.trace ? { trace: options.trace } : {}),
             contractId: target.contractId,
             capabilityId: route.capability.id,
@@ -55,15 +65,22 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             input,
         });
         return gatewayResultResponse(
-            {
-                ...result,
-                status:
-                    result.status ??
-                    (result.kind === "declared-error"
-                        ? route.binding.response.errorStatuses[result.errorCode]
-                        : route.binding.response.successStatuses[0]),
-            },
+            result.kind === "not-modified"
+                ? result
+                : {
+                      ...result,
+                      status:
+                          result.status ??
+                          (result.kind === "declared-error"
+                              ? route.binding.response.errorStatuses[result.errorCode]
+                              : route.binding.response.successStatuses[0]),
+                  },
             request.method,
+            options.actor.kind === "anonymous" &&
+                !options.trustedRequestContext &&
+                !request.headers.has("authorization") &&
+                route.capability.access === "public" &&
+                route.capability.behavior.effect === "query",
         );
     } catch (error) {
         const head = request.method === "HEAD";
@@ -250,10 +267,20 @@ function parseIdempotencyKey(value: string | null): string | undefined {
     return value;
 }
 
-export function gatewayResultResponse(result: GatewayResult, method: string): Response {
+export function gatewayResultResponse(result: GatewayResult, method: string, allowPublicCache = false): Response {
+    const responseHeaders = {
+        ...result.responseHeaders,
+        ...(!allowPublicCache ? { "cache-control": "private, no-store" } : {}),
+    };
     const effectHeader: Record<string, string> = result.responseEffect
         ? { [SESSION_EFFECT_HEADER]: encodeSessionEffect(result.responseEffect) }
         : {};
+    if (result.kind === "not-modified") {
+        return new Response(null, {
+            status: 304,
+            headers: { ...responseHeaders, "x-ulvia-request-id": result.requestId },
+        });
+    }
     if (result.kind === "binary") {
         if (method === "HEAD") {
             void result.stream.cancel();
@@ -266,7 +293,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
                 "x-content-type-options": "nosniff",
                 "x-ulvia-request-id": result.requestId,
                 ...(result.contentLength === undefined ? {} : { "content-length": String(result.contentLength) }),
-                ...result.responseHeaders,
+                ...responseHeaders,
                 ...effectHeader,
             },
         });
@@ -278,7 +305,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
                 "cache-control": "private, no-store",
                 "x-ulvia-error-code": encodeURIComponent(result.errorCode),
                 "x-ulvia-request-id": result.requestId,
-                ...result.responseHeaders,
+                ...responseHeaders,
                 ...effectHeader,
             },
         });
@@ -289,12 +316,16 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
             headers: {
                 "cache-control": "private, no-store",
                 "x-ulvia-request-id": result.requestId,
+                ...responseHeaders,
                 ...effectHeader,
             },
         });
     }
     return result.kind === "success"
-        ? jsonResponse(result.output ?? null, result.status ?? 200, result.requestId, effectHeader)
+        ? jsonResponse(result.output ?? null, result.status ?? 200, result.requestId, {
+              ...responseHeaders,
+              ...effectHeader,
+          })
         : jsonResponse(
               {
                   error: {
@@ -305,7 +336,7 @@ export function gatewayResultResponse(result: GatewayResult, method: string): Re
               },
               result.status ?? 409,
               result.requestId,
-              result.responseHeaders,
+              { ...responseHeaders, ...effectHeader },
           );
 }
 
@@ -364,3 +395,5 @@ function jsonResponse(
         },
     });
 }
+
+import { readGatewayRequestContext } from "./readRequestContext";

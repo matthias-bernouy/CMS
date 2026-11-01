@@ -109,6 +109,12 @@ export class CapabilityMcpBinding {
                     capabilityId: entry.capability.id,
                 });
             }
+            if (result.kind === "not-modified") {
+                throw new GatewayError(
+                    "invalid_provider_response",
+                    "MCP calls cannot return HTTP revalidation outcomes",
+                );
+            }
             const data =
                 result.kind === "declared-error"
                     ? {

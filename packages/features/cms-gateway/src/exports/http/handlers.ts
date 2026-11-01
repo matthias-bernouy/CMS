@@ -10,6 +10,7 @@ export type {
     CapabilityHttpHandlerConfig,
 } from "cms-gateway/invocation/http/handlers/config";
 export { readGatewayHttpInput } from "cms-gateway/invocation/http/readHttpInput";
+export { readGatewayRequestContext } from "cms-gateway/invocation/http/readRequestContext";
 export {
     CMS_CAPABILITY_CALL_ROUTE,
     CMS_CAPABILITY_MUTATION_ROUTE,

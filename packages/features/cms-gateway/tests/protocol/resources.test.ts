@@ -32,7 +32,7 @@ test("resource redirects accept only bounded root paths or HTTP URLs", () => {
     }
 });
 
-test("negotiated Vary and cache tags are bounded, immutable and cannot vary on unkeyed or credential fields", () => {
+test("negotiated Vary and cache tags are bounded, immutable and rejects credential dimensions and preserves unsupported application dimensions", () => {
     const headers = { "content-type": "text/html" };
     const result = parseResourceMetadata({
         status: 200,
@@ -42,7 +42,7 @@ test("negotiated Vary and cache tags are bounded, immutable and cannot vary on u
     });
     expect(result.vary).toEqual(["accept-language"]);
     expect(Object.isFrozen(result.cacheTags)).toBe(true);
-    for (const vary of [["cookie"], ["authorization"], ["user-agent"], ["*"], ["accept", "accept"]]) {
+    for (const vary of [["cookie"], ["authorization"], ["user-agent"], ["accept", "accept"]]) {
         expect(() => parseResourceMetadata({ status: 200, headers, vary })).toThrow();
     }
     for (const cacheTags of [
@@ -52,5 +52,13 @@ test("negotiated Vary and cache tags are bounded, immutable and cannot vary on u
         ["tag", "tag"],
     ]) {
         expect(() => parseResourceMetadata({ status: 200, headers, cacheTags })).toThrow();
+    }
+});
+
+test("unkeyed Vary dimensions survive metadata for the Edge cache to bypass", () => {
+    for (const vary of [["x-project"], ["*"]]) {
+        expect(parseResourceMetadata({ status: 200, headers: { "content-type": "text/html" }, vary }).vary).toEqual(
+            vary,
+        );
     }
 });

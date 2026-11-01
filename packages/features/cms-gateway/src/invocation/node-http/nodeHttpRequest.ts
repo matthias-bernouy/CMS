@@ -79,6 +79,7 @@ export function toResponse(incoming: IncomingMessage, method: string): Response 
     const headers = new Headers();
     for (const name of [
         "content-type",
+        "content-encoding",
         "x-ulvia-error-code",
         "x-ulvia-request-id",
         SESSION_EFFECT_HEADER,
@@ -91,6 +92,11 @@ export function toResponse(incoming: IncomingMessage, method: string): Response 
         "cache-control",
         "content-length",
         "last-modified",
+        "content-language",
+        "expires",
+        "vary",
+        "location",
+        "link",
     ]) {
         const value = incoming.headers[name];
         if (typeof value === "string") {

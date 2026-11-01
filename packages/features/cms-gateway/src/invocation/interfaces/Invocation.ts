@@ -17,6 +17,8 @@ export type GatewayActor =
     | { readonly kind: "system"; readonly serviceId: string };
 
 export interface GatewayInvocation {
+    readonly requestContext?: GatewayRequestContext;
+    readonly signal?: AbortSignal;
     readonly trace?: TraceContext;
     readonly siteId: string;
     readonly contractId: string;
@@ -73,6 +75,8 @@ export interface GatewayRouteResolver {
 }
 
 export interface GatewayTransportRequest {
+    readonly requestContext?: GatewayRequestContext;
+    readonly signal?: AbortSignal;
     readonly onDispatch?: () => void;
     /** Host-owned initial reads for this dispatch only. Never serialize as wire authority. */
     readonly authorityReads?: GatewayAuthorityReads;
@@ -107,6 +111,7 @@ export interface GatewayTransportRequest {
 }
 
 export interface GatewayTransportResponse {
+    readonly notModified?: true;
     readonly resource?: ResourceMetadata;
     readonly status?: number;
     readonly contentType?: string;
@@ -131,6 +136,7 @@ interface GatewayResultBase {
 }
 
 export type GatewayResult =
+    | (GatewayResultBase & { readonly kind: "not-modified"; readonly notModified: true; readonly status: 304 })
     | (GatewayResultBase & { readonly kind: "success"; readonly output?: unknown })
     | (GatewayResultBase & {
           readonly kind: "binary";
@@ -154,3 +160,5 @@ export interface GatewayInvoker {
 export interface GatewayAccessProbe {
     assertAuthorized(value: Omit<GatewayInvocation, "input">): Promise<void>;
 }
+
+import type { GatewayRequestContext } from "cms-gateway/protocol/http/requestContext";

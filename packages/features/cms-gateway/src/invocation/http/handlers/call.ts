@@ -32,11 +32,13 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
             }
             const response = await handleGatewayHttpCall(request, {
                 siteId: config.siteId,
+                requestHeaders: config.requestHeaders,
                 invoker: {
                     resolveContract: (value) => config.invoker.resolveContract(value),
                     invoke: (value) => config.invokeProvider!(authorization.slice(7), value),
                 },
                 actor: { kind: "anonymous" }, // Only the broker derives Provider authority.
+                trustedRequestContext: true,
                 trace: readTraceContext(request.headers.get(TRACE_CONTEXT_HEADER)),
                 prefix: routePrefix(config.basePath),
                 onFailure: config.onFailure,
@@ -52,6 +54,7 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
         if (installationId) {
             return handleGatewayHttpCall(request, {
                 siteId: config.siteId,
+                requestHeaders: config.requestHeaders,
                 invoker: config.invoker,
                 actor: {
                     kind: "provider",
@@ -95,6 +98,7 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
         }
         return handleGatewayHttpCall(request, {
             siteId: config.siteId,
+            requestHeaders: config.requestHeaders,
             invoker: config.invoker,
             actor,
             prefix: routePrefix(config.basePath),

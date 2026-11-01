@@ -2,7 +2,10 @@ import type { DelegationContext } from "cms-gateway/access/delegation/interfaces
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { GatewayTransportRequest, GatewayTransportResponse } from "cms-gateway/invocation/interfaces/Invocation";
 
-export type ProviderInvocationOptions = Pick<GatewayTransportRequest, "idempotencyKey" | "binaryBody" | "bindingId"> &
+export type ProviderInvocationOptions = Pick<
+    GatewayTransportRequest,
+    "idempotencyKey" | "binaryBody" | "bindingId" | "requestContext" | "signal"
+> &
     ({ readonly authority: "provider" } | { readonly authority: "delegated"; readonly delegation: DelegationContext });
 export interface ProviderCapabilityClient {
     invoke(
@@ -25,6 +28,8 @@ export class ProviderClientError extends Error {
         readonly code: string,
         readonly retryable: boolean,
         readonly status?: number,
+        readonly output?: unknown,
+        readonly responseHeaders?: Readonly<Record<string, string>>,
     ) {
         super(`Provider capability rejected: ${code}`);
         this.name = "ProviderClientError";

@@ -31,6 +31,8 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
             }
             const result = await config.invoker.invoke({
                 siteId: config.siteId,
+                requestContext: readGatewayRequestContext(request, false, config.requestHeaders),
+                signal: request.signal,
                 contractId,
                 capabilityId,
                 ...(await logicalHttpBinding(config.invoker, { siteId: config.siteId, contractId, capabilityId })),
@@ -40,7 +42,14 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
                     ? { actorCredential: actorCredentialFromRequest(request) }
                     : {}),
             });
-            return gatewayResultResponse(result, request.method);
+            return gatewayResultResponse(
+                result,
+                request.method,
+                actor.kind === "anonymous" &&
+                    !request.headers.has("authorization") &&
+                    capability.access === "public" &&
+                    capability.effect === "query",
+            );
         } catch (error) {
             return logicalFailure(error, actor);
         }
@@ -69,6 +78,8 @@ export function createCapabilityMutationHandler(config: CapabilityMutationHandle
             const idempotencyKey = mutationIdempotencyKey(request, capability.idempotency);
             const result = await config.invoker.invoke({
                 siteId: config.siteId,
+                requestContext: readGatewayRequestContext(request, false, config.requestHeaders),
+                signal: request.signal,
                 contractId,
                 capabilityId,
                 ...(await logicalHttpBinding(config.invoker, { siteId: config.siteId, contractId, capabilityId })),
@@ -79,7 +90,14 @@ export function createCapabilityMutationHandler(config: CapabilityMutationHandle
             if (result.kind === "success") {
                 notifyMutationSuccess(config, { contractId, capabilityId });
             }
-            return gatewayResultResponse(result, request.method);
+            return gatewayResultResponse(
+                result,
+                request.method,
+                actor.kind === "anonymous" &&
+                    !request.headers.has("authorization") &&
+                    capability.access === "public" &&
+                    capability.effect === "query",
+            );
         } catch (error) {
             return logicalFailure(error, actor);
         }
@@ -179,3 +197,5 @@ function logicalFailure(error: unknown, actor: GatewayActor): Response {
                 : 503;
     return gatewayFailureResponse(code, status, error instanceof GatewayError ? error.requestId : undefined);
 }
+
+import { readGatewayRequestContext } from "../readRequestContext";

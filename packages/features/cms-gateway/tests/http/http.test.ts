@@ -148,10 +148,10 @@ test("binary provider responses stay streamed and retain safe resource headers",
                 },
             ),
     );
-    const response = await handleGatewayHttpCall(
-        new Request("https://site.example/.cms/call/catalog/v1/files/one"),
-        options(gateway),
-    );
+    const response = await handleGatewayHttpCall(new Request("https://site.example/.cms/call/catalog/v1/files/one"), {
+        ...options(gateway),
+        actor: { kind: "anonymous" },
+    });
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("image/avif");
     expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
@@ -302,3 +302,29 @@ function options(invoker: CapabilityGateway) {
         invoker,
     };
 }
+
+test("JSON response metadata survives while authenticated callers remain private", async () => {
+    const route = await gatewayRoute();
+    const gateway = gatewayFor(route, async () =>
+        Response.json(
+            { items: ["one"] },
+            { headers: { "cache-control": "public, max-age=60", etag: '"v1"', "content-language": "fr" } },
+        ),
+    );
+    for (const mode of ["system", "anonymous", "bearer", "broker"] as const) {
+        const request = new Request("https://site.example/.cms/call/catalog/v1/items", {
+            headers: mode === "bearer" ? { authorization: "Bearer opaque" } : {},
+        });
+        const response = await handleGatewayHttpCall(request, {
+            ...options(gateway),
+            ...(mode !== "system" ? { actor: { kind: "anonymous" as const } } : {}),
+            ...(mode === "broker" ? { trustedRequestContext: true } : {}),
+        });
+        expect(response.headers.get("cache-control")).toBe(
+            mode === "anonymous" ? "public, max-age=60" : "private, no-store",
+        );
+        expect(response.headers.get("etag")).toBe('"v1"');
+        expect(response.headers.get("content-language")).toBe("fr");
+        expect(await response.json()).toEqual({ items: ["one"] });
+    }
+});

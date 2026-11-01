@@ -97,6 +97,8 @@ export class GatewayProviderClient {
                       },
                   }
                 : {}),
+            ...(options.requestContext ? { requestContext: options.requestContext } : {}),
+            ...(options.signal && capability.behavior.effect === "query" ? { signal: options.signal } : {}),
             requestId: crypto.randomUUID(),
             instanceId: "cms",
             installationId: "connection",
@@ -111,6 +113,8 @@ export class GatewayProviderClient {
                 response.errorCode,
                 capability.errors.find((error) => error.code === response.errorCode)?.retryable ?? false,
                 response.status,
+                response.output,
+                response.responseHeaders,
             );
         }
         return response;

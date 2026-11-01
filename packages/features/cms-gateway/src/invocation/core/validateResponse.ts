@@ -17,6 +17,21 @@ export function validateResponse(
         ...(response.responseHeaders ? { responseHeaders: response.responseHeaders } : {}),
     };
     try {
+        if (response.notModified) {
+            if (
+                response.status !== 304 ||
+                capability.behavior.effect !== "query" ||
+                capability.behavior.execution !== "sync" ||
+                response.output !== undefined ||
+                response.errorCode ||
+                response.responseEffect ||
+                response.bytes ||
+                response.stream
+            ) {
+                throw new Error("Invalid revalidation outcome");
+            }
+            return { ...metadata, kind: "not-modified", notModified: true, status: 304 };
+        }
         if (response.errorCode !== undefined) {
             const error = capability.errors.find((item) => item.code === response.errorCode);
             if (!error || response.responseEffect || response.stream || response.bytes) {
@@ -73,7 +88,7 @@ export function validateResponse(
                 kind: "binary",
                 ...(capability.output.resource ? { resource: parseResourceMetadata(response.resource) } : {}),
                 stream: boundedBinary(stream, capability.output.maxBytes),
-                contentType: response.contentType.split(";", 1)[0]!.trim().toLowerCase(),
+                contentType: response.contentType,
                 ...(response.contentLength === undefined ? {} : { contentLength: response.contentLength }),
             };
         }

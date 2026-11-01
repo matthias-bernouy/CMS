@@ -285,6 +285,8 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 ...(invocation.bindingTransport ? { bindingTransport: invocation.bindingTransport } : {}),
                 ...(invocation.metadataOnly ? { metadataOnly: true } : {}),
                 input,
+                ...(invocation.requestContext ? { requestContext: invocation.requestContext } : {}),
+                ...(invocation.signal && !isCommand ? { signal: invocation.signal } : {}),
                 ...(invocation.binaryBody ? { binaryBody: invocation.binaryBody } : {}),
                 ...(subjectId ? { subjectId } : {}),
                 ...(capability.output.type === "binary" &&
