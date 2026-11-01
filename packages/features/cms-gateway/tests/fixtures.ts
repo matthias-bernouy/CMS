@@ -7,6 +7,7 @@ export const NOW = "2026-09-29T08:00:00.000Z";
 
 export async function gatewayRoute(
     overrides: {
+        errorOutput?: Record<string, unknown>;
         endpoint?: string;
         contractId?: string;
         capabilityId?: string;
@@ -77,7 +78,13 @@ export async function gatewayRoute(
                             },
                             required: ["items"],
                         },
-                errors: [{ code: "NOT_FOUND", retryable: false }],
+                errors: [
+                    {
+                        code: "NOT_FOUND",
+                        retryable: false,
+                        ...(overrides.errorOutput ? { output: overrides.errorOutput } : {}),
+                    },
+                ],
                 ...(overrides.mcp ? { bindings: [{ id: "mcp", transport: "mcp" as const }] } : {}),
                 bindings: [
                     {

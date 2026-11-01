@@ -310,7 +310,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 throw new GatewayError("stale_route", "selection or installation changed during invocation");
             }
             tracker.enter("validation");
-            result = validateResponse(capability, response, requestId);
+            result = validateResponse(capability, response, requestId, invocation.metadataOnly);
             if (isCommand) {
                 await this.#auditCommand(
                     commandAuditEvent(
@@ -576,8 +576,8 @@ function snapshotInput(value: unknown, capability: CapabilityDefinition): Readon
         );
         validateSchemaValue({ ...capability.input, properties, required }, value);
         return input;
-    } catch {
-        throw new GatewayError("invalid_input", "input violates the selected capability schema");
+    } catch (cause) {
+        throw new GatewayError("invalid_input", "input violates the selected capability schema", undefined, { cause });
     }
 }
 

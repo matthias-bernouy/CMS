@@ -94,7 +94,7 @@ export function createCapabilityHttpHandler(config: CapabilityHttpHandlerConfig)
                         ? 404
                         : 503;
             observeFailure(config.onFailure, { code, status, phase: "authorization" }, error);
-            return gatewayFailureResponse(code, status);
+            return gatewayFailureResponse(code, status, undefined, { request, cause: error });
         }
         return handleGatewayHttpCall(request, {
             siteId: config.siteId,

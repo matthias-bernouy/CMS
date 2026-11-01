@@ -44,6 +44,9 @@ export {
     decodeRequestContext,
     type GatewayRequestContext,
 } from "cms-gateway/protocol/http/requestContext";
+export { negotiateMessageLanguage, type MessageLanguage } from "cms-gateway/protocol/http/messageLanguage";
+export { inputFailureResponse } from "cms-gateway/protocol/http/inputFailure";
+
 export {
     REQUEST_HEADERS,
     RESPONSE_HEADERS,

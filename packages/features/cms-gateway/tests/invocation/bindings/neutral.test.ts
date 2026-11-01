@@ -55,3 +55,26 @@ test("neutral binary outputs preserve MIME metadata and enforce the declared str
         await expect(new Response(malformed.stream).text()).rejects.toThrow("non-byte chunk");
     }
 });
+
+test("protocol-neutral errors project additive details and keep validating the selected schema", async () => {
+    const schema = {
+        type: "object",
+        properties: { message: { type: "string", maxLength: 100 } },
+        required: ["message"],
+    };
+    for (const errorOutput of [undefined, schema]) {
+        const f = await scope([mcp], { errorOutput });
+        f.respond({ errorCode: "NOT_FOUND", output: { message: "No page", internal: "not declared" } });
+        const result = await f.gateway.invoke(invocation);
+        expect(result.kind).toBe("declared-error");
+        expect(result.kind === "declared-error" ? result.output : null).toEqual(
+            errorOutput ? { message: "No page" } : undefined,
+        );
+        if (errorOutput) {
+            f.respond({ errorCode: "NOT_FOUND", output: {} });
+            await expect(f.gateway.invoke(invocation)).rejects.toMatchObject({ code: "invalid_provider_response" });
+        }
+        f.respond({ errorCode: "UNKNOWN", output: { message: "No page" } });
+        await expect(f.gateway.invoke(invocation)).rejects.toMatchObject({ code: "invalid_provider_response" });
+    }
+});

@@ -51,7 +51,7 @@ export function createCapabilityQueryHandler(config: CapabilityQueryHandlerConfi
                     capability.effect === "query",
             );
         } catch (error) {
-            return logicalFailure(error, actor);
+            return logicalFailure(error, actor, request);
         }
     };
 }
@@ -99,7 +99,7 @@ export function createCapabilityMutationHandler(config: CapabilityMutationHandle
                     capability.effect === "query",
             );
         } catch (error) {
-            return logicalFailure(error, actor);
+            return logicalFailure(error, actor, request);
         }
     };
 }
@@ -183,7 +183,7 @@ function mutationIdempotencyKey(request: Request, mode: "none" | "natural" | "ke
     return raw;
 }
 
-function logicalFailure(error: unknown, actor: GatewayActor): Response {
+function logicalFailure(error: unknown, actor: GatewayActor, request: Request): Response {
     const code = error instanceof GatewayError ? error.code : "internal_error";
     const status =
         code === "invalid_input"
@@ -195,7 +195,10 @@ function logicalFailure(error: unknown, actor: GatewayActor): Response {
               : code === "not_selected" || code === "invalid_route"
                 ? 404
                 : 503;
-    return gatewayFailureResponse(code, status, error instanceof GatewayError ? error.requestId : undefined);
+    return gatewayFailureResponse(code, status, error instanceof GatewayError ? error.requestId : undefined, {
+        request,
+        cause: error,
+    });
 }
 
 import { readGatewayRequestContext } from "../readRequestContext";

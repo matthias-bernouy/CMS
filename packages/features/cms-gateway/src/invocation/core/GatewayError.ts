@@ -19,8 +19,9 @@ export class GatewayError extends Error {
         readonly code: GatewayErrorCode,
         message: string,
         readonly requestId?: string,
+        options?: ErrorOptions,
     ) {
-        super(message);
+        super(message, options);
         this.name = "GatewayError";
     }
 }

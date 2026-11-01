@@ -1,3 +1,4 @@
+import { inputFailureResponse } from "cms-gateway/protocol/http/inputFailure";
 import { RESOURCE_HEADER } from "../resource/metadata";
 import type { GatewayHttpRoute } from "./route/interfaces";
 import type { GatewayHttpInvoker } from "./route/interfaces";
@@ -87,10 +88,14 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
         const code = error instanceof GatewayError ? error.code : "internal_error";
         const status = error instanceof GatewayError ? errorStatus(error, options.actor) : 500;
         observeFailure(options.onFailure, { code, status, phase: "invocation" }, error);
-        if (head) {
+        if (head && code !== "invalid_input") {
             return headFailure(code, status, error instanceof GatewayError ? error.requestId : undefined);
         }
-        return gatewayFailureResponse(code, status, error instanceof GatewayError ? error.requestId : undefined);
+        return gatewayFailureResponse(code, status, error instanceof GatewayError ? error.requestId : undefined, {
+            request,
+            cause: error,
+            trustedContext: options.actor.kind === "provider" || options.trustedRequestContext,
+        });
     }
 }
 
@@ -340,7 +345,15 @@ export function gatewayResultResponse(result: GatewayResult, method: string, all
           );
 }
 
-export function gatewayFailureResponse(code: string, status: number, requestId?: string): Response {
+export function gatewayFailureResponse(
+    code: string,
+    status: number,
+    requestId?: string,
+    input?: Readonly<{ request: Request; cause?: unknown; trustedContext?: boolean }>,
+): Response {
+    if (code === "invalid_input" && input) {
+        return inputFailureResponse(input.request, status, input.cause, requestId, input.trustedContext);
+    }
     return jsonResponse({ failure: { code, retryable: retryableGatewayFailure(code) } }, status, requestId);
 }
 

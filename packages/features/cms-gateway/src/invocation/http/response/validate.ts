@@ -119,7 +119,7 @@ export function validateHttpResponse(
         throw new GatewayError("invalid_provider_response", "provider error content type is invalid");
     }
     try {
-        const errorHeaders = projectedHeaders(response, ["retry-after", "content-range"]);
+        const errorHeaders = projectedHeaders(response, ["retry-after", "content-range", "content-language"]);
         if (
             response.status === 416 &&
             errorHeaders["content-range"] !== undefined &&
@@ -127,11 +127,10 @@ export function validateHttpResponse(
         ) {
             throw new GatewayError("invalid_provider_response", "provider unsatisfied range is invalid");
         }
-        const output = definition.output
-            ? projectSchemaValue(definition.output, response.output)
-            : response.output === undefined || response.output === null
-              ? undefined
-              : invalidErrorOutput();
+        const output =
+            definition.output && binding.response.errorEnvelope.kind !== "headers"
+                ? projectSchemaValue(definition.output, response.output)
+                : undefined;
         return Object.freeze({
             kind: "declared-error",
             requestId,
@@ -232,10 +231,6 @@ function byteStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
             controller.close();
         },
     });
-}
-
-function invalidErrorOutput(): never {
-    throw new GatewayError("invalid_provider_response", "undeclared error output");
 }
 
 import { RESPONSE_HEADERS, MAX_APPLICATION_HEADER_VALUE } from "cms-gateway/protocol/http/headers";

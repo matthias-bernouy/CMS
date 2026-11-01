@@ -10,6 +10,7 @@ export function validateResponse(
     capability: CapabilityDefinition,
     response: GatewayTransportResponse,
     requestId: string,
+    metadataOnly = false,
 ): GatewayResult {
     const metadata = {
         requestId,
@@ -37,15 +38,12 @@ export function validateResponse(
             if (!error || response.responseEffect || response.stream || response.bytes) {
                 throw new Error("Invalid declared error");
             }
-            if (!error.output && response.output !== undefined && response.output !== null) {
-                throw new Error("Undeclared error output");
-            }
             return {
                 ...metadata,
                 kind: "declared-error",
                 errorCode: error.code,
                 retryable: error.retryable,
-                ...(error.output ? { output: projectSchemaValue(error.output, response.output) } : {}),
+                ...(error.output && !metadataOnly ? { output: projectSchemaValue(error.output, response.output) } : {}),
             };
         }
         const effect = response.responseEffect;

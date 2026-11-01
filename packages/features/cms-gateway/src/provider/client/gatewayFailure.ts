@@ -1,3 +1,5 @@
+import { projectSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { selectResponseHeaders } from "cms-gateway/protocol/http/headers";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 import { withAbort } from "cms-gateway/invocation/http/transport/withAbort";
 import { ProviderClientError } from "./interfaces";
@@ -23,13 +25,13 @@ export async function gatewayFailure(
                 break;
             }
             length += next.value.byteLength;
-            if (length > 1024) {
+            if (length > 8192) {
                 return;
             }
             chunks.push(next.value);
         }
-        const parsed = parseStrictJson(Buffer.concat(chunks), 1024, 4) as {
-            failure?: { code?: unknown; retryable?: unknown };
+        const parsed = parseStrictJson(Buffer.concat(chunks), 8192, 4) as {
+            failure?: { code?: unknown; retryable?: unknown; output?: unknown };
         };
         if (
             !parsed ||
@@ -41,7 +43,24 @@ export async function gatewayFailure(
         ) {
             return;
         }
-        return new ProviderClientError(parsed.failure.code, parsed.failure.retryable, response.status);
+        const output =
+            parsed.failure.output === undefined
+                ? undefined
+                : projectSchemaValue(
+                      {
+                          type: "object",
+                          properties: { message: { type: "string", minLength: 1, maxLength: 2048 } },
+                          required: ["message"],
+                      },
+                      parsed.failure.output,
+                  );
+        return new ProviderClientError(
+            parsed.failure.code,
+            parsed.failure.retryable,
+            response.status,
+            output,
+            selectResponseHeaders(response.headers),
+        );
     } catch {
         if (signal.aborted) {
             throw signal.reason;

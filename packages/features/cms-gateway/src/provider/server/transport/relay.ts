@@ -1,7 +1,8 @@
 import { runWithTraceContext } from "@bernouy/logging/tracing";
-import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { projectSchemaValue, validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
 import type { ProviderInvocationClaims } from "cms-gateway/exports/protocol";
+import { inputFailureResponse } from "cms-gateway/protocol/http/inputFailure";
 import { RequestBodyTooLargeError } from "@bernouy/http-runner";
 import type { Logger } from "@bernouy/logging";
 import {
@@ -68,10 +69,13 @@ export function createProviderContractRelay(
                 },
                 cause,
             );
-            return new Response(null, {
-                status: cause instanceof RequestBodyTooLargeError ? 413 : 400,
-                headers: { "Cache-Control": "no-store" },
-            });
+            return inputFailureResponse(
+                request,
+                cause instanceof RequestBodyTooLargeError ? 413 : 400,
+                cause,
+                claims.requestId,
+                true,
+            );
         }
         try {
             if (!(await authorize(claims, controlAuthority))) {
@@ -97,7 +101,7 @@ export function createProviderContractRelay(
                           context.requestContext?.resource?.method ?? request.method,
                           resource?.metadata,
                           context.signal,
-                          isRevalidationRequest(request.method, context.headers!),
+                          isRevalidationRequest(request.method, context.http!.headers),
                       )
                     : undefined;
             if (adapted?.notModified) {
@@ -145,11 +149,10 @@ export function createProviderContractRelay(
                 const status = capability.binding.response.errorStatuses[cause.code];
                 const definition = capability.errors.find((error) => error.code === cause.code);
                 let valid = Boolean(definition);
+                let errorOutput: unknown;
                 try {
                     if (definition?.output) {
-                        validateSchemaValue(definition.output, cause.output);
-                    } else if (cause.output !== undefined) {
-                        valid = false;
+                        errorOutput = projectSchemaValue(definition.output, cause.output);
                     }
                 } catch {
                     valid = false;
@@ -168,7 +171,7 @@ export function createProviderContractRelay(
                         {
                             error: {
                                 code: cause.code,
-                                ...(cause.output === undefined ? {} : { output: cause.output }),
+                                ...(errorOutput === undefined ? {} : { output: errorOutput }),
                             },
                         },
                         {
