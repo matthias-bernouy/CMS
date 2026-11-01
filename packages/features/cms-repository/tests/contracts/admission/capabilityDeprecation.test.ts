@@ -68,3 +68,16 @@ describe("capability deprecation", () => {
         ).toThrow("must be a valid date-time");
     });
 });
+
+test("replacement chains cannot form a lifecycle cycle", () => {
+    expect(() =>
+        parseContractRelease(
+            contractDocument({
+                capabilities: [
+                    capabilityDocument({ id: "first", deprecation: { replacedBy: "second" } }),
+                    capabilityDocument({ id: "second", deprecation: { replacedBy: "first" } }),
+                ],
+            }),
+        ),
+    ).toThrow("replacement cycle");
+});

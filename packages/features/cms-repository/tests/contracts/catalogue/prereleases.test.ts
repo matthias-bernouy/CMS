@@ -12,13 +12,30 @@ const release = (version: string, maximum = 100) =>
     );
 
 describe("prerelease target evolution", () => {
-    test("allows major previews to evolve freely before final stabilization", async () => {
+    test("allows new preview capabilities to evolve while stable identities stay compatible", async () => {
         const catalogue = new InMemoryReleaseCatalogue();
         await catalogue.publish(await release("1.0.0"));
-        await catalogue.publish(await release("2.0.0-alpha.1", 50));
-        await catalogue.publish(await release("2.0.0-alpha.2", 150));
-        await catalogue.publish(await release("2.0.0-beta.1", 30));
-        await expect(catalogue.publish(await release("2.0.0", 80))).resolves.toMatchObject({
+        const preview = async (version: string, maximum: number) => {
+            const stable = (await release("1.0.0")).release.capabilities[0]!;
+            return admitContractRelease(
+                contractDocument({
+                    version,
+                    capabilities: [
+                        stable,
+                        {
+                            ...stable,
+                            id: "email.message.deliver",
+                            input: objectSchema({ name: stringSchema(maximum) }, ["name"]),
+                            bindings: stable.bindings.map((binding) => ({ ...binding, path: "/v2/messages" })),
+                        },
+                    ],
+                }),
+            );
+        };
+        await catalogue.publish(await preview("2.0.0-alpha.1", 50));
+        await catalogue.publish(await preview("2.0.0-alpha.2", 150));
+        await catalogue.publish(await preview("2.0.0-beta.1", 30));
+        await expect(catalogue.publish(await preview("2.0.0", 80))).resolves.toMatchObject({
             admission: { release: { version: "2.0.0" } },
         });
     });

@@ -50,6 +50,22 @@ export async function releaseCatalogue(...documents: Record<string, unknown>[]):
     return catalogue;
 }
 
+/** A replacement is introduced and deprecated before a major removes the former capability. */
+export function capabilityTransition(
+    contractId: string,
+    previousId: string,
+    nextId: string,
+): Record<string, unknown>[] {
+    const next = contractDocument(contractId, nextId, "2.0.0");
+    const replacement = (next.capabilities as Record<string, unknown>[])[0]!;
+    (replacement.bindings as Record<string, unknown>[])[0]!.path = `/v2/${contractId.replaceAll(".", "/")}`;
+    const transition = contractDocument(contractId, previousId, "1.1.0");
+    const previous = (transition.capabilities as Record<string, unknown>[])[0]!;
+    previous.deprecation = { replacedBy: nextId };
+    (transition.capabilities as Record<string, unknown>[]).push(structuredClone(replacement));
+    return [transition, next];
+}
+
 export function manifestDocument(
     implementations: readonly Record<string, unknown>[],
     overrides: Record<string, unknown> = {},

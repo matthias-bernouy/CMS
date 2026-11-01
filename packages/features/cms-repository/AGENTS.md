@@ -120,15 +120,24 @@ models and validation for CMS-owned installations and site selections.
   new outputs projected through the old schema remain valid for old consumers.
   Additive output fields can be minor; preserve old required fields and bounds
   recursively. Never truncate values or coerce types to manufacture compatibility.
-  Unknown relationships require a major; documentation-only or semantically
+  Unknown capability compatibility requires a new capability identity; documentation-only or semantically
   equivalent changes may be patches. Compare effective object cardinalities and
   presence, including required fields and fields forced present by a closed
   object's minimum count; equivalent constraints must not force a bump.
 - Compatibility reports separate valid publication evolution from consumer
   compatibility. Neither proves that a running provider supports old HTTP bindings.
-  Catalogue publication compares with the latest stable release of the same
-  major and checks monotonic order within a prerelease target. Preview shapes
-  may change before stabilization without breaking an existing stable major line.
+  Catalogue publication retains SemVer checks within a major and enforces stable
+  capability identities across majors against the preceding known stable release.
+  Inputs and outputs cannot lose named fields, even optional ones; existing HTTP
+  bindings remain executable. Breaking changes require a new capability ID.
+  Removal requires a major and a previous stable release deprecating the capability
+  with a replacement retained in the target, or explicit `retirement: true` and a
+  reason for withdrawal without a successor. Retired IDs cannot be recycled.
+  Backports must preserve identities already stable in higher known releases.
+  New preview identities may evolve before stabilization; previews cannot bypass
+  an existing stable identity. Exact republishes and restoration of verified
+  already-stored history do not re-publish historical bytes under a new policy.
+  Single-release admission alone cannot prove missing publication history.
 - A site's selected release remains authoritative for input and output bounds.
   A newer provider build neither widens it nor proves runtime support for earlier
   release digests. Installation and gateway enforcement are outside contracts.

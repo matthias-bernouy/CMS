@@ -47,7 +47,11 @@ export async function planContractPublications(
                 "$.publisherId",
             );
         }
-        verifyEvolution(admission.release, [...published, ...planned], snapshotLimits);
+        verifyEvolution(admission.release, [...published, ...planned], snapshotLimits, [
+            ...published,
+            ...planned,
+            ...staged,
+        ]);
         verifySpecialization(admission.release, [...published, ...staged]);
         planned.push(Object.freeze({ admission, publishedAt: PLANNED_AT }));
     }

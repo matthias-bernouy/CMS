@@ -8,6 +8,8 @@ export type CapabilityUsageEvidence = Readonly<{
     requirements: readonly Readonly<{
         contractId: string;
         capabilityId?: string;
+        /** Host-owned adapters support these alternatives; authored references never infer them from deprecation. */
+        alternatives?: readonly Readonly<{ capabilityId: string; versionRange?: string }>[];
         bindingPath?: string;
         versionRange?: string;
         location: string;

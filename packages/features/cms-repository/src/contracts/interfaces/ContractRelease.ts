@@ -24,6 +24,8 @@ export type CapabilityBehavior =
 
 /** Admission requires at least one of these deprecation fields. */
 export interface CapabilityDeprecation {
+    /** Explicit withdrawal without a successor; requires a reason. */
+    readonly retirement?: true;
     readonly reason?: string;
     readonly replacedBy?: string;
     readonly sunsetAt?: string;

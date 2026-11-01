@@ -4,7 +4,14 @@ import { parseProviderInstallation } from "@bernouy/cms-repository/providers/ins
 import type { ContractSelection, ContractSelectionContext } from "@bernouy/cms-repository/providers/selections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { installationDocument } from "../installations/fixtures";
-import { contractDocument, implementation, manifestDocument, releaseCatalogue, requirement } from "../support/fixtures";
+import {
+    capabilityTransition,
+    contractDocument,
+    implementation,
+    manifestDocument,
+    releaseCatalogue,
+    requirement,
+} from "../support/fixtures";
 
 export const siteId = "site:STORE_1";
 
@@ -31,7 +38,7 @@ export async function graphFixture(extraRequirements: Record<string, unknown>[] 
         contractDocument("payment", "pay"),
         contractDocument("payment", "pay", "2.0.0"),
         contractDocument("emailer", "send"),
-        contractDocument("emailer", "deliver", "2.0.0"),
+        ...capabilityTransition("emailer", "send", "deliver"),
         commerce("1.0.0", "^1.0.0"),
         commerce("1.1.0", "^1.0.0 || ^2.0.0"),
     );

@@ -1,6 +1,7 @@
 import type { ContractRelease } from "cms-repository/contracts/interfaces/ContractRelease";
 import type { CatalogueContractRelease } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 import { ReleaseValidationError } from "cms-repository/contracts/core/protocol/errors";
+import { validateDeprecationReferences } from "../../parsing/parseDeprecation";
 
 /** A specialization declares only additions and inherits its exact ancestors from the catalogue. */
 export function verifySpecialization(release: ContractRelease, published: readonly CatalogueContractRelease[]): void {
@@ -21,6 +22,7 @@ export function verifySpecialization(release: ContractRelease, published: readon
         );
     }
     const inheritedIds = new Set<string>();
+    const capabilities = [...release.capabilities];
     let ancestor = parentRecord;
     const visited = new Set<string>();
     while (ancestor) {
@@ -30,6 +32,7 @@ export function verifySpecialization(release: ContractRelease, published: readon
         visited.add(ancestor.admission.release.contractId);
         for (const capability of ancestor.admission.release.capabilities) {
             inheritedIds.add(capability.id);
+            capabilities.push(capability);
         }
         const parent = ancestor.admission.release.extends;
         if (!parent) {
@@ -57,4 +60,5 @@ export function verifySpecialization(release: ContractRelease, published: readon
             );
         }
     }
+    validateDeprecationReferences(capabilities);
 }

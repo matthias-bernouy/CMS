@@ -68,12 +68,13 @@ export async function validateCapabilityUsage(
             candidate.lineage.some((release) => release.contractId === reference.contractId),
         );
         const contract = node?.lineage.find((release) => release.contractId === reference.contractId);
-        const capability = node ? capabilityForReference(node, reference) : undefined;
+        const use = node ? resolveReference(node, reference) : undefined;
+        const capability = use?.capability;
         if (
             !node ||
             !contract ||
             !capability ||
-            (reference.versionRange !== undefined && !satisfiesVersionRange(contract.version, reference.versionRange))
+            (use?.versionRange !== undefined && !satisfiesVersionRange(contract.version, use.versionRange))
         ) {
             const oldNodeForMissing = before.find((candidate) =>
                 candidate.lineage.some((release) => release.contractId === reference.contractId),
@@ -92,7 +93,7 @@ export async function validateCapabilityUsage(
         );
         const oldContract = oldNode?.lineage.find((release) => release.contractId === reference.contractId);
         const oldCapability = oldNode ? capabilityForReference(oldNode, reference) : undefined;
-        if (oldContract && oldCapability) {
+        if (oldContract && oldCapability && oldCapability.id === capability.id) {
             const { extends: _oldParent, ...oldBase } = oldContract;
             const { extends: _targetParent, ...targetBase } = contract;
             const compatibility = compareContractReleases(
@@ -139,12 +140,29 @@ export async function validateCapabilityUsage(
     return issues;
 }
 
-function capabilityForReference(
+function resolveReference(
     node: Awaited<ReturnType<typeof selectedContractNodes>>[number],
     reference: CapabilityUsageEvidence["requirements"][number],
 ) {
     if (reference.capabilityId) {
-        return node.capabilities.find(({ id }) => id === reference.capabilityId);
+        if ((reference.alternatives?.length ?? 0) > 16) {
+            throw new TypeError("Too many runtime capability alternatives");
+        }
+        const contract = node.lineage.find(({ contractId }) => contractId === reference.contractId)!;
+        const choices = [
+            { capabilityId: reference.capabilityId, versionRange: reference.versionRange },
+            ...(reference.alternatives ?? []),
+        ];
+        for (const choice of choices) {
+            const capability = node.capabilities.find(({ id }) => id === choice.capabilityId);
+            if (
+                capability &&
+                (choice.versionRange === undefined || satisfiesVersionRange(contract.version, choice.versionRange))
+            ) {
+                return { capability, versionRange: choice.versionRange };
+            }
+        }
+        return undefined;
     }
     if (!reference.bindingPath) {
         return undefined;
@@ -153,5 +171,13 @@ function capabilityForReference(
     const match = compileContractBindings({ ...release, capabilities: node.capabilities }).find(
         ({ binding }) => binding.method === "GET" && matchPathTemplate(binding.path, reference.bindingPath!) !== null,
     );
-    return node.capabilities.find(({ id }) => id === match?.capabilityId);
+    const capability = node.capabilities.find(({ id }) => id === match?.capabilityId);
+    return capability ? { capability, versionRange: reference.versionRange } : undefined;
+}
+
+function capabilityForReference(
+    node: Awaited<ReturnType<typeof selectedContractNodes>>[number],
+    reference: CapabilityUsageEvidence["requirements"][number],
+) {
+    return resolveReference(node, reference)?.capability;
 }

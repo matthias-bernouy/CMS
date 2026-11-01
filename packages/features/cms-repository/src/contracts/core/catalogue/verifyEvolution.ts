@@ -15,6 +15,7 @@ export function verifyEvolution(
     next: ContractRelease,
     published: readonly CatalogueContractRelease[],
     limits: Readonly<ReleaseLimits>,
+    ancestry = published,
 ): void {
     const releases = published
         .map((record) => record.admission.release)
@@ -38,4 +39,7 @@ export function verifyEvolution(
             );
         }
     }
+    verifyCapabilityLifecycle(next, published, ancestry, limits);
 }
+
+import { verifyCapabilityLifecycle } from "./lifecycle/verify";

@@ -3,6 +3,7 @@ import type { ResolvedContract } from "../../../interfaces/ResolvedContract";
 import type { CapabilityDefinition, ContractRelease } from "cms-repository/contracts/interfaces/ContractRelease";
 import type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
 import { ReleaseValidationError } from "cms-repository/contracts/core/protocol/errors";
+import { validateDeprecationReferences } from "../../parsing/parseDeprecation";
 
 /** Returns the concrete release first, followed by each exact ancestor up to the root. */
 export async function resolveContractLineage(
@@ -29,6 +30,7 @@ export async function resolveContractLineage(
         lineage.push(current);
         visited.add(current.contractId);
     }
+    validateDeprecationReferences(effectiveLineageCapabilities(lineage));
     return Object.freeze(lineage);
 }
 

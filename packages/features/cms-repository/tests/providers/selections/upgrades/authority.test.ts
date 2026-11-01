@@ -76,9 +76,17 @@ test("a non-sensitive wildcard expansion changes reviewed authority and cannot b
         ["1.0.0", true],
         ["2.0.0", false],
     ] as const) {
-        const document = contractDocument("catalog", "read", version);
+        const document = contractDocument("catalog", sensitive ? "read" : "read-public", version);
         const capability = (document.capabilities as { behavior: Record<string, unknown> }[])[0]!;
         capability.behavior.sensitive = sensitive;
+        if (!sensitive) {
+            const next = document.capabilities as { bindings: Record<string, unknown>[] }[];
+            next[0]!.bindings[0]!.path = "/v2/catalog";
+            (document.capabilities as unknown[]).unshift({
+                ...targets[0]!.release.capabilities[0]!,
+                deprecation: { replacedBy: "read-public" },
+            });
+        }
         const release = await admitContractRelease(document);
         await f.releases.publish(release);
         targets.push(release);
@@ -119,7 +127,10 @@ test("a non-sensitive wildcard expansion changes reviewed authority and cannot b
         digest: targets[1]!.digest,
         sensitive: false,
     });
-    const grants = { default: "allow-selected" as const, denied: [{ contractId: "catalog", capabilityId: "read" }] };
+    const grants = {
+        default: "allow-selected" as const,
+        denied: [{ contractId: "catalog", capabilityId: "read-public" }],
+    };
     const denied = await service.plan(siteId, next, grants);
     expect(denied.authorityAdded).toBeEmpty();
     expect(denied.planDigest).not.toBe(plan.planDigest);

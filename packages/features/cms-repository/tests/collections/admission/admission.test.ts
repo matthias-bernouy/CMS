@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { admitCollectionRelease, admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
 import { canonicalIJsonBytes } from "@bernouy/cms-repository/contracts/protocol";
 import { collectionDocument } from "../fixtures";
-import { contractDocument, releaseCatalogue } from "../../providers/support/fixtures";
+import { capabilityTransition, contractDocument, releaseCatalogue } from "../../providers/support/fixtures";
 
 describe("collection authored bundle admission", () => {
     test("supports the full identifier length admitted by contracts", async () => {
@@ -52,12 +52,12 @@ describe("collection authored bundle admission", () => {
     test("requires one common contract witness for all requirements of one bloc", async () => {
         const contracts = await releaseCatalogue(
             contractDocument("payment", "create-link"),
-            contractDocument("payment", "refund", "2.0.0"),
+            ...capabilityTransition("payment", "create-link", "refund"),
         );
         const source = collectionDocument();
         const blocs = source.blocs as Record<string, unknown>[];
-        const create = { contractId: "payment", capabilityId: "create-link", versionRange: "^1.0.0 || ^2.0.0" };
-        const refund = { contractId: "payment", capabilityId: "refund", versionRange: "^1.0.0 || ^2.0.0" };
+        const create = { contractId: "payment", capabilityId: "create-link", versionRange: "1.0.0 || 2.0.0" };
+        const refund = { contractId: "payment", capabilityId: "refund", versionRange: "1.0.0 || 2.0.0" };
         blocs[0]!.requires = [create, refund];
         await expect(admitCollectionRelease(collectionFixture(source), [], { contracts })).rejects.toMatchObject({
             code: "resolution_failed",

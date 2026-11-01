@@ -39,10 +39,10 @@ export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
         publishedAt: string,
     ): Promise<CatalogueContractRelease> {
         const verified = await verifyStoredContractReleaseJson(canonicalJson, digest, this.#limits);
-        return this.#insert(verified, publishedAt);
+        return this.#insert(verified, publishedAt, true);
     }
 
-    #insert(admission: AdmittedContractRelease, publishedAt: string): CatalogueContractRelease {
+    #insert(admission: AdmittedContractRelease, publishedAt: string, restoring = false): CatalogueContractRelease {
         const verified = admission;
         const { contractId, version } = verified.release;
         const key = releaseKey(contractId, version);
@@ -59,7 +59,9 @@ export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
         }
         this.#assertPublisher(contractId, verified.release.publisherId);
         verifySpecialization(verified.release, [...this.#byKey.values()]);
-        verifyEvolution(verified.release, [...this.#byKey.values()], this.#limits);
+        if (!restoring) {
+            verifyEvolution(verified.release, [...this.#byKey.values()], this.#limits);
+        }
         const record = freezeRecord(verified, publishedAt);
         this.#byKey.set(key, record);
         this.#byDigest.set(verified.digest, record);

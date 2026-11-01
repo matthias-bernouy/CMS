@@ -12,6 +12,8 @@ export type CapabilityUse = Readonly<
     Omit<CollectionCapabilityRequirement, "versionRange"> & {
         versionRange?: string;
         type: "capability";
+        /** Explicit alternatives supplied by a host consumer, not authored collection requirements. */
+        alternatives?: readonly Readonly<{ capabilityId: string; versionRange?: string }>[];
         location: string;
         scope: "catalogue" | "runtime";
     }

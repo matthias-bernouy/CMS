@@ -2,7 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { admitProviderManifest } from "@bernouy/cms-repository/providers";
 import { admitContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { contractDocument, implementation, manifestDocument, releaseCatalogue, requirement } from "../support/fixtures";
+import {
+    capabilityTransition,
+    contractDocument,
+    implementation,
+    manifestDocument,
+    releaseCatalogue,
+    requirement,
+} from "../support/fixtures";
 
 describe("multi-release provider implementations", () => {
     test("serves several exact releases with deterministic order and separate digest checks", async () => {
@@ -52,7 +59,7 @@ describe("multi-release provider implementations", () => {
     test("does not connect releases missing the required capability", async () => {
         const catalogue = await releaseCatalogue(
             contractDocument("first", "old", "1.0.0"),
-            contractDocument("first", "new", "2.0.0"),
+            ...capabilityTransition("first", "old", "new"),
             contractDocument("second", "run"),
         );
         const first1 = (await catalogue.get("first", "1.0.0"))!.admission;

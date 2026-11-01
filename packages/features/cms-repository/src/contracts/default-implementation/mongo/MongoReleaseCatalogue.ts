@@ -122,13 +122,7 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
             }
             const catalogue = await this.list();
             verifySpecialization(admission.release, catalogue);
-            verifyEvolution(
-                admission.release,
-                head
-                    ? await recordsForHead(head, this.#artifacts, this.#limits, (entry) => this.readRecord(entry))
-                    : [],
-                this.#limits,
-            );
+            verifyEvolution(admission.release, catalogue, this.#limits);
             try {
                 await this.#artifacts.insertOne(structuredClone(artifact));
             } catch (error) {

@@ -67,11 +67,12 @@ export function parseContractRelease(
     if (new Set(capabilities.map((capability) => capability.id)).size !== capabilities.length) {
         throw new ReleaseValidationError("invalid_contract", "contains duplicate capability IDs", "$.capabilities");
     }
-    validateDeprecationReferences(capabilities);
     const description = optionalString(record.description, "$.description", "invalid_contract", 4096);
     const catalogue = parseCatalogueMetadata(record.catalogue);
     const contractId = parseIdentifier(record.contractId, "$.contractId", 96);
     const parent = parseParentReference(record.extends, contractId);
+    // Parent capabilities are available only when the exact lineage is resolved.
+    validateDeprecationReferences(capabilities, Boolean(parent));
     const release: ContractRelease = {
         kind: "contract",
         protocol: "ulvia-provider/v1",
@@ -187,20 +188,6 @@ function catalogueToken(value: unknown, path: string): string {
     return token;
 }
 
-function validateDeprecationReferences(capabilities: ContractRelease["capabilities"]): void {
-    const ids = new Set(capabilities.map((capability) => capability.id));
-    for (const capability of capabilities) {
-        const replacement = capability.deprecation?.replacedBy;
-        if (replacement && (!ids.has(replacement) || replacement === capability.id)) {
-            throw new ReleaseValidationError(
-                "invalid_contract",
-                `replacement ${JSON.stringify(replacement)} must identify another capability in the release`,
-                `$.capabilities.${capability.id}.deprecation.replacedBy`,
-            );
-        }
-    }
-}
-
 export function parseContractReleaseJson(
     input: string | Uint8Array,
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
@@ -213,3 +200,5 @@ function expectLiteral(value: unknown, literal: string, path: string): void {
         throw new ReleaseValidationError("invalid_contract", `must be ${JSON.stringify(literal)}`, path);
     }
 }
+
+import { validateDeprecationReferences } from "./parseDeprecation";
