@@ -94,7 +94,7 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
             {
                 $set: { status: "running", updatedAt: now, lease: { token, expiresAt } },
                 $inc: { revision: 1 },
-                $unset: { result: "", errorCode: "" },
+                $unset: { result: "", errorCode: "", errorOutput: "" },
             },
         );
         return result.modifiedCount === 1;
@@ -112,14 +112,24 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
         return this.#finish(id, token, { status: "succeeded", result: structuredClone(result) }, now);
     }
 
-    fail(id: string, token: string, errorCode: string, now: string): Promise<boolean> {
-        return this.#finish(id, token, { status: "failed", errorCode }, now);
+    fail(id: string, token: string, errorCode: string, now: string, errorOutput?: unknown): Promise<boolean> {
+        return this.#finish(
+            id,
+            token,
+            {
+                status: "failed",
+                errorCode,
+                ...(errorOutput === undefined ? {} : { errorOutput: structuredClone(errorOutput) }),
+            },
+            now,
+        );
     }
 
     async #finish(
         id: string,
         token: string,
-        patch: Pick<ProviderOperationRecord, "status"> & Partial<Pick<ProviderOperationRecord, "result" | "errorCode">>,
+        patch: Pick<ProviderOperationRecord, "status"> &
+            Partial<Pick<ProviderOperationRecord, "result" | "errorCode" | "errorOutput">>,
         now: string,
     ): Promise<boolean> {
         const result = await this.#records.updateOne(

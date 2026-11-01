@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { ProviderCapabilityDispatchError } from "../dispatch/registry";
 import type { ProviderOperationHandler, ProviderOperationRecord, ProviderOperationStore } from "./types";
 import { ProviderOperationLeaseLostError, expiresAt, operationExecution, waitForLeaseRenewal } from "./lease";
+import { canonicalIJsonBytes } from "@bernouy/cms-repository/contracts/protocol";
+import { hydrateProviderInvocationContext } from "@bernouy/cms-gateway/provider/server";
 
 export type ProviderOperationFailureObservation = Readonly<{
     operationId: string;
@@ -42,7 +44,15 @@ export async function runProviderOperation(
     const heartbeat = maintainLease(store, record.id, token, executionAbort, heartbeatAbort.signal, options);
     try {
         execution.throwIfLeaseLost();
-        const result = await handler(record.input, record.context, execution);
+        const result = await handler(
+            record.input,
+            hydrateProviderInvocationContext({
+                ...record.context,
+                headers: new Headers(record.context.requestContext?.headers),
+                signal: execution.signal,
+            }),
+            execution,
+        );
         execution.throwIfLeaseLost();
         if (!(await store.succeed(record.id, token, result, options.now().toISOString()))) {
             const error = new ProviderOperationLeaseLostError();
@@ -67,7 +77,20 @@ export async function runProviderOperation(
         } else {
             reportFailure(options, record, "handler-failed", code, performance.now() - startedAt, error);
         }
-        await store.fail(record.id, token, code, options.now().toISOString());
+        let output: unknown;
+        if (error instanceof ProviderCapabilityDispatchError && error.output !== undefined) {
+            try {
+                const bytes = canonicalIJsonBytes(error.output);
+                if (bytes.byteLength > 65_536) {
+                    throw new TypeError("Operation error output exceeds its byte limit");
+                }
+                output = JSON.parse(new TextDecoder().decode(bytes));
+            } catch {
+                await store.fail(record.id, token, "OPERATION_FAILED", options.now().toISOString());
+                return;
+            }
+        }
+        await store.fail(record.id, token, code, options.now().toISOString(), output);
     } finally {
         heartbeatAbort.abort();
         await heartbeat;

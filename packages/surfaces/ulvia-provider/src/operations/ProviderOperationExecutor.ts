@@ -1,9 +1,9 @@
-import { createHash } from "node:crypto";
 import { randomUUIDv7 } from "bun";
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import { ProviderCapabilityDispatchError, type ProviderCapabilityInvocationContext } from "../dispatch/registry";
 import type { ProviderOperationHandler, ProviderOperationRecord, ProviderOperationStore } from "./types";
 import { reportFailure, runProviderOperation, type ProviderOperationFailureObservation } from "./execution";
+import type { CapabilityErrorDefinition } from "@bernouy/cms-repository/contracts";
+import { validatedOperationHandler } from "./handler";
 
 export type { ProviderOperationFailureObservation } from "./execution";
 
@@ -36,12 +36,17 @@ export class ProviderOperationExecutor {
         return this.options.leaseMs ?? DEFAULT_LEASE_MS;
     }
 
-    register(contractId: string, capabilityId: string, handler: ProviderOperationHandler): void {
+    register(
+        contractId: string,
+        capabilityId: string,
+        handler: ProviderOperationHandler,
+        errors: readonly CapabilityErrorDefinition[] = [],
+    ): void {
         const key = operationKey(contractId, capabilityId);
         if (this.#handlers.has(key)) {
             throw new Error(`Provider operation is already registered: ${contractId}/${capabilityId}`);
         }
-        this.#handlers.set(key, handler);
+        this.#handlers.set(key, validatedOperationHandler(handler, errors));
     }
 
     async enqueue(
@@ -63,16 +68,21 @@ export class ProviderOperationExecutor {
             contractId,
             capabilityId,
             idempotencyKey: context.idempotencyKey,
-            inputDigest: digest(input),
+            inputDigest: operationDigest(input, context),
+            inputDigestVersion: 2,
             input: structuredClone(input),
-            context: structuredClone(context),
+            context: snapshotOperationContext(context),
             status: "queued",
             revision: 1,
             createdAt: now,
             updatedAt: now,
         };
         const stored = await this.store.createOrGet(candidate);
-        if (stored.record.inputDigest !== candidate.inputDigest) {
+        const storedDigest =
+            stored.record.inputDigestVersion === 2
+                ? stored.record.inputDigest
+                : operationDigest(stored.record.input, stored.record.context);
+        if (storedDigest !== candidate.inputDigest) {
             throw new ProviderCapabilityDispatchError("IDEMPOTENCY_CONFLICT", 409);
         }
         void this.#execute(stored.record).catch(() => undefined);
@@ -139,6 +149,4 @@ function operationKey(contractId: string, capabilityId: string): string {
     return `${contractId}\0${capabilityId}`;
 }
 
-function digest(input: Readonly<Record<string, unknown>>): string {
-    return `sha256:${createHash("sha256").update(canonicalizeIJson(input)).digest("hex")}`;
-}
+import { operationDigest, snapshotOperationContext } from "./context";

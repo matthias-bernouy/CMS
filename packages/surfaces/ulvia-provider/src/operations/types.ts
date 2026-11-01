@@ -1,4 +1,5 @@
 import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
+import type { ProviderHttpContext } from "@bernouy/cms-gateway/provider/server";
 
 export type ProviderOperationStatus = "queued" | "running" | "succeeded" | "failed";
 
@@ -9,14 +10,16 @@ export interface ProviderOperationRecord {
     readonly capabilityId: string;
     readonly idempotencyKey: string;
     readonly inputDigest: string;
+    readonly inputDigestVersion?: 2;
     readonly input: Readonly<Record<string, unknown>>;
-    readonly context: ProviderCapabilityInvocationContext;
+    readonly context: ProviderOperationContext;
     readonly status: ProviderOperationStatus;
     readonly revision: number;
     readonly createdAt: string;
     readonly updatedAt: string;
     readonly result?: unknown;
     readonly errorCode?: string;
+    readonly errorOutput?: unknown;
     readonly lease?: { readonly token: string; readonly expiresAt: string };
 }
 
@@ -33,7 +36,7 @@ export interface ProviderOperationStore {
     claim(id: string, expectedRevision: number, token: string, expiresAt: string, now: string): Promise<boolean>;
     renew(id: string, token: string, expiresAt: string, now: string): Promise<boolean>;
     succeed(id: string, token: string, result: unknown, now: string): Promise<boolean>;
-    fail(id: string, token: string, errorCode: string, now: string): Promise<boolean>;
+    fail(id: string, token: string, errorCode: string, now: string, errorOutput?: unknown): Promise<boolean>;
 }
 
 export interface ProviderOperationExecutionContext {
@@ -44,6 +47,15 @@ export interface ProviderOperationExecutionContext {
 
 export type ProviderOperationHandler = (
     input: Readonly<Record<string, unknown>>,
-    context: ProviderCapabilityInvocationContext,
+    context: ProviderCapabilityInvocationContext & {
+        readonly http: ProviderHttpContext;
+        readonly headers: Headers;
+        readonly signal: AbortSignal;
+    },
     execution: ProviderOperationExecutionContext,
 ) => Promise<unknown>;
+
+export type ProviderOperationContext = Omit<
+    ProviderCapabilityInvocationContext,
+    "http" | "headers" | "signal" | "request" | "resourceRequest" | "binaryBody"
+>;

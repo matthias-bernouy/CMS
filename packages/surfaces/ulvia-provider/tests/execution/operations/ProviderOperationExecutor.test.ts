@@ -287,7 +287,7 @@ test("the installations contract exposes a completed operation result only from 
     ] as const) {
         const definition = await Bun.file(
             new URL(
-                `../../../../official-repository/contracts/ulvia.cms.installations/capabilities/queries/${name}.json`,
+                `../../../../../official-repository/contracts/ulvia.cms.installations/capabilities/queries/${name}.json`,
                 import.meta.url,
             ),
         ).json();
