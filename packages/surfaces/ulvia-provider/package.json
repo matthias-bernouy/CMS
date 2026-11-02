@@ -24,7 +24,8 @@
         "@bernouy/cms-smtp-emailer": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/logging": "workspace:*",
-        "@bernouy/cms-observability": "workspace:*"
+        "@bernouy/cms-observability": "workspace:*",
+        "@bernouy/cms-documentation": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

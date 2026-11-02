@@ -1,0 +1,23 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "cms-documentation/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../cms-repository"
+        },
+        {
+            "path": "../../foundation/binary-media"
+        }
+    ]
+}

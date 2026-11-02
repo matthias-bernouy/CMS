@@ -26,7 +26,8 @@
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
         "mongodb": "^7.6.0",
-        "@bernouy/cms-observability": "workspace:*"
+        "@bernouy/cms-observability": "workspace:*",
+        "@bernouy/cms-documentation": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

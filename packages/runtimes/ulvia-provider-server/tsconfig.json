@@ -58,6 +58,9 @@
         },
         {
             "path": "../../features/cms-observability"
+        },
+        {
+            "path": "../../features/cms-documentation"
         }
     ]
 }
