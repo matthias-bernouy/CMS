@@ -114,7 +114,7 @@ describe("MongoContentRepository content persistence", () => {
         expect((await repository.getPublishedPages()).map((page) => page.id)).toEqual([draft!.id]);
         expect(await repository.getLinks()).toEqual([
             {
-                page: { kind: "site", pageId: draft!.id },
+                page: { pageId: draft!.id },
                 path: "/draft",
                 title: "Draft",
             },

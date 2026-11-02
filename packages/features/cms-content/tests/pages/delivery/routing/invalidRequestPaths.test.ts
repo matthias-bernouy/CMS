@@ -7,7 +7,7 @@ test("non-Page request paths render the configured fallback without querying the
     await repository.insertPage("/not-found", "Not found", "<main>Configured fallback</main>");
     const fallback = (await repository.getPage("/not-found"))!;
     await repository.updatePage({ id: fallback.id, visible: true });
-    await repository.updateSystem({ site: { notFound: { kind: "site", pageId: fallback.id } } as never });
+    await repository.updateSystem({ site: { notFound: { pageId: fallback.id } } as never });
 
     const content = createContentReader(repository);
     let routeLookups = 0;

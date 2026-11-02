@@ -25,8 +25,8 @@ Use the exact contract selected on the site. Discover the available tool schemas
 - `pages.editor-catalogue`: List the author-visible Blocs and bounded insertion metadata available to Pages.
 - `pages.get`: Read one complete editable Page by stable identity.
 - `pages.list`: List a bounded, stable Page batch for administration interfaces.
-- `site.update`: Update safe site identity and availability settings with revision control.
-- `site.get`: Return safe site identity and availability settings.
+- `site.update`: Update site identity, availability and system Page references with revision control.
+- `site.get`: Return site identity, availability and system Page references.
 - `site-blocs.archive`: Archive a site-owned reusable composition.
 - `site-blocs.create`: Create a draft site-owned reusable composition from validated Page markup.
 - `site-blocs.publish`: Publish the current draft of a site-owned reusable composition.

@@ -16,7 +16,7 @@ test("reuses Page rendering inputs within a cold render and skips them on a cach
         tags: [],
     };
     const renderable = {
-        reference: { kind: "site" as const, pageId: page.id },
+        reference: { pageId: page.id },
         page,
         source: { kind: "site" as const, pageId: page.id, revision: page.revision },
         requirements: [],

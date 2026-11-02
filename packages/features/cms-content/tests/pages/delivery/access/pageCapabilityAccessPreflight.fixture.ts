@@ -25,7 +25,6 @@ const system: TSystem = {
         forbidden: null,
         serverError: null,
         login: {
-            kind: "site",
             pageId: "login",
         },
     },
@@ -127,7 +126,7 @@ export async function mountPage(options: {
         content: {
             ...content,
             resolvePageReference: async (reference) => {
-                if (reference.kind === "site" && reference.pageId === "login") {
+                if (reference.pageId === "login") {
                     return "/login";
                 }
                 return content.resolvePageReference(reference);

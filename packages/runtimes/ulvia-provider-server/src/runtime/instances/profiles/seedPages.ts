@@ -80,7 +80,7 @@ export async function seedOfficialPages(
         if (seed.id === "login") {
             const { revision, system } = await readSystemSnapshot(repo);
             if (system.site.login === null) {
-                await repo.updateSystem({ site: { login: { kind: "site", pageId: page.id } } as never }, revision);
+                await repo.updateSystem({ site: { login: { pageId: page.id } } as never }, revision);
             }
         }
         execution.throwIfLeaseLost();

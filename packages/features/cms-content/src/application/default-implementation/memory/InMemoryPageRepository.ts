@@ -254,8 +254,8 @@ export class InMemoryPageRepository extends InMemoryBlocRepository {
         }
         if (alternative) {
             for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
-                if (this.system.site[field]?.kind === "site" && this.system.site[field]?.pageId === id) {
-                    this.system.site[field] = { kind: "site", pageId: alternative.id };
+                if (this.system.site[field]?.pageId === id) {
+                    this.system.site[field] = { pageId: alternative.id };
                 }
             }
         }
@@ -329,7 +329,7 @@ export class InMemoryPageRepository extends InMemoryBlocRepository {
 
     async getLinks(): Promise<PageLink[]> {
         return Array.from(this.pages.values()).map((page) => ({
-            page: { kind: "site", pageId: page.id },
+            page: { pageId: page.id },
             path: page.path,
             title: page.title,
         }));

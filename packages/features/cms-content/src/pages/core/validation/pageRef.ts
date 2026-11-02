@@ -7,12 +7,12 @@ export function coercePageRef(raw: unknown): TPageRef {
     }
     if (typeof raw === "string") {
         try {
-            return validatePageReference({ kind: "site", pageId: raw }) as Exclude<TPageRef, null>;
+            return validatePageReference({ pageId: raw });
         } catch {
             return null;
         }
     }
-    if (typeof raw === "object" && raw !== null && "kind" in raw && "pageId" in raw) {
+    if (typeof raw === "object" && raw !== null && "pageId" in raw) {
         try {
             return validatePageReference(raw as Exclude<TPageRef, null>);
         } catch {

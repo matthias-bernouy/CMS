@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { validateSettingsPatch, ContentValidationError } from "@bernouy/cms-content";
+import { coercePageRef, validateSettingsPatch, ContentValidationError } from "@bernouy/cms-content";
 
 test("Content settings reject security policy owned by Edge", () => {
     expect(() => validateSettingsPatch({ security: { connectExtras: [] } } as never)).toThrow(ContentValidationError);
@@ -34,9 +34,16 @@ describe("validateSettingsPatch — canonical site host", () => {
 });
 
 describe("validateSettingsPatch — system Page references", () => {
+    test("rejects the retired site discriminator", () => {
+        const legacy = { kind: "site", pageId: "login" };
+        expect(coercePageRef(legacy)).toBeNull();
+        expect(coercePageRef("login")).toEqual({ pageId: "login" });
+        expect(() => validateSettingsPatch({ site: { login: legacy } })).toThrow(ContentValidationError);
+        expect(coercePageRef({ kind: "contribution", pageId: "login" })).toBeNull();
+    });
+
     test("accepts stable site Page references", () => {
         const login = {
-            kind: "site" as const,
             pageId: "login",
         };
 

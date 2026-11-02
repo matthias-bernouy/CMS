@@ -8,14 +8,14 @@ const RESERVED_PAGE_PATH_PREFIXES = ["/.cms", "/_content", "/api", "/assets", "/
 export function validatePageReference(page: PageReference): PageReference {
     if (
         !page ||
-        page.kind !== "site" ||
+        typeof page !== "object" ||
         typeof page.pageId !== "string" ||
         !sitePageId.test(page.pageId) ||
-        Object.keys(page).some((key) => key !== "kind" && key !== "pageId")
+        Object.keys(page).some((key) => key !== "pageId")
     ) {
         throw new TypeError("Only valid site-owned Page references are supported");
     }
-    return { kind: "site", pageId: page.pageId };
+    return { pageId: page.pageId };
 }
 
 export function isValidRegisteredPagePath(value: string): boolean {

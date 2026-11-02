@@ -22,7 +22,7 @@ export function editorialPages(repo: ContentRepository): ContentDeliveryHost["ed
             }
             return {
                 page: {
-                    reference: { kind: "site", pageId: page.id },
+                    reference: { pageId: page.id },
                     page: structuredClone({ ...page, path }),
                     source: { kind: "site", pageId: page.id, revision: page.revision },
                     requirements: [...((await repo.getPageRequirements?.(page)) ?? [])],

@@ -75,7 +75,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
               },
               getRenderablePages: async () => storedPages.map(renderable),
               resolvePageReference: async (reference) =>
-                  storedPages.find((page) => reference.kind === "site" && page.id === reference.pageId)?.path ?? null,
+                  storedPages.find((page) => page.id === reference.pageId)?.path ?? null,
               resolveRenderableRoute: async (path) => {
                   storedLookups.push(path);
                   const page = storedPages.find((item) => item.path === path);
@@ -200,7 +200,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
 
 function renderable(page: TPage) {
     return {
-        reference: { kind: "site" as const, pageId: page.id },
+        reference: { pageId: page.id },
         page,
         source: { kind: "site" as const, pageId: page.id, revision: page.revision },
         requirements: [],

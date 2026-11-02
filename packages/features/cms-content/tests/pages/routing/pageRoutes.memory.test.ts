@@ -12,12 +12,12 @@ test("Page links resolve using Content's native routes and stable site IDs", asy
     await repo.insertPage("/about", "About");
     const page = (await repo.getPage("/about"))!;
     const reader = createPageRouteReader(repo);
-    expect(
-        await resolvePageLinkTarget(reader, { kind: "page", page: { kind: "site", pageId: page.id } }),
-    ).toMatchObject({ href: "/about" });
+    expect(await resolvePageLinkTarget(reader, { kind: "page", page: { pageId: page.id } })).toMatchObject({
+        href: "/about",
+    });
     await repo.updatePage({ id: page.id, path: "/company" }, page.revision);
     expect(await reader.resolvePath("/about")).toEqual({ path: "/company" });
-    expect(await reader.get({ kind: "site", pageId: page.id })).toEqual({ path: "/company" });
+    expect(await reader.get({ pageId: page.id })).toEqual({ path: "/company" });
     await expect(
         reader.get({ kind: "contribution", sourceId: "old", contributionId: "old", pageId: page.id } as never),
     ).rejects.toThrow();
@@ -26,11 +26,9 @@ test("Page links resolve using Content's native routes and stable site IDs", asy
 test("Page references require a string site ID and reject extra coordinates", async () => {
     const reader = createPageRouteReader(new InMemoryContentRepository());
     for (const pageId of [undefined, null, 123, {}, ""]) {
-        await expect(reader.get({ kind: "site", pageId } as never)).rejects.toThrow("valid site-owned");
+        await expect(reader.get({ pageId } as never)).rejects.toThrow("valid site-owned");
     }
-    await expect(reader.get({ kind: "site", pageId: "id", sourceId: "old" } as never)).rejects.toThrow(
-        "valid site-owned",
-    );
+    await expect(reader.get({ pageId: "id", sourceId: "old" } as never)).rejects.toThrow("valid site-owned");
 });
 
 test("Content link batches preserve localized paths and aliases, and exclude unavailable routes", async () => {

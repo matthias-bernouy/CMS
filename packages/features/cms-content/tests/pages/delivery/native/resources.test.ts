@@ -78,7 +78,7 @@ test("restricted system fallbacks cannot expose a Page to anonymous callers or a
     const page = (await repo.getAllPages())[0]!;
     await repo.updatePage({ id: page.id, visible: true }, page.revision);
     const settings = await repo.getSystem();
-    await repo.updateSystem({ site: { ...settings.site, notFound: { kind: "site", pageId: page.id } } });
+    await repo.updateSystem({ site: { ...settings.site, notFound: { pageId: page.id } } });
     expect(await (await read("/missing")).text()).not.toContain("Private fallback");
     const allowed = await read("/missing", "GET", "administrator");
     expect(await allowed.text()).toContain("Private fallback");

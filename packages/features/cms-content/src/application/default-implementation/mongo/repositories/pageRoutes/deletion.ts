@@ -131,9 +131,9 @@ async function finishPageDeletion(pages: Pages, routes: Routes, systems: Systems
 async function retargetSystemPageReferences(systems: Systems, sourceId: string, targetId: string): Promise<void> {
     for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
         await systems.updateOne(
-            { _id: SYSTEM_ID, [`site.${field}.kind`]: "site", [`site.${field}.pageId`]: sourceId },
+            { _id: SYSTEM_ID, [`site.${field}.pageId`]: sourceId },
             {
-                $set: { [`site.${field}`]: { kind: "site", pageId: targetId } },
+                $set: { [`site.${field}`]: { pageId: targetId } },
                 $inc: { settingsRevision: 1 },
             },
         );

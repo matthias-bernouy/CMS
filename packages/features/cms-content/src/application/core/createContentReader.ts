@@ -20,7 +20,7 @@ import { installPageRenderInputReaders } from "cms-content/application/core/page
 /** Public delivery reads only site-owned Pages and installed rendering resources. */
 export function createContentReader(repository: ContentRepository): ContentReader {
     const sitePage = async (page: TPage, reads?: RenderingResourceReads): Promise<RenderablePage> => ({
-        reference: { kind: "site", pageId: page.id },
+        reference: { pageId: page.id },
         page,
         source: { kind: "site", pageId: page.id, revision: page.revision },
         requirements: [...((await repository.getPageRequirements?.(page, reads)) ?? [])],

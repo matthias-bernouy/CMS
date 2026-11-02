@@ -31,7 +31,7 @@ describe("Content page capability access preflight", () => {
             pagePath: "/sign-in",
             siteVisible: false,
             resolveActor: authSubject(null),
-            systemPages: { login: { kind: "site", pageId: "sign-in" } },
+            systemPages: { login: { pageId: "sign-in" } },
         });
 
         const response = await handler(new Request("http://site/sign-in"));
@@ -54,7 +54,7 @@ describe("Content page capability access preflight", () => {
         const { handler } = await mountPage({
             content: `<section cms-query="shop:my-products as products"></section>`,
             resolveActor: authSubject(null),
-            systemPages: { login: { kind: "site", pageId: "sign-in" } },
+            systemPages: { login: { pageId: "sign-in" } },
         });
 
         const response = await handler(new Request("http://site/products"));
@@ -68,7 +68,6 @@ describe("Content page capability access preflight", () => {
             resolveActor: authSubject(null),
             systemPages: {
                 login: {
-                    kind: "site",
                     pageId: "login",
                 },
             },

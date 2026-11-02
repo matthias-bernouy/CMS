@@ -383,7 +383,7 @@ export class MongoPageRepository extends MongoBlocRepository {
     async getLinks(): Promise<PageLink[]> {
         const documents = await this.pages.find({}, { projection: { path: 1, title: 1 } }).toArray();
         return documents.map((document) => ({
-            page: { kind: "site", pageId: document._id },
+            page: { pageId: document._id },
             path: document.path,
             title: document.title,
         }));

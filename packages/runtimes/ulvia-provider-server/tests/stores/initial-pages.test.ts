@@ -10,7 +10,7 @@ test("initial Pages are ordinary site Pages, seeded once and independent of the 
     expect(page).toMatchObject({ title: "Login", description: "Sign in", visible: true, indexing: { enabled: false } });
     expect(Object.hasOwn(page, "origin")).toBe(false);
     expect(records.get("test:login")).toEqual({ _id: "test:login", completed: true });
-    expect((await repo.getSystem()).site.login).toEqual({ kind: "site", pageId: page.id });
+    expect((await repo.getSystem()).site.login).toEqual({ pageId: page.id });
     await repo.updatePage({ id: page.id, path: "/my-login", title: "My login", visible: false }, page.revision);
     await seed();
     expect(await repo.getAllPages()).toHaveLength(1);
@@ -41,7 +41,7 @@ test("provisioning refuses to take over a pre-existing Page or continue with a l
 
 test("provisioning preserves an explicitly selected site login Page", async () => {
     const { repo, seed } = fixture();
-    const login = { kind: "site" as const, pageId: "custom-login" };
+    const login = { pageId: "custom-login" };
     await repo.updateSystem({ site: { login } } as never, await repo.getSystemRevision());
     await seed();
     expect((await repo.getSystem()).site.login).toEqual(login);

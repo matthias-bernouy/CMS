@@ -1,5 +1,5 @@
 /** Stable identity of an ordinary site-owned Page. */
-export type PageReference = { readonly kind: "site"; readonly pageId: string };
+export type PageReference = { readonly pageId: string };
 export type SitePageReference = PageReference;
 export type PageLinkTarget =
     | { readonly kind: "page"; readonly page: PageReference }

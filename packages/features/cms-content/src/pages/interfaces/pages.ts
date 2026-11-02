@@ -67,5 +67,5 @@ export type PageRoute = {
     language: string;
 };
 
-/** Stable reference to a site-owned or contributed Page. `null` means "not set". */
+/** Stable reference to a site-owned Page. `null` means "not set". */
 export type TPageRef = PageReference | null;

@@ -97,7 +97,7 @@ function pageRenderInputs(
     settings.initializationStep = 1;
     settings.site.visible = true;
     const renderable = {
-        reference: { kind: "site" as const, pageId: page.id },
+        reference: { pageId: page.id },
         page,
         source: { kind: "site" as const, pageId: page.id, revision: page.revision },
         requirements: requirements ?? [],

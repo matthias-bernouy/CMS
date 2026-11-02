@@ -51,7 +51,7 @@ export type BlocListOptions = {
 };
 
 export type PageLink = {
-    page: Extract<PageReference, { kind: "site" }>;
+    page: PageReference;
     path: string;
     title: string;
 };
