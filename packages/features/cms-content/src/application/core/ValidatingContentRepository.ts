@@ -26,7 +26,13 @@ import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation
 import { validateSettingsPatch } from "cms-content/settings/core/validation";
 import { validateSiteBlocDefinition, validateSiteBlocSnapshot } from "cms-content/blocs/core/validation";
 import { validateBlocArtifact } from "cms-content/application/core/validation/blocArtifact";
+import { assertBlocPageConsumers } from "cms-content/application/core/validation/blocConsumers";
 import type { ContentBindingValidationOptions } from "cms-content/application/core/validation/bindingCapabilities";
+import type {
+    ContentDiagnostic,
+    PageWriteFeedback,
+    PageWriteResult,
+} from "cms-content/application/interfaces/diagnostics";
 /**
  * Decorator that VALIDATES + NORMALIZES every authored-content write before
  * delegating to the wrapped repository — the single, unbypassable barrier so
@@ -61,7 +67,7 @@ export class ValidatingContentRepository implements ContentRepository {
         return this.inner.updateSiteBlocGroup(id, validateSiteBlocGroupInput(input));
     }
     // ── Validated authored-content writes ─────────────────────────────────
-    async insertPage(path: string, title: string, content?: string): Promise<void> {
+    async insertPage(path: string, title: string, content?: string): Promise<void | PageWriteFeedback> {
         const validPath = validatePagePath(path);
         const validTitle = validatePageTitle(title);
         return this.pageMutations.run(async () => {
@@ -69,28 +75,34 @@ export class ValidatingContentRepository implements ContentRepository {
                 return this.inner.insertPage(validPath, validTitle, undefined);
             }
             const validContent = validatePagePatch({ content }).content!;
-            await assertContentRefsExist(this.inner, validContent, this.bindingValidation);
-            await this.pageMutations.content(validContent, [validPath]);
-            return this.inner.insertPage(validPath, validTitle, validContent);
+            const analysis = await assertContentRefsExist(this.inner, validContent, this.bindingValidation);
+            const diagnostics = await this.pageMutations.content(validContent, [validPath], false, analysis);
+            await this.inner.insertPage(validPath, validTitle, validContent);
+            return { diagnostics };
         });
     }
 
-    async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null> {
+    async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<PageWriteResult | null> {
         const valid = validatePagePatch(page);
         return this.pageMutations.run(async () => {
             const current = valid.id ? await this.inner.getPageById(valid.id) : null;
-            if (valid.content !== undefined) {
-                await assertContentRefsExist(this.inner, valid.content, this.bindingValidation);
-            } else if (valid.visible === true && current) {
-                await assertContentRefsExist(this.inner, current.content, this.bindingValidation);
+            let diagnostics: readonly ContentDiagnostic[] = [];
+            if (valid.visible === false && current?.visible === true) {
+                diagnostics = await this.pageMutations.unpublication(current.id);
             }
-            if (current || valid.content !== undefined) {
-                await this.pageMutations.content(valid.content ?? current!.content, [
-                    ...(current ? [current.path] : []),
-                    ...(valid.path ? [valid.path] : []),
-                ]);
+            if (valid.content !== undefined || (valid.visible === true && current)) {
+                const html = valid.content ?? current!.content;
+                const analysis = await assertContentRefsExist(this.inner, html, this.bindingValidation);
+                diagnostics = await this.pageMutations.content(
+                    html,
+                    [...(current ? [current.path] : []), ...(valid.path ? [valid.path] : [])],
+                    valid.visible ?? current?.visible ?? false,
+                    analysis,
+                    current?.id,
+                );
             }
-            return this.inner.updatePage(valid, expectedRevision);
+            const updated = await this.inner.updatePage(valid, expectedRevision);
+            return updated ? { ...updated, diagnostics } : null;
         });
     }
 
@@ -99,7 +111,11 @@ export class ValidatingContentRepository implements ContentRepository {
         return this.inner.createBloc(await validateBlocArtifact(this.inner, bloc, this.bindingValidation));
     }
     async replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
-        return this.inner.replaceBloc(await validateBlocArtifact(this.inner, bloc, this.bindingValidation));
+        const artifact = await validateBlocArtifact(this.inner, bloc, this.bindingValidation);
+        return this.pageMutations.run(async () => {
+            await assertBlocPageConsumers(this.inner, artifact);
+            return this.inner.replaceBloc(artifact);
+        });
     }
     getBlocRecord(tag: string): Promise<BlocRecord | null> {
         return this.inner.getBlocRecord(tag);
@@ -131,13 +147,11 @@ export class ValidatingContentRepository implements ContentRepository {
         publicationDate?: Date,
         publicationGuard?: SiteBlocPublicationGuard,
     ): Promise<BlocRecord> {
-        return this.inner.publishSiteBloc(
-            tag,
-            await validateBlocArtifact(this.inner, artifact, this.bindingValidation),
-            expectedDraftRevision,
-            publicationDate,
-            publicationGuard,
-        );
+        const validated = await validateBlocArtifact(this.inner, artifact, this.bindingValidation);
+        return this.pageMutations.run(async () => {
+            await assertBlocPageConsumers(this.inner, validated);
+            return this.inner.publishSiteBloc(tag, validated, expectedDraftRevision, publicationDate, publicationGuard);
+        });
     }
     archiveSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition> {
         return this.inner.archiveSiteBloc(tag, expectedDraftRevision);
@@ -191,6 +205,14 @@ export class ValidatingContentRepository implements ContentRepository {
         return (
             this.inner.getPublishedPagesByIds?.(ids) ??
             Promise.all(ids.map((id) => this.inner.getPublishedPageById(id))).then((pages) =>
+                pages.filter((page): page is TPage => page !== null),
+            )
+        );
+    }
+    getPagesByIds(ids: readonly string[]) {
+        return (
+            this.inner.getPagesByIds?.(ids) ??
+            Promise.all(ids.map((id) => this.inner.getPageById(id))).then((pages) =>
                 pages.filter((page): page is TPage => page !== null),
             )
         );

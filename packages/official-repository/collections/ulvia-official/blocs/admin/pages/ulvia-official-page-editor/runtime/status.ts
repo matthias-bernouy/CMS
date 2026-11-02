@@ -28,13 +28,15 @@ export class EditorStatus {
         }
     }
 
-    notice(message: string, error = false): void {
+    notice(message: string, error = false, persistent = false): void {
         this.clearNotice();
         for (const notice of this.root.querySelectorAll<HTMLElement>("[data-notice]")) {
             notice.textContent = message;
             notice.toggleAttribute("data-error", error);
         }
-        this.noticeTimer = setTimeout(() => this.clearNotice(), error ? 8000 : 3000);
+        if (!persistent) {
+            this.noticeTimer = setTimeout(() => this.clearNotice(), error ? 8000 : 3000);
+        }
     }
 
     clearNotice(): void {

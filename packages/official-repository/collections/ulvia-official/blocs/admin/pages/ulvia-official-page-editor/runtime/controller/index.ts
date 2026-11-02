@@ -1,5 +1,5 @@
 import { mutationFormRequest } from "@bernouy/cms-content/browser";
-import { callCapability } from "../client";
+import { callCapability, diagnosticMessages } from "../client";
 import { EditorFrame } from "../frame";
 import type { EditorCatalogue, EditorCatalogueItem } from "../model";
 import { EditorStatus } from "../status";
@@ -102,7 +102,8 @@ export class PageEditorController {
             this.editing.applySaved(updated.content);
             this.dirty = false;
             this.previewStale = false;
-            this.status.notice(this.view.copy("document-saved"));
+            const warnings = diagnosticMessages(updated.diagnostics);
+            this.status.notice([this.view.copy("document-saved"), ...warnings].join("\n"), false, warnings.length > 0);
         });
         this.render();
         if (saved) {

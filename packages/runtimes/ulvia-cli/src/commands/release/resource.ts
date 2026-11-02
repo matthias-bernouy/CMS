@@ -12,11 +12,15 @@ import {
 } from "@bernouy/cms-repository/repository/filesystem";
 import { prepareContractSource } from "../../release/authored/contract";
 import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/build";
+import type { ContentDiagnostic } from "@bernouy/cms-content/page-document";
 
 export type PreparedResource =
     | Readonly<{ kind: "contract"; admission: AdmittedContractRelease }>
     | Readonly<{ kind: "provider-manifest"; admission: AdmittedProviderManifest }>
-    | Readonly<{ kind: "collection"; admission: AdmittedCollectionRelease }>;
+    | Readonly<{
+          kind: "collection";
+          admission: AdmittedCollectionRelease & { readonly diagnostics?: readonly ContentDiagnostic[] };
+      }>;
 
 export async function prepareContractResource(directory: string): Promise<PreparedResource & { kind: "contract" }> {
     const { admission } = await prepareContractSource(directory);
@@ -67,6 +71,13 @@ export async function storeResource(
         added = await new LocalCollectionRepository(root).store(resource.admission);
     }
     log(`${added ? "+" : "="} ${resourceCoordinate(resource)} (${resource.admission.digest})`);
+    if (resource.kind === "collection") {
+        for (const diagnostic of resource.admission.diagnostics ?? []) {
+            log(
+                `${diagnostic.severity} ${diagnostic.code}: ${diagnostic.message}${diagnostic.relatedResources?.length ? ` (${diagnostic.relatedResources.join(", ")})` : ""}`,
+            );
+        }
+    }
 }
 
 export function resourceCoordinate(resource: PreparedResource): string {

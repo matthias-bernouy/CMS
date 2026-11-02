@@ -1,4 +1,5 @@
 import type { RenderingResourceReads } from "cms-content/application/core/RenderingResourceReads";
+import type { PageWriteFeedback, PageWriteResult } from "./diagnostics";
 import type {
     BlocRecord,
     SiteBlocGroup,
@@ -141,6 +142,7 @@ export interface ContentRepository {
     // PAGE
     getPage(path: string): Promise<TPage | null>;
     getPageById(id: string): Promise<TPage | null>;
+    getPagesByIds?(ids: readonly string[]): Promise<TPage[]>;
     getAllPages(): Promise<TPage[]>;
     scanPages(cursor: string | undefined, limit: number): Promise<PageScan>;
     scanPagesByContentReference(
@@ -155,8 +157,8 @@ export interface ContentRepository {
     /** Editorial route record access. Public consumers use `resolvePublishedRoute`. */
     getPageRoute(path: string): Promise<PageRoute | null>;
     getPageRoutes?(paths: readonly string[]): Promise<PageRoute[]>;
-    insertPage(path: string, title: string, content?: string): Promise<void>;
-    updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null>;
+    insertPage(path: string, title: string, content?: string): Promise<void | PageWriteFeedback>;
+    updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<PageWriteResult | null>;
     deletePage(id: string, expectedRevision?: number): Promise<void>;
     setPagePaths?(
         id: string,

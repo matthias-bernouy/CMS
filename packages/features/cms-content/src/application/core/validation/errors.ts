@@ -1,3 +1,5 @@
+import type { ContentDiagnostic } from "cms-content/application/interfaces/diagnostics";
+
 /**
  * Domain errors of the content aggregate. They carry a `status` so any HTTP
  * surface maps them without importing surface-specific error classes — the
@@ -13,6 +15,7 @@ export class ContentValidationError extends Error {
             code: "field.invalid",
             parameters: { field },
         },
+        readonly diagnostics: readonly ContentDiagnostic[] = [],
     ) {
         super(`Invalid ${field}: ${message}`);
         this.name = "ContentValidationError";

@@ -30,14 +30,34 @@ export async function callCapability<T>(capabilityId: PageEditorCapability, inpu
     const body = await response.json().catch(() => ({ error: `Request failed (${response.status})` }));
     if (!response.ok) {
         const record = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+        const error =
+            record.error && typeof record.error === "object" ? (record.error as Record<string, unknown>) : record;
+        const output =
+            error.output && typeof error.output === "object" ? (error.output as Record<string, unknown>) : record;
+        const details = diagnosticMessages(output.diagnostics);
         throw new CapabilityError(
-            typeof record.message === "string"
-                ? record.message
-                : typeof record.error === "string"
-                  ? record.error
-                  : `Request failed (${response.status})`,
-            typeof record.code === "string" ? record.code : "REQUEST_FAILED",
+            [
+                typeof output.message === "string"
+                    ? output.message
+                    : typeof record.error === "string"
+                      ? record.error
+                      : `Request failed (${response.status})`,
+                ...details,
+            ].join("\n"),
+            typeof error.code === "string" ? error.code : "REQUEST_FAILED",
         );
     }
     return body as T;
+}
+
+export function diagnosticMessages(value: unknown): string[] {
+    return Array.isArray(value)
+        ? value
+              .slice(0, 16)
+              .flatMap((item) =>
+                  item && typeof item === "object" && typeof item.message === "string"
+                      ? [item.message.slice(0, 2048)]
+                      : [],
+              )
+        : [];
 }

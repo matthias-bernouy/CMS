@@ -34,6 +34,7 @@ export function expandCompositions(
     root: ParentNode,
     definitions: readonly CompositionDefinition[],
     mode: CompositionExpansionMode = "render",
+    origins?: WeakMap<Element, string>,
 ): void {
     const markups = new Map<string, ExpansionMarkup>(
         definitions.map((definition) => [
@@ -47,6 +48,7 @@ export function expandCompositions(
 
     const expanded = new WeakSet<Element>();
     const idScope = createTemplateIdScope(root);
+    const budget = origins ? { remaining: 50_000, characters: 4 * 1024 * 1024 } : undefined;
     const expansionLimit = markups.size * 100 + 1_000;
     for (let count = 0; count < expansionLimit; count++) {
         const host = nextComposition(root, markups, expanded);
@@ -54,7 +56,7 @@ export function expandCompositions(
             return;
         }
         expanded.add(host);
-        expandHost(host, markups.get(host.getAttribute("cms-bloc")!)!, mode, idScope);
+        expandHost(host, markups.get(host.getAttribute("cms-bloc")!)!, mode, idScope, origins, budget);
     }
     throw new Error("Composition expansion exceeded its safety limit; check for a recursive composition dependency");
 }
@@ -78,6 +80,8 @@ function expandHost(
     definition: ExpansionMarkup,
     mode: CompositionExpansionMode,
     idScope: TemplateIdScope,
+    origins?: WeakMap<Element, string>,
+    budget?: { remaining: number; characters: number },
 ): void {
     const document = host.ownerDocument;
     const authored = Array.from(host.childNodes);
@@ -89,7 +93,19 @@ function expandHost(
     const template = document.createElement("template");
     template.innerHTML = definition.html;
     scopeTemplateIds(template.content, idScope);
-    const forwarding = projectSlots(template.content, authored, mode);
+    if (origins) {
+        for (const element of Array.from(template.content.querySelectorAll("*"))) {
+            origins.set(element, host.getAttribute("cms-bloc")!);
+        }
+    }
+    const forwarding = projectSlots(template.content, authored, mode, origins);
+    if (budget) {
+        budget.remaining -= template.content.querySelectorAll("*").length;
+        budget.characters -= template.innerHTML.length;
+        if (budget.remaining < 0 || budget.characters < 0) {
+            throw new Error("Expanded document exceeds the authoring expansion work budget");
+        }
+    }
     if (input) {
         input.setAttribute("data-cms-composition-slot-forwarding", JSON.stringify(forwarding));
     }
@@ -148,6 +164,7 @@ function projectSlots(
     fragment: DocumentFragment,
     authored: Node[],
     mode: CompositionExpansionMode,
+    origins?: WeakMap<Element, string>,
 ): Record<string, string | null> {
     const usedNames = new Set<string>();
     const forwarding: Record<string, string | null> = {};
@@ -161,7 +178,7 @@ function projectSlots(
         }
         const projected =
             assigned.length > 0
-                ? assigned.map((node) => (mode === "preview" ? node : node.cloneNode(true)))
+                ? assigned.map((node) => (mode === "preview" ? node : cloneWithOrigins(node, origins)))
                 : Array.from(slot.childNodes);
         remapProjectedSlot(projected, name, forwardedSlot);
         if (mode === "preview") {
@@ -185,6 +202,21 @@ function projectSlots(
         }
     }
     return forwarding;
+}
+
+function cloneWithOrigins(node: Node, origins?: WeakMap<Element, string>): Node {
+    const clone = node.cloneNode(true);
+    if (origins && node.nodeType === 1) {
+        const before = [node as Element, ...Array.from((node as Element).querySelectorAll("*"))];
+        const after = [clone as Element, ...Array.from((clone as Element).querySelectorAll("*"))];
+        for (const [index, element] of before.entries()) {
+            const origin = origins.get(element);
+            if (origin) {
+                origins.set(after[index]!, origin);
+            }
+        }
+    }
+    return clone;
 }
 
 function markAuthored(nodes: Node[], slotName: string): void {

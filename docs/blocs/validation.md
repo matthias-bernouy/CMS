@@ -45,6 +45,37 @@ static JavaScript checks and the canvas channel for color-data previews.
 When changing compiler behavior, add a focused test beside
 `packages/features/cms-repository/tests/collections/admission/tooling/`.
 
+## Expanded authoring diagnostics
+
+Page writes analyze the expanded document before persistence and expose up to
+16 structured diagnostics through the existing mutations. Errors refuse a write;
+warnings return with the committed revision and are not persisted in Page data.
+The authoring analyzer checks main landmarks, native references, repeated IDs,
+interactive nesting and links supplied by templates as well as Page content.
+It preserves Bloc origins across composition/slot expansion for diagnostics.
+Exclusive match cases are considered separately; independent conditions are not
+assumed exclusive. Dynamic or budget-limited results remain explicitly unverified.
+
+Broken routes/fragments are warnings for drafts and errors for published content.
+Existing draft destinations remain advisory to avoid publication cycles.
+Deletion checks effective incoming links, including relative destinations.
+Unpublication stays possible and reports incoming links or an incomplete scan.
+Bloc replacement checks indexed direct and indirect Page consumers; collection
+upgrade planning uses the target definitions and the existing usage snapshot.
+These checks do not establish a distributed snapshot or guarantee that another
+write cannot later change a destination.
+
+Collection preparation also checks example structure and reports normalized
+clone groups and conservative CSS-vector candidates. It preserves selectors,
+media rules, contracts and significant values. Executable behavior is not treated
+as interchangeable. The CLI prints preparation warnings; MCP returns structured
+feedback and the Page editor displays write diagnostics. These checks do not add
+a capability, rename resources or change the release digest based on warnings.
+
+New authoring policy is explicit and does not run on ordinary historical artifact
+reads or public rendering. The existing immutable grammar validation remains in
+place. Full admission-policy versioning is a separate concern.
+
 ## Workspace checks
 
 From the repository root run:

@@ -29,6 +29,14 @@ The tests print observed stage and catalogue durations without machine-specific
 latency assertions. Temporary processes, files, credentials and browser profiles
 are cleaned up on success and failure.
 
+`validation.test.ts` exercises authoring diagnostics through the real OAuth/MCP
+boundary: expanded-example refusals, clone warnings with stable release digests,
+publication and installation, persistent editor warnings, effective template
+links, progressive publication, refusal without mutation, scoped template IDs
+and ARIA references, incoming-link protection, and a valid release whose upgrade
+is blocked by incompatible expanded Page HTML. It also checks retained Page state
+after restarting the Provider.
+
 ## Interpretation and limits
 
 These are scripted protocol journeys. Reading a guide and executing assertions

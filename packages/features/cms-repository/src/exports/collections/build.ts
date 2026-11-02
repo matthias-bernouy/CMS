@@ -7,7 +7,11 @@ export { compileBlocStyle } from "cms-repository/collections/core/validation/sty
 export { blocRuntimeExternalsPlugin } from "cms-repository/collections/tooling/blocRuntimeExternalsPlugin";
 export { validateBloc, validateBlocTag } from "cms-repository/collections/tooling/validateBloc";
 
-export { prepareCollectionRelease } from "cms-repository/collections/tooling/authoring/source";
+export {
+    prepareCollectionRelease,
+    CollectionAuthoringValidationError,
+} from "cms-repository/collections/tooling/authoring/source";
+export { collectionAuthoringDiagnostics } from "cms-repository/collections/tooling/authoring/analysis/diagnostics";
 export { loadCollectionBlocs } from "cms-repository/collections/tooling/authoring/blocSources";
 export {
     discoverCollectionBlocSources,

@@ -33,6 +33,7 @@ const CMS_REPOSITORY_NON_MUTATIONS = [
     "getBlocSource",
     "getPage",
     "getPageById",
+    "getPagesByIds",
     "getAllPages",
     "scanPages",
     "scanPagesByContentReference",

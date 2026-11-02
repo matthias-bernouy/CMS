@@ -23,8 +23,11 @@ export async function concurrentEditing(connection: Connection, cmsUrl: string) 
     const losing = results.find((result) => result.isError)!;
     refusal(losing, "REVISION_CONFLICT");
     const winner = results.find((result) => !result.isError)!.structuredContent.output;
+    const { diagnostics, ...expectedPage } = winner;
+    expect(diagnostics).toEqual([]);
     const saved = await call("ulvia.cms.content", "pages.get", { id: page.id });
-    expect(saved).toMatchObject(winner);
+    expect(saved).toMatchObject(expectedPage);
+    expect(saved).not.toHaveProperty("diagnostics");
     const invalid = await invoke(connection, "ulvia.cms.content", "pages.update", {
         id: page.id,
         expectedRevision: winner.revision,

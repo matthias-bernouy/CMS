@@ -98,6 +98,13 @@ export class InMemoryPageRepository extends InMemoryBlocRepository {
         });
     }
 
+    async getPagesByIds(ids: readonly string[]): Promise<TPage[]> {
+        return [...new Set(ids)].flatMap((id) => {
+            const page = this.findPageEntryById(id)?.[1];
+            return page ? [structuredClone(page)] : [];
+        });
+    }
+
     async getPublishedPages(): Promise<TPage[]> {
         return (await this.getAllPages()).filter(isPublishedPage).map((page) => structuredClone(page));
     }

@@ -52,6 +52,7 @@ const CMS_REPOSITORY_METHOD_POLICY = {
     getBlocSource: "override",
     getPage: "delegate",
     getPageById: "delegate",
+    getPagesByIds: "delegate",
     getAllPages: "delegate",
     scanPages: "delegate",
     scanPagesByContentReference: "delegate",

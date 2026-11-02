@@ -43,14 +43,18 @@ export function registerCollectionAuthoringCapabilities(
                         try {
                             result = {
                                 valid: true,
-                                diagnostics: [],
                                 ...(await authoring.prepare(required(request.sourceJson))),
                             };
                         } catch (error) {
                             if (!(error instanceof CollectionPreparationError)) {
                                 throw error;
                             }
-                            result = { valid: false, diagnostics: [{ message: error.message }] };
+                            result = {
+                                valid: false,
+                                diagnostics: error.diagnostics ?? [
+                                    { code: "collection.invalid", severity: "error", message: error.message },
+                                ],
+                            };
                         }
                         break;
                     case "publish-collection":

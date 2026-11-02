@@ -30,6 +30,12 @@ export {
     type UnresolvedPageDocumentBloc,
 } from "cms-content/blocs/core/markup/validation/documents/pageDocument";
 export { validateExpandedPageDocument } from "cms-content/blocs/core/markup/validation/documents/expandedPageDocument";
+export { analyzeExpandedPageDocument } from "cms-content/blocs/core/markup/validation/documents/expandedPageDocument";
+export type {
+    ContentDiagnostic,
+    PageWriteFeedback,
+    PageWriteResult,
+} from "cms-content/application/interfaces/diagnostics";
 export {
     validateBlocDocument,
     type BlocDocumentContract,

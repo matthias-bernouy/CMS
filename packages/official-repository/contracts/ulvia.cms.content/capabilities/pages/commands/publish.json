@@ -67,6 +67,59 @@
             },
             "visible": {
                 "type": "boolean"
+            },
+            "diagnostics": {
+                "type": "array",
+                "maxItems": 16,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "code": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "severity": {
+                            "type": "string",
+                            "enum": ["error", "warning"],
+                            "maxLength": 7
+                        },
+                        "message": {
+                            "type": "string",
+                            "maxLength": 2048
+                        },
+                        "location": {
+                            "type": "object",
+                            "properties": {
+                                "blocId": {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                "path": {
+                                    "type": "string",
+                                    "maxLength": 2048
+                                },
+                                "attribute": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                }
+                            },
+                            "required": []
+                        },
+                        "relatedResources": {
+                            "type": "array",
+                            "maxItems": 8,
+                            "items": {
+                                "type": "string",
+                                "maxLength": 200
+                            }
+                        },
+                        "suggestion": {
+                            "type": "string",
+                            "maxLength": 512
+                        }
+                    },
+                    "required": ["code", "severity", "message"]
+                }
             }
         },
         "required": ["id", "revision", "path", "title", "description", "content", "tags", "visible"]
@@ -82,6 +135,74 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 2048
+                    }
+                },
+                "required": ["message"]
+            }
+        },
+        {
+            "code": "INVALID_PAGE",
+            "retryable": false,
+            "output": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    },
+                    "diagnostics": {
+                        "type": "array",
+                        "maxItems": 16,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "string",
+                                    "maxLength": 128
+                                },
+                                "severity": {
+                                    "type": "string",
+                                    "enum": ["error", "warning"],
+                                    "maxLength": 7
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "maxLength": 2048
+                                },
+                                "location": {
+                                    "type": "object",
+                                    "properties": {
+                                        "blocId": {
+                                            "type": "string",
+                                            "maxLength": 200
+                                        },
+                                        "path": {
+                                            "type": "string",
+                                            "maxLength": 2048
+                                        },
+                                        "attribute": {
+                                            "type": "string",
+                                            "maxLength": 64
+                                        }
+                                    },
+                                    "required": []
+                                },
+                                "relatedResources": {
+                                    "type": "array",
+                                    "maxItems": 8,
+                                    "items": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                    }
+                                },
+                                "suggestion": {
+                                    "type": "string",
+                                    "maxLength": 512
+                                }
+                            },
+                            "required": ["code", "severity", "message"]
+                        }
                     }
                 },
                 "required": ["message"]
@@ -133,7 +254,8 @@
                 "errorStatuses": {
                     "NOT_FOUND": 404,
                     "REVISION_CONFLICT": 409,
-                    "CORE_UNAVAILABLE": 503
+                    "CORE_UNAVAILABLE": 503,
+                    "INVALID_PAGE": 422
                 }
             }
         },

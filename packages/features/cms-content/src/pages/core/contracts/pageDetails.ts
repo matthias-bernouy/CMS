@@ -2,12 +2,13 @@ import { ContentValidationError } from "cms-content/application/core/validation/
 import type { ContentRepository } from "cms-content/application/interfaces/ContentRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
+import type { ContentDiagnostic } from "cms-content/application/interfaces/diagnostics";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
 
 export type CmsPageDetails = Pick<
     TPage,
     "id" | "revision" | "path" | "title" | "description" | "content" | "tags" | "visible"
->;
+> & { readonly diagnostics?: readonly ContentDiagnostic[] };
 
 export type CmsPageEditingDetails = CmsPageDetails & {
     readonly routes: readonly CmsPageRouteEntry[];
@@ -60,7 +61,7 @@ export function cmsPageRevision(value: unknown): number {
     return value as number;
 }
 
-export function cmsPageDetails(page: TPage): CmsPageDetails {
+export function cmsPageDetails(page: TPage, diagnostics?: readonly ContentDiagnostic[]): CmsPageDetails {
     return {
         id: page.id,
         revision: page.revision,
@@ -70,6 +71,7 @@ export function cmsPageDetails(page: TPage): CmsPageDetails {
         content: page.content,
         tags: [...page.tags],
         visible: page.visible,
+        ...(diagnostics ? { diagnostics } : {}),
     };
 }
 

@@ -27,17 +27,24 @@ for (const [adapter, factory] of Object.entries(factories)) {
         });
         return { inner, repo: new ValidatingContentRepository(inner) };
     }
-    test(`${adapter}: Page insert/update/publication reject unavailable links but permit self links and draft targets`, async () => {
+    test(`${adapter}: drafts report unavailable links and publication refuses them without changing state`, async () => {
         const { repo, inner } = await fixture();
-        await expect(repo.insertPage("/broken", "Broken", content("/missing"))).rejects.toThrow("unavailable route");
-        expect(await repo.getPage("/broken")).toBeNull();
+        const feedback = await repo.insertPage("/broken", "Broken", content("/missing"));
+        expect(feedback?.diagnostics).toContainEqual(
+            expect.objectContaining({ code: "page.route_missing", severity: "warning" }),
+        );
         await repo.insertPage("/source", "Source", content("/source"));
         const source = (await repo.getPage("/source"))!;
-        await expect(
-            repo.updatePage({ id: source.id, content: content("/missing") }, source.revision),
-        ).rejects.toThrow();
+        const modified = (await repo.updatePage({ id: source.id, content: content("/missing") }, source.revision))!;
+        expect(modified.diagnostics).toContainEqual(
+            expect.objectContaining({ code: "page.route_missing", severity: "warning" }),
+        );
+        await expect(repo.updatePage({ id: source.id, visible: true }, modified.revision)).rejects.toThrow(
+            "unavailable route",
+        );
+        expect(await inner.getPageById(source.id)).toMatchObject({ revision: modified.revision, visible: false });
         await repo.insertPage("/target", "Target");
-        await repo.updatePage({ id: source.id, content: content("/target?query=one#anchor") }, source.revision);
+        await repo.updatePage({ id: source.id, content: content("/target?query=one#anchor") }, modified.revision);
         await inner.insertPage("/raw", "Raw", content("/missing"));
         const raw = (await repo.getPage("/raw"))!;
         await expect(repo.updatePage({ id: raw.id, visible: true }, raw.revision)).rejects.toThrow("unavailable route");

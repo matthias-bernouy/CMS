@@ -28,6 +28,12 @@ Call `prepare-collection` with the complete source snapshot. A successful tool i
 
 Compilation does not prove visual quality. Inspect the installed result with a browser when available and report any missing visual or interaction checks.
 
+Inspect `diagnostics` even when `valid` is true. Errors block preparation; warnings identify review opportunities without blocking publication. Entries carry a stable code, severity, message and optional location, related resource IDs and suggestion. `analysis.truncated` means more issues or similarity candidates remain. Correct the reported issues and prepare again.
+
+Preparation checks expanded example structure and compares local Blocs using normalized DOM, native/slot contracts, settings, dependencies and CSS. `design.similar_blocs` groups matching candidates independently of their IDs or slot names. `design.near_blocs` compares CSS feature vectors only after matching structure/contracts and CSS selector, media and declaration-order skeletons. The score is a retrieval signal, not proof of equivalence; review remaining values, cascade behavior and editorial intent. Executable Blocs are excluded from automatic clone grouping. No embedding model is required.
+
+Separate public resources can be intentional variants. Nothing is renamed or merged automatically, and names such as `copy-42` are not independently classified as defects. Reports list up to eight resource IDs per group. These authoring diagnostics are transient feedback, not immutable release fields or a new rule applied while reading stored releases.
+
 ## Publish the reviewed preparation
 
 Inspect its digest and executable browser-code risk. Call `publish-collection` with the returned `preparationId` and `expectedDigest: digest`. Publication creates an immutable `(publisherId, collectionId, version)` release; it does not install it. Use a new version for changed published sources.

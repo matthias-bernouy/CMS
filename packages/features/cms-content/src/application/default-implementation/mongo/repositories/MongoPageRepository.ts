@@ -216,6 +216,16 @@ export class MongoPageRepository extends MongoBlocRepository {
         return documents.map((document) => fromPageDoc(document)!);
     }
 
+    async getPagesByIds(ids: readonly string[]): Promise<TPage[]> {
+        if (ids.length === 0) {
+            return [];
+        }
+        const documents = await this.pages
+            .find({ _id: { $in: [...new Set(ids)] }, deletionIntent: { $exists: false } })
+            .toArray();
+        return documents.map((document) => fromPageDoc(document)!);
+    }
+
     async getPublishedPages(): Promise<TPage[]> {
         const documents = await this.pages.find({ visible: true, deletionIntent: { $exists: false } }).toArray();
         return documents.map((document) => fromPageDoc(document)!);

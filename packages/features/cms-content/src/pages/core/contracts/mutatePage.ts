@@ -39,7 +39,7 @@ export async function updateCmsPage(
     if (!updated) {
         throw new CmsPageNotFoundError(id);
     }
-    return cmsPageDetails(updated);
+    return cmsPageDetails(updated, updated.diagnostics ?? []);
 }
 
 export async function publishCmsPage(
@@ -58,7 +58,7 @@ export async function publishCmsPage(
     if (!updated) {
         throw new CmsPageNotFoundError(id);
     }
-    return cmsPageDetails(updated);
+    return cmsPageDetails(updated, updated.diagnostics ?? []);
 }
 
 export async function deleteCmsPage(

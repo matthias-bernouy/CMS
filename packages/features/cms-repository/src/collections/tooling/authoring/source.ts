@@ -8,6 +8,7 @@ import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTrans
 import { loadCollectionTexts } from "./textSources";
 import { readSourceEntries } from "cms-repository/repository/authoring/sourceTree";
 import { loadCollectionAssets } from "./assetSources";
+import { collectionAuthoringDiagnostics } from "./analysis/diagnostics";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
 export async function prepareCollectionRelease(directory: string, contracts?: ReleaseCatalogue) {
@@ -66,7 +67,19 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     if (artifact.release.collectionId !== collectionId) {
         throw new Error(`Collection folder ${collectionId} does not match its definition`);
     }
-    return artifact;
+    const diagnostics = collectionAuthoringDiagnostics(artifact.release);
+    if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
+        throw new CollectionAuthoringValidationError(diagnostics);
+    }
+    return Object.freeze({ ...artifact, diagnostics });
+}
+
+export class CollectionAuthoringValidationError extends Error {
+    constructor(readonly diagnostics: ReturnType<typeof collectionAuthoringDiagnostics>) {
+        super(
+            diagnostics.find((diagnostic) => diagnostic.severity === "error")?.message ?? "Invalid collection examples",
+        );
+    }
 }
 
 function ids(values: readonly unknown[], include: (value: Record<string, unknown>) => boolean = () => true): string[] {

@@ -83,7 +83,11 @@ export async function collectionUpgrade(connection: Connection, cmsUrl: string) 
     const after = await call("ulvia.cms.installations", "list-collection-installations");
     expect(after.revision).toBe(installed.revision + 1);
     expect(after.items.find((item: { collectionId: string }) => item.collectionId === "mcp-kit").version).toBe("1.1.0");
-    expect(await call("ulvia.cms.content", "pages.get", { id: page.id })).toMatchObject(edited);
+    const { diagnostics, ...expectedPage } = edited;
+    expect(diagnostics).toEqual([]);
+    const savedPage = await call("ulvia.cms.content", "pages.get", { id: page.id });
+    expect(savedPage).toMatchObject(expectedPage);
+    expect(savedPage).not.toHaveProperty("diagnostics");
     expect(edited.content).toBe(page.content);
     const rendered = await connection.browser.newPage();
     try {

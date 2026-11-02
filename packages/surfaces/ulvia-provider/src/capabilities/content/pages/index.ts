@@ -19,6 +19,10 @@ import {
 } from "@bernouy/cms-content";
 import { type ProviderCapabilityHandler, type ProviderCapabilityRegistry } from "../../../dispatch/registry";
 import type { CmsContentDependencies } from "../../../ports";
+import { ProviderCapabilityDispatchError } from "../../../dispatch/registry";
+import { errorMessage } from "../../../dispatch/errors/localize";
+import { messageLanguage } from "../../../dispatch/errors/locale";
+import type { ProviderCapabilityInvocationContext } from "../../../dispatch/registry";
 
 export function registerPageCapabilities(
     dispatcher: ProviderCapabilityRegistry,
@@ -26,7 +30,7 @@ export function registerPageCapabilities(
 ): void {
     const register = (capabilityId: string, handler: ProviderCapabilityHandler, invalidCode = "INVALID_PAGE") => {
         dispatcher.register("ulvia.cms.content", `pages.${capabilityId}`, async (input, context) =>
-            pageCommand(() => handler(input, context), invalidCode),
+            pageCommand(() => handler(input, context), invalidCode, context),
         );
     };
     dispatcher.register("ulvia.cms.content", "examples.list", (input) =>
@@ -47,7 +51,11 @@ export function registerPageCapabilities(
     register("rename", (input) => renameCmsPage(dependencies.repo, input as never), "INVALID_TITLE");
 }
 
-async function pageCommand(operation: () => Promise<unknown>, invalidCode: string): Promise<unknown> {
+async function pageCommand(
+    operation: () => Promise<unknown>,
+    invalidCode: string,
+    context?: ProviderCapabilityInvocationContext,
+): Promise<unknown> {
     try {
         return await operation();
     } catch (error) {
@@ -67,6 +75,22 @@ async function pageCommand(operation: () => Promise<unknown>, invalidCode: strin
             throw officialFailure("CORE_UNAVAILABLE", 503, error);
         }
         if (error instanceof ContentValidationError) {
+            if (error.diagnostics.length > 0) {
+                const language = messageLanguage(
+                    context?.http?.headers.get("accept-language") ??
+                        context?.requestContext?.headers["accept-language"],
+                );
+                throw new ProviderCapabilityDispatchError(
+                    invalidCode,
+                    422,
+                    invalidCode,
+                    { "content-language": language },
+                    {
+                        message: errorMessage("ulvia.cms.content", "pages.update", invalidCode, language),
+                        diagnostics: error.diagnostics,
+                    },
+                );
+            }
             throw officialFailure(invalidCode, 422, error);
         }
         throw error;

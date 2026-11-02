@@ -78,6 +78,7 @@ export async function prepareRemoteCollection(host: AuthoringHost, sourceJson: s
             sourceDigest: `sha256:${createHash("sha256").update(retainedSources).digest("hex")}`,
             approvedBrowserRiskDigest: collectionBrowserRiskDigest(browserRisk),
             browserRisk: browserRisk.level,
+            diagnostics: artifact.diagnostics,
         };
     } catch (error) {
         await rm(work, { recursive: true, force: true });

@@ -69,12 +69,51 @@
                 "items": {
                     "type": "object",
                     "properties": {
+                        "code": {
+                            "type": "string",
+                            "maxLength": 128
+                        },
+                        "severity": {
+                            "type": "string",
+                            "enum": ["error", "warning"],
+                            "maxLength": 7
+                        },
                         "message": {
                             "type": "string",
                             "maxLength": 2048
+                        },
+                        "location": {
+                            "type": "object",
+                            "properties": {
+                                "blocId": {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                "path": {
+                                    "type": "string",
+                                    "maxLength": 2048
+                                },
+                                "attribute": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                }
+                            },
+                            "required": []
+                        },
+                        "relatedResources": {
+                            "type": "array",
+                            "maxItems": 8,
+                            "items": {
+                                "type": "string",
+                                "maxLength": 200
+                            }
+                        },
+                        "suggestion": {
+                            "type": "string",
+                            "maxLength": 512
                         }
                     },
-                    "required": ["message"]
+                    "required": ["code", "severity", "message"]
                 }
             }
         },

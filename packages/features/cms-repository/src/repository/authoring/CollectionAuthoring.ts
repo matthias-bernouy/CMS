@@ -3,7 +3,8 @@ import { readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { RemoteRepositoryClient } from "cms-repository/exports/repository/publication";
 import { RepositorySourceClient } from "../sources/client";
-import { prepareCollectionRelease } from "cms-repository/exports/collections/build";
+import { prepareCollectionRelease, CollectionAuthoringValidationError } from "cms-repository/exports/collections/build";
+import type { ContentDiagnostic } from "@bernouy/cms-content/page-document";
 import { prepareRemoteCollection, type AuthoringHost } from "./prepare";
 import type { RepositoryOwnerCredential } from "cms-repository/exports/repository/namespaces";
 
@@ -52,7 +53,10 @@ export class CollectionAuthoring {
             const message = (error instanceof Error ? error.message : "Invalid collection sources")
                 .replaceAll(this.host.root, "<sources>")
                 .slice(0, 2048);
-            throw new CollectionPreparationError(message);
+            throw new CollectionPreparationError(
+                message,
+                error instanceof CollectionAuthoringValidationError ? error.diagnostics : undefined,
+            );
         }
     }
     async publish(id: string, expectedDigest: string) {
@@ -124,7 +128,10 @@ export class CollectionAuthoring {
 }
 
 export class CollectionPreparationError extends Error {
-    constructor(message: string) {
+    constructor(
+        message: string,
+        readonly diagnostics?: readonly ContentDiagnostic[],
+    ) {
         super(message);
         this.name = "CollectionPreparationError";
     }

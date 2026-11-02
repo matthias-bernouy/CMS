@@ -22,10 +22,10 @@ export async function createCmsPage(
             parameters: { field: "content" },
         });
     }
-    await repository.insertPage(path, title, input.content);
+    const feedback = await repository.insertPage(path, title, input.content);
     const created = await repository.getPage(path);
     if (!created) {
         throw new CmsPageNotFoundError(path);
     }
-    return cmsPageDetails(created);
+    return cmsPageDetails(created, feedback?.diagnostics ?? []);
 }

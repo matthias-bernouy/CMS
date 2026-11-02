@@ -22,6 +22,11 @@ export type {
     TBloc,
     TBlocWrite,
 } from "cms-content/blocs/interfaces/blocs";
+export type {
+    ContentDiagnostic,
+    PageWriteFeedback,
+    PageWriteResult,
+} from "cms-content/application/interfaces/diagnostics";
 export {
     parsePresentationImage,
     presentationImageContentType,
@@ -85,6 +90,7 @@ export {
 } from "cms-content/pages/core/routing/links";
 export { validatePageReference } from "cms-content/pages/core/routing/values";
 export { PageRouteNotFoundError, PageReferencedError } from "cms-content/pages/core/routing/errors";
+export { analyzePageLinks } from "cms-content/pages/core/routing/analysis/analyze";
 export { languagePrefix, localPagePath, publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
 export { pageSeoForLanguage } from "cms-content/pages/core/lifecycle/pageSeo";
 export type {

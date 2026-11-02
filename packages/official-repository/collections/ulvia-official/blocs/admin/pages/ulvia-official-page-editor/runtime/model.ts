@@ -15,6 +15,7 @@ export type EditorCatalogue = {
 };
 
 export type PageUpdate = {
+    diagnostics?: readonly { message: string; severity: "error" | "warning"; code: string }[];
     id: string;
     revision: number;
     path: string;

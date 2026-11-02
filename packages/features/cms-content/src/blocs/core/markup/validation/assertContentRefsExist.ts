@@ -2,7 +2,8 @@ import { ContentValidationError } from "cms-content/application/core/validation/
 import type { TBloc } from "cms-content/blocs/interfaces/blocs";
 import type { BlocSettings } from "cms-content/pages/interfaces/document";
 import { validatePageDocument } from "cms-content/blocs/core/markup/validation/documents/pageDocument";
-import { validateExpandedPageDocument } from "cms-content/blocs/core/markup/validation/documents/expandedPageDocument";
+import { analyzeExpandedPageDocument } from "cms-content/blocs/core/markup/validation/documents/expandedPageDocument";
+import { assertContentDiagnostics } from "cms-content/application/core/validation/diagnostics";
 import {
     resolveBindingAnalysisOptions,
     type ContentBindingValidationOptions,
@@ -31,7 +32,8 @@ export async function assertContentRefsExist(
     repository: ContentRefsReader,
     content: string,
     bindingOptions: ContentBindingValidationOptions = {},
-): Promise<void> {
+    options: { readonly complete?: boolean } = {},
+) {
     if (!content) {
         return;
     }
@@ -65,7 +67,9 @@ export async function assertContentRefsExist(
         });
     }
     try {
-        validateExpandedPageDocument(document.html, completeCatalogue);
+        const analysis = analyzeExpandedPageDocument(document.html, completeCatalogue, options.complete ?? true);
+        assertContentDiagnostics(analysis.diagnostics);
+        return analysis;
     } catch (error) {
         if (error instanceof ContentValidationError) {
             throw error;
