@@ -1,6 +1,10 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { admitContractReleaseJson, type AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
+import {
+    admitContractBundleJson,
+    parseContractReleaseJson,
+    type AdmittedContractRelease,
+} from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 
 const CONTRACT_ROOT = join(import.meta.dir, "../../packages/runtimes/ulvia-cli/dist/bootstrap/contracts/cms");
@@ -20,7 +24,17 @@ export async function officialContractDocuments(): Promise<Array<{ name: string;
 
 export async function officialContractAdmissions(): Promise<AdmittedContractRelease[]> {
     const documents = await officialContractDocuments();
-    return Promise.all(documents.map(({ json }) => admitContractReleaseJson(json)));
+    return Promise.all(
+        documents.map(({ name, json }) =>
+            admitContractBundleJson(
+                json,
+                (parseContractReleaseJson(json).documentation ?? []).map((document) => ({
+                    id: `docs/${document.path}`,
+                    bytes: Bun.file(join(CONTRACT_ROOT, name, "docs", document.path)),
+                })),
+            ),
+        ),
+    );
 }
 
 export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalogue> {

@@ -1,8 +1,8 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
@@ -30,9 +30,16 @@ export async function repositoryFixture() {
     const definition = (await Bun.file(join(BOOTSTRAP, "index.json")).json()) as BootstrapIndex;
     const contracts = new InMemoryReleaseCatalogue();
     const admissions = await Promise.all(
-        definition.contracts.map(async (path) =>
-            admitContractReleaseJson(await Bun.file(join(BOOTSTRAP, path)).text()),
-        ),
+        definition.contracts.map(async (path) => {
+            const json = await Bun.file(join(BOOTSTRAP, path)).text();
+            return admitContractBundleJson(
+                json,
+                (parseContractReleaseJson(json).documentation ?? []).map((document) => ({
+                    id: `docs/${document.path}`,
+                    bytes: Bun.file(join(BOOTSTRAP, dirname(path), "docs", document.path)),
+                })),
+            );
+        }),
     );
     await publishContractSet(contracts, admissions);
     const artifact = await admitCollectionReleaseJson(
@@ -51,6 +58,7 @@ export async function repositoryFixture() {
                 release.contractId,
                 release.version,
                 admission.canonicalJson,
+                admission.documentationAssets,
             );
         }
         const provider = await admitProviderManifestJson(

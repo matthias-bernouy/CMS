@@ -1,3 +1,5 @@
+import { parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { dirname } from "node:path";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
@@ -26,7 +28,15 @@ export async function bootstrapOfficialRepository(
         const files = new LocalArtifactFiles(repositoryRoot);
         const contracts = new LocalContractReleases(files);
         for (const path of index.contracts) {
-            await contracts.publish(await readFile(join(root, path), "utf8"));
+            const source = await readFile(join(root, path), "utf8");
+            const metadata = parseContractReleaseJson(source);
+            const assets = await Promise.all(
+                (metadata.documentation ?? []).map(async (document) => ({
+                    id: `docs/${document.path}`,
+                    bytes: await readFile(join(root, dirname(path), "docs", document.path)),
+                })),
+            );
+            await contracts.publish(source, assets);
         }
         await new LocalProviderReleases(files, contracts).release(await readFile(join(root, index.provider), "utf8"));
         const collection = await admitCollectionReleaseJson(

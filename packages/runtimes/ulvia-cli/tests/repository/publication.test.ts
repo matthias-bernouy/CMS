@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 import { startTestRepository } from "./fixture";
+import { prepareContractSource } from "../../src/release/authored/contract";
 
 test("remote publication is signed, immutable, atomic, and reversibly yankable", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-publication-source-"));
@@ -27,7 +28,8 @@ test("remote publication is signed, immutable, atomic, and reversibly yankable",
             `${definition.version}.json`,
         );
         const canonicalJson = await readFile(path, "utf8");
-        const envelope = { kind: "contract" as const, canonicalJson, assets: [] };
+        const admission = (await prepareContractSource(source)).admission;
+        const envelope = { kind: "contract" as const, canonicalJson, assets: admission.documentationAssets ?? [] };
         await expect(new RemoteRepositoryClient(server.url).push(envelope)).rejects.toThrow(
             "namespace owner credential",
         );
@@ -54,7 +56,7 @@ test("remote publication is signed, immutable, atomic, and reversibly yankable",
         const changed = {
             kind: "contract",
             canonicalJson: canonicalJson.replace("CMS Installations", "Changed CMS Installations"),
-            assets: [],
+            assets: envelope.assets,
         } as const;
         await expect(client.push(changed)).rejects.toThrow("already published");
         expect(

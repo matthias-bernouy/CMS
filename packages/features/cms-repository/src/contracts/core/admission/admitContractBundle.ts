@@ -1,3 +1,5 @@
+import { contractAssetDefinitions } from "../../documentation/manifest";
+import { verifyDocumentation } from "../../documentation/verify";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
 import { prepareContractRelease, prepareContractReleaseJson } from "./prepareContractRelease";
 import { admitPreparedRelease, type AdmittedContractRelease } from "./admitContractRelease";
@@ -29,6 +31,12 @@ async function admitPreparedReleaseWithAssets(
     prepared: PreparedContractRelease,
     assets: readonly ContractBundleAsset[],
 ): Promise<AdmittedContractRelease> {
-    const verified = await verifyFixtureAssets(prepared.release.fixtureAssets ?? [], assets);
-    return admitPreparedRelease(prepared, verified);
+    const verified = await verifyFixtureAssets(contractAssetDefinitions(prepared.release), assets);
+    const documents = verified.filter((asset) => asset.id.startsWith("docs/"));
+    await verifyDocumentation(prepared.release, documents);
+    return admitPreparedRelease(
+        prepared,
+        verified.filter((asset) => !asset.id.startsWith("docs/")),
+        documents,
+    );
 }

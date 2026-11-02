@@ -1,7 +1,6 @@
 import { resolve } from "node:path";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { compileContractSource } from "../src/release/authored/contract";
+import { prepareContractSource } from "../src/release/authored/contract";
 
 export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalogue> {
     const catalogue = new InMemoryReleaseCatalogue();
@@ -17,7 +16,7 @@ export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalo
         "ulvia.provider.connections",
     ]) {
         const directory = resolve(import.meta.dir, `../../../official-repository/contracts/${contractId}`);
-        await catalogue.publish(await admitContractReleaseJson(await compileContractSource(directory)));
+        await catalogue.publish((await prepareContractSource(directory)).admission);
     }
     return catalogue;
 }

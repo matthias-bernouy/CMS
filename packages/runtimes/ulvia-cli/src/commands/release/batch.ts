@@ -34,7 +34,10 @@ export async function releaseBatch(
         coordinates.add(coordinate);
         bytes += Buffer.byteLength(resource.admission.canonicalJson);
         if (resource.kind === "contract") {
-            bytes += (resource.admission.fixtureAssets ?? []).reduce((total, asset) => total + asset.bytes.size, 0);
+            bytes += [
+                ...(resource.admission.fixtureAssets ?? []),
+                ...(resource.admission.documentationAssets ?? []),
+            ].reduce((total, asset) => total + asset.bytes.size, 0);
         } else if (resource.kind === "collection") {
             bytes += resource.admission.assets.reduce((total, asset) => total + asset.bytes.size, 0);
         }

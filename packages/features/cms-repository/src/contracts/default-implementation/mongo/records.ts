@@ -1,3 +1,4 @@
+import { verifyStoredContractReleaseJson } from "../../core/admission/admitContractRelease";
 import type { Collection } from "mongodb";
 import type { AdmittedContractRelease } from "../../core/admission/admitContractRelease";
 import type { ReleaseDigest } from "../../core/admission/digest";
@@ -39,7 +40,9 @@ export async function releaseRecord(
     if (!artifact || artifact._id !== entry.digest) {
         throw new ReleaseValidationError("invalid_contract", "published release artifact is missing");
     }
-    const admission = await verifyAdmission(artifact.admission, limits);
+    const admission = artifact.admission.release.documentation?.length
+        ? await verifyStoredContractReleaseJson(artifact.admission.canonicalJson, artifact._id, limits)
+        : await verifyAdmission(artifact.admission, limits);
     if (admission.digest !== entry.digest || admission.release.version !== entry.version) {
         throw new ReleaseValidationError("invalid_contract", "published release artifact disagrees with catalogue");
     }

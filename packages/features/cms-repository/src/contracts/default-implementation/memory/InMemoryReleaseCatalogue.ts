@@ -27,6 +27,13 @@ export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
         this.#clock = clock;
     }
 
+    async readDocumentation(digest: ReleaseDigest, path: string): Promise<Blob | null> {
+        return (
+            this.#byDigest.get(digest)?.admission.documentationAssets?.find((asset) => asset.id === `docs/${path}`)
+                ?.bytes ?? null
+        );
+    }
+
     async publish(admission: AdmittedContractRelease): Promise<CatalogueContractRelease> {
         const verified = await verifyAdmission(admission, this.#limits);
         return this.#insert(verified, this.#clock().toISOString());

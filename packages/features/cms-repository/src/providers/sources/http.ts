@@ -1,3 +1,4 @@
+import { documentationPath } from "cms-repository/exports/contracts/documentation";
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
 import { readCataloguePages } from "cms-repository/repository-http/cataloguePages";
@@ -53,6 +54,22 @@ export class HttpProviderRepository implements ProviderRepositorySource {
             },
             (entry) => `${entry.publisherId}\0${entry.id}\0${entry.version}`,
             "provider",
+        );
+    }
+
+    async getAsset(reference: RepositoryArtifactReference, assetId: string, maxBytes: number): Promise<Uint8Array> {
+        if (!validProviderReference(reference) || reference.kind !== "contract" || !assetId.startsWith("docs/")) {
+            throw new TypeError("Invalid documentation asset reference");
+        }
+        const path = documentationPath(assetId.slice(5));
+        if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 128 * 1024) {
+            throw new TypeError("Invalid documentation byte budget");
+        }
+        return getRepositoryBytes(
+            this.base,
+            `v1/contracts/${encodeURIComponent(reference.publisherId)}/${encodeURIComponent(reference.id)}/${encodeURIComponent(reference.version)}/docs/${encodeURIComponent(path)}`,
+            "Documentation",
+            { request: this.request, accept: "text/markdown", maxBytes },
         );
     }
 

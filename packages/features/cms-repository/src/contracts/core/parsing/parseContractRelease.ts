@@ -1,3 +1,4 @@
+import { parseDocumentation } from "../../documentation/manifest";
 import { assertIJson, canonicalIJsonBytes } from "../protocol/canonical";
 import { ReleaseValidationError } from "../protocol/errors";
 import { parseStrictJson } from "../protocol/json";
@@ -37,6 +38,7 @@ export function parseContractRelease(
             "catalogue",
             "capabilities",
             "fixtureAssets",
+            "documentation",
         ],
         "$",
         "invalid_contract",
@@ -52,6 +54,7 @@ export function parseContractRelease(
             "$.capabilities",
         );
     }
+    const documentation = parseDocumentation(record.documentation);
     const schemaState = createSchemaState(limits);
     const fixtureAssets = parseFixtureAssets(record.fixtureAssets, limits);
     const assetsById = new Map(fixtureAssets?.map((asset) => [asset.id, asset]));
@@ -59,6 +62,14 @@ export function parseContractRelease(
     const capabilities = source.map((capability, index) =>
         parseCapability(capability, `$.capabilities[${index}]`, limits, schemaState, assetsById, referencedAssets),
     );
+    const docPaths = new Set(documentation?.map((doc) => doc.path));
+    for (const capability of capabilities) {
+        for (const path of capability.docs ?? []) {
+            if (!docPaths.has(path)) {
+                throw new ReleaseValidationError("invalid_contract", `missing capability documentation: ${path}`);
+            }
+        }
+    }
     for (const asset of fixtureAssets ?? []) {
         if (!referencedAssets.has(asset.id)) {
             throw new ReleaseValidationError("invalid_contract", `unused fixture asset ${asset.id}`, "$.fixtureAssets");
@@ -85,6 +96,7 @@ export function parseContractRelease(
         publisherId: parseIdentifier(record.publisherId, "$.publisherId", 96),
         ...(catalogue ? { catalogue } : {}),
         capabilities,
+        ...(documentation === undefined ? {} : { documentation }),
         ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
     };
     validateResponseEffectAuthority(release);

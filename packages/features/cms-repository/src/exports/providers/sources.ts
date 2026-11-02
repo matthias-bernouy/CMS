@@ -6,3 +6,5 @@ export type {
 } from "cms-repository/providers/sources/interfaces";
 export { importRepositoryArtifact } from "cms-repository/providers/sources/importRepositoryArtifact";
 export { importProviderManifest } from "cms-repository/providers/sources/importProviderManifest";
+
+export { loadDocumentedContract } from "cms-repository/providers/sources/documentation/load";

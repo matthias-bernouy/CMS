@@ -1,3 +1,4 @@
+import { contractAssetDefinitions } from "@bernouy/cms-repository/contracts/documentation";
 import {
     admitContractBundleJson,
     admitContractReleaseJson,
@@ -106,7 +107,7 @@ async function collectionAssets(assets: readonly { id: string; bytes: Blob }[]):
 }
 
 async function contractAssets(files: LocalArtifactFiles, canonicalJson: string): Promise<PublicationAsset[]> {
-    return (parseContractReleaseJson(canonicalJson).fixtureAssets ?? []).map((asset) => ({
+    return contractAssetDefinitions(parseContractReleaseJson(canonicalJson)).map((asset) => ({
         id: asset.id,
         bytes: files.fixtureBlob(canonicalJson, asset.id),
     }));

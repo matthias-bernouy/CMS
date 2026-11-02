@@ -10,6 +10,7 @@ export interface AdmittedContractRelease extends PreparedContractRelease {
     readonly digest: ReleaseDigest;
     readonly kind: "admitted-contract-release";
     readonly fixtureAssets?: readonly VerifiedFixtureAsset[];
+    readonly documentationAssets?: readonly VerifiedFixtureAsset[];
 }
 
 export interface VerifiedFixtureAsset {
@@ -61,6 +62,7 @@ function requireNoFixtureAssets(prepared: PreparedContractRelease): void {
 export async function admitPreparedRelease(
     prepared: PreparedContractRelease,
     fixtureAssets?: readonly VerifiedFixtureAsset[],
+    documentationAssets?: readonly VerifiedFixtureAsset[],
 ): Promise<AdmittedContractRelease> {
     const bytes = encoder.encode(prepared.canonicalJson);
     const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes.slice().buffer as ArrayBuffer);
@@ -69,6 +71,7 @@ export async function admitPreparedRelease(
         ...prepared,
         digest: `sha256:${hex(new Uint8Array(digest))}` as ReleaseDigest,
         ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
+        ...(documentationAssets === undefined ? {} : { documentationAssets }),
     });
 }
 

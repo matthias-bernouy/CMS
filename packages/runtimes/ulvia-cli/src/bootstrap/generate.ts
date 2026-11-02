@@ -8,6 +8,7 @@ import { prepareCollectionRelease } from "@bernouy/cms-repository/collections/bu
 
 export type OfficialBootstrapArtifacts = Readonly<{
     contracts: Readonly<Record<string, string>>;
+    contractAssets: readonly { contractId: string; id: string; bytes: Uint8Array }[];
     provider: string;
     providerDigest: string;
     collection: string;
@@ -18,12 +19,20 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
     const root = resolve(import.meta.dir, "../../../../official-repository");
     const catalogue = new InMemoryReleaseCatalogue();
     const contracts: Record<string, string> = {};
+    const contractAssets: { contractId: string; id: string; bytes: Uint8Array }[] = [];
     const admissions = new Map<string, AdmittedContractRelease>();
     const contractIds = await directories(join(root, "contracts"));
     for (const id of contractIds) {
         const directory = join(root, "contracts", id);
         const { admission } = await prepareContractSource(directory);
         admissions.set(`${admission.release.contractId}@${admission.release.version}`, admission);
+        for (const asset of admission.documentationAssets ?? []) {
+            contractAssets.push({
+                contractId: admission.release.contractId,
+                id: asset.id,
+                bytes: new Uint8Array(await asset.bytes.arrayBuffer()),
+            });
+        }
     }
     const publicationOrder = await publishContractSet(catalogue, [...admissions.values()]);
     for (const admission of publicationOrder) {
@@ -36,6 +45,7 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
     const collection = await prepareCollectionRelease(join(root, "collections", "ulvia-official"), catalogue);
     return {
         contracts,
+        contractAssets,
         provider: provider.canonicalJson,
         providerDigest: provider.digest,
         collection: collection.canonicalJson,
@@ -60,6 +70,12 @@ export async function writeOfficialBootstrapArtifacts(
             : `contracts/${id}/definition.json`;
         contractPaths.push(path);
         await writeArtifact(root, path, bytes);
+    }
+    for (const asset of artifacts.contractAssets) {
+        const contractRoot = asset.contractId.startsWith("ulvia.cms.")
+            ? `contracts/cms/${asset.contractId}`
+            : `contracts/${asset.contractId}`;
+        await writeBytes(root, `${contractRoot}/${asset.id}`, asset.bytes);
     }
     const provider = "providers/ulvia.official/definition.json";
     const collection = "collections/ulvia-official/release.json";

@@ -1,3 +1,4 @@
+import { contractAssetDefinitions } from "cms-repository/exports/contracts/documentation";
 import { isSha256Digest } from "@bernouy/binary-media";
 import { parseCollectionReleaseJson } from "cms-repository/exports/collections/index";
 import { parseContractReleaseJson } from "cms-repository/exports/contracts/index";
@@ -58,7 +59,7 @@ export class RemoteRepositoryClient {
         const definitions =
             coordinate.kind === "collection"
                 ? parseCollectionReleaseJson(canonicalJson).assets
-                : (parseContractReleaseJson(canonicalJson).fixtureAssets ?? []);
+                : contractAssetDefinitions(parseContractReleaseJson(canonicalJson));
         const directory = coordinate.kind === "collection" ? "assets" : "fixtures";
         const assets = new Array<{ id: string; bytes: Uint8Array | Blob }>(definitions.length);
         let nextIndex = 0;
@@ -66,7 +67,8 @@ export class RemoteRepositoryClient {
             while (nextIndex < definitions.length) {
                 const index = nextIndex++;
                 const definition = definitions[index]!;
-                const path = `${releasePath(coordinate)}/${directory}/${encodeURIComponent(definition.id)}`;
+                const doc = coordinate.kind === "contract" && definition.id.startsWith("docs/");
+                const path = `${releasePath(coordinate)}/${doc ? "docs" : directory}/${encodeURIComponent(doc ? definition.id.slice(5) : definition.id)}`;
                 const bytes = await this.asset(path, definition, assetSink);
                 assets[index] = { id: definition.id, bytes };
             }

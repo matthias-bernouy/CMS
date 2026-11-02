@@ -1,12 +1,12 @@
-import { admitContractReleaseJson } from "cms-repository/exports/contracts";
+import { loadDocumentedContract } from "./documentation/load";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { admitProviderManifestJson } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
 import { parseProviderManifestJson } from "cms-repository/providers/manifests/core/parsing/parseProviderManifest";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import type { ProviderRepositorySource, RepositoryArtifactReference } from "./interfaces";
-import { loadImplementedContracts } from "./implementedContracts";
-import { publishProviderImport } from "./publishProviderImport";
-import { stagedReleaseCatalogue } from "./stagedReleaseCatalogue";
+import { loadImplementedContracts } from "./imports/implementedContracts";
+import { publishProviderImport } from "./imports/publishProviderImport";
+import { stagedReleaseCatalogue } from "./imports/stagedReleaseCatalogue";
 
 /** Re-admit immutable bytes before publishing into the CMS-owned catalogues. */
 export async function importRepositoryArtifact(
@@ -27,7 +27,7 @@ export async function importRepositoryArtifact(
     }
     const bytes = await source.get(reference);
     if (reference.kind === "contract") {
-        const admitted = await admitContractReleaseJson(bytes);
+        const admitted = await loadDocumentedContract(source, reference, bytes);
         const release = admitted.release;
         if (
             admitted.digest !== reference.digest ||

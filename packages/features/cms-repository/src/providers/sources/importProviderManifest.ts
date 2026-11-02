@@ -3,9 +3,9 @@ import { parseProviderManifestJson } from "cms-repository/providers/manifests/co
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import type { ProviderRepositorySource } from "./interfaces";
-import { loadImplementedContracts } from "./implementedContracts";
-import { publishProviderImport } from "./publishProviderImport";
-import { stagedReleaseCatalogue } from "./stagedReleaseCatalogue";
+import { loadImplementedContracts } from "./imports/implementedContracts";
+import { publishProviderImport } from "./imports/publishProviderImport";
+import { stagedReleaseCatalogue } from "./imports/stagedReleaseCatalogue";
 
 /** Imports an administrator-supplied manifest after resolving its exact contracts from configured repositories. */
 export async function importProviderManifest(

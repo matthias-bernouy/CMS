@@ -1,8 +1,9 @@
-import { admitContractReleaseJson, type AdmittedContractRelease } from "cms-repository/exports/contracts";
+import { loadDocumentedContract } from "../documentation/load";
+import type { AdmittedContractRelease } from "cms-repository/exports/contracts";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/protocol/errors";
 import type { ProviderManifest } from "cms-repository/providers/manifests/interfaces/ProviderManifest";
-import type { ProviderRepositorySource, RepositoryArtifactEntry, RepositoryArtifactReference } from "./interfaces";
+import type { ProviderRepositorySource, RepositoryArtifactEntry, RepositoryArtifactReference } from "../interfaces";
 
 export async function loadImplementedContracts(
     sources: readonly ProviderRepositorySource[],
@@ -62,7 +63,7 @@ async function loadContract(
     source: ProviderRepositorySource,
     value: RepositoryArtifactReference,
 ): Promise<AdmittedContractRelease> {
-    const admitted = await admitContractReleaseJson(await source.get(value));
+    const admitted = await loadDocumentedContract(source, value);
     const release = admitted.release;
     if (
         admitted.digest !== value.digest ||

@@ -1,7 +1,8 @@
+import { documentationPath } from "cms-repository/exports/contracts/documentation";
 import { RepositoryRequestError } from "../../core/errors";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { stat } from "node:fs/promises";
 import { ensureDurableDirectory } from "../core/durable";
 import { listDirectories, writeImmutableFile } from "../core/immutableFiles";
@@ -40,10 +41,11 @@ export class LocalArtifactFiles {
             const fixtureRoot = join(this.root, "assets", "contracts", releaseHash(canonicalJson));
             await ensureDurableDirectory(fixtureRoot, this.root);
             for (const fixture of fixtures) {
-                if (!ASSET_IDENTIFIER.test(fixture.id)) {
+                if (!validAssetId(fixture.id)) {
                     throw new Error("Invalid fixture asset ID");
                 }
                 const path = join(fixtureRoot, fixture.id);
+                await ensureDurableDirectory(dirname(path), fixtureRoot);
                 await writeImmutableFile(
                     path,
                     fixture.bytes,
@@ -60,14 +62,14 @@ export class LocalArtifactFiles {
     }
 
     async fixture(canonicalJson: string, assetId: string): Promise<Buffer> {
-        if (!ASSET_IDENTIFIER.test(assetId)) {
+        if (!validAssetId(assetId)) {
             throw new Error("Invalid fixture asset ID");
         }
         return readFile(join(this.root, "assets", "contracts", releaseHash(canonicalJson), assetId));
     }
 
     fixtureBlob(canonicalJson: string, assetId: string): Bun.BunFile {
-        if (!ASSET_IDENTIFIER.test(assetId)) {
+        if (!validAssetId(assetId)) {
             throw new Error("Invalid fixture asset ID");
         }
         return Bun.file(join(this.root, "assets", "contracts", releaseHash(canonicalJson), assetId));
@@ -124,4 +126,19 @@ function sameBytes(existing: Buffer, candidate: string, type: string, id: string
         throw new RepositoryRequestError("REJECTED", `${type} ${id}@${version} already exists with different content`);
     }
     return false;
+}
+
+function validAssetId(id: string): boolean {
+    if (ASSET_IDENTIFIER.test(id)) {
+        return true;
+    }
+    if (!id.startsWith("docs/")) {
+        return false;
+    }
+    try {
+        documentationPath(id.slice(5));
+        return true;
+    } catch {
+        return false;
+    }
 }

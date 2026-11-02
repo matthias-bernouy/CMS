@@ -20,6 +20,7 @@ export interface CatalogueContractRelease {
 }
 
 export interface ReleaseCatalogue {
+    readDocumentation?(digest: ReleaseDigest, path: string): Promise<Blob | null>;
     /** Optional token that changes on every publication, yank or deprecation mutation. */
     revision?(): Promise<string>;
     findByDigest(digest: ReleaseDigest): Promise<CatalogueContractRelease | null>;

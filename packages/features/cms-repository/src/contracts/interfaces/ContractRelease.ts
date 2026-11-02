@@ -70,7 +70,15 @@ export interface ContractParentReference {
     readonly digest: ReleaseDigest;
 }
 
+export interface ContractDocumentationDefinition {
+    readonly path: string;
+    readonly title: string;
+    readonly byteLength: number;
+    readonly digest: ReleaseDigest;
+}
+
 interface CapabilityCommon {
+    readonly docs?: readonly string[];
     readonly id: string;
     readonly description?: string;
     readonly access: CapabilityAccess;
@@ -87,6 +95,7 @@ interface CapabilityCommon {
 export type CapabilityDefinition = CapabilityCommon & { readonly bindings: readonly CapabilityBinding[] };
 
 export interface ContractRelease {
+    readonly documentation?: readonly ContractDocumentationDefinition[];
     readonly catalogue?: ContractCatalogueMetadata;
     readonly capabilities: readonly CapabilityDefinition[];
     readonly fixtureAssets?: readonly ContractFixtureAssetDefinition[];

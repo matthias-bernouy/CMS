@@ -1,3 +1,4 @@
+import { readDocumentationSource } from "./documentation";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
@@ -41,7 +42,15 @@ export async function compileContractSource(directory: string): Promise<string> 
                 ? { ...fragment.value, mocks: capabilityMocks.map((mock) => mock.value) }
                 : fragment.value;
         });
-    return JSON.stringify({ ...definition.value, capabilities });
+    if (Object.hasOwn(definition.value, "documentation")) {
+        throw new Error("Contract documentation is discovered from docs/");
+    }
+    const { documents } = await readDocumentationSource(directory);
+    return JSON.stringify({
+        ...definition.value,
+        capabilities,
+        ...(documents.length ? { documentation: documents } : {}),
+    });
 }
 
 export async function prepareContractSource(
@@ -49,9 +58,10 @@ export async function prepareContractSource(
 ): Promise<Readonly<{ sourceJson: string; admission: AdmittedContractRelease }>> {
     const sourceJson = await compileContractSource(directory);
     const fixtureAssets = parseContractReleaseJson(sourceJson).fixtureAssets ?? [];
-    const assets = await Promise.all(
+    const assets: { id: string; bytes: Uint8Array | Blob }[] = await Promise.all(
         fixtureAssets.map(async ({ id }) => ({ id, bytes: await readFile(join(directory, "fixtures", id)) })),
     );
+    assets.push(...(await readDocumentationSource(directory)).assets);
     const admission = assets.length
         ? await admitContractBundleJson(sourceJson, assets)
         : await admitContractReleaseJson(sourceJson);

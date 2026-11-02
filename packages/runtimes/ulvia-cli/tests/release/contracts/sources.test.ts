@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
-import { runCli } from "../../src/cli";
-import { compileContractSource } from "../../src/release/authored/contract";
+import { runCli } from "../../../src/cli";
+import { compileContractSource } from "../../../src/release/authored/contract";
 
 test("recursive contract sources are path-independent and attach separate mocks", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-contract-sources-"));

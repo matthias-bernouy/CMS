@@ -10,11 +10,19 @@ export async function verifyAdmission(
     if (admission.kind !== "admitted-contract-release") {
         throw new ReleaseValidationError("invalid_contract", "catalogue accepts only admitted releases");
     }
-    const verified = admission.release.fixtureAssets?.length
-        ? await admitContractBundle(admission.release, admission.fixtureAssets ?? [], limits)
-        : await admitContractRelease(admission.release, limits);
+    const verified =
+        admission.release.fixtureAssets?.length || admission.release.documentation?.length
+            ? await admitContractBundle(
+                  admission.release,
+                  [...(admission.fixtureAssets ?? []), ...(admission.documentationAssets ?? [])],
+                  limits,
+              )
+            : await admitContractRelease(admission.release, limits);
     if (!admission.release.fixtureAssets?.length && admission.fixtureAssets?.length) {
         throw new ReleaseValidationError("invalid_contract", "unexpected fixture asset bytes");
+    }
+    if (!admission.release.documentation?.length && admission.documentationAssets?.length) {
+        throw new ReleaseValidationError("invalid_contract", "unexpected documentation bytes");
     }
     if (verified.digest !== admission.digest || verified.canonicalJson !== admission.canonicalJson) {
         throw new ReleaseValidationError("invalid_contract", "admitted release artifact failed integrity verification");

@@ -54,7 +54,12 @@ export async function storeResource(
     const contracts = new LocalContractReleases(files, yanks);
     let added: boolean;
     if (resource.kind === "contract") {
-        added = (await contracts.publish(resource.admission.canonicalJson, resource.admission.fixtureAssets)).added;
+        added = (
+            await contracts.publish(resource.admission.canonicalJson, [
+                ...(resource.admission.fixtureAssets ?? []),
+                ...(resource.admission.documentationAssets ?? []),
+            ])
+        ).added;
     } else if (resource.kind === "provider-manifest") {
         added = (await new LocalProviderReleases(files, contracts, yanks).release(resource.admission.canonicalJson))
             .added;

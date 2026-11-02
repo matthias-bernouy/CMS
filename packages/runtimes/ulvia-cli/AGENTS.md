@@ -90,3 +90,8 @@ Ulvia CMS installation runtime.
 - Import collection source assembly directly from
   `@bernouy/cms-repository/collections/build`; do not retain CLI forwarding files
   merely to preserve obsolete internal paths.
+
+- Compile contract `docs/**/*.md` into a generated manifest plus separate signed
+  assets. Require one real H1 per document; paths identify documents. Preserve
+  exact bytes through bootstrap, release, push and pull. Reject authored
+  manifests, source symlinks and dangling capability or internal document links.

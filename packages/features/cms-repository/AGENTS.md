@@ -366,3 +366,8 @@ models and validation for CMS-owned installations and site selections.
   insertion preserves those references. Locale and theme mode belong to rendering
   options, never authored examples or preview frames. Preview rendering stays behind `/collections/build`;
   browser execution belongs to the CLI and never the Edge or admission.
+
+- Contract documentation has a generated bounded manifest and separate verified
+  `docs/<path>` assets. Mongo stores document text separately from release
+  metadata; fixture-byte storage remains unsupported by that adapter. Metadata
+  admission does not authorize publication without complete verified docs.

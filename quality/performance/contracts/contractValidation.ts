@@ -6,7 +6,7 @@ import {
 import { InMemoryReleaseCatalogue, planContractPublications } from "@bernouy/cms-repository/contracts/catalogue";
 import { compareContractReleases, satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compatibility";
 import { assertMaximum, benchmark, printResults } from "../benchmark";
-import { officialContractDocuments } from "../officialContracts";
+import { officialContractAdmissions, officialContractDocuments } from "../officialContracts";
 
 export async function runContractValidationBenchmarks(): Promise<void> {
     const documents = await officialContractDocuments();
@@ -17,16 +17,16 @@ export async function runContractValidationBenchmarks(): Promise<void> {
         0,
     );
     const largest = documents[largestIndex]!;
-    const admissions = await Promise.all(documents.map(({ json }) => admitContractReleaseJson(json)));
+    const admissions = await officialContractAdmissions();
     const results = [
         await benchmark(`parse largest contract (${parsed[largestIndex]!.capabilities.length} capabilities)`, () =>
             parseContractReleaseJson(largest.json),
         ),
-        await benchmark("admit largest contract", () => admitContractReleaseJson(largest.json)),
+        await benchmark("admit largest contract metadata", () => admitContractReleaseJson(largest.json)),
         await benchmark(`parse ${documents.length} official contracts`, () =>
             documents.map(({ json }) => parseContractReleaseJson(json)),
         ),
-        await benchmark(`admit ${documents.length} official contracts`, () =>
+        await benchmark(`admit ${documents.length} official contract metadata`, () =>
             Promise.all(documents.map(({ json }) => admitContractReleaseJson(json))),
         ),
         await benchmark("compare largest contract with identical release", () =>

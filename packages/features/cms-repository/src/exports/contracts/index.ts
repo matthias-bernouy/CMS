@@ -29,6 +29,7 @@ export type {
     CapabilityMockOutcome,
     CapabilityDeprecation,
     ContractFixtureAssetDefinition,
+    ContractDocumentationDefinition,
     ContractParentReference,
     ContractRelease,
 } from "cms-repository/contracts/interfaces/ContractRelease";

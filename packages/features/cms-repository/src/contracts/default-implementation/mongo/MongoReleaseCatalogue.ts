@@ -1,3 +1,5 @@
+import { MongoDocumentationAssets } from "./documentation";
+import { verifyStoredContractReleaseJson } from "../../core/admission/admitContractRelease";
 import { VerifiedArtifactCache } from "cms-repository/contracts/core/catalogue/VerifiedArtifactCache";
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
@@ -29,6 +31,7 @@ import {
 /** Immutable digest artifacts become visible only through a revisioned per-contract head. */
 export class MongoReleaseCatalogue implements ReleaseCatalogue {
     readonly #verified = new VerifiedArtifactCache<AdmittedContractRelease>();
+    readonly #documents: MongoDocumentationAssets;
     readonly #heads;
     readonly #artifacts;
     readonly #limits: Readonly<ReleaseLimits>;
@@ -38,9 +41,16 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
         limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
         private readonly clock: () => Date = () => new Date(),
     ) {
+        this.#documents = new MongoDocumentationAssets(db);
         this.#heads = db.collection<ReleaseHead>("cms_contract_heads");
         this.#artifacts = db.collection<ReleaseArtifact>("cms_contract_artifacts");
         this.#limits = Object.freeze({ ...limits });
+    }
+
+    async readDocumentation(digest: ReleaseDigest, path: string): Promise<Blob | null> {
+        const record = await this.findByDigest(digest);
+        const document = record?.admission.release.documentation?.find((doc) => doc.path === path);
+        return document ? this.#documents.get(document) : null;
     }
 
     async revision(): Promise<string> {
@@ -97,7 +107,8 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
             throw new ReleaseValidationError("invalid_contract", "Mongo fixture-asset storage is not available yet");
         }
         const { contractId, version, publisherId } = admission.release;
-        const artifact: ReleaseArtifact = { _id: admission.digest, admission };
+        const { documentationAssets: _documents, ...metadata } = admission;
+        const artifact: ReleaseArtifact = { _id: admission.digest, admission: metadata };
         for (;;) {
             const head = await this.#heads.findOne({ _id: contractId });
             const existing = head?.versions.find((entry) => entry.version === version);
@@ -123,6 +134,7 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
             const catalogue = await this.list();
             verifySpecialization(admission.release, catalogue);
             verifyEvolution(admission.release, catalogue, this.#limits);
+            await this.#documents.store(admission);
             try {
                 await this.#artifacts.insertOne(structuredClone(artifact));
             } catch (error) {
@@ -131,7 +143,16 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
                 }
             }
             const persisted = await this.#artifacts.findOne({ _id: admission.digest });
-            if (!persisted || (await verifyAdmission(persisted.admission, this.#limits)).digest !== admission.digest) {
+            if (
+                !persisted ||
+                (
+                    await verifyStoredContractReleaseJson(
+                        persisted.admission.canonicalJson,
+                        admission.digest,
+                        this.#limits,
+                    )
+                ).digest !== admission.digest
+            ) {
                 throw new ReleaseValidationError(
                     "invalid_contract",
                     "persisted release artifact failed integrity verification",

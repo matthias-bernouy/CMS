@@ -42,7 +42,7 @@ export class RepositoryReadEndpoint {
             await response.body?.cancel();
             return new Response(null, { status: response.status, headers: response.headers });
         }
-        if (parts.length === 8 && type === "contracts" && parts[6] === "fixtures") {
+        if (parts.length === 8 && type === "contracts" && (parts[6] === "fixtures" || parts[6] === "docs")) {
             return this.contractFixture(parts, head);
         }
         if (parts.length === 8 && type === "collections" && parts[6] === "assets") {
@@ -79,7 +79,10 @@ export class RepositoryReadEndpoint {
             const [publisherId, id, version, assetId] = [parts[3]!, parts[4]!, parts[5]!, parts[7]!].map(
                 decodeURIComponent,
             );
-            const fixture = await this.contracts.getFixture(publisherId!, id!, version!, assetId!, head);
+            const fixture =
+                parts[6] === "docs"
+                    ? await this.contracts.getDocumentation(publisherId!, id!, version!, assetId!, head)
+                    : await this.contracts.getFixture(publisherId!, id!, version!, assetId!, head);
             if (!fixture) {
                 return notFound();
             }

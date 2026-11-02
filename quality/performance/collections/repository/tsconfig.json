@@ -70,6 +70,9 @@
             ],
             "envelope-crypto/*": [
                 "../../../../packages/foundation/envelope-crypto/src/*"
+            ],
+            "cms-documentation/*": [
+                "../../../../packages/features/cms-documentation/src/*"
             ]
         }
     },

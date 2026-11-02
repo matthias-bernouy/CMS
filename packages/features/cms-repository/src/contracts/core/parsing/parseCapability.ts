@@ -1,3 +1,4 @@
+import { parseDocumentationReferences } from "../../documentation/manifest";
 import { ReleaseValidationError } from "../protocol/errors";
 import { type ReleaseLimits } from "../protocol/limits";
 import {
@@ -44,6 +45,7 @@ export function parseCapability(
     rejectUnknownKeys(
         record,
         [
+            "docs",
             "id",
             "description",
             "access",
@@ -102,6 +104,7 @@ export function parseCapability(
     const responseEffects = parseResponseEffects(record.responseEffects, `${path}.responseEffects`);
     return {
         id: parseIdentifier(record.id, `${path}.id`),
+        ...(record.docs === undefined ? {} : { docs: parseDocumentationReferences(record.docs) }),
         ...(description ? { description } : {}),
         access: enumValue(record.access, `${path}.access`, ACCESS_LEVELS),
         behavior,

@@ -1,3 +1,4 @@
+import { contractAssetDefinitions } from "cms-repository/exports/contracts/documentation";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -25,9 +26,14 @@ export class LocalContractReleases {
         bytes: string,
         sourceDirectory: string,
     ): Promise<{ added: boolean; admission: AdmittedContractRelease }> {
-        const definitions = parseContractReleaseJson(bytes).fixtureAssets ?? [];
+        const definitions = contractAssetDefinitions(parseContractReleaseJson(bytes));
         const fixtures: LocalFixtureAsset[] = await Promise.all(
-            definitions.map(async ({ id }) => ({ id, bytes: await readFile(join(sourceDirectory, "fixtures", id)) })),
+            definitions.map(async ({ id }) => ({
+                id,
+                bytes: await readFile(
+                    id.startsWith("docs/") ? join(sourceDirectory, id) : join(sourceDirectory, "fixtures", id),
+                ),
+            })),
         );
         return this.publish(bytes, fixtures);
     }
@@ -124,6 +130,27 @@ export class LocalContractReleases {
             throw new Error(`Corrupt local contract release: ${publisherId}/${contractId}/${version}`);
         }
         return admission;
+    }
+
+    async getDocumentation(
+        publisherId: string,
+        contractId: string,
+        version: string,
+        path: string,
+        metadataOnly = false,
+    ) {
+        const admission = await this.getMetadata(publisherId, contractId, version);
+        const definition =
+            admission && contractAssetDefinitions(admission.release).find((asset) => asset.id === `docs/${path}`);
+        if (!admission || !definition) {
+            return null;
+        }
+        const bytes = this.files.fixtureBlob(admission.canonicalJson, definition.id);
+        if (metadataOnly) {
+            return (await bytes.exists()) && bytes.size === definition.byteLength ? { definition, bytes } : null;
+        }
+        await verifyFixtureAssets([definition], [{ id: definition.id, bytes }]);
+        return { definition, bytes };
     }
 
     async getFixture(publisherId: string, contractId: string, version: string, assetId: string, metadataOnly = false) {

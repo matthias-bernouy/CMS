@@ -26,5 +26,6 @@ export type RepositoryArtifactReference = Pick<
 export interface ProviderRepositorySource {
     readonly id: string;
     list(kind: RepositoryArtifactKind): Promise<readonly RepositoryArtifactEntry[]>;
+    getAsset?(reference: RepositoryArtifactReference, assetId: string, maxBytes: number): Promise<Uint8Array>;
     get(reference: RepositoryArtifactReference): Promise<Uint8Array>;
 }
