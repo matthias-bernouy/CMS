@@ -1,27 +1,37 @@
 import { seedOfficialPages } from "../../src/runtime/instances/profiles/seedPages";
 import { initialPagesFixture } from "./initialPagesFixture";
 import { expect, test } from "bun:test";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { createCmsPage, InMemoryContentRepository, ValidatingContentRepository } from "@bernouy/cms-content";
 import { collectionExampleDocument } from "@bernouy/cms-repository/collections";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { withInstalledCollections } from "@bernouy/cms-repository/collections/content";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { initialPages } from "../../src/runtime/instances/profiles/initialPages";
 import {
     selectedCapabilityResolver,
     selectedPublicSvgCapabilityValidator,
-} from "../../src/runtime/stores/selectedQueryCapabilities";
+} from "../../src/runtime/stores/selections/capabilities";
 
 test("official initial Pages and a translated input example use ordinary Content writes", async () => {
     const bootstrap = resolve(import.meta.dir, "../../../ulvia-cli/dist/bootstrap");
     const index = await Bun.file(resolve(bootstrap, "index.json")).json();
     const catalogue = new InMemoryReleaseCatalogue();
     const admissions = await Promise.all(
-        (index.contracts as string[]).map(async (path) =>
-            admitContractReleaseJson(await Bun.file(resolve(bootstrap, path)).text()),
-        ),
+        (index.contracts as string[]).map(async (path) => {
+            const bytes = await Bun.file(resolve(bootstrap, path)).text();
+            const metadata = parseContractReleaseJson(bytes);
+            return admitContractBundleJson(
+                bytes,
+                await Promise.all(
+                    (metadata.documentation ?? []).map(async (document) => ({
+                        id: `docs/${document.path}`,
+                        bytes: Bun.file(resolve(bootstrap, dirname(path), "docs", document.path)),
+                    })),
+                ),
+            );
+        }),
     );
     await publishContractSet(catalogue, admissions);
     const store = new CollectionStore(new MemoryCollectionStorage(), catalogue);

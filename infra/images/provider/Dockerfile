@@ -1,6 +1,6 @@
 # Ulvia Provider image. Build context: workspace root.
 
-FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS build
+FROM oven/bun:1.4.2-debian@sha256:4f6e31d1a54d6a3dd312daef655fc998101b5043d52e12592ac293ef04b9bc73 AS build
 
 WORKDIR /app
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
@@ -13,7 +13,10 @@ RUN cd packages/features/cms-content && bun run build:browser
 FROM build AS runtime-source
 RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules
 
-FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS runtime
+# ONNX Runtime's CPU bindings require glibc; the Provider's embedding model cannot run on musl.
+FROM oven/bun:1.4.2-debian@sha256:4f6e31d1a54d6a3dd312daef655fc998101b5043d52e12592ac293ef04b9bc73 AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
 
 ARG IMAGE_VERSION=dev
 ARG VCS_REF=unknown

@@ -49,10 +49,12 @@ test("official MCP V1 exposes authoring, collection lifecycle and administrator 
                             "apply-contract-upgrade",
                             "resume-contract-upgrade",
                             "get-contract-upgrade",
+                            "documentation.search",
+                            "documentation.get",
                         ].includes(capability.id),
                 ).toBe(true);
             }
         }
     }
-    expect(tools).toBe(63);
+    expect(tools).toBe(65);
 });

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { CapabilityBinding } from "@bernouy/cms-repository/contracts/bindings";
-import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
+import type { CapabilityDefinition, ContractDocumentationDefinition } from "@bernouy/cms-repository/contracts";
 import { closedObject, mcpSchema } from "./schema";
 
 export function capabilityToolName(contractId: string, capabilityId: string, bindingId = "mcp"): string {
@@ -15,7 +15,20 @@ export function capabilityTool(
     capability: CapabilityDefinition,
     digest: string,
     binding: Extract<CapabilityBinding, { transport: "mcp" }>,
+    documentation: readonly ContractDocumentationDefinition[] = [],
 ) {
+    const docs = (capability.docs ?? []).map((path) => ({
+        reference: { contractId, releaseDigest: digest, path },
+        title: documentation.find((doc) => doc.path === path)?.title ?? path,
+    }));
+    const description =
+        binding.tool?.description ?? `${contractId}/${capability.id}: ${capability.description ?? capability.id}`;
+    const help = docs.length
+        ? `\n\nRelated documentation:\n${docs
+              .slice(0, 3)
+              .map((doc) => `- ${doc.title} (${doc.reference.path})`)
+              .join("\n")}\nRead with documentation.get; search documentation before unfamiliar or multi-step work.`
+        : "";
     const query = capability.behavior.effect === "query";
     const keyed = !query && capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed";
     const output =
@@ -36,8 +49,7 @@ export function capabilityTool(
     return {
         name: binding.tool?.name ?? capabilityToolName(contractId, capability.id, binding.id),
         ...(binding.tool?.title ? { title: binding.tool.title } : {}),
-        description:
-            binding.tool?.description ?? `${contractId}/${capability.id}: ${capability.description ?? capability.id}`,
+        description: description + help,
         inputSchema: closedObject({
             input: mcpSchema(capability.input),
             ...(keyed ? { idempotencyKey: { type: "string", minLength: 1, maxLength: 512 } } : {}),
@@ -56,6 +68,7 @@ export function capabilityTool(
             "io.ulvia/binding": binding.id,
             "io.ulvia/digest": digest,
             "io.ulvia/access": capability.access,
+            ...(docs.length ? { "io.ulvia/docs": docs } : {}),
         },
     };
 }

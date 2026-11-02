@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { admitContractBundleJson, parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
 import type { ProviderRepositorySource, RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
@@ -20,7 +20,19 @@ export async function repositoryFixture() {
     const entries: RepositoryArtifactEntry[] = [];
     const bytes = new Map<string, Uint8Array>();
     const admissions = await Promise.all(
-        index.contracts.map(async (path) => admitContractReleaseJson(await readFile(resolve(ROOT, path)))),
+        index.contracts.map(async (path) => {
+            const bytes = await readFile(resolve(ROOT, path));
+            const metadata = parseContractReleaseJson(bytes);
+            return admitContractBundleJson(
+                bytes,
+                await Promise.all(
+                    (metadata.documentation ?? []).map(async (document) => ({
+                        id: `docs/${document.path}`,
+                        bytes: await readFile(resolve(ROOT, dirname(path), "docs", document.path)),
+                    })),
+                ),
+            );
+        }),
     );
     const contractDigests = new Map(admissions.map(({ release, digest }) => [release.contractId, digest]));
     await publishContractSet(catalogue, admissions);
@@ -65,6 +77,15 @@ export async function repositoryFixture() {
     const providers: ProviderRepositorySource = {
         id: "official",
         list: async (kind) => entries.filter((entry) => entry.kind === kind),
+        getAsset: async (reference, id) => {
+            const asset = admissions
+                .find((entry) => entry.digest === reference.digest)
+                ?.documentationAssets?.find((entry) => entry.id === id);
+            if (!asset) {
+                throw new Error("Missing fixture documentation");
+            }
+            return new Uint8Array(await asset.bytes.arrayBuffer());
+        },
         get: async (reference) => bytes.get(`${reference.kind}:${reference.id}@${reference.version}`)!,
     };
     const collections: CollectionRepositorySource = {

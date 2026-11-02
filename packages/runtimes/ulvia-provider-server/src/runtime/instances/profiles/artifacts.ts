@@ -1,12 +1,9 @@
+import { loadDocumentedContract } from "@bernouy/cms-repository/providers/sources";
 import { CURRENT_PROFILE, SUPPORTED_PROFILES, type ProfileDefinition } from "./definitions";
 import { initialPages } from "./initialPages";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
-import {
-    admitContractReleaseJson,
-    type AdmittedContractRelease,
-    type ResolvedContract,
-} from "@bernouy/cms-repository/contracts";
+import { type AdmittedContractRelease, type ResolvedContract } from "@bernouy/cms-repository/contracts";
 import {
     resolveContract,
     InMemoryReleaseCatalogue,
@@ -158,7 +155,7 @@ async function loadContractWithAncestors(
     if (entry.digest !== coordinate.digest) {
         throw new Error(`Official contract coordinate mismatch: ${key}`);
     }
-    const admission = await admitContractReleaseJson(await source.get(entry));
+    const admission = await loadDocumentedContract(source, entry);
     if (
         admission.digest !== coordinate.digest ||
         admission.release.contractId !== coordinate.contractId ||

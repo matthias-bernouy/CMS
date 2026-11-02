@@ -1,3 +1,4 @@
+import type { CmsDocumentation } from "@bernouy/cms-documentation";
 import type { ProviderMachinePreparation, PreparedProviderMachine } from "@bernouy/cms-gateway/protocol";
 import type { ProviderDispatchPreparation, PreparedProviderDispatch } from "@bernouy/cms-gateway/protocol";
 import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts/catalogue";
@@ -63,6 +64,7 @@ export interface CmsContentDependencies {
 }
 
 export interface CmsCollectionDependencies {
+    readonly documentation?: CmsDocumentation;
     readonly collectionAuthoring?: CollectionAuthoring;
     readonly collections: CollectionStore;
     readonly collectionUpgrades: CollectionUpgradeService;

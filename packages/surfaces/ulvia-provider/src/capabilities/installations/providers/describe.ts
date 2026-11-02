@@ -26,6 +26,7 @@ export function registerCapabilityDescription(
                 access: capability.access,
                 effect: capability.behavior.effect,
                 sensitive: capability.behavior.sensitive,
+                ...(capability.docs ? { docs: capability.docs } : {}),
             })),
         };
     });

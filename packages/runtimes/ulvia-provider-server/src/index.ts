@@ -74,7 +74,14 @@ try {
             await transitions.listRetained(),
             managedReleaseReader(mongo, profiles, managedInstances),
         );
-        const instanceHost = new ProviderInstanceHost(env, credentials, profiles, logger, artifacts.contracts);
+        const instanceHost = new ProviderInstanceHost(
+            env,
+            credentials,
+            profiles,
+            logger,
+            artifacts.contracts,
+            instances,
+        );
         host = instanceHost;
         const provisioner = new OfficialInstanceProvisioner(
             instances,
@@ -104,6 +111,7 @@ try {
             lifecycle,
             logger,
         });
+        instanceHost.startDocumentation(managedInstances);
         transitionRecovery = new RecoverySupervisor(
             (limit) => provisioner.recover(limit),
             undefined,

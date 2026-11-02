@@ -1,3 +1,4 @@
+import { registerDocumentationCapabilities } from "./providers/documentation";
 import { registerCapabilityDescription } from "./providers/describe";
 import { registerContractUpgradeCapabilities } from "./providers/upgrades";
 import type { ProviderCapabilityRegistry } from "../../dispatch/registry";
@@ -16,6 +17,7 @@ export function registerInstallationCapabilities(
     sources?: CollectionSources,
 ): void {
     registerCapabilityDescription(dispatcher, gateway);
+    registerDocumentationCapabilities(dispatcher, dependencies.documentation);
     registerCollectionInstallationCapabilities(dispatcher, dependencies, operations, sources);
     registerProviderInstallationCapabilities(dispatcher, gateway, management);
     registerContractUpgradeCapabilities(dispatcher, gateway, operations);

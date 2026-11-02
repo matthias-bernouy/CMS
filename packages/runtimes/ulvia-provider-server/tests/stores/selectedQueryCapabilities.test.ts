@@ -6,7 +6,7 @@ import {
     selectedCapabilityResolver,
     selectedPublicSvgCapabilityValidator,
     selectedQueryCapabilityResolver,
-} from "../../src/runtime/stores/selectedQueryCapabilities";
+} from "../../src/runtime/stores/selections/capabilities";
 
 const capability = {
     id: "list",

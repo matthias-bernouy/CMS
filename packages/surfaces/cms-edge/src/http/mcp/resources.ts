@@ -27,7 +27,6 @@ const resources = [
         mimeType: "application/json",
     },
 ];
-const guide = `# Collection authoring\nPass sourceJson as JSON with files: [{path, content}] and optional assets. Binary assets reference either {path, fileId, generation} from this site or {path, publisherId, collectionId, version, releaseDigest, assetId} from the configured Repository. Sources are bounded to 1 MiB, 2048 files and 64 binary references.\nFor new collections use ulvia-collection/v1. Every Bloc needs a translated description and nonempty categories array. Listed Blocs reference examples and one matching-root defaultExample. Author examples in examples/<folder>/definition.json plus document.html with explicit preview frame widths and heights; do not author thumbnail or default.html. Interaction behavior belongs in descriptions.\nWork with authored files: definition.json, translations/<locale>/*.json, blocs/<folder>/definition.json, markup.html, optional style.css and bloc.ts, assets/, texts/, theme/ and migrations/.\nUse repository_prepare_collection to validate a complete source snapshot. Inspect valid and diagnostics; publish only when valid is true. Inspect its digest and browser risk, then repository_publish_collection to publish the exact prepared result. Publication requires a configured namespace identity. Use installations_install_collection or installations_upgrade_collection with the exact repository, version, digest and current installation revision. Publication and installation are separate; retries never overwrite an existing release.\nThe CMS has no persistent editing workspace. Read retained source snapshots before preparing the next version. Site content and configuration stay on the site.\n`;
 
 export function createAuthoringResources(host: CmsMcpHost) {
     return {
@@ -35,19 +34,58 @@ export function createAuthoringResources(host: CmsMcpHost) {
             return { resources };
         },
         async read(uri: string, context: McpInvocationContext) {
-            if (uri === "ulvia://cms/site-files") {
-                return {
-                    contents: [
-                        {
-                            uri,
-                            mimeType: "text/markdown",
-                            text: "# Site files\nCreate a site upload, then PUT raw bytes to the returned uploadUrl with Authorization: Bearer <your MCP access token> and Upload-Token: <uploadToken>. The client supplies bytes; never encode an entire file in tool arguments. Complete the upload through its MCP tool, then call workspace.get to obtain fileId and generation. Use these exact references for collection source assets. The server binds reads and writes to this instance’s managed file namespace. Signed download URLs expire; file visibility is a separate choice.",
-                        },
-                    ],
+            const document =
+                uri === "ulvia://cms/site-files"
+                    ? { contractId: "ulvia.cms.files", path: "site-files.md" }
+                    : uri === "ulvia://cms/collection-authoring"
+                      ? { contractId: "ulvia.cms.repository", path: "collection-authoring.md" }
+                      : undefined;
+            if (document) {
+                if (!host.invoker.resolveContract) {
+                    throw new Error("Contract discovery is unavailable");
+                }
+                const selected = await host.invoker.resolveContract({
+                    siteId: context.siteId,
+                    contractId: document.contractId,
+                });
+                if (!selected.release.documentation?.some((entry) => entry.path === document.path)) {
+                    throw new Error("Selected documentation is unavailable");
+                }
+                const reference = {
+                    contractId: document.contractId,
+                    releaseDigest: selected.digest,
+                    path: document.path,
                 };
-            }
-            if (uri === "ulvia://cms/collection-authoring") {
-                return { contents: [{ uri, mimeType: "text/markdown", text: guide }] };
+                let offset = 0;
+                let text = "";
+                for (let page = 0; page < 8; page++) {
+                    const result = await host.invoker.invoke({
+                        ...context,
+                        contractId: "ulvia.cms.installations",
+                        capabilityId: "documentation.get",
+                        input: { reference, offset },
+                    });
+                    if (result.kind !== "success" || !result.output || typeof result.output !== "object") {
+                        throw new Error("Documentation read failed");
+                    }
+                    const output = result.output as { content?: unknown; nextOffset?: unknown };
+                    if (typeof output.content !== "string" || output.content.length > 16_384) {
+                        throw new Error("Invalid documentation response");
+                    }
+                    text += output.content;
+                    if (output.nextOffset === null) {
+                        return { contents: [{ uri, mimeType: "text/markdown", text }] };
+                    }
+                    if (
+                        typeof output.nextOffset !== "number" ||
+                        !Number.isSafeInteger(output.nextOffset) ||
+                        output.nextOffset <= offset
+                    ) {
+                        throw new Error("Invalid documentation continuation");
+                    }
+                    offset = output.nextOffset;
+                }
+                throw new Error("Documentation resource exceeds its page budget");
             }
             if (!["ulvia://cms/installed-collections", "ulvia://cms/repository-namespaces"].includes(uri)) {
                 throw new Error("Unknown resource");

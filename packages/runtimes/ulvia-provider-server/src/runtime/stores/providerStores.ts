@@ -1,3 +1,4 @@
+import { observeSelectionCommits } from "./selections/notifications";
 import { createCollectionUpgradeAnalysis } from "./collections/upgradeAnalysis";
 import { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
@@ -38,7 +39,8 @@ import {
     MongoProviderManifestCatalogue,
 } from "@bernouy/cms-repository/providers/mongo";
 import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
-import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from "./selectedQueryCapabilities";
+import type { StoredContractSelections } from "@bernouy/cms-repository/providers/selections";
+import { selectedCapabilityResolver, selectedPublicSvgCapabilityValidator } from "./selections/capabilities";
 import type { Logger } from "@bernouy/logging";
 import { CmsSecrets } from "@bernouy/cms-secrets";
 import { MongoCmsSecretMetadataStore } from "@bernouy/cms-secrets/mongo";
@@ -59,7 +61,11 @@ export type ProviderStoreConfig = Readonly<{
     CMS_PUBLIC_URL: string;
 }>;
 
-export async function createProviderStores(env: ProviderStoreConfig, logger: Logger) {
+export async function createProviderStores(
+    env: ProviderStoreConfig,
+    logger: Logger,
+    onSelectionsCommitted?: (state: StoredContractSelections) => void,
+) {
     const mongo = new MongoClient(env.MONGO_URL);
     await mongo.connect();
     const db = mongo.db();
@@ -82,7 +88,8 @@ export async function createProviderStores(env: ProviderStoreConfig, logger: Log
         "setStatus",
     ]);
     const selectionDependencies = new CatalogueSelectionDependencies(releases, manifests, installations);
-    const selectionStore = new MongoContractSelectionStore(db, selectionDependencies);
+    const rawSelectionStore = new MongoContractSelectionStore(db, selectionDependencies);
+    const selectionStore = observeSelectionCommits(rawSelectionStore, logger, onSelectionsCommitted);
     const selections = withSiteWriteFence(selectionStore, upgradeStorage, SCOPE_ID, ["replace"]);
     const executionState = new MongoProviderExecutionStateReader(db, selections, installations);
     await executionState.init().catch(async (error) => {

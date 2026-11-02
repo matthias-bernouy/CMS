@@ -1,7 +1,7 @@
 import { InMemoryReleaseCatalogue, publishContractSet } from "@bernouy/cms-repository/contracts/catalogue";
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import {
     ProviderCapabilityDispatchError,
     ProviderOperationExecutor,
@@ -11,7 +11,7 @@ import {
     type UlviaProviderDependencies,
     type CmsFileWorkspace,
 } from "@bernouy/ulvia-provider";
-import { admitContractReleaseJson, resolveContract } from "@bernouy/cms-repository/contracts";
+import { admitContractBundleJson, parseContractReleaseJson, resolveContract } from "@bernouy/cms-repository/contracts";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
 import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";
@@ -170,7 +170,19 @@ async function loadOfficialContract(contractId: string) {
     const root = resolve(import.meta.dir, "../../../runtimes/ulvia-cli/dist/bootstrap");
     const index = JSON.parse(await readFile(resolve(root, "index.json"), "utf8")) as { contracts: string[] };
     const admissions = await Promise.all(
-        index.contracts.map(async (path) => admitContractReleaseJson(await readFile(resolve(root, path)))),
+        index.contracts.map(async (path) => {
+            const bytes = await readFile(resolve(root, path));
+            const metadata = parseContractReleaseJson(bytes);
+            return admitContractBundleJson(
+                bytes,
+                await Promise.all(
+                    (metadata.documentation ?? []).map(async (document) => ({
+                        id: `docs/${document.path}`,
+                        bytes: await readFile(resolve(root, dirname(path), "docs", document.path)),
+                    })),
+                ),
+            );
+        }),
     );
     const admission = admissions.find(({ release }) => release.contractId === contractId)!;
     const catalogue = new InMemoryReleaseCatalogue();

@@ -29,8 +29,8 @@ export class CapabilityMcpBinding {
         return {
             tools: entries
                 .slice(offset, offset + 64)
-                .map(({ contractId, capability, digest, binding }) =>
-                    capabilityTool(contractId, capability, digest, binding),
+                .map(({ contractId, capability, digest, binding, documentation }) =>
+                    capabilityTool(contractId, capability, digest, binding, documentation),
                 ),
             ...(offset + 64 < entries.length ? { nextCursor: String(offset + 64) } : {}),
         };
@@ -160,6 +160,7 @@ export class CapabilityMcpBinding {
                                   capability,
                                   binding,
                                   digest: contract.digest,
+                                  documentation: contract.release.documentation ?? [],
                               },
                           ]
                         : [],

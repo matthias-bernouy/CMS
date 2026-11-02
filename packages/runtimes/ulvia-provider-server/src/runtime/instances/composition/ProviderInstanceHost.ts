@@ -1,3 +1,6 @@
+import { createInstanceDocumentation } from "./documentation";
+import type { CmsDocumentation } from "@bernouy/cms-documentation";
+import { ProviderDocumentation } from "./ProviderDocumentation";
 import { ProviderPairing } from "../../gateway/providers/connections/ProviderPairing";
 import { createPublicDelivery } from "../../content/publicDelivery";
 import { ProviderConnections } from "@bernouy/cms-gateway/provider/node";
@@ -25,6 +28,7 @@ import {
     type OfficialInstanceProfiles,
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceRecord,
+    type ProviderInstanceRegistry,
     type ProviderInstanceTransitionExecution,
     type UlviaProviderInstanceRuntime,
 } from "@bernouy/ulvia-provider";
@@ -63,12 +67,14 @@ export type InstanceComposition = Readonly<{
     ): ProviderManagement;
     administrators: Awaited<ReturnType<typeof createProviderGateway>>["administrators"];
     operations: ProviderOperationExecutor;
+    documentation: CmsDocumentation;
     ensureProviderReady(): Promise<void>;
     pairOfficialProvider(): Promise<void>;
     close(): Promise<void>;
 }>;
 
 export class ProviderInstanceHost {
+    readonly #documentation: ProviderDocumentation;
     readonly #instances: InstanceResourcePool<InstanceComposition>;
     readonly #providerSource: HttpProviderRepository;
     readonly #collectionSource: HttpCollectionRepository;
@@ -79,7 +85,19 @@ export class ProviderInstanceHost {
         private readonly profiles: OfficialInstanceProfiles,
         private readonly logger: Logger,
         private readonly contracts: readonly ResolvedContract[],
+        instances: Pick<ProviderInstanceRegistry, "get">,
     ) {
+        this.#documentation = new ProviderDocumentation(
+            join(env.CMS_FILES_DIR, ".documentation-models"),
+            async (instance) => {
+                const current = await instances.get(instance.id);
+                if (!current || (current.status !== "ready" && current.status !== "provisioning")) {
+                    throw new Error("Documentation instance is not available for preparation");
+                }
+                return this.open(current);
+            },
+            logger,
+        );
         this.#providerSource = new HttpProviderRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL, {
             request: correlatedRepositoryFetch,
             allowInsecureHttp: env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
@@ -135,7 +153,13 @@ export class ProviderInstanceHost {
     }
 
     async close(): Promise<void> {
+        await this.#documentation.stop();
         await this.#instances.close();
+        await this.#documentation.close();
+    }
+
+    startDocumentation(instances: readonly ProviderInstanceRecord[]): void {
+        this.#documentation.start(instances);
     }
 
     async recoverOperations(instances: readonly ProviderInstanceRecord[], limit = 100): Promise<number> {
@@ -194,9 +218,12 @@ export class ProviderInstanceHost {
                 CMS_PUBLIC_URL: instance.cmsUrl,
             },
             instanceLogger,
+            () => this.#documentation.request(instance, true),
         );
         const storesMs = performance.now() - storesStartedAt;
         let operationRecovery: RecoverySupervisor | undefined;
+        let documentation: CmsDocumentation | undefined;
+        let documentationTimer: ReturnType<typeof setInterval> | undefined;
         try {
             const profile = this.requiredProfile(instance.profile.id, instance.profile.version);
             const readReport = async (endpoint: string, token: string) =>
@@ -264,10 +291,15 @@ export class ProviderInstanceHost {
                 fileWorkspace,
                 this.env.CMS_REPOSITORY_ALLOW_INSECURE_HTTP,
             );
+            documentation = await createInstanceDocumentation(stores, this.#documentation.model, () =>
+                this.#documentation.request(instance),
+            );
+            const instanceDocumentation = documentation;
             registerOfficialProviderCapabilities(
                 dispatcher,
                 {
                     ...stores,
+                    documentation: instanceDocumentation,
                     ...createPublicDelivery(stores, gateway, instance.cmsUrl),
                     collectionAuthoring,
                     emailer: stores.emailer,
@@ -313,6 +345,7 @@ export class ProviderInstanceHost {
             const composition = {
                 stores,
                 gateway,
+                documentation: instanceDocumentation,
                 management,
                 managementForProfile,
                 administrators: gateway.administrators,
@@ -338,6 +371,8 @@ export class ProviderInstanceHost {
                     await gateway.routes.warm(SITE_ID, "ulvia.cms.installations");
                 },
                 close: async () => {
+                    clearInterval(documentationTimer);
+                    await instanceDocumentation.close();
                     await activeRecovery.stop();
                     await operations.stop();
                     await diagnostics.collector.close();
@@ -363,8 +398,13 @@ export class ProviderInstanceHost {
                 assemblyMs: roundDuration(performance.now() - startedAt - bootstrapReadMs - storesMs),
                 durationMs: roundDuration(performance.now() - startedAt),
             });
+            documentationTimer = setInterval(() => this.#documentation.request(instance), 6 * 60 * 60_000);
+            documentationTimer.unref();
+            this.#documentation.request(instance);
             return composition;
         } catch (error) {
+            clearInterval(documentationTimer);
+            await documentation?.close();
             await operationRecovery?.stop();
             await diagnostics.collector.close();
             await stores.close();
