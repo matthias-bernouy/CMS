@@ -1,6 +1,6 @@
 :scope {
-    --ulvia-official-section-background: var(--ulvia-official-background-base, Canvas);
-    --ulvia-official-section-color: var(--ulvia-official-text-primary, CanvasText);
+    --ulvia-official-section-background: var(--ulvia-official-background-base);
+    --ulvia-official-section-color: var(--ulvia-official-text-primary);
     --ulvia-official-section-gutter: var(--ulvia-official-page-gutter, 1rem);
     --ulvia-official-section-block-spacing: var(--ulvia-official-section-spacing, 4rem);
     display: block;
@@ -15,15 +15,15 @@
     margin-inline: auto;
 }
 :scope[surface="subtle"] {
-    --ulvia-official-section-background: var(--ulvia-official-background-subtle, #f4f5f7);
+    --ulvia-official-section-background: var(--ulvia-official-background-subtle);
 }
 :scope[surface="inverse"] {
-    --ulvia-official-section-background: var(--ulvia-official-background-inverse, #17191c);
-    --ulvia-official-section-color: var(--ulvia-official-text-inverse, #ffffff);
-    --ulvia-official-text-primary: var(--ulvia-official-text-inverse, #ffffff);
-    --ulvia-official-text-secondary: color-mix(in srgb, var(--ulvia-official-text-inverse, #ffffff) 78%, transparent);
-    --ulvia-official-text-muted: color-mix(in srgb, var(--ulvia-official-text-inverse, #ffffff) 62%, transparent);
-    --ulvia-official-border-subtle: color-mix(in srgb, var(--ulvia-official-text-inverse, #ffffff) 18%, transparent);
+    --ulvia-official-section-background: var(--ulvia-official-background-inverse);
+    --ulvia-official-section-color: var(--ulvia-official-text-inverse);
+    --ulvia-official-text-primary: var(--ulvia-official-text-inverse);
+    --ulvia-official-text-secondary: color-mix(in srgb, var(--ulvia-official-text-inverse) 78%, transparent);
+    --ulvia-official-text-muted: color-mix(in srgb, var(--ulvia-official-text-inverse) 62%, transparent);
+    --ulvia-official-border-subtle: color-mix(in srgb, var(--ulvia-official-text-inverse) 18%, transparent);
 }
 :scope[width="sm"] [part~="container"] {
     max-width: var(--ulvia-official-content-width-sm, 40rem);

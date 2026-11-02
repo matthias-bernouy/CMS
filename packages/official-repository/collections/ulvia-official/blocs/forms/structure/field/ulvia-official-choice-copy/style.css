@@ -11,13 +11,13 @@
     gap: var(--ulvia-official-spacing-3xs, 0.25rem);
 }
 [part~="label"] {
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     line-height: var(--ulvia-official-line-height-snug, 1.35);
 }
 [part~="help"] {
-    color: var(--ulvia-official-text-muted, #68766f);
+    color: var(--ulvia-official-text-muted);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     font-weight: var(--ulvia-official-font-weight-regular, 400);
     line-height: var(--ulvia-official-line-height-normal, 1.5);

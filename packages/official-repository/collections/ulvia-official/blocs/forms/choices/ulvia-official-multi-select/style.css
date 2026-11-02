@@ -21,10 +21,10 @@ select {
     min-height: 9rem;
     box-sizing: border-box;
     padding: var(--ulvia-official-spacing-xs, 0.5rem);
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
-    color: var(--ulvia-official-text-primary, CanvasText);
-    background: var(--ulvia-official-background-surface, Canvas);
+    color: var(--ulvia-official-text-primary);
+    background: var(--ulvia-official-background-surface);
     font: inherit;
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
@@ -57,10 +57,10 @@ select {
     min-height: var(--ulvia-official-multi-select-option-height);
     align-items: center;
     padding-inline: var(--ulvia-official-multi-select-option-padding);
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-radius-full, 999px);
-    color: var(--ulvia-official-text-secondary, #42504a);
-    background: var(--ulvia-official-background-surface, Canvas);
+    color: var(--ulvia-official-text-secondary);
+    background: var(--ulvia-official-background-surface);
     font: inherit;
     font-size: var(--ulvia-official-multi-select-option-font-size);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
@@ -68,14 +68,14 @@ select {
 }
 
 [part~="option"]:hover {
-    border-color: var(--ulvia-official-primary, #086c55);
-    color: var(--ulvia-official-primary, #086c55);
-    background: var(--ulvia-official-primary-subtle, #dff3ed);
+    border-color: var(--ulvia-official-primary);
+    color: var(--ulvia-official-primary);
+    background: var(--ulvia-official-primary-subtle);
 }
 [part~="option"][aria-selected="true"] {
-    border-color: var(--ulvia-official-primary, #086c55);
-    color: var(--ulvia-official-on-primary-subtle, #075642);
-    background: var(--ulvia-official-primary-subtle, #dff3ed);
+    border-color: var(--ulvia-official-primary);
+    color: var(--ulvia-official-on-primary-subtle);
+    background: var(--ulvia-official-primary-subtle);
 }
 [part~="option"][aria-selected="true"]::before {
     margin-inline-end: var(--ulvia-official-spacing-xs, 0.5rem);
@@ -84,8 +84,8 @@ select {
 }
 [part~="listbox"]:focus-visible [part~="option"][data-active] {
     box-shadow:
-        0 0 0 2px var(--ulvia-official-background-surface, Canvas),
-        0 0 0 4px var(--ulvia-official-focus-ring, #167c5e);
+        0 0 0 2px var(--ulvia-official-background-surface),
+        0 0 0 4px var(--ulvia-official-focus-ring);
 }
 [part~="option"]:disabled {
     cursor: not-allowed;
@@ -95,8 +95,7 @@ select {
     outline: none;
 }
 :scope[data-invalid] [part~="listbox"] {
-    border-inline-start: var(--ulvia-official-border-width-strong, 2px) solid
-        var(--ulvia-official-danger-border, #b42318);
+    border-inline-start: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-danger-border);
     padding-inline-start: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 :scope[data-disabled] [part~="listbox"] {

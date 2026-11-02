@@ -6,13 +6,13 @@
     --ulvia-official-option-list-gap: var(--ulvia-official-spacing-3xs, 0.25rem);
     --ulvia-official-option-list-padding: var(--ulvia-official-spacing-3xs, 0.25rem);
     --ulvia-official-option-list-radius: var(--ulvia-official-radius-lg, 0.75rem);
-    --ulvia-official-option-list-background: var(--ulvia-official-background-subtle, #eef1f0);
+    --ulvia-official-option-list-background: var(--ulvia-official-background-subtle);
     --ulvia-official-segment-min-height: var(--ulvia-official-control-height-md, 2.875rem);
     --ulvia-official-segment-padding-inline: var(--ulvia-official-spacing-md, 1rem);
     --ulvia-official-segment-font-size: var(--ulvia-official-font-size-md, 1rem);
     display: block;
     min-width: 0;
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
     container-type: inline-size;
 }

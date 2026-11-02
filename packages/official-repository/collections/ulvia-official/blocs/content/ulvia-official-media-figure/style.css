@@ -1,5 +1,5 @@
 :scope {
-    --ulvia-official-media-figure-background: var(--ulvia-official-background-subtle, #f4f5f7);
+    --ulvia-official-media-figure-background: var(--ulvia-official-background-subtle);
     --ulvia-official-media-figure-radius: var(
         --ulvia-official-media-figure-inherited-radius,
         var(--ulvia-official-radius-lg, 0.75rem)
@@ -9,7 +9,7 @@
     --ulvia-official-image-inherited-radius: var(--ulvia-official-media-figure-radius);
     --ulvia-official-image-root-width: 100%;
     display: block;
-    color: var(--ulvia-official-text-muted, CanvasText);
+    color: var(--ulvia-official-text-muted);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 
@@ -64,13 +64,13 @@
     opacity: 0.76;
 }
 :scope[surface="inverse"] {
-    color: var(--ulvia-official-text-inverse, #ffffff);
+    color: var(--ulvia-official-text-inverse);
 }
 :scope[surface="inverse"] [part~="figure"] {
     gap: 0;
     overflow: hidden;
     border-radius: var(--ulvia-official-media-figure-radius);
-    background: var(--ulvia-official-background-inverse, #17191c);
+    background: var(--ulvia-official-background-inverse);
 }
 :scope[surface="inverse"] [part~="media"] {
     border-radius: 0;
@@ -89,8 +89,8 @@
     left: 0;
     padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-lg, 1.5rem);
     border-radius: 0 0 var(--ulvia-official-media-figure-radius) var(--ulvia-official-media-figure-radius);
-    background: color-mix(in srgb, var(--ulvia-official-background-inverse, #17191c) 90%, transparent);
-    color: var(--ulvia-official-text-inverse, #ffffff);
+    background: color-mix(in srgb, var(--ulvia-official-background-inverse) 90%, transparent);
+    color: var(--ulvia-official-text-inverse);
     backdrop-filter: blur(0.5rem);
 }
 :scope[caption-placement="overlay"] [part~="media"] {

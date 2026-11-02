@@ -7,6 +7,6 @@
 }
 
 :scope:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 3px;
 }

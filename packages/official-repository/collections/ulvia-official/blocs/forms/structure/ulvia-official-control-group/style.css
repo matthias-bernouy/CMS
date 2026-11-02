@@ -36,10 +36,10 @@
     align-items: center;
     box-sizing: border-box;
     padding-inline: var(--ulvia-official-spacing-md, 1rem);
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
-    color: var(--ulvia-official-text-secondary, #42504a);
-    background: var(--ulvia-official-background-subtle, #eef1f0);
+    color: var(--ulvia-official-text-secondary);
+    background: var(--ulvia-official-background-subtle);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
 }
 :scope[joined] [part~="group"] {
@@ -82,7 +82,7 @@
         --ulvia-official-action-form-radius: var(--ulvia-official-radius-md, 0.5rem);
     }
     :scope[joined] [part~="leading"] {
-        border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
+        border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
         border-radius: var(--ulvia-official-radius-md, 0.5rem);
     }
     [part~="trailing"] {

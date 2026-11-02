@@ -16,7 +16,7 @@
         var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem)
             var(--ulvia-official-spacing-2xs, 0.25rem)
     );
-    color: var(--ulvia-official-text-muted, #6d7e77);
+    color: var(--ulvia-official-text-muted);
     font-size: 0.6875rem;
     font-weight: var(--ulvia-official-font-weight-bold, 700);
     letter-spacing: var(--ulvia-official-letter-spacing-wide, 0.04em);
@@ -26,7 +26,7 @@
 :scope[divider] [part~="label"]::after {
     height: var(--ulvia-official-border-width, 1px);
     flex: 1;
-    background: var(--ulvia-official-border-subtle, #e2e9e6);
+    background: var(--ulvia-official-border-subtle);
     content: "";
 }
 [part~="items"] {

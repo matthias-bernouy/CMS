@@ -16,7 +16,7 @@
     width: 0.25rem;
     height: 1.5rem;
     border-radius: var(--ulvia-official-radius-full, 999px);
-    background: var(--ulvia-official-primary, #086c55);
+    background: var(--ulvia-official-primary);
 }
 [part~="label"] {
     font-size: var(--ulvia-official-font-size-md, 1rem);

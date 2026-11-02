@@ -1,6 +1,6 @@
 :scope {
     display: block;
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 [part~="field"] {
@@ -20,7 +20,7 @@ label[part~="choice-label"] {
 }
 [part~="choice-error"] {
     margin-inline-start: 2.75rem;
-    color: var(--ulvia-official-danger, #b42318);
+    color: var(--ulvia-official-danger);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
@@ -30,7 +30,6 @@ label[part~="choice-label"] {
 }
 :scope[invalid] {
     padding: var(--ulvia-official-spacing-sm, 0.75rem);
-    border-inline-start: var(--ulvia-official-border-width-strong, 2px) solid
-        var(--ulvia-official-danger-border, #b42318);
-    background: var(--ulvia-official-danger-subtle, #fff0ee);
+    border-inline-start: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-danger-border);
+    background: var(--ulvia-official-danger-subtle);
 }

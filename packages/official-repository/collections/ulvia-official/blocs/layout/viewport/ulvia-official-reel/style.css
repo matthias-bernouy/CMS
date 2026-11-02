@@ -10,11 +10,11 @@
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     padding-block-end: var(--ulvia-official-spacing-sm, 0.75rem);
-    scrollbar-color: var(--ulvia-official-border-strong, #899b94) transparent;
+    scrollbar-color: var(--ulvia-official-border-strong) transparent;
     scrollbar-width: thin;
 }
 [part~="reel"]:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 3px;
 }
 * {

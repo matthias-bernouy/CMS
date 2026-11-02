@@ -3,11 +3,11 @@
     max-height: min(calc(100svh - 2rem), 48rem);
     box-sizing: border-box;
     padding: 0;
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c9d5d0);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-radius-xl, 1rem);
-    color: var(--ulvia-official-text-primary, CanvasText);
-    background: var(--ulvia-official-background-base, Canvas);
-    box-shadow: var(--ulvia-official-shadow-xl, 0 24px 64px rgb(20 40 32 / 24%));
+    color: var(--ulvia-official-text-primary);
+    background: var(--ulvia-official-background-base);
+    box-shadow: var(--ulvia-official-shadow-xl);
     overflow: hidden;
 }
 
@@ -16,7 +16,7 @@
 }
 
 :scope::backdrop {
-    background: rgb(15 29 24 / 48%);
+    background: var(--ulvia-official-overlay-backdrop);
     backdrop-filter: blur(0.125rem);
 }
 

@@ -30,10 +30,10 @@ input {
     width: var(--ulvia-official-toggle-track-width);
     height: var(--ulvia-official-toggle-track-height);
     box-sizing: border-box;
-    border: 1px solid var(--ulvia-official-border-strong, #737985);
+    border: 1px solid var(--ulvia-official-border-strong);
     border-radius: var(--ulvia-official-radius-full, 999px);
-    background: var(--ulvia-official-background-subtle, #dfe4e1);
-    box-shadow: inset 0 1px 2px rgb(23 33 30 / 18%);
+    background: var(--ulvia-official-background-subtle);
+    box-shadow: inset 0 1px 2px color-mix(in srgb, var(--ulvia-official-shadow-color) 18%, transparent);
     transition:
         border-color var(--ulvia-official-duration-fast, 120ms),
         background-color var(--ulvia-official-duration-fast, 120ms);
@@ -45,10 +45,10 @@ input {
     display: block;
     width: var(--ulvia-official-toggle-thumb-size);
     height: var(--ulvia-official-toggle-thumb-size);
-    border: 1px solid var(--ulvia-official-border-default, #c8d1cd);
+    border: 1px solid var(--ulvia-official-border-default);
     border-radius: 50%;
-    background: var(--ulvia-official-background-surface, #fff);
-    box-shadow: 0 2px 5px rgb(23 33 30 / 22%);
+    background: var(--ulvia-official-background-surface);
+    box-shadow: 0 2px 5px color-mix(in srgb, var(--ulvia-official-shadow-color) 22%, transparent);
     transform: translateY(-50%);
     transition:
         inset-inline-start var(--ulvia-official-duration-fast, 120ms),
@@ -57,25 +57,21 @@ input {
 }
 :scope[data-checked] [part~="track"] {
     border-color: transparent;
-    background: var(--ulvia-official-primary, #086c55);
+    background: var(--ulvia-official-primary);
 }
 :scope[data-checked] [part~="thumb"] {
     inset-inline-start: calc(100% - var(--ulvia-official-toggle-thumb-size) + 0.1875rem);
-    border-color: color-mix(
-        in srgb,
-        var(--ulvia-official-primary, #086c55) 28%,
-        var(--ulvia-official-background-surface, #fff)
-    );
+    border-color: color-mix(in srgb, var(--ulvia-official-primary) 28%, var(--ulvia-official-background-surface));
 }
 :scope:hover:not([data-disabled]) [part~="thumb"] {
     transform: translateY(-50%) scale(1.06);
 }
 :scope:focus-within [part~="track"] {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 3px;
 }
 :scope[data-invalid] [part~="track"] {
-    outline: 2px solid var(--ulvia-official-danger-border, #b42318);
+    outline: 2px solid var(--ulvia-official-danger-border);
     outline-offset: 2px;
 }
 :scope[data-disabled] [part~="control"] {

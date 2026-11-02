@@ -1,7 +1,7 @@
 :scope {
     display: block;
     height: 100%;
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 [part~="plan"] {
@@ -11,9 +11,9 @@
     flex-direction: column;
     gap: var(--ulvia-official-spacing-lg, 1.5rem);
     padding: var(--ulvia-official-spacing-xl, 2rem);
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8cdd5);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-radius-xl, 1rem);
-    background: var(--ulvia-official-background-surface, Canvas);
+    background: var(--ulvia-official-background-surface);
 }
 [part~="header"] {
     display: grid;
@@ -21,7 +21,7 @@
 }
 [part~="features"] {
     flex: 1;
-    color: var(--ulvia-official-text-secondary, #5b6472);
+    color: var(--ulvia-official-text-secondary);
 }
 [part~="action"] {
     margin-block-start: auto;
@@ -38,6 +38,6 @@
     font-weight: var(--ulvia-official-font-weight-bold, 700);
 }
 :scope[featured] [part~="plan"] {
-    border-color: var(--ulvia-official-primary, #3157d5);
-    box-shadow: var(--ulvia-official-shadow-lg, 0 12px 32px rgb(0 0 0 / 16%));
+    border-color: var(--ulvia-official-primary);
+    box-shadow: var(--ulvia-official-shadow-lg);
 }

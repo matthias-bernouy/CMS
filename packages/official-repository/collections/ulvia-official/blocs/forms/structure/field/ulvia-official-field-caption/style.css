@@ -10,7 +10,7 @@
 }
 [part~="required"] {
     display: var(--ulvia-official-field-caption-required-marker-display, none);
-    color: var(--ulvia-official-danger, #b42318);
+    color: var(--ulvia-official-danger);
 }
 [part~="required"]::before {
     content: "*";

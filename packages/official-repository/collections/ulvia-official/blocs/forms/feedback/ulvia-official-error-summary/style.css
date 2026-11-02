@@ -1,6 +1,6 @@
 :scope {
     display: block;
-    color: var(--ulvia-official-on-danger-subtle, #60150f);
+    color: var(--ulvia-official-on-danger-subtle);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 [part~="summary"] {
@@ -8,12 +8,12 @@
 }
 section[part~="summary"] {
     padding: var(--ulvia-official-spacing-lg, 1.5rem);
-    border: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-danger-border, #b42318);
+    border: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-danger-border);
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
-    background: var(--ulvia-official-danger-subtle, #fff0ee);
+    background: var(--ulvia-official-danger-subtle);
     line-height: var(--ulvia-official-line-height-relaxed, 1.65);
 }
 section[part~="summary"]:focus {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 3px;
 }

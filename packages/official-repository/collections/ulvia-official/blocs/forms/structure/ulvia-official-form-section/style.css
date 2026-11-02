@@ -1,12 +1,12 @@
 :scope {
-    --ulvia-official-form-section-background: var(--ulvia-official-background-surface, Canvas);
+    --ulvia-official-form-section-background: var(--ulvia-official-background-surface);
     --ulvia-official-form-section-border: 0 solid transparent;
-    --ulvia-official-form-section-shadow: var(--ulvia-official-shadow-md, 0 0.5rem 1.5rem rgb(21 53 43 / 12%));
+    --ulvia-official-form-section-shadow: var(--ulvia-official-shadow-md);
     --ulvia-official-form-section-padding: var(--ulvia-official-spacing-xl, 2rem);
     --ulvia-official-form-section-radius: var(--ulvia-official-radius-xl, 1rem);
     display: block;
     min-width: 0;
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
     container-type: inline-size;
 }
@@ -36,12 +36,12 @@ fieldset[part~="form-section"] {
 
 :scope[appearance="outlined"] {
     --ulvia-official-form-section-border: var(--ulvia-official-border-width, 1px) solid
-        var(--ulvia-official-border-subtle, #e1e6e3);
+        var(--ulvia-official-border-subtle);
     --ulvia-official-form-section-shadow: none;
 }
 
 :scope[appearance="soft"] {
-    --ulvia-official-form-section-background: var(--ulvia-official-background-subtle, #eef1f0);
+    --ulvia-official-form-section-background: var(--ulvia-official-background-subtle);
     --ulvia-official-form-section-shadow: none;
 }
 

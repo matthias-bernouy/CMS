@@ -14,6 +14,17 @@ import {
     type Rgb,
 } from "./colour";
 
+/** Paint business color data into a swatch without changing UI CSS or theme tokens. */
+function paintPreview(canvas: HTMLCanvasElement, colour: string): void {
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d");
+    if (context) {
+        context.fillStyle = colour;
+        context.fillRect(0, 0, 1, 1);
+    }
+}
+
 type Channel = { id: string; label: string; maximum: number; value: number; suffix?: string };
 
 function labelFor(input: HTMLInputElement): string {
@@ -30,11 +41,11 @@ export class ColorInputController {
     private readonly scope: ReturnType<typeof createBlocScope>;
     private input: HTMLInputElement | null = null;
     private trigger: HTMLButtonElement;
-    private swatch: HTMLElement;
+    private swatch: HTMLCanvasElement;
     private value: HTMLElement;
     private action: HTMLElement;
     private popover: HTMLElement;
-    private preview: HTMLElement;
+    private preview: HTMLCanvasElement;
     private modeTabs: HTMLElement;
     private editor: HTMLElement;
     private mode: ColourMode = "hex";
@@ -54,7 +65,7 @@ export class ColorInputController {
         this.popover.setAttribute("aria-label", "Compose colour");
         const previewRow = document.createElement("span");
         previewRow.setAttribute("part", "preview-row");
-        this.preview = document.createElement("span");
+        this.preview = document.createElement("canvas");
         this.preview.setAttribute("part", "preview-swatch");
         this.preview.setAttribute("role", "img");
         this.modeTabs = document.createElement("span");
@@ -68,7 +79,7 @@ export class ColorInputController {
         this.trigger.type = "button";
         this.trigger.setAttribute("part", "trigger");
         this.trigger.setAttribute("aria-haspopup", "dialog");
-        this.swatch = document.createElement("span");
+        this.swatch = document.createElement("canvas");
         this.swatch.setAttribute("part", "trigger-swatch");
         this.swatch.setAttribute("aria-hidden", "true");
         this.value = document.createElement("span");
@@ -250,11 +261,8 @@ export class ColorInputController {
             return;
         }
         const colour = normalizeHex(this.input.value) ?? "#000000";
-        this.blocRoot.style.setProperty("--ulvia-official-color-input-selected-color", colour);
-        this.blocRoot.style.setProperty(
-            "--ulvia-official-color-input-selected-hue",
-            String(rgbToHsl(hexToRgb(colour))[0]),
-        );
+        paintPreview(this.swatch, colour);
+        paintPreview(this.preview, colour);
         this.value.textContent = colour.toUpperCase();
         this.preview.setAttribute("aria-label", colour.toUpperCase());
         this.action.textContent = this.blocRoot.getAttribute("action-label") || "Compose";

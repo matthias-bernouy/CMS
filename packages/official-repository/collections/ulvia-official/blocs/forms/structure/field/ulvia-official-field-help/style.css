@@ -1,7 +1,7 @@
 :scope {
     position: relative;
     display: inline-block;
-    color: var(--ulvia-official-text-secondary, #5b6472);
+    color: var(--ulvia-official-text-secondary);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 [part~="help"] {
@@ -19,11 +19,11 @@
     place-items: center;
     box-sizing: border-box;
     padding: 0;
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-strong, #89968f);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-strong);
     border-radius: var(--ulvia-official-radius-full, 999px);
-    color: var(--ulvia-official-text-secondary, #42504a);
-    background: var(--ulvia-official-background-surface, Canvas);
-    box-shadow: 0 1px 2px rgb(23 33 30 / 8%);
+    color: var(--ulvia-official-text-secondary);
+    background: var(--ulvia-official-background-surface);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ulvia-official-shadow-color) 8%, transparent);
     font: inherit;
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
@@ -31,12 +31,12 @@
     cursor: pointer;
 }
 [data-field-help-trigger]:hover {
-    border-color: var(--ulvia-official-primary, #086c55);
-    color: var(--ulvia-official-on-primary, #fff);
-    background: var(--ulvia-official-primary, #086c55);
+    border-color: var(--ulvia-official-primary);
+    color: var(--ulvia-official-on-primary);
+    background: var(--ulvia-official-primary);
 }
 [data-field-help-trigger]:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 2px;
 }
 [data-field-help-panel] {
@@ -49,11 +49,11 @@
     width: min(18rem, calc(100vw - 2rem));
     box-sizing: border-box;
     padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-md, 1rem);
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c7cbd1);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
-    color: var(--ulvia-official-text-primary, CanvasText);
-    background: var(--ulvia-official-background-raised, Canvas);
-    box-shadow: var(--ulvia-official-shadow-md, 0 0.5rem 1.5rem rgb(0 0 0 / 12%));
+    color: var(--ulvia-official-text-primary);
+    background: var(--ulvia-official-background-raised);
+    box-shadow: var(--ulvia-official-shadow-md);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
     font-weight: var(--ulvia-official-font-weight-regular, 400);
     line-height: var(--ulvia-official-line-height-normal, 1.5);

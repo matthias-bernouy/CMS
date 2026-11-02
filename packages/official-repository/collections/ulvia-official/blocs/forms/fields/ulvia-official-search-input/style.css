@@ -23,7 +23,7 @@
     height: 1.25rem;
     transform: translateY(-50%);
     place-items: center;
-    color: var(--ulvia-official-text-muted, #737985);
+    color: var(--ulvia-official-text-muted);
     pointer-events: none;
 }
 [part~="search-icon"] {
@@ -34,7 +34,7 @@
     mask: url("{{ cms.asset.ulvia-official.icons/actions/search.svg }}") center / contain no-repeat;
 }
 :scope:focus-within [part~="icon-shell"] {
-    color: var(--ulvia-official-primary, #086c55);
+    color: var(--ulvia-official-primary);
 }
 [part~="search-control"] {
     display: block;
@@ -58,18 +58,18 @@ button[part~="clear"] {
     background-position: center;
     background-size: 0.75rem 0.75rem;
     background-repeat: no-repeat;
-    color: var(--ulvia-official-text-secondary, #5b6472);
+    color: var(--ulvia-official-text-secondary);
     cursor: pointer;
 }
 button[part~="clear"][hidden] {
     display: none;
 }
 button[part~="clear"]:hover {
-    color: var(--ulvia-official-text-primary, CanvasText);
-    background-color: var(--ulvia-official-background-subtle, #f4f5f7);
+    color: var(--ulvia-official-text-primary);
+    background-color: var(--ulvia-official-background-subtle);
 }
 button[part~="clear"]:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 1px;
 }
 :scope[size="sm"] {

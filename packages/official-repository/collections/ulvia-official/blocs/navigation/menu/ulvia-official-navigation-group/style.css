@@ -2,7 +2,7 @@
     display: block;
     min-width: 0;
     flex: var(--ulvia-official-navigation-group-flex, 0 1 auto);
-    color: var(--ulvia-official-text-secondary, #4f625a);
+    color: var(--ulvia-official-text-secondary);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 
@@ -47,11 +47,11 @@ button[part~="trigger"] {
         background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease);
 }
 button[part~="trigger"]:hover {
-    color: var(--ulvia-official-text-primary, #17211d);
-    background: var(--ulvia-official-background-subtle, #f3f7f5);
+    color: var(--ulvia-official-text-primary);
+    background: var(--ulvia-official-background-subtle);
 }
 button[part~="trigger"]:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 2px;
 }
 button[part~="trigger"]::before {
@@ -60,8 +60,8 @@ button[part~="trigger"]::before {
     margin-inline-start: auto;
     padding: 0.16rem 0.42rem;
     border-radius: var(--ulvia-official-radius-full, 999px);
-    color: var(--ulvia-official-text-muted, #6d7e77);
-    background: var(--ulvia-official-background-raised, #e8efec);
+    color: var(--ulvia-official-text-muted);
+    background: var(--ulvia-official-background-raised);
     content: attr(data-count);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-variant-numeric: tabular-nums;

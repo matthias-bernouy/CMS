@@ -9,7 +9,7 @@
     aspect-ratio: var(--ulvia-official-frame-ratio);
     border-radius: var(--ulvia-official-frame-radius);
     overflow: clip;
-    background: var(--ulvia-official-background-subtle, #f3f7f5);
+    background: var(--ulvia-official-background-subtle);
 }
 * {
     width: 100%;

@@ -1,6 +1,6 @@
 :scope {
-    --ulvia-official-hero-background: var(--ulvia-official-background-base, Canvas);
-    --ulvia-official-hero-color: var(--ulvia-official-text-primary, CanvasText);
+    --ulvia-official-hero-background: var(--ulvia-official-background-base);
+    --ulvia-official-hero-color: var(--ulvia-official-text-primary);
     display: block;
     color: var(--ulvia-official-hero-color);
     background: var(--ulvia-official-hero-background);
@@ -28,7 +28,7 @@
     gap: var(--ulvia-official-spacing-lg, 1.5rem);
 }
 [part~="header"] {
-    --ulvia-official-heading-inherited-accent-color: var(--ulvia-official-secondary, #976322);
+    --ulvia-official-heading-inherited-accent-color: var(--ulvia-official-secondary);
     --ulvia-official-heading-inherited-accent-font-weight: var(--ulvia-official-font-weight-regular, 400);
     --ulvia-official-heading-inherited-font-family: var(--ulvia-official-font-family-main, inherit);
     --ulvia-official-heading-inherited-letter-spacing: -0.035em;
@@ -56,26 +56,26 @@ figure[part~="media"] {
     justify-self: end;
 }
 [part~="eyebrow"] {
-    color: var(--ulvia-official-primary, #3157d5);
+    color: var(--ulvia-official-primary);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     letter-spacing: var(--ulvia-official-letter-spacing-wide, 0.04em);
 }
 [part~="body"] {
     max-width: 58ch;
     margin: 0;
-    color: var(--ulvia-official-text-secondary, #5b6472);
+    color: var(--ulvia-official-text-secondary);
     font-size: var(--ulvia-official-font-size-lg, 1.125rem);
     line-height: var(--ulvia-official-line-height-relaxed, 1.65);
 }
 :scope[surface="subtle"] {
-    --ulvia-official-hero-background: var(--ulvia-official-background-subtle, #f4f5f7);
+    --ulvia-official-hero-background: var(--ulvia-official-background-subtle);
 }
 :scope[surface="inverse"] {
-    --ulvia-official-hero-background: var(--ulvia-official-background-inverse, #17191c);
-    --ulvia-official-hero-color: var(--ulvia-official-text-inverse, #ffffff);
+    --ulvia-official-hero-background: var(--ulvia-official-background-inverse);
+    --ulvia-official-hero-color: var(--ulvia-official-text-inverse);
 }
 :scope[surface="inverse"] [part~="body"] {
-    color: var(--ulvia-official-text-inverse, #ffffff);
+    color: var(--ulvia-official-text-inverse);
 }
 :scope[content-align="center"] [part~="container"] {
     display: block;

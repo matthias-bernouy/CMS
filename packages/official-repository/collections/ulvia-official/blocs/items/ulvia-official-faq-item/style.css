@@ -1,10 +1,10 @@
 :scope {
     display: block;
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 [part~="item"] {
-    border-block-end: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #dfe2e7);
+    border-block-end: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
 }
 details {
     padding-block: var(--ulvia-official-spacing-md, 1rem);

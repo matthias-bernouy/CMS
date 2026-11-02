@@ -1,7 +1,7 @@
 :scope {
     display: block;
-    color: var(--ulvia-official-text-primary, CanvasText);
-    background: var(--ulvia-official-background-subtle, #f4f5f7);
+    color: var(--ulvia-official-text-primary);
+    background: var(--ulvia-official-background-subtle);
     font-family: var(--ulvia-official-font-family-main, inherit);
     container-type: inline-size;
 }
@@ -36,7 +36,7 @@
 [part~="attribution"] {
     display: grid;
     gap: var(--ulvia-official-spacing-3xs, 0.25rem);
-    color: var(--ulvia-official-text-secondary, #5b6472);
+    color: var(--ulvia-official-text-secondary);
 }
 [part~="media"] {
     --ulvia-official-image-ratio: 1;
@@ -48,14 +48,14 @@
     margin: 0;
 }
 :scope[surface="base"] {
-    background: var(--ulvia-official-background-base, Canvas);
+    background: var(--ulvia-official-background-base);
 }
 :scope[surface="inverse"] {
-    color: var(--ulvia-official-text-inverse, #ffffff);
-    background: var(--ulvia-official-background-inverse, #17191c);
+    color: var(--ulvia-official-text-inverse);
+    background: var(--ulvia-official-background-inverse);
 }
 :scope[surface="inverse"] [part~="attribution"] {
-    color: var(--ulvia-official-text-inverse, #ffffff);
+    color: var(--ulvia-official-text-inverse);
 }
 @container (max-width: 36rem) {
     [part~="container"] {

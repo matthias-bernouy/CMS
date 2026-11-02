@@ -1,9 +1,9 @@
 :scope {
-    --ulvia-official-action-tone: var(--ulvia-official-primary, #3157d5);
-    --ulvia-official-action-tone-hover: var(--ulvia-official-primary-hover, #2747b2);
-    --ulvia-official-action-tone-active: var(--ulvia-official-primary-active, #203b94);
-    --ulvia-official-action-on-tone: var(--ulvia-official-on-primary, #ffffff);
-    --ulvia-official-action-tone-subtle: var(--ulvia-official-primary-subtle, #e9edff);
+    --ulvia-official-action-tone: var(--ulvia-official-primary);
+    --ulvia-official-action-tone-hover: var(--ulvia-official-primary-hover);
+    --ulvia-official-action-tone-active: var(--ulvia-official-primary-active);
+    --ulvia-official-action-on-tone: var(--ulvia-official-on-primary);
+    --ulvia-official-action-tone-subtle: var(--ulvia-official-primary-subtle);
     --ulvia-official-action-background: var(--ulvia-official-action-tone);
     --ulvia-official-action-background-hover: var(--ulvia-official-action-tone-hover);
     --ulvia-official-action-background-active: var(--ulvia-official-action-tone-active);
@@ -32,7 +32,7 @@
     border-radius: var(--ulvia-official-action-form-radius, var(--ulvia-official-radius-md, 0.5rem));
     color: var(--ulvia-official-action-color);
     background: var(--ulvia-official-action-background);
-    box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(0 0 0 / 8%));
+    box-shadow: var(--ulvia-official-shadow-sm);
     font-size: var(--ulvia-official-action-font-size);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     line-height: var(--ulvia-official-line-height-tight, 1.15);
@@ -57,7 +57,7 @@
     background: var(--ulvia-official-action-background-active);
 }
 :scope:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 3px;
 }
 :scope:disabled {
@@ -65,53 +65,53 @@
     cursor: not-allowed;
 }
 :scope[tone="secondary"] {
-    --ulvia-official-action-tone: var(--ulvia-official-secondary, #5b6472);
-    --ulvia-official-action-tone-hover: var(--ulvia-official-secondary-hover, #4a5260);
-    --ulvia-official-action-tone-active: var(--ulvia-official-secondary-active, #3e4550);
-    --ulvia-official-action-on-tone: var(--ulvia-official-on-secondary, #ffffff);
-    --ulvia-official-action-tone-subtle: var(--ulvia-official-secondary-subtle, #e8e8ff);
+    --ulvia-official-action-tone: var(--ulvia-official-secondary);
+    --ulvia-official-action-tone-hover: var(--ulvia-official-secondary-hover);
+    --ulvia-official-action-tone-active: var(--ulvia-official-secondary-active);
+    --ulvia-official-action-on-tone: var(--ulvia-official-on-secondary);
+    --ulvia-official-action-tone-subtle: var(--ulvia-official-secondary-subtle);
 }
 :scope[tone="neutral"] {
-    --ulvia-official-action-tone: var(--ulvia-official-text-primary, #15352b);
-    --ulvia-official-action-tone-hover: var(--ulvia-official-text-secondary, #365247);
-    --ulvia-official-action-tone-active: var(--ulvia-official-text-muted, #526b61);
-    --ulvia-official-action-on-tone: var(--ulvia-official-text-inverse, #ffffff);
-    --ulvia-official-action-tone-subtle: var(--ulvia-official-background-subtle, #f4f5f7);
+    --ulvia-official-action-tone: var(--ulvia-official-text-primary);
+    --ulvia-official-action-tone-hover: var(--ulvia-official-text-secondary);
+    --ulvia-official-action-tone-active: var(--ulvia-official-text-muted);
+    --ulvia-official-action-on-tone: var(--ulvia-official-text-inverse);
+    --ulvia-official-action-tone-subtle: var(--ulvia-official-background-subtle);
 }
 :scope[tone="inverse"] {
-    --ulvia-official-action-tone: var(--ulvia-official-text-inverse, #ffffff);
-    --ulvia-official-action-tone-hover: var(--ulvia-official-text-inverse, #ffffff);
-    --ulvia-official-action-tone-active: var(--ulvia-official-text-inverse, #ffffff);
-    --ulvia-official-action-on-tone: var(--ulvia-official-background-inverse, #17191c);
-    --ulvia-official-action-tone-subtle: rgb(255 255 255 / 12%);
+    --ulvia-official-action-tone: var(--ulvia-official-text-inverse);
+    --ulvia-official-action-tone-hover: var(--ulvia-official-text-inverse);
+    --ulvia-official-action-tone-active: var(--ulvia-official-text-inverse);
+    --ulvia-official-action-on-tone: var(--ulvia-official-background-inverse);
+    --ulvia-official-action-tone-subtle: color-mix(in srgb, var(--ulvia-official-text-inverse) 12%, transparent);
 }
 :scope[tone="info"] {
-    --ulvia-official-action-tone: var(--ulvia-official-info, #1769aa);
-    --ulvia-official-action-tone-hover: var(--ulvia-official-info-hover, #12568c);
-    --ulvia-official-action-tone-active: var(--ulvia-official-info-active, #0e4571);
-    --ulvia-official-action-on-tone: var(--ulvia-official-on-info, #ffffff);
-    --ulvia-official-action-tone-subtle: var(--ulvia-official-info-subtle, #e7f2fb);
+    --ulvia-official-action-tone: var(--ulvia-official-info);
+    --ulvia-official-action-tone-hover: var(--ulvia-official-info-hover);
+    --ulvia-official-action-tone-active: var(--ulvia-official-info-active);
+    --ulvia-official-action-on-tone: var(--ulvia-official-on-info);
+    --ulvia-official-action-tone-subtle: var(--ulvia-official-info-subtle);
 }
 :scope[tone="success"] {
-    --ulvia-official-action-tone: var(--ulvia-official-success, #18794e);
-    --ulvia-official-action-tone-hover: var(--ulvia-official-success-hover, #12623e);
-    --ulvia-official-action-tone-active: var(--ulvia-official-success-active, #0d4d31);
-    --ulvia-official-action-on-tone: var(--ulvia-official-on-success, #ffffff);
-    --ulvia-official-action-tone-subtle: var(--ulvia-official-success-subtle, #dff3e8);
+    --ulvia-official-action-tone: var(--ulvia-official-success);
+    --ulvia-official-action-tone-hover: var(--ulvia-official-success-hover);
+    --ulvia-official-action-tone-active: var(--ulvia-official-success-active);
+    --ulvia-official-action-on-tone: var(--ulvia-official-on-success);
+    --ulvia-official-action-tone-subtle: var(--ulvia-official-success-subtle);
 }
 :scope[tone="warning"] {
-    --ulvia-official-action-tone: var(--ulvia-official-warning, #9a5b00);
-    --ulvia-official-action-tone-hover: var(--ulvia-official-warning-hover, #7d4900);
-    --ulvia-official-action-tone-active: var(--ulvia-official-warning-active, #633a00);
-    --ulvia-official-action-on-tone: var(--ulvia-official-on-warning, #ffffff);
-    --ulvia-official-action-tone-subtle: var(--ulvia-official-warning-subtle, #fff1d6);
+    --ulvia-official-action-tone: var(--ulvia-official-warning);
+    --ulvia-official-action-tone-hover: var(--ulvia-official-warning-hover);
+    --ulvia-official-action-tone-active: var(--ulvia-official-warning-active);
+    --ulvia-official-action-on-tone: var(--ulvia-official-on-warning);
+    --ulvia-official-action-tone-subtle: var(--ulvia-official-warning-subtle);
 }
 :scope[tone="danger"] {
-    --ulvia-official-action-tone: var(--ulvia-official-danger, #b4233c);
-    --ulvia-official-action-tone-hover: var(--ulvia-official-danger-hover, #941d32);
-    --ulvia-official-action-tone-active: var(--ulvia-official-danger-active, #771728);
-    --ulvia-official-action-on-tone: var(--ulvia-official-on-danger, #ffffff);
-    --ulvia-official-action-tone-subtle: var(--ulvia-official-danger-subtle, #fde7eb);
+    --ulvia-official-action-tone: var(--ulvia-official-danger);
+    --ulvia-official-action-tone-hover: var(--ulvia-official-danger-hover);
+    --ulvia-official-action-tone-active: var(--ulvia-official-danger-active);
+    --ulvia-official-action-on-tone: var(--ulvia-official-on-danger);
+    --ulvia-official-action-tone-subtle: var(--ulvia-official-danger-subtle);
 }
 :scope[variant="outline"] {
     --ulvia-official-action-background: transparent;

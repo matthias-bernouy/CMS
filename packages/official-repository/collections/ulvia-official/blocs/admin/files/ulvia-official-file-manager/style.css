@@ -21,7 +21,7 @@
 
 [part~="library-header"] p,
 [part~="file-meta"] {
-    color: var(--ulvia-official-text-muted, #66716c);
+    color: var(--ulvia-official-text-muted);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
 
@@ -65,7 +65,7 @@
 [part~="file-details"],
 [part~="danger-details"] {
     padding-block-start: var(--ulvia-official-spacing-sm, 0.75rem);
-    border-block-start: 1px solid var(--ulvia-official-border-subtle, #d8ddda);
+    border-block-start: 1px solid var(--ulvia-official-border-subtle);
 }
 
 [part~="file-details"] summary,
@@ -75,7 +75,7 @@
 }
 
 [part~="danger-details"] summary {
-    color: var(--ulvia-official-danger, #a12828);
+    color: var(--ulvia-official-danger);
 }
 
 @media (max-width: 42rem) {

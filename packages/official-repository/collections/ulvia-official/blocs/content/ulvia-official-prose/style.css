@@ -1,5 +1,5 @@
 :scope {
-    --ulvia-official-prose-color: var(--ulvia-official-text-secondary, CanvasText);
+    --ulvia-official-prose-color: var(--ulvia-official-text-secondary);
     --ulvia-official-prose-measure: 65ch;
     --ulvia-official-prose-size: var(--ulvia-official-font-size-md, 1rem);
     display: block;

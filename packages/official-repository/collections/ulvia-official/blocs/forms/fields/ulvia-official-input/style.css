@@ -15,7 +15,7 @@
     display: block;
     width: var(--ulvia-official-input-root-width, auto);
     min-width: 0;
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 [part~="control"],
@@ -36,11 +36,11 @@ input {
     padding-inline-start: var(--ulvia-official-input-padding-start, var(--ulvia-official-input-padding-inline));
     padding-inline-end: var(--ulvia-official-input-padding-end, var(--ulvia-official-input-padding-inline));
     border: var(--ulvia-official-border-width, var(--ulvia-official-border-width, 1px)) solid
-        var(--ulvia-official-border-default, var(--ulvia-official-border-default, #c8d1cd));
+        var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-input-form-radius, var(--ulvia-official-radius-md, 0.5rem));
     color: inherit;
-    background: var(--ulvia-official-background-surface, Canvas);
-    box-shadow: var(--ulvia-official-shadow-sm, inset 0 1px 0 rgb(23 33 30 / 3%));
+    background: var(--ulvia-official-background-surface);
+    box-shadow: var(--ulvia-official-shadow-sm);
     font: inherit;
     font-size: var(--ulvia-official-input-font-size);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
@@ -65,21 +65,21 @@ input[type="search"]::-webkit-search-decoration {
     clip-path: inset(50%);
 }
 input:hover:not(:disabled) {
-    border-color: var(--ulvia-official-border-strong, #89968f);
+    border-color: var(--ulvia-official-border-strong);
 }
 input:focus-visible {
-    border-color: var(--ulvia-official-primary, #086c55);
-    outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring, #167c5e) 28%, transparent);
+    border-color: var(--ulvia-official-primary);
+    outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring) 28%, transparent);
     outline-offset: 1px;
-    box-shadow: 0 0 0 1px var(--ulvia-official-primary, #086c55);
+    box-shadow: 0 0 0 1px var(--ulvia-official-primary);
 }
 input:user-invalid,
 input[aria-invalid="true"] {
-    border-color: var(--ulvia-official-danger-border, #b42318);
+    border-color: var(--ulvia-official-danger-border);
 }
 input:disabled {
-    color: var(--ulvia-official-text-disabled, #858b95);
-    background: var(--ulvia-official-background-subtle, #f4f5f7);
+    color: var(--ulvia-official-text-disabled);
+    background: var(--ulvia-official-background-subtle);
     cursor: not-allowed;
     opacity: 1;
 }
@@ -91,12 +91,12 @@ input:disabled {
     align-items: center;
     box-sizing: border-box;
     padding-inline: var(--ulvia-official-input-padding-inline) var(--ulvia-official-spacing-sm, 0.75rem);
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-input-form-radius, var(--ulvia-official-radius-md, 0.5rem));
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
     color: inherit;
-    background: var(--ulvia-official-background-surface, Canvas);
-    box-shadow: 0 1px 2px rgb(23 33 30 / 5%);
+    background: var(--ulvia-official-background-surface);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ulvia-official-shadow-color) 5%, transparent);
     font: inherit;
     font-size: var(--ulvia-official-input-font-size);
     text-align: start;
@@ -110,19 +110,19 @@ input:disabled {
 [part~="date-icon"] {
     width: 1.125rem;
     height: 1.125rem;
-    color: var(--ulvia-official-text-muted, #68766f);
+    color: var(--ulvia-official-text-muted);
     background: currentColor;
     -webkit-mask: url("{{ cms.asset.ulvia-official.icons/controls/calendar.svg }}") center / contain no-repeat;
     mask: url("{{ cms.asset.ulvia-official.icons/controls/calendar.svg }}") center / contain no-repeat;
 }
 [part~="date-trigger"]:hover:not(:disabled) {
-    border-color: var(--ulvia-official-border-strong, #737985);
+    border-color: var(--ulvia-official-border-strong);
 }
 [part~="date-trigger"]:focus-visible {
-    border-color: var(--ulvia-official-primary, #086c55);
-    outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring, #167c5e) 28%, transparent);
+    border-color: var(--ulvia-official-primary);
+    outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring) 28%, transparent);
     outline-offset: 1px;
-    box-shadow: 0 0 0 1px var(--ulvia-official-primary, #086c55);
+    box-shadow: 0 0 0 1px var(--ulvia-official-primary);
 }
 [part~="popover"] {
     position: absolute;
@@ -133,11 +133,11 @@ input:disabled {
     width: min(21rem, calc(100vw - 2rem));
     box-sizing: border-box;
     padding: var(--ulvia-official-spacing-md, 1rem);
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-radius-lg, 0.75rem);
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
-    background: var(--ulvia-official-background-raised, Canvas);
-    box-shadow: var(--ulvia-official-shadow-lg, 0 1rem 2.5rem rgb(23 33 30 / 16%));
+    background: var(--ulvia-official-background-raised);
+    box-shadow: var(--ulvia-official-shadow-lg);
 }
 [part~="popover"][hidden] {
     display: none;
@@ -161,7 +161,7 @@ input:disabled {
     padding: 0;
     border: 0;
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
-    color: var(--ulvia-official-text-secondary, #42504a);
+    color: var(--ulvia-official-text-secondary);
     background: transparent;
     cursor: pointer;
 }
@@ -179,8 +179,8 @@ input:disabled {
 }
 [part~="previous-month"]:hover,
 [part~="next-month"]:hover {
-    color: var(--ulvia-official-primary, #086c55);
-    background: var(--ulvia-official-primary-subtle, #dff3ed);
+    color: var(--ulvia-official-primary);
+    background: var(--ulvia-official-primary-subtle);
 }
 [part~="weekdays"],
 [part~="days"] {
@@ -192,7 +192,7 @@ input:disabled {
     display: grid;
     min-height: 1.75rem;
     place-items: center;
-    color: var(--ulvia-official-text-muted, #68766f);
+    color: var(--ulvia-official-text-muted);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
 }
@@ -212,27 +212,27 @@ input:disabled {
 }
 [part~="day"]:hover:not(:disabled),
 [part~="day"][data-active] {
-    color: var(--ulvia-official-on-primary-subtle, #075642);
-    background: var(--ulvia-official-primary-subtle, #dff3ed);
+    color: var(--ulvia-official-on-primary-subtle);
+    background: var(--ulvia-official-primary-subtle);
 }
 [part~="day"][aria-selected="true"] {
-    color: var(--ulvia-official-on-primary, white);
-    background: var(--ulvia-official-primary, #086c55);
+    color: var(--ulvia-official-on-primary);
+    background: var(--ulvia-official-primary);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
 }
 [part~="day"][data-outside] {
-    color: var(--ulvia-official-text-muted, #68766f);
+    color: var(--ulvia-official-text-muted);
     opacity: 0.55;
 }
 [part~="day"][data-today]:not([aria-selected="true"]) {
-    box-shadow: inset 0 0 0 1px var(--ulvia-official-primary, #086c55);
+    box-shadow: inset 0 0 0 1px var(--ulvia-official-primary);
 }
 [part~="day"]:focus-visible,
 [part~="previous-month"]:focus-visible,
 [part~="next-month"]:focus-visible,
 [part~="today"]:focus-visible,
 [part~="clear"]:focus-visible {
-    outline: 2px solid var(--ulvia-official-focus-ring, #167c5e);
+    outline: 2px solid var(--ulvia-official-focus-ring);
     outline-offset: 1px;
 }
 [part~="day"]:disabled {
@@ -243,7 +243,7 @@ input:disabled {
     display: flex;
     justify-content: space-between;
     padding-block-start: var(--ulvia-official-spacing-xs, 0.5rem);
-    border-block-start: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
+    border-block-start: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
 }
 [part~="today"],
@@ -252,7 +252,7 @@ input:disabled {
     padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
     border: 0;
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
-    color: var(--ulvia-official-primary, #086c55);
+    color: var(--ulvia-official-primary);
     background: transparent;
     font: inherit;
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
@@ -261,18 +261,18 @@ input:disabled {
 }
 [part~="today"]:hover,
 [part~="clear"]:hover:not(:disabled) {
-    background: var(--ulvia-official-primary-subtle, #dff3ed);
+    background: var(--ulvia-official-primary-subtle);
 }
 [part~="clear"]:disabled {
-    color: var(--ulvia-official-text-disabled, #858b95);
+    color: var(--ulvia-official-text-disabled);
     cursor: not-allowed;
 }
 :scope[data-invalid] [part~="date-trigger"] {
-    border-color: var(--ulvia-official-danger-border, #b42318);
+    border-color: var(--ulvia-official-danger-border);
 }
 :scope[data-disabled] [part~="date-trigger"] {
-    color: var(--ulvia-official-text-disabled, #858b95);
-    background: var(--ulvia-official-background-subtle, #f4f5f7);
+    color: var(--ulvia-official-text-disabled);
+    background: var(--ulvia-official-background-subtle);
     cursor: not-allowed;
 }
 :scope[size="sm"] {

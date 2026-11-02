@@ -2,7 +2,7 @@
     --ulvia-official-field-caption-required-marker-display: none;
     display: block;
     min-width: 0;
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
     container-type: inline-size;
 }
@@ -67,10 +67,10 @@ label[part~="field-label"] {
     justify-content: center;
     box-sizing: border-box;
     padding-inline: var(--ulvia-official-spacing-sm, 0.75rem);
-    border: 1px solid color-mix(in srgb, var(--ulvia-official-primary, #086c55) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ulvia-official-primary) 30%, transparent);
     border-radius: var(--ulvia-official-radius-full, 999px);
-    color: var(--ulvia-official-on-primary-subtle, #075642);
-    background: var(--ulvia-official-primary-subtle, #dff3ed);
+    color: var(--ulvia-official-on-primary-subtle);
+    background: var(--ulvia-official-primary-subtle);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
     white-space: nowrap;
@@ -81,7 +81,7 @@ label[part~="field-label"] {
 }
 
 [part~="field-description"] {
-    color: var(--ulvia-official-text-muted, #68766f);
+    color: var(--ulvia-official-text-muted);
 }
 
 [part~="field-error"] {
@@ -90,10 +90,10 @@ label[part~="field-label"] {
     align-items: center;
     box-sizing: border-box;
     padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem);
-    border-inline-start: 0.25rem solid var(--ulvia-official-danger-border, #b42318);
+    border-inline-start: 0.25rem solid var(--ulvia-official-danger-border);
     border-radius: var(--ulvia-official-radius-sm, 0.375rem);
-    color: var(--ulvia-official-danger, #b42318);
-    background: color-mix(in srgb, var(--ulvia-official-danger-subtle, #fef3f2) 82%, transparent);
+    color: var(--ulvia-official-danger);
+    background: color-mix(in srgb, var(--ulvia-official-danger-subtle) 82%, transparent);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
 }
 
@@ -102,14 +102,13 @@ label[part~="field-label"] {
 }
 
 :scope[invalid] {
-    --ulvia-official-border-default: var(--ulvia-official-danger-border, #b42318);
+    --ulvia-official-border-default: var(--ulvia-official-danger-border);
     --ulvia-official-border-width: var(--ulvia-official-border-width-strong, 2px);
-    --ulvia-official-shadow-sm: 0 0 0 3px
-        color-mix(in srgb, var(--ulvia-official-danger-border, #b42318) 22%, transparent);
+    --ulvia-official-shadow-sm: 0 0 0 3px color-mix(in srgb, var(--ulvia-official-danger-border) 22%, transparent);
 }
 
 :scope[invalid] label[part~="field-label"] {
-    color: var(--ulvia-official-danger, #b42318);
+    color: var(--ulvia-official-danger);
 }
 
 :scope[label-position="inline"] [part~="field"] {

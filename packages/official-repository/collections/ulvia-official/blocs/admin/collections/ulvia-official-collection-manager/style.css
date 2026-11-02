@@ -17,7 +17,7 @@
 
 [part~="release-count"],
 [part~="release-meta"] {
-    color: var(--ulvia-official-text-muted, #66716c);
+    color: var(--ulvia-official-text-muted);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
 
@@ -39,13 +39,13 @@
 
 [part~="security-details"] {
     padding-block-start: var(--ulvia-official-spacing-xs, 0.5rem);
-    border-block-start: 1px solid var(--ulvia-official-border-subtle, #d8ddda);
-    color: var(--ulvia-official-text-secondary, #4f625a);
+    border-block-start: 1px solid var(--ulvia-official-border-subtle);
+    color: var(--ulvia-official-text-secondary);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
 
 [part~="security-details"] summary {
-    color: var(--ulvia-official-text-primary, #17211d);
+    color: var(--ulvia-official-text-primary);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     cursor: pointer;
 }

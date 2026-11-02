@@ -3,19 +3,19 @@
     --ulvia-official-cover-inherited-height: 100svh;
     display: block;
     min-height: 100svh;
-    color: var(--ulvia-official-text-primary, #17211d);
+    color: var(--ulvia-official-text-primary);
     background:
         radial-gradient(
             circle at 12% 8%,
-            color-mix(in srgb, var(--ulvia-official-primary-subtle, #e4f4ee) 82%, transparent) 0,
+            color-mix(in srgb, var(--ulvia-official-primary-subtle) 82%, transparent) 0,
             transparent 32rem
         ),
         radial-gradient(
             circle at 88% 92%,
-            color-mix(in srgb, var(--ulvia-official-info-subtle, #eef7ff) 78%, transparent) 0,
+            color-mix(in srgb, var(--ulvia-official-info-subtle) 78%, transparent) 0,
             transparent 28rem
         ),
-        var(--ulvia-official-background-subtle, #f3f7f5);
+        var(--ulvia-official-background-subtle);
     font-family: var(
         --ulvia-official-font-family-main,
         system-ui,

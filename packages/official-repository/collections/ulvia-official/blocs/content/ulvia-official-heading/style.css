@@ -1,8 +1,5 @@
 :scope {
-    --ulvia-official-heading-color: var(
-        --ulvia-official-heading-inherited-color,
-        var(--ulvia-official-text-primary, CanvasText)
-    );
+    --ulvia-official-heading-color: var(--ulvia-official-heading-inherited-color, var(--ulvia-official-text-primary));
     --ulvia-official-heading-size: var(
         --ulvia-official-heading-inherited-size,
         var(--ulvia-official-font-size-3xl, 2rem)
@@ -41,7 +38,7 @@
     display: block;
 }
 [part~="accent"] {
-    color: var(--ulvia-official-heading-inherited-accent-color, var(--ulvia-official-secondary, currentColor));
+    color: var(--ulvia-official-heading-inherited-accent-color, var(--ulvia-official-secondary));
     font-weight: var(
         --ulvia-official-heading-inherited-accent-font-weight,
         var(--ulvia-official-font-weight-regular, 400)

@@ -24,7 +24,7 @@
 [part~="header"] {
     display: var(--ulvia-official-navigation-menu-header-display, block);
     padding: 0.125rem var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-spacing-sm, 0.75rem);
-    color: var(--ulvia-official-text-muted, #6d7e77);
+    color: var(--ulvia-official-text-muted);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
     letter-spacing: var(--ulvia-official-letter-spacing-wide, 0.04em);
@@ -41,10 +41,10 @@
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
     margin-block-start: auto;
     padding-block-start: var(--ulvia-official-spacing-md, 1rem);
-    border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+    border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
 }
 :scope[appearance="subtle"] [part~="menu"] {
-    background: var(--ulvia-official-background-subtle, #f3f7f5);
+    background: var(--ulvia-official-background-subtle);
 }
 :scope[density="compact"] {
     --ulvia-official-navigation-menu-padding: 0.25rem 0.5rem 0.75rem;

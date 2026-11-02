@@ -2,6 +2,17 @@ import { createBlocScope, observeBlocAttributes } from "@bernouy/cms-content/bro
 
 const DEFAULT_COLOURS = "#086c55,#3157d5,#7c3aed,#be185d,#b42318,#c2410c,#ca8a04,#111827,#64748b,#ffffff";
 
+/** Paint business color data into a swatch without changing UI CSS or theme tokens. */
+function paintPreview(canvas: HTMLCanvasElement, colour: string): void {
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d");
+    if (context) {
+        context.fillStyle = colour;
+        context.fillRect(0, 0, 1, 1);
+    }
+}
+
 function normalizeHex(value: string): string | null {
     const compact = value.trim().replace(/^#/, "");
     const expanded = /^[0-9a-f]{3}$/i.test(compact)
@@ -27,7 +38,7 @@ class Controller {
     private readonly scope: ReturnType<typeof createBlocScope>;
     private input: HTMLInputElement | null = null;
     private trigger: HTMLButtonElement;
-    private swatch: HTMLElement;
+    private swatch: HTMLCanvasElement;
     private value: HTMLElement;
     private popover: HTMLElement;
     private sourceTabIndex: string | null = null;
@@ -50,7 +61,7 @@ class Controller {
         this.trigger.type = "button";
         this.trigger.setAttribute("part", "trigger");
         this.trigger.setAttribute("aria-haspopup", "listbox");
-        this.swatch = document.createElement("span");
+        this.swatch = document.createElement("canvas");
         this.swatch.setAttribute("part", "selected-swatch");
         this.swatch.setAttribute("aria-hidden", "true");
         this.value = document.createElement("span");
@@ -117,7 +128,11 @@ class Controller {
                 button.setAttribute("part", "preset");
                 button.setAttribute("role", "option");
                 button.setAttribute("aria-label", colour.toUpperCase());
-                button.style.setProperty("--ulvia-official-color-presets-preset-colour", colour);
+                const swatch = document.createElement("canvas");
+                swatch.setAttribute("part", "preset-swatch");
+                swatch.setAttribute("aria-hidden", "true");
+                paintPreview(swatch, colour);
+                button.append(swatch);
                 return button;
             }),
         );
@@ -128,7 +143,7 @@ class Controller {
             return;
         }
         const colour = normalizeHex(this.input.value) ?? "#000000";
-        this.blocRoot.style.setProperty("--ulvia-official-color-presets-selected-colour", colour);
+        paintPreview(this.swatch, colour);
         this.value.textContent = colour.toUpperCase();
         this.trigger.disabled = this.input.disabled;
         this.trigger.setAttribute("aria-label", labelFor(this.input));

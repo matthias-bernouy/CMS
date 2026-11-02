@@ -22,24 +22,24 @@ input {
     height: var(--ulvia-official-radio-choice-indicator-size);
     box-sizing: border-box;
     margin: 0;
-    border: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-border-strong, #89968f);
+    border: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-border-strong);
     border-radius: var(--ulvia-official-radius-full, 999px);
     appearance: none;
-    background: var(--ulvia-official-background-surface, Canvas);
+    background: var(--ulvia-official-background-surface);
     cursor: pointer;
 }
 input:checked {
-    border: var(--ulvia-official-radio-selected-border) solid var(--ulvia-official-primary, #086c55);
+    border: var(--ulvia-official-radio-selected-border) solid var(--ulvia-official-primary);
 }
 input:hover:not(:disabled) {
-    border-color: var(--ulvia-official-primary, #086c55);
+    border-color: var(--ulvia-official-primary);
 }
 input:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 3px;
 }
 input[aria-invalid="true"] {
-    outline: 2px solid var(--ulvia-official-danger-border, #b42318);
+    outline: 2px solid var(--ulvia-official-danger-border);
     outline-offset: 2px;
 }
 input:disabled {

@@ -32,5 +32,10 @@
     "theme.token.border-strong.label": "Bordure forte",
     "theme.token.border-strong.description": "Une limite très visible pour les zones sélectionnées ou importantes.",
     "theme.token.focus-ring.label": "Anneau de focus",
-    "theme.token.focus-ring.description": "L’indicateur visible du focus clavier."
+    "theme.token.focus-ring.description": "L’indicateur visible du focus clavier.",
+    "theme.token.shadow-color.label": "Couleur des ombres",
+    "theme.token.overlay-backdrop.label": "Fond des fenêtres modales",
+    "theme.token.overlay-media.label": "Voile sur les médias",
+    "theme.token.on-overlay.label": "Texte sur les voiles",
+    "theme.token.overlay-border.label": "Bordure des voiles"
 }

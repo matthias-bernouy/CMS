@@ -215,7 +215,12 @@
             "warning-active",
             "warning-border",
             "warning-hover",
-            "warning-subtle"
+            "warning-subtle",
+            "shadow-color",
+            "overlay-backdrop",
+            "overlay-media",
+            "on-overlay",
+            "overlay-border"
         ],
         "texts": [
             "callout-body",

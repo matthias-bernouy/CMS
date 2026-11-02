@@ -26,8 +26,8 @@
     height: var(--ulvia-official-option-list-indicator-height, 0);
     border-radius: calc(var(--ulvia-official-radius-md, 0.5rem) - var(--ulvia-official-spacing-3xs, 0.25rem));
     content: "";
-    background: var(--ulvia-official-option-list-indicator-background, var(--ulvia-official-primary, #086c55));
-    box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(0 0 0 / 8%));
+    background: var(--ulvia-official-option-list-indicator-background, var(--ulvia-official-primary));
+    box-shadow: var(--ulvia-official-shadow-sm);
     opacity: var(--ulvia-official-option-list-indicator-opacity, 0);
     transition:
         inset-inline-start var(--ulvia-official-duration-normal, 180ms),

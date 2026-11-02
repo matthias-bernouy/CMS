@@ -1,6 +1,6 @@
 :scope {
     --ulvia-official-surface-background: transparent;
-    --ulvia-official-surface-color: var(--ulvia-official-text-primary, #17211d);
+    --ulvia-official-surface-color: var(--ulvia-official-text-primary);
     --ulvia-official-surface-border: transparent;
     --ulvia-official-surface-padding: var(--ulvia-official-spacing-md, 1rem);
     --ulvia-official-surface-radius: var(--ulvia-official-radius-xl, 1rem);
@@ -21,24 +21,22 @@
 }
 
 :scope[appearance="subtle"] {
-    --ulvia-official-surface-background: var(--ulvia-official-background-subtle, #f3f7f5);
+    --ulvia-official-surface-background: var(--ulvia-official-background-subtle);
 }
 :scope[appearance="outlined"] {
-    --ulvia-official-surface-background: var(--ulvia-official-background-base, #fff);
-    --ulvia-official-surface-border: var(--ulvia-official-border-default, #c9d5d0);
+    --ulvia-official-surface-background: var(--ulvia-official-background-base);
+    --ulvia-official-surface-border: var(--ulvia-official-border-default);
 }
 :scope[appearance="elevated"] {
-    --ulvia-official-surface-background: var(--ulvia-official-background-raised, #fff);
-    --ulvia-official-surface-border: var(--ulvia-official-border-subtle, #e2e9e6);
-    --ulvia-official-surface-shadow: 0 1px 2px rgb(20 40 32 / 5%), 0 10px 30px rgb(20 40 32 / 7%);
+    --ulvia-official-surface-background: var(--ulvia-official-background-raised);
+    --ulvia-official-surface-border: var(--ulvia-official-border-subtle);
+    --ulvia-official-surface-shadow:
+        0 1px 2px color-mix(in srgb, var(--ulvia-official-shadow-color) 5%, transparent),
+        0 10px 30px color-mix(in srgb, var(--ulvia-official-shadow-color) 7%, transparent);
 }
 :scope[appearance="inverse"] {
-    --ulvia-official-surface-background: var(--ulvia-official-background-inverse, #15221d);
-    --ulvia-official-surface-color: var(--ulvia-official-text-inverse, #fff);
-    --ulvia-official-text-primary: var(--ulvia-official-text-inverse, #fff);
-    --ulvia-official-text-secondary: rgb(255 255 255 / 76%);
-    --ulvia-official-text-muted: rgb(255 255 255 / 62%);
-    --ulvia-official-border-subtle: rgb(255 255 255 / 16%);
+    --ulvia-official-surface-background: var(--ulvia-official-background-inverse);
+    --ulvia-official-surface-color: var(--ulvia-official-text-inverse);
 }
 :scope[padding="none"] {
     --ulvia-official-surface-padding: 0rem;

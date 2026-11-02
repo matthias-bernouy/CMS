@@ -3,7 +3,7 @@
     min-width: 0;
     border: var(--ulvia-official-list-item-border, 0);
     border-radius: var(--ulvia-official-list-item-radius, 0);
-    color: var(--ulvia-official-text-primary, #17211d);
+    color: var(--ulvia-official-text-primary);
     background: var(--ulvia-official-list-item-background, transparent);
     container-type: inline-size;
     font-family: var(--ulvia-official-font-family-main, inherit);
@@ -15,7 +15,7 @@
 }
 
 :scope:hover {
-    background: color-mix(in srgb, var(--ulvia-official-background-subtle, #f3f7f5) 62%, transparent);
+    background: color-mix(in srgb, var(--ulvia-official-background-subtle) 62%, transparent);
 }
 
 [part~="item"] {
@@ -80,7 +80,7 @@
 
 [part~="meta"],
 [part~="description"] {
-    color: var(--ulvia-official-text-secondary, #4f625a);
+    color: var(--ulvia-official-text-secondary);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
 
@@ -110,7 +110,7 @@
 }
 :scope[layout="columns"] [part~="body"] {
     padding-block-start: 0;
-    color: var(--ulvia-official-text-secondary, #42504a);
+    color: var(--ulvia-official-text-secondary);
     font-size: var(--ulvia-official-font-size-sm, 0.875rem);
 }
 :scope[layout="columns"] [part~="actions"] {

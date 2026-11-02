@@ -160,6 +160,51 @@
                 "light": "#167c5e",
                 "dark": "#77e4bd"
             }
+        },
+        {
+            "id": "shadow-color",
+            "label": "theme.token.shadow-color.label",
+            "type": "color",
+            "defaults": {
+                "light": "#15352b",
+                "dark": "#000000"
+            }
+        },
+        {
+            "id": "overlay-backdrop",
+            "label": "theme.token.overlay-backdrop.label",
+            "type": "color",
+            "defaults": {
+                "light": "rgb(15 28 23 / 48%)",
+                "dark": "rgb(0 0 0 / 64%)"
+            }
+        },
+        {
+            "id": "overlay-media",
+            "label": "theme.token.overlay-media.label",
+            "type": "color",
+            "defaults": {
+                "light": "rgb(12 22 18 / 82%)",
+                "dark": "rgb(12 22 18 / 82%)"
+            }
+        },
+        {
+            "id": "on-overlay",
+            "label": "theme.token.on-overlay.label",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#ffffff"
+            }
+        },
+        {
+            "id": "overlay-border",
+            "label": "theme.token.overlay-border.label",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#ffffff"
+            }
         }
     ]
 }

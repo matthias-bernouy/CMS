@@ -1,7 +1,7 @@
 :scope {
     padding: var(--ulvia-official-data-table-column-header-padding-block, 0.75rem)
         var(--ulvia-official-data-table-column-header-padding-inline, 1rem);
-    border-bottom: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-border-default, #cad5d0);
+    border-bottom: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-border-default);
     color: inherit;
     background: inherit;
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);

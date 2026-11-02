@@ -8,7 +8,7 @@
     display: grid;
     min-width: 0;
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 
@@ -18,19 +18,18 @@
     align-items: center;
     box-sizing: border-box;
     padding: 0.375rem var(--ulvia-official-spacing-sm, 0.75rem);
-    border: var(--ulvia-official-border-width, 1px) solid
-        var(--ulvia-official-border-default, var(--ulvia-official-border-default, #c8d1cd));
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
     border-radius: var(--ulvia-official-radius-md, 0.5rem);
-    background: var(--ulvia-official-background-surface, Canvas);
-    box-shadow: 0 1px 2px rgb(23 33 30 / 5%);
+    background: var(--ulvia-official-background-surface);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ulvia-official-shadow-color) 5%, transparent);
     cursor: text;
 }
 
 :scope:focus-within [part~="control"] {
-    border-color: var(--ulvia-official-primary, #086c55);
-    outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring, #167c5e) 28%, transparent);
+    border-color: var(--ulvia-official-primary);
+    outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring) 28%, transparent);
     outline-offset: 1px;
-    box-shadow: 0 0 0 1px var(--ulvia-official-primary, #086c55);
+    box-shadow: 0 0 0 1px var(--ulvia-official-primary);
 }
 
 [part~="tags"] {
@@ -52,11 +51,11 @@
     box-sizing: border-box;
     padding: 0 var(--ulvia-official-spacing-3xs, 0.25rem) 0 var(--ulvia-official-spacing-sm, 0.75rem);
     border: var(--ulvia-official-border-width, 1px) solid
-        color-mix(in srgb, var(--ulvia-official-primary, #086c55) 30%, transparent);
+        color-mix(in srgb, var(--ulvia-official-primary) 30%, transparent);
     border-radius: var(--ulvia-official-radius-full, 999px);
     gap: var(--ulvia-official-spacing-3xs, 0.25rem);
-    color: var(--ulvia-official-on-primary-subtle, #075642);
-    background: var(--ulvia-official-primary-subtle, #dff3ed);
+    color: var(--ulvia-official-on-primary-subtle);
+    background: var(--ulvia-official-primary-subtle);
     font-size: var(--ulvia-official-tag-input-tag-chip-font-size);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
 }
@@ -75,7 +74,7 @@
     border: 0;
     border-radius: var(--ulvia-official-radius-full, 999px);
     color: currentColor;
-    background: color-mix(in srgb, var(--ulvia-official-primary, #086c55) 10%, transparent);
+    background: color-mix(in srgb, var(--ulvia-official-primary) 10%, transparent);
     cursor: pointer;
 }
 
@@ -99,12 +98,12 @@
 }
 
 [part~="remove"]:hover {
-    color: var(--ulvia-official-on-primary, #fff);
-    background: var(--ulvia-official-primary, #086c55);
+    color: var(--ulvia-official-on-primary);
+    background: var(--ulvia-official-primary);
 }
 
 [part~="remove"]:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, #167c5e);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 1px;
 }
 
@@ -129,7 +128,7 @@
 }
 
 [part~="input"]::placeholder {
-    color: var(--ulvia-official-text-muted, #68766f);
+    color: var(--ulvia-official-text-muted);
 }
 
 [part~="control"] > input:not([part]) {
@@ -141,7 +140,7 @@
 }
 
 [part~="hint"] {
-    color: var(--ulvia-official-text-muted, #68766f);
+    color: var(--ulvia-official-text-muted);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
@@ -155,8 +154,8 @@
 }
 
 :scope[data-disabled] [part~="control"] {
-    color: var(--ulvia-official-text-disabled, #858b95);
-    background: var(--ulvia-official-background-subtle, #f4f5f7);
+    color: var(--ulvia-official-text-disabled);
+    background: var(--ulvia-official-background-subtle);
     cursor: not-allowed;
 }
 

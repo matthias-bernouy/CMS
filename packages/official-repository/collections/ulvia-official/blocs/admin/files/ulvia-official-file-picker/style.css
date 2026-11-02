@@ -19,21 +19,21 @@
     gap: var(--ulvia-official-spacing-xs, 0.5rem);
     min-width: 0;
     padding: var(--ulvia-official-spacing-xs, 0.5rem);
-    border: 1px solid var(--ulvia-official-border-subtle, #d8ddda);
+    border: 1px solid var(--ulvia-official-border-subtle);
     border-radius: var(--ulvia-official-radius-sm, 0.5rem);
     color: inherit;
-    background: var(--ulvia-official-background-base, #fff);
+    background: var(--ulvia-official-background-base);
     text-align: start;
     cursor: pointer;
 }
 
 [part~="item"]:hover {
-    border-color: var(--ulvia-official-primary, #126b57);
-    background: var(--ulvia-official-background-subtle, #f4f5f7);
+    border-color: var(--ulvia-official-primary);
+    background: var(--ulvia-official-background-subtle);
 }
 
 [part~="item"]:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--ulvia-official-primary, #126b57) 30%, transparent);
+    outline: 3px solid color-mix(in srgb, var(--ulvia-official-primary) 30%, transparent);
     outline-offset: 2px;
 }
 
@@ -53,7 +53,7 @@
 }
 
 [part~="type"] {
-    color: var(--ulvia-official-text-muted, #66716c);
+    color: var(--ulvia-official-text-muted);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
 }
 

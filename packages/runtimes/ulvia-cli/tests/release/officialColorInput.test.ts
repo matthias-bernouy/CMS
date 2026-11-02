@@ -1,8 +1,36 @@
-import { afterEach, expect, test } from "bun:test";
+import { afterEach, expect, mock, spyOn, test } from "bun:test";
 import { mount } from "../../../../official-repository/collections/ulvia-official/blocs/forms/fields/ulvia-official-color-input/bloc";
+import { mount as mountPresets } from "../../../../official-repository/collections/ulvia-official/blocs/forms/fields/advanced/ulvia-official-color-presets/bloc";
 
 afterEach(() => {
     document.body.replaceChildren();
+    mock.restore();
+});
+
+test.each([
+    ["ulvia-official-color-input", mount],
+    ["ulvia-official-color-presets", mountPresets],
+] as const)("%s paints color data only into preview canvases", (tag, mountControl) => {
+    const painted: string[] = [];
+    const context = {
+        fillStyle: "",
+        fillRect() {
+            painted.push(this.fillStyle);
+        },
+    };
+    spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(context as unknown as CanvasRenderingContext2D);
+    document.body.innerHTML = `<div cms-bloc="${tag}"><span part="trigger-shell"></span>
+        <input type="color" value="#086c55"><span part="popover" hidden></span></div>`;
+    const root = document.body.firstElementChild as HTMLElement;
+    const cleanup = mountControl(root);
+    const input = root.querySelector("input")!;
+    input.value = "#ff0033";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(painted).toContain("#ff0033");
+    expect(root.querySelectorAll("canvas").length).toBeGreaterThan(0);
+    expect(root.querySelector("[style]")).toBeNull();
+    expect(root.hasAttribute("style")).toBe(false);
+    cleanup?.();
 });
 
 test("official color input closes on Escape and restores focus", async () => {

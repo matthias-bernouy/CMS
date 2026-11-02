@@ -1,17 +1,17 @@
 :scope {
-    --ulvia-official-page-editor-accent: #176b4d;
-    --ulvia-official-page-editor-accent-soft: #e4f1eb;
-    --ulvia-official-page-editor-canvas: #d9dfdc;
-    --ulvia-official-page-editor-ink: #17211d;
-    --ulvia-official-page-editor-muted: #66736d;
-    --ulvia-official-page-editor-line: #dce3df;
+    --ulvia-official-page-editor-accent: var(--ulvia-official-primary);
+    --ulvia-official-page-editor-accent-soft: var(--ulvia-official-primary-subtle);
+    --ulvia-official-page-editor-canvas: var(--ulvia-official-background-subtle);
+    --ulvia-official-page-editor-ink: var(--ulvia-official-text-primary);
+    --ulvia-official-page-editor-muted: var(--ulvia-official-text-muted);
+    --ulvia-official-page-editor-line: var(--ulvia-official-border-subtle);
     position: fixed;
     z-index: 1000;
     inset: 0;
     display: block;
     min-width: 0;
     color: var(--ulvia-official-page-editor-ink);
-    background: #f8faf9;
+    background: var(--ulvia-official-background-base);
     font-family: var(--ulvia-official-font-family-main, system-ui, sans-serif);
     container-type: inline-size;
 }
@@ -34,7 +34,7 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-    outline: 3px solid #72c7a8;
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 2px;
 }
 h2,
@@ -44,9 +44,9 @@ p {
 button {
     min-height: 2.125rem;
     padding: 0.4rem 0.65rem;
-    border: 1px solid #cbd5d0;
+    border: 1px solid var(--ulvia-official-border-default);
     border-radius: 0.45rem;
-    background: #fff;
+    background: var(--ulvia-official-background-surface);
     cursor: pointer;
 }
 button:hover,
@@ -66,7 +66,7 @@ button:disabled {
     width: 100%;
     height: 100dvh;
     overflow: hidden;
-    background: #f8faf9;
+    background: var(--ulvia-official-background-base);
 }
 [data-editor-state],
 [data-editor-ready] {
@@ -88,8 +88,8 @@ button:disabled {
     min-width: 0;
     padding: 0 0.875rem;
     border-bottom: 1px solid var(--ulvia-official-page-editor-line);
-    background: rgb(255 255 255 / 96%);
-    box-shadow: 0 1px 0 rgb(23 33 29 / 3%);
+    background: color-mix(in srgb, var(--ulvia-official-background-surface) 96%, transparent);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--ulvia-official-shadow-color) 3%, transparent);
 }
 [part~="toolbar-start"],
 [part~="toolbar-end"],
@@ -148,7 +148,7 @@ button:disabled {
     padding: 0.2rem;
     border: 1px solid var(--ulvia-official-page-editor-line);
     border-radius: 0.55rem;
-    background: #f2f5f3;
+    background: var(--ulvia-official-background-subtle);
 }
 
 [part~="workspace"] {
@@ -166,14 +166,14 @@ button:disabled {
     min-height: 0;
     padding: 0.9rem;
     overflow: auto;
-    background: #fbfcfb;
+    background: var(--ulvia-official-background-base);
 }
 [part~="structure"] {
     border-right: 1px solid var(--ulvia-official-page-editor-line);
 }
 [part~="inspector"] {
     border-left: 1px solid var(--ulvia-official-page-editor-line);
-    background: #fff;
+    background: var(--ulvia-official-background-surface);
 }
 [part~="panel-header"] {
     position: sticky;
@@ -187,10 +187,10 @@ button:disabled {
     margin: -0.9rem -0.9rem 0;
     padding: 0.75rem 0.9rem 0.55rem;
     border-bottom: 1px solid var(--ulvia-official-page-editor-line);
-    background: #fbfcfb;
+    background: var(--ulvia-official-background-base);
 }
 [part~="inspector"] [part~="panel-header"] {
-    background: #fff;
+    background: var(--ulvia-official-background-surface);
 }
 
 [part~="canvas"] {
@@ -200,7 +200,7 @@ button:disabled {
     padding: 1.5rem;
     overflow: auto;
     background: var(--ulvia-official-page-editor-canvas);
-    box-shadow: inset 0 1px 3px rgb(23 33 29 / 7%);
+    box-shadow: inset 0 1px 3px color-mix(in srgb, var(--ulvia-official-shadow-color) 7%, transparent);
 }
 [part~="canvas"]:has(> [part~="preview-status"]:not([hidden])) {
     padding-top: 3.75rem;
@@ -211,10 +211,10 @@ button:disabled {
     min-height: 34rem;
     margin-inline: auto;
     overflow: hidden;
-    border: 1px solid #bdc7c2;
+    border: 1px solid var(--ulvia-official-border-default);
     border-radius: 0.25rem;
-    background: #fff;
-    box-shadow: 0 1rem 3.5rem rgb(23 33 29 / 16%);
+    background: var(--ulvia-official-background-surface);
+    box-shadow: 0 1rem 3.5rem color-mix(in srgb, var(--ulvia-official-shadow-color) 16%, transparent);
     transition: width 180ms ease;
 }
 [part~="preview-frame"][data-viewport="tablet"] {
@@ -228,7 +228,7 @@ button:disabled {
     width: 100%;
     height: 100%;
     border: 0;
-    background: #fff;
+    background: var(--ulvia-official-background-surface);
 }
 [part~="preview-status"] {
     position: absolute;
@@ -237,11 +237,11 @@ button:disabled {
     left: 50%;
     max-width: calc(100% - 2rem);
     padding: 0.4rem 0.65rem;
-    border: 1px solid #bfc9c4;
+    border: 1px solid var(--ulvia-official-border-default);
     border-radius: 999px;
-    color: #43514a;
-    background: #fff;
-    box-shadow: 0 0.3rem 1rem rgb(23 33 29 / 12%);
+    color: var(--ulvia-official-text-secondary);
+    background: var(--ulvia-official-background-surface);
+    box-shadow: 0 0.3rem 1rem color-mix(in srgb, var(--ulvia-official-shadow-color) 12%, transparent);
     font-size: 0.7rem;
     font-weight: 700;
     text-align: center;
@@ -257,9 +257,9 @@ button:disabled {
     left: var(--ulvia-official-page-editor-highlight-x, 0);
     width: var(--ulvia-official-page-editor-highlight-width, 0);
     height: var(--ulvia-official-page-editor-highlight-height, 0);
-    border: 2px solid #4b63db;
+    border: 2px solid var(--ulvia-official-focus-ring);
     border-radius: 0.18rem;
-    box-shadow: 0 0 0 2px rgb(255 255 255 / 85%);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ulvia-official-shadow-color) 85%, transparent);
     pointer-events: none;
 }
 [data-frame-highlight][hidden] {
@@ -316,17 +316,17 @@ button:disabled {
 }
 [data-slot-target] > button {
     min-height: 1.8rem;
-    border: 1px dashed #b9c6c0;
+    border: 1px dashed var(--ulvia-official-border-strong);
     color: var(--ulvia-official-page-editor-muted);
-    background: #fff;
+    background: var(--ulvia-official-background-surface);
     font-size: 0.68rem;
 }
 [data-outline] button:hover {
-    background: #f0f4f2;
+    background: var(--ulvia-official-background-subtle);
 }
 [data-outline] button[aria-current="true"] {
-    color: #234b99;
-    background: #e8edff;
+    color: var(--ulvia-official-on-primary-subtle);
+    background: var(--ulvia-official-primary-subtle);
     font-weight: 720;
 }
 [part~="empty"],
@@ -363,7 +363,7 @@ label,
 [data-settings] {
     display: grid;
     gap: 0.35rem;
-    color: #445149;
+    color: var(--ulvia-official-text-secondary);
     font-size: 0.72rem;
     font-weight: 720;
 }
@@ -415,18 +415,18 @@ label,
     bottom: 1rem;
     max-width: min(32rem, calc(100% - 2rem));
     padding: 0.6rem 0.85rem;
-    border: 1px solid #c2ccc7;
+    border: 1px solid var(--ulvia-official-border-default);
     border-radius: 0.5rem;
-    background: #fff;
-    box-shadow: 0 0.75rem 2rem rgb(23 33 29 / 16%);
+    background: var(--ulvia-official-background-surface);
+    box-shadow: 0 0.75rem 2rem color-mix(in srgb, var(--ulvia-official-shadow-color) 16%, transparent);
     font-size: 0.75rem;
 }
 [part~="notice"]:empty {
     display: none;
 }
 [part~="notice"][data-error] {
-    border-color: #ce655d;
-    color: #8a1c13;
+    border-color: var(--ulvia-official-danger-border);
+    color: var(--ulvia-official-danger);
 }
 
 [part~="catalogue-dialog"],
@@ -436,16 +436,16 @@ label,
     max-height: min(46rem, calc(100dvh - 2rem));
     padding: 0;
     overflow: hidden;
-    border: 1px solid #c6d0cb;
+    border: 1px solid var(--ulvia-official-border-default);
     border-radius: 0.8rem;
     color: inherit;
-    background: #fff;
-    box-shadow: 0 1.5rem 5rem rgb(23 33 29 / 28%);
+    background: var(--ulvia-official-background-surface);
+    box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--ulvia-official-shadow-color) 28%, transparent);
 }
 [part~="catalogue-dialog"]::backdrop,
 [part~="media-dialog"]::backdrop,
 [part~="composition-dialog"]::backdrop {
-    background: rgb(15 28 23 / 48%);
+    background: var(--ulvia-official-overlay-backdrop);
     backdrop-filter: blur(2px);
 }
 [part~="catalogue-shell"] {

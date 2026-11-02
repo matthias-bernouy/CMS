@@ -37,7 +37,7 @@
     --ulvia-official-range-value-row-padding-end: 11rem;
 }
 [part~="manual-label"] {
-    color: var(--ulvia-official-text-secondary, #42504a);
+    color: var(--ulvia-official-text-secondary);
     font-size: var(--ulvia-official-font-size-xs, 0.75rem);
     font-weight: var(--ulvia-official-font-weight-semibold, 600);
 }

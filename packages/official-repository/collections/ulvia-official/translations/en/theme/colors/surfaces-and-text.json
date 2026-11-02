@@ -32,5 +32,10 @@
     "theme.token.border-strong.label": "Strong border",
     "theme.token.border-strong.description": "A high-emphasis boundary for selected or important regions.",
     "theme.token.focus-ring.label": "Focus ring",
-    "theme.token.focus-ring.description": "The visible keyboard focus indicator."
+    "theme.token.focus-ring.description": "The visible keyboard focus indicator.",
+    "theme.token.shadow-color.label": "Shadow color",
+    "theme.token.overlay-backdrop.label": "Modal backdrop",
+    "theme.token.overlay-media.label": "Media overlay",
+    "theme.token.on-overlay.label": "Text on overlays",
+    "theme.token.overlay-border.label": "Overlay border"
 }

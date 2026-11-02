@@ -6,8 +6,8 @@
     --ulvia-official-app-shell-brand-font-size: var(--ulvia-official-font-size-xl, 1.25rem);
     display: block;
     min-height: 100svh;
-    color: var(--ulvia-official-text-primary, #17211d);
-    background: var(--ulvia-official-background-base, #f6f7f7);
+    color: var(--ulvia-official-text-primary);
+    background: var(--ulvia-official-background-base);
     container-type: inline-size;
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
@@ -28,8 +28,8 @@
     align-items: center;
     padding: var(--ulvia-official-spacing-md, 1rem)
         max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--ulvia-official-app-shell-shell-width)) / 2));
-    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
-    background: color-mix(in srgb, var(--ulvia-official-background-base, #fff) 94%, transparent);
+    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
+    background: color-mix(in srgb, var(--ulvia-official-background-base) 94%, transparent);
     backdrop-filter: blur(16px);
     z-index: 30;
 }
@@ -40,7 +40,7 @@
     gap: var(--ulvia-official-spacing-sm, 0.75rem);
 }
 [part~="brand"] {
-    color: var(--ulvia-official-text-primary, #17211d);
+    color: var(--ulvia-official-text-primary);
     font-size: var(--ulvia-official-app-shell-brand-font-size);
     font-weight: var(--ulvia-official-font-weight-bold, 700);
     letter-spacing: var(--ulvia-official-letter-spacing-tight, -0.02em);
@@ -60,8 +60,8 @@
     grid-area: secondary;
     padding: var(--ulvia-official-spacing-sm, 0.75rem)
         max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--ulvia-official-app-shell-shell-width)) / 2));
-    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
-    background: var(--ulvia-official-background-base, #fff);
+    border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
+    background: var(--ulvia-official-background-base);
 }
 [part~="secondary-sidebar"] {
     display: none;
@@ -70,7 +70,7 @@
     box-sizing: border-box;
     padding: var(--ulvia-official-spacing-sm, 0.75rem);
     overflow: auto;
-    background: var(--ulvia-official-background-surface, #fff);
+    background: var(--ulvia-official-background-surface);
 }
 [part~="content"] {
     grid-area: content;
@@ -81,14 +81,14 @@
     padding: var(--ulvia-official-spacing-xl, 2rem) var(--ulvia-official-page-gutter, 1rem);
 }
 [part~="content"]:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, #0f7b5d);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: -3px;
 }
 [part~="footer"] {
     grid-area: footer;
     padding: var(--ulvia-official-spacing-lg, 1.5rem)
         max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--ulvia-official-app-shell-shell-width)) / 2));
-    border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+    border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
 }
 [part~="footer"][hidden] {
     display: none;
@@ -139,7 +139,7 @@
 }
 :scope[layout="dual-sidebar"] [part~="secondary-sidebar"] {
     display: block;
-    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
 }
 :scope[layout="sidebar"] [part~="primary-navigation"],
 :scope[layout="dual-sidebar"] [part~="primary-navigation"] {
@@ -149,9 +149,9 @@
 :scope[layout="dual-sidebar"] [part~="header"] {
     grid-template-columns: minmax(0, 1fr);
     padding: var(--ulvia-official-app-shell-sidebar-header-padding);
-    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
     border-bottom: 0;
-    background: var(--ulvia-official-background-surface, #fff);
+    background: var(--ulvia-official-background-surface);
     backdrop-filter: none;
 }
 :scope[layout="sidebar"] [part~="actions"],
@@ -163,9 +163,9 @@
     min-height: 0;
     overflow: auto;
     padding: 0;
-    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
     border-bottom: 0;
-    background: var(--ulvia-official-background-surface, #fff);
+    background: var(--ulvia-official-background-surface);
 }
 :scope[layout="sidebar"] [part~="content"],
 :scope[layout="dual-sidebar"] [part~="content"] {
@@ -179,12 +179,12 @@
 :scope[layout="dual-sidebar"] [part~="footer"] {
     padding: var(--ulvia-official-spacing-md, 1rem);
     border-top: 0;
-    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
-    background: var(--ulvia-official-background-base, #fff);
+    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
+    background: var(--ulvia-official-background-base);
 }
 :scope[layout="hybrid"] [part~="secondary-navigation"] {
     padding: var(--ulvia-official-spacing-lg, 1.5rem) var(--ulvia-official-spacing-md, 1rem);
-    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+    border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
     border-bottom: 0;
 }
 
@@ -207,7 +207,7 @@
         grid-template-columns: minmax(0, 1fr) auto;
         padding: var(--ulvia-official-spacing-sm, 0.75rem) var(--ulvia-official-page-gutter, 1rem);
         border-right: 0;
-        border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+        border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
         backdrop-filter: blur(16px);
     }
     [part~="primary-navigation"] {
@@ -222,8 +222,8 @@
         grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr));
         gap: var(--ulvia-official-spacing-xs, 0.5rem);
         padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-page-gutter, 1rem);
-        border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
-        background: var(--ulvia-official-background-base, #fff);
+        border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
+        background: var(--ulvia-official-background-base);
     }
     [part~="mobile-navigation"] > slot {
         display: contents;
@@ -237,11 +237,11 @@
         align-items: center;
         gap: var(--ulvia-official-spacing-xs, 0.5rem);
         padding: var(--ulvia-official-spacing-xs, 0.5rem) var(--ulvia-official-spacing-sm, 0.75rem);
-        border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
+        border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default);
         border-radius: var(--ulvia-official-radius-md, 0.5rem);
-        color: var(--ulvia-official-text-primary, #17211d);
-        background: var(--ulvia-official-background-base, #fff);
-        box-shadow: 0 1px 2px rgb(23 33 29 / 5%);
+        color: var(--ulvia-official-text-primary);
+        background: var(--ulvia-official-background-base);
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--ulvia-official-shadow-color) 5%, transparent);
         font: inherit;
         font-size: var(--ulvia-official-font-size-sm, 0.875rem);
         font-weight: var(--ulvia-official-font-weight-semibold, 600);
@@ -284,14 +284,14 @@
     }
     button[part~="mobile-navigation-toggle"]:hover,
     button[part~="mobile-contextual-toggle"]:hover {
-        border-color: var(--ulvia-official-border-strong, #89968f);
-        background: var(--ulvia-official-background-subtle, #f3f7f5);
+        border-color: var(--ulvia-official-border-strong);
+        background: var(--ulvia-official-background-subtle);
     }
     button[part~="mobile-navigation-toggle"][aria-expanded="true"],
     button[part~="mobile-contextual-toggle"][aria-expanded="true"] {
-        border-color: var(--ulvia-official-primary, #0f7b5d);
-        background: var(--ulvia-official-primary-subtle, #e4f4ee);
-        box-shadow: 0 0 0 1px var(--ulvia-official-primary, #0f7b5d);
+        border-color: var(--ulvia-official-primary);
+        background: var(--ulvia-official-primary-subtle);
+        box-shadow: 0 0 0 1px var(--ulvia-official-primary);
     }
     button[part~="mobile-navigation-toggle"][aria-expanded="true"]::after,
     button[part~="mobile-contextual-toggle"][aria-expanded="true"]::after {
@@ -299,7 +299,7 @@
     }
     button[part~="mobile-navigation-toggle"]:focus-visible,
     button[part~="mobile-contextual-toggle"]:focus-visible {
-        outline: 3px solid var(--ulvia-official-focus-ring, #0f7b5d);
+        outline: 3px solid var(--ulvia-official-focus-ring);
         outline-offset: 2px;
     }
     button[part~="mobile-navigation-toggle"][hidden],
@@ -312,7 +312,7 @@
         grid-area: body;
         width: 100%;
         height: 100%;
-        background: rgb(14 30 25 / 42%);
+        background: var(--ulvia-official-overlay-backdrop);
     }
     :scope:not([mobile-panel]) > [part~="shell"] > [part~="mobile-backdrop"] {
         display: none;
@@ -340,22 +340,22 @@
         box-sizing: border-box;
         padding: 0;
         border: 0;
-        border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+        border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
         overflow: auto;
         visibility: hidden;
         transform: translateX(-100%);
         pointer-events: none;
-        box-shadow: 0.75rem 0 2rem rgb(14 30 25 / 16%);
+        box-shadow: 0.75rem 0 2rem color-mix(in srgb, var(--ulvia-official-shadow-color) 16%, transparent);
         transition:
             transform var(--ulvia-official-duration-normal, 200ms) var(--ulvia-official-easing-standard, ease),
             visibility var(--ulvia-official-duration-normal, 200ms);
     }
     [part~="secondary-navigation"] {
-        background: var(--ulvia-official-background-base, #fff);
+        background: var(--ulvia-official-background-base);
     }
     [part~="secondary-sidebar"] {
         padding: var(--ulvia-official-spacing-md, 1rem) var(--ulvia-official-spacing-sm, 0.75rem);
-        background: var(--ulvia-official-background-subtle, #f3f7f5);
+        background: var(--ulvia-official-background-subtle);
     }
     :scope[mobile-panel="navigation"] [part~="secondary-navigation"],
     :scope[mobile-panel="contextual"] [part~="secondary-sidebar"] {
@@ -379,8 +379,8 @@
     :scope[layout="sidebar"] [part~="footer"],
     :scope[layout="dual-sidebar"] [part~="footer"] {
         padding: var(--ulvia-official-spacing-md, 1rem);
-        border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6);
+        border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle);
         border-right: 0;
-        background: var(--ulvia-official-background-base, #fff);
+        background: var(--ulvia-official-background-base);
     }
 }

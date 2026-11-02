@@ -7,10 +7,10 @@
     max-height: var(--ulvia-official-scroll-area-height);
     overflow: auto;
     overscroll-behavior: contain;
-    scrollbar-color: var(--ulvia-official-border-strong, #899b94) transparent;
+    scrollbar-color: var(--ulvia-official-border-strong) transparent;
 }
 [part~="scroll-area"]:focus-visible {
-    outline: 3px solid var(--ulvia-official-focus-ring, Highlight);
+    outline: 3px solid var(--ulvia-official-focus-ring);
     outline-offset: 3px;
 }
 :scope[height="sm"] {

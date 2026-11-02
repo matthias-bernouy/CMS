@@ -1,7 +1,7 @@
 :scope {
     display: block;
     min-width: 0;
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
     container-type: inline-size;
 }

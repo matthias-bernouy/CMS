@@ -2,7 +2,7 @@
     display: block;
     min-width: 0;
     margin-block-end: var(--ulvia-official-spacing-xs, 0.5rem);
-    color: var(--ulvia-official-text-primary, CanvasText);
+    color: var(--ulvia-official-text-primary);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 [part~="caption"] {
