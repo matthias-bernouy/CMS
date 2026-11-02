@@ -30,7 +30,7 @@ latency assertions. Temporary processes, files, credentials and browser profiles
 are cleaned up on success and failure.
 
 `validation.test.ts` exercises authoring diagnostics through the real OAuth/MCP
-boundary: expanded-example refusals, clone warnings with stable release digests,
+boundary: expanded-example refusals, duplicate structures with no design warnings,
 publication and installation, persistent editor warnings, effective template
 links, progressive publication, refusal without mutation, scoped template IDs
 and ARIA references, incoming-link protection, and a valid release whose upgrade

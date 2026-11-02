@@ -20,7 +20,7 @@ integration(
             });
             const client = connection;
             const { source } = await stage(
-                "Expanded example refusal → clone warning → stable digest → publication → installation",
+                "Expanded example refusal → duplicate structures accepted → stable digest → publication → installation",
                 () => validationCollection(client),
             );
             await stage("Visual editor → successful save → persistent warning → clean stored Page", () =>

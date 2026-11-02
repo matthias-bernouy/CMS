@@ -11,7 +11,7 @@ export {
     prepareCollectionRelease,
     CollectionAuthoringValidationError,
 } from "cms-repository/collections/tooling/authoring/source";
-export { collectionAuthoringDiagnostics } from "cms-repository/collections/tooling/authoring/analysis/diagnostics";
+export { collectionAuthoringDiagnostics } from "cms-repository/collections/tooling/authoring/exampleDiagnostics";
 export { loadCollectionBlocs } from "cms-repository/collections/tooling/authoring/blocSources";
 export {
     discoverCollectionBlocSources,

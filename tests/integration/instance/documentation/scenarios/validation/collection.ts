@@ -72,13 +72,7 @@ export async function validationCollection(connection: Connection) {
     );
     const prepared = await call("ulvia.cms.repository", "prepare-collection", { sourceJson: JSON.stringify(source) });
     expect(prepared.valid).toBe(true);
-    expect(prepared.diagnostics).toContainEqual(
-        expect.objectContaining({
-            code: "design.similar_blocs",
-            severity: "warning",
-            relatedResources: expect.arrayContaining(["mcp-kit-panel", "mcp-kit-clone"]),
-        }),
-    );
+    expect(prepared.diagnostics).toEqual([]);
     const duplicate = await call("ulvia.cms.repository", "prepare-collection", { sourceJson: JSON.stringify(source) });
     expect(duplicate.digest).toBe(prepared.digest);
     await call("ulvia.cms.repository", "discard-preparation", { preparationId: duplicate.preparationId });

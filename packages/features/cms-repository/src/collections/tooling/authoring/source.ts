@@ -8,7 +8,7 @@ import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTrans
 import { loadCollectionTexts } from "./textSources";
 import { readSourceEntries } from "cms-repository/repository/authoring/sourceTree";
 import { loadCollectionAssets } from "./assetSources";
-import { collectionAuthoringDiagnostics } from "./analysis/diagnostics";
+import { collectionAuthoringDiagnostics } from "./exampleDiagnostics";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
 export async function prepareCollectionRelease(directory: string, contracts?: ReleaseCatalogue) {

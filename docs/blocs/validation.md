@@ -65,12 +65,10 @@ upgrade planning uses the target definitions and the existing usage snapshot.
 These checks do not establish a distributed snapshot or guarantee that another
 write cannot later change a destination.
 
-Collection preparation also checks example structure and reports normalized
-clone groups and conservative CSS-vector candidates. It preserves selectors,
-media rules, contracts and significant values. Executable behavior is not treated
-as interchangeable. The CLI prints preparation warnings; MCP returns structured
-feedback and the Page editor displays write diagnostics. These checks do not add
-a capability, rename resources or change the release digest based on warnings.
+Collection preparation also checks expanded example structure. The CLI prints
+preparation diagnostics; MCP returns structured feedback and the Page editor
+displays write diagnostics. These checks do not add a capability or change the
+release digest based on diagnostics.
 
 New authoring policy is explicit and does not run on ordinary historical artifact
 reads or public rendering. The existing immutable grammar validation remains in
