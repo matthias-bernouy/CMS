@@ -1,5 +1,6 @@
 import { collectionBlocTagIssue } from "cms-repository/collections/core/namespace";
 import { validateForbiddenBlocBehavior } from "cms-repository/collections/core/validation/blocBehaviorPolicy";
+import { validateStyleColorLiterals } from "cms-repository/collections/core/validation/styles/behavior";
 
 const viewTranspiler = new Bun.Transpiler({ loader: "ts" });
 
@@ -50,10 +51,12 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
         errors.push(...validateForbiddenBlocBehavior(input.viewSource, "Bloc"));
         errors.push(...checkFunctionalMountExport(input.viewSource, "Bloc"));
         errors.push(...checkStyleVariableWrites(input.viewSource, input.tag, input.uses ?? [], "Bloc"));
+        errors.push(...validateStyleColorLiterals(input.viewSource, "Bloc"));
     }
     for (const behavior of input.behaviorSources ?? []) {
         errors.push(...validateForbiddenBlocBehavior(behavior.source, behavior.label));
         errors.push(...checkStyleVariableWrites(behavior.source, input.tag, input.uses ?? [], behavior.label));
+        errors.push(...validateStyleColorLiterals(behavior.source, behavior.label));
     }
     return { errors };
 }

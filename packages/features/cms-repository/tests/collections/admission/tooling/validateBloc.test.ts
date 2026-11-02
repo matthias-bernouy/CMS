@@ -166,7 +166,7 @@ describe("validateBloc — CSS variable writes", () => {
             uses: ["atlas-tab"],
             viewSource: `export function mount(root) {
                 root.style.setProperty("--atlas-tabs-offset", "1px");
-                root.style.setProperty("--atlas-tab-color", "red");
+                root.style.setProperty("--atlas-tab-offset", "2px");
             }`,
         });
         expect(result.errors).toHaveLength(0);
@@ -180,10 +180,12 @@ describe("validateBloc — CSS variable writes", () => {
                 root.style.setProperty(name, "red");
             }`,
         });
-        expect(result.errors).toEqual([
-            expect.stringContaining("static lowercase literal name"),
-            expect.stringContaining("must belong to Bloc atlas-tabs"),
-        ]);
+        expect(result.errors).toEqual(
+            expect.arrayContaining([
+                expect.stringContaining("static lowercase literal name"),
+                expect.stringContaining("must belong to Bloc atlas-tabs"),
+            ]),
+        );
     });
 });
 

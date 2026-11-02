@@ -81,3 +81,5 @@ export {
     parseCollectionAssetReference,
     type CollectionAssetExpression,
 } from "cms-content/blocs/core/markup/security/collectionAssetExpression";
+export { blocStyleWrites } from "cms-content/blocs/core/validation/definition/styleWrites";
+export { blocStylePaintProperty } from "cms-content/blocs/core/validation/definition/paint";

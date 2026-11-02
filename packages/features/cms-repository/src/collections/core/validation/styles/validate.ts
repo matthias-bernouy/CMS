@@ -1,7 +1,10 @@
-import { parse, walk } from "css-tree";
+import { ident, parse, walk } from "css-tree";
+import type { Declaration } from "css-tree";
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
-import { invalid } from "../errors";
-import { compileBlocStyle } from "./blocStyleCompilation";
+import { invalid } from "../../errors";
+import { compileBlocStyle } from "./compile";
+import { colorVariables } from "./colors";
+import { validateColorBehavior } from "./behavior";
 
 type StyleContract = {
     readonly themeVariables: ReadonlySet<string>;
@@ -13,12 +16,15 @@ export function validateBlocStyles(blocs: readonly CollectionBloc[], contract: S
     const knownBlocs = [...blocs.map((bloc) => bloc.id), ...contract.importedBlocs].sort(
         (left, right) => right.length - left.length,
     );
+    const declarations: { declaration: Declaration; path: string }[] = [];
     for (const bloc of blocs) {
         if (bloc.kind !== "component" || !bloc.style) {
             continue;
         }
-        validateStyle(bloc, bloc.style, knownBlocs, contract.themeVariables);
+        declarations.push(...validateStyle(bloc, bloc.style, knownBlocs, contract.themeVariables));
     }
+    const colors = colorVariables(declarations, contract.themeVariables);
+    validateColorBehavior(blocs, colors, contract.themeVariables, knownBlocs);
 }
 
 function validateStyle(
@@ -26,7 +32,7 @@ function validateStyle(
     source: string,
     knownBlocs: string[],
     theme: ReadonlySet<string>,
-): void {
+): { declaration: Declaration; path: string }[] {
     const path = `$.blocs[${bloc.id}].style`;
     try {
         compileBlocStyle(bloc.id, source);
@@ -35,13 +41,25 @@ function validateStyle(
     }
     let ast: ReturnType<typeof parse>;
     try {
-        ast = parse(source, { context: "stylesheet" });
+        ast = parse(source, { context: "stylesheet", parseCustomProperty: true });
     } catch (error) {
         invalid(`invalid CSS: ${error instanceof Error ? error.message : String(error)}`, path);
     }
     const declared = new Set<string>();
+    const declarations: { declaration: Declaration; path: string }[] = [];
     walk(ast, (node) => {
-        if (node.type !== "Declaration" || !node.property.startsWith("--")) {
+        if (node.type === "Declaration") {
+            node.property = ident.decode(node.property);
+        } else if (node.type === "Function" || node.type === "Identifier") {
+            node.name = ident.decode(node.name);
+        }
+    });
+    walk(ast, (node) => {
+        if (node.type !== "Declaration") {
+            return;
+        }
+        declarations.push({ declaration: node, path });
+        if (!node.property.startsWith("--")) {
             return;
         }
         const variable = node.property.slice(2);
@@ -73,6 +91,7 @@ function validateStyle(
             invalid(`CSS variable --${variable} is neither declared nor provided with a fallback`, path);
         }
     });
+    return declarations;
 }
 
 function assertWritable(
@@ -83,14 +102,14 @@ function assertWritable(
     path: string,
 ): void {
     if (theme.has(variable)) {
-        return;
+        invalid(`cannot redefine theme token --${variable} in Bloc CSS; edit the theme values instead`, path);
     }
     const owner = variableOwner(variable, knownBlocs);
     if (owner === bloc.id || (owner !== undefined && bloc.uses.includes(owner))) {
         return;
     }
     invalid(
-        `CSS variable --${variable} must belong to Bloc ${bloc.id}, a Bloc declared in uses, or a known theme token`,
+        `CSS variable --${variable} must belong to Bloc ${bloc.id} or a Bloc declared in uses; theme tokens are read-only`,
         path,
     );
 }

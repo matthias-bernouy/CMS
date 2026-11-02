@@ -1,5 +1,5 @@
 :scope {
-    --ulvia-official-content-width-sm: 31rem;
+    --ulvia-official-center-inherited-width: 31rem;
     --ulvia-official-cover-inherited-height: 100svh;
     display: block;
     min-height: 100svh;

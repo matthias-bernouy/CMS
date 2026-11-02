@@ -9,7 +9,7 @@ import { parseComponentSettings } from "./settings";
 import { blocReferences, parseSlots } from "./slots";
 import { parseCollectionBlocTag, parseCollectionNamespace } from "../../namespace";
 import { parseManagedNativeElement } from "./managedNativeElement";
-import { compileBlocStyle } from "../../validation/blocStyleCompilation";
+import { compileBlocStyle } from "../../validation/styles/compile";
 import { validateCompiledBlocBehavior } from "../../validation/blocBehaviorPolicy";
 import { CMS_BROWSER_RUNTIME_ABI } from "@bernouy/cms-content/runtime-abi";
 import { blocSettingAttributeNameIssue, validateBlocBrowserCapabilities } from "@bernouy/cms-content/page-document";

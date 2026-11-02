@@ -1,4 +1,6 @@
 :scope {
+    --ulvia-official-heading-inherited-color: var(--ulvia-official-text-primary);
+    --ulvia-official-prose-inherited-color: var(--ulvia-official-text-secondary);
     --ulvia-official-section-background: var(--ulvia-official-background-base);
     --ulvia-official-section-color: var(--ulvia-official-text-primary);
     --ulvia-official-section-gutter: var(--ulvia-official-page-gutter, 1rem);
@@ -20,10 +22,8 @@
 :scope[surface="inverse"] {
     --ulvia-official-section-background: var(--ulvia-official-background-inverse);
     --ulvia-official-section-color: var(--ulvia-official-text-inverse);
-    --ulvia-official-text-primary: var(--ulvia-official-text-inverse);
-    --ulvia-official-text-secondary: color-mix(in srgb, var(--ulvia-official-text-inverse) 78%, transparent);
-    --ulvia-official-text-muted: color-mix(in srgb, var(--ulvia-official-text-inverse) 62%, transparent);
-    --ulvia-official-border-subtle: color-mix(in srgb, var(--ulvia-official-text-inverse) 18%, transparent);
+    --ulvia-official-heading-inherited-color: var(--ulvia-official-text-inverse);
+    --ulvia-official-prose-inherited-color: color-mix(in srgb, var(--ulvia-official-text-inverse) 78%, transparent);
 }
 :scope[width="sm"] [part~="container"] {
     max-width: var(--ulvia-official-content-width-sm, 40rem);

@@ -3,7 +3,7 @@ export {
     type CollectionBlocBuildArtifact,
     type CollectionBlocBuildInput,
 } from "cms-repository/collections/tooling/buildCollectionBloc";
-export { compileBlocStyle } from "cms-repository/collections/core/validation/blocStyleCompilation";
+export { compileBlocStyle } from "cms-repository/collections/core/validation/styles/compile";
 export { blocRuntimeExternalsPlugin } from "cms-repository/collections/tooling/blocRuntimeExternalsPlugin";
 export { validateBloc, validateBlocTag } from "cms-repository/collections/tooling/validateBloc";
 

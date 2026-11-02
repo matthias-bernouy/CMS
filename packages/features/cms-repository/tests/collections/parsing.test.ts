@@ -509,7 +509,7 @@ describe("collection release parsing", () => {
             requires: [],
         };
         (source.blocs as Record<string, unknown>[]).push(child);
-        panel.style = ":scope { --atlas-action-color: red; color: var(--atlas-action-color); }";
+        panel.style = ":scope { --atlas-action-color: currentColor; color: var(--atlas-action-color); }";
         expect(() => parseCollectionRelease(collectionFixture(source))).toThrow(/declared in uses/);
 
         panel.uses = ["atlas-action"];

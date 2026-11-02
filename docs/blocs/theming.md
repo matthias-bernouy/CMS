@@ -69,12 +69,12 @@ An authored stylesheet therefore contains only the inner rules:
 
 ```css
 :scope {
-    --example-card-background: var(--ulvia-official-background-surface, Canvas);
-    --example-card-color: var(--ulvia-official-text-primary, CanvasText);
-    --_example-card-padding: var(--ulvia-official-spacing-md, 1rem);
+    --example-card-background: var(--ulvia-official-background-surface);
+    --example-card-color: var(--ulvia-official-text-primary);
+    --example-card-padding: var(--ulvia-official-spacing-md, 1rem);
 
     display: grid;
-    padding: var(--_example-card-padding);
+    padding: var(--example-card-padding);
     color: var(--example-card-color);
     background: var(--example-card-background);
 }
@@ -90,13 +90,64 @@ An authored stylesheet therefore contains only the inner rules:
 ```
 
 Use documented public variables for supported theme knobs. Prefix private
-implementation variables with `--_<collection>-*`. `part` tokens identify
+implementation variables with the owning Bloc ID, such as `--example-card-*`. `part` tokens identify
 projected Light DOM structures that the owning scoped stylesheet needs to
 target; they are not Shadow DOM parts.
 
 Global selectors, document selectors, `:host`, `::part`, `::slotted`, imports
 and other scope escapes are rejected. A Bloc cannot style outside its scoped
 root. Nested Bloc scopes remain independently owned.
+
+## Color Admission
+
+Raw UI colors belong only in theme-token defaults and site theme values. Bloc
+CSS consumes local tokens or explicitly imported tokens. Prefer the semantic
+roles exported by `ulvia-official` when they fit; define a translated, exported
+collection token for a genuinely new reusable role. Admission does not require
+an official dependency or rename another collection's tokens.
+
+Admission rejects hexadecimal and named colors (including system colors),
+absolute `rgb()`/`hsl()`/`oklch()` and other color constructors in paint values.
+This covers backgrounds, borders, outlines, shadows, gradients, filters, SVG
+paint, text decoration, caret, accent and vendor color properties. The same
+rule follows local aliases through every selector variant and checks literal
+fallbacks, including `var(--example-accent, #fff)`. Cyclic color aliases,
+`attr()` color injection and unparsed color values are refused. Blocs cannot
+redefine theme tokens or register global `@property` values.
+
+Use `var(--ulvia-official-primary)`, or derive a translucent value with
+`color-mix(in srgb, var(--ulvia-official-primary) 20%, transparent)`.
+`transparent`, `currentColor`, inheritance/reset keywords and `none` remain
+available where valid CSS permits them. Numeric geometry and opacity are
+unaffected. Local aliases remain owned by their Bloc or a declared `uses`
+dependency; inherited presentation inputs configure a child Bloc without
+changing a shared theme token. Inverse surface/section variants use the
+heading and prose inputs for their text descendants.
+
+Recognized JavaScript paint assignments, `cssText`, style attributes and native
+`style.setProperty()` writes are refused. Owned custom-property writes remain
+available for dynamic geometry. A variable reachable from a paint declaration
+may receive only static token-based CSS, including its fallbacks; dynamic values
+and local runtime aliases are refused. Imported Bloc inputs whose stylesheet is
+not available also require static values based on theme tokens. Put dynamic
+geometry in numeric longhands rather than a shorthand that also carries paint.
+Prefer finite settings and CSS states
+for UI variants. These static authoring checks are not a security sandbox or a
+proof about arbitrary JavaScript, reflection or DOM aliases.
+Programmatic style elements, CSS rule injection and paint attributes such as
+`setAttribute("fill", value)` are also refused; the stylesheet owns UI paint.
+
+User-selected colors in color controls are business data: the official controls
+paint their dedicated canvas swatches. The hue spectrum is an immutable image
+asset. Neither path writes UI CSS or shared tokens. Intrinsic logo, photograph
+and illustration colors remain in their assets; no Bloc receives a blanket
+color exemption.
+
+When reproducing a site, first map its palette to semantic roles and configure
+the destination site's theme values. Build reusable Blocs against those roles.
+Keep custom color inputs for editing token values or color data, rather than
+injecting a raw color into Bloc styling. Validate light/dark, hover, focus and
+error states; user theme overrides still require contrast review.
 
 ## Settings And Behavior
 

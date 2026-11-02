@@ -52,7 +52,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
         expect([...(releases[0]!.release.exports?.blocs ?? [])].sort()).toEqual([...definition.exports.blocs].sort());
         expect(definition.exports.blocs.every((id) => releaseBlocIds.includes(id))).toBe(true);
         expect(releaseBlocIds).toContain("ulvia-official-choice-copy");
-        expect(releases[0]!.release.exports?.themeTokens).toHaveLength(119);
+        expect(releases[0]!.release.exports?.themeTokens).toHaveLength(124);
         expect(releases[0]!.release.exports?.texts).toEqual(definition.exports.texts.slice().sort());
         await runCli(["release", source], options);
         expect(output.at(-1)).toStartWith(`= collection ulvia.official/ulvia-official@${definition.version}`);

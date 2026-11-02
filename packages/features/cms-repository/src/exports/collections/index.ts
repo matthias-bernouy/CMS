@@ -104,7 +104,7 @@ export {
     rewriteCollectionAssetReferences,
 } from "cms-repository/collections/core/texts/expressions";
 export { documentRequirements } from "cms-repository/collections/core/admission/documentRequirements";
-export { compileBlocStyle } from "cms-repository/collections/core/validation/blocStyleCompilation";
+export { compileBlocStyle } from "cms-repository/collections/core/validation/styles/compile";
 export {
     pageBlocHostAttributesIssue,
     type PageBlocHostContract,

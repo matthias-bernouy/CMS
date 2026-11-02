@@ -12,6 +12,16 @@ Read `get-collection-sources` before changing a previously published collection.
 
 Every Bloc has a native root contract. Listed Blocs use translated descriptions, categories and appropriate examples. Author example `definition.json` and `document.html` with explicit preview frames. Page content and mutable site configuration remain site-owned.
 
+## Make colors reusable
+
+Put literal colors in theme-token defaults and site theme values. Bloc paint styles must consume declared or explicitly imported tokens. Prefer semantic `ulvia-official` roles such as `background-surface`, `text-primary`, `primary`, `on-primary`, `border-default`, `focus-ring` and feedback colors when suitable. Import the exact token IDs from a dependency; declaring its collection name alone does not authorize every token. A new role may use a translated token in your collection, exported when other collections should reuse it.
+
+Preparation rejects raw hexadecimal, named/system and functional colors in UI paint, including borders, shadows, gradients, SVG paint and literal fallbacks. Local aliases are followed across selector variants; they cannot hide a palette. Do not redefine theme tokens inside Bloc CSS. Use `var(--ulvia-official-primary)` or `color-mix(in srgb, var(--ulvia-official-primary) 20%, transparent)` after importing that token. `transparent`, `currentColor`, inheritance/reset keywords and `none` remain available where CSS permits them.
+
+Select finite CSS states rather than writing native paint, `cssText`, style elements, CSS rules or paint attributes from behavior. Owned variables can carry dynamic geometry; variables feeding UI paint require static theme-token-based values. Color-data controls may render their dedicated canvas previews, and intrinsic image colors stay in immutable assets. These static checks are authoring rules, not a JavaScript security sandbox.
+
+For a copied site, map the source palette to semantic roles and change the destination site's theme values. Keep the Bloc reusable across sites. Review light/dark, hover, focus and error contrast after installation. A custom color control should edit a theme value or business color data, not inject raw Bloc styling.
+
 ## Prepare and correct
 
 Call `prepare-collection` with the complete source snapshot. A successful tool invocation can still return `valid: false`: inspect `diagnostics[].message`, correct the sources and prepare again. Publication needs `valid: true`, a `preparationId`, a `digest` and a reviewed `approvedBrowserRiskDigest`. Retain those exact returned values; do not construct them from source text.

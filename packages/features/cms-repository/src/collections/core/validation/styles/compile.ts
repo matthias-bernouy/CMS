@@ -1,4 +1,4 @@
-import { parse, walk } from "css-tree";
+import { ident, parse, walk } from "css-tree";
 
 const FORBIDDEN = /:host\b|::slotted\b|:global\b/u;
 const NESTED_BLOC_SELECTOR = /\[cms-bloc\b/u;
@@ -18,8 +18,8 @@ export function compileBlocStyle(id: string, source: string): string {
     }
     walk(ast, (node) => {
         if (node.type === "Atrule") {
-            const name = node.name.toLowerCase();
-            if (["import", "namespace", "scope", "keyframes", "-webkit-keyframes"].includes(name)) {
+            const name = ident.decode(node.name).toLowerCase();
+            if (["import", "namespace", "scope", "property", "keyframes", "-webkit-keyframes"].includes(name)) {
                 throw new Error(`Bloc ${id} CSS cannot declare @${name}`);
             }
         }

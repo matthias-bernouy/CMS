@@ -11,7 +11,10 @@
 }
 
 :scope[width="sm"] {
-    --ulvia-official-center-width: var(--ulvia-official-content-width-sm, 40rem);
+    --ulvia-official-center-width: var(
+        --ulvia-official-center-inherited-width,
+        var(--ulvia-official-content-width-sm, 40rem)
+    );
 }
 :scope[width="lg"] {
     --ulvia-official-center-width: var(--ulvia-official-content-width-lg, 72rem);

@@ -4,7 +4,7 @@
     "label": "bloc.auth-shell.label",
     "description": "bloc.auth-shell.description",
     "catalogue": "listed",
-    "uses": ["ulvia-official-cover"],
+    "uses": ["ulvia-official-cover", "ulvia-official-center"],
     "requires": [],
     "slots": {
         "default": {

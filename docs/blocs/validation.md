@@ -36,6 +36,11 @@ emitted syntax. Release admission parses every Bloc stylesheet and validates
 custom-property ownership, declared Bloc dependencies, theme-token imports and
 fallbacks for optional values. The collection import path additionally checks
 source bundles, default content and bounded `native-element` slot structure.
+Paint values and their local alias graph must resolve to theme tokens or
+allowed CSS keywords; literal colors and literal fallbacks fail preparation
+and admission. Compiled behavior is rechecked against color-carrying variables.
+See [color admission](theming.md#color-admission), including the limits of the
+static JavaScript checks and the canvas channel for color-data previews.
 
 When changing compiler behavior, add a focused test beside
 `packages/features/cms-repository/tests/collections/admission/tooling/`.

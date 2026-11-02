@@ -101,10 +101,10 @@ label[part~="field-label"] {
     --ulvia-official-field-caption-required-marker-display: inline;
 }
 
-:scope[invalid] {
-    --ulvia-official-border-default: var(--ulvia-official-danger-border);
-    --ulvia-official-border-width: var(--ulvia-official-border-width-strong, 2px);
-    --ulvia-official-shadow-sm: 0 0 0 3px color-mix(in srgb, var(--ulvia-official-danger-border) 22%, transparent);
+:scope[invalid] [part~="field-control"] {
+    outline: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-danger-border);
+    border-radius: var(--ulvia-official-radius-md);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ulvia-official-danger-border) 22%, transparent);
 }
 
 :scope[invalid] label[part~="field-label"] {

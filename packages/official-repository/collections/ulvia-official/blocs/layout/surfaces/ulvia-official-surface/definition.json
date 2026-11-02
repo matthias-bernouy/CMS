@@ -4,7 +4,7 @@
     "label": "bloc.surface.label",
     "description": "bloc.surface.description",
     "order": 100,
-    "uses": [],
+    "uses": ["ulvia-official-heading", "ulvia-official-prose"],
     "requires": [],
     "slots": {
         "content": {

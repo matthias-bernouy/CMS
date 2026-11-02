@@ -14,11 +14,11 @@
     position: relative;
     display: block;
 }
-input {
+input[type="color"] {
     width: 100%;
     min-height: var(--ulvia-official-color-input-color-control-height);
 }
-:scope[data-ready] input {
+:scope[data-ready] input[type="color"] {
     position: absolute;
     width: 1px;
     height: 1px;

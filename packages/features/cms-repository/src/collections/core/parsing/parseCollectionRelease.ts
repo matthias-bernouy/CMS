@@ -21,7 +21,7 @@ import { parseCollectionExamples } from "../validation/examples/parse";
 import { validateCollectionExamples } from "../validation/examples/validate";
 import { parseCollectionStates } from "./states";
 import { validateCollectionStateBindings } from "../validation/markup/state";
-import { validateBlocStyles } from "../validation/blocStyles";
+import { validateBlocStyles } from "../validation/styles/validate";
 
 export function parseCollectionRelease(
     value: unknown,

@@ -68,11 +68,11 @@ test("local repository lists immutable metadata and serves matching release byte
                 .map((bloc) => bloc.id)
                 .sort(),
         );
-        expect(release.exports?.themeTokens).toHaveLength(119);
+        expect(release.exports?.themeTokens).toHaveLength(124);
         expect(release.exports?.assets).toEqual(bundle.assets.map(({ id }) => id));
         const themeEntries = release.theme?.categories.flatMap((category) => category.entries) ?? [];
         expect(themeEntries.filter((entry) => entry.type === "font-face")).toHaveLength(23);
-        expect(themeEntries.filter((entry) => entry.type !== "font-face")).toHaveLength(119);
+        expect(themeEntries.filter((entry) => entry.type !== "font-face")).toHaveLength(124);
         expect(themeEntries.find((entry) => entry.id === "inter-normal")).toMatchObject({
             asset: "fonts/sans/inter/normal.woff2",
             family: "inter",

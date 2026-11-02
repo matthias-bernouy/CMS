@@ -1,7 +1,7 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import { buildCollectionBloc } from "cms-repository/collections/tooling/buildCollectionBloc";
-import { compileBlocStyle } from "cms-repository/collections/core/validation/blocStyleCompilation";
+import { compileBlocStyle } from "cms-repository/collections/core/validation/styles/compile";
 import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery";
 import { readSourceEntries, scanFileSourceTree } from "cms-repository/repository/authoring/sourceTree";
 
